@@ -58,7 +58,7 @@ internal class GenericAgentEnvironment(
                 )
             }
 
-        val toolDescription = tool.description
+        val toolDescription = tool.descriptor.description
 
         // Tool Args
         val toolArgs = try {

@@ -2,7 +2,6 @@ package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -18,7 +17,17 @@ import kotlin.coroutines.cancellation.CancellationException
 public class ExecuteShellCommandTool(
     private val executor: ShellCommandExecutor,
     private val confirmationHandler: ShellCommandConfirmationHandler
-) : Tool<ExecuteShellCommandTool.Args, ExecuteShellCommandTool.Result>() {
+) : Tool<ExecuteShellCommandTool.Args, ExecuteShellCommandTool.Result>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Result.serializer(),
+    name = "__execute_shell_command__",
+    description = """
+        Executes a shell command.
+        Depending on configuration, the command may run immediately or ask the user before running.
+        A working directory and timeout can be provided. If a timeout is reached, any available output is included.
+        Returns everything the command printed and the exit code, or a message if it was not run or did not finish.
+    """.trimIndent()
+) {
 
     /**
      * Parameters for running a shell command.
@@ -63,16 +72,6 @@ public class ExecuteShellCommandTool(
         val exitCode: Int?,
         val output: String
     )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
-    override val name: String = "__execute_shell_command__"
-    override val description: String = """
-        Executes a shell command.  
-        Depending on configuration, the command may run immediately or ask the user before running.  
-        A working directory and timeout can be provided. If a timeout is reached, any available output is included.  
-        Returns everything the command printed and the exit code, or a message if it was not run or did not finish.
-    """.trimIndent()
 
     /**
      * Runs a command after asking the user for permission.

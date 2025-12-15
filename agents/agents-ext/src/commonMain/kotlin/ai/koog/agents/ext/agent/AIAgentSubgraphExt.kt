@@ -29,7 +29,6 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 
 /**
@@ -73,45 +72,14 @@ public object SubgraphWithTaskUtils {
      * @return A `Tool` instance where the input arguments and results share the same type `T`. The tool uses serializers and a descriptor based on the generic type `T`.
      */
     @OptIn(InternalAgentToolsApi::class)
-    public inline fun <reified T> finishTool(): Tool<T, T> = object : Tool<T, T>() {
-
-        /**
-         * Provides a serializer for the argument type of the tool.
-         *
-         * This property is used to serialize the data to be passed as arguments for the tool's execution.
-         * The generic type `T` represents the type of the arguments, and its serializer is resolved at runtime.
-         *
-         * It ensures that the arguments can be properly encoded and decoded, facilitating communication
-         * between different components or systems handling the serialized data.
-         */
-        override val argsSerializer: KSerializer<T> = serializer()
-
-        /**
-         * Serializer used to encode and decode the results of the tool's execution.
-         * This property defines how the result type `T` should be serialized, enabling the transfer
-         * and persistence of the execution output in a structured and type-safe manner.
-         *
-         * It leverages Kotlin serialization features to automatically provide a mechanism
-         * for converting the result into a serializable format and reconstructing it
-         * during deserialization.
-         */
-        override val resultSerializer: KSerializer<T> = serializer()
-
-        /**
-         * The descriptor for the tool, derived from the serializer's [kotlinx.serialization.descriptors.SerialDescriptor],
-         * and converted to a [ToolDescriptor] using the provided tool name.
-         *
-         * This property defines the metadata of the tool, such as its name and associated parameters,
-         * and leverages the `asToolDescriptor` function for the conversion process.
-         *
-         * The tool name used for this descriptor is defined as `FINALIZE_SUBGRAPH_TOOL_NAME`.
-         */
-        override val descriptor: ToolDescriptor =
-            serializer<T>().descriptor.asToolDescriptor(toolName = FINALIZE_SUBGRAPH_TOOL_NAME)
-
-        override val name: String get() = descriptor.name
-        override val description: String get() = descriptor.description
-
+    public inline fun <reified T> finishTool(): Tool<T, T> = object : Tool<T, T>(
+        argsSerializer = serializer(),
+        resultSerializer = serializer(),
+        descriptor = serializer<T>().descriptor.asToolDescriptor(
+            toolName = FINALIZE_SUBGRAPH_TOOL_NAME,
+            toolDescription = FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+        )
+    ) {
         /**
          * Executes the given argument and returns it as the result. This is a simple pass-through
          * implementation that processes input and directly returns it without modification.
@@ -140,11 +108,12 @@ public object SubgraphWithTaskUtils {
  */
 @PublishedApi
 @OptIn(InternalAgentToolsApi::class)
-internal inline fun <reified Output> identityTool(): Tool<Output, Output> = object : Tool<Output, Output>() {
-    override val argsSerializer: KSerializer<Output> = serializer()
-    override val resultSerializer: KSerializer<Output> = serializer()
-    override val name: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
-    override val description: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+internal inline fun <reified Output> identityTool(): Tool<Output, Output> = object : Tool<Output, Output>(
+    argsSerializer = serializer(),
+    resultSerializer = serializer(),
+    name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
+    description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+) {
     override suspend fun execute(args: Output): Output = args
 }
 
@@ -638,7 +607,7 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentC
         toolArgs = toolCall.contentJson,
         content = toolCall.content,
         resultKind = ToolResultKind.Success,
-        toolDescription = finishTool.description,
+        toolDescription = finishTool.descriptor.description,
         result = encodedResult
     )
 }

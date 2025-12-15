@@ -3,7 +3,6 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.core.tools.asToolDescriptorSerializer
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -90,7 +89,7 @@ class SafeToolTest {
                     toolDescription = null,
                     content = resultContent,
                     resultKind = ToolResultKind.Success,
-                    result = json.encodeToJsonElement(serializer<String>().asToolDescriptorSerializer(), TEST_RESULT)
+                    result = json.encodeToJsonElement(serializer<String>(), TEST_RESULT)
                 )
             } else {
                 ReceivedToolResult(
@@ -298,7 +297,7 @@ class SafeToolTest {
                     )
 
                     val result = testFunctionWithComplexArgs("direct-test", listOf(10, 11, 12), complexData)
-                    val resultSerializer = serializer<String>().asToolDescriptorSerializer()
+                    val resultSerializer = serializer<String>()
 
                     ReceivedToolResult(
                         id = toolCall.id,

@@ -4,7 +4,11 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
 
-object GenericParameterTool : SimpleTool<GenericParameterTool.Args>() {
+object GenericParameterTool : SimpleTool<GenericParameterTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "generic_parameter_tool",
+    description = "A tool that demonstrates handling of required and optional parameters"
+) {
     @Serializable
     data class Args(
         @property:LLMDescription("A required string parameter that must be provided")
@@ -13,12 +17,7 @@ object GenericParameterTool : SimpleTool<GenericParameterTool.Args>() {
         val optionalArg: String? = null
     )
 
-    override val argsSerializer = Args.serializer()
-
-    override val name: String = "generic_parameter_tool"
-    override val description: String = "A tool that demonstrates handling of required and optional parameters"
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         return "Generic parameter tool executed with requiredArg: ${args.requiredArg}, optionalArg: ${args.optionalArg ?: "not provided"}"
     }
 }

@@ -10,40 +10,31 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
 /**
- * Represents a tool that, when executed, makes changes to the environment.
+ * Base class representing a tool that can be invoked by the LLM.
+ * Tools are usually used to return results, make changes to the environment, or perform other actions.
+ *
+ * @param TArgs The type of arguments the tool accepts.
+ * @param TResult The type of result the tool returns.
+ * Provides a textual explanation of what the tool does and how it can be used (for the LLM).
+ * @property argsSerializer A [KSerializer] responsible for encoding and decoding the arguments required for the tool execution.
+ * @property resultSerializer A [KSerializer] responsible for encoding and decoding the result returned by the tool execution.
+ * @property descriptor A [ToolDescriptor] representing the tool's schema, including its name, description, and parameters.
  */
-public abstract class Tool<TArgs, TResult> {
+public abstract class Tool<TArgs, TResult>(
+    public val argsSerializer: KSerializer<TArgs>,
+    public val resultSerializer: KSerializer<TResult>,
+    public val descriptor: ToolDescriptor,
+) {
     /**
-     * Serializer responsible for encoding and decoding the arguments required for the tool execution.
-     * This abstract property is used to define the specific [KSerializer] corresponding to the type of arguments
-     * expected by the tool.
-     *
-     * The implementation must provide a concrete serializer for the `TArgs` type parameter, which ensures
-     * proper serialization and deserialization of the tool arguments.
+     * The name of the tool from the [descriptor]
      */
-    public abstract val argsSerializer: KSerializer<TArgs>
-
-    // FIXME just a quickfix, more proper and thorough update is required for Tool
-    @OptIn(InternalAgentToolsApi::class)
-    private val actualArgsSerializer by lazy {
-        argsSerializer.asToolDescriptorSerializer()
-    }
-
-    // FIXME just a quickfix, more proper and thorough update is required for Tool
-    @OptIn(InternalAgentToolsApi::class)
-    private val actualResultSerializer by lazy {
-        resultSerializer.asToolDescriptorSerializer()
-    }
+    public val name: String get() = descriptor.name
 
     /**
-     * Serializer responsible for encoding the result of the tool execution.
-     * This abstract property is used to define the specific [KSerializer] corresponding to the type of arguments
-     * expected by the tool.
-     *
-     * The implementation must provide a concrete serializer for the `TResult` type parameter, which ensures
-     * proper serialization and deserialization of the tool arguments.
+     * Wraps [argsSerializer] to handle primitive types, ensuring all tool arguments serialize to [JsonObject] as required by LLM APIs.
      */
-    public abstract val resultSerializer: KSerializer<TResult>
+    @OptIn(InternalAgentToolsApi::class)
+    private val actualArgsSerializer: KSerializer<TArgs> = argsSerializer.asToolDescriptorSerializer()
 
     /**
      * The [Json] used to encode and decode the arguments and results of the tool.
@@ -52,35 +43,25 @@ public abstract class Tool<TArgs, TResult> {
     protected open val json: Json = ToolJson
 
     /**
-     * The name of the tool.
+     * Convenience constructor for the base tool class that generates [ToolDescriptor] from the provided
+     * [name], [description] and [argsSerializer] using [asToolDescriptor]
      *
-     * This property provides a descriptive name (visible to the LLM) that can be used to identify the tool.
-     */
-    public open val name: String by lazy {
-        this::class.simpleName ?: throw IllegalStateException("Class ${this::class} doesn't have a name")
-    }
-
-    /**
-     * Describes the functionality and purpose of the tool.
-     *
-     * This property provides a textual explanation of what the tool does and how it can be utilized (for the LLM).
-     */
-    public abstract val description: String
-
-    /**
-     * Provides a descriptor detailing the tool's metadata, including its name,
-     * description, and parameter requirements. This property defines the structure
-     * and characteristics of the tool, offering an overview of its functionality
-     * and how it should be used.
+     * @param argsSerializer A [KSerializer] responsible for encoding and decoding the arguments required for the tool execution.
+     * @param resultSerializer A [KSerializer] responsible for encoding and decoding the result returned by the tool execution.
+     * @param name The name of the tool.
+     * @param description Textual explanation of what the tool does and how it can be used (for the LLM).
      */
     @OptIn(InternalAgentToolsApi::class)
-    public open val descriptor: ToolDescriptor by lazy {
-        // Needs to be calculated lazily because argsSerializer from the subclass might be unavailable on initialization of the base class:
-        argsSerializer.descriptor.asToolDescriptor(
-            name,
-            description
-        )
-    }
+    public constructor(
+        argsSerializer: KSerializer<TArgs>,
+        resultSerializer: KSerializer<TResult>,
+        name: String,
+        description: String,
+    ) : this(
+        argsSerializer = argsSerializer,
+        resultSerializer = resultSerializer,
+        descriptor = argsSerializer.descriptor.asToolDescriptor(name, description)
+    )
 
     /**
      * Executes the tool's logic with the provided arguments.
@@ -109,8 +90,10 @@ public abstract class Tool<TArgs, TResult> {
      */
     @InternalAgentToolsApi
     public suspend fun executeUnsafe(args: Any?): TResult {
-        @Suppress("UNCHECKED_CAST")
-        return execute(args as TArgs)
+        return withUnsafeCast<TArgs, TResult>(
+            args,
+            "executeUnsafe argument must be castable to TArgs"
+        ) { execute(it) }
     }
 
     /**
@@ -128,7 +111,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return The decoded result of type TResult.
      */
     public fun decodeResult(rawResult: JsonElement): TResult =
-        json.decodeFromJsonElement(actualResultSerializer, rawResult)
+        json.decodeFromJsonElement(resultSerializer, rawResult)
 
     /**
      * Encodes the given arguments into a JSON representation.
@@ -151,8 +134,10 @@ public abstract class Tool<TArgs, TResult> {
      * @throws ClassCastException If the provided arguments cannot be cast to the expected type.
      */
     public fun encodeArgsUnsafe(args: Any?): JsonObject {
-        @Suppress("UNCHECKED_CAST")
-        return json.encodeToJsonElement(actualArgsSerializer, args as TArgs).jsonObject
+        return withUnsafeCast<TArgs, JsonObject>(
+            args,
+            "encodeArgsUnsafe argument must be castable to TArgs"
+        ) { json.encodeToJsonElement(actualArgsSerializer, it).jsonObject }
     }
 
     /**
@@ -162,7 +147,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return A JsonObject representing the encoded result.
      */
     public fun encodeResult(result: TResult): JsonElement =
-        json.encodeToJsonElement(actualResultSerializer, result)
+        json.encodeToJsonElement(resultSerializer, result)
 
     /**
      * Encodes the given result object into a JSON representation without type safety checks.
@@ -175,8 +160,10 @@ public abstract class Tool<TArgs, TResult> {
      */
     @InternalAgentToolsApi
     public fun encodeResultUnsafe(result: Any?): JsonElement {
-        @Suppress("UNCHECKED_CAST")
-        return encodeResult(result as TResult)
+        return withUnsafeCast<TResult, JsonElement>(
+            result,
+            "encodeResultUnsafe argument must be castable to TResult",
+        ) { encodeResult(it) }
     }
 
     /**
@@ -199,8 +186,10 @@ public abstract class Tool<TArgs, TResult> {
      * @throws ClassCastException If the provided arguments cannot be cast to the expected type `TArgs`.
      */
     public fun encodeArgsToStringUnsafe(args: Any?): String {
-        @Suppress("UNCHECKED_CAST")
-        return encodeArgsToString(args as TArgs)
+        return withUnsafeCast<TArgs, String>(
+            args,
+            "encodeArgsToStringUnsafe argument must be castable to TArgs",
+        ) { encodeArgsToString(it) }
     }
 
     /**
@@ -222,8 +211,40 @@ public abstract class Tool<TArgs, TResult> {
      * @return A JSON string representation of the provided result.
      */
     public fun encodeResultToStringUnsafe(result: Any?): String {
-        @Suppress("UNCHECKED_CAST")
-        return encodeResultToString(result as TResult)
+        return withUnsafeCast<TResult, String>(
+            result,
+            "encodeResultToStringUnsafe argument must be castable to TResult",
+        ) { encodeResultToString(it) }
+    }
+
+    /**
+     * Utility method to perform unsafe cast while providing a more descriptive error message.
+     * Because default [ClassCastException] contains very little information, making it harder to debug in concurrent workflows with tools.
+     *
+     * @param T Expected type of the input object to be cast unsafely to.
+     * @param R Result type.
+     * @param input Input object to be cast.
+     * @param errorMessage Additional short error message to include in the exception message, e.g. method name with an explanation.
+     * @param action Action to be performed with the input object after successful cast.
+     * @throws ClassCastException containing additional debug information in its message
+     */
+    private inline fun <T, R> withUnsafeCast(
+        input: Any?,
+        errorMessage: String,
+        action: (T) -> R,
+    ): R {
+        return try {
+            @Suppress("UNCHECKED_CAST")
+            action(input as T)
+        } catch (e: ClassCastException) {
+            throw ClassCastException(
+                """
+                Unsafe cast failed in tool with name: $name
+                Error message: $errorMessage
+                Original ClassCastException message: ${e.message}
+                """.trimIndent()
+            )
+        }
     }
 
     /**

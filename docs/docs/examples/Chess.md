@@ -248,13 +248,9 @@ The `moveNotation` string provides clear documentation for the AI agent on accep
 ```kotlin
 import kotlinx.serialization.Serializable
 
-class Move(val game: ChessGame) : SimpleTool<Move.Args>() {
-    @Serializable
-    data class Args(val notation: String) : ToolArgs
-
-    override val argsSerializer = Args.serializer()
-
-    override val descriptor = ToolDescriptor(
+class Move(val game: ChessGame) : SimpleTool<Move.Args>(
+    argsSerializer = Args.serializer(),
+    descriptor = ToolDescriptor(
         name = "move",
         description = "Moves a piece according to the notation:\n${game.moveNotation}",
         requiredParameters = listOf(
@@ -265,8 +261,11 @@ class Move(val game: ChessGame) : SimpleTool<Move.Args>() {
             )
         )
     )
+) {
+    @Serializable
+    data class Args(val notation: String) : ToolArgs
 
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         game.move(args.notation)
         println(game.getBoard())
         println("-----------------")
@@ -280,7 +279,8 @@ The `Move` tool demonstrates the Koog framework's tool integration pattern:
 1. **Extends SimpleTool**: Inherits the basic tool functionality with type-safe argument handling
 2. **Serializable Arguments**: Uses Kotlin serialization to define the tool's input parameters
 3. **Rich Documentation**: The `ToolDescriptor` provides the LLM with detailed information about the tool's purpose and parameters
-4. **Execution Logic**: The `doExecute` method handles the actual move execution and provides formatted feedback
+4. **Constructor Parameters**: Passes `argsSerializer` and `descriptor` to the constructor
+5. **Execution Logic**: The `execute` method handles the actual move execution and provides formatted feedback
 
 Key design aspects:
 - **Context Injection**: The tool receives the `ChessGame` instance, allowing it to modify game state

@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -22,13 +21,12 @@ import kotlinx.serialization.json.jsonObject
  */
 public class McpTool(
     private val mcpClient: Client,
-    override val descriptor: ToolDescriptor,
-) : Tool<JsonObject, CallToolResult?>() {
-    override val name: String = descriptor.name
-    override val description: String = descriptor.description
-
-    override val argsSerializer: KSerializer<JsonObject> = JsonObject.serializer()
-    override val resultSerializer: KSerializer<CallToolResult?> = CallToolResult.serializer().nullable
+    descriptor: ToolDescriptor,
+) : Tool<JsonObject, CallToolResult?>(
+    argsSerializer = JsonObject.serializer(),
+    resultSerializer = CallToolResult.serializer().nullable,
+    descriptor = descriptor
+) {
 
     /**
      * Executes the MCP tool with the given arguments.

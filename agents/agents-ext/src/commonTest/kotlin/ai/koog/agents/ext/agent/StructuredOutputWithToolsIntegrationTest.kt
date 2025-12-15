@@ -13,7 +13,6 @@ import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,7 +38,11 @@ class StructuredOutputWithToolsIntegrationTest {
         val humidity: Int
     )
 
-    object GetTemperatureTool : SimpleTool<GetTemperatureTool.Args>() {
+    object GetTemperatureTool : SimpleTool<GetTemperatureTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_temperature",
+        description = "Get current temperature for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -48,16 +51,15 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_temperature"
-        override val description: String = "Get current temperature for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Temperature in ${args.city}, ${args.country}: 22°C"
     }
 
-    object GetWeatherConditionsTool : SimpleTool<GetWeatherConditionsTool.Args>() {
+    object GetWeatherConditionsTool : SimpleTool<GetWeatherConditionsTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_weather_conditions",
+        description = "Get current weather conditions for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -66,16 +68,15 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_weather_conditions"
-        override val description: String = "Get current weather conditions for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Weather conditions in ${args.city}, ${args.country}: Partly Cloudy"
     }
 
-    object GetWindSpeedTool : SimpleTool<GetWindSpeedTool.Args>() {
+    object GetWindSpeedTool : SimpleTool<GetWindSpeedTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_wind_speed",
+        description = "Get current wind speed for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -84,16 +85,15 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_wind_speed"
-        override val description: String = "Get current wind speed for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Wind speed in ${args.city}, ${args.country}: 15.5 km/h"
     }
 
-    object GetHumidityTool : SimpleTool<GetHumidityTool.Args>() {
+    object GetHumidityTool : SimpleTool<GetHumidityTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_humidity",
+        description = "Get current humidity for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -102,12 +102,7 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_humidity"
-        override val description: String = "Get current humidity for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Humidity in ${args.city}, ${args.country}: 65%"
     }
 

@@ -347,7 +347,7 @@ class DebuggerTest {
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                        toolDescription = dummyTool.description,
+                        toolDescription = dummyTool.descriptor.description,
                         result = dummyTool.encodeResult(dummyTool.result),
                         timestamp = AIAgentFeatureTestAPI.testClock.now().toEpochMilliseconds()
                     ),
@@ -364,7 +364,7 @@ class DebuggerTest {
                                 id = "0",
                                 tool = dummyTool.name,
                                 toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                                toolDescription = dummyTool.description,
+                                toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
                                 resultKind = ToolResultKind.Success,
                                 result = dummyTool.encodeResult(dummyTool.result)
@@ -381,7 +381,7 @@ class DebuggerTest {
                                 id = "0",
                                 tool = dummyTool.name,
                                 toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                                toolDescription = dummyTool.description,
+                                toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
                                 resultKind = ToolResultKind.Success,
                                 result = dummyTool.encodeResult(dummyTool.result)
@@ -414,7 +414,7 @@ class DebuggerTest {
                                 id = "0",
                                 tool = dummyTool.name,
                                 toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                                toolDescription = dummyTool.description,
+                                toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
                                 resultKind = ToolResultKind.Success,
                                 result = dummyTool.encodeResult(dummyTool.result)

@@ -48,7 +48,7 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.tool.call.id" to mockToolCallResponse.toolCallId,
                         "gen_ai.operation.name" to OperationNameType.EXECUTE_TOOL.id,
-                        "gen_ai.tool.description" to TestGetWeatherTool.description,
+                        "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                     ),
                     "events" to mapOf()
                 )
@@ -91,7 +91,7 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.tool.call.id" to mockToolCallResponse.toolCallId,
                         "gen_ai.operation.name" to OperationNameType.EXECUTE_TOOL.id,
-                        "gen_ai.tool.description" to TestGetWeatherTool.description,
+                        "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                     ),
                     "events" to mapOf()
                 )

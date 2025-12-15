@@ -2,16 +2,20 @@ package ai.koog.agents.core
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 object CalculatorTools {
 
     abstract class CalculatorTool(
-        override val name: String,
-        override val description: String,
-    ) : Tool<CalculatorTool.Args, CalculatorTool.Result>() {
+        name: String,
+        description: String,
+    ) : Tool<CalculatorTool.Args, CalculatorTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = name,
+        description = description
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("First number")
@@ -23,9 +27,6 @@ object CalculatorTools {
         @Serializable
         @JvmInline
         value class Result(val result: Float)
-
-        final override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
     }
 
     object PlusTool : CalculatorTool(

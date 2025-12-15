@@ -258,41 +258,41 @@ import ai.koog.prompt.dsl.prompt
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
-class WebSearchTool: SimpleTool<WebSearchTool.Args>() {
+class WebSearchTool: SimpleTool<WebSearchTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "web_search",
+    description = "Search on the web"
+) {
     @Serializable
     class Args(val query: String)
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val description = "Search on the web"
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         return "Searching for ${args.query} on the web..."
     }
 }
 
-class DoAction: SimpleTool<DoAction.Args>() {
+class DoAction: SimpleTool<DoAction.Args>(
+    argsSerializer = Args.serializer(),
+    name = "do_action",
+    description = "Do something"
+) {
     @Serializable
     class Args(val action: String)
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val description = "Do something"
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         return "Doing action..."
     }
 }
 
-class DoAnotherAction: SimpleTool<DoAnotherAction.Args>() {
+class DoAnotherAction: SimpleTool<DoAnotherAction.Args>(
+    argsSerializer = Args.serializer(),
+    name = "do_another_action",
+    description = "Do something other"
+) {
     @Serializable
     class Args(val action: String)
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val description = "Do something other"
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         return "Doing another action..."
     }
 }

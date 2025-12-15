@@ -149,171 +149,160 @@ class ToolDescriptorIntegrationTest {
         }
     }
 
-    abstract class TestTool<T, R> : Tool<T, R>() {
-        abstract val toolName: ToolName
-        override val name: String get() = toolName.value
+    abstract class TestTool<T, R>(
+        argsSerializer: KSerializer<T>,
+        resultSerializer: KSerializer<R>,
+        val toolName: ToolName,
+    ) : Tool<T, R>(
+        argsSerializer = argsSerializer,
+        resultSerializer = resultSerializer,
+        name = toolName.value,
+        description = toolName.value
+    ) {
         override fun toString(): String = toolName.displayName
     }
 
-    class IntToStringTool : TestTool<Int, String>() {
-        override val toolName = ToolName.INT_TO_STRING
-        override val argsSerializer: KSerializer<Int> = Int.serializer()
-        override val resultSerializer: KSerializer<String> = String.serializer()
-        override val description: String = "Converts an integer to its string representation"
-
+    class IntToStringTool : TestTool<Int, String>(
+        argsSerializer = Int.serializer(),
+        resultSerializer = String.serializer(),
+        toolName = ToolName.INT_TO_STRING,
+    ) {
         override suspend fun execute(args: Int): String = "Number: $args"
     }
 
-    class StringToIntTool : TestTool<String, Int>() {
-        override val toolName = ToolName.STRING_TO_INT
-        override val argsSerializer: KSerializer<String> = String.serializer()
-        override val resultSerializer: KSerializer<Int> = Int.serializer()
-        override val description: String = "Converts a string to an integer"
-
+    class StringToIntTool : TestTool<String, Int>(
+        argsSerializer = String.serializer(),
+        resultSerializer = Int.serializer(),
+        toolName = ToolName.STRING_TO_INT,
+    ) {
         override suspend fun execute(args: String): Int = args.length
     }
 
-    class IntToIntTool : TestTool<Int, Int>() {
-        override val toolName = ToolName.INT_TO_INT
-        override val argsSerializer: KSerializer<Int> = Int.serializer()
-        override val resultSerializer: KSerializer<Int> = Int.serializer()
-        override val description: String = "Doubles an integer value"
-
+    class IntToIntTool : TestTool<Int, Int>(
+        argsSerializer = Int.serializer(),
+        resultSerializer = Int.serializer(),
+        toolName = ToolName.INT_TO_INT,
+    ) {
         override suspend fun execute(args: Int): Int = args * 2
     }
 
-    class StringToStringTool : TestTool<String, String>() {
-        override val toolName = ToolName.STRING_TO_STRING
-        override val argsSerializer: KSerializer<String> = String.serializer()
-        override val resultSerializer: KSerializer<String> = String.serializer()
-        override val description: String = "Converts string to uppercase"
-
+    class StringToStringTool : TestTool<String, String>(
+        argsSerializer = String.serializer(),
+        resultSerializer = String.serializer(),
+        toolName = ToolName.STRING_TO_STRING,
+    ) {
         override suspend fun execute(args: String): String = args.uppercase()
     }
 
-    class BooleanToStringTool : TestTool<Boolean, String>() {
-        override val toolName = ToolName.BOOLEAN_TO_STRING
-        override val argsSerializer: KSerializer<Boolean> = Boolean.serializer()
-        override val resultSerializer: KSerializer<String> = String.serializer()
-        override val description: String = "Converts boolean to descriptive string"
-
+    class BooleanToStringTool : TestTool<Boolean, String>(
+        argsSerializer = Boolean.serializer(),
+        resultSerializer = String.serializer(),
+        toolName = ToolName.BOOLEAN_TO_STRING,
+    ) {
         override suspend fun execute(args: Boolean): String = if (args) "TRUE_VALUE" else "FALSE_VALUE"
     }
 
-    class DoubleToIntTool : TestTool<Double, Int>() {
-        override val toolName = ToolName.DOUBLE_TO_INT
-        override val argsSerializer: KSerializer<Double> = Double.serializer()
-        override val resultSerializer: KSerializer<Int> = Int.serializer()
-        override val description: String = "Converts double to integer by rounding"
-
+    class DoubleToIntTool : TestTool<Double, Int>(
+        argsSerializer = Double.serializer(),
+        resultSerializer = Int.serializer(),
+        toolName = ToolName.DOUBLE_TO_INT,
+    ) {
         override suspend fun execute(args: Double): Int = args.toInt()
     }
 
-    class LongToDoubleTool : TestTool<Long, Double>() {
-        override val toolName = ToolName.LONG_TO_DOUBLE
-        override val argsSerializer: KSerializer<Long> = Long.serializer()
-        override val resultSerializer: KSerializer<Double> = Double.serializer()
-        override val description: String = "Converts long to double with decimal places"
-
+    class LongToDoubleTool : TestTool<Long, Double>(
+        argsSerializer = Long.serializer(),
+        resultSerializer = Double.serializer(),
+        toolName = ToolName.LONG_TO_DOUBLE,
+    ) {
         override suspend fun execute(args: Long): Double = args + 0.5
     }
 
-    class FloatToBooleanTool : TestTool<Float, Boolean>() {
-        override val toolName = ToolName.FLOAT_TO_BOOLEAN
-        override val argsSerializer: KSerializer<Float> = Float.serializer()
-        override val resultSerializer: KSerializer<Boolean> = Boolean.serializer()
-        override val description: String = "Converts float to boolean (positive = true)"
-
+    class FloatToBooleanTool : TestTool<Float, Boolean>(
+        argsSerializer = Float.serializer(),
+        resultSerializer = Boolean.serializer(),
+        toolName = ToolName.FLOAT_TO_BOOLEAN,
+    ) {
         override suspend fun execute(args: Float): Boolean = args > 0f
     }
 
-    class StringToBooleanTool : TestTool<String, Boolean>() {
-        override val toolName = ToolName.STRING_TO_BOOLEAN
-        override val argsSerializer: KSerializer<String> = String.serializer()
-        override val resultSerializer: KSerializer<Boolean> = Boolean.serializer()
-        override val description: String = "Converts string to boolean ('true' = true, others = false)"
-
+    class StringToBooleanTool : TestTool<String, Boolean>(
+        argsSerializer = String.serializer(),
+        resultSerializer = Boolean.serializer(),
+        toolName = ToolName.STRING_TO_BOOLEAN,
+    ) {
         override suspend fun execute(args: String): Boolean = args.equals("true", ignoreCase = true)
     }
 
-    class IntToDoubleTool : TestTool<Int, Double>() {
-        override val toolName = ToolName.INT_TO_DOUBLE
-        override val argsSerializer: KSerializer<Int> = Int.serializer()
-        override val resultSerializer: KSerializer<Double> = Double.serializer()
-        override val description: String = "Converts integer to double"
-
+    class IntToDoubleTool : TestTool<Int, Double>(
+        argsSerializer = Int.serializer(),
+        resultSerializer = Double.serializer(),
+        toolName = ToolName.INT_TO_DOUBLE,
+    ) {
         override suspend fun execute(args: Int): Double = args.toDouble()
     }
 
-    class DoubleToLongTool : TestTool<Double, Long>() {
-        override val toolName = ToolName.DOUBLE_TO_LONG
-        override val argsSerializer: KSerializer<Double> = Double.serializer()
-        override val resultSerializer: KSerializer<Long> = Long.serializer()
-        override val description: String = "Converts double to long by rounding"
-
+    class DoubleToLongTool : TestTool<Double, Long>(
+        argsSerializer = Double.serializer(),
+        resultSerializer = Long.serializer(),
+        toolName = ToolName.DOUBLE_TO_LONG,
+    ) {
         override suspend fun execute(args: Double): Long = args.toLong()
     }
 
-    class BooleanToFloatTool : TestTool<Boolean, Float>() {
-        override val toolName = ToolName.BOOLEAN_TO_FLOAT
-        override val argsSerializer: KSerializer<Boolean> = Boolean.serializer()
-        override val resultSerializer: KSerializer<Float> = Float.serializer()
-        override val description: String = "Converts boolean to float (true = 1.0f, false = 0.0f)"
-
+    class BooleanToFloatTool : TestTool<Boolean, Float>(
+        argsSerializer = Boolean.serializer(),
+        resultSerializer = Float.serializer(),
+        toolName = ToolName.BOOLEAN_TO_FLOAT,
+    ) {
         override suspend fun execute(args: Boolean): Float = if (args) 1.0f else 0.0f
     }
 
-    class LongToIntTool : TestTool<Long, Int>() {
-        override val toolName = ToolName.LONG_TO_INT
-        override val argsSerializer: KSerializer<Long> = Long.serializer()
-        override val resultSerializer: KSerializer<Int> = Int.serializer()
-        override val description: String = "Converts long to integer"
-
+    class LongToIntTool : TestTool<Long, Int>(
+        argsSerializer = Long.serializer(),
+        resultSerializer = Int.serializer(),
+        toolName = ToolName.LONG_TO_INT,
+    ) {
         override suspend fun execute(args: Long): Int = args.toInt()
     }
 
-    class IntToLongTool : TestTool<Int, Long>() {
-        override val toolName = ToolName.INT_TO_LONG
-        override val argsSerializer: KSerializer<Int> = Int.serializer()
-        override val resultSerializer: KSerializer<Long> = Long.serializer()
-        override val description: String = "Converts integer to long"
-
+    class IntToLongTool : TestTool<Int, Long>(
+        argsSerializer = Int.serializer(),
+        resultSerializer = Long.serializer(),
+        toolName = ToolName.INT_TO_LONG,
+    ) {
         override suspend fun execute(args: Int): Long = args.toLong()
     }
 
-    class FloatToStringTool : TestTool<Float, String>() {
-        override val toolName = ToolName.FLOAT_TO_STRING
-        override val argsSerializer: KSerializer<Float> = Float.serializer()
-        override val resultSerializer: KSerializer<String> = String.serializer()
-        override val description: String = "Converts float to string"
-
+    class FloatToStringTool : TestTool<Float, String>(
+        argsSerializer = Float.serializer(),
+        resultSerializer = String.serializer(),
+        toolName = ToolName.FLOAT_TO_STRING,
+    ) {
         override suspend fun execute(args: Float): String = "Float: $args"
     }
 
-    class StringToFloatTool : TestTool<String, Float>() {
-        override val toolName = ToolName.STRING_TO_FLOAT
-        override val argsSerializer: KSerializer<String> = String.serializer()
-        override val resultSerializer: KSerializer<Float> = Float.serializer()
-        override val description: String = "Converts string length to float"
-
+    class StringToFloatTool : TestTool<String, Float>(
+        argsSerializer = String.serializer(),
+        resultSerializer = Float.serializer(),
+        toolName = ToolName.STRING_TO_FLOAT,
+    ) {
         override suspend fun execute(args: String): Float = args.length.toFloat()
     }
 
-    class DoubleToStringTool : TestTool<Double, String>() {
-        override val toolName = ToolName.DOUBLE_TO_STRING
-        override val argsSerializer: KSerializer<Double> = Double.serializer()
-        override val resultSerializer: KSerializer<String> = String.serializer()
-        override val description: String = "Converts double to string"
-
+    class DoubleToStringTool : TestTool<Double, String>(
+        argsSerializer = Double.serializer(),
+        resultSerializer = String.serializer(),
+        toolName = ToolName.DOUBLE_TO_STRING,
+    ) {
         override suspend fun execute(args: Double): String = "Double: $args"
     }
 
-    class StringToDoubleTool : TestTool<String, Double>() {
-        override val toolName = ToolName.STRING_TO_DOUBLE
-        override val argsSerializer: KSerializer<String> = String.serializer()
-        override val resultSerializer: KSerializer<Double> = Double.serializer()
-        override val description: String = "Converts string length to double"
-
+    class StringToDoubleTool : TestTool<String, Double>(
+        argsSerializer = String.serializer(),
+        resultSerializer = Double.serializer(),
+        toolName = ToolName.STRING_TO_DOUBLE,
+    ) {
         override suspend fun execute(args: String): Double = args.length.toDouble()
     }
 

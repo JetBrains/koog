@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonNull
@@ -466,33 +465,36 @@ class ToolParameterTypesTest {
     }
     // endregion
 
-    private object PrimitiveTypesTool : Tool<String, String>() {
-        override val argsSerializer = String.serializer()
-        override val resultSerializer = String.serializer()
-
-        override val name = "primitive_types_tool"
-        override val description = "Tool with primitive types parameter"
-
+    private object PrimitiveTypesTool : Tool<String, String>(
+        argsSerializer = String.serializer(),
+        resultSerializer = String.serializer(),
+        name = "primitive_types_tool",
+        description = "Tool with primitive types parameter",
+    ) {
         override suspend fun execute(args: String): String =
             "input: $args"
     }
 
-    private object ValueClassTool : Tool<ValueClassTool.Args, String>() {
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer = String.serializer()
-
+    private object ValueClassTool : Tool<ValueClassTool.Args, String>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = String.serializer(),
+        name = "value_class_tool",
+        description = "Tool with value class parameter",
+    ) {
         @Serializable
         @JvmInline
         value class Args(val value: String)
-
-        override val name = "value_class_tool"
-        override val description: String = "Tool with value class parameter"
 
         override suspend fun execute(args: Args): String =
             "input: ${args.value}"
     }
 
-    private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>() {
+    private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "nested_lists_tool",
+        description = "Tool with nested lists parameter",
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("A nested list of integers")
@@ -502,16 +504,15 @@ class ToolParameterTypesTest {
         @Serializable
         data class Result(val nestedList: List<List<Int>>)
 
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name = "nested_lists_tool"
-        override val description: String = "Tool with nested lists parameter"
-
         override suspend fun execute(args: Args): Result = Result(args.nestedList)
     }
 
-    private object ListOfEnumsTool : Tool<ListOfEnumsTool.Args, ListOfEnumsTool.Result>() {
+    private object ListOfEnumsTool : Tool<ListOfEnumsTool.Args, ListOfEnumsTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "list_of_enums_tool",
+        description = "Tool with list of enums parameter",
+    ) {
         @Serializable
         enum class Color { RED, GREEN, BLUE }
 
@@ -531,16 +532,15 @@ class ToolParameterTypesTest {
         @Serializable
         data class Result(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?)
 
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name = "list_of_enums_tool"
-        override val description: String = "Tool with list of enums parameter"
-
         override suspend fun execute(args: Args): Result = Result(args.colors, args.names, args.optional)
     }
 
-    private object ObjectTool : Tool<ObjectTool.Args, ObjectTool.Result>() {
+    private object ObjectTool : Tool<ObjectTool.Args, ObjectTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "object_tool",
+        description = "Tool with object parameter",
+    ) {
         @Serializable
         data class Address(
             @property:LLMDescription("Street address")
@@ -568,16 +568,15 @@ class ToolParameterTypesTest {
         @Serializable
         data class Result(val person: Person)
 
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name = "object_tool"
-        override val description: String = "Tool with object parameter"
-
         override suspend fun execute(args: Args): Result = Result(args.person)
     }
 
-    private object ListOfObjectsTool : Tool<ListOfObjectsTool.Args, ListOfObjectsTool.Result>() {
+    private object ListOfObjectsTool : Tool<ListOfObjectsTool.Args, ListOfObjectsTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "list_of_objects_tool",
+        description = "Tool with list of objects parameter",
+    ) {
         @Serializable
         data class Person(
             @property:LLMDescription("Person's name")
@@ -595,17 +594,16 @@ class ToolParameterTypesTest {
         @Serializable
         data class Result(val people: List<Person>)
 
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name = "list_of_objects_tool"
-        override val description: String = "Tool with list of objects parameter"
-
         override suspend fun execute(args: Args): Result = Result(args.people)
     }
 
     private object ObjectWithAdditionalPropertiesTool :
-        Tool<ObjectWithAdditionalPropertiesTool.Args, ObjectWithAdditionalPropertiesTool.Result>() {
+        Tool<ObjectWithAdditionalPropertiesTool.Args, ObjectWithAdditionalPropertiesTool.Result>(
+            argsSerializer = Args.serializer(),
+            resultSerializer = Result.serializer(),
+            name = "object_with_additional_properties_tool",
+            description = "Tool with object with additional properties parameter",
+        ) {
 
         @Serializable
         data class Config(
@@ -632,12 +630,6 @@ class ToolParameterTypesTest {
 
         @Serializable
         data class Result(val config: Config)
-
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name = "object_with_additional_properties_tool"
-        override val description: String = "Tool with object with additional properties parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.config)
     }

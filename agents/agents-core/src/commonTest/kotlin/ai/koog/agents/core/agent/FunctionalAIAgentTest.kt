@@ -24,7 +24,6 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlin.test.Test
@@ -272,28 +271,28 @@ class FunctionalAIAgentTest {
     data class SimpleOut(val value: String)
 
     object QATools {
-        object TestEngine : SimpleTool<Spacecraft>() {
-            override val argsSerializer: KSerializer<Spacecraft> = Spacecraft.serializer()
-
-            override val description: String = "Performs testing of the spacecraft engine."
-
-            override suspend fun doExecute(args: Spacecraft): String = "Engine is good"
+        object TestEngine : SimpleTool<Spacecraft>(
+            argsSerializer = Spacecraft.serializer(),
+            name = "test_engine",
+            description = "Performs testing of the spacecraft engine."
+        ) {
+            override suspend fun execute(args: Spacecraft): String = "Engine is good"
         }
 
-        object TestBody : SimpleTool<Spacecraft>() {
-            override val argsSerializer: KSerializer<Spacecraft> = Spacecraft.serializer()
-
-            override val description: String = "Performs testing of the spacecraft bofy."
-
-            override suspend fun doExecute(args: Spacecraft): String = "Body is good"
+        object TestBody : SimpleTool<Spacecraft>(
+            argsSerializer = Spacecraft.serializer(),
+            name = "test_body",
+            description = "Performs testing of the spacecraft bofy."
+        ) {
+            override suspend fun execute(args: Spacecraft): String = "Body is good"
         }
 
-        object TestBuild : SimpleTool<Spacecraft>() {
-            override val argsSerializer: KSerializer<Spacecraft> = Spacecraft.serializer()
-
-            override val description: String = "Tests how spacecraft is built."
-
-            override suspend fun doExecute(args: Spacecraft): String =
+        object TestBuild : SimpleTool<Spacecraft>(
+            argsSerializer = Spacecraft.serializer(),
+            name = "test_build",
+            description = "Tests how spacecraft is built."
+        ) {
+            override suspend fun execute(args: Spacecraft): String =
                 "Spacecraft is built badly... Engine is too big for the body"
         }
 
@@ -302,65 +301,81 @@ class FunctionalAIAgentTest {
 
     // Define sample tools for subtasks, similar in spirit to QATools so tool lists are not empty
     object ArchitectureTools {
-        object AnalyzeRequirements : SimpleTool<String>() {
-            override val argsSerializer: KSerializer<String> = String.serializer()
-            override val description: String = "Analyzes high-level mission requirements."
-            override suspend fun doExecute(args: String): String = "Requirements analyzed: $args"
+        object AnalyzeRequirements : SimpleTool<String>(
+            argsSerializer = String.serializer(),
+            name = "analyze_requirements",
+            description = "Analyzes high-level mission requirements."
+        ) {
+            override suspend fun execute(args: String): String = "Requirements analyzed: $args"
         }
 
-        object DraftArchitecture : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Drafts an initial spacecraft architecture proposal."
-            override suspend fun doExecute(args: Architecture): String = "Drafted architecture: ${'$'}{args.name}"
+        object DraftArchitecture : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "draft_architecture",
+            description = "Drafts an initial spacecraft architecture proposal."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Drafted architecture: ${'$'}{args.name}"
         }
 
         val tools: List<Tool<*, *>> = listOf(AnalyzeRequirements, DraftArchitecture)
     }
 
     object BuildEngineTools {
-        object EstimateThrust : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Estimates required thrust for the given architecture."
-            override suspend fun doExecute(args: Architecture): String = "Estimated thrust for ${'$'}{args.name}"
+        object EstimateThrust : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "estimate_thrust",
+            description = "Estimates required thrust for the given architecture."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Estimated thrust for ${'$'}{args.name}"
         }
 
-        object SelectFuelType : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Selects suitable fuel type based on mission profile and constraints."
-            override suspend fun doExecute(args: Architecture): String = "Fuel selected for ${'$'}{args.name}"
+        object SelectFuelType : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "select_fuel_type",
+            description = "Selects suitable fuel type based on mission profile and constraints."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Fuel selected for ${'$'}{args.name}"
         }
 
         val tools: List<Tool<*, *>> = listOf(EstimateThrust, SelectFuelType)
     }
 
     object BuildBodyTools {
-        object ComputeMassBudget : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Computes mass budget for the spacecraft body."
-            override suspend fun doExecute(args: Architecture): String = "Mass budget computed for ${'$'}{args.name}"
+        object ComputeMassBudget : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "compute_mass_budget",
+            description = "Computes mass budget for the spacecraft body."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Mass budget computed for ${'$'}{args.name}"
         }
 
-        object ChooseMaterial : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Chooses hull material given constraints."
-            override suspend fun doExecute(args: Architecture): String = "Material chosen for ${'$'}{args.name}"
+        object ChooseMaterial : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "choose_material",
+            description = "Chooses hull material given constraints."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Material chosen for ${'$'}{args.name}"
         }
 
         val tools: List<Tool<*, *>> = listOf(ComputeMassBudget, ChooseMaterial)
     }
 
     object AssemblyTools {
-        object CheckInterfaces : SimpleTool<Assembly>() {
-            override val argsSerializer: KSerializer<Assembly> = Assembly.serializer()
-            override val description: String = "Checks mechanical, power, and data interfaces between components."
-            override suspend fun doExecute(args: Assembly): String =
+        object CheckInterfaces : SimpleTool<Assembly>(
+            argsSerializer = Assembly.serializer(),
+            name = "check_interfaces",
+            description = "Checks mechanical, power, and data interfaces between components."
+        ) {
+            override suspend fun execute(args: Assembly): String =
                 "Interfaces check passed for engine ${'$'}{args.engine.name} and body ${'$'}{args.body.name}"
         }
 
-        object ComputeDryMass : SimpleTool<Assembly>() {
-            override val argsSerializer: KSerializer<Assembly> = Assembly.serializer()
-            override val description: String = "Computes total dry mass of the assembly."
-            override suspend fun doExecute(args: Assembly): String = "Dry mass: ${'$'}{args.totalDryMassKg} kg"
+        object ComputeDryMass : SimpleTool<Assembly>(
+            argsSerializer = Assembly.serializer(),
+            name = "compute_dry_mass",
+            description = "Computes total dry mass of the assembly."
+        ) {
+            override suspend fun execute(args: Assembly): String = "Dry mass: ${'$'}{args.totalDryMassKg} kg"
         }
 
         val tools: List<Tool<*, *>> = listOf(CheckInterfaces, ComputeDryMass)

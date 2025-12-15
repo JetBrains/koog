@@ -25,7 +25,6 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,40 +61,26 @@ class AIAgentLLMWriteSessionTest {
         }
     }
 
-    class TestTool : SimpleTool<TestTool.Args>() {
+    class TestTool : SimpleTool<TestTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "test-tool",
+        description = "A test tool"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Input parameter")
             val input: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "test-tool"
-        override val description: String = "A test tool"
-
-        override suspend fun doExecute(args: Args): String {
+        override suspend fun execute(args: Args): String {
             return "Processed: ${args.input}"
         }
     }
 
-    class CustomTool : Tool<CustomTool.Args, CustomTool.Result>() {
-        @Serializable
-        data class Args(val input: String)
-
-        @Serializable
-        data class Result(
-            @property:LLMDescription("Input parameter")
-            val output: String
-        )
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "custom-tool"
-        override val description: String = "A custom tool"
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
+    class CustomTool : Tool<CustomTool.Args, CustomTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        descriptor = ToolDescriptor(
             name = "custom-tool",
             description = "A custom tool",
             requiredParameters = listOf(
@@ -105,6 +90,15 @@ class AIAgentLLMWriteSessionTest {
                     type = ToolParameterType.String
                 )
             )
+        )
+    ) {
+        @Serializable
+        data class Args(val input: String)
+
+        @Serializable
+        data class Result(
+            @property:LLMDescription("Input parameter")
+            val output: String
         )
 
         override suspend fun execute(args: Args): Result {

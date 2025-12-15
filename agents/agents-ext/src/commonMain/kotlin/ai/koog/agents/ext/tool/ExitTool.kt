@@ -2,7 +2,6 @@ package ai.koog.agents.ext.tool
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -15,7 +14,11 @@ import kotlinx.serialization.Serializable
  *
  * The descriptor defines the tool's metadata including its name, description, and required parameters.
  */
-public object ExitTool : SimpleTool<ExitTool.Args>() {
+public object ExitTool : SimpleTool<ExitTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "__exit__",
+    description = "Service tool, used by the agent to end conversation on user request or agent decision"
+) {
     /**
      * Represents the arguments for the [ExitTool] tool
      *
@@ -27,13 +30,7 @@ public object ExitTool : SimpleTool<ExitTool.Args>() {
         val message: String
     )
 
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         return "DONE"
     }
-
-    override val argsSerializer: KSerializer<Args>
-        get() = Args.serializer()
-
-    override val name: String = "__exit__"
-    override val description: String = "Service tool, used by the agent to end conversation on user request or agent decision"
 }
