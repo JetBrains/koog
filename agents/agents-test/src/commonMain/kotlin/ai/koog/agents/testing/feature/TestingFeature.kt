@@ -1019,9 +1019,8 @@ public class Testing {
                         model = agent.agentConfig.model,
                         responseProcessor = agent.agentConfig.responseProcessor,
                         promptExecutor = ContextualPromptExecutor(
-                            agent.promptExecutor,
-                            pipeline,
-                            assertion.context.runId,
+                            executor = agent.promptExecutor,
+                            context = assertion.context,
                         ),
                         environment = environment,
                         config = agent.agentConfig,

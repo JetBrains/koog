@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature
 
-import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -22,14 +22,13 @@ import kotlin.uuid.Uuid
  * A wrapper around [ai.koog.prompt.executor.model.PromptExecutor] that allows for adding internal functionality to the executor
  * to catch and log events related to LLM calls.
  *
- * @property executor The [ai.koog.prompt.executor.model.PromptExecutor] to wrap.
- * @property pipeline The [ai.koog.agents.core.feature.pipeline.AIAgentPipeline] associated with the executor.
+ * @property executor The [ai.koog.prompt.executor.model.PromptExecutor] to wrap;
+ * @property context The [AIAgentContext] associated with the agent that is executing the prompt.
  */
 @OptIn(ExperimentalUuidApi::class)
 public class ContextualPromptExecutor(
     private val executor: PromptExecutor,
-    private val pipeline: AIAgentPipeline,
-    private val runId: String,
+    private val context: AIAgentContext,
 ) : PromptExecutor {
 
     private companion object {
@@ -38,13 +37,14 @@ public class ContextualPromptExecutor(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val callId = Uuid.random().toString()
+
         logger.debug { "Executing LLM call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        pipeline.onLLMCallStarting(runId, callId, prompt, model, tools)
+        context.pipeline.onLLMCallStarting(context.executionInfo, context.runId, callId, prompt, model, tools)
 
         val responses = executor.execute(prompt, model, tools)
 
         logger.trace { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
-        pipeline.onLLMCallCompleted(runId, callId, prompt, model, tools, responses)
+        context.pipeline.onLLMCallCompleted(context.executionInfo, context.runId, callId, prompt, model, tools, responses)
 
         return responses
     }
@@ -72,23 +72,24 @@ public class ContextualPromptExecutor(
         return executor.executeStreaming(prompt, model, tools)
             .onStart {
                 logger.debug { "Starting LLM streaming call" }
-                pipeline.onLLMStreamingStarting(runId, callId, prompt, model, tools)
+                context.pipeline.onLLMStreamingStarting(context.executionInfo, context.runId, callId, prompt, model, tools)
             }
             .onEach { frame ->
                 logger.debug { "Received frame from LLM streaming call: $frame" }
-                pipeline.onLLMStreamingFrameReceived(runId, callId, frame)
+                context.pipeline.onLLMStreamingFrameReceived(context.executionInfo, context.runId, callId, frame)
             }
             .catch { error ->
                 logger.debug(error) { "Error in LLM streaming call" }
-                pipeline.onLLMStreamingFailed(runId, callId, error)
+                context.pipeline.onLLMStreamingFailed(context.executionInfo, context.runId, callId, error)
                 throw error
             }
             .onCompletion { error ->
                 logger.debug(error) { "Finished LLM streaming call" }
-                pipeline.onLLMStreamingCompleted(runId, callId, prompt, model, tools)
+                context.pipeline.onLLMStreamingCompleted(context.executionInfo, context.runId, callId, prompt, model, tools)
             }
     }
 
+    // TODO: Add Pipeline interceptors for this method
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
@@ -99,8 +100,7 @@ public class ContextualPromptExecutor(
         val responses = executor.executeMultipleChoices(prompt, model, tools)
 
         logger.debug {
-            val messageBuilder = StringBuilder()
-                .appendLine("Finished LLM call with LLM Choice response:")
+            val messageBuilder = StringBuilder().appendLine("Finished LLM call with LLM Choice response:")
 
             responses.forEachIndexed { index, response ->
                 messageBuilder.appendLine("- Response #$index")
@@ -122,12 +122,13 @@ public class ContextualPromptExecutor(
         logger.debug { "Executing moderation LLM request (prompt: $prompt)" }
         val callId = Uuid.random().toString()
 
-        pipeline.onLLMCallStarting(runId, callId, prompt, model, emptyList())
+        context.pipeline.onLLMCallStarting(context.executionInfo, context.runId, callId, prompt, model, tools = emptyList())
 
         val result = executor.moderate(prompt, model)
         logger.trace { "Finished moderation LLM request with response: $result" }
 
-        pipeline.onLLMCallCompleted(runId, callId, prompt, model, emptyList(), responses = emptyList(), moderationResponse = result)
+        context.pipeline.onLLMCallCompleted(context.executionInfo, context.runId, callId, prompt, model, tools = emptyList(), responses = emptyList(), moderationResponse = result)
+
         return result
     }
 

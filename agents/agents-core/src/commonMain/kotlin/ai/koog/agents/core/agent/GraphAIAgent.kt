@@ -99,57 +99,60 @@ public open class GraphAIAgent<Input, Output>(
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
-        val agentExecutionInfo = AgentExecutionInfo(parent = null, partName = id)
-        val runExecutionInfo = AgentExecutionInfo(parent = agentExecutionInfo, partName = runId)
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
+        val initialEnvironment = prepareAgentEnvironment(executionInfo = executionInfo)
 
-        val preparedEnvironment = prepareAgentEnvironment()
+        // Initial
+        val initialLLMContext = AIAgentLLMContext(
+            tools = toolRegistry.tools.map { it.descriptor },
+            toolRegistry = toolRegistry,
+            prompt = agentConfig.prompt,
+            model = agentConfig.model,
+            responseProcessor = agentConfig.responseProcessor,
+            promptExecutor = promptExecutor,
+            environment = initialEnvironment,
+            config = agentConfig,
+            clock = clock
+        )
 
-        val context = AIAgentGraphContext(
-            environment = preparedEnvironment,
+        val agentContext = AIAgentGraphContext(
+            environment = initialEnvironment,
             agentId = id,
             agentInput = agentInput,
             agentInputType = inputType,
             config = agentConfig,
-            llm = AIAgentLLMContext(
-                tools = toolRegistry.tools.map { it.descriptor },
-                toolRegistry = toolRegistry,
-                prompt = agentConfig.prompt,
-                model = agentConfig.model,
-                responseProcessor = agentConfig.responseProcessor,
-                promptExecutor = ContextualPromptExecutor(
-                    executor = promptExecutor,
-                    pipeline = pipeline,
-                    runId = runId
-                ),
-                environment = preparedEnvironment,
-                config = agentConfig,
-                clock = clock
-            ),
+            llm = initialLLMContext,
             stateManager = stateManager,
             storage = storage,
             runId = runId,
             strategyName = strategy.name,
             pipeline = pipeline,
-            executionInfo = runExecutionInfo,
+            executionInfo = executionInfo,
             parentContext = null,
         )
 
-        // Update Environment
         val contextualEnvironment = ContextualAgentEnvironment(
-            environment = preparedEnvironment,
-            context = context,
+            environment = initialEnvironment,
+            context = agentContext,
         )
 
-        val updatedLLMContext = context.llm.copy(
-            environment = contextualEnvironment
+        val contextualPromptExecutor = ContextualPromptExecutor(
+            executor = promptExecutor,
+            context = agentContext,
         )
 
-        // Update the environment and llm with a created context instance
-        return context.copy(
-            parentContext = context.parentContext,
+        val updatedLLMContext = agentContext.llm.copy(
+            environment = contextualEnvironment,
+            promptExecutor = contextualPromptExecutor,
+        )
+
+        agentContext.replace(agentContext.copy(
+            executionInfo = executionInfo,
             llm = updatedLLMContext,
-            environment = contextualEnvironment
-        )
+            environment = contextualEnvironment,
+        ))
+
+        return agentContext
     }
 
     /**
@@ -162,7 +165,7 @@ public open class GraphAIAgent<Input, Output>(
      * @return An instance of `AIAgentEnvironment` that represents the finalized environment
      *         for the AI agent after applying all transformations.
      */
-    private suspend fun prepareAgentEnvironment(): AIAgentEnvironment {
+    private suspend fun prepareAgentEnvironment(executionInfo: AgentExecutionInfo): AIAgentEnvironment {
         // Create a base environment implementation
         val environment = GenericAgentEnvironment(
             agentId = id,
@@ -172,7 +175,8 @@ public open class GraphAIAgent<Input, Output>(
 
         val preparedEnvironment = pipeline.onAgentEnvironmentTransforming(
             agent = this,
-            baseEnvironment = environment
+            baseEnvironment = environment,
+            executionInfo = executionInfo,
         )
 
         return preparedEnvironment

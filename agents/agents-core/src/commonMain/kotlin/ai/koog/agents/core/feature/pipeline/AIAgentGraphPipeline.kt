@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
@@ -70,24 +71,27 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     /**
      * Notifies all registered node handlers before a node is executed.
      *
+     * @param executionInfo The execution information for the agent environment transformation event
      * @param node The node that is about to be executed
      * @param context The agent context in which the node is being executed
      * @param input The input data for the node execution
      * @param inputType The type of the input data provided to the node
      */
     public suspend fun onNodeExecutionStarting(
+        executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType
     ) {
-        val eventContext = NodeExecutionStartingContext(node, context, input, inputType)
+        val eventContext = NodeExecutionStartingContext(executionInfo, node, context, input, inputType)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionStartingHandler.handle(eventContext) }
     }
 
     /**
      * Notifies all registered node handlers after a node has been executed.
      *
+     * @param executionInfo The execution information for the agent environment transformation event
      * @param node The node that was executed
      * @param context The agent context in which the node was executed
      * @param input The input data that was provided to the node
@@ -96,6 +100,7 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * @param outputType The type of the output data produced by the node execution
      */
     public suspend fun onNodeExecutionCompleted(
+        executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
@@ -103,13 +108,14 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
         output: Any?,
         outputType: KType,
     ) {
-        val eventContext = NodeExecutionCompletedContext(node, context, input, inputType, output, outputType)
+        val eventContext = NodeExecutionCompletedContext(executionInfo, node, context, input, inputType, output, outputType)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionCompletedHandler.handle(eventContext) }
     }
 
     /**
      * Handles errors occurring during the execution of a node by invoking all registered node execution error handlers.
      *
+     * @param executionInfo The execution information for the agent environment transformation event
      * @param node The instance of the node where the error occurred.
      * @param context The context associated with the AI agent executing the node.
      * @param input The input data provided to the node.
@@ -117,13 +123,14 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * @param throwable The exception or error that occurred during node execution.
      */
     public suspend fun onNodeExecutionFailed(
+        executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType,
         throwable: Throwable
     ) {
-        val eventContext = NodeExecutionFailedContext(node, context, input, inputType, throwable)
+        val eventContext = NodeExecutionFailedContext(executionInfo, node, context, input, inputType, throwable)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionFailedHandler.handle(eventContext) }
     }
 
@@ -134,24 +141,27 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     /**
      * Notifies all registered subgraph handlers before a subgraph is executed.
      *
+     * @param executionInfo The execution information for the agent environment transformation event
      * @param subgraph The subgraph that is about to be executed.
      * @param context The agent context in which the subgraph is being executed.
      * @param input The input data for the subgraph execution.
      * @param inputType The type of the input data provided to the subgraph.
      */
     public suspend fun onSubgraphExecutionStarting(
+        executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType
     ) {
-        val eventContext = SubgraphExecutionStartingContext(subgraph, context, input, inputType)
+        val eventContext = SubgraphExecutionStartingContext(executionInfo, subgraph, context, input, inputType)
         executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionStartingHandler.handle(eventContext) }
     }
 
     /**
      * Notifies all registered subgraph handlers after a subgraph has been executed.
      *
+     * @param executionInfo The execution information for the agent environment transformation event
      * @param subgraph The subgraph that was executed.
      * @param context The agent context in which the subgraph was executed.
      * @param input The input data provided to the subgraph.
@@ -160,6 +170,7 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * @param outputType The type of the output data produced by the subgraph execution.
      */
     public suspend fun onSubgraphExecutionCompleted(
+        executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
@@ -167,13 +178,14 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
         output: Any?,
         outputType: KType,
     ) {
-        val eventContext = SubgraphExecutionCompletedContext(subgraph, context, input, output, inputType, outputType)
+        val eventContext = SubgraphExecutionCompletedContext(executionInfo, subgraph, context, input, output, inputType, outputType)
         executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionCompletedHandler.handle(eventContext) }
     }
 
     /**
      * Notifies all registered subgraph handlers when a subgraph execution fails.
      *
+     * @param executionInfo The execution information for the agent environment transformation event
      * @param subgraph The subgraph for which the execution failed.
      * @param context The agent context in which the subgraph execution occurred.
      * @param input The input data that was provided to the subgraph when it failed.
@@ -181,13 +193,14 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * @param throwable The exception or error that caused the subgraph execution to fail.
      */
     public suspend fun onSubgraphExecutionFailed(
+        executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType,
         throwable: Throwable
     ) {
-        val eventContext = SubgraphExecutionFailedContext(subgraph, context, input, inputType, throwable)
+        val eventContext = SubgraphExecutionFailedContext(executionInfo, subgraph, context, input, inputType, throwable)
         executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionFailedHandler.handle(eventContext) }
     }
 

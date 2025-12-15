@@ -78,7 +78,7 @@ public interface AIAgentContext {
      * This variable provides synchronized access to the agent's state to ensure thread safety
      * and consistent state transitions during concurrent operations. It acts as a central
      * mechanism for managing state updates and validations across different
-     * nodes and subgraphes of the AI agent's execution flow.
+     * nodes and subgraphs of the AI agent's execution flow.
      *
      * The [stateManager] is utilized extensively in coordinating state changes, such as
      * tracking the number of iterations made by the agent and enforcing execution limits
@@ -192,3 +192,35 @@ public inline fun <reified TFeature : Any> AIAgentContext.feature(feature: AIAge
  */
 public inline fun <reified TFeature : Any> AIAgentContext.featureOrThrow(feature: AIAgentFeature<*, TFeature>): TFeature =
     feature(feature) ?: throw NoSuchElementException("Feature ${feature.key} is not found.")
+
+/**
+ * Executes a block of code with a modified execution context.
+ *
+ * @param T The return type of the block being executed.
+ * @param executionInfo The execution info to be set for the context.
+ * @param block The suspend function to execute with the modified execution context.
+ * @return The result of executing the provided block.
+ */
+public inline fun <T> AIAgentContext.with(executionInfo: AgentExecutionInfo, block: (executionInfo: AgentExecutionInfo) -> T): T {
+    val originalExecutionInfo = this.executionInfo
+    return try {
+        this.executionInfo = executionInfo
+        block(executionInfo)
+    } finally {
+        this.executionInfo = originalExecutionInfo
+    }
+}
+
+/**
+ * Executes a block of code with a modified execution context, creating a parent-child relationship
+ * between execution contexts for tracing purposes.
+ *
+ * @param T The return type of the block being executed.
+ * @param partName The name of the execution part to append to the execution path.
+ * @param block The suspend function to execute with the modified execution context.
+ * @return The result of executing the provided block.
+ */
+public inline fun <T> AIAgentContext.with(partName: String, block: (executionInfo: AgentExecutionInfo) -> T): T {
+    val executionInfo = AgentExecutionInfo(parent = this.executionInfo, partName = partName)
+    return with(executionInfo = executionInfo, block = block)
+}
