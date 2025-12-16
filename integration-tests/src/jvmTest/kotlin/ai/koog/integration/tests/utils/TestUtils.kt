@@ -7,7 +7,6 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeEmpty
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -38,8 +37,7 @@ object TestUtils {
     fun assertResponseContainsToolCall(response: List<Message>, toolName: String) {
         with(response) {
             shouldNotBeEmpty()
-            shouldForAny { it is Message.Tool.Call }
-            toolName shouldBe (first { it is Message.Tool.Call } as Message.Tool.Call).tool
+            shouldForAny { (it is Message.Tool.Call) && it.tool == toolName }
         }
     }
 
@@ -70,8 +68,9 @@ object TestUtils {
     fun assertResponseContainsReasoningWithEncryption(response: List<Message>) {
         with(response) {
             shouldNotBeEmpty()
-            shouldForAny { it is Message.Reasoning }
-            with(first { it is Message.Reasoning } as Message.Reasoning) {
+            val reasoningMessage = firstOrNull { it is Message.Reasoning } as? Message.Reasoning
+            reasoningMessage.shouldNotBeNull()
+            with(reasoningMessage) {
                 content.shouldNotBeEmpty()
                 encrypted
                     .shouldNotBeNull()

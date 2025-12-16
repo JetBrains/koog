@@ -129,8 +129,8 @@ abstract class ExecutorIntegrationTestBase {
 
             is LLMProvider.OpenAI -> OpenAIResponsesParams(
                 reasoning = ReasoningConfig(
-                    effort = ReasoningEffort.HIGH,
-                    summary = ReasoningSummary.DETAILED
+                    effort = ReasoningEffort.MEDIUM,
+                    summary = ReasoningSummary.AUTO
                 ),
                 include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
                 maxTokens = 256
@@ -1118,7 +1118,8 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testReasoningMultiStep_Turn2[${model.id}]") {
             val response2 = client.execute(prompt2, model)
             response2.shouldNotBeEmpty()
-            val answer = response2.firstOrNull { it is Message.Assistant || it is Message.Reasoning }?.content
+            val answer = response2.filter { it is Message.Assistant || it is Message.Reasoning }
+                .joinToString("") { it.content }
             answer.shouldContain("20")
         }
     }
