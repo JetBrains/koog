@@ -50,8 +50,7 @@ Koog lets you work with LLM providers on two levels:
 
 * Using a **prompt executor** for a higher-level abstraction that wraps one or multiple LLM clients,
   manages their lifecycles, and unifies an interface across providers.
-  It can optionally fall back to a single LLM client if a specific provider is unavailable.
-  Prompt executors also handle failures, retries, and switching between providers.
+  It can switch between providers and fall back to a single LLM client.
   You can either create your own executor or use a pre-defined prompt executor for a specific provider.
   For details, see [Running prompts with prompt executors](prompts/prompt-api.md#running-prompts-with-prompt-executors).
 
