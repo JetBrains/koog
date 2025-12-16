@@ -50,16 +50,18 @@ object TestUtils {
         false
     }
 
-    fun assertResponseContainsReasoning(response: List<Message>) {
+    fun assertResponseContainsReasoning(response: List<Message>, checkMetaInfo: Boolean = true) {
         with(response) {
             shouldNotBeEmpty()
             shouldForAny { it is Message.Reasoning }
             with(first { it is Message.Reasoning } as Message.Reasoning) {
                 content.shouldNotBeEmpty()
-                with(metaInfo) {
-                    inputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
-                    outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
-                    totalTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                if (checkMetaInfo) {
+                    metaInfo.shouldNotBeNull {
+                        inputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                        outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                        totalTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                    }
                 }
             }
         }

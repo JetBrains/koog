@@ -192,7 +192,7 @@ public open class GoogleLLMClient(
                         outputTokensCount = it.candidatesTokenCount,
                     )
                 }
-                response.candidates.firstOrNull()?.let { candidate ->
+                response.candidates?.firstOrNull()?.let { candidate ->
                     candidate.content?.parts?.forEach { part ->
                         when (part) {
                             is GooglePart.FunctionCall -> emitToolCall(
@@ -202,6 +202,7 @@ public open class GoogleLLMClient(
                             )
 
                             is GooglePart.Text -> emitAppend(part.text)
+
                             else -> Unit
                         }
                     }
@@ -267,7 +268,7 @@ public open class GoogleLLMClient(
         }.let { response ->
 
             // https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175/219
-            if (response.candidates.isNotEmpty() && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
+            if (response.candidates?.isNotEmpty() == true && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
                 logger.warn { "Content `parts` field is missing in the response from GoogleAI API: $response" }
             }
 
@@ -425,8 +426,11 @@ public open class GoogleLLMClient(
 
         val functionCallingConfig = when (val toolChoice = googleParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
+
             LLMParams.ToolChoice.None -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.NONE)
+
             LLMParams.ToolChoice.Required -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.ANY)
+
             is LLMParams.ToolChoice.Named -> {
                 GoogleFunctionCallingConfig(
                     GoogleFunctionCallingMode.ANY,
@@ -461,6 +465,7 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -476,6 +481,7 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported audio attachment content: ${content::class}"
                             )
@@ -491,6 +497,7 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported file attachment content: ${content::class}"
                             )
@@ -506,6 +513,7 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported video attachment content: ${content::class}"
                             )
@@ -532,9 +540,13 @@ public open class GoogleLLMClient(
         fun JsonObjectBuilder.putType(type: ToolParameterType) {
             when (type) {
                 ToolParameterType.Boolean -> put("type", "boolean")
+
                 ToolParameterType.Float -> put("type", "number")
+
                 ToolParameterType.Integer -> put("type", "integer")
+
                 ToolParameterType.String -> put("type", "string")
+
                 ToolParameterType.Null -> put("type", "null")
 
                 is ToolParameterType.Enum -> {
@@ -671,6 +683,7 @@ public open class GoogleLLMClient(
         return when {
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
@@ -679,6 +692,7 @@ public open class GoogleLLMClient(
                     metaInfo = metaInfo
                 )
             )
+
             // Just return responses
             else -> responses
         }
@@ -691,7 +705,7 @@ public open class GoogleLLMClient(
      * @return A list of choices, where each choice is a list of response messages
      */
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
-        if (response.candidates.isEmpty()) {
+        if (response.candidates?.isEmpty() ?: true) {
             logger.error { "Empty candidates in Google API response" }
             throw LLMClientException(clientName, "Empty candidates in Google API response")
         }

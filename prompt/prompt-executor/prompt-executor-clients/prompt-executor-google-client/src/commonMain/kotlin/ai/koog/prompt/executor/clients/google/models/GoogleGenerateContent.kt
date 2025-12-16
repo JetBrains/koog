@@ -1,5 +1,8 @@
 package ai.koog.prompt.executor.clients.google.models
 
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode.ANY
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode.AUTO
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode.NONE
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
@@ -405,7 +408,7 @@ internal enum class GoogleFunctionCallingMode {
  */
 @Serializable
 internal class GoogleResponse(
-    val candidates: List<GoogleCandidate>,
+    val candidates: List<GoogleCandidate>? = null,
     val promptFeedback: GooglePromptFeedback? = null,
     val usageMetadata: GoogleUsageMetadata? = null,
     val modelVersion: String? = null,

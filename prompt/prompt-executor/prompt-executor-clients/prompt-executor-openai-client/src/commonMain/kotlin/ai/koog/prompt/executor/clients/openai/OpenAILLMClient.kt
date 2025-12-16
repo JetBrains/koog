@@ -366,7 +366,25 @@ public open class OpenAILLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = super.executeMultipleChoices(prompt, model, tools)
+    ): List<LLMChoice> = selectExecutionStrategy(prompt, model) { params ->
+        when (params) {
+            is OpenAIChatParams -> super.executeMultipleChoices(prompt, model, tools)
+
+            is OpenAIResponsesParams -> {
+                // Responses API does not currently expose a native "n" parameter,
+                // so we issue multiple independent responses and aggregate them.
+                // This path is required for models like gpt-5.1-codex that only
+                // support the Responses endpoint and return 404 on Chat Completions.
+                val choices = (params.numberOfChoices ?: 1).coerceAtLeast(1)
+                buildList {
+                    repeat(choices) {
+                        val response = getResponseWithResponsesAPI(prompt, params, model, tools)
+                        add(processResponsesAPIResponse(response))
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Embeds the given text using the OpenAI embeddings API.
@@ -777,11 +795,14 @@ public open class OpenAILLMClient(
                         metaInfo = metaInfo
                     )
 
-                    is Item.OutputMessage -> Message.Assistant(
-                        content = output.text(),
-                        finishReason = output.status?.name,
-                        metaInfo = metaInfo
-                    )
+                    is Item.OutputMessage -> {
+                        val text = output.text().ifBlank { response.outputText.orEmpty() }
+                        Message.Assistant(
+                            content = text,
+                            finishReason = output.status?.name,
+                            metaInfo = metaInfo
+                        )
+                    }
 
                     is Item.Reasoning -> Message.Reasoning(
                         id = output.id,
@@ -803,7 +824,9 @@ public open class OpenAILLMClient(
     }
 
     internal fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
-        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
+        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams()
+
+        // TODO: create a separate Azure Client
         params is OpenAIResponsesParams -> {
             model.requireCapability(
                 LLMCapability.OpenAIEndpoint.Responses,
@@ -821,7 +844,9 @@ public open class OpenAILLMClient(
         }
 
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
+
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
+
         else -> throw LLMClientException(clientName, "Cannot determine proper LLM params for OpenAI model: ${model.id}")
     }
 

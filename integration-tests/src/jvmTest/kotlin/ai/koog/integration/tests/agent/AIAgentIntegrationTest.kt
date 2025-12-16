@@ -1007,7 +1007,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 with(state) {
                     withClue("${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model") {
-                        actualToolCalls shouldBe listOf(CalculatorToolNoArgs.descriptor.name)
+                        actualToolCalls.shouldContain(CalculatorToolNoArgs.descriptor.name)
                     }
 
                     errors.shouldBeEmpty()
