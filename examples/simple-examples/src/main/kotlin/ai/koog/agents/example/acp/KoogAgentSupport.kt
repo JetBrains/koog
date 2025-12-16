@@ -4,16 +4,17 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTool
+import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.acp.AcpAgent
+import ai.koog.agents.features.acp.toKoogMessage
+import ai.koog.agents.features.acp.withAcpAgent
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.message.ContentPart
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.RequestMetaInfo
 import com.agentclientprotocol.agent.AgentInfo
 import com.agentclientprotocol.agent.AgentSession
 import com.agentclientprotocol.agent.AgentSupport
@@ -25,6 +26,7 @@ import com.agentclientprotocol.model.ContentBlock
 import com.agentclientprotocol.model.LATEST_PROTOCOL_VERSION
 import com.agentclientprotocol.model.PromptCapabilities
 import com.agentclientprotocol.model.SessionId
+import com.agentclientprotocol.model.SessionUpdate
 import com.agentclientprotocol.protocol.Protocol
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Deferred
@@ -38,6 +40,7 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
 /**
  * Represents a session for managing the lifecycle and interaction with a Koog AI agent that uses the ACP protocol.
  *
@@ -66,20 +69,21 @@ class KoogAgentSession(
         val agentConfig = AIAgentConfig(
             prompt = prompt("acp") {
                 system("You are agent.")
-           }.appendPrompt(content),
+            }.appendPrompt(content),
             model = OpenAIModels.Chat.GPT4o,
             maxAgentIterations = 1000
         )
 
         val toolRegistry = ToolRegistry {
-            tool(::listFiles.asTool())
+            tool(::listDirectory.asTool())
+            tool(::createFile.asTool())
         }
 
         agentMutex.withLock {
             val agent = AIAgent<Unit, Unit>(
                 promptExecutor = promptExecutor,
                 agentConfig = agentConfig,
-                strategy = sampleStrategy(),
+                strategy = koogStrategy(),
                 toolRegistry = toolRegistry,
             ) {
                 install(AcpAgent) {
@@ -100,24 +104,36 @@ class KoogAgentSession(
         agentJob?.cancelAndJoin()
     }
 
-    private fun sampleStrategy() = strategy<Unit, Unit>("acp-agent") {
-        edge(nodeStart forwardTo nodeFinish)
+    private fun koogStrategy() = strategy<Unit, Unit>("acp-agent") {
+        val nodePlanPrompt by node<Unit, String>("plan") {
+            "You have a task! Crate a plan for it."
+        }
+        val nodeCreatePlan by nodeLLMRequestStructured<KoogPlan>()
+
+        val nodeSendPlan by node<KoogPlan, Unit> { plan ->
+            withAcpAgent {
+                sendEvent(
+                    Event.SessionUpdateEvent(
+                        SessionUpdate.PlanUpdate(plan.toAcpPlan().entries)
+                    )
+                )
+            }
+        }
+
+        val executePlan by subgraphWithTask<Unit, Unit> {
+            "Execute the plan using provided tools."
+        }
+
+        edge(nodeStart forwardTo nodePlanPrompt)
+        edge(nodePlanPrompt forwardTo nodeCreatePlan)
+        edge(nodeCreatePlan forwardTo nodeSendPlan onCondition { it.isSuccess } transformed { it.getOrThrow().data })
+        edge(nodeSendPlan forwardTo executePlan)
+        edge(executePlan forwardTo nodeFinish)
     }
 
     private fun Prompt.appendPrompt(content: List<ContentBlock>): Prompt {
         return withMessages { messages ->
-            messages + listOf(
-                // TODO move to converters
-                Message.User(
-                    parts = content.mapNotNull {
-                        when (it) {
-                            is ContentBlock.Text -> ContentPart.Text(it.text)
-                            else -> null // TODO: implement
-                        }
-                    },
-                    metaInfo = RequestMetaInfo(clock.now())
-                )
-            )
+            messages + listOf(content.toKoogMessage(clock))
         }
     }
 }

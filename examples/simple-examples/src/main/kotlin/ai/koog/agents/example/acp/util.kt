@@ -29,11 +29,11 @@ fun SessionUpdate.render() {
         }
 
         is SessionUpdate.ToolCall -> {
-            println("Tool call started: ${this.title} (${this.kind})")
+            println("Tool call started: ${this.title} ${this.status} ${this.rawInput} ${this.rawOutput}")
         }
 
         is SessionUpdate.ToolCallUpdate -> {
-            println("Tool call updated: ${this.title} (${this.kind})")
+            println("Tool call update: ${this.title} ${this.status} ${this.rawInput} ${this.rawOutput}")
         }
 
         is SessionUpdate.UserMessageChunk -> {

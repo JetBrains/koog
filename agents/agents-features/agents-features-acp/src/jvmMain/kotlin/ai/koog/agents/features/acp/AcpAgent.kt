@@ -11,10 +11,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.prompt.message.ContentPart
-import ai.koog.prompt.message.Message
 import com.agentclientprotocol.common.Event
-import com.agentclientprotocol.model.ContentBlock
 import com.agentclientprotocol.model.PromptResponse
 import com.agentclientprotocol.model.SessionId
 import com.agentclientprotocol.model.SessionUpdate
@@ -29,14 +26,14 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 /**
- * AcpAgent is the main class for interacting with the Agent Client Protocol.
+ * [AcpAgent] is the main class for interacting with the Agent Client Protocol.
+ * https://agentclientprotocol.com/
+ * This feature allows sending requests and notifications to the ACP Client via [sendEvent] or [protocol]
+ * Notification can be handled automatically by default and can be configured via [AcpConfig.setDefaultNotifications]
  *
  * @property sessionId The session ID of the ACP agent.
  * @property protocol The protocol instance to use for sending requests and notifications to ACP Client.
  * @param eventsProducer A coroutine-based producer scope for sending [Event] instances.
- *
- * This feature allows sending requests and notifications to the ACP Client via [sendEvent] or [protocol]
- * Notification can be handled automatically by default and can be configured via [AcpConfig.setDefaultNotifications]
  */
 public class AcpAgent(
     public val sessionId: SessionId,
@@ -45,7 +42,6 @@ public class AcpAgent(
 ) {
     /**
      * Configuration for the ACP Agent feature.
-     * @property setDefaultNotifications
      */
     public class AcpConfig : FeatureConfig() {
         /**
@@ -72,6 +68,8 @@ public class AcpAgent(
 
     /**
      * Sends [Event] to the connected ACP client.
+     *
+     * @param event The event to send.
      */
     public suspend fun sendEvent(event: Event) {
         eventsProducer.send(event)
@@ -177,8 +175,7 @@ public class AcpAgent(
             }
 
             pipeline.interceptAgentExecutionFailed(this@Feature) { ctx ->
-                // TODO: Analyze the exception and emit appropriate event
-                when (val thr = ctx.throwable) {
+                when (ctx.throwable) {
                     is AIAgentMaxNumberOfIterationsReachedException -> {
                         logger.debug { "Emitting PromptResponseEvent with StopReason.MAX_TURN_REQUESTS" }
                         sendEvent(
@@ -205,52 +202,9 @@ public class AcpAgent(
 
             pipeline.interceptLLMCallCompleted(this@Feature) { ctx ->
                 ctx.responses.forEach {
-                    when (it) {
-                        is Message.Assistant -> {
-                            it.parts.forEach { part ->
-                                when (part) {
-                                    is ContentPart.Text -> {
-                                        logger.debug { "Emitting SessionUpdateEvent for Assistant message chunk" }
-                                        sendEvent(
-                                            Event.SessionUpdateEvent(
-                                                update = SessionUpdate.AgentMessageChunk(
-                                                    content = ContentBlock.Text(part.text)
-                                                )
-                                            )
-                                        )
-                                    }
-
-                                    else -> TODO("Implement other content parts")
-                                }
-                            }
-                        }
-
-                        is Message.Reasoning -> {
-                            logger.debug { "Emitting AgentThoughtChunk event for Reasoning message chunk" }
-                            sendEvent(
-                                Event.SessionUpdateEvent(
-                                    update = SessionUpdate.AgentThoughtChunk(
-                                        content = ContentBlock.Text(it.content)
-                                    )
-                                )
-                            )
-                        }
-
-                        is Message.Tool.Call -> {
-                            logger.debug { "Emitting SessionUpdateEvent for ToolCall" }
-                            sendEvent(
-                                Event.SessionUpdateEvent(
-                                    update = SessionUpdate.ToolCall(
-                                        toolCallId = ToolCallId(it.id ?: "unknown"),
-                                        // TODO: Support tool description in the event
-                                        title = it.tool,
-                                        // TODO: Support kind for tools
-                                        status = ToolCallStatus.PENDING,
-                                        rawInput = it.contentJson,
-                                    )
-                                )
-                            )
-                        }
+                    it.toAcpEvents().forEach { event ->
+                        logger.debug { "Emitting event $event for LLM Call Completed" }
+                        sendEvent(event)
                     }
                 }
             }
@@ -308,7 +262,7 @@ public class AcpAgent(
 /**
  * Retrieves the [AcpAgent] feature from the agent context.
  *
- * @return The installed
+ * @return The installed [AcpAgent] feature
  * @throws IllegalStateException if the feature is not installed
  */
 public fun AIAgentContext.acpAgent(): AcpAgent = featureOrThrow(AcpAgent.Feature)
