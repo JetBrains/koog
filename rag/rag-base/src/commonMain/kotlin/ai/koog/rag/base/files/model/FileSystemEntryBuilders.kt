@@ -1,8 +1,5 @@
-package ai.koog.agents.ext.tool.file.model
+package ai.koog.rag.base.files.model
 
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry.File
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry.File.Content
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry.Folder
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.readText
@@ -20,16 +17,16 @@ public suspend fun <Path> buildFileEntry(
     fs: FileSystemProvider.ReadOnly<Path>,
     path: Path,
     metadata: FileMetadata
-): File {
+): FileSystemEntry.File {
     val type = fs.getFileContentType(path)
-    return File(
+    return FileSystemEntry.File(
         name = fs.name(path),
         extension = fs.extension(path),
         path = fs.toAbsolutePathString(path),
         hidden = metadata.hidden,
         size = buildFileSize(fs, path, type),
         contentType = type,
-        content = Content.None,
+        content = FileSystemEntry.File.Content.None,
     )
 }
 
@@ -48,8 +45,8 @@ public fun <Path> buildFolderEntry(
     path: Path,
     metadata: FileMetadata,
     entries: List<FileSystemEntry>?
-): Folder {
-    return Folder(
+): FileSystemEntry.Folder {
+    return FileSystemEntry.Folder(
         name = fs.name(path),
         path = fs.toAbsolutePathString(path),
         hidden = metadata.hidden,

@@ -1,11 +1,10 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry.File
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry.File.Content
-import ai.koog.agents.ext.tool.file.model.buildFileSize
 import ai.koog.rag.base.files.DocumentProvider
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.rag.base.files.model.buildFileSize
 import ai.koog.rag.base.files.readText
 
 /**
@@ -35,8 +34,8 @@ internal suspend fun <Path> buildTextFileEntry(
     startLine: Int,
     endLine: Int,
     onEndLineExceedsFileLength: ((endLine: Int, fileLineCount: Int) -> Unit)? = null
-): File {
-    return File(
+): FileSystemEntry.File {
+    return FileSystemEntry.File(
         name = fs.name(path),
         extension = fs.extension(path),
         path = fs.toAbsolutePathString(path),
@@ -52,7 +51,7 @@ private fun buildContent(
     startLine: Int,
     endLine: Int,
     onEndLineExceedsFileLength: ((requestedEndLine: Int, fileLineCount: Int) -> Unit)?
-): Content {
+): FileSystemEntry.File.Content {
     val lineCount = content.lineSequence().count()
 
     require(startLine >= 0) { "startLine=$startLine must be >= 0" }
@@ -68,7 +67,7 @@ private fun buildContent(
     }
 
     if (startLine == 0 && clampedEndLine == lineCount) {
-        return Content.Text(content)
+        return FileSystemEntry.File.Content.Text(content)
     }
 
     val range = DocumentProvider.DocumentRange(
@@ -76,9 +75,9 @@ private fun buildContent(
         DocumentProvider.Position(clampedEndLine, 0)
     )
 
-    return Content.Excerpt(
+    return FileSystemEntry.File.Content.Excerpt(
         listOf(
-            Content.Excerpt.Snippet(
+            FileSystemEntry.File.Content.Excerpt.Snippet(
                 text = range.substring(content),
                 range = range,
             )

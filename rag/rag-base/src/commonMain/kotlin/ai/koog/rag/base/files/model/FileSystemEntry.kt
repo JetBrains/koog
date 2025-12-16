@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.tool.file.model
+package ai.koog.rag.base.files.model
 
 import ai.koog.rag.base.files.DocumentProvider
 import ai.koog.rag.base.files.FileMetadata
