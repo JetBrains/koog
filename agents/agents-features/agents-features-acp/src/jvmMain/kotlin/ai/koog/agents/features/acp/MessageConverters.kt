@@ -13,11 +13,12 @@ import com.agentclientprotocol.model.ToolCallId
 import com.agentclientprotocol.model.ToolCallStatus
 import kotlinx.datetime.Clock
 
-private const val UNKNOWN_FORMAT = "unknown"
-private const val UNKNOWN_MIME_TYPE = "unknown/unknown"
-private const val UNKNOWN_URI = "unknown"
-private const val UNKNOWN_FILE_NAME = "unknown"
-private const val UNKNOWN_TOOL_CALL_ID = "unknown"
+public const val UNKNOWN_FORMAT: String = "unknown"
+public const val UNKNOWN_MIME_TYPE: String = "unknown/unknown"
+public const val UNKNOWN_URI: String = "unknown"
+public const val UNKNOWN_FILE_NAME: String = "unknown"
+public const val UNKNOWN_TOOL_CALL_ID: String = "unknown"
+public const val UNKNOWN_TOOL_DESCRIPTION: String = "unknown"
 
 private fun parseFormat(mimeType: String?): String {
     return mimeType?.split("/")?.lastOrNull() ?: UNKNOWN_FORMAT

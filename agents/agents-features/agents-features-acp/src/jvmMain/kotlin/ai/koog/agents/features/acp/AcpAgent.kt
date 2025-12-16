@@ -214,11 +214,11 @@ public class AcpAgent(
                 sendEvent(
                     Event.SessionUpdateEvent(
                         update = SessionUpdate.ToolCall(
-                            toolCallId = ToolCallId(ctx.toolCallId ?: "unknown"),
-                            title = ctx.tool.description,
+                            toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
+                            title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.IN_PROGRESS,
-                            rawInput = ctx.tool.encodeArgsUnsafe(ctx.toolArgs),
+                            rawInput = ctx.toolArgs,
                         )
                     )
                 )
@@ -229,28 +229,27 @@ public class AcpAgent(
                 sendEvent(
                     Event.SessionUpdateEvent(
                         update = SessionUpdate.ToolCall(
-                            toolCallId = ToolCallId(ctx.toolCallId ?: "unknown"),
-                            title = ctx.tool.description,
+                            toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
+                            title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.FAILED,
-                            rawInput = ctx.tool.encodeArgsUnsafe(ctx.toolArgs),
+                            rawInput = ctx.toolArgs,
                         )
                     )
                 )
             }
 
-            @OptIn(InternalAgentToolsApi::class)
-            pipeline.interceptToolCallCompleted(this@Feature) { ctx ->
+            @OptIn(InternalAgentToolsApi::class) pipeline.interceptToolCallCompleted(this@Feature) { ctx ->
                 logger.debug { "Emitting SessionUpdateEvent for ToolCall Completed" }
                 sendEvent(
                     Event.SessionUpdateEvent(
                         update = SessionUpdate.ToolCall(
-                            toolCallId = ToolCallId(ctx.toolCallId ?: "unknown"),
-                            title = ctx.tool.description,
+                            toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
+                            title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.COMPLETED,
-                            rawInput = ctx.tool.encodeArgsUnsafe(ctx.toolArgs),
-                            rawOutput = ctx.tool.encodeResultUnsafe(ctx.result)
+                            rawInput = ctx.toolArgs,
+                            rawOutput = ctx.toolResult
                         )
                     )
                 )
