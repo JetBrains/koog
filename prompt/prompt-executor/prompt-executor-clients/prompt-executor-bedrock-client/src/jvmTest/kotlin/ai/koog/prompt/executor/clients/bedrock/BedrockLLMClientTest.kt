@@ -37,11 +37,15 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import kotlin.random.Random.Default.nextInt
+import kotlin.random.Random.Default.nextLong
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -49,6 +53,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 
 class BedrockLLMClientTest {
     @Test
@@ -159,15 +164,22 @@ class BedrockLLMClientTest {
 
     @Test
     fun `client configuration options work correctly`() {
+        // given
+        val requestTimeoutMillis = nextLong(1000, 2000)
+        val connectTimeoutMillis = nextLong(100, 200)
+        val socketTimeoutMillis = nextLong(200, 300)
+        val maxRetries = nextInt(5, 10)
+
+        // when
         val customSettings = BedrockClientSettings(
             region = BedrockRegions.EU_WEST_1.regionCode,
             endpointUrl = "https://custom.endpoint.com",
-            maxRetries = 5,
+            maxRetries = maxRetries,
             enableLogging = true,
             timeoutConfig = ConnectionTimeoutConfig(
-                requestTimeoutMillis = 120_000,
-                connectTimeoutMillis = 10_000,
-                socketTimeoutMillis = 120_000
+                requestTimeoutMillis = requestTimeoutMillis,
+                connectTimeoutMillis = connectTimeoutMillis,
+                socketTimeoutMillis = socketTimeoutMillis
             )
         )
 
@@ -180,11 +192,21 @@ class BedrockLLMClientTest {
             clock = Clock.System
         )
 
-        assertNotNull(client)
-        assertEquals(BedrockRegions.EU_WEST_1.regionCode, customSettings.region)
-        assertEquals("https://custom.endpoint.com", customSettings.endpointUrl)
-        assertEquals(5, customSettings.maxRetries)
-        assertEquals(true, customSettings.enableLogging)
+        // then
+        client shouldNotBeNull {
+            bedrockClient.config shouldNotBeNull {
+                callTimeout shouldBe requestTimeoutMillis.milliseconds
+                endpointUrl.toString() shouldBe "https://custom.endpoint.com"
+                region shouldBe BedrockRegions.EU_WEST_1.regionCode
+                retryStrategy.config.maxAttempts shouldBe maxRetries
+
+                httpClient.config shouldNotBeNull {
+                    socketReadTimeout.inWholeMilliseconds shouldBe socketTimeoutMillis
+                    socketWriteTimeout.inWholeMilliseconds shouldBe socketTimeoutMillis
+                    connectTimeout.inWholeMilliseconds shouldBe connectTimeoutMillis
+                }
+            }
+        }
     }
 
     @Test
@@ -271,7 +293,10 @@ class BedrockLLMClientTest {
             override suspend fun converse(input: ConverseRequest): ConverseResponse =
                 throw UnsupportedOperationException("converse not implemented in mock client")
 
-            override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T =
+            override suspend fun <T> converseStream(
+                input: ConverseStreamRequest,
+                block: suspend (ConverseStreamResponse) -> T
+            ): T =
                 throw UnsupportedOperationException("converseStream not implemented in mock client")
 
             override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
@@ -280,10 +305,16 @@ class BedrockLLMClientTest {
             override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse =
                 throw UnsupportedOperationException("invokeModel not implemented in mock client")
 
-            override suspend fun <T> invokeModelWithBidirectionalStream(input: InvokeModelWithBidirectionalStreamRequest, block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T): T =
+            override suspend fun <T> invokeModelWithBidirectionalStream(
+                input: InvokeModelWithBidirectionalStreamRequest,
+                block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T
+            ): T =
                 throw UnsupportedOperationException("invokeModelWithBidirectionalStream not implemented in mock client")
 
-            override suspend fun <T> invokeModelWithResponseStream(input: InvokeModelWithResponseStreamRequest, block: suspend (InvokeModelWithResponseStreamResponse) -> T): T =
+            override suspend fun <T> invokeModelWithResponseStream(
+                input: InvokeModelWithResponseStreamRequest,
+                block: suspend (InvokeModelWithResponseStreamResponse) -> T
+            ): T =
                 throw UnsupportedOperationException("invokeModelWithResponseStream not implemented in mock client")
 
             override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse =
@@ -402,7 +433,11 @@ class BedrockLLMClientTest {
 
             client.moderate(prompt, model)
 
-            assertEquals(2, applyGuardrailCallCount, "Should call applyGuardrail exactly twice for prompts with both Request and Response")
+            assertEquals(
+                2,
+                applyGuardrailCallCount,
+                "Should call applyGuardrail exactly twice for prompts with both Request and Response"
+            )
         } finally {
             client.close()
         }
@@ -434,7 +469,11 @@ class BedrockLLMClientTest {
 
             client.moderate(prompt, model)
 
-            assertEquals(1, applyGuardrailCallCount, "Should call applyGuardrail exactly once for Response-only prompts")
+            assertEquals(
+                1,
+                applyGuardrailCallCount,
+                "Should call applyGuardrail exactly once for Response-only prompts"
+            )
         } finally {
             client.close()
         }
@@ -458,7 +497,10 @@ class BedrockLLMClientTest {
             override suspend fun converse(input: ConverseRequest): ConverseResponse =
                 throw UnsupportedOperationException("converse not implemented in mock client")
 
-            override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T =
+            override suspend fun <T> converseStream(
+                input: ConverseStreamRequest,
+                block: suspend (ConverseStreamResponse) -> T
+            ): T =
                 throw UnsupportedOperationException("converseStream not implemented in mock client")
 
             override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
@@ -467,10 +509,16 @@ class BedrockLLMClientTest {
             override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse =
                 throw UnsupportedOperationException("invokeModel not implemented in mock client")
 
-            override suspend fun <T> invokeModelWithBidirectionalStream(input: InvokeModelWithBidirectionalStreamRequest, block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T): T =
+            override suspend fun <T> invokeModelWithBidirectionalStream(
+                input: InvokeModelWithBidirectionalStreamRequest,
+                block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T
+            ): T =
                 throw UnsupportedOperationException("invokeModelWithBidirectionalStream not implemented in mock client")
 
-            override suspend fun <T> invokeModelWithResponseStream(input: InvokeModelWithResponseStreamRequest, block: suspend (InvokeModelWithResponseStreamResponse) -> T): T =
+            override suspend fun <T> invokeModelWithResponseStream(
+                input: InvokeModelWithResponseStreamRequest,
+                block: suspend (InvokeModelWithResponseStreamResponse) -> T
+            ): T =
                 throw UnsupportedOperationException("invokeModelWithResponseStream not implemented in mock client")
 
             override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse =
