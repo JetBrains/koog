@@ -1,7 +1,6 @@
 package ai.koog.agents.examples.codeagent.step01
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.file.EditFileTool
@@ -32,7 +31,7 @@ val agent = AIAgent(
     handleEvents {
         onToolCallStarting { ctx ->
             println(
-                "Tool '${ctx.tool.name}' called with args:" +
+                "Tool '${ctx.toolName}' called with args:" +
                     " ${ctx.toolArgs.toString().take(100)}"
             )
         }

@@ -52,7 +52,7 @@ val agent = AIAgent(
     }
     handleEvents {
         onToolCallStarting { ctx ->
-            println("Tool '${ctx.tool.name}' called with args: ${ctx.toolArgs.toString().take(100)}")
+            println("Tool '${ctx.toolName}' called with args: ${ctx.toolArgs.toString().take(100)}")
         }
     }
 }
