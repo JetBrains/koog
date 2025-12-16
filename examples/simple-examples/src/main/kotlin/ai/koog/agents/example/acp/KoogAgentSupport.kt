@@ -77,6 +77,7 @@ class KoogAgentSession(
         val toolRegistry = ToolRegistry {
             tool(::listDirectory.asTool())
             tool(::createFile.asTool())
+            tool(::readFile.asTool())
         }
 
         agentMutex.withLock {

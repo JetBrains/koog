@@ -104,7 +104,7 @@ Important notes:
 * Use `channelFlow` to allow sending events from different corutines
 * Set `this.setDefaultNotifications = true` to automatically handle standard ACP notifications using agent pipeline
   interseption. In case manual notification handling, please set `this.setDefaultNotifications = false` and process all
-  the agents events accoring to the spesificaion using vai protocal `AcpAgent` feature.
+  the agents events accoring to the spesificaion using vai protocol `AcpAgent` feature.
 * To convert ACP content blocks to Koog messages use `toKoogMessage` extension function and append recieved user message
   to the prompt.
 * Run the agent in a separate coroutine to allow canceling in `AgentSession.cancel` method
