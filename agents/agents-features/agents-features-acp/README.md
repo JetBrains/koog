@@ -1,3 +1,0 @@
-# ACP support
-
-## Overview

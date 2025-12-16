@@ -12,9 +12,9 @@ pluginManagement {
 include(":agents:agents-core")
 include(":agents:agents-ext")
 
+include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
-include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-opentelemetry")
 include(":agents:agents-features:agents-features-sql")
 include(":agents:agents-features:agents-features-trace")
@@ -23,7 +23,6 @@ include(":agents:agents-features:agents-features-snapshot")
 include(":agents:agents-features:agents-features-a2a-core")
 include(":agents:agents-features:agents-features-a2a-server")
 include(":agents:agents-features:agents-features-a2a-client")
-include("agents:agents-features:agents-features-acp")
 
 include(":agents:agents-mcp")
 include(":agents:agents-mcp-server")
