@@ -26,14 +26,11 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         resultSerializer = Result.serializer(),
         name = "__list_directory__",
         description = """
-            Lists files and subdirectories in a directory. READ-ONLY - never modifies anything.
-
-            Use this to:
-            - See what files exist before reading or creating
-            - Understand project structure
-            - Find specific files with patterns
-
-            Returns a tree showing all contents with sizes and metadata.
+            Lists directory contents with optional pattern-based file search. READ-ONLY.
+            Use to:
+            - Explore: see what files/folders exist
+            - Search: find files by pattern (use filter + higher depth)
+            Returns a tree with file paths, sizes, and line counts.
         """.trimIndent()
     ) {
 
@@ -46,11 +43,15 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      */
     @Serializable
     public data class Args(
-        @property:LLMDescription("Absolute path to the directory you want to list (e.g., /home/user/project)")
+        @property:LLMDescription("Absolute path to the directory to list (e.g. /home/user/project). Don't use relative path like '.'")
         val path: String,
-        @property:LLMDescription("How many levels deep to go. 1 = only direct contents, 2 = include subdirectories, etc. Default is 1")
+        @property:LLMDescription("Directory levels to traverse. 1 = immediate contents only (default), 2 = include subdirectories, etc. When searching with ** glob patterns, use 5-10 to reach deeply nested files.")
         val depth: Int = 1,
-        @property:LLMDescription("Glob pattern to match files/folders. Examples: '*.txt' for text files, '**/*.kt' for all Kotlin files at any depth")
+        @property:LLMDescription("""
+            Glob pattern for finding files (case-insensitive). Output shows matching files with their paths; paths without matches are omitted.
+            Pattern sees each file's path from the listed directory, so 'src/**/*.kt' finds Kotlin files under src/.
+            Glob: * (in segment), ** (across segments, limited by depth), ?, {a,b}.
+            """)
         val filter: String? = null
     )
 
