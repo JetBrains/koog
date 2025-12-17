@@ -172,7 +172,7 @@ public open class GoogleLLMClient(
             "Model ${model.id} does not support chat completions"
         }
 
-        val request = createGoogleRequest(prompt, model, emptyList())
+        val request = createGoogleRequest(prompt, model, tools)
 
         try {
             httpClient.sse(

@@ -89,7 +89,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Base64
+import java.util.*
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
@@ -1117,6 +1117,59 @@ abstract class ExecutorIntegrationTestBase {
             response2.shouldNotBeEmpty()
             val answer = response2.filterIsInstance<Message.Assistant>().first().content
             answer.shouldContain("20")
+        }
+    }
+
+    open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val executor = getExecutor(model)
+
+        val prompt = Prompt.build("test-streaming", LLMParams(toolChoice = ToolChoice.Required)) {
+            system("You are a helpful assistant.")
+            user("Count three times five")
+        }
+
+        withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
+            with(StringBuilder()) {
+                val endMessages = mutableListOf<StreamFrame.End>()
+                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+
+                executor.executeStreamAndCollect(
+                    prompt = prompt,
+                    model = model,
+                    tools = listOf(SimpleCalculatorTool.descriptor),
+                    appendable = this,
+                    endMessages = endMessages,
+                    toolMessages = toolMessages
+                )
+
+                toolMessages.shouldNotBeEmpty()
+                withClue("Expected calculator tool call but got: [$toolMessages]") {
+                    toolMessages.any {
+                        it.name == SimpleCalculatorTool.name &&
+                            it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
+                    } shouldBe true
+                }
+            }
+        }
+    }
+
+    private suspend fun PromptExecutor.executeStreamAndCollect(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        appendable: StringBuilder,
+        endMessages: MutableList<StreamFrame.End>,
+        toolMessages: MutableList<StreamFrame.ToolCall>
+    ) {
+        executeStreaming(prompt, model, tools).collect { frame ->
+            when (frame) {
+                is StreamFrame.Append -> appendable.append(frame.text)
+                is StreamFrame.ToolCall -> toolMessages.add(frame)
+                is StreamFrame.End -> endMessages.add(frame)
+            }
         }
     }
 }

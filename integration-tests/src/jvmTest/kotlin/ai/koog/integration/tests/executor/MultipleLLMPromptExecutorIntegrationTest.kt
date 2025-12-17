@@ -123,6 +123,12 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
+    override fun integration_testExecuteStreamingWithTools(model: LLModel) {
+        super.integration_testExecuteStreamingWithTools(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
     override fun integration_testToolWithRequiredParams(model: LLModel) {
         super.integration_testToolWithRequiredParams(model)
     }
