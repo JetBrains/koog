@@ -1171,23 +1171,6 @@ abstract class ExecutorIntegrationTestBase {
             }
         }
     }
-
-    private suspend fun PromptExecutor.executeStreamAndCollect(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        appendable: StringBuilder,
-        endMessages: MutableList<StreamFrame.End>,
-        toolMessages: MutableList<StreamFrame.ToolCall>
-    ) {
-        executeStreaming(prompt, model, tools).collect { frame ->
-            when (frame) {
-                is StreamFrame.Append -> appendable.append(frame.text)
-                is StreamFrame.ToolCall -> toolMessages.add(frame)
-                is StreamFrame.End -> endMessages.add(frame)
-            }
-        }
-    }
 }
 
 private suspend fun PromptExecutor.executeStreamAndCollect(
