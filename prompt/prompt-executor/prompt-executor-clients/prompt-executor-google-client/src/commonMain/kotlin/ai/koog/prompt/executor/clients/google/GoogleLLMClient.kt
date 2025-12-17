@@ -365,24 +365,28 @@ public open class GoogleLLMClient(
         }
         flushCalls()
 
-        val googleTools = tools.map { tool ->
-            val properties =
-                (tool.requiredParameters + tool.optionalParameters).associate { it.name to buildGoogleParamType(it) }
-            GoogleFunctionDeclaration(
-                name = tool.name,
-                description = tool.description,
-                parameters = buildJsonObject {
-                    put("type", "object")
-                    put("properties", JsonObject(properties))
-                    putJsonArray("required") {
-                        addAll(tool.requiredParameters.map { JsonPrimitive(it.name) })
+        val googleTools = tools
+            .map { tool ->
+                val properties = (tool.requiredParameters + tool.optionalParameters)
+                    .associate { it.name to buildGoogleParamType(it) }
+                GoogleFunctionDeclaration(
+                    name = tool.name,
+                    description = tool.description,
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        put("properties", JsonObject(properties))
+                        putJsonArray("required") {
+                            addAll(tool.requiredParameters.map { JsonPrimitive(it.name) })
+                        }
                     }
-                }
-            )
-        }.takeIf { it.isNotEmpty() }
+                )
+            }
+            .takeIf { it.isNotEmpty() }
             ?.let { declarations -> listOf(GoogleTool(functionDeclarations = declarations)) }
 
-        val googleSystemInstruction = systemMessageParts.takeIf { it.isNotEmpty() }?.let { GoogleContent(parts = it) }
+        val googleSystemInstruction = systemMessageParts
+            .takeIf { it.isNotEmpty() }
+            ?.let { GoogleContent(parts = it) }
 
         val googleParams = prompt.params.toGoogleParams()
 
@@ -702,6 +706,7 @@ public open class GoogleLLMClient(
      */
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
         if (response.candidates.isEmpty()) {
+            logger.error { "Empty candidates in Google API response" }
             throw LLMClientException(clientName, "Empty candidates in Google API response")
         }
 
