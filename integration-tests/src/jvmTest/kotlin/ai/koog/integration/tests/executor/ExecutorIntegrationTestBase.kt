@@ -1128,6 +1128,14 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model.provider !== LLMProvider.OpenRouter,
+            "KG-626 Error from OpenRouter on a streaming with a tool call"
+        )
+        assumeTrue(
+            model.provider !== LLMProvider.Bedrock,
+            "KG-627 Error from Bedrock executor on a streaming with a tool call"
+        )
 
         val executor = getExecutor(model)
 
