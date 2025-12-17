@@ -776,10 +776,7 @@ public open class OpenAILLMClient(
                         add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = part.fileName))
                     }
 
-                    else -> throw LLMClientException(
-                        clientName,
-                        "Unsupported attachment type: $part, for model: $model with Responses API"
-                    )
+                    else -> throw LLMClientException(clientName, "Unsupported attachment type: $part, for model: $model with Responses API")
                 }
             }
         }
@@ -821,10 +818,7 @@ public open class OpenAILLMClient(
                         metaInfo = metaInfo
                     )
 
-                    else -> throw LLMClientException(
-                        clientName,
-                        "Unexpected response from $clientName: no tool calls and no content"
-                    )
+                    else -> throw LLMClientException(clientName, "Unexpected response from $clientName: no tool calls and no content")
                 }
             }
     }
@@ -837,9 +831,7 @@ public open class OpenAILLMClient(
     }
 
     internal fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
-        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams()
-
-        // TODO: create a separate Azure Client
+        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
         params is OpenAIResponsesParams -> {
             model.requireCapability(
                 LLMCapability.OpenAIEndpoint.Responses,
@@ -857,9 +849,7 @@ public open class OpenAILLMClient(
         }
 
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
-
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
-
         else -> throw LLMClientException(clientName, "Cannot determine proper LLM params for OpenAI model: ${model.id}")
     }
 
