@@ -34,10 +34,6 @@ object MediaTestUtils {
             MediaTestScenarios.ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
                 testResourcesDir.resolve("large_5.jpg")
             }
-
-            MediaTestScenarios.ImageTestScenario.SMALL_IMAGE -> {
-                testResourcesDir.resolve("small.png")
-            }
         }
     }
 

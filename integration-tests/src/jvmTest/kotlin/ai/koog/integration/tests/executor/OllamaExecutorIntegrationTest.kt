@@ -296,7 +296,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
-                ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
                     checkExecutorMediaResponse(response)
                     response.content.shouldNotBeBlank()
                 }

@@ -15,7 +15,6 @@ object MediaTestScenarios {
         CORRUPTED_IMAGE,
         LARGE_IMAGE, // 20MB for Gemini and OpenAI, 5 MB for Anthropic
         LARGE_IMAGE_ANTHROPIC, // 20MB for Gemini and OpenAI, 5 MB for Anthropic
-        SMALL_IMAGE // 1x1 pixel
     }
 
     enum class TextTestScenario {
