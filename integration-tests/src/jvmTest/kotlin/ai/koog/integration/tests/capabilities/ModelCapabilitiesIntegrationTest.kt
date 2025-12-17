@@ -206,10 +206,10 @@ class ModelCapabilitiesIntegrationTest {
 
                 LLMCapability.Document -> {
                     // TODO KG-620 GPT-5.1-Codex fails to process the text input file
-                    if (model == OpenAIModels.Chat.GPT5_1Codex) {
-                        assumeTrue(false, "Skipping document capability test for ${model.id}, see KG-620")
-                        return@runTest
-                    }
+                    assumeTrue(
+                        model != OpenAIModels.Chat.GPT5_1Codex,
+                        "Skipping document capability test for ${model.id}, see KG-620"
+                    )
 
                     val file = createTextFileForScenario(
                         MediaTestScenarios.TextTestScenario.BASIC_TEXT,
