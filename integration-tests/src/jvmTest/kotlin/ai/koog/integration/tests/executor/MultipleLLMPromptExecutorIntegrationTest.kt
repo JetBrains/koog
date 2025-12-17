@@ -10,7 +10,6 @@ import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -112,13 +111,6 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("allCompletionModels")
     override fun integration_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
-    }
-
-    @Disabled("KG-616")
-    @ParameterizedTest
-    @MethodSource("allCompletionModels")
-    override fun integration_testExecuteStreamingWithTools(model: LLModel) {
-        super.integration_testExecuteStreamingWithTools(model)
     }
 
     @ParameterizedTest
