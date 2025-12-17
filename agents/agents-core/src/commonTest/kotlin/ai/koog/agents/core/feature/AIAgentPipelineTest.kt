@@ -97,15 +97,13 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(NodeExecutionCompleted::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput)",
-            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput, output: $agentInput)",
-            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, dummyNodeName)}, name: $dummyNodeName, input: kotlin.Unit)",
-            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, dummyNodeName)}, name: $dummyNodeName, input: kotlin.Unit, output: kotlin.Unit)",
-            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, FINISH_NODE_PREFIX)}, name: $FINISH_NODE_PREFIX, input: $agentResult)",
-            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, FINISH_NODE_PREFIX)}, name: $FINISH_NODE_PREFIX, input: $agentResult, output: $agentResult)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput, output: $agentInput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, dummyNodeName)}, name: $dummyNodeName, input: kotlin.Unit)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, dummyNodeName)}, name: $dummyNodeName, input: kotlin.Unit, output: kotlin.Unit)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, FINISH_NODE_PREFIX)}, name: $FINISH_NODE_PREFIX, input: $agentResult)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, FINISH_NODE_PREFIX)}, name: $FINISH_NODE_PREFIX, input: $agentResult, output: $agentResult)",
         )
 
         assertEquals(
@@ -155,13 +153,11 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(NodeExecutionCompleted::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput)",
-            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput, output: $agentInput)",
-            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeName)}, name: $nodeName, input: $agentInput)",
-            "${NodeExecutionFailed::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeName)}, name: $nodeName, error: $testErrorMessage)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput, output: $agentInput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeName)}, name: $nodeName, input: $agentInput)",
+            "${NodeExecutionFailed::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeName)}, name: $nodeName, error: $testErrorMessage)",
         )
 
         assertEquals(
@@ -211,12 +207,10 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(NodeExecutionCompleted::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput)",
-            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput, output: $agentInput)",
-            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeWithErrorName)}, name: $nodeWithErrorName, input: $agentInput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput, output: $agentInput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeWithErrorName)}, name: $nodeWithErrorName, input: $agentInput)",
         )
 
         assertEquals(
@@ -265,11 +259,9 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(SubgraphExecutionFailed::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${SubgraphExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, subgraphName)}, name: $subgraphName, input: $agentInput)",
-            "${SubgraphExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, subgraphName)}, name: $subgraphName, input: $agentInput, output: $subgraphOutput)",
+            "${SubgraphExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, subgraphName)}, name: $subgraphName, input: $agentInput)",
+            "${SubgraphExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, subgraphName)}, name: $subgraphName, input: $agentInput, output: $subgraphOutput)",
         )
 
         assertEquals(
@@ -327,11 +319,9 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(SubgraphExecutionFailed::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${SubgraphExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, subgraphName)}, name: $subgraphName, input: $agentInput)",
-            "${SubgraphExecutionFailed::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, subgraphName)}, name: $subgraphName, error: $testErrorMessage)",
+            "${SubgraphExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, subgraphName)}, name: $subgraphName, input: $agentInput)",
+            "${SubgraphExecutionFailed::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, subgraphName)}, name: $subgraphName, error: $testErrorMessage)",
         )
 
         assertEquals(
@@ -386,10 +376,8 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(SubgraphExecutionFailed::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${SubgraphExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, subgraphWithErrorName)}, name: $subgraphWithErrorName, input: $agentInput)",
+            "${SubgraphExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, subgraphWithErrorName)}, name: $subgraphWithErrorName, input: $agentInput)",
         )
 
         assertEquals(
@@ -443,13 +431,11 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(LLMCallCompleted::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
-            "${LLMCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeLLMCallWithoutToolsName)}, responses: [${Role.Assistant.name}: $DEFAULT_ASSISTANT_RESPONSE])",
-            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeLLMCall)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
-            "${LLMCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeLLMCall)}, responses: [${Role.Assistant.name}: $DEFAULT_ASSISTANT_RESPONSE])",
+            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
+            "${LLMCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, responses: [${Role.Assistant.name}: $DEFAULT_ASSISTANT_RESPONSE])",
+            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCall)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
+            "${LLMCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCall)}, responses: [${Role.Assistant.name}: $DEFAULT_ASSISTANT_RESPONSE])",
         )
 
         assertEquals(
@@ -506,13 +492,11 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(ToolCallCompleted::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${ToolCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, args: ${
+            "${ToolCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, args: ${
                 CalculatorTools.PlusTool.encodeArgs(CalculatorTools.CalculatorTool.Args(2.2F, 2.2F))
             })",
-            "${ToolCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, result: ${
+            "${ToolCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, result: ${
                 CalculatorTools.PlusTool.encodeResult(CalculatorTools.CalculatorTool.Result(4.4F))
             })"
         )
@@ -561,8 +545,8 @@ class AIAgentPipelineTest {
         val runId = interceptedRunIds.first()
 
         val expectedEvents = listOf(
-            "${AgentStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId)}, id: $agentId, run id: $runId)",
-            "${AgentCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId)}, id: $agentId, run id: $runId, result: $agentOutput)",
+            "${AgentStarting::class.simpleName} (path: ${agentExecutionPath(agentId)}, id: $agentId, run id: $runId)",
+            "${AgentCompleted::class.simpleName} (path: ${agentExecutionPath(agentId)}, id: $agentId, run id: $runId, result: $agentOutput)",
             "${AgentClosing::class.simpleName} (path: ${agentExecutionPath(agentId)}, id: $agentId)"
         )
 
@@ -603,10 +587,8 @@ class AIAgentPipelineTest {
             collectedEvent.startsWith(StrategyStarting::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${StrategyStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName)}, strategy: $strategyName)",
+            "${StrategyStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName)}, strategy: $strategyName)",
         )
 
         assertEquals(
@@ -667,8 +649,8 @@ class AIAgentPipelineTest {
         val runId2 = runIds[1]
 
         val expectedEvents = listOf(
-            "${AgentStarting::class.simpleName} (path: ${agentExecutionPath(agent1Id, runId1)}, id: $agent1Id, run id: $runId1)",
-            "${AgentStarting::class.simpleName} (path: ${agentExecutionPath(agent2Id, runId2)}, id: $agent2Id, run id: $runId2)",
+            "${AgentStarting::class.simpleName} (path: ${agentExecutionPath(agent1Id)}, id: $agent1Id, run id: $runId1)",
+            "${AgentStarting::class.simpleName} (path: ${agentExecutionPath(agent2Id)}, id: $agent2Id, run id: $runId2)",
         )
 
         assertEquals(
@@ -718,11 +700,9 @@ class AIAgentPipelineTest {
             collectedEvent.startsWith(LLMCallStarting::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
-            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeLLMCallName)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
+            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
+            "${LLMCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallName)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
         )
 
         assertEquals(
@@ -780,13 +760,11 @@ class AIAgentPipelineTest {
                 collectedEvent.startsWith(ToolCallFailed::class.simpleName.toString())
         }
 
-        val runId = interceptedRunIds.first()
-
         val expectedEvents = listOf(
-            "${ToolCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, args: ${
+            "${ToolCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, args: ${
                 CalculatorTools.PlusTool.encodeArgs(CalculatorTools.CalculatorTool.Args(2.2F, 2.2F))
             })",
-            "${ToolCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, runId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, result: ${
+            "${ToolCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, result: ${
                 CalculatorTools.PlusTool.encodeResult(CalculatorTools.CalculatorTool.Result(4.4F))
             })"
         )
