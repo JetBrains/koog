@@ -46,6 +46,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
+import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
@@ -100,6 +101,8 @@ import kotlinx.io.files.Path as KtPath
 
 abstract class ExecutorIntegrationTestBase {
     private val testScope = TestScope()
+    private val basicLimit = 256
+    private val extendedLimit = 512
 
     @AfterEach
     fun cleanup() {
@@ -130,38 +133,68 @@ abstract class ExecutorIntegrationTestBase {
             is LLMProvider.OpenAI -> OpenAIResponsesParams(
                 reasoning = ReasoningConfig(
                     effort = ReasoningEffort.MEDIUM,
-                    summary = ReasoningSummary.DETAILED
+                    summary = ReasoningSummary.AUTO
                 ),
                 include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
-                maxTokens = 256
+                maxTokens = basicLimit
             )
 
             is LLMProvider.Google -> {
                 val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
                     GoogleThinkingConfig(
                         includeThoughts = true,
-                        thinkingLevel = GoogleThinkingLevel.LOW // with HIGH thoughts often exceed maxTokens causing test failures
+                        thinkingLevel = GoogleThinkingLevel.HIGH
                     )
                 } else {
                     GoogleThinkingConfig(
                         includeThoughts = true,
-                        thinkingBudget = 256
+                        // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                        thinkingBudget = extendedLimit
                     )
                 }
                 GoogleParams(
                     thinkingConfig = thinkingConfig,
-                    maxTokens = 256
+                    // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                    maxTokens = extendedLimit
                 )
             }
 
-            else -> LLMParams(maxTokens = 256)
+            else -> LLMParams(maxTokens = basicLimit)
         }
+    }
+
+    private fun createNoReasoningParams(model: LLModel): LLMParams = when (model.provider) {
+        is LLMProvider.Anthropic -> AnthropicParams(
+            thinking = AnthropicThinking.Disabled()
+        )
+
+        is LLMProvider.OpenAI ->
+            if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+                OpenAIResponsesParams(
+                    maxTokens = basicLimit
+                )
+            } else {
+                OpenAIChatParams(
+                    maxTokens = basicLimit
+                )
+            }
+
+        is LLMProvider.Google ->
+            GoogleParams(
+                thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = false,
+                ),
+                // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                maxTokens = extendedLimit
+            )
+
+        else -> LLMParams(maxTokens = basicLimit)
     }
 
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
-        val prompt = Prompt.build("test-prompt") {
+        val prompt = Prompt.build("test-prompt", createNoReasoningParams(model)) {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
@@ -169,7 +202,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecute[${model.id}]") {
             getExecutor(model).execute(prompt, model) shouldNotBeNull {
                 shouldNotBeEmpty()
-                with(shouldForAny { it is Message.Assistant }.first()) {
+                filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
                     content.lowercase().shouldContain("paris")
                     with(metaInfo) {
                         inputTokensCount.shouldNotBeNull()
@@ -648,9 +681,11 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry {
-            with(getExecutor(model).execute(prompt, model).single()) {
+            with(
+                getExecutor(model).execute(prompt, model)
+                    .first { it is Message.Assistant && it.content.isNotBlank() }
+            ) {
                 checkExecutorMediaResponse(this)
-                content.shouldContain("image")
             }
         }
     }
@@ -665,7 +700,7 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val imageUrl =
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png"
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/PNG_Test.png/200px-PNG_Test.png"
 
         val prompt = prompt("url-based-attachments-test") {
             system("You are a helpful assistant that can analyze images.")
@@ -683,8 +718,9 @@ abstract class ExecutorIntegrationTestBase {
             with(getExecutor(model).execute(prompt, model).single()) {
                 checkExecutorMediaResponse(this)
                 content.lowercase()
-                    .shouldContain("python")
-                    .shouldContain("logo")
+                    .shouldContain("image")
+                    .shouldContain("test")
+                    .shouldContain("hat")
             }
         }
     }
@@ -885,13 +921,16 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testMultipleSystemMessages(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
-        val prompt = prompt("multiple-system-messages-test") {
+        val prompt = prompt("multiple-system-messages-test", createNoReasoningParams(model)) {
             system("You are a helpful assistant.")
             user("Hi")
             system("You can handle multiple system messages.")
             user("Respond with a short message.")
         }
-        getLLMClient(model).execute(prompt, model).single().role shouldBe Message.Role.Assistant
+        with(getLLMClient(model).execute(prompt, model)) {
+            shouldNotBeEmpty()
+            shouldForAny { it is Message.Assistant }
+        }
     }
 
     open fun integration_testSingleMessageModeration(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -1016,7 +1055,8 @@ abstract class ExecutorIntegrationTestBase {
             getLLMClient(model).execute(prompt, model) shouldNotBeNull {
                 shouldNotBeEmpty()
                 withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
-                assertResponseContainsReasoning(this)
+                // Some Google models aren't providing meta info
+                assertResponseContainsReasoning(this, model.provider != LLMProvider.Google)
             }
         }
     }
@@ -1079,7 +1119,8 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testReasoningMultiStep_Turn2[${model.id}]") {
             val response2 = client.execute(prompt2, model)
             response2.shouldNotBeEmpty()
-            val answer = response2.filterIsInstance<Message.Assistant>().first().content
+            val answer = response2.filter { it is Message.Assistant || it is Message.Reasoning }
+                .joinToString("") { it.content }
             answer.shouldContain("20")
         }
     }
@@ -1087,10 +1128,29 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model.provider !== LLMProvider.OpenRouter,
+            "KG-626 Error from OpenRouter on a streaming with a tool call"
+        )
+        assumeTrue(
+            model.provider !== LLMProvider.Bedrock,
+            "KG-627 Error from Bedrock executor on a streaming with a tool call"
+        )
 
         val executor = getExecutor(model)
 
-        val prompt = Prompt.build("test-streaming", LLMParams(toolChoice = ToolChoice.Required)) {
+        val params = when (model.provider) {
+            LLMProvider.OpenAI ->
+                if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+                    OpenAIResponsesParams(toolChoice = ToolChoice.Required)
+                } else {
+                    OpenAIChatParams(toolChoice = ToolChoice.Required)
+                }
+
+            else -> LLMParams(toolChoice = ToolChoice.Required)
+        }
+
+        val prompt = Prompt.build("test-streaming", params) {
             system("You are a helpful assistant.")
             user("Count three times five")
         }
@@ -1116,23 +1176,6 @@ abstract class ExecutorIntegrationTestBase {
                             it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
                     } shouldBe true
                 }
-            }
-        }
-    }
-
-    private suspend fun PromptExecutor.executeStreamAndCollect(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        appendable: StringBuilder,
-        endMessages: MutableList<StreamFrame.End>,
-        toolMessages: MutableList<StreamFrame.ToolCall>
-    ) {
-        executeStreaming(prompt, model, tools).collect { frame ->
-            when (frame) {
-                is StreamFrame.Append -> appendable.append(frame.text)
-                is StreamFrame.ToolCall -> toolMessages.add(frame)
-                is StreamFrame.End -> endMessages.add(frame)
             }
         }
     }

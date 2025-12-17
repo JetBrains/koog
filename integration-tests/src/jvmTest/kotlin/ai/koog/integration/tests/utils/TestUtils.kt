@@ -7,7 +7,6 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeEmpty
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -38,8 +37,7 @@ object TestUtils {
     fun assertResponseContainsToolCall(response: List<Message>, toolName: String) {
         with(response) {
             shouldNotBeEmpty()
-            shouldForAny { it is Message.Tool.Call }
-            toolName shouldBe (first { it is Message.Tool.Call } as Message.Tool.Call).tool
+            shouldForAny { (it is Message.Tool.Call) && it.tool == toolName }
         }
     }
 
@@ -50,16 +48,18 @@ object TestUtils {
         false
     }
 
-    fun assertResponseContainsReasoning(response: List<Message>) {
+    fun assertResponseContainsReasoning(response: List<Message>, checkMetaInfo: Boolean = true) {
         with(response) {
             shouldNotBeEmpty()
             shouldForAny { it is Message.Reasoning }
             with(first { it is Message.Reasoning } as Message.Reasoning) {
                 content.shouldNotBeEmpty()
-                with(metaInfo) {
-                    inputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
-                    outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
-                    totalTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                if (checkMetaInfo) {
+                    metaInfo.shouldNotBeNull {
+                        inputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                        outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                        totalTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                    }
                 }
             }
         }
@@ -68,8 +68,7 @@ object TestUtils {
     fun assertResponseContainsReasoningWithEncryption(response: List<Message>) {
         with(response) {
             shouldNotBeEmpty()
-            shouldForAny { it is Message.Reasoning }
-            with(first { it is Message.Reasoning } as Message.Reasoning) {
+            response.filterIsInstance<Message.Reasoning>().firstOrNull().shouldNotBeNull {
                 content.shouldNotBeEmpty()
                 encrypted
                     .shouldNotBeNull()

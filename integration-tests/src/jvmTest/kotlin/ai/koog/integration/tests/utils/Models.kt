@@ -103,7 +103,8 @@ object Models {
     @JvmStatic
     fun reasoningCapableModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT5_2,
+            // Replaced 5.2 with 5.1-Codex because of the unstable 5.2 behaviour, see KG-625
+            OpenAIModels.Chat.GPT5_1Codex,
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini3_Pro_Preview,

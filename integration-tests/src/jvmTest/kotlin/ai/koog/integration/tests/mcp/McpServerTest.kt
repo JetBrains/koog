@@ -35,7 +35,7 @@ class McpServerTest {
         @JvmStatic
         fun getModels() = listOf(
             OpenAIModels.Chat.GPT4o,
-            // ToDo enable when fixed: KG-588 singleRunStrategy outputs empty response when using an MCP server
+            // Enable when fixed: KG-588 singleRunStrategy outputs empty response when using an MCP server
             // GoogleModels.Gemini2_5FlashLite
         )
     }

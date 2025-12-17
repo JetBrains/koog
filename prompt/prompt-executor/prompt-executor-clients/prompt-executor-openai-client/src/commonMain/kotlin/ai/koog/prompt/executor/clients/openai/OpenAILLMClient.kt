@@ -56,6 +56,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
@@ -366,7 +369,29 @@ public open class OpenAILLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = super.executeMultipleChoices(prompt, model, tools)
+    ): List<LLMChoice> = selectExecutionStrategy(prompt, model) { params ->
+        when (params) {
+            is OpenAIChatParams -> super.executeMultipleChoices(prompt, model, tools)
+
+            is OpenAIResponsesParams -> {
+                /*
+                Responses API does not currently expose a native "n" parameter,
+                 so we issue multiple independent responses and aggregate them.
+                 This path is required for models like gpt-5.1-codex that only
+                 support the Responses endpoint and return 404 on Chat Completions.
+                 */
+                val choices = (params.numberOfChoices ?: 1).coerceAtLeast(1)
+                coroutineScope {
+                    List(choices) {
+                        async {
+                            val response = getResponseWithResponsesAPI(prompt, params, model, tools)
+                            processResponsesAPIResponse(response)
+                        }
+                    }.awaitAll()
+                }
+            }
+        }
+    }
 
     /**
      * Embeds the given text using the OpenAI embeddings API.
@@ -777,11 +802,14 @@ public open class OpenAILLMClient(
                         metaInfo = metaInfo
                     )
 
-                    is Item.OutputMessage -> Message.Assistant(
-                        content = output.text(),
-                        finishReason = output.status?.name,
-                        metaInfo = metaInfo
-                    )
+                    is Item.OutputMessage -> {
+                        val text = output.text().ifBlank { response.outputText.orEmpty() }
+                        Message.Assistant(
+                            content = text,
+                            finishReason = output.status?.name,
+                            metaInfo = metaInfo
+                        )
+                    }
 
                     is Item.Reasoning -> Message.Reasoning(
                         id = output.id,

@@ -20,6 +20,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -146,7 +147,7 @@ class ModelCapabilitiesIntegrationTest {
                 LLMCapability.Tools, LLMCapability.ToolChoice -> {
                     val tools = SimpleCalculatorTool.descriptor
                     val prompt = prompt("cap-tools-positive", params = LLMParams(toolChoice = ToolChoice.Required)) {
-                        system("You are a helpful assistant with a calculator tool. Always use the tool.")
+                        system("You are a helpful assistant.")
                         user("Compute 2 + 3.")
                     }
                     withRetry {
@@ -157,10 +158,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Vision.Image -> {
-                    val imagePath = getImageFileForScenario(
-                        MediaTestScenarios.ImageTestScenario.BASIC_PNG,
-                        testResourcesDir
-                    )
+                    val imagePath = testResourcesDir.resolve("basic.jpg")
                     val base64 = Base64.encode(imagePath.readBytes())
                     val prompt = prompt("cap-vision-image-positive") {
                         system("You are a helpful assistant that can describe images.")
@@ -169,8 +167,8 @@ class ModelCapabilitiesIntegrationTest {
                             image(
                                 ContentPart.Image(
                                     content = AttachmentContent.Binary.Base64(base64),
-                                    format = "png",
-                                    mimeType = "image/png"
+                                    format = "jpeg",
+                                    mimeType = "image/jpeg"
                                 )
                             )
                         }
@@ -204,6 +202,12 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Document -> {
+                    // KG-620 GPT-5.1-Codex fails to process the text input file
+                    assumeTrue(
+                        model != OpenAIModels.Chat.GPT5_1Codex,
+                        "Skipping document capability test for ${model.id}, see KG-620"
+                    )
+
                     val file = createTextFileForScenario(
                         MediaTestScenarios.TextTestScenario.BASIC_TEXT,
                         testResourcesDir

@@ -259,14 +259,39 @@ public class PromptBuilder internal constructor(
          *
          * Tool results represent the output from executing a tool.
          *
+         * This method ensures that the corresponding tool call message exists in the prompt
+         * before adding the result. If the tool call is missing, it will be synthesized and
+         * added to maintain proper conversation flow.
+         *
+         * Problematic cases could potentially occur, when:
+         * 1. LLM providers concatenate tool names/args and normalize/split them, producing
+         *    synthesized calls that were not part of the original prompt history
+         * 2. Tool calls with null IDs get processed separately
+         * 3. Parallel tool execution results arrive before calls are recorded in prompt
+         *
          * @param result The tool result message to add
          */
         public fun result(result: Message.Tool.Result) {
-            this@PromptBuilder.messages
+            val existingCallIndex = this@PromptBuilder.messages
                 .indexOfLast { it is Message.Tool.Call && it.id == result.id }
-                .takeIf { it != -1 }
-                ?.let { index -> this@PromptBuilder.messages.add(index + 1, result) }
-                ?: throw IllegalStateException("Failed to add tool result: no call message with id ${result.id}")
+
+            if (existingCallIndex != -1) {
+                // Normal case: a corresponding tool call exists, so we just add its result after it
+                this@PromptBuilder.messages.add(existingCallIndex + 1, result)
+            } else {
+                // Missing tool call case: synthesize the call message and ensure all originating tool-call messages exist in the prompt before adding results
+                if (result.id != null) {
+                    val synthesizedCall = Message.Tool.Call(
+                        id = result.id,
+                        tool = result.tool,
+                        content = "Synthesized call for result",
+                        metaInfo = ResponseMetaInfo.create(clock)
+                    )
+                    this@PromptBuilder.messages.add(synthesizedCall)
+                }
+                // Add the result message at the end after a synthetic tool call
+                this@PromptBuilder.messages.add(result)
+            }
         }
 
         /**

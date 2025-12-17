@@ -15,7 +15,6 @@ object MediaTestScenarios {
         CORRUPTED_IMAGE,
         LARGE_IMAGE, // 20MB for Gemini and OpenAI, 5 MB for Anthropic
         LARGE_IMAGE_ANTHROPIC, // 20MB for Gemini and OpenAI, 5 MB for Anthropic
-        SMALL_IMAGE // 1x1 pixel
     }
 
     enum class TextTestScenario {
@@ -63,7 +62,7 @@ object MediaTestScenarios {
     val models = listOf(
         AnthropicModels.Sonnet_4_5,
         GoogleModels.Gemini2_5Pro,
-        OpenAIModels.Chat.GPT5_2,
+        OpenAIModels.Chat.GPT5_1,
     )
 
     @JvmStatic
