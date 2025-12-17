@@ -202,7 +202,6 @@ public open class GoogleLLMClient(
                             )
 
                             is GooglePart.Text -> emitAppend(part.text)
-
                             else -> Unit
                         }
                     }
@@ -426,11 +425,8 @@ public open class GoogleLLMClient(
 
         val functionCallingConfig = when (val toolChoice = googleParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
-
             LLMParams.ToolChoice.None -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.NONE)
-
             LLMParams.ToolChoice.Required -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.ANY)
-
             is LLMParams.ToolChoice.Named -> {
                 GoogleFunctionCallingConfig(
                     GoogleFunctionCallingMode.ANY,
@@ -465,7 +461,6 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -481,7 +476,6 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-
                             else -> throw IllegalArgumentException(
                                 "Unsupported audio attachment content: ${content::class}"
                             )
@@ -497,7 +491,6 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-
                             else -> throw IllegalArgumentException(
                                 "Unsupported file attachment content: ${content::class}"
                             )
@@ -513,7 +506,6 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-
                             else -> throw IllegalArgumentException(
                                 "Unsupported video attachment content: ${content::class}"
                             )
@@ -540,13 +532,9 @@ public open class GoogleLLMClient(
         fun JsonObjectBuilder.putType(type: ToolParameterType) {
             when (type) {
                 ToolParameterType.Boolean -> put("type", "boolean")
-
                 ToolParameterType.Float -> put("type", "number")
-
                 ToolParameterType.Integer -> put("type", "integer")
-
                 ToolParameterType.String -> put("type", "string")
-
                 ToolParameterType.Null -> put("type", "null")
 
                 is ToolParameterType.Enum -> {
@@ -683,7 +671,6 @@ public open class GoogleLLMClient(
         return when {
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
-
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
@@ -692,7 +679,6 @@ public open class GoogleLLMClient(
                     metaInfo = metaInfo
                 )
             )
-
             // Just return responses
             else -> responses
         }
