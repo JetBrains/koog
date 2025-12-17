@@ -66,19 +66,16 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                     )
                 }
 
-                is AttachmentContent.PlainText -> {
-                    ContentBlock.Audio(
-                        data = content.text,
-                        mimeType = this.mimeType,
-                    )
-                }
-
                 is AttachmentContent.URL -> {
                     ContentBlock.ResourceLink(
                         name = this.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
                         mimeType = this.mimeType,
                     )
+                }
+
+                is AttachmentContent.PlainText -> {
+                    throw IllegalArgumentException("Audio attachment can’t have plain text content")
                 }
             }
         }
@@ -129,20 +126,16 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                     )
                 }
 
-                is AttachmentContent.PlainText -> {
-                    ContentBlock.Image(
-                        data = content.text,
-                        mimeType = this.mimeType,
-                        uri = this.fileName,
-                    )
-                }
-
                 is AttachmentContent.URL -> {
                     ContentBlock.ResourceLink(
                         name = this.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
                         mimeType = this.mimeType,
                     )
+                }
+
+                is AttachmentContent.PlainText -> {
+                    throw IllegalArgumentException("Image attachment can’t have plain text content")
                 }
             }
         }
