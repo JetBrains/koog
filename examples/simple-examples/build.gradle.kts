@@ -25,7 +25,8 @@ dependencies {
     implementation("ai.koog:a2a-transport-server-jsonrpc-http")
     //noinspection UseTomlInstead
     implementation("ai.koog:a2a-transport-client-jsonrpc-http")
-
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-acp")
     //noinspection UseTomlInstead
     testImplementation("ai.koog:agents-test")
 

@@ -21,6 +21,7 @@ dependencies {
     implementation(project(":a2a:a2a-transport:a2a-transport-core-jsonrpc"))
     implementation(project(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http"))
     implementation(project(":agents:agents-test"))
+    implementation(project(":agents:agents-test"))
     implementation(project(":koog-agents"))
     implementation(libs.opentelemetry.exporter.logging)
     implementation(libs.opentelemetry.exporter.otlp)
