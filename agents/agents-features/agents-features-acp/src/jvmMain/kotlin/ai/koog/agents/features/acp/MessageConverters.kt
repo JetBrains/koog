@@ -1,5 +1,6 @@
 package ai.koog.agents.features.acp
 
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
@@ -43,6 +44,11 @@ public fun List<ContentBlock>.toKoogMessage(clock: Clock): Message {
 
 /**
  * Converts a ContentPart to an ACP ContentBlock.
+ *
+ * As the Koog and ACP models are slightly different, some assumptions in converters are made:
+ * 1. Treat fileName as uri and vice versa, should be fixed in the future by adding uri to the file
+ * 2. Stub all nullable content types with 'unknown' constants
+ * 3. Assume that a format is the last segment of the MIME type
  */
 public fun ContentPart.toAcpContentBlock(): ContentBlock {
     return when (this) {
@@ -51,10 +57,30 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
         }
 
         is ContentPart.Audio -> {
-            ContentBlock.Audio(
-                data = this.content.toString(),
-                mimeType = this.mimeType,
-            )
+            when (val content = this.content) {
+                is AttachmentContent.Binary.Base64,
+                is AttachmentContent.Binary.Bytes -> {
+                    ContentBlock.Audio(
+                        data = content.asBase64(),
+                        mimeType = this.mimeType,
+                    )
+                }
+
+                is AttachmentContent.PlainText -> {
+                    ContentBlock.Audio(
+                        data = content.text,
+                        mimeType = this.mimeType,
+                    )
+                }
+
+                is AttachmentContent.URL -> {
+                    ContentBlock.ResourceLink(
+                        name = this.fileName ?: UNKNOWN_FILE_NAME,
+                        uri = content.url,
+                        mimeType = this.mimeType,
+                    )
+                }
+            }
         }
 
         is ContentPart.File ->
@@ -62,7 +88,6 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                 is AttachmentContent.Binary.Base64 -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.BlobResourceContents(
                         blob = content.base64,
-                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
                         uri = this.fileName ?: UNKNOWN_URI,
                         mimeType = this.mimeType
                     )
@@ -71,7 +96,6 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                 is AttachmentContent.Binary.Bytes -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.BlobResourceContents(
                         blob = content.asBase64(),
-                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
                         uri = this.fileName ?: UNKNOWN_URI,
                         mimeType = this.mimeType
                     )
@@ -80,7 +104,6 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                 is AttachmentContent.PlainText -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.TextResourceContents(
                         text = content.text,
-                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
                         uri = this.fileName ?: UNKNOWN_URI,
                         mimeType = this.mimeType,
                     )
@@ -96,12 +119,32 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
             }
 
         is ContentPart.Image -> {
-            ContentBlock.Image(
-                data = this.content.toString(),
-                mimeType = this.mimeType,
-                // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
-                uri = this.fileName,
-            )
+            when (val content = this.content) {
+                is AttachmentContent.Binary.Base64,
+                is AttachmentContent.Binary.Bytes -> {
+                    ContentBlock.Image(
+                        data = content.asBase64(),
+                        mimeType = this.mimeType,
+                        uri = this.fileName,
+                    )
+                }
+
+                is AttachmentContent.PlainText -> {
+                    ContentBlock.Image(
+                        data = content.text,
+                        mimeType = this.mimeType,
+                        uri = this.fileName,
+                    )
+                }
+
+                is AttachmentContent.URL -> {
+                    ContentBlock.ResourceLink(
+                        name = this.fileName ?: UNKNOWN_FILE_NAME,
+                        uri = content.url,
+                        mimeType = this.mimeType,
+                    )
+                }
+            }
         }
 
         is ContentPart.Video -> {
@@ -112,6 +155,11 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
 
 /**
  * Converts a single [ContentBlock] of ACP prompt to a Koog [ContentPart].
+ *
+ * As the Koog and ACP models are slightly different, some assumptions in converters are made:
+ * 1. Treat fileName as uri and vice versa, should be fixed in the future by adding uri to the file
+ * 2. Stub all nullable content types with 'unknown' constants
+ * 3. Assume that a format is the last segment of the MIME type
  */
 public fun ContentBlock.toKoogContentPart(): ContentPart {
     return when (this) {
@@ -130,7 +178,6 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
                 content = AttachmentContent.Binary.Base64(data),
                 format = parseFormat(mimeType),
                 mimeType = mimeType,
-                // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
                 fileName = uri
             )
         }
@@ -143,7 +190,6 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
                         content = AttachmentContent.Binary.Base64(resource.blob),
                         format = parseFormat(resource.mimeType),
                         mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
-                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
                         fileName = resource.uri
                     )
                 }
@@ -153,7 +199,6 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
                         content = AttachmentContent.PlainText(resource.text),
                         format = parseFormat(resource.mimeType),
                         mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
-                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
                         fileName = resource.uri
                     )
                 }
@@ -166,7 +211,6 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
                 content = AttachmentContent.URL(uri),
                 format = parseFormat(mimeType),
                 mimeType = mimeType ?: UNKNOWN_MIME_TYPE,
-                // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
                 fileName = uri
             )
         }
@@ -180,8 +224,11 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
 
 /**
  * Converts a [Message.Response] to a list of ACP [SessionUpdateEvent].
+ *
+ * As the Koog and ACP models are slightly different, some assumptions in converters are made:
+ * 1. Stub all nullable content types with 'unknown' constants
  */
-public fun Message.Response.toAcpEvents(): List<SessionUpdateEvent> {
+public fun Message.Response.toAcpEvents(tools: List<ToolDescriptor> = emptyList()): List<SessionUpdateEvent> {
     val response = this
     return buildList {
         when (response) {
@@ -210,9 +257,8 @@ public fun Message.Response.toAcpEvents(): List<SessionUpdateEvent> {
                     SessionUpdateEvent(
                         update = SessionUpdate.ToolCall(
                             toolCallId = ToolCallId(response.id ?: UNKNOWN_TOOL_CALL_ID),
-                            // Workaround, we cannot get the tool description here from tool call
-                            // as we have no context with the tool registry
-                            title = response.tool,
+                            title = tools.firstOrNull { it.name == response.tool }?.description
+                                ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.PENDING,
                             rawInput = response.contentJson,

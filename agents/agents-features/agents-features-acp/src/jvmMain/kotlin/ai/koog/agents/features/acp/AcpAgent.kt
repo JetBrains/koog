@@ -202,7 +202,7 @@ public class AcpAgent(
 
             pipeline.interceptLLMCallCompleted(this@Feature) { ctx ->
                 ctx.responses.forEach {
-                    it.toAcpEvents().forEach { event ->
+                    it.toAcpEvents(ctx.tools).forEach { event ->
                         logger.debug { "Emitting event $event for LLM Call Completed" }
                         sendEvent(event)
                     }
