@@ -39,6 +39,7 @@ public data class LLMCallStartingContext(
  *
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property runId The unique identifier for this LLM call session.
+ * @property callId Identifier for the current LLM call.
  * @property prompt The prompt that was sent to the language model.
  * @property model The language model instance that was used.
  * @property tools The list of tool descriptors that were available for the LLM call.

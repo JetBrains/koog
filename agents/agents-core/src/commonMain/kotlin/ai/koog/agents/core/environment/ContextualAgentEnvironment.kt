@@ -28,6 +28,7 @@ internal class ContextualAgentEnvironment(
             runId = context.runId,
             toolCallId = toolCall.id,
             toolName = toolCall.tool,
+            toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description,
             toolArgs = toolCall.contentJson
         )
 
@@ -39,6 +40,7 @@ internal class ContextualAgentEnvironment(
                 "run id: ${context.runId}, " +
                 "tool call id: ${toolCall.id}, " +
                 "tool: ${toolCall.tool}, " +
+                "tool description: ${toolResult.toolDescription}, " +
                 "args: ${toolCall.contentJson}) " +
                 "with result: $toolResult"
         }
@@ -63,8 +65,8 @@ internal class ContextualAgentEnvironment(
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
-                    toolArgs = toolResult.toolArgs,
                     toolDescription = toolResult.toolDescription,
+                    toolArgs = toolResult.toolArgs,
                     toolResult = toolResult.result
                 )
             }
@@ -75,8 +77,8 @@ internal class ContextualAgentEnvironment(
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
-                    toolArgs = toolResult.toolArgs,
                     toolDescription = toolResult.toolDescription,
+                    toolArgs = toolResult.toolArgs,
                     message = toolResult.content,
                     error = toolResultKind.error
                 )
@@ -88,8 +90,8 @@ internal class ContextualAgentEnvironment(
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
-                    toolArgs = toolResult.toolArgs,
                     toolDescription = toolResult.toolDescription,
+                    toolArgs = toolResult.toolArgs,
                     message = toolResult.content,
                     error = toolResultKind.error
                 )

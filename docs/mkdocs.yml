@@ -33,6 +33,7 @@ nav:
           - A2A server implementation: a2a-server.md
           - A2A client implementation: a2a-client.md
           - A2A and Koog integration: a2a-koog-integration.md
+      - Agent Client Protocol: agent-client-protocol.md
       - LLM parameters: llm-parameters.md
       - Model capabilities: model-capabilities.md
       - Content moderation: content-moderation.md
@@ -151,6 +152,8 @@ plugins:
           - a2a-server.md: This page provides details about the A2A server implementation in the Koog agentic framework. The A2A server is responsible for handling requests from A2A clients according to the A2A protocol specification.
           - a2a-client.md: This page provides details about the A2A client implementation in the Koog agentic framework. The A2A client is responsible for sending requests to A2A servers according to the A2A protocol specification.
           - a2a-koog-integration.md: This page provides details about the integration of A2A with Koog agents. It includes information about how to define your agent as A2A server and connect it to the Koog agent system.
+        Agent Client Protocol:
+          - agent-client-protocol.md: This page provides details about the Agent Client Protocol (ACP) integration in Koog, which enables AI agents to communicate with client applications through a standardized, bidirectional interface.
         LLM Parameters:
           - llm-parameters.md: This page provides details about LLM Parameters, which allow you to control and customize the behavior of language models by adjusting parameters like temperature, token limits, schemas, and tool choices.
         Model capabilities:

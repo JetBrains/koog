@@ -31,6 +31,8 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-a2a-server",
     ":agents:agents-features:agents-features-a2a-client",
 
+    ":agents:agents-features:agents-features-acp",
+
     ":http-client:http-client-test",
     ":http-client:http-client-okhttp",
     ":http-client:http-client-java",

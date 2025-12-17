@@ -44,7 +44,7 @@ internal class AIAgentStuckInTheNodeException(node: AIAgentNodeBase<*, *>, outpu
  * @constructor Creates an instance of this exception with the specified maximum number of iterations.
  * @param maxNumberOfIterations The maximum number of iterations allowed for the agent before the exception is triggered.
  */
-internal class AIAgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
+public class AIAgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
     AIAgentException(
         "Agent couldn't finish in given number of steps ($maxNumberOfIterations). " +
             "Please, consider increasing `maxAgentIterations` value in agent's configuration"

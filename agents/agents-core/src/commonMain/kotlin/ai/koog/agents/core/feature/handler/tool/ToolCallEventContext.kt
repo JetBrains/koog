@@ -26,6 +26,7 @@ public data class ToolCallStartingContext(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
+    val toolDescription: String?,
     val toolArgs: JsonObject,
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallStarting
@@ -38,8 +39,8 @@ public data class ToolCallStartingContext(
  * @property runId The unique identifier for this tool call session;
  * @property toolCallId The unique identifier for this tool call;
  * @property toolName The name of the tool associated with the validation error;
- * @property toolArgs The arguments passed to the tool when the error occurred;
  * @property toolDescription A description of the tool being executed;
+ * @property toolArgs The arguments passed to the tool when the error occurred;
  * @property message A message describing the validation error.
  * @property error The [AIAgentError] error describing the validation issue.
  */
@@ -48,8 +49,8 @@ public data class ToolValidationFailedContext(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: JsonObject,
     val toolDescription: String?,
+    val toolArgs: JsonObject,
     val message: String,
     val error: AIAgentError
 ) : ToolCallEventContext {
@@ -63,8 +64,8 @@ public data class ToolValidationFailedContext(
  * @property runId The unique identifier for this tool call session;
  * @property toolCallId The unique identifier for this tool call;
  * @property toolName The name of the tool being executed when the failure occurred;
- * @property toolArgs The arguments that were passed to the tool during execution;
  * @property toolDescription A description of the tool being executed;
+ * @property toolArgs The arguments that were passed to the tool during execution;
  * @property message A message describing the failure that occurred.
  * @property error The [AIAgentError] instance describing the tool call failure.
  */
@@ -73,8 +74,8 @@ public data class ToolCallFailedContext(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: JsonObject,
     val toolDescription: String?,
+    val toolArgs: JsonObject,
     val message: String,
     val error: AIAgentError?
 ) : ToolCallEventContext {
@@ -88,8 +89,8 @@ public data class ToolCallFailedContext(
  * @property runId The unique identifier for this tool call session;
  * @property toolCallId The unique identifier for this tool call;
  * @property toolName The name of the tool being executed;
- * @property toolArgs The arguments required by the tool for execution;
  * @property toolDescription A description of the tool being executed;
+ * @property toolArgs The arguments required by the tool for execution;
  * @property toolResult An optional result produced by the tool after execution can be null if not applicable.
  */
 public data class ToolCallCompletedContext(
@@ -97,8 +98,8 @@ public data class ToolCallCompletedContext(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: JsonObject,
     val toolDescription: String?,
+    val toolArgs: JsonObject,
     val toolResult: JsonElement?
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallCompleted

@@ -451,6 +451,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param runId The unique identifier for the current run.
      * @param toolCallId The unique identifier for the current tool call.
      * @param toolName The tool name that is being called
+     * @param toolDescription The description of the tool that is being called.
      * @param toolArgs The arguments provided to the tool
      */
     public suspend fun onToolCallStarting(
@@ -458,9 +459,11 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         toolCallId: String?,
         toolName: String,
+        toolDescription: String?,
         toolArgs: JsonObject,
     ) {
-        val eventContext = ToolCallStartingContext(executionInfo, runId, toolCallId, toolName, toolArgs)
+        val eventContext =
+            ToolCallStartingContext(executionInfo, runId, toolCallId, toolName, toolDescription, toolArgs)
         toolCallEventHandlers.values.forEach { handler -> handler.toolCallHandler.handle(eventContext) }
     }
 
@@ -471,8 +474,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param runId The unique identifier for the current run;
      * @param toolCallId The unique identifier for the current tool call;
      * @param toolName The name of the tool for which validation failed;
-     * @param toolArgs The arguments that failed validation;
      * @param toolDescription The description of the tool that was called;
+     * @param toolArgs The arguments that failed validation;
      * @param message The validation error message;
      * @param error The [AIAgentError] validation error.
      */
@@ -481,12 +484,12 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         toolCallId: String?,
         toolName: String,
-        toolArgs: JsonObject,
         toolDescription: String?,
+        toolArgs: JsonObject,
         message: String,
         error: AIAgentError,
     ) {
-        val eventContext = ToolValidationFailedContext(executionInfo, runId, toolCallId, toolName, toolArgs, toolDescription, message, error)
+        val eventContext = ToolValidationFailedContext(executionInfo, runId, toolCallId, toolName, toolDescription, toolArgs, message, error)
         toolCallEventHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(eventContext) }
     }
 
@@ -497,8 +500,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param runId The unique identifier for the current run;
      * @param toolCallId The unique identifier for the current tool call;
      * @param toolName The tool name that was called;
-     * @param toolArgs The arguments provided to the tool;
      * @param toolDescription The description of the tool that was called;
+     * @param toolArgs The arguments provided to the tool;
      * @param message A message describing the failure.
      * @param error The [AIAgentError] that caused the failure.
      */
@@ -507,12 +510,12 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         toolCallId: String?,
         toolName: String,
-        toolArgs: JsonObject,
         toolDescription: String?,
+        toolArgs: JsonObject,
         message: String,
         error: AIAgentError?
     ) {
-        val eventContext = ToolCallFailedContext(executionInfo, runId, toolCallId, toolName, toolArgs, toolDescription, message, error)
+        val eventContext = ToolCallFailedContext(executionInfo, runId, toolCallId, toolName, toolDescription, toolArgs, message, error)
         toolCallEventHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(eventContext) }
     }
 
@@ -523,8 +526,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param runId The unique identifier for the current run;
      * @param toolCallId The unique identifier for the current tool call;
      * @param toolName The tool name that was called;
-     * @param toolArgs The arguments that were provided to the tool;
      * @param toolDescription The description of the tool that was called;
+     * @param toolArgs The arguments that were provided to the tool;
      * @param toolResult The result produced by the tool, or null if no result was produced.
      */
     public suspend fun onToolCallCompleted(
@@ -532,11 +535,11 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         toolCallId: String?,
         toolName: String,
-        toolArgs: JsonObject,
         toolDescription: String?,
+        toolArgs: JsonObject,
         toolResult: JsonElement?
     ) {
-        val eventContext = ToolCallCompletedContext(executionInfo, runId, toolCallId, toolName, toolArgs, toolDescription, toolResult)
+        val eventContext = ToolCallCompletedContext(executionInfo, runId, toolCallId, toolName, toolDescription, toolArgs, toolResult)
         toolCallEventHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(eventContext) }
     }
 
@@ -1375,6 +1378,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
                             // Use default configuration
                         }
                     }
+
                     is AIAgentFunctionalPipeline -> {
                         this.install(Debugger) {
                             // Use default configuration
@@ -1382,6 +1386,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
                     }
                 }
             }
+
             else -> {
                 error(
                     "Unsupported system feature key: ${featureKey.name}. " +
