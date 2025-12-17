@@ -450,21 +450,6 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleToolsAndSendResul
         }
 
         llm.writeSession {
-            /*
-            Ensure all originating tool-call messages exist in the prompt before adding results.
-            This is important when providers concatenate tool names/args and we normalize/split them,
-            producing synthesized calls that were not part of the original prompt history.
-             */
-            val existingCallIds = prompt.messages.filterIsInstance<Message.Tool.Call>().map { it.id }.toSet()
-            val missingCalls = toolCalls.filter { it.id !in existingCallIds }
-            if (missingCalls.isNotEmpty()) {
-                appendPrompt {
-                    tool {
-                        missingCalls.forEach { call(it) }
-                    }
-                }
-            }
-
             appendPrompt {
                 tool {
                     results.forEach { result(it) }
@@ -486,14 +471,8 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
 ): AIAgentNodeDelegate<List<ReceivedToolResult>, List<Message.Response>> =
     node(name) { results ->
         llm.writeSession {
-            /*
-            Ensure corresponding tool-call messages are present before adding results.
-             */
-            val existingCallIds = prompt.messages.filterIsInstance<Message.Tool.Call>().map { it.id }.toSet()
-            val missingCalls = results.filter { it.id !in existingCallIds }
             appendPrompt {
                 tool {
-                    missingCalls.forEach { call(it.id, it.tool, it.toolArgs.toString()) }
                     results.forEach { result(it) }
                 }
             }

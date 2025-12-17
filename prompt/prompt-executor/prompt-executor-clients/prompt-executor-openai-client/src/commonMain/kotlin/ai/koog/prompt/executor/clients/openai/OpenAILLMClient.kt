@@ -56,6 +56,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
@@ -371,16 +374,20 @@ public open class OpenAILLMClient(
             is OpenAIChatParams -> super.executeMultipleChoices(prompt, model, tools)
 
             is OpenAIResponsesParams -> {
-                // Responses API does not currently expose a native "n" parameter,
-                // so we issue multiple independent responses and aggregate them.
-                // This path is required for models like gpt-5.1-codex that only
-                // support the Responses endpoint and return 404 on Chat Completions.
+                /*
+                Responses API does not currently expose a native "n" parameter,
+                 so we issue multiple independent responses and aggregate them.
+                 This path is required for models like gpt-5.1-codex that only
+                 support the Responses endpoint and return 404 on Chat Completions.
+                 */
                 val choices = (params.numberOfChoices ?: 1).coerceAtLeast(1)
-                buildList {
-                    repeat(choices) {
-                        val response = getResponseWithResponsesAPI(prompt, params, model, tools)
-                        add(processResponsesAPIResponse(response))
-                    }
+                coroutineScope {
+                    List(choices) {
+                        async {
+                            val response = getResponseWithResponsesAPI(prompt, params, model, tools)
+                            processResponsesAPIResponse(response)
+                        }
+                    }.awaitAll()
                 }
             }
         }
@@ -769,7 +776,10 @@ public open class OpenAILLMClient(
                         add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = part.fileName))
                     }
 
-                    else -> throw LLMClientException(clientName, "Unsupported attachment type: $part, for model: $model with Responses API")
+                    else -> throw LLMClientException(
+                        clientName,
+                        "Unsupported attachment type: $part, for model: $model with Responses API"
+                    )
                 }
             }
         }
@@ -811,7 +821,10 @@ public open class OpenAILLMClient(
                         metaInfo = metaInfo
                     )
 
-                    else -> throw LLMClientException(clientName, "Unexpected response from $clientName: no tool calls and no content")
+                    else -> throw LLMClientException(
+                        clientName,
+                        "Unexpected response from $clientName: no tool calls and no content"
+                    )
                 }
             }
     }
