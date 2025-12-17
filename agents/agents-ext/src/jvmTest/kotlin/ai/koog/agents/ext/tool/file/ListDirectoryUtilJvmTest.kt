@@ -45,7 +45,7 @@ class ListDirectoryUtilJvmTest {
     }
 
     @Test
-    fun `buildDirectoryTree returns folder with no entries when depth 1 and multiple children`() = runTest {
+    fun `buildDirectoryTree returns folder with entries when depth 1 and multiple children`() = runTest {
         // Structure:
         // dir/
         // ├── f1.txt
@@ -59,7 +59,10 @@ class ListDirectoryUtilJvmTest {
 
         assertIs<FileSystemEntry.Folder>(entry)
         assertEquals(d.toAbsolutePath().toString(), entry.path)
-        assertNull(entry.entries)
+        val entries = assertNotNull(entry.entries)
+        assertEquals(2, entries.size)
+        val names = entries.map { (it as FileSystemEntry.File).name }.toSet()
+        assertEquals(setOf("f1.txt", "f2.txt"), names)
     }
 
     @Test
@@ -157,9 +160,12 @@ class ListDirectoryUtilJvmTest {
         val entry = buildDirectoryTree(fs, level1, metadata, maxDepth = 1) as FileSystemEntry.Folder
 
         // level1 has 1 child (level2 directory), so it unwraps
-        // level2 has multiple children at maxDepth=1, so its entries should be null
+        // level2 has multiple children - with fixed behavior, they are listed
         val level2Folder = assertNotNull(entry.entries).single() as FileSystemEntry.Folder
-        assertNull(level2Folder.entries)
+        val level2Entries = assertNotNull(level2Folder.entries)
+        assertEquals(2, level2Entries.size)
+        val names = level2Entries.map { (it as FileSystemEntry.File).name }.toSet()
+        assertEquals(setOf("file1.txt", "file2.txt"), names)
     }
 
     @Test
@@ -179,8 +185,15 @@ class ListDirectoryUtilJvmTest {
         val metadata = assertNotNull(fs.metadata(level1))
         val entry = buildDirectoryTree(fs, level1, metadata, maxDepth = 1) as FileSystemEntry.Folder
 
-        // level1 has multiple children at maxDepth=1, so entries should be null
-        assertNull(entry.entries)
+        // level1 has multiple children - with fixed behavior, they are listed as collapsed directories
+        val entries = assertNotNull(entry.entries)
+        assertEquals(2, entries.size)
+        val names = entries.map { (it as FileSystemEntry.Folder).name }.toSet()
+        assertEquals(setOf("dir1", "dir2"), names)
+        // Child directories should be collapsed (entries = null) since we're at the depth limit
+        entries.forEach { dir ->
+            assertNull((dir as FileSystemEntry.Folder).entries)
+        }
     }
 
     @Test
