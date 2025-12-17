@@ -105,7 +105,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
         dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
 
-        val resultText = tool.encodeResultToString(list(dir, depth = 2))
+        val resultText = tool.encodeResultToString(list(dir, depth = 1))
 
         // Expected:
         // /path/to/project/
@@ -450,6 +450,50 @@ class ListDirectoryToolJvmTest {
 
         // Expected: /path/to/project/test/TestMain.kt (<0.1 KiB, 1 line)
         val expectedText = "${testMainFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
+
+        assertEquals(expectedText, resultText)
+    }
+
+    @Test
+    fun `empty filter outputs all files`() = runBlocking {
+        // Structure:
+        // project/
+        // ├── LICENSE.txt
+        // └── README.md
+        val dir = createDir("project")
+        dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
+        dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
+
+        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = ""))
+
+        // Expected:
+        // /path/to/project/
+        //   LICENSE.txt (<0.1 KiB, 1 line)
+        //   README.md (<0.1 KiB, 1 line)
+        val expectedText = """
+            ${dir.toAbsolutePath().toString().norm()}/
+              LICENSE.txt (<0.1 KiB, 1 line)
+              README.md (<0.1 KiB, 1 line)
+        """.trimIndent()
+
+        assertEquals(expectedText, resultText)
+    }
+
+    @Test
+    fun `filter is case insensitive`() = runBlocking {
+        // Structure:
+        // project/
+        // ├── LICENSE.txt
+        // └── README.md
+        val dir = createDir("project")
+        dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
+        dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
+
+        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = "read*"))
+
+        // Expected:
+        // /path/to/project/README.md (<0.1 KiB, 1 line)
+        val expectedText = "${dir.toAbsolutePath().toString().norm()}/README.md (<0.1 KiB, 1 line)"
 
         assertEquals(expectedText, resultText)
     }

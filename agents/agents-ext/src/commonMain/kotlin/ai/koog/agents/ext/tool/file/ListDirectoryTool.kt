@@ -94,7 +94,9 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
             start = path,
             startMetadata = metadata,
             maxDepth = args.depth,
-            filter = args.filter?.let { GlobPattern(it, caseSensitive = false) }
+            filter = args.filter?.ifEmpty { null }?.let {
+                GlobPattern(pattern = it, caseSensitive = false)
+            }
         )
 
         validate(entry != null) {
