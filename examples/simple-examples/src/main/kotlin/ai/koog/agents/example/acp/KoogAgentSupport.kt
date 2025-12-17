@@ -107,7 +107,7 @@ class KoogAgentSession(
 
     private fun koogStrategy() = strategy<Unit, Unit>("acp-agent") {
         val nodePlanPrompt by node<Unit, String>("plan") {
-            "You have a task! Crate a plan for it."
+            "You have a task! Create a plan for it."
         }
         val nodeCreatePlan by nodeLLMRequestStructured<KoogPlan>()
 
@@ -134,7 +134,7 @@ class KoogAgentSession(
 
     private fun Prompt.appendPrompt(content: List<ContentBlock>): Prompt {
         return withMessages { messages ->
-            messages + listOf(content.toKoogMessage(clock))
+            messages + content.toKoogMessage(clock)
         }
     }
 }

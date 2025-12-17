@@ -8,16 +8,6 @@ The Koog framework provides integration with ACP, enabling you to build ACP-comp
 
 To learn more about the protocol, see the [Agent Client Protocol](https://agentclientprotocol.com) documentation.
 
-## What is ACP?
-
-The Agent Client Protocol (ACP) is a standardized protocol that defines how AI agents communicate with client applications. It provides:
-
-- **Bidirectional communication**: Agents receive prompts from clients and send events and updates back in real-time
-- **Event streaming**: Real-time updates about agent execution, including tool calls, thoughts, and completion status
-- **Session management**: Structured lifecycle for agent sessions including creation, execution, and cancellation
-
-Unlike request-response protocols, ACP enables continuous communication throughout the agent's execution, giving clients visibility into the agent's decision-making process and actions.
-
 ## Integration with Koog
 
 The Koog framework integrates with ACP using the [ACP Kotlin SDK](https://github.com/agentclientprotocol/kotlin-sdk) with additional API extensions in the `agents-features-acp` module.

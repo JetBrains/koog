@@ -24,20 +24,12 @@ ACP provides a bidirectional communication channel where agents can:
 
 To read more about ACP visit [https://agentclientprotocol.com](https://agentclientprotocol.com)
 
-### How is ACP integrated with Koog?
-
-The Koog framework integrates with ACP using the [ACP Kotlin SDK](https://github.com/agentclientprotocol/kotlin-sdk)
-with the additional API extensions presented in the `agents-features-acp` module.
-This integration allows Koog agents to:
-
-1. Communicate with ACP-compliant client applications
-2. Convert between Koog message formats and ACP content blocks
-3. Send real-time updates about agent execution (tool calls, thoughts, completions)
-4. Handle standard ACP events and notifications
-
 ### How to Use ACP with Koog?
 
 #### Setting Up an ACP-Enabled Agent
+
+Koog integrates with ACP using the [ACP Kotlin SDK](https://github.com/agentclientprotocol/kotlin-sdk)
+with the additional API extensions presented in the `agents-features-acp` module.
 
 To use ACP with Koog, you need to:
 
