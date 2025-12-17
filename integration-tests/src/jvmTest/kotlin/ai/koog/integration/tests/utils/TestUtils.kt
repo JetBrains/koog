@@ -68,9 +68,7 @@ object TestUtils {
     fun assertResponseContainsReasoningWithEncryption(response: List<Message>) {
         with(response) {
             shouldNotBeEmpty()
-            val reasoningMessage = firstOrNull { it is Message.Reasoning } as? Message.Reasoning
-            reasoningMessage.shouldNotBeNull()
-            with(reasoningMessage) {
+            response.filterIsInstance<Message.Reasoning>().firstOrNull().shouldNotBeNull {
                 content.shouldNotBeEmpty()
                 encrypted
                     .shouldNotBeNull()

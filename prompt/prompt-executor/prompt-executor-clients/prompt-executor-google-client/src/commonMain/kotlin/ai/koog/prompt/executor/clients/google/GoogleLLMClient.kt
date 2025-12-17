@@ -192,7 +192,7 @@ public open class GoogleLLMClient(
                         outputTokensCount = it.candidatesTokenCount,
                     )
                 }
-                response.candidates?.firstOrNull()?.let { candidate ->
+                response.candidates.firstOrNull()?.let { candidate ->
                     candidate.content?.parts?.forEach { part ->
                         when (part) {
                             is GooglePart.FunctionCall -> emitToolCall(
@@ -268,7 +268,7 @@ public open class GoogleLLMClient(
         }.let { response ->
 
             // https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175/219
-            if (response.candidates?.isNotEmpty() == true && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
+            if (response.candidates.isNotEmpty() && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
                 logger.warn { "Content `parts` field is missing in the response from GoogleAI API: $response" }
             }
 
@@ -701,8 +701,7 @@ public open class GoogleLLMClient(
      * @return A list of choices, where each choice is a list of response messages
      */
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
-        if (response.candidates?.isEmpty() ?: true) {
-            logger.error { "Empty candidates in Google API response" }
+        if (response.candidates.isEmpty()) {
             throw LLMClientException(clientName, "Empty candidates in Google API response")
         }
 

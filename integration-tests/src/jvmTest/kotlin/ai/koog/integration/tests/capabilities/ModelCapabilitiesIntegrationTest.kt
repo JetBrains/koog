@@ -205,7 +205,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Document -> {
-                    // TODO KG-620 GPT-5.1-Codex fails to process the text input file
+                    // KG-620 GPT-5.1-Codex fails to process the text input file
                     assumeTrue(
                         model != OpenAIModels.Chat.GPT5_1Codex,
                         "Skipping document capability test for ${model.id}, see KG-620"

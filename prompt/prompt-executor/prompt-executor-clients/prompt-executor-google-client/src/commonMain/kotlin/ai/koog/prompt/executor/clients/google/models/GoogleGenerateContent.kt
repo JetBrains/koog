@@ -408,7 +408,7 @@ internal enum class GoogleFunctionCallingMode {
  */
 @Serializable
 internal class GoogleResponse(
-    val candidates: List<GoogleCandidate>? = null,
+    val candidates: List<GoogleCandidate>,
     val promptFeedback: GooglePromptFeedback? = null,
     val usageMetadata: GoogleUsageMetadata? = null,
     val modelVersion: String? = null,

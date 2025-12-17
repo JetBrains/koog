@@ -46,6 +46,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
+import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
@@ -100,6 +101,8 @@ import kotlinx.io.files.Path as KtPath
 
 abstract class ExecutorIntegrationTestBase {
     private val testScope = TestScope()
+    private val basicLimit = 256
+    private val extendedLimit = 512
 
     @AfterEach
     fun cleanup() {
@@ -133,7 +136,7 @@ abstract class ExecutorIntegrationTestBase {
                     summary = ReasoningSummary.AUTO
                 ),
                 include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
-                maxTokens = 256
+                maxTokens = basicLimit
             )
 
             is LLMProvider.Google -> {
@@ -145,48 +148,47 @@ abstract class ExecutorIntegrationTestBase {
                 } else {
                     GoogleThinkingConfig(
                         includeThoughts = true,
-                        thinkingBudget = 512
-                    )
-                }
-                GoogleParams(
-                    thinkingConfig = thinkingConfig,
-                    maxTokens = 512
-                )
-            }
-
-            else -> LLMParams(maxTokens = 256)
-        }
-    }
-
-    private fun createNoReasoningParams(model: LLModel): LLMParams {
-        return when (model.provider) {
-            is LLMProvider.Anthropic -> AnthropicParams(
-                thinking = AnthropicThinking.Disabled()
-            )
-
-            is LLMProvider.OpenAI -> OpenAIResponsesParams(
-                maxTokens = 256
-            )
-
-            is LLMProvider.Google -> {
-                val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
-                    GoogleThinkingConfig(
-                        includeThoughts = false,
-                    )
-                } else {
-                    GoogleThinkingConfig(
-                        includeThoughts = false,
+                        // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                        thinkingBudget = extendedLimit
                     )
                 }
                 GoogleParams(
                     thinkingConfig = thinkingConfig,
                     // Slightly higher limit to avoid truncation in multi-step reasoning tests
-                    maxTokens = 512
+                    maxTokens = extendedLimit
                 )
             }
 
-            else -> LLMParams(maxTokens = 256)
+            else -> LLMParams(maxTokens = basicLimit)
         }
+    }
+
+    private fun createNoReasoningParams(model: LLModel): LLMParams = when (model.provider) {
+        is LLMProvider.Anthropic -> AnthropicParams(
+            thinking = AnthropicThinking.Disabled()
+        )
+
+        is LLMProvider.OpenAI ->
+            if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+                OpenAIResponsesParams(
+                    maxTokens = basicLimit
+                )
+            } else {
+                OpenAIChatParams(
+                    maxTokens = basicLimit
+                )
+            }
+
+        is LLMProvider.Google ->
+            GoogleParams(
+                thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = false,
+                ),
+                // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                maxTokens = extendedLimit
+            )
+
+        else -> LLMParams(maxTokens = basicLimit)
     }
 
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -200,8 +202,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecute[${model.id}]") {
             getExecutor(model).execute(prompt, model) shouldNotBeNull {
                 shouldNotBeEmpty()
-                shouldForAny { it is Message.Assistant }
-                with(filterIsInstance<Message.Assistant>().first()) {
+                filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
                     content.lowercase().shouldContain("paris")
                     with(metaInfo) {
                         inputTokensCount.shouldNotBeNull()
@@ -680,7 +681,10 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry {
-            with(getExecutor(model).execute(prompt, model).first { it.content.isNotBlank() }) {
+            with(
+                getExecutor(model).execute(prompt, model)
+                    .first { it is Message.Assistant && it.content.isNotBlank() }
+            ) {
                 checkExecutorMediaResponse(this)
             }
         }
@@ -1051,11 +1055,7 @@ abstract class ExecutorIntegrationTestBase {
                 shouldNotBeEmpty()
                 withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
                 // Some Google models aren't providing meta info
-                if (model.provider == LLMProvider.Google) {
-                    assertResponseContainsReasoning(this, false)
-                } else {
-                    assertResponseContainsReasoning(this)
-                }
+                assertResponseContainsReasoning(this, model.provider != LLMProvider.Google)
             }
         }
     }

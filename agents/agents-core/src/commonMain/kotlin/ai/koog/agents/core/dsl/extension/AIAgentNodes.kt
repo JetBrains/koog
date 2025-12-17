@@ -487,16 +487,9 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
             // Ensure corresponding tool-call messages are present before adding results.
             val existingCallIds = prompt.messages.filterIsInstance<Message.Tool.Call>().map { it.id }.toSet()
             val missingCalls = results.filter { it.id !in existingCallIds }
-            if (missingCalls.isNotEmpty()) {
-                appendPrompt {
-                    tool {
-                        missingCalls.forEach { call(it.id, it.tool, it.toolArgs.toString()) }
-                    }
-                }
-            }
-
             appendPrompt {
                 tool {
+                    missingCalls.forEach { call(it.id, it.tool, it.toolArgs.toString()) }
                     results.forEach { result(it) }
                 }
             }
