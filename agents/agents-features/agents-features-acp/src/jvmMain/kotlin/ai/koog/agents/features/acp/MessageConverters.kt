@@ -13,16 +13,23 @@ import com.agentclientprotocol.model.ToolCallId
 import com.agentclientprotocol.model.ToolCallStatus
 import kotlinx.datetime.Clock
 
+/** Constant to use for an unknown content part format */
 public const val UNKNOWN_FORMAT: String = "unknown"
-public const val UNKNOWN_MIME_TYPE: String = "unknown/unknown"
-public const val UNKNOWN_URI: String = "unknown"
-public const val UNKNOWN_FILE_NAME: String = "unknown"
-public const val UNKNOWN_TOOL_CALL_ID: String = "unknown"
-public const val UNKNOWN_TOOL_DESCRIPTION: String = "unknown"
 
-private fun parseFormat(mimeType: String?): String {
-    return mimeType?.split("/")?.lastOrNull() ?: UNKNOWN_FORMAT
-}
+/**  Constant to use for an unknown content part mime type */
+public const val UNKNOWN_MIME_TYPE: String = "unknown/unknown"
+
+/** Constant to use for an unknown content part uri */
+public const val UNKNOWN_URI: String = "unknown"
+
+/** Constant to use for an unknown content part file name */
+public const val UNKNOWN_FILE_NAME: String = "unknown"
+
+/**  Constant to use for an unknown tool call id */
+public const val UNKNOWN_TOOL_CALL_ID: String = "unknown"
+
+/** Constant to use for an unknown tool description */
+public const val UNKNOWN_TOOL_DESCRIPTION: String = "unknown"
 
 /**
  * Converts a list of [ContentBlock] of ACP prompt to a Koog [Message.User].
@@ -35,6 +42,75 @@ public fun List<ContentBlock>.toKoogMessage(clock: Clock): Message {
 }
 
 /**
+ * Converts a ContentPart to an ACP ContentBlock.
+ */
+public fun ContentPart.toAcpContentBlock(): ContentBlock {
+    return when (this) {
+        is ContentPart.Text -> {
+            ContentBlock.Text(this.text)
+        }
+
+        is ContentPart.Audio -> {
+            ContentBlock.Audio(
+                data = this.content.toString(),
+                mimeType = this.mimeType,
+            )
+        }
+
+        is ContentPart.File ->
+            when (val content = this.content) {
+                is AttachmentContent.Binary.Base64 -> ContentBlock.Resource(
+                    resource = EmbeddedResourceResource.BlobResourceContents(
+                        blob = content.base64,
+                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                        uri = this.fileName ?: UNKNOWN_URI,
+                        mimeType = this.mimeType
+                    )
+                )
+
+                is AttachmentContent.Binary.Bytes -> ContentBlock.Resource(
+                    resource = EmbeddedResourceResource.BlobResourceContents(
+                        blob = content.asBase64(),
+                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                        uri = this.fileName ?: UNKNOWN_URI,
+                        mimeType = this.mimeType
+                    )
+                )
+
+                is AttachmentContent.PlainText -> ContentBlock.Resource(
+                    resource = EmbeddedResourceResource.TextResourceContents(
+                        text = content.text,
+                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                        uri = this.fileName ?: UNKNOWN_URI,
+                        mimeType = this.mimeType,
+                    )
+                )
+
+                is AttachmentContent.URL -> {
+                    ContentBlock.ResourceLink(
+                        name = this.fileName ?: UNKNOWN_FILE_NAME,
+                        uri = content.url,
+                        mimeType = this.mimeType,
+                    )
+                }
+            }
+
+        is ContentPart.Image -> {
+            ContentBlock.Image(
+                data = this.content.toString(),
+                mimeType = this.mimeType,
+                // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                uri = this.fileName,
+            )
+        }
+
+        is ContentPart.Video -> {
+            throw IllegalArgumentException("Video content is not supported yet in Acp content blocks.")
+        }
+    }
+}
+
+/**
  * Converts a single [ContentBlock] of ACP prompt to a Koog [ContentPart].
  */
 public fun ContentBlock.toKoogContentPart(): ContentPart {
@@ -44,7 +120,7 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
             ContentPart.Audio(
                 content = AttachmentContent.Binary.Base64(data),
                 format = parseFormat(mimeType),
-                mimeType = mimeType
+                mimeType = mimeType,
             )
         }
 
@@ -53,7 +129,9 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
             ContentPart.Image(
                 content = AttachmentContent.Binary.Base64(data),
                 format = parseFormat(mimeType),
-                mimeType = mimeType
+                mimeType = mimeType,
+                // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                fileName = uri
             )
         }
 
@@ -64,7 +142,9 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
                     ContentPart.File(
                         content = AttachmentContent.Binary.Base64(resource.blob),
                         format = parseFormat(resource.mimeType),
-                        mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE
+                        mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
+                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                        fileName = resource.uri
                     )
                 }
 
@@ -72,7 +152,9 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
                     ContentPart.File(
                         content = AttachmentContent.PlainText(resource.text),
                         format = parseFormat(resource.mimeType),
-                        mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE
+                        mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
+                        // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                        fileName = resource.uri
                     )
                 }
             }
@@ -83,7 +165,9 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
             ContentPart.File(
                 content = AttachmentContent.URL(uri),
                 format = parseFormat(mimeType),
-                mimeType = mimeType ?: UNKNOWN_MIME_TYPE
+                mimeType = mimeType ?: UNKNOWN_MIME_TYPE,
+                // Workaround, treat fileName as uri, should be fixed in the future by adding uri to the file
+                fileName = uri
             )
         }
 
@@ -126,7 +210,8 @@ public fun Message.Response.toAcpEvents(): List<SessionUpdateEvent> {
                     SessionUpdateEvent(
                         update = SessionUpdate.ToolCall(
                             toolCallId = ToolCallId(response.id ?: UNKNOWN_TOOL_CALL_ID),
-                            // TODO: Support tool description in the event
+                            // Workaround, we cannot get the tool description here from tool call
+                            // as we have no context with the tool registry
                             title = response.tool,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.PENDING,
@@ -140,66 +225,13 @@ public fun Message.Response.toAcpEvents(): List<SessionUpdateEvent> {
 }
 
 /**
- * Converts a ContentPart to an ACP ContentBlock.
+ * Attempts to derive a content part format from a MIME type.
+ *
+ * ACP entities expose only the MIME type and not the format separately,
+ * which prevents retrieving the format directly for Koog entities.
+ * To work around this, the method assumes that the format corresponds to the last segment of the MIME type
+ * (which is not always guaranteed to be correct).
  */
-public fun ContentPart.toAcpContentBlock(): ContentBlock {
-    return when (this) {
-        is ContentPart.Text -> {
-            ContentBlock.Text(this.text)
-        }
-
-        is ContentPart.Audio -> {
-            ContentBlock.Audio(
-                data = this.content.toString(),
-                mimeType = this.mimeType,
-            )
-        }
-
-        is ContentPart.File ->
-            when (val content = this.content) {
-                is AttachmentContent.Binary.Base64 -> ContentBlock.Resource(
-                    resource = EmbeddedResourceResource.BlobResourceContents(
-                        blob = content.base64,
-                        // TODO: add uri to the file
-                        uri = UNKNOWN_URI,
-                        mimeType = this.mimeType
-                    )
-                )
-
-                is AttachmentContent.Binary.Bytes -> ContentBlock.Resource(
-                    resource = EmbeddedResourceResource.BlobResourceContents(
-                        blob = content.asBase64(),
-                        // TODO: add uri to the file
-                        uri = UNKNOWN_URI,
-                        mimeType = this.mimeType
-                    )
-                )
-
-                is AttachmentContent.PlainText -> ContentBlock.Resource(
-                    resource = EmbeddedResourceResource.TextResourceContents(
-                        text = content.text,
-                        // TODO: add uri to the file
-                        uri = UNKNOWN_URI
-                    )
-                )
-
-                is AttachmentContent.URL -> {
-                    ContentBlock.ResourceLink(
-                        name = this.fileName ?: UNKNOWN_FILE_NAME,
-                        uri = content.url
-                    )
-                }
-            }
-
-        is ContentPart.Image -> {
-            ContentBlock.Image(
-                data = this.content.toString(),
-                mimeType = this.mimeType,
-            )
-        }
-
-        is ContentPart.Video -> {
-            throw AcpException("Video content is not supported yet in Acp content blocks.")
-        }
-    }
+private fun parseFormat(mimeType: String?): String {
+    return mimeType?.split("/")?.lastOrNull() ?: UNKNOWN_FORMAT
 }
