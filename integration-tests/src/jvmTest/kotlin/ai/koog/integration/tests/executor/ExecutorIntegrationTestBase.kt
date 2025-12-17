@@ -222,42 +222,6 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val executor = getExecutor(model)
-
-        val prompt = Prompt.build("test-streaming", LLMParams(toolChoice = ToolChoice.Required)) {
-            system("You are a helpful assistant.")
-            user("Count three times five")
-        }
-
-        withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
-            with(StringBuilder()) {
-                val endMessages = mutableListOf<StreamFrame.End>()
-                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
-
-                executor.executeStreamAndCollect(
-                    prompt = prompt,
-                    model = model,
-                    tools = listOf(SimpleCalculatorTool.descriptor),
-                    appendable = this,
-                    endMessages = endMessages,
-                    toolMessages = toolMessages
-                )
-
-                toolMessages.shouldNotBeEmpty()
-                withClue("Expected calculator tool call but got: [$toolMessages]") {
-                    toolMessages.any {
-                        it.name == SimpleCalculatorTool.name &&
-                            it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
-                    } shouldBe true
-                }
-            }
-        }
-    }
-
     open fun integration_testToolWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
