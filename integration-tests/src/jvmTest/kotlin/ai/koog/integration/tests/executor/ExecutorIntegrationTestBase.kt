@@ -718,7 +718,8 @@ abstract class ExecutorIntegrationTestBase {
             with(getExecutor(model).execute(prompt, model).single()) {
                 checkExecutorMediaResponse(this)
                 content.lowercase()
-                    .shouldContain("test image")
+                    .shouldContain("image")
+                    .shouldContain("test")
                     .shouldContain("hat")
             }
         }
@@ -1130,7 +1131,18 @@ abstract class ExecutorIntegrationTestBase {
 
         val executor = getExecutor(model)
 
-        val prompt = Prompt.build("test-streaming", LLMParams(toolChoice = ToolChoice.Required)) {
+        val params = when (model.provider) {
+            LLMProvider.OpenAI ->
+                if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+                    OpenAIResponsesParams(toolChoice = ToolChoice.Required)
+                } else {
+                    OpenAIChatParams(toolChoice = ToolChoice.Required)
+                }
+
+            else -> LLMParams(toolChoice = ToolChoice.Required)
+        }
+
+        val prompt = Prompt.build("test-streaming", params) {
             system("You are a helpful assistant.")
             user("Count three times five")
         }
