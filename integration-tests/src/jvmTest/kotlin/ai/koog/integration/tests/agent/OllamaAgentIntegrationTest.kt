@@ -126,8 +126,8 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
                                   
                                     Example tool call:
                                     {
-                                        "id":"ollama_tool_call_3743609160"
-                                        "tool":"answer_verification_tool"
+                                        "id":"ollama_tool_call_3743609160",
+                                        "tool":"answer_verification_tool",
                                         "content":{"answer":"Paris"}
                                     }.
                             """.trimIndent()
@@ -255,12 +255,21 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
             Make sure that all paths are relative to the project directory, e.g. "scores.csv", "compute_scores.py".
             """.trimIndent()
 
-            agent.run(request)
+            withRetry {
+                agent.run(request)
 
-            assertContains(toolCalls, "ReadFileContent", "readFileContent tool should be called")
-            assertContains(toolCalls, "CreateNewFileWithText", "createNewFileWithText tool should be called")
-
-            assertEquals(2, fileTools.fileContentsByPath.size, "A script with average score should be created")
+                assertContains(
+                    toolCalls,
+                    fileTools.readFileContentTool.name,
+                    "${fileTools.readFileContentTool.name} tool should be called"
+                )
+                assertContains(
+                    toolCalls,
+                    fileTools.createNewFileWithTextTool.name,
+                    "${fileTools.createNewFileWithTextTool.name} tool should be called"
+                )
+                assertEquals(2, fileTools.fileContentsByPath.size, "A script with average score should be created")
+            }
         }
     }
 }
