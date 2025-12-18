@@ -33,7 +33,7 @@ class ListDirectoryToolJvmTest {
     @Test
     fun `Args uses correct defaults`() {
         val args = ListDirectoryTool.Args("/tmp/test")
-        assertEquals("/tmp/test", args.path)
+        assertEquals("/tmp/test", args.absolutePath)
         assertEquals(1, args.depth)
         assertNull(args.filter)
     }

@@ -26,9 +26,9 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         resultSerializer = Result.serializer(),
         name = "__list_directory__",
         description = """
-            Lists directory contents with optional pattern-based file search. READ-ONLY.
+            Lists directory contents with optional filtering. READ-ONLY.
             Use to:
-            - Explore: see what files/folders exist
+            - Explore: see what files/directories exist
             - Search: find files by pattern (use filter + higher depth)
             Returns a tree with file paths, sizes, and line counts.
         """.trimIndent()
@@ -37,15 +37,26 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
     /**
      * Specifies which directory to list and how to traverse its contents.
      *
-     * @property path absolute filesystem path to the target directory
+     * @property absolutePath absolute filesystem path to the target directory
      * @property depth how many levels deep to traverse (1 = direct children only, 2 = include subdirectories, etc.), defaults to 1
      * @property filter glob pattern to match specific files/folders (e.g., "*.kt" for Kotlin files), defaults to null
      */
     @Serializable
     public data class Args(
-        @property:LLMDescription("Absolute path to the directory to list (e.g. /home/user/project). Don't use relative path like '.'")
-        val path: String,
-        @property:LLMDescription("Directory levels to traverse. 1 = immediate contents only (default), 2 = include subdirectories, etc. When searching with ** glob patterns, use 5-10 to reach deeply nested files.")
+        @property:LLMDescription("""
+            "The full filesystem path, starting from root.
+            Format:
+            - Linux/macOS: Starts with '/' (e.g., /home/user/project, /var/log, /tmp)
+            - Windows: Starts with drive letter (e.g., C:\\Users\\name, D:\\projects)
+            DO NOT use relative paths (., ./src) - the tool has no working directory context."
+            """)
+        val absolutePath: String,
+        @property:LLMDescription(
+            """How many levels deep to traverse from the target absolute path.
+            1 = only direct contents of the directory (default), 2 = also contents of its subdirectories, etc.
+            For deeply nested file searches, use higher values (5-10).
+            """
+        )
         val depth: Int = 1,
         @property:LLMDescription("""
             Glob pattern for finding files (case-insensitive). Output shows matching files with their paths; paths without matches are omitted.
@@ -83,11 +94,11 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
     override suspend fun execute(args: Args): Result {
         validate(args.depth > 0) { "Depth must be at least 1 (got ${args.depth})" }
 
-        val path = fs.fromAbsolutePathString(args.path)
-        val metadata = validateNotNull(fs.metadata(path)) { "Path does not exist: ${args.path}" }
+        val path = fs.fromAbsolutePathString(args.absolutePath)
+        val metadata = validateNotNull(fs.metadata(path)) { "Path does not exist: ${args.absolutePath}" }
 
         validate(metadata.type == FileMetadata.FileType.Directory) {
-            "Path is not a directory: ${args.path} (it's a ${metadata.type})"
+            "Path is not a directory: ${args.absolutePath} (it's a ${metadata.type})"
         }
 
         val entry = buildDirectoryTree(
@@ -101,7 +112,7 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         )
 
         validate(entry != null) {
-            "No files or directories match the pattern '${args.filter}' in ${args.path}"
+            "No files or directories match the pattern '${args.filter}' in ${args.absolutePath}"
         }
 
         return Result(entry as FileSystemEntry.Folder)
