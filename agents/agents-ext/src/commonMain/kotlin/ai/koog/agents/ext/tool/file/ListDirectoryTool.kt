@@ -48,7 +48,7 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
             - Glob does not override `depth`. If files exist deeper than the traversal can reach, you’ll get “no matches”.
 
             Returns a structured tree rooted at the requested directory.
-            """.trimIndent()
+        """.trimIndent()
     ) {
 
     /**
@@ -62,21 +62,26 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      */
     @Serializable
     public data class Args(
-        @property:LLMDescription("""
+        @property:LLMDescription(
+            """
             Absolute path to the directory to list.
             Requirements:
             - Must be an absolute path (not relative)
             - Must point to a directory (not a file)
-            """)
+            """
+        )
         val absolutePath: String,
-        @property:LLMDescription("""
+        @property:LLMDescription(
+            """
             Maximum traversal depth (> 0). Default is `1`.
             Guidance:
             - Start with `1` to avoid large outputs.
             - Increase when you need to see inside subfolders, but prefer adding a `filter` to keep results small.
-            """)
+            """
+        )
         val depth: Int = 1,
-        @property:LLMDescription("""
+        @property:LLMDescription(
+            """
             Optional glob filter for narrowing results (case-insensitive). Use `null` or `""` to disable filtering.
 
             What it matches:
@@ -98,7 +103,8 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
             - `"*/*.ts"`: TypeScript files exactly 1 folder below `absolutePath`
             - `"*/Test*"`: test files like `test/TestMain.cs`
             - `"**/{build.gradle.kts,settings.gradle.kts}"`: find Gradle build entrypoints
-            """)
+            """
+        )
         val filter: String? = null
     )
 
