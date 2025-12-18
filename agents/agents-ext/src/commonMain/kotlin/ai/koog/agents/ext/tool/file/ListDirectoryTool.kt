@@ -12,6 +12,7 @@ import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
 /**
  * Provides functionality to list directory contents with configurable depth and glob filtering parameters,
@@ -26,11 +27,28 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         resultSerializer = Result.serializer(),
         name = "__list_directory__",
         description = """
-            Lists directory contents with optional filtering. READ-ONLY.
-            Use to:
-            - Explore: see what files/directories exist
-            - Search: find files by pattern (use filter + higher depth)
-            Returns a tree with file paths, sizes, and line counts.
+            List a directory as a tree so an agent can *orient itself* in an unknown filesystem/repo and decide what to read next.
+
+            This is usually the first tool to call:
+            - Find where code, configs, and docs live
+            - Confirm filenames and exact paths before reading/editing
+            - Narrow the search space with a glob instead of dumping huge directory listings
+
+            Recommended agent workflow:
+            1) Call with a small `depth` (often `1` or `2`) to understand the top-level layout.
+            2) If you need to locate specific files, add a `filter` (glob) and increase `depth` significantly.
+            3) Once you see the exact path(s), switch to other tools for content.
+
+            This tool does NOT:
+            - Return file contents
+            - Search inside files (it only matches on paths via `filter`)
+            - Modify the filesystem (read-only)
+
+            Common pitfalls:
+            - `filter="*.kt"` only matches files directly under `absolutePath`. For “any depth”, use `filter="**/*.kt"`.
+            - Glob does not override `depth`. If files exist deeper than the traversal can reach, you’ll get “no matches”.
+
+            Returns a structured tree rooted at the requested directory.
         """.trimIndent()
     ) {
 
@@ -38,30 +56,53 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      * Specifies which directory to list and how to traverse its contents.
      *
      * @property absolutePath absolute filesystem path to the target directory
-     * @property depth how many levels deep to traverse (1 = direct children only, 2 = include subdirectories, etc.), defaults to 1
-     * @property filter glob pattern to match specific files/folders (e.g., "*.kt" for Kotlin files), defaults to null
+     * @property depth how many levels deep to traverse (1 = direct children only, 2 = include subdirectories, etc.),
+     *   defaults to 1; single-child directory chains may be collapsed without consuming depth
+     * @property filter optional glob pattern (case-insensitive) matched against normalized relative paths (from
+     *   [absolutePath]) using `/` as a separator; defaults to null (no filtering)
      */
     @Serializable
     public data class Args(
         @property:LLMDescription("""
-            "The full filesystem path, starting from root.
-            Format:
-            - Linux/macOS: Starts with '/' (e.g., /home/user/project, /var/log, /tmp)
-            - Windows: Starts with drive letter (e.g., C:\\Users\\name, D:\\projects)
-            DO NOT use relative paths (., ./src) - the tool has no working directory context."
+            Absolute path to the directory to list.
+            Requirements:
+            - Must be an absolute path (not relative)
+            - Must point to a directory (not a file)
             """)
+        @SerialName("absolutePath")
         val absolutePath: String,
         @property:LLMDescription(
-            """How many levels deep to traverse from the target absolute path.
-            1 = only direct contents of the directory (default), 2 = also contents of its subdirectories, etc.
-            For deeply nested file searches, use higher values (5-10).
+            """
+                Maximum traversal depth (> 0). Default is `1`.
+                Guidance:
+                - Start with `1` to avoid large outputs.
+                - Increase when you need to see inside subfolders, but prefer adding a `filter` to keep results small.
             """
         )
         val depth: Int = 1,
         @property:LLMDescription("""
-            Glob pattern for finding files (case-insensitive). Output shows matching files with their paths; paths without matches are omitted.
-            Pattern sees each file's path from the listed directory, so 'src/**/*.kt' finds Kotlin files under src/.
-            Glob: * (in segment), ** (across segments, limited by depth), ?, {a,b}.
+            Optional glob filter for narrowing results (case-insensitive). Use `null` or `""` (empty) to disable filtering.
+
+            What it matches:
+            - The pattern is matched against each entry’s *relative path* from `absolutePath`
+              (normalized to `/`, even on Windows).
+              Example relative paths: `README.md`, `src/main/kotlin/App.kt`, `test/TestMain.kt`.
+
+            What you get back:
+            - Matching files are included.
+            - Directories are included when they contain matching entries (to preserve structure).
+            - If `depth` is too small to reach matches, you may get a “no matches” error even if the files exist deeper.
+
+            Glob syntax (common cases):
+            - `*` matches within a single path segment (does not cross `/`)
+            - `**` can cross `/` (any depth)
+            - `?`, `[...]`, `[!...]`, `{a,b}` alternatives are supported
+
+            Practical examples:
+            - `"**/*.kt"`: all Kotlin files anywhere under `absolutePath`
+            - `"*/*.kt"`: Kotlin files exactly 1 folder below `absolutePath`
+            - `"*/Test*"`: test files like `test/TestMain.kt`
+            - `"**/{build.gradle.kts,settings.gradle.kts}"`: find Gradle build entrypoints
             """)
         val filter: String? = null
     )

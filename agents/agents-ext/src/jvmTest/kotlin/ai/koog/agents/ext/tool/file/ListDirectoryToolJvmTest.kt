@@ -43,7 +43,7 @@ class ListDirectoryToolJvmTest {
         val descriptor = tool.descriptor
         assertEquals("__list_directory__", descriptor.name)
         assertTrue(descriptor.description.isNotEmpty())
-        assertEquals(listOf("path"), descriptor.requiredParameters.map { it.name })
+        assertEquals(listOf("absolutePath"), descriptor.requiredParameters.map { it.name })
         assertEquals(setOf("depth", "filter"), descriptor.optionalParameters.map { it.name }.toSet())
     }
 
