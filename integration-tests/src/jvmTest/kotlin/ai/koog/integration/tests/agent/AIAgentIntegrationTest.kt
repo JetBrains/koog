@@ -617,7 +617,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             shouldNotBeEmpty()
-            first().nodeId shouldBe save
+            first().nodePath shouldBe save
         }
 
         val restoredAgent = AIAgent(
@@ -815,7 +815,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             size shouldBeGreaterThanOrEqual 3
-            map { it.nodeId }.toSet() shouldNotBeNull {
+            map { it.nodePath }.toSet() shouldNotBeNull {
                 shouldContain(hello)
                 shouldContain(world)
                 shouldContain(bye)
@@ -890,12 +890,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         agent.run(testInput)
 
-        with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }) {
+        with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }) {
             withClue(noCheckpointsError) {
                 isNotEmpty() shouldBe true
             }
             withClue(incorrectNodeIdError) {
-                first().nodeId shouldBe bye
+                first().nodePath shouldBe bye
             }
         }
     }
@@ -955,7 +955,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
 
                 withClue("Checkpoint message history should contain a tool call to '${SimpleCalculatorTool.name}'") {
-                    storageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
+                    storageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }
                         .shouldNotBeEmpty()
                         .shouldForAny { cp ->
                             cp.messageHistory.any { msg ->

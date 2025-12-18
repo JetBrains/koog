@@ -1,5 +1,6 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -121,7 +122,7 @@ class FileCheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodeId = "Node2",
+            nodePath = path(agentId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -162,7 +163,7 @@ class FileCheckpointsTests {
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId2",
             createdAt = time - 10.seconds,
-            nodeId = "Node1",
+            nodePath = path(agentId, "straight-forward", "Node1"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
@@ -174,7 +175,7 @@ class FileCheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodeId = "Node2",
+            nodePath = path(agentId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),

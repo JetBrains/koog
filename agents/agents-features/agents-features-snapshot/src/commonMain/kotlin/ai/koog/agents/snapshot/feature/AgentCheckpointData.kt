@@ -5,6 +5,7 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
@@ -21,8 +22,8 @@ import kotlin.uuid.Uuid
  *
  * @property checkpointId The unique identifier of the checkpoint. This allows tracking and restoring the agent's session to a specific state.
  * @property messageHistory A list of messages exchanged in the session up to the checkpoint. Messages include interactions between the user, system, assistant, and tools.
- * @property nodeId The identifier of the node where the checkpoint was created.
- * @property lastInput Serialized input received for node with [nodeId]
+ * @property nodePath The identifier of the node where the checkpoint was created.
+ * @property lastInput Serialized input received for node with [nodePath]
  * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
  * @property createdAt The timestamp when the checkpoint was created.
  * @property version The version of the checkpoint data structure
@@ -31,7 +32,7 @@ import kotlin.uuid.Uuid
 public data class AgentCheckpointData(
     val checkpointId: String,
     val createdAt: Instant,
-    val nodeId: String,
+    val nodePath: String,
     val lastInput: JsonElement,
     val messageHistory: List<Message>,
     val version: Long,
@@ -50,7 +51,7 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
     return AgentCheckpointData(
         checkpointId = Uuid.random().toString(),
         createdAt = time,
-        nodeId = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
+        nodePath = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
         lastInput = JsonNull,
         messageHistory = emptyList(),
         properties = mapOf(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JsonPrimitive(true)),
@@ -69,11 +70,12 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
  */
 public fun AgentCheckpointData.toAgentContextData(
     rollbackStrategy: RollbackStrategy,
+    agentId: String,
     additionalRollbackAction: suspend (AIAgentContext) -> Unit = {}
 ): AgentContextData {
     return AgentContextData(
         messageHistory = messageHistory,
-        nodePath = nodeId,
+        nodePath = nodePath,
         lastInput = lastInput,
         rollbackStrategy,
         additionalRollbackAction

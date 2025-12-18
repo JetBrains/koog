@@ -99,7 +99,7 @@ class PersistenceRunsTwiceTest {
             }
         }
 
-        val agentId = "100500"
+        val agentId = "test-agent-id"
 
         // Act: first run
         val result = runCatching { agentService.createAgentAndRun("Start the test", id = agentId) }
@@ -114,7 +114,9 @@ class PersistenceRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getCheckpoints(agentId).size == 2
+                val a = provider.getCheckpoints(agentId)
+                println(a)
+                a.size == 2
             }
         }
 
@@ -123,10 +125,10 @@ class PersistenceRunsTwiceTest {
 
         val secondAgent = agentService.createAgent(id = agentId)
 
-        val secondRunResult = runCatching { secondAgent.run("Start the test") }
+        val secondRunResult = secondAgent.run("Start the test")
 
         // Assert: second run is successful
-        assert(secondRunResult.isSuccess) { "Second run should complete successfully" }
+//        assert(secondRunResult.isSuccess) { "Second run should complete successfully" }
         testCollector.logs() shouldContainExactly listOf(
             "Second Step",
             "Second try successful",

@@ -121,7 +121,7 @@ class PostgresPersistenceStorageProviderTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
-            nodeId = "test-node",
+            nodePath = "test-node",
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),

@@ -74,11 +74,11 @@ class NodeUniquenessCheckpointTest {
     }
 
     /**
-     * Test that verifies an error is produced when the AgentCheckpoint feature is present
+     * Test that verifies an NO error is produced when the AgentCheckpoint feature is present
      * and the graph's nodes are non-unique.
      */
     @Test
-    fun `test error when Persistence feature is present and nodes are non-unique`() = runTest {
+    fun `test no error when Persistence feature is present and nodes are non-unique`() = runTest {
         // Create a mock executor
         val mockExecutor: PromptExecutor = getMockExecutor {}
 
@@ -109,10 +109,7 @@ class NodeUniquenessCheckpointTest {
             }
         }
 
-        // The exception should be thrown when the agent is started, not when the feature is installed
-        assertFailsWith<IllegalArgumentException> {
-            agent.run("Start the test")
-        }
+        agent.run("Start the test")
     }
 
     /**

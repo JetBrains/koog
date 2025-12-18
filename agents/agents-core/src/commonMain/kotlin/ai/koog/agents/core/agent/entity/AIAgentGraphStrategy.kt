@@ -7,6 +7,8 @@ import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.context.with
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -97,7 +99,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun restoreDefault(agentContext: AIAgentContext, data: AgentContextData) {
-        val nodePath = agentContext.executionInfo.path()
+        val nodePath = data.nodePath
 
         // Perform additional cleanup (ex: rollback tools):
         data.additionalRollbackActions(agentContext)
@@ -115,11 +117,14 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
      * Finds and sets the node for the strategy based on the provided context.
      */
     public fun setExecutionPoint(nodePath: String, input: JsonElement) {
-        val segments = nodePath.split(":")
+        // we drop first because it's agent's id, we don't need it here
+        val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
+
         if (segments.isEmpty()) {
             throw IllegalArgumentException("Invalid node path: $nodePath")
         }
 
+        val actualPath = segments.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
         val strategyName = segments.firstOrNull() ?: return
 
         // getting the very first segment (it should be a root strategy node)
@@ -129,25 +134,25 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
         // restoring the current node for each subgraph including strategy
         val segmentsInbetween = segments.drop(1).dropLast(1)
         for (segment in segmentsInbetween) {
-            currentNode as? ExecutionPointNode
-                ?: throw IllegalStateException("Node ${currentNode?.name} does not have subnodes")
+            val currNode = currentNode as? ExecutionPointNode
+                ?: throw IllegalStateException("Restore for path $nodePath failed: one of middle segments is not a subgraph")
 
-            currentPath = "$currentPath:$segment"
+            currentPath = "$currentPath${DEFAULT_AGENT_PATH_SEPARATOR}$segment"
             val nextNode = metadata.nodesMap[currentPath]
             if (nextNode is ExecutionPointNode) {
-                currentNode.enforceExecutionPoint(nextNode, input)
+                currNode.enforceExecutionPoint(nextNode, input)
                 currentNode = nextNode
             }
         }
 
         // forcing the very last segment to the latest pre-leaf node to complete the chain
-        val leaf = metadata.nodesMap[nodePath] ?: throw IllegalStateException("Node ${segments.last()} not found")
+        val leaf = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
         val inputType = leaf.inputType
 
         val actualInput = serializer.decodeFromJsonElement(serializer.serializersModule.serializer(inputType), input)
         leaf.let {
             currentNode as? ExecutionPointNode
-                ?: throw IllegalStateException("Node ${currentNode?.name} does not have subnodes")
+                ?: throw IllegalStateException("Node ${currentNode?.name} is not a valid leaf node")
             currentNode.enforceExecutionPoint(it, actualInput)
         }
     }

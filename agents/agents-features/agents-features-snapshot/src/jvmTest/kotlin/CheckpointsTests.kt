@@ -3,6 +3,7 @@ import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.GraphAIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.strategy
@@ -71,7 +72,7 @@ class CheckpointsTests {
                     withPersistence { ctx ->
                         createCheckpoint(
                             agentContext = ctx,
-                            nodeId = currentNodeId ?: error("currentNodeId not set"),
+                            nodePath = ctx.executionInfo.path(),
                             lastInput = input,
                             lastInputType = typeOf<String>(),
                             checkpointId = "cpt-100500",
@@ -215,7 +216,7 @@ class CheckpointsTests {
                 withPersistence { ctx ->
                     createCheckpoint(
                         ctx,
-                        currentNodeId ?: error("currentNodeId not set"),
+                        ctx.executionInfo.path(),
                         input,
                         typeOf<String>(),
                         checkpointId = checkpointId,
@@ -358,7 +359,7 @@ class CheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodeId = "Node2",
+            nodePath = path(agentId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -400,7 +401,7 @@ class CheckpointsTests {
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodeId = "Node1",
+            nodePath = path(agentId, "straight-forward", "Node1"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -412,7 +413,7 @@ class CheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodeId = "Node2",
+            nodePath = path(agentId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),

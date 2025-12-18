@@ -1,5 +1,6 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -178,7 +179,7 @@ class SubgraphCheckpointsTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = Clock.System.now(),
-            nodeId = "repeated-subgraphs-test:sg1:sgNode1",
+            nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
             lastInput = JsonPrimitive("Input at checkpoint"),
             messageHistory = listOf(),
             version = 1L

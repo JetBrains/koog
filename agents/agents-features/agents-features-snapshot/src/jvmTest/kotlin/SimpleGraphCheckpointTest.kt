@@ -1,5 +1,8 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.Persistence
@@ -99,10 +102,15 @@ class SimpleGraphCheckpointTest {
             maxAgentIterations = 10
         )
 
+        val agentId = "test-agent-checkpoint"
+        val checkpointNodeId = "test-checkpoint-node"
+        val checkpointStrategyName = "test-checkpoint-strategy"
+
         // Create an agent with the checkpoint strategy
         val agent = AIAgent(
+            id = agentId,
             promptExecutor = mockExecutor,
-            strategy = createCheckpointStrategy(),
+            strategy = createCheckpointStrategy(checkpointStrategyName, checkpointNodeId),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -117,7 +125,8 @@ class SimpleGraphCheckpointTest {
         // Verify that a checkpoint was created and saved
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
         assertNotNull(checkpoint, "No checkpoint was created")
-        assertEquals("checkpointNode", checkpoint?.nodeId, "Checkpoint has incorrect node ID")
+        val expectedPath = path(agentId, checkpointStrategyName, checkpointNodeId)
+        assertEquals(expectedPath, checkpoint?.nodePath, "Checkpoint has incorrect node ID")
     }
 
     @Test
@@ -141,10 +150,15 @@ class SimpleGraphCheckpointTest {
             maxAgentIterations = 10
         )
 
+        val agentId = "test-agent-checkpoint"
+        val checkpointNodeId = "test-checkpoint-node"
+        val checkpointStrategyName = "test-checkpoint-strategy"
+
         // Create an agent with the checkpoint strategy
         val agent = AIAgent(
+            id = agentId,
             promptExecutor = mockExecutor,
-            strategy = createCheckpointStrategy(),
+            strategy = createCheckpointStrategy(checkpointStrategyName, checkpointNodeId),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -159,8 +173,9 @@ class SimpleGraphCheckpointTest {
         // Verify that a checkpoint was created and saved
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull() ?: error("checkpoint is null")
 
+        val expectedPath = "$agentId${DEFAULT_AGENT_PATH_SEPARATOR}$checkpointStrategyName${DEFAULT_AGENT_PATH_SEPARATOR}$checkpointNodeId"
         assertNotNull(checkpoint, "No checkpoint was created")
-        assertEquals("checkpointNode", checkpoint.nodeId, "Checkpoint has incorrect node ID")
+        assertEquals(expectedPath, checkpoint.nodePath, "Checkpoint has incorrect node ID")
         assertEquals(3, checkpoint.messageHistory.size)
         assertEquals(input, checkpoint.messageHistory[0].content)
         assertEquals("Node 1 output", checkpoint.messageHistory[1].content)
