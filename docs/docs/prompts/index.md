@@ -99,6 +99,19 @@ flowchart TB
     B -->|"result to"| A
 ```
 
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import kotlinx.coroutines.runBlocking
+
+val apiKey = System.getenv("OPENAI_API_KEY")
+
+fun main() = runBlocking {
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 // Create an agent
 val agent = AIAgent(
@@ -109,6 +122,7 @@ val agent = AIAgent(
 // Run the agent
 val result = agent.run("What is Koog?")
 ```
+<!--- KNIT example-prompts-01.kt -->
 
 ## Optimizing performance and handling failures
 

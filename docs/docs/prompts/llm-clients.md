@@ -38,35 +38,33 @@ import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.runBlocking
 -->
 ```kotlin
-fun main() {
-    runBlocking {
-        // Create an OpenAI client
-        val token = System.getenv("OPENAI_API_KEY")
-        val client = OpenAILLMClient(token)
+fun main() = runBlocking {
+    // Create an OpenAI client
+    val token = System.getenv("OPENAI_API_KEY")
+    val client = OpenAILLMClient(token)
 
-        // Create a prompt
-        val prompt = prompt("prompt_name", LLMParams()) {
-            // Add a system message to set the context
-            system("You are a helpful assistant.")
+    // Create a prompt
+    val prompt = prompt("prompt_name", LLMParams()) {
+        // Add a system message to set the context
+        system("You are a helpful assistant.")
 
-            // Add a user message
-            user("Tell me about Kotlin")
+        // Add a user message
+        user("Tell me about Kotlin")
 
-            // You can also add assistant messages for few-shot examples
-            assistant("Kotlin is a modern programming language...")
+        // You can also add assistant messages for few-shot examples
+        assistant("Kotlin is a modern programming language...")
 
-            // Add another user message
-            user("What are its key features?")
-        }
-
-        // Run the prompt
-        val response = client.execute(prompt, OpenAIModels.Chat.GPT4o)
-        // Print the response
-        println(response)
+        // Add another user message
+        user("What are its key features?")
     }
+
+    // Run the prompt
+    val response = client.execute(prompt, OpenAIModels.Chat.GPT4o)
+    // Print the response
+    println(response)
 }
 ```
-<!--- KNIT example-llm-clients-03.kt -->
+<!--- KNIT example-llm-clients-01.kt -->
 
 ## Streaming responses
 
@@ -76,6 +74,18 @@ fun main() {
 When you need to process responses as they are generated,
 you can use the `executeStreaming()` method to stream the model output:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.streaming.StreamFrame
+import kotlinx.coroutines.runBlocking
+
+fun main() = runBlocking {
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 // Set up the OpenAI client with your API key
 val token = System.getenv("OPENAI_API_KEY")
@@ -94,7 +104,7 @@ response.collect { event ->
     }
 }
 ```
-<!--- KNIT example-llm-clients-04.kt -->
+<!--- KNIT example-llm-clients-02.kt -->
 
 ## Multiple choices
 
@@ -103,6 +113,12 @@ response.collect { event ->
 
 You can use the `executeMultipleChoices()` method to request multiple alternative responses from the model in a single call:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
 fun main() = runBlocking {
     val apiKey = System.getenv("OPENAI_API_KEY")
@@ -122,7 +138,7 @@ fun main() = runBlocking {
     }
 }
 ```
-<!--- KNIT example-llm-clients-05.kt -->
+<!--- KNIT example-llm-clients-03.kt -->
 
 !!! tip
     You can also request multiple choices by adding the [`numberOfChoices`](structured-prompts.md#prompt-parameters) LLM parameter into the prompt.
@@ -134,6 +150,12 @@ fun main() = runBlocking {
 
 To get a list of available model IDs supported by the LLM client, use the `models()` method:    
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
 fun main() = runBlocking {
     val apiKey = System.getenv("OPENAI_API_KEY")
@@ -143,7 +165,7 @@ fun main() = runBlocking {
     ids.forEach { println(it) }
 }
 ```
-<!--- KNIT example-llm-clients-06.kt -->
+<!--- KNIT example-llm-clients-04.kt -->
 
 ## Embeddings
 
@@ -153,6 +175,12 @@ fun main() = runBlocking {
 You convert text into embedding vectors using the `embed()` method.
 Choose an embedding model and pass your text to this method:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
 fun main() = runBlocking {
     val apiKey = System.getenv("OPENAI_API_KEY")
@@ -166,7 +194,7 @@ fun main() = runBlocking {
     println("Embedding size: ${embedding.size}")
 }
 ```
-<!--- KNIT example-llm-clients-07.kt -->
+<!--- KNIT example-llm-clients-05.kt -->
 
 ## Moderation
 
@@ -175,6 +203,12 @@ fun main() = runBlocking {
 
 You can use the `moderate()` method with a moderation model to check whether a prompt contains inappropriate content:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
 fun main() = runBlocking {
     val apiKey = System.getenv("OPENAI_API_KEY")
@@ -190,7 +224,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-llm-clients-08.kt -->
+<!--- KNIT example-llm-clients-06.kt -->
 
 ## Integration with prompt executors
 

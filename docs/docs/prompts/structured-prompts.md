@@ -10,11 +10,15 @@ examples, tool calls, and their results.
 
 The `prompt()` function creates a Prompt object with a unique ID and a list of messages:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
 ```kotlin
 val prompt = prompt("unique_prompt_id") {
     // List of messages
 }
 ```
+<!--- KNIT example-structured-prompts-01.kt -->
 
 ## Message types
 
@@ -25,6 +29,9 @@ The Kotlin DSL supports the following types of messages, each of which correspon
 - **Assistant message**: Represents LLM responses that are used for few-shot learning or to continue the conversation.
 - **Tool message**: Represents tool calls and their results.
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
 ```kotlin
 val prompt = prompt("unique_prompt_id") {
     // Add a system message to set the context
@@ -35,6 +42,7 @@ val prompt = prompt("unique_prompt_id") {
     assistant("The result is 8.")
 }
 ```
+<!--- KNIT example-structured-prompts-02.kt -->
 
 ### System message
 
@@ -51,10 +59,13 @@ val prompt = prompt("assistant") {
     system("You are a helpful assistant that explains technical concepts.")
 }
 ```
-<!--- KNIT example-structured-prompts-01.kt -->
+<!--- KNIT example-structured-prompts-03.kt -->
 
 You can use the `text()` extension function to create a more complex system message:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
 ```kotlin
 val prompt = prompt("prompt_name") {
     system {
@@ -64,6 +75,7 @@ val prompt = prompt("prompt_name") {
     }
 }
 ```
+<!--- KNIT example-structured-prompts-04.kt -->
 
 ### User messages
 
@@ -72,12 +84,16 @@ It can include plain text or multimodal content (such as images, audio, video, a
 
 To create the user message, provide a string to the `user()` function as an argument:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
 ```kotlin
 val prompt = prompt("question") {
     system("You are a helpful assistant.")
     user("What is Koog?")
 }
 ```
+<!--- KNIT example-structured-prompts-05.kt -->
 
 For details about multimodal content, see [Multimodal inputs](#multimodal-inputs).
 
@@ -88,6 +104,9 @@ to continue a conversation, or to demonstrate the expected output structure.
 
 To create the assistant message, provide a string to the `assistant()` function as an argument:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
 ```kotlin
 val prompt = prompt("article_review") {
     system("Evaluate the article review.")
@@ -108,9 +127,13 @@ val prompt = prompt("article_review") {
     user("The article is interesting and helpful.")
 }
 ```
+<!--- KNIT example-structured-prompts-06.kt -->
 
 You can use the `text()` extension function to create a more complex assistant message:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
 ```kotlin
     val prompt = prompt("prompt_name") {
     assistant{
@@ -119,6 +142,7 @@ You can use the `text()` extension function to create a more complex assistant m
     }
 }
 ```
+<!--- KNIT example-structured-prompts-07.kt -->
 
 ### Tool messages
 
@@ -157,12 +181,17 @@ val prompt = prompt("calculator_example") {
     assistant("The result of 5 + 3 is 8.")
 }
 ```
-<!--- KNIT example-structured-prompts-02.kt -->
+<!--- KNIT example-structured-prompts-08.kt -->
 
 ## Prompt parameters
 
 Prompts can be customized by configuring parameters that control the LLM's behavior.
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.params.LLMParams.ToolChoice
+-->
 ```kotlin
 val prompt = prompt(
     id = "custom_params",
@@ -176,6 +205,7 @@ val prompt = prompt(
     user("Write a song about winter.")
 }
 ```
+<!--- KNIT example-structured-prompts-09.kt -->
 
 The following parameters are supported:
 
@@ -190,6 +220,9 @@ For more information, see [LLM parameters](llm-parameters.md).
 
 You can extend an existing prompt by calling the `prompt()` function with the existing prompt as an argument:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
 ```kotlin
 val basePrompt = prompt("base") {
     system("You are a helpful assistant.")
@@ -201,6 +234,7 @@ val extendedPrompt = prompt(basePrompt) {
     user("What's the weather like?")
 }
 ```
+<!--- KNIT example-structured-prompts-10.kt -->
 
 This creates a new prompt that includes all messages from `basePrompt` and the new user message.
 

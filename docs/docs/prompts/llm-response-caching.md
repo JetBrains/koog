@@ -50,7 +50,7 @@ val cachedExecutor = CachedPromptExecutor(
 // Run the cached prompt executor
 val response = cachedExecutor.execute(prompt, OpenAIModels.Chat.GPT4o)
 ```
-<!--- KNIT example-prompt-api-17.kt -->
+<!--- KNIT example-llm-response-caching-01.kt -->
 
 Now you can run the same prompt with the same model multiple times. The response will be retrieved from the cache.
 

@@ -37,7 +37,7 @@ val resilientClient = RetryingLLMClient(client)
 // Now all operations will automatically retry on transient errors
 val response = resilientClient.execute(prompt, OpenAIModels.Chat.GPT4o)
 ```
-<!--- KNIT example-llm-clients-09.kt -->
+<!--- KNIT example-handling-failures-01.kt -->
 
 ### Configuring retry behavior
 
@@ -80,7 +80,7 @@ val customClient = RetryingLLMClient(
     )
 )
 ```
-<!--- KNIT example-llm-clients-10.kt -->
+<!--- KNIT example-handling-failures-02.kt -->
 
 ### Retry error patterns
 
@@ -150,7 +150,7 @@ val config = RetryConfig(
     )
 )
 ```
-<!--- KNIT example-llm-clients-11.kt -->
+<!--- KNIT example-handling-failures-03.kt -->
 
 You can also append custom patterns to the default `RetryConfig.DEFAULT_PATTERNS`:
 
@@ -165,7 +165,7 @@ val config = RetryConfig(
     )
 )
 ```
-<!--- KNIT example-llm-clients-12.kt -->
+<!--- KNIT example-handling-failures-04.kt -->
 
 
 ### Streaming with retry
@@ -199,7 +199,7 @@ val config = RetryConfig(
 val client = RetryingLLMClient(baseClient, config)
 val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
 ```
-<!--- KNIT example-llm-clients-10.kt -->
+<!--- KNIT example-handling-failures-05.kt -->
 
 !!!note
     Streaming retries only apply to connection failures that happen before the first token is received.
@@ -250,7 +250,7 @@ val multiExecutor = MultiLLMPromptExecutor(
     ),
 )
 ```
-<!--- KNIT example-prompt-api-21.kt -->
+<!--- KNIT example-handling-failures-06.kt -->
 
 ## Timeout configuration
 
@@ -277,7 +277,7 @@ val client = OpenAILLMClient(
     )
 )
 ```
-<!--- KNIT example-prompt-api-23.kt -->
+<!--- KNIT example-handling-failures-07.kt -->
 
 !!! tip
     For long-running or streaming calls, set higher values for `requestTimeoutMillis` and `socketTimeoutMillis`.
@@ -297,6 +297,7 @@ Here is an example of error handling:
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
+import ai.koog.prompt.executor.clients.retry.RetryConfig
 import ai.koog.prompt.dsl.prompt
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
@@ -341,4 +342,4 @@ fun main() {
     }
 }
 ```
-<!--- KNIT example-prompt-api-24.kt -->
+<!--- KNIT example-handling-failures-08.kt -->

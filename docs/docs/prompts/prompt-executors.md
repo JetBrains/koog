@@ -30,7 +30,7 @@ import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
 val promptExecutor = SingleLLMPromptExecutor(openAIClient)
 ```
-<!--- KNIT example-prompt-api-09.kt -->
+<!--- KNIT example-prompt-executors-01.kt -->
 
 ## Creating a multi-provider executor
 
@@ -55,7 +55,7 @@ val multiExecutor = MultiLLMPromptExecutor(
     LLMProvider.Ollama to ollamaClient
 )
 ```
-<!--- KNIT example-prompt-api-11.kt -->
+<!--- KNIT example-prompt-executors-02.kt -->
 
 ## Pre-defined prompt executors
 
@@ -87,13 +87,6 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import kotlinx.coroutines.runBlocking
-
-fun main() {
-    runBlocking {
--->
-<!--- SUFFIX
-    }
-}
 -->
 ```kotlin
 // Create an OpenAI executor
@@ -105,7 +98,7 @@ val anthropicClient = AnthropicLLMClient("ANTHROPIC_KEY")
 val googleClient = GoogleLLMClient("GOOGLE_KEY")
 val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 ```
-<!--- KNIT example-prompt-api-13.kt -->
+<!--- KNIT example-prompt-executors-03.kt -->
 
 ## Running a prompt
 
@@ -139,7 +132,7 @@ val response = promptExecutor.execute(
     model = OpenAIModels.Chat.GPT4o
 )
 ```
-<!--- KNIT example-prompt-api-14.kt -->
+<!--- KNIT example-prompt-executors-04.kt -->
 
 This will run the prompt with the `GPT4o` model and return the response.
 
@@ -161,19 +154,35 @@ The process is as follows:
 
 Here is an example of switching between providers:
 
-```kotlin
+<!--- INCLUDE
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.dsl.prompt
+import kotlinx.coroutines.runBlocking
+
 // Create LLM clients for OpenAI, Anthropic, and Google providers
 val openAIClient = OpenAILLMClient("OPENAI_KEY")
 val anthropicClient = AnthropicLLMClient("ANTHROPIC_KEY")
 val googleClient = GoogleLLMClient("GOOGLE_KEY")
 
 // Create a MultiLLMPromptExecutor that maps LLM providers to LLM clients
-val multiExecutor = MultiLLMPromptExecutor(
+val executor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to openAIClient,
     LLMProvider.Anthropic to anthropicClient,
     LLMProvider.Google to googleClient
 )
 
+fun main() = runBlocking {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
 // Create a prompt
 val p = prompt("demo") { user("Summarize this.") }
 
@@ -181,8 +190,9 @@ val p = prompt("demo") { user("Summarize this.") }
 val openAIResult = executor.execute(p, OpenAIModels.Chat.GPT4o)
 
 // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
-val anthropicResult = executor.execute(p, AnthropicModels.Messages.Claude35Sonnet)
+val anthropicResult = executor.execute(p, AnthropicModels.Sonnet_3_5)
 ```
+<!--- KNIT example-prompt-executors-05.kt -->
 
 You can optionally configure a fallback LLM provider and model to use when the requested client is unavailable.
 For details, refer to [Configuring fallbacks](#configuring-fallbacks).
@@ -194,6 +204,9 @@ To configure the fallback mechanism, provide the `fallback` parameter to the `Mu
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.llm.LLMProvider
 -->
 ```kotlin
@@ -209,17 +222,45 @@ val multiExecutor = MultiLLMPromptExecutor(
     )
 )
 ```
-<!--- KNIT example-prompt-api-15.kt -->
+<!--- KNIT example-prompt-executors-06.kt -->
 
 If you pass a model from an LLM provider that is not included in the `MultiLLMPromptExecutor`,
 the prompt executor will use the fallback model:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.llm.LLMProvider
+import kotlinx.coroutines.runBlocking
+
+val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
+val ollamaClient = OllamaClient()
+
+val multiExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to openAIClient,
+    LLMProvider.Ollama to ollamaClient,
+    fallback = MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
+        fallbackProvider = LLMProvider.Ollama,
+        fallbackModel = OllamaModels.Meta.LLAMA_3_2
+    )
+)
+
+fun main() = runBlocking {
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 // Create a prompt
 val p = prompt("demo") { user("Summarize this") }
 // If you pass a Google model, the prompt executor will use the fallback model, as the Google client is not included
 val response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro)
 ```
+<!--- KNIT example-prompt-executors-07.kt -->
 
 !!! note
     Fallbacks are available for the `execute()` and `executeMultipleChoices()` methods only.

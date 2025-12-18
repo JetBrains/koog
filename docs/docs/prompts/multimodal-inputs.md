@@ -39,7 +39,7 @@ user {
     +"Focus on the main subjects."
 }
 ```
-<!--- KNIT example-structured-prompts-04.kt -->
+<!--- KNIT example-multimodal-inputs-01.kt -->
 
 The `+` operator adds text content to the user message along with the media attachments.
 
@@ -76,7 +76,7 @@ user {
     )
 }
 ```
-<!--- KNIT example-structured-prompts-05.kt -->
+<!--- KNIT example-multimodal-inputs-02.kt -->
 
 Koog provides specialized `ContentPart` classes for each media type:
 
@@ -93,8 +93,6 @@ All `ContentPart` types accept the following parameters:
 | `format`   | String                                  | Yes                         | The format of the provided file. For example, `png`.                                                      |
 | `mimeType` | String                                  | Only for `ContentPart.File` | The MIME Type of the provided file. For example, `image/png`.                                             |
 | `fileName` | String                                  | No                          | The name of the provided file including the extension. For example, `screenshot.png`.                     |
-
-
 
 #### Attachment content
 
@@ -145,7 +143,7 @@ val prompt = prompt("mixed_content") {
     }
 }
 ```
-<!--- KNIT example-structured-prompts-06.kt -->
+<!--- KNIT example-multimodal-inputs-03.kt -->
 
 ## Next steps
 
