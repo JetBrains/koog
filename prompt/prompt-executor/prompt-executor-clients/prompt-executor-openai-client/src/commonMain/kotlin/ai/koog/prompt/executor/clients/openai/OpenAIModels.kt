@@ -378,7 +378,6 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-5",
             capabilities = listOf(
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -409,7 +408,6 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-5-mini",
             capabilities = listOf(
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -441,7 +439,6 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-5-nano",
             capabilities = listOf(
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -473,7 +470,6 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-5-codex",
             capabilities = listOf(
                 LLMCapability.Completion,
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -531,7 +527,6 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-5.1",
             capabilities = listOf(
                 LLMCapability.Completion,
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -563,7 +558,6 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-5.1-codex",
             capabilities = listOf(
                 LLMCapability.Completion,
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -595,7 +589,6 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-5.2",
             capabilities = listOf(
                 LLMCapability.Completion,
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -629,7 +622,6 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-5.2-pro",
             capabilities = listOf(
                 LLMCapability.Completion,
-                LLMCapability.Temperature,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
