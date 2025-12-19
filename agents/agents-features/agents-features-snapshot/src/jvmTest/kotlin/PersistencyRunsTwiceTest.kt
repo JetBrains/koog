@@ -123,12 +123,8 @@ class PersistenceRunsTwiceTest {
         // Clear the collector to isolate the second run
         testCollector.clear()
 
-        val secondAgent = agentService.createAgent(id = agentId)
+        agentService.createAgent(id = agentId).run("Start the test")
 
-        val secondRunResult = secondAgent.run("Start the test")
-
-        // Assert: second run is successful
-//        assert(secondRunResult.isSuccess) { "Second run should complete successfully" }
         testCollector.logs() shouldContainExactly listOf(
             "Second Step",
             "Second try successful",

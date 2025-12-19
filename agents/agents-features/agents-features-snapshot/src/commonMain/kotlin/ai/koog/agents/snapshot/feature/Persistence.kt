@@ -124,7 +124,7 @@ public class Persistence(
                     val parent = persistence.getLatestCheckpoint(eventCtx.context.agentId)
                     persistence.createCheckpoint(
                         agentContext = eventCtx.context,
-                        nodePath = eventCtx.executionInfo.path(),
+                        nodePath = eventCtx.context.executionInfo.path(),
                         lastInput = eventCtx.input,
                         lastInputType = eventCtx.inputType,
                         version = parent?.version?.plus(1) ?: 0L,

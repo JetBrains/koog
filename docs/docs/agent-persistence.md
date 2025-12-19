@@ -169,7 +169,7 @@ suspend fun example(context: AIAgentContext) {
     // Create a checkpoint with the current state
     val checkpoint = context.persistence().createCheckpoint(
         agentContext = context,
-        nodeId = "current-node-id",
+        nodePath = context.executionInfo.path(),
         lastInput = inputData,
         lastInputType = inputType,
         checkpointId = context.runId,
@@ -284,7 +284,7 @@ suspend fun example(context: AIAgentContext) {
         // 'this' is the checkpoint feature
         createCheckpoint(
             agentContext = ctx,
-            nodeId = "current-node-id",
+            nodePath = ctx.executionInfo.path(),
             lastInput = inputData,
             lastInputType = inputType,
             checkpointId = ctx.runId,
@@ -390,7 +390,7 @@ val customMessageHistory = emptyList<User>()
 fun example(context: AIAgentContext) {
     context.persistence().setExecutionPoint(
         agentContext = context,
-        nodeId = "target-node-id",
+        nodePath = context.executionInfo.path(),
         messageHistory = customMessageHistory,
         input = customInput
     )
