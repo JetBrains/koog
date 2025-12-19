@@ -180,7 +180,6 @@ public class Persistence(
             return null
         }
 
-        agentContext.executionInfo.path()
         val checkpoint = agentContext.llm.readSession {
             return@readSession AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
