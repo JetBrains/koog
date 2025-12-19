@@ -6,11 +6,13 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
-import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.tools.ToolRegistry
@@ -51,12 +53,6 @@ public class PlannerAIAgent<State, Plan>(
 
     override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
 
-    private val environment = GenericAgentEnvironment(
-        agentId = this.id,
-        logger = logger,
-        toolRegistry = toolRegistry,
-    )
-
     /**
      * Represents a context for managing and configuring features in an AI agent.
      * Provides functionality to install and configure features into a specific instance of an AI agent.
@@ -80,34 +76,65 @@ public class PlannerAIAgent<State, Plan>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: State, runId: String): AIAgentFunctionalContext {
-        val llm = AIAgentLLMContext(
+    override suspend fun prepareContext(agentInput: State, runId: String, eventId: String): AIAgentFunctionalContext {
+        val environment = GenericAgentEnvironment(
+            agentId = this.id,
+            logger = logger,
+            toolRegistry = toolRegistry,
+        )
+
+        val initialLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
             toolRegistry = toolRegistry,
             prompt = agentConfig.prompt,
             model = agentConfig.model,
             responseProcessor = agentConfig.responseProcessor,
-            promptExecutor = PromptExecutorProxy(
-                executor = promptExecutor,
-                pipeline = pipeline,
-                runId = runId
-            ),
+            promptExecutor = promptExecutor,
             environment = environment,
             config = agentConfig,
             clock = clock
         )
 
-        return AIAgentFunctionalContext(
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
+
+        // Context
+        val initialAgentContext = AIAgentFunctionalContext(
             environment = environment,
             agentId = id,
             runId = runId,
             agentInput = agentInput,
             config = agentConfig,
-            llm = llm,
+            llm = initialLLMContext,
             stateManager = AIAgentStateManager(),
             storage = AIAgentStorage(),
             strategyName = strategy.name,
-            pipeline = pipeline
+            pipeline = pipeline,
+            executionInfo = executionInfo,
+            parentContext = null,
         )
+
+        // Updated environment
+        val contextualEnvironment = ContextualAgentEnvironment(
+            environment = environment,
+            context = initialAgentContext,
+        )
+
+        val contextualPromptExecutor = ContextualPromptExecutor(
+            executor = promptExecutor,
+            context = initialAgentContext,
+        )
+
+        val updatedLLMContext = initialAgentContext.llm.copy(
+            environment = contextualEnvironment,
+            promptExecutor = contextualPromptExecutor,
+        )
+
+        val updatedAgentContext = initialAgentContext.copy(
+            llm = updatedLLMContext,
+            environment = contextualEnvironment,
+            parentRootContext = initialAgentContext.parentContext, // Keep the original parent context
+        )
+
+        return updatedAgentContext
     }
 }
