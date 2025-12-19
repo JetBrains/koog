@@ -3,6 +3,7 @@ package ai.koog.integration.tests.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -576,7 +577,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpoint(
                         agentContext = agentContext,
-                        nodeId = save,
+                        nodePath = save,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
                         version = parent?.version?.plus(1) ?: 0
@@ -682,7 +683,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpoint(
                         agentContext = agentContext,
-                        nodeId = save,
+                        nodePath = save,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
                         version = parent?.version?.plus(1) ?: 0
@@ -829,6 +830,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         model: LLModel,
         @TempDir tempDir: Path,
     ) = runTest(timeout = 180.seconds) {
+        val agentId = "storage-providers-test-agent"
         val strategyName = "storage-providers-strategy"
 
         val hello = "Hello"
@@ -856,7 +858,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpoint(
                         agentContext = agentContext,
-                        nodeId = bye,
+                        nodePath = bye,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
                         version = parent?.version?.plus(1) ?: 0
@@ -871,6 +873,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         }
 
         val agent = AIAgent(
+            id = agentId,
             promptExecutor = getExecutor(model),
             strategy = simpleStrategy,
             agentConfig = AIAgentConfig(
@@ -890,12 +893,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         agent.run(testInput)
 
+        val expectedNodePath = path(agentId, strategyName, bye)
         with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }) {
             withClue(noCheckpointsError) {
                 isNotEmpty() shouldBe true
             }
             withClue(incorrectNodeIdError) {
-                first().nodePath shouldBe bye
+                first().nodePath shouldBe expectedNodePath
             }
         }
     }

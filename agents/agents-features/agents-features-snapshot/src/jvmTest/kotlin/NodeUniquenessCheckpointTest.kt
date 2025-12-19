@@ -15,7 +15,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
 
 /**
  * Tests for verifying node uniqueness requirements with the AgentCheckpoint feature.
@@ -147,5 +146,4 @@ class NodeUniquenessCheckpointTest {
         // Run the agent to verify it works without the AgentCheckpoint feature
         agent.run("Start the test")
     }
-
 }

@@ -1,6 +1,5 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry

@@ -5,7 +5,6 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
-import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message

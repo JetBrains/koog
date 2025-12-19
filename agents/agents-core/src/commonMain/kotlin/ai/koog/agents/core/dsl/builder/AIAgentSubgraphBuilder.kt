@@ -12,7 +12,6 @@ import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
-import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool

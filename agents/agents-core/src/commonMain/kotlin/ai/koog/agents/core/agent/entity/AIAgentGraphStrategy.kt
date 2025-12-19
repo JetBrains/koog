@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.context.with
-import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.runCatchingCancellable
