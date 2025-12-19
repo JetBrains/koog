@@ -19,17 +19,17 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `constructor should initialize with parent`() {
-        val parentSpan = MockGenAIAgentSpan("parent.span")
-        val childSpan = MockGenAIAgentSpan("parent.span.child", parent = parentSpan)
+        val parentSpan = MockGenAIAgentSpan(id = "parent.span", name = "parent.span.name")
+        val childSpan = MockGenAIAgentSpan(id = "parent.span.child", name = "parent.span.child.name", parentSpan = parentSpan)
 
-        assertEquals(parentSpan, childSpan.parent)
+        assertEquals(parentSpan, childSpan.parentSpan)
     }
 
     @Test
     fun `constructor should initialize without parent`() {
-        val span = MockGenAIAgentSpan("span")
+        val span = MockGenAIAgentSpan("span", "span.name")
 
-        assertNull(span.parent)
+        assertNull(span.parentSpan)
     }
 
     //endregion Constructor
@@ -38,31 +38,31 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `name should return correct name without parent`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
 
-        assertEquals("test.span", span.spanId)
-        assertEquals("test.span", span.name)
+        assertEquals("test.span", span.id)
+        assertEquals("test.span.name", span.name)
     }
 
     @Test
     fun `name should return correct name with parent`() {
-        val parentSpan = MockGenAIAgentSpan("parent.span")
-        val childSpan = MockGenAIAgentSpan("parent.span.child", parent = parentSpan)
+        val parentSpan = MockGenAIAgentSpan("parent.span", "parent.span.name")
+        val childSpan = MockGenAIAgentSpan("parent.span.child", "parent.span.child.name", parentSpan = parentSpan)
 
-        assertEquals("parent.span.child", childSpan.spanId)
-        assertEquals("child", childSpan.name)
+        assertEquals("parent.span.child", childSpan.id)
+        assertEquals("parent.span.child.name", childSpan.name)
     }
 
     @Test
     fun `kind should return CLIENT by default`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
 
         assertEquals(SpanKind.CLIENT, span.kind)
     }
 
     @Test
     fun `context should throw error when not initialized`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
 
         val exception = assertFailsWith<IllegalStateException> {
             span.context
@@ -73,7 +73,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `context should return value when initialized`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val context = Context.root()
 
         span.context = context
@@ -83,7 +83,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `span should throw error when not initialized`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
 
         val exception = assertFailsWith<IllegalStateException> {
             span.span
@@ -94,7 +94,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `span should return value when initialized`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val mockSpan = MockSpan()
 
         span.span = mockSpan
@@ -108,7 +108,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add valid events to span`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val mockSpan = MockSpan()
         span.span = mockSpan
 
@@ -132,7 +132,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add duplicate event should append`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val mockSpan = MockSpan()
         span.span = mockSpan
 
@@ -151,7 +151,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add events with body fields`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val mockSpan = MockSpan()
         span.span = mockSpan
 
@@ -169,7 +169,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add multiple events to span`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val mockSpan = MockSpan()
         span.span = mockSpan
 
@@ -190,7 +190,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add multiple attributes to span`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val mockSpan = MockSpan()
         span.span = mockSpan
 
@@ -208,7 +208,7 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add duplicate attribute should override value`() {
-        val span = MockGenAIAgentSpan("test.span")
+        val span = MockGenAIAgentSpan("test.span", "test.span.name")
         val mockSpan = MockSpan()
         span.span = mockSpan
 

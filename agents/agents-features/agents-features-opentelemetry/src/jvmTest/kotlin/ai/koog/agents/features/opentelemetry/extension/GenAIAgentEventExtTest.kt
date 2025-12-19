@@ -38,7 +38,7 @@ class GenAIAgentEventExtTest {
     fun `toSpanAttributes adds converted attributes to span`() {
         val bodyFieldMap = MockEventBodyField("bodyFieldMap", mapOf("test-key" to "test-value"))
         val event = MockGenAIAgentEvent(fields = listOf(bodyFieldMap))
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val mockSpan = MockSpan()
         span.span = mockSpan

@@ -653,8 +653,8 @@ class TraceFeatureMessageTestWriterTest {
         }
 
         TestFeatureMessageWriter().use { writer ->
-            var expectedStackTrace = ""
-            var expectedCause = ""
+            var expectedStackTrace: String = ""
+            var expectedCause: String? = null
 
             val agentThrowable = createAgent(
                 agentId = agentId,
@@ -669,7 +669,7 @@ class TraceFeatureMessageTestWriterTest {
                         agent.run(inputRequest)
                     } catch (t: Throwable) {
                         expectedStackTrace = t.stackTraceToString()
-                        expectedCause = t.cause?.stackTraceToString() ?: ""
+                        expectedCause = t.cause?.stackTraceToString()
                         throw t
                     }
                 }

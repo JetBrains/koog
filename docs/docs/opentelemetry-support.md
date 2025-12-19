@@ -292,7 +292,9 @@ The OpenTelemetry feature automatically creates different types of spans to trac
 
 - **CreateAgentSpan**: created when you run an agent, closed when the agent is closed or the process is terminated.
 - **InvokeAgentSpan**: the invocation of an agent.
+- **StrategySpan**: the execution of an agent's strategy (the top-level execution flow).
 - **NodeExecuteSpan**: the execution of a node in the agent's strategy. This is a custom, Koog-specific span.
+- **SubgraphExecuteSpan**: the execution of a subgraph within the agent strategy. This is a custom, Koog-specific span.
 - **InferenceSpan**: an LLM call.
 - **ExecuteToolSpan**: a tool call.
 
@@ -301,12 +303,14 @@ Spans are organized in a nested, hierarchical structure. Here is an example of a
 ```text
 CreateAgentSpan
     InvokeAgentSpan
-        NodeExecuteSpan
-            InferenceSpan
-        NodeExecuteSpan
-            ExecuteToolSpan
-        NodeExecuteSpan
-            InferenceSpan    
+        StrategySpan
+            NodeExecuteSpan
+                InferenceSpan
+            NodeExecuteSpan
+                ExecuteToolSpan
+            SubgraphExecuteSpan
+                NodeExecuteSpan
+                    InferenceSpan
 ```
 
 ### Span attributes
@@ -318,14 +322,17 @@ Koog supports a list of predefined attributes that follow OpenTelemetry's [Seman
 `gen_ai.conversation.id`, which is usually a required attribute for a span. In Koog, the value of this attribute is the 
 unique identifier for an agent run, that is automatically set when you call the `agent.run()` method.
 
-In addition, Koog also includes custom, Koog-specific attributes. You can recognize most of these attributes by the 
+In addition, Koog also includes custom, Koog-specific attributes. You can recognize most of these attributes by the
 `koog.` prefix. Here are the available custom attributes:
 
-- `koog.agent.strategy.name`: the name of the agent strategy. A strategy is a Koog-related entity that describes the 
-purpose of the agent. Used in the `InvokeAgentSpan` span.
-- `koog.node.name`: the name of the node being run. Used in the `NodeExecuteSpan` span.
+- `koog.strategy.name`: the name of the agent strategy. A strategy is a Koog-related entity that describes the
+purpose of the agent. Used in the `StrategySpan` span.
+- `koog.node.id`: the identifier (name) of the node being executed. Used in the `NodeExecuteSpan` span.
 - `koog.node.input`: the input passed to the node at the beginning of execution. Present on `NodeExecuteSpan` when node starts.
 - `koog.node.output`: the output produced by the node upon completion. Present on `NodeExecuteSpan` when node completes successfully.
+- `koog.subgraph.id`: the identifier (name) of the subgraph being executed. Used in the `SubgraphExecuteSpan` span.
+- `koog.subgraph.input`: the input passed to the subgraph at the beginning of execution. Present on `SubgraphExecuteSpan` when subgraph starts.
+- `koog.subgraph.output`: the output produced by the subgraph upon completion. Present on `SubgraphExecuteSpan` when subgraph completes successfully.
 
 ### Events
 

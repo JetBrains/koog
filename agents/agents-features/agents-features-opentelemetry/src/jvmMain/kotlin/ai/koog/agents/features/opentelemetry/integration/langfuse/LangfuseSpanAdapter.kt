@@ -73,7 +73,7 @@ internal class LangfuseSpanAdapter(
                 span.addAttribute(
                     CustomAttribute(
                         "langfuse.observation.metadata.langgraph_node",
-                        span.nodeName
+                        span.nodeId
                     )
                 )
             }

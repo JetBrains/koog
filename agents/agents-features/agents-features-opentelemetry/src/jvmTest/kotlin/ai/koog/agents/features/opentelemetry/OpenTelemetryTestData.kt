@@ -5,21 +5,39 @@ import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.sdk.trace.data.SpanData
 
-internal data class NodeInfo(val nodeName: String, val nodeId: String)
+internal data class NodeInfo(val nodeId: String, val eventId: String)
 
 internal data class OpenTelemetryTestData(
-    var runIds: List<String> = emptyList(),
     var result: String? = null,
     var collectedSpans: List<SpanData> = emptyList(),
     var collectedNodeIds: List<NodeInfo> = emptyList(),
+    var collectedSubgraphIds: List<NodeInfo> = emptyList(),
+    var collectedLLMEventIds: List<String> = emptyList(),
+    var collectedToolEventIds: List<String> = emptyList(),
 ) {
+
+    companion object {
+        private val nodeIdAttributeKey = AttributeKey.stringKey("koog.node.id")
+        private val subgraphIdAttributeKey = AttributeKey.stringKey("koog.subgraph.id")
+    }
+
+    val runIds: List<String>
+        get() = collectedSpans.mapNotNull { span ->
+            span.attributes[AttributeKey.stringKey("gen_ai.conversation.id")]
+        }.distinct()
+
     val lastRunId: String
         get() = runIds.last()
 
-    fun singleNodeInfoByName(nodeName: String): NodeInfo = collectedNodeIds.singleOrNull { it.nodeName == nodeName }
-        ?: throw NoSuchElementException("Expected collected node with name '$nodeName' to be present.")
+    fun singleNodeInfoById(nodeId: String): NodeInfo = collectedNodeIds.singleOrNull { it.nodeId == nodeId }
+        ?: throw NoSuchElementException("Expected collected node with node id '$nodeId' to be present.")
 
-    fun singleNodeIdByName(nodeName: String): String = singleNodeInfoByName(nodeName).nodeId
+    fun singleSubgraphInfoById(nodeId: String): NodeInfo = collectedSubgraphIds.singleOrNull { it.nodeId == nodeId }
+        ?: throw NoSuchElementException("Expected collected subgraphs with subgraph id '$nodeId' to be present.")
+
+    fun filterNodeInfoById(nodeId: String): List<NodeInfo> = collectedNodeIds.filter { it.nodeId == nodeId }
+
+    fun filterSubgraphInfoById(nodeId: String): List<NodeInfo> = collectedSubgraphIds.filter { it.nodeId == nodeId }
 
     fun filterCreateAgentSpans(): List<SpanData> {
         val createAgentAttribute = SpanAttributes.Operation.Name(OperationNameType.CREATE_AGENT)
@@ -49,16 +67,19 @@ internal data class OpenTelemetryTestData(
     }
 
     fun filterExecuteToolSpans(): List<SpanData> {
-        val executeToolAttribute = SpanAttributes.Operation.Name(OperationNameType.EXECUTE_TOOL)
-        val attributeKey = AttributeKey.stringKey(executeToolAttribute.key)
+        val executeToolOperationAttribute = SpanAttributes.Operation.Name(OperationNameType.EXECUTE_TOOL)
+        val attributeKey = AttributeKey.stringKey(executeToolOperationAttribute.key)
 
         return collectedSpans.filter { spanData ->
-            spanData.attributes.get(attributeKey) == executeToolAttribute.value
+            spanData.attributes.get(attributeKey) == executeToolOperationAttribute.value
         }
     }
 
     fun filterNodeExecutionSpans(): List<SpanData> {
-        val attributeKey = AttributeKey.stringKey("koog.node.name")
-        return collectedSpans.filter { spanData -> spanData.attributes.get(attributeKey) != null }
+        return collectedSpans.filter { spanData -> spanData.attributes.get(nodeIdAttributeKey) != null }
+    }
+
+    fun filterSubgraphExecutionSpans(): List<SpanData> {
+        return collectedSpans.filter { spanData -> spanData.attributes.get(subgraphIdAttributeKey) != null }
     }
 }

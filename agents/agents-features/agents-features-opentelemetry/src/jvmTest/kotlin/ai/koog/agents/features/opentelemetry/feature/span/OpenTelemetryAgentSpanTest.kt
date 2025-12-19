@@ -1,10 +1,10 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.features.opentelemetry.OpenTelemetrySpanAsserts.assertSpans
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_AGENT_ID
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
+import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import kotlinx.coroutines.test.runTest
@@ -32,7 +32,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "agent.$agentId" to mapOf(
+                agentId to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                         "gen_ai.system" to model.provider.id,
@@ -44,7 +44,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
             ),
 
             mapOf(
-                "run.$runId" to mapOf(
+                "invoke.$runId" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
                         "gen_ai.system" to model.provider.id,
@@ -87,7 +87,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "agent.$agentId" to mapOf(
+                agentId to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                         "gen_ai.system" to model.provider.id,
@@ -99,7 +99,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
             ),
 
             mapOf(
-                "run.$runId" to mapOf(
+                "invoke.$runId" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
                         "gen_ai.system" to model.provider.id,

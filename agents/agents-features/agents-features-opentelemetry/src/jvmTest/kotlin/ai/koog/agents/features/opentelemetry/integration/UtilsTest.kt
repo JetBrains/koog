@@ -16,7 +16,7 @@ class UtilsTest {
 
     @Test
     fun `test bodyFieldsToCustomAttribute convert matching body fields into attributes`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val bodyFieldId = EventBodyFields.Id("id-body-field")
         val bodyFieldContent = EventBodyFields.Content("content-body-field")
@@ -57,7 +57,7 @@ class UtilsTest {
 
     @Test
     fun `test bodyFieldsToCustomAttribute does nothing when there are no matching fields`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val mockEventBody1 = MockEventBodyField("mock-event-body-field-key-1", "mock-event-body-field-value-1")
         val mockEventBody2 = MockEventBodyField("mock-event-body-field-key-2", 42)
@@ -98,7 +98,7 @@ class UtilsTest {
 
     @Test
     fun `test replaceBodyFields processes each matching field and removes them from event`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val bodyFieldId = EventBodyFields.Id("id-body-field")
         val bodyFieldContent = EventBodyFields.Content("content-body-field")
@@ -138,7 +138,7 @@ class UtilsTest {
 
     @Test
     fun `test replaceBodyFields replace multiple fields`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val bodyFieldContent = EventBodyFields.Content("content-body-field")
         val mockBodyField1 = MockEventBodyField("mock-body-field-key-1", "mock-body-field-value-1")
@@ -179,7 +179,7 @@ class UtilsTest {
 
     @Test
     fun `replaceBodyFields does nothing when there are no matching fields`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val mockBodyField1 = MockEventBodyField("mock-body-field-key-1", "mock-body-field-value-1")
         val mockBodyField2 = MockEventBodyField("mock-body-field-key-2", "mock-body-field-value-2")
@@ -219,7 +219,7 @@ class UtilsTest {
 
     @Test
     fun `test replace attributes when span has no attribute`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         span.replaceAttributes<CustomAttribute> { _ ->
             CustomAttribute("newKey", "newValue")
@@ -230,7 +230,7 @@ class UtilsTest {
 
     @Test
     fun `test replace attributes when multiple attributes of different types exist`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val customAttribute = CustomAttribute("customAttributeKey", "customAttributeValue")
         val mockAttribute = MockAttribute("mockAttributeKey", 123)
@@ -251,7 +251,7 @@ class UtilsTest {
 
     @Test
     fun `test replace attributes when span has no attributes of expected type`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val originalAttribute = MockAttribute("mockAttributeKey", "mockAttributeValue")
         span.addAttribute(originalAttribute)
@@ -269,7 +269,7 @@ class UtilsTest {
 
     @Test
     fun `test replace single attribute when span has one attribute`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val originalAttribute = CustomAttribute("customAttributeKey", "customAttributeValue")
         span.addAttribute(originalAttribute)
@@ -289,7 +289,7 @@ class UtilsTest {
 
     @Test
     fun `test replace single attribute when more than one attribute exist`() {
-        val span = MockGenAIAgentSpan(spanId = "test-span-id")
+        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
         val customAttribute1 = CustomAttribute("customAttributeKey1", "customAttributeValue1")
         val customAttribute2 = CustomAttribute("customAttributeKey2", "customAttributeValue2")

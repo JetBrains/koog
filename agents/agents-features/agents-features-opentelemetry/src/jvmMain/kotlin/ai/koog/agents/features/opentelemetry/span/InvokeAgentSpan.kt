@@ -9,23 +9,16 @@ import io.opentelemetry.api.trace.SpanKind
  * Agent Run Span
  */
 internal class InvokeAgentSpan(
-    parent: CreateAgentSpan,
+    override val id: String,
+    override val parentSpan: CreateAgentSpan,
     val provider: LLMProvider,
     val runId: String,
     val agentId: String,
-) : GenAIAgentSpan(parent) {
-
-    companion object {
-        fun createId(agentId: String, runId: String): String =
-            createIdFromParent(parentId = CreateAgentSpan.createId(agentId), runId = runId)
-
-        private fun createIdFromParent(parentId: String, runId: String): String =
-            "$parentId.run.$runId"
-    }
+) : GenAIAgentSpan() {
 
     override val kind: SpanKind = SpanKind.CLIENT
 
-    override val spanId: String = createIdFromParent(parent.spanId, runId)
+    override val name: String = "invoke.$runId"
 
     /**
      * Add the necessary attributes for the Invoke Agent Span, according to the Open Telemetry Semantic Convention:

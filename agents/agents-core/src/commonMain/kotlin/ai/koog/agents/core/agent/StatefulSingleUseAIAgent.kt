@@ -85,30 +85,32 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
         }
 
         val runId = Uuid.random().toString()
-        val eventId = Uuid.random().toString()
-        val context = prepareContext(agentInput, runId, eventId)
 
-        return context.withPreparedPipeline {
+        // Unique identifier for a group of agent-run events
+        val agentRunEventId = Uuid.random().toString()
+        val context = prepareContext(agentInput, runId, agentRunEventId)
+
+        return withPreparedPipeline(context, agentRunEventId) {
             agentStateMutex.withLock {
                 @OptIn(InternalAgentsApi::class)
                 state = State.Running(context.parentContext ?: context)
             }
 
             logger.debug { formatLog(id, runId, "Starting agent execution") }
-            pipeline.onAgentStarting<Input, Output>(eventId, context.executionInfo, runId, this@StatefulSingleUseAIAgent, context)
+            pipeline.onAgentStarting<Input, Output>(agentRunEventId, context.executionInfo, runId, this@StatefulSingleUseAIAgent, context)
 
             val result = try {
                 @Suppress("UNCHECKED_CAST")
                 strategy.execute(context = context, input = agentInput)
             } catch (e: Throwable) {
                 logger.error(e) { "Execution exception reported by server!" }
-                pipeline.onAgentExecutionFailed(eventId, context.executionInfo, id, runId, e)
+                pipeline.onAgentExecutionFailed(agentRunEventId, context.executionInfo, id, runId, e)
                 agentStateMutex.withLock { state = State.Failed(e) }
                 throw e
             }
 
             logger.debug { formatLog(id, runId, "Finished agent execution") }
-            pipeline.onAgentCompleted(eventId, context.executionInfo, id, runId, result)
+            pipeline.onAgentCompleted(agentRunEventId, context.executionInfo, id, runId, result)
 
             agentStateMutex.withLock {
                 state = if (result != null) {
@@ -170,6 +172,8 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
     protected fun formatLog(agentId: String, runId: String, message: String): String =
         "[agent id: $agentId, run id: $runId] $message"
 
+    //region Private Methods
+
     /**
      * Executes the provided block within a prepared pipeline context.
      * Ensures that the necessary feature resources are initialized before the block is invoked
@@ -177,26 +181,25 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      *
      * @return The result of the block's execution.
      */
-    private suspend fun <T> AIAgentContext.withPreparedPipeline(block: suspend (eventId: String) -> T): T {
-        require(executionInfo.parent == null) {
+    private suspend fun <T> withPreparedPipeline(context: AIAgentContext, eventId: String, block: suspend () -> T): T {
+        require(context.executionInfo.parent == null) {
             "withPreparedPipeline() should be called from a top level agent context."
         }
 
-        // Unique id for a group of agent-related events
-        val eventId = Uuid.random().toString()
-
         return try {
             pipeline.prepareFeatures()
-            block.invoke(eventId)
+            block.invoke()
         } finally {
             pipeline.onAgentClosing(
                 eventId = eventId,
-                executionInfo = executionInfo.parent ?: executionInfo,
+                executionInfo = context.executionInfo.parent ?: context.executionInfo,
                 agentId = id
             )
             pipeline.closeAllFeaturesMessageProcessors()
         }
     }
+
+    //endregion Private Methods
 }
 
 /**

@@ -4,9 +4,9 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.features.opentelemetry.OpenTelemetrySpanAsserts.assertSpans
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
+import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
@@ -15,6 +15,7 @@ import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.utils.io.use
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import kotlinx.coroutines.test.runTest
 import java.util.Properties
@@ -166,7 +167,7 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
             val collectedSpans = mockExporter.collectedSpans
             agent.close()
 
-            assertEquals(6, collectedSpans.size)
+            assertEquals(7, collectedSpans.size)
         }
     }
 
@@ -226,13 +227,33 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
             val collectedSpans = mockExporter.collectedSpans
             assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
 
-            val actualInvokeAgentSpans = collectedSpans.filter { span -> span.name.startsWith("run.") }
+            val conversationIdAttribute = SpanAttributes.Conversation.Id(mockExporter.lastRunId)
+            val operationNameAttribute = SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.INVOKE_AGENT)
+
+            fun attributesMatches(attributes: Map<AttributeKey<*>, Any>): Boolean {
+                var conversationIdAttributeExists = false
+                var operationNameAttributeExists = false
+                attributes.forEach { key, value ->
+                    if (key.key == conversationIdAttribute.key && value == conversationIdAttribute.value) {
+                        conversationIdAttributeExists = true
+                    }
+
+                    if (key.key == operationNameAttribute.key && value == operationNameAttribute.value) {
+                        operationNameAttributeExists = true
+                    }
+                }
+                return conversationIdAttributeExists && operationNameAttributeExists
+            }
+
+            val actualInvokeAgentSpans = collectedSpans.filter { span ->
+                attributesMatches(span.attributes.asMap())
+            }
+
             assertEquals(1, actualInvokeAgentSpans.size, "Invoke agent span should be present")
 
             val expectedInvokeAgentSpans = listOf(
                 mapOf(
-
-                    "run.${mockExporter.lastRunId}" to mapOf(
+                    "invoke.${mockExporter.lastRunId}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             customBeforeStartAttribute.key to customBeforeStartAttribute.value,

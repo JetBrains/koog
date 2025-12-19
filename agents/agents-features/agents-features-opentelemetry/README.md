@@ -158,7 +158,7 @@ The OpenTelemetry feature automatically adds various attributes to spans followi
 Some custom attributes specific to Koog are also added:
 
 - `koog.agent.strategy.name`: the name of the agent strategy
-- `koog.node.name`: the name of the node being executed
+- `koog.node.id`: the name of the node being executed
 
 ### Span Types
 
@@ -193,7 +193,7 @@ The OpenTelemetry feature creates different types of spans for various operation
     - Useful for: Understanding strategy flow and attributing LLM or tool work to a specific node.
     - Key attributes:
         - `gen_ai.conversation.id`
-        - `koog.node.name`
+        - `koog.node.id`
 
 4. **Inference Span**
     - Purpose: A single LLM call (prompt execution).

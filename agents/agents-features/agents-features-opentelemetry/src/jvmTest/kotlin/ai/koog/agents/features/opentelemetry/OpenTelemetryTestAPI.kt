@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.GraphAIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -32,14 +31,22 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.utils.io.use
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 internal object OpenTelemetryTestAPI {
 
     internal val testClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
+
+    private val spansCollectionTimeout = 5.seconds
 
     internal object Parameter {
         internal const val DEFAULT_AGENT_ID = "test-agent-id"
@@ -72,10 +79,10 @@ internal object OpenTelemetryTestAPI {
         verbose: Boolean = true,
     ): OpenTelemetryTestData {
         val strategy = strategy("test-single-llm-strategy") {
-            val nodeSendInput by nodeLLMRequest("test-llm-call")
+            val nodeCallLLM by nodeLLMRequest("test-llm-call")
 
-            edge(nodeStart forwardTo nodeSendInput)
-            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeStart forwardTo nodeCallLLM)
+            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
         }
 
         val executor = getMockExecutor(clock = testClock) {
@@ -97,13 +104,13 @@ internal object OpenTelemetryTestAPI {
         verbose: Boolean = true,
     ): OpenTelemetryTestData {
         val strategy = strategy("test-tool-calls-strategy") {
-            val nodeSendInput by nodeLLMRequest("test-llm-call")
+            val nodeCallLLM by nodeLLMRequest("test-llm-call")
             val nodeExecuteTool by nodeExecuteTool("test-tool-call")
             val nodeSendToolResult by nodeLLMSendToolResult("test-node-llm-send-tool-result")
 
-            edge(nodeStart forwardTo nodeSendInput)
-            edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeStart forwardTo nodeCallLLM)
+            edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
             edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
@@ -152,7 +159,6 @@ internal object OpenTelemetryTestAPI {
 
         return MockSpanExporter().use { mockExporter ->
             collectedTestData.collectedSpans = mockExporter.collectedSpans
-            collectedTestData.runIds = mockExporter.runIds
 
             val agentResult = createAgent(
                 agentId = agentId,
@@ -170,14 +176,36 @@ internal object OpenTelemetryTestAPI {
                     setVerbose(verbose)
                 }
 
-                installNodeIdsCollector().also { collectedTestData.collectedNodeIds = it }
+                installEventDataCollector().also {
+                    collectedTestData.collectedNodeIds = it.nodeData
+                    collectedTestData.collectedSubgraphIds = it.subgraphData
+                    collectedTestData.collectedLLMEventIds = it.llmCallsEventIds
+                    collectedTestData.collectedToolEventIds = it.toolCallEventIds
+                }
             }.use { agent ->
                 agent.run(userPrompt ?: USER_PROMPT_PARIS)
             }
 
+            waitSpansCollected(mockExporter)
+
             collectedTestData.result = agentResult
             collectedTestData
         }
+    }
+
+    /**
+     * Waits for spans to be collected within a specified timeout period.
+     *
+     * Note! Use default dispatcher because the [kotlinx.coroutines.test.runTest] wrapper override thread scheduler
+     *       and [withTimeoutOrNull] does not wait for a specified timeout.
+     */
+    private suspend fun waitSpansCollected(mockExporter: MockSpanExporter) = withContext(Dispatchers.Default) {
+        val isSpanDataCollected = withTimeoutOrNull(spansCollectionTimeout) {
+            // Wait until all spans are collected
+            mockExporter.isCollected.first { it }
+        } != null
+
+        assertTrue(isSpanDataCollected, "Spans were not collected within the timeout: $spansCollectionTimeout")
     }
 
     //endregion Agents With Strategies
@@ -258,22 +286,38 @@ internal object OpenTelemetryTestAPI {
 
     //region Features
 
-    internal fun GraphAIAgent.FeatureContext.installNodeIdsCollector(): List<NodeInfo> {
+    internal data class CollectedEventData(
+        val nodeData: List<NodeInfo>,
+        val subgraphData: List<NodeInfo>,
+        val llmCallsEventIds: List<String>,
+        val toolCallEventIds: List<String>,
+    )
+
+    internal fun GraphAIAgent.FeatureContext.installEventDataCollector(): CollectedEventData {
         val nodesInfo = mutableListOf<NodeInfo>()
+        val subgraphInfo = mutableListOf<NodeInfo>()
+        val llmCallEventIds = mutableListOf<String>()
+        val toolCallEventIds = mutableListOf<String>()
+
         install(EventHandler.Feature) {
             onNodeExecutionStarting { eventContext ->
-                getNodeInfoElement()?.id?.let { nodeId ->
-                    nodesInfo.add(NodeInfo(nodeName = eventContext.node.name, nodeId = nodeId))
-                }
+                nodesInfo.add(NodeInfo(nodeId = eventContext.node.id, eventId = eventContext.eventId))
             }
 
             onSubgraphExecutionStarting { eventContext ->
-                getNodeInfoElement()?.id?.let { nodeId ->
-                    nodesInfo.add(NodeInfo(nodeName = eventContext.subgraph.name, nodeId = nodeId))
-                }
+                subgraphInfo.add(NodeInfo(nodeId = eventContext.subgraph.id, eventId = eventContext.eventId))
+            }
+
+            onLLMCallStarting { eventContext ->
+                llmCallEventIds.add(eventContext.eventId)
+            }
+
+            onToolCallStarting { eventContext ->
+                toolCallEventIds.add(eventContext.eventId)
             }
         }
-        return nodesInfo
+
+        return CollectedEventData(nodesInfo, subgraphInfo, llmCallEventIds, toolCallEventIds)
     }
 
     //endregion Features

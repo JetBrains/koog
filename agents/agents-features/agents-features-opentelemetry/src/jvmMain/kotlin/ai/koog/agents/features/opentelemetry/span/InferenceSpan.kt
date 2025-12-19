@@ -10,27 +10,19 @@ import io.opentelemetry.api.trace.SpanKind
  * LLM Call Span
  */
 internal class InferenceSpan(
-    parent: NodeExecuteSpan,
+    override val id: String,
+    override val parentSpan: NodeExecuteSpan,
     val provider: LLMProvider,
     val runId: String,
     val model: LLModel,
     val content: String,
-    val temperature: Double,
+    val temperature: Double?,
     val maxTokens: Int? = null
-) : GenAIAgentSpan(parent) {
-
-    companion object {
-        fun createId(agentId: String, runId: String, nodeName: String, nodeId: String, content: String): String =
-            createIdFromParent(parentId = NodeExecuteSpan.createId(agentId, runId, nodeName, nodeId), content = content)
-
-        // TODO: Replace sha256base64() with unique event id for the LLM Call event
-        private fun createIdFromParent(parentId: String, content: String): String =
-            "$parentId.llm.${content.sha256base64()}"
-    }
-
-    override val spanId: String = createIdFromParent(parentId = parent.spanId, content = content)
+) : GenAIAgentSpan() {
 
     override val kind: SpanKind = SpanKind.CLIENT
+
+    override val name: String = "inference.$id"
 
     /**
      * Add the necessary attributes for the Inference Span according to the Open Telemetry Semantic Convention:
@@ -74,7 +66,9 @@ internal class InferenceSpan(
         addAttribute(SpanAttributes.Request.Model(model))
 
         // gen_ai.request.temperature
-        addAttribute(SpanAttributes.Request.Temperature(temperature))
+        temperature?.let {
+            addAttribute(SpanAttributes.Request.Temperature(it))
+        }
 
         // gen_ai.request.max_tokens
         maxTokens?.let {
