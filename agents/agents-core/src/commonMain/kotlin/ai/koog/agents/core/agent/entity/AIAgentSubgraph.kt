@@ -222,7 +222,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
-        logger.info { formatLog(context, "Executing subgraph '$name'") }
+        logger.debug { formatLog(context, "Executing subgraph '$name'") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput

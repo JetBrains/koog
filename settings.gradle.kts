@@ -11,6 +11,7 @@ pluginManagement {
 
 include(":agents:agents-core")
 include(":agents:agents-ext")
+include(":agents:agents-planner")
 
 include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")

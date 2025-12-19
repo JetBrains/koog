@@ -215,6 +215,7 @@ dependencies {
     dokka(project(":agents:agents-features:agents-features-snapshot"))
     dokka(project(":agents:agents-features:agents-features-tokenizer"))
     dokka(project(":agents:agents-features:agents-features-trace"))
+    dokka(project(":agents:agents-planner"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))

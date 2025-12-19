@@ -7,12 +7,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-internal class ContextualAgentEnvironment(
+@Suppress("MissingKDocForPublicAPI")
+public class ContextualAgentEnvironment(
     private val environment: AIAgentEnvironment,
     private val context: AIAgentContext,
 ) : AIAgentEnvironment {
 
-    companion object {
+    private companion object {
         private val logger = KotlinLogging.logger { }
     }
 

@@ -119,6 +119,7 @@ registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.s
 registerRunExampleTask("runExampleWebSearchAgent", "ai.koog.agents.example.websearch.WebSearchAgentKt")
 registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.streaming.StreamingAgentWithToolsKt")
 
+registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.GrouperAgentKt")
 /*
  A2A examples
 */
