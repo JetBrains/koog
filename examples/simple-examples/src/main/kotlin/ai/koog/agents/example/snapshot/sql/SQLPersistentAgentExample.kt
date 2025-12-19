@@ -170,7 +170,7 @@ object SQLPersistentAgentExample {
         return AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = Clock.System.now(),
-            nodeId = "example-node",
+            nodePath = "example-node",
             lastInput = JsonPrimitive("Sample input for $checkpointId"),
             messageHistory = listOf(
                 Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),

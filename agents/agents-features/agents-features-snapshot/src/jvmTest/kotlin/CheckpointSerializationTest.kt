@@ -29,7 +29,7 @@ class CheckpointSerializationTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-1",
             createdAt = now,
-            nodeId = "NodeA",
+            nodePath = "NodeA",
             lastInput = JsonPrimitive("last-input"),
             messageHistory = sampleMessages(now),
             version = 0L
@@ -46,7 +46,7 @@ class CheckpointSerializationTest {
         // Thorough field-by-field assertions
         assertEquals("cp-1", restored.checkpointId)
         assertEquals(now, restored.createdAt)
-        assertEquals("NodeA", restored.nodeId)
+        assertEquals("NodeA", restored.nodePath)
         assertEquals(JsonPrimitive("last-input"), restored.lastInput)
         assertNull(restored.properties, "properties should be null after deserialization when omitted in JSON")
 
@@ -87,7 +87,7 @@ class CheckpointSerializationTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-2",
             createdAt = now,
-            nodeId = "NodeB",
+            nodePath = "NodeB",
             lastInput = JsonObject(mapOf("inputKey" to JsonPrimitive("inputVal"))),
             messageHistory = sampleMessages(now),
             properties = properties,

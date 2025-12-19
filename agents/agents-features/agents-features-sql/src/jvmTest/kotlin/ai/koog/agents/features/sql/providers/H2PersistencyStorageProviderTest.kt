@@ -54,7 +54,7 @@ class H2PersistenceStorageProviderTest {
 
         latest1 shouldNotBe null
         latest1?.checkpointId shouldBe "cp-1"
-        latest1?.nodeId shouldBe "test-node"
+        latest1?.nodePath shouldBe "test-node"
         latest1?.messageHistory?.size shouldBe 3
         latest1?.isTombstone() shouldBe false
 
@@ -99,7 +99,7 @@ class H2PersistenceStorageProviderTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
-            nodeId = "test-node",
+            nodePath = "test-node",
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),

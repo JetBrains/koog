@@ -8,6 +8,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
@@ -32,7 +33,6 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallFaile
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallStarting
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolValidationFailed
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.testing.agent.agentExecutionPath
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -816,6 +816,8 @@ class AIAgentPipelineTest {
             installFeatures = installFeatures,
         )
     }
+
+    private fun agentExecutionPath(vararg parts: String) = parts.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
 
     //endregion Private Methods
 }

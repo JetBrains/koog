@@ -2,6 +2,7 @@ package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -77,7 +78,7 @@ class PostgresPersistenceAgentRunTest {
         return PostgresPersistenceStorageProvider(database = db)
     }
 
-    private fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
+    private fun straightForwardGraphNoCheckpoint(strategyName: String) = strategy(strategyName) {
         val node1 by simpleNode(
             name = "Node1",
             output = "Node 1 output"
@@ -151,8 +152,8 @@ class PostgresPersistenceAgentRunTest {
         val agentId = "pg-agent-preseed-1"
         val time = Clock.System.now()
 
-        val cp1 = createTestCheckpoint("cp-1", time = time, version = 0)
-        val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time)
+        val cp1 = createTestCheckpoint("cp-1", time = time, version = 0, nodePath = path(agentId, "straight-forward", "Node2"))
+        val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, "straight-forward", "Node2"))
         val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
 
         // Save in order: cp1 -> cp2 -> tombstone
@@ -167,7 +168,7 @@ class PostgresPersistenceAgentRunTest {
         // Create agent with persistence but without automatic persistence to keep seeded chain intact
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = straightForwardGraphNoCheckpoint(),
+            strategy = straightForwardGraphNoCheckpoint("strategy"),
             agentConfig = agentConfig,
             id = agentId
         ) {
@@ -190,12 +191,13 @@ class PostgresPersistenceAgentRunTest {
 
     fun preSeedFinishedChainPlusUnfinishedTest(provider: PersistenceStorageProvider<*>) = runBlocking<Unit> {
         val agentId = "pg-agent-preseed-2"
+        val stratName = "strategy"
         val time = Clock.System.now()
 
-        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time)
-        val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time)
+        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(agentId, stratName, "Node2"))
+        val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, stratName, "Node2"))
         val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
-        val cp3 = createTestCheckpoint("cp-3", version = tomb.version + 1, time = time, "Node1")
+        val cp3 = createTestCheckpoint("cp-3", version = tomb.version + 1, time = time, nodePath = path(agentId, stratName, "Node1"))
 
         // Save in order: cp1 -> cp2 -> tombstone -> cp3
         provider.saveCheckpoint(agentId, cp1)
@@ -210,7 +212,7 @@ class PostgresPersistenceAgentRunTest {
         // Create agent with persistence; keep auto persistence off to avoid mutating preseeded data
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = straightForwardGraphNoCheckpoint(),
+            strategy = straightForwardGraphNoCheckpoint(stratName),
             agentConfig = agentConfig,
             id = agentId
         ) {
@@ -237,9 +239,10 @@ class PostgresPersistenceAgentRunTest {
 
     fun preSeedSingleCheckpoint(provider: PersistenceStorageProvider<*>) = runBlocking<Unit> {
         val agentId = "pg-agent-preseed-3"
+        val strategyId = "strategy"
         val time = Clock.System.now()
 
-        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodeId = "Node1")
+        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(agentId, strategyId, "Node1"))
 
         // Save single checkpoint
         provider.saveCheckpoint(agentId, cp1)
@@ -251,7 +254,7 @@ class PostgresPersistenceAgentRunTest {
         // Create agent with persistence but without automatic persistence to keep seeded chain intact
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = straightForwardGraphNoCheckpoint(),
+            strategy = straightForwardGraphNoCheckpoint(strategyId),
             agentConfig = agentConfig,
             id = agentId
         ) {
@@ -278,12 +281,12 @@ class PostgresPersistenceAgentRunTest {
         id: String,
         version: Long,
         time: Instant,
-        nodeId: String = "Node2"
+        nodePath: String
     ): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = time,
-            nodeId = nodeId,
+            nodePath = nodePath,
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", RequestMetaInfo(time)),

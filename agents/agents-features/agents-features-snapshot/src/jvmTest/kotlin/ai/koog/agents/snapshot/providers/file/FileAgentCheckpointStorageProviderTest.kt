@@ -49,7 +49,7 @@ class FileAgentCheckpointStorageProviderTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = createdAt,
-            nodeId = nodeId,
+            nodePath = nodeId,
             lastInput = lastInput,
             messageHistory = messageHistory,
             version = 0L
@@ -67,7 +67,7 @@ class FileAgentCheckpointStorageProviderTest {
         val retrievedCheckpoint = checkpoints.first()
         assertEquals(checkpointId, retrievedCheckpoint.checkpointId)
         assertEquals(createdAt, retrievedCheckpoint.createdAt)
-        assertEquals(nodeId, retrievedCheckpoint.nodeId)
+        assertEquals(nodeId, retrievedCheckpoint.nodePath)
         assertEquals(lastInput, retrievedCheckpoint.lastInput)
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
 
@@ -92,7 +92,7 @@ class FileAgentCheckpointStorageProviderTest {
         val laterCheckpoint = AgentCheckpointData(
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,
-            nodeId = nodeId,
+            nodePath = nodeId,
             lastInput = lastInput,
             messageHistory = messageHistory,
             version = checkpoint.version.plus(1)

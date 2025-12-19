@@ -10,6 +10,7 @@ import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.agent.featureOrThrow
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -81,20 +82,6 @@ public class Persistence(
     public var rollbackToolRegistry: RollbackToolRegistry = RollbackToolRegistry {}
 
     /**
-     * Represents the identifier of the current node being executed within the agent pipeline.
-     *
-     * This property is used to track the state of the agent's execution and is updated whenever
-     * the agent begins processing a new node.
-     * It plays a crucial role in maintaining the agent's
-     * state across checkpoints and ensuring accurate state restoration during rollbacks.
-     *
-     * The value is nullable, indicating that there might be no current node under execution
-     * (e.g., when the pipeline is idle or has not started).
-     */
-    public var currentNodeId: String? = null
-        private set
-
-    /**
      * Companion object implementing agent feature, handling [Persistence] creation and installation.
      */
     public companion object Feature : AIAgentGraphFeature<PersistenceFeatureConfig, Persistence> {
@@ -122,7 +109,7 @@ public class Persistence(
                 val checkpoint = persistence.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
-                    logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
+                    logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodePath}" }
                 } else {
                     logger.info { "No non-tombstone checkpoint found, starting from the beginning" }
                 }
@@ -137,16 +124,12 @@ public class Persistence(
                     val parent = persistence.getLatestCheckpoint(eventCtx.context.agentId)
                     persistence.createCheckpoint(
                         agentContext = eventCtx.context,
-                        nodeId = eventCtx.node.id,
+                        nodePath = eventCtx.context.executionInfo.path(),
                         lastInput = eventCtx.input,
                         lastInputType = eventCtx.inputType,
                         version = parent?.version?.plus(1) ?: 0L,
                     )
                 }
-            }
-
-            pipeline.interceptNodeExecutionStarting(this) { eventCtx ->
-                persistence.currentNodeId = eventCtx.node.id
             }
 
             pipeline.interceptStrategyCompleted(this) { ctx ->
@@ -182,7 +165,7 @@ public class Persistence(
      */
     public suspend fun createCheckpoint(
         agentContext: AIAgentContext,
-        nodeId: String,
+        nodePath: String,
         lastInput: Any?,
         lastInputType: KType,
         version: Long,
@@ -192,7 +175,7 @@ public class Persistence(
 
         if (inputJson == null) {
             logger.warn {
-                "Failed to serialize input of type $lastInputType for checkpoint creation for $nodeId, skipping..."
+                "Failed to serialize input of type $lastInputType for checkpoint creation for $nodePath, skipping..."
             }
             return null
         }
@@ -201,7 +184,7 @@ public class Persistence(
             return@readSession AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
-                nodeId = nodeId,
+                nodePath = agentContext.executionInfo.path(),
                 lastInput = inputJson,
                 createdAt = Clock.System.now(),
                 version = version,
@@ -263,17 +246,17 @@ public class Persistence(
      * with the specified message history and input data.
      *
      * @param agentContext The context of the agent to modify
-     * @param nodeId The ID of the node to set as the current execution point
+     * @param nodePath The path to the node inside the agent's graph
      * @param messageHistory The message history to set for the agent
      * @param input The input data to set for the agent
      */
     public fun setExecutionPoint(
         agentContext: AIAgentContext,
-        nodeId: String,
+        nodePath: String,
         messageHistory: List<Message>,
         input: JsonElement
     ) {
-        agentContext.store(AgentContextData(messageHistory, nodeId, input, rollbackStrategy))
+        agentContext.store(AgentContextData(messageHistory, agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath, input, rollbackStrategy))
     }
 
     /**
@@ -297,7 +280,7 @@ public class Persistence(
         val checkpoint: AgentCheckpointData? = getCheckpointById(agentContext.agentId, checkpointId)
         if (checkpoint != null) {
             agentContext.store(
-                checkpoint.toAgentContextData(rollbackStrategy) { context ->
+                checkpoint.toAgentContextData(rollbackStrategy, agentContext.agentId) { context ->
                     messageHistoryDiff(
                         currentMessages = context.llm.prompt.messages,
                         checkpointMessages = checkpoint.messageHistory
@@ -356,7 +339,7 @@ public class Persistence(
             return null
         }
 
-        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
+        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy, agentContext.agentId))
         return checkpoint
     }
 }

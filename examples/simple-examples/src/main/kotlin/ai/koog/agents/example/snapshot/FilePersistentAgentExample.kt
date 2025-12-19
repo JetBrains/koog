@@ -84,7 +84,7 @@ fun main() = runBlocking {
             println("Checkpoint ${index + 1}:")
             println("  ID: ${checkpoint.checkpointId}")
             println("  Created at: ${checkpoint.createdAt}")
-            println("  Node ID: ${checkpoint.nodeId}")
+            println("  Node ID: ${checkpoint.nodePath}")
             println("  Message history size: ${checkpoint.messageHistory.size}")
         }
 
@@ -121,7 +121,7 @@ fun main() = runBlocking {
         println("\nLatest checkpoint after restoration:")
         println("  ID: ${latestCheckpoint?.checkpointId}")
         println("  Created at: ${latestCheckpoint?.createdAt}")
-        println("  Node ID: ${latestCheckpoint?.nodeId}")
+        println("  Node ID: ${latestCheckpoint?.nodePath}")
         println("  Message history size: ${latestCheckpoint?.messageHistory?.size}")
     }
 }

@@ -1,13 +1,18 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
+import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,7 +37,7 @@ class SubgraphCheckpointsTest {
         val checkpointId = "test-checkpoint"
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createCheckpointSubgraphStrategy(checkpointId),
+            strategy = checkpointSubgraphStrategy(checkpointId),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -59,7 +64,7 @@ class SubgraphCheckpointsTest {
         val checkpointId = "test-checkpoint"
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createCheckpointSubgraphWithRollbackStrategy(checkpointId),
+            strategy = checkpointSubgraphWithRollbackStrategy(checkpointId),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -86,7 +91,7 @@ class SubgraphCheckpointsTest {
         val checkpointId = "test-checkpoint"
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createNestedSubgraphCheckpointStrategy(checkpointId),
+            strategy = nestedSubgraphCheckpointStrategy(checkpointId),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -114,7 +119,7 @@ class SubgraphCheckpointsTest {
         val checkpointId = "test-checkpoint"
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createNestedSubgraphCheckpointWithRollbackStrategy(checkpointId),
+            strategy = nestedSubgraphCheckpointWithRollbackStrategy(checkpointId),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -136,5 +141,71 @@ class SubgraphCheckpointsTest {
                 "sgNode2 node output",
             output
         )
+    }
+
+    @Test
+    fun `test reusing subgraph with Persistence - clean start `() = runTest {
+        val mockExecutor: PromptExecutor = getMockExecutor {}
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test") {
+                system("You are a test agent.")
+            },
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 100
+        )
+
+        val agent = AIAgent(
+            promptExecutor = mockExecutor,
+            strategy = strategyWithRepeatedSubgraphs(),
+            agentConfig = agentConfig,
+        ) {
+            // Install the AgentCheckpoint feature
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider()
+            }
+        }
+
+        agent.run("Start the test")
+    }
+
+    @Test
+    fun `test reusing subgraph with Persistence - checkpoint start`() = runTest {
+        val mockExecutor: PromptExecutor = getMockExecutor {}
+        val agentId = "test-agent"
+
+        val inMemoryPersistence = InMemoryPersistenceStorageProvider()
+
+        val checkpoint = AgentCheckpointData(
+            checkpointId = "checkpoint-1",
+            createdAt = Clock.System.now(),
+            nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
+            lastInput = JsonPrimitive("Input at checkpoint"),
+            messageHistory = listOf(),
+            version = 1L
+        )
+
+        inMemoryPersistence.saveCheckpoint(agentId, checkpoint)
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test") {
+                system("You are a test agent.")
+            },
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 100
+        )
+
+        val agent = AIAgent(
+            id = agentId,
+            promptExecutor = mockExecutor,
+            strategy = strategyWithRepeatedSubgraphs(),
+            agentConfig = agentConfig
+        ) {
+            install(Persistence) {
+                storage = inMemoryPersistence
+            }
+        }
+
+        agent.run("Start the test")
     }
 }
