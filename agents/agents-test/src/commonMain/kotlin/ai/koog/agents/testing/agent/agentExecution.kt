@@ -1,6 +1,7 @@
 package ai.koog.agents.testing.agent
 
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 
 /**
  * Constructs an execution path for an agent by joining the provided path components using
@@ -9,7 +10,7 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
  * @param parts A variable number of path components that should be joined to create the execution path.
  * @return A string representing the fully constructed execution path.
  */
-public fun agentExecutionPath(vararg parts: String): String = parts.joinToString(AgentExecutionInfo.defaultPathSeparator)
+public fun agentExecutionPath(vararg parts: String): String = parts.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
 
 /**
  * Constructs an [AgentExecutionInfo] instance from the provided path components.
