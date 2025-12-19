@@ -1,16 +1,12 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
-import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -158,26 +154,24 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
         context.with(id) { executionInfo, eventId ->
-            withContext(NodeInfoContextElement(Uuid.random().toString(), getNodeInfoElement()?.id, name, input, inputType)) {
-                logger.debug { "Start executing node (name: $name)" }
-                context.pipeline.onNodeExecutionStarting(eventId, executionInfo, this@AIAgentNode, context, input, inputType)
+            logger.debug { "Start executing node (name: $name)" }
+            context.pipeline.onNodeExecutionStarting(eventId, executionInfo, this@AIAgentNode, context, input, inputType)
 
-                val output =
-                    try {
-                        val executeResult = context.execute(input)
-                        logger.trace { "Finished executing node (name: $name) with output: $executeResult" }
-                        executeResult
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        logger.error(e) { "Error executing node (name: $name): ${e.message}" }
-                        context.pipeline.onNodeExecutionFailed(eventId, executionInfo, this@AIAgentNode, context, input, inputType, e)
-                        throw e
-                    }
+            val output =
+                try {
+                    val executeResult = context.execute(input)
+                    logger.trace { "Finished executing node (name: $name) with output: $executeResult" }
+                    executeResult
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.error(e) { "Error executing node (name: $name): ${e.message}" }
+                    context.pipeline.onNodeExecutionFailed(eventId, executionInfo, this@AIAgentNode, context, input, inputType, e)
+                    throw e
+                }
 
-                context.pipeline.onNodeExecutionCompleted(eventId, executionInfo, this@AIAgentNode, context, input, inputType, output, outputType)
-                output
-            }
+            context.pipeline.onNodeExecutionCompleted(eventId, executionInfo, this@AIAgentNode, context, input, inputType, output, outputType)
+            output
         }
 }
 
