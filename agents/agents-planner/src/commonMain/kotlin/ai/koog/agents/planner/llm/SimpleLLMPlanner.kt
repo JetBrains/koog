@@ -10,6 +10,7 @@ import ai.koog.agents.planner.AIAgentPlanner
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlin.reflect.typeOf
 
@@ -217,6 +218,7 @@ public open class SimpleLLMPlanner : AIAgentPlanner<String, SimplePlan>(
 @Serializable
 public data class PlanStep(
     val description: String,
+    @EncodeDefault
     val isCompleted: Boolean = false
 )
 
