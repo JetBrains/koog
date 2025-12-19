@@ -6,7 +6,7 @@ You can add these attachments to the `user` message by using the corresponding f
 - `image()`: Adds images (JPG, PNG, WebP, GIF).
 - `audio()`: Adds audio files (MP3, WAV, FLAC).
 - `video()`: Adds video files (MP4, AVI, MOV).
-- `file()` / `binaryFile()`: Add documents (PDF, TXT, MD, etc.).
+- `file()` / `binaryFile()` / `textFile()`: Add documents (PDF, TXT, MD, etc.).
 
 Each function supports two ways of configuring media content parameters, so you can:
 

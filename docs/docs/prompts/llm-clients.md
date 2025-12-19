@@ -109,14 +109,17 @@ response.collect { event ->
 ## Multiple choices
 
 !!! note
-    Available for all LLM clients except `GoogleLLMClient`, `BedrockLLMClient`, and `OllamaClient`.
+    Available for all LLM clients except `GoogleLLMClient`, `BedrockLLMClient`, and `OllamaClient`
 
-You can use the `executeMultipleChoices()` method to request multiple alternative responses from the model in a single call:
+You can request multiple alternative responses from the model in a single call by using the `executeMultipleChoices()` method.
+It requires additionally specifying the [`numberOfChoices`](structured-prompts.md#prompt-parameters) LLM parameter in the prompt
+being executed.
 
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.runBlocking
 -->
 ```kotlin
@@ -125,7 +128,7 @@ fun main() = runBlocking {
     val client = OpenAILLMClient(apiKey)
 
     val choices = client.executeMultipleChoices(
-        prompt = prompt("n_best") {
+        prompt = prompt("n_best", params = LLMParams(numberOfChoices = 3)) {
             system("You are a creative assistant.")
             user("Give me three different opening lines for a story.")
         },
@@ -229,4 +232,4 @@ fun main() = runBlocking {
 ## Integration with prompt executors
 
 [Prompt executors](prompt-executors.md) wrap LLM clients and provide additional functionality, such as routing, fallbacks, and unified usage across providers.
-They are recommended for production use, as they provide resilience and multi‑provider flexibility.
+They are recommended for production use, as they offer flexibility when working with multiple providers.

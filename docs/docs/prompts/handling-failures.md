@@ -202,8 +202,8 @@ val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
 <!--- KNIT example-handling-failures-05.kt -->
 
 !!!note
-    Streaming retries only apply to connection failures that happen before the first token is received.
-    After streaming has started, any errors are not processed, so the content doesn't change.
+    Streaming retries only apply to connection failures that occur before the first token is received.
+    After streaming has started, any errors will be passed through.
 
 ### Retry with prompt executors
 

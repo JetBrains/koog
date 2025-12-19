@@ -61,22 +61,6 @@ val prompt = prompt("assistant") {
 ```
 <!--- KNIT example-structured-prompts-03.kt -->
 
-You can use the `text()` extension function to create a more complex system message:
-
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
--->
-```kotlin
-val prompt = prompt("prompt_name") {
-    system {
-        text("You are a helpful assistant.")
-        text("Always provide code examples.")
-        text("Always provide step by step reasoning.")
-    }
-}
-```
-<!--- KNIT example-structured-prompts-04.kt -->
-
 ### User messages
 
 A user message represents input from the user.
@@ -93,7 +77,7 @@ val prompt = prompt("question") {
     user("What is Koog?")
 }
 ```
-<!--- KNIT example-structured-prompts-05.kt -->
+<!--- KNIT example-structured-prompts-04.kt -->
 
 For details about multimodal content, see [Multimodal inputs](#multimodal-inputs).
 
@@ -109,7 +93,7 @@ import ai.koog.prompt.dsl.prompt
 -->
 ```kotlin
 val prompt = prompt("article_review") {
-    system("Evaluate the article review.")
+    system("Evaluate the article.")
 
     // Example 1
     user("The article is clear and easy to understand.")
@@ -127,22 +111,7 @@ val prompt = prompt("article_review") {
     user("The article is interesting and helpful.")
 }
 ```
-<!--- KNIT example-structured-prompts-06.kt -->
-
-You can use the `text()` extension function to create a more complex assistant message:
-
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
--->
-```kotlin
-    val prompt = prompt("prompt_name") {
-    assistant{
-        text("The review is positive.")
-        text("It expresses user satisfaction.")
-    }
-}
-```
-<!--- KNIT example-structured-prompts-07.kt -->
+<!--- KNIT example-structured-prompts-05.kt -->
 
 ### Tool messages
 
@@ -181,7 +150,76 @@ val prompt = prompt("calculator_example") {
     assistant("The result of 5 + 3 is 8.")
 }
 ```
+<!--- KNIT example-structured-prompts-06.kt -->
+
+## Text message builders
+
+When building a `system()`, `user()`, or `assistant()` message, you can use 
+helper [text-building functions](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.text/-text-content-builder/index.html)
+for rich text formatting.
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+-->
+```kotlin
+val prompt = prompt("text_example") {
+    user {
+        +"Review the following code snippet:"
+        +"fun greet(name: String) = println(\"Hello, \$name!\")"
+
+        // Paragraph break
+        br()
+        text("Please include in your explanation:")
+
+        // Indent content
+        padding("  ") {
+            +"1. What the function does."
+            +"2. How string interpolation works."
+        }
+    }
+}
+```
+<!--- KNIT example-structured-prompts-07.kt -->
+
+You can also use the [Markdown](https://api.koog.ai/prompt/prompt-markdown/ai.koog.prompt.markdown/markdown.html) 
+and [XML](https://api.koog.ai/prompt/prompt-xml/ai.koog.prompt.xml/xml.html) builders to add the content in 
+the corresponding format.
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.xml.xml
+-->
+```kotlin
+val prompt = prompt("markdown_xml_example") {
+    // A user message in Markdown format
+    user {
+        markdown {
+            h2("Evaluate the article using the following criteria:")
+            bulleted {
+                item { +"Clarity and readability" }
+                item { +"Accuracy of information" }
+                item { +"Usefulness to the reader" }
+            }
+        }
+    }
+    // An assistant message in XML format
+    assistant {
+        xml {
+            xmlDeclaration()
+            tag("review") {
+                tag("clarity") { text("positive") }
+                tag("accuracy") { text("neutral") }
+                tag("usefulness") { text("positive") }
+            }
+        }
+    }
+}
+```
 <!--- KNIT example-structured-prompts-08.kt -->
+
+!!! tip
+    You can mix the text building functions with the XML and Markdown builders.
 
 ## Prompt parameters
 
