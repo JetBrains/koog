@@ -1,90 +1,82 @@
-# Running prompts with prompt executors
+# Prompt executors
 
-While LLM clients provide direct access to providers, prompt executors offer a higher-level abstraction that simplifies common use cases and handles client lifecycle management.
-They are ideal when you need to:
+Prompt executors provide a higher-level abstraction that lets you manage the lifecycle of one or multiple LLM clients.
+You can work with multiple LLM providers through a unified interface, abstracting from provider-specific details,
+with dynamic switching between them and fallbacks.
 
-- Quickly prototype without managing client configuration.
-- Work with multiple providers through a unified interface.
-- Simplify dependency injection in larger applications.
-- Abstract away provider-specific details.
+## Executor types
 
-### Executor types
+Koog provides two main types of prompt executors that implement the [`PromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-model/ai.koog.prompt.executor.model/-prompt-executor/index.html) interface:
 
-Koog provides two main prompt executors:
+| Type            | <div style="width:175px">Class</div>                                                                                                                               | Description                                                                                                                                                                                                                                                          |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Single-provider | [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html) | Wraps a single LLM client for one provider. Use this executor if your agent only requires switching between models within a single LLM provider.                                                                                                                     |
+| Multi-provider  | [`MultiLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-multi-l-l-m-prompt-executor/index.html)   | Wraps multiple LLM clients and routes calls based on the LLM provider. It can optionally use a configured fallback provider and LLM when the requested client is unavailable. Use this executor if your agent needs to switch between LLMs from different providers. |
 
-| <div style="width:175px">Name</div> | Description                                                                                                                                                                                                                             |
-|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html)       | Wraps a single LLM client for one provider. Use this executor if your agent only requires the ability to switch between models within a single LLM provider.                                                                            |
-| [`MultiLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-multi-l-l-m-prompt-executor/index.html)        | Routes to multiple LLM clients by a provider, with optional fallbacks for each provider to be used when a requested provider is not available. Use this executor if your agent needs to switch between models from different providers. |
-
-These are implementations of the [`PromtExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-model/ai.koog.prompt.executor.model/-prompt-executor/index.html) interface for executing prompts with LLMs.
-
-### Creating a single provider executor
+## Creating a single-provider executor
 
 To create a prompt executor for a specific LLM provider, perform the following:
 
-1) Configure an LLM client for a specific provider with the corresponding API key:
+1. Configure an LLM client for a specific provider with the corresponding API key.
+2. Create a prompt executor using [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html).
+
+Here is an example:
+
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
--->
-```kotlin
-val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
-```
-<!--- KNIT example-prompt-api-09.kt -->
-2) Create a prompt executor using [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html):
-<!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi09.openAIClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 -->
 ```kotlin
+val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
 val promptExecutor = SingleLLMPromptExecutor(openAIClient)
 ```
-<!--- KNIT example-prompt-api-10.kt -->
+<!--- KNIT example-prompt-api-09.kt -->
 
-### Creating a multi-provider executor
+## Creating a multi-provider executor
 
 To create a prompt executor that works with multiple LLM providers, do the following:
 
-1) Configure clients for the required LLM providers with the corresponding API keys:
+1. Configure clients for the required LLM providers with the corresponding API keys.
+2. Pass the configured clients to the `MultiLLMPromptExecutor` class constructor to create a prompt executor
+   with multiple LLM providers.
+
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.ollama.client.OllamaClient
--->
-```kotlin
-val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
-val ollamaClient = OllamaClient()
-```
-<!--- KNIT example-prompt-api-11.kt -->
-
-2) Pass the configured clients to the `MultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
-<!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi11.openAIClient
-import ai.koog.agents.example.examplePromptApi11.ollamaClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 -->
 ```kotlin
+val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
+val ollamaClient = OllamaClient()
+
 val multiExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to openAIClient,
     LLMProvider.Ollama to ollamaClient
 )
 ```
-<!--- KNIT example-prompt-api-12.kt -->
+<!--- KNIT example-prompt-api-11.kt -->
 
-### Pre-defined prompt executors
+## Pre-defined prompt executors
 
-For faster setup, Koog provides the following ready-to-use executor implementations for common providers:
+For faster setup, Koog provides the ready-to-use executor implementations for common providers.
 
-- Single provider executors that return `SingleLLMPromptExecutor` configured with a certain LLM client:
-    - `simpleOpenAIExecutor` for executing prompts with OpenAI models.
-    - `simpleAzureOpenAIExecutor` for executing prompts using Azure OpenAI Service.
-    - `simpleAnthropicExecutor` for executing prompts with Anthropic models.
-    - `simpleGoogleAIExecutor` for executing prompts with Google models.
-    - `simpleOpenRouterExecutor` for executing prompts with OpenRouter.
-    - `simpleOllamaAIExecutor` for executing prompts with Ollama.
+The following table includes the **pre-defined single-provider executors**
+that return `SingleLLMPromptExecutor` configured with a specific LLM client.
 
-- Multi-provider executor:
-    - `DefaultMultiLLMPromptExecutor` which is an implementation of `MultiLLMPromptExecutor` that supports OpenAI, Anthropic, and Google providers.
+| LLM provider   | Prompt executor                                                                                                                                                                                                                                                                                                                                             | Description                                                                                                                                                                                                          |
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| OpenAI         | [simpleOpenAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-open-a-i-executor.html),<br/>[simpleAzureOpenAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-azure-open-a-i-executor.html)                       | * `simpleOpenAIExecutor` wraps `OpenAILLMClient` that runs prompts with OpenAI models.<br/>* `simpleAzureOpenAIExecutor` wraps `OpenAILLMClient` configured for using Azure OpenAI Service.                          |
+| Anthropic      | [simpleAnthropicExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-anthropic-executor.html)                                                                                                                                                                                              | Wraps `AnthropicLLMClient` that runs prompts with Anthropic models.                                                                                                                                                  |
+| Google         | [simpleGoogleAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-google-a-i-executor.html)                                                                                                                                                                                              | Wraps `GoogleLLMClient` that runs prompts with Google models.                                                                                                                                                        |
+| OpenRouter     | [simpleOpenRouterExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-open-router-executor.html)                                                                                                                                                                                           | Wraps `OpenRouterLLMClient` that runs prompts with OpenRouter.                                                                                                                                                       |
+| Amazon Bedrock | [simpleBedrockExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-bedrock-executor.html),<br/>[simpleBedrockExecutorWithBearerToken](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-bedrock-executor-with-bearer-token.html) | * `simpleBedrockExecutor` wraps `BedrockLLMClient` that runs prompts with AWS Bedrock.<br/>* `simpleBedrockExecutorWithBearerToken` wraps `BedrockLLMClient` and uses the provided Bedrock API key to send requests. |
+| Mistral        | [simpleMistralAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-mistral-a-i-executor.html)                                                                                                                                                                                            | Wraps `MistralAILLMClient` that runs prompts with Mistral models.                                                                                                                                                    |
+| Ollama         | [simpleOllamaAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-ollama-a-i-executor.html)                                                                                                                                                                                              | Wraps `OllamaClient` that runs prompts with Ollama.                                                                                                                                                                  |
+
+Koog also provides the **pre-defined multi-provider executor** `DefaultMultiLLMPromptExecutor`.
+This is an implementation of `MultiLLMPromptExecutor` that wraps `OpenAILLMClient`,
+`AnthropicLLMClient`, and `GoogleLLMClient` models.
 
 Here is an example of creating pre-defined single and multi-provider executors:
 
@@ -115,15 +107,18 @@ val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient,
 ```
 <!--- KNIT example-prompt-api-13.kt -->
 
-### Executing a prompt
+## Running a prompt
 
-The prompt executors provide methods to run prompts using various capabilities, such as streaming, multiple choices generation, and content moderation.
+To run a prompt using a prompt executor, do the following:
 
-Here is an example of how to run a prompt with a specific LLM using the `execute` method:
+1. Create a prompt executor.
+2. Run the prompt with the specific LLM using the `execute()` method.
+
+Here is an example:
 
 <!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi04.prompt
-import ai.koog.agents.example.examplePromptApi10.promptExecutor
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
 
@@ -135,9 +130,12 @@ fun main() {
 }
 -->
 ```kotlin
+// Create an OpenAI executor
+val promptExecutor = simpleOpenAIExecutor("OPENAI_KEY")
+
 // Execute a prompt
 val response = promptExecutor.execute(
-    prompt = prompt,
+    prompt = prompt("demo") { user("Summarize this.") },
     model = OpenAIModels.Chat.GPT4o
 )
 ```
@@ -145,7 +143,89 @@ val response = promptExecutor.execute(
 
 This will run the prompt with the `GPT4o` model and return the response.
 
-!!!note
-The prompt executors let you stream responses, generate multiple choices, and run content moderation.
-For more information, refer to the API Reference for the specific executor.
-To learn more about content moderation, see [Content moderation](../content-moderation.md).
+!!! note
+    The prompt executors provide methods to run prompts using various capabilities, 
+    such as streaming, multiple choice generation, and content moderation.
+    Since prompt executors wrap LLM clients, each executor supports the capabilities of the corresponding client.
+    For details, refer to [LLM clients](llm-clients.md).
+
+## Switching between providers
+
+When you work with multiple LLM providers using `MultiLLMPromptExecutor`, you can switch between them.
+The process is as follows:
+
+1. Create an LLM client instance for each provider you want to use.
+2. Create a `MultiLLMPromptExecutor` that maps LLM providers to LLM clients.
+3. Run a prompt with a model from the corresponding client passed as an argument to the `execute()` method.
+   The prompt executor will use the corresponding client based on the model provider to run the prompt.
+
+Here is an example of switching between providers:
+
+```kotlin
+// Create LLM clients for OpenAI, Anthropic, and Google providers
+val openAIClient = OpenAILLMClient("OPENAI_KEY")
+val anthropicClient = AnthropicLLMClient("ANTHROPIC_KEY")
+val googleClient = GoogleLLMClient("GOOGLE_KEY")
+
+// Create a MultiLLMPromptExecutor that maps LLM providers to LLM clients
+val multiExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to openAIClient,
+    LLMProvider.Anthropic to anthropicClient,
+    LLMProvider.Google to googleClient
+)
+
+// Create a prompt
+val p = prompt("demo") { user("Summarize this.") }
+
+// Run the prompt with an OpenAI model; the prompt executor automatically switches to the OpenAI client
+val openAIResult = executor.execute(p, OpenAIModels.Chat.GPT4o)
+
+// Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
+val anthropicResult = executor.execute(p, AnthropicModels.Messages.Claude35Sonnet)
+```
+
+You can optionally configure a fallback LLM provider and model to use when the requested client is unavailable.
+For details, refer to [Configuring fallbacks](#configuring-fallbacks).
+
+## Configuring fallbacks
+
+Multi-provider prompt executors can be configured to use a fallback LLM provider and model when the requested LLM client is unavailable.
+To configure the fallback mechanism, provide the `fallback` parameter to the `MultiLLMPromptExecutor` constructor:
+
+<!--- INCLUDE
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.llm.LLMProvider
+-->
+```kotlin
+val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
+val ollamaClient = OllamaClient()
+
+val multiExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to openAIClient,
+    LLMProvider.Ollama to ollamaClient,
+    fallback = MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
+        fallbackProvider = LLMProvider.Ollama,
+        fallbackModel = OllamaModels.Meta.LLAMA_3_2
+    )
+)
+```
+<!--- KNIT example-prompt-api-15.kt -->
+
+If you pass a model from an LLM provider that is not included in the `MultiLLMPromptExecutor`,
+the prompt executor will use the fallback model:
+
+```kotlin
+// Create a prompt
+val p = prompt("demo") { user("Summarize this") }
+// If you pass a Google model, the prompt executor will use the fallback model, as the Google client is not included
+val response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro)
+```
+
+!!! note
+    Fallbacks are available for the `execute()` and `executeMultipleChoices()` methods only.
+
+
+
+
+
+

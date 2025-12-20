@@ -1,16 +1,16 @@
 # Multimodal inputs
 
-In addition to text messages, Koog also lets you send images, audio, video, and files to LLMs in the `user` message.
+In addition to text messages, Koog also lets you send images, audio, video, and files to LLMs within the `user` message.
 You can add these attachments to the `user` message by using the corresponding functions:
 
-- `image()` - Images (JPG, PNG, WebP, GIF)
-- `audio()` - Audio files (MP3, WAV, FLAC)
-- `video()` - Video files (MP4, AVI, MOV)
-- `file()` / `binaryFile()` - Documents (PDF, TXT, MD, etc.)
+- `image()`: Adds images (JPG, PNG, WebP, GIF).
+- `audio()`: Adds audio files (MP3, WAV, FLAC).
+- `video()`: Adds video files (MP4, AVI, MOV).
+- `file()` / `binaryFile()`: Add documents (PDF, TXT, MD, etc.).
 
 Each function supports two ways of configuring media content parameters, so you can:
 
-- Pass a URL or a file path to the function, it automatically handles media content parameters.
+- Pass a URL or a file path to the function, and it automatically handles media content parameters.
 - Create and pass a `ContentPart` object to the function for custom control over media content parameters.
 
 ### Auto-configured attachments
@@ -18,7 +18,7 @@ Each function supports two ways of configuring media content parameters, so you 
 If you pass a URL or a file path to the `image()`, `audio()`, `video()`, or `file()` functions, Koog automatically constructs
 the corresponding media content parameters based on the file extension.
 
-The general format of the `user` message that includes a text message and list of auto-configured attachments is as follows:
+The general format of the `user` message that includes a text message and a list of auto-configured attachments is as follows:
 
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
@@ -49,9 +49,9 @@ The [`ContentPart`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.messa
 lets you configure media content parameters for each attachment individually.
 
 You can create a `ContentPart` object for each attachment, configure its parameters,
-and pass to the corresponding `image()`, `audio()`, `video()`, or `file()` functions.
+and pass it to the corresponding `image()`, `audio()`, `video()`, or `file()` functions.
 
-The general format of the `user` message that includes a text message and list of custom-configured attachments is as follows:
+The general format of the `user` message that includes a text message and a list of custom-configured attachments is as follows:
 
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
@@ -80,10 +80,10 @@ user {
 
 Koog provides specialized `ContentPart` classes for each media type:
 
-- [`ContentPart.Image`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-image/index.html): image attachments, such as `jpg` or `png` files.
-- [`ContentPart.Audio`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-audio/index.html): audio attachments, such as `mp3` or `wav` files.
-- [`ContentPart.Video`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-video/index.html): video attachments, such as `mpg` or `avi` files.
-- [`ContentPart.File`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-file/index.html): file attachments, such as `pdf`,`md`, or `txt` files.
+- [`ContentPart.Image`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-image/index.html): image attachments, such as JPG or PNG files.
+- [`ContentPart.Audio`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-audio/index.html): audio attachments, such as MP3 or WAV files.
+- [`ContentPart.Video`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-video/index.html): video attachments, such as MP4 or AVI files.
+- [`ContentPart.File`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-file/index.html): file attachments, such as PDF or TXT files.
 
 All `ContentPart` types accept the following parameters:
 
@@ -98,7 +98,7 @@ All `ContentPart` types accept the following parameters:
 
 #### Attachment content
 
-`AttachmentContent` defines the type and source of content that is provided as an input to the LLM:
+`AttachmentContent` defines the type and source of content that is provided as input to the LLM:
 
 - URL of the provided content:
     ```kotlin
@@ -112,13 +112,13 @@ All `ContentPart` types accept the following parameters:
     ```
   See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html).
 
-- File content as s Base64-encoded string containing file data:
+- File content as a Base64-encoded string containing file data:
     ```kotlin
     AttachmentContent.Binary.Base64("iVBORw0KGgoAAAANS...")
     ```
   See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html).
 
-- File content as a plain text (for `ContentPart.File` only):
+- File content as plain text (for `ContentPart.File` only):
 
     ```kotlin
     AttachmentContent.PlainText("This is the file content.")
@@ -149,5 +149,5 @@ val prompt = prompt("mixed_content") {
 
 ## Next steps
 
-- Run prompts with [LLM clients](lm-clients.md) if you work with a single LLM provider.
+- Run prompts with [LLM clients](llm-clients.md) if you work with a single LLM provider.
 - Run prompts with [prompt executors](prompt-executors.md) if you work with multiple LLM providers.

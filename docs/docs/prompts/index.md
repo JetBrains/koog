@@ -12,13 +12,13 @@ objects. A Prompt object contains:
 - **ID**: A unique identifier for the prompt.
 - **Messages**: A list of messages that represent the conversation with the LLM.
 - **Parameters**: Optional [LLM configuration parameters](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.params/-l-l-m-params/index.html)
-  (such as temperature, tool choice, and other).
+  (such as temperature, tool choice, and others).
 
 All Prompt objects are structured prompts defined using the Kotlin DSL, which lets you specify the structure of the conversation.
 
 !!! note
-    AI agents let you provide a simple text prompt instead of a Prompt object.
-    They automatically convert it to the Prompt and send to the LLM for execution.
+    AI agents let you provide a simple text prompt instead of creating a Prompt object.
+    They automatically convert the text prompt to the Prompt object and send it to the LLM for execution.
     This is useful for a [basic agent](basic-agents.md) that only needs to run a single request.
 
 
@@ -59,26 +59,26 @@ flowchart TB
 
 <div class="grid cards" markdown>
 
--   :material-arrow-right-bold:{ .lg .middle } [**LLM clients**](lm-clients.md)
+-   :material-arrow-right-bold:{ .lg .middle } [**LLM clients**](llm-clients.md)
 
     ---
 
     Low‑level interfaces for direct interaction with specific LLM providers.
-    Use when working with a single provider, and advanced lifecycle management is not required.
+    Use them when you work with a single provider and do not need advanced lifecycle management.
 
 -   :material-swap-horizontal:{ .lg .middle } [**Prompt executors**](prompt-executors.md)
 
     ---
 
-    High-level abstraction managing lifecycles of one or multiple LLM clients.
-    Use when you need a unified API for running prompts across multiple providers,
+    High-level abstractions that manage the lifecycles of one or multiple LLM clients.
+    Use them when you need a unified API for running prompts across multiple providers,
     with dynamic switching between them and fallbacks.
 
 </div>
 
-If you want to run a simple text prompt, wrap it into a Prompt object with the Kotlin DSL,
-or use an agent, which does this for you.
-Here is the execution flow for an agent:
+If you want to run a simple text prompt, wrap it in a Prompt object using the Kotlin DSL,
+or use an AI agent, which automatically does this for you.
+Here is the execution flow for the agent:
 
 ```mermaid
 flowchart TB
@@ -110,22 +110,22 @@ val agent = AIAgent(
 val result = agent.run("What is Koog?")
 ```
 
-## Optimizing and handling failures
+## Optimizing performance and handling failures
 
-Koog provides mechanisms to optimize performance and handle failures when running prompts.
+Koog allows you to optimize performance and handle failures when running prompts.
 
 <div class="grid cards" markdown>
 
--   :material-cached:{ .lg .middle } [**Prompt caching**](prompt-caching.md)
+-   :material-cached:{ .lg .middle } [**LLM response caching**](llm-response-caching.md)
 
     ---
 
     Cache LLM responses to optimize performance and reduce costs for repeated requests.
 
--   :material-shield-check:{ .lg .middle } [**Failure handling**](failure-handling.md)
+-   :material-shield-check:{ .lg .middle } [**Handling failures**](handling-failures.md)
 
     ---
 
-    Built-in retries, timeouts, and automatic fallbacks to alternative providers.
+    Use built-in retries, timeouts, and other error handling mechanisms in your application.
 
 </div>

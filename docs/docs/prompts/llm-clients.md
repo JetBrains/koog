@@ -25,41 +25,8 @@ The `*` symbol indicates additional notes available in the **Notes** column.
 
 To run a prompt using an LLM client, perform the following:
 
-1) Create an LLM client that handles the connection between your application and LLM providers. For example:
-
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-const val apiKey = "apikey"
--->
-```kotlin
-// Create an OpenAI client
-val client = OpenAILLMClient(apiKey)
-```
-<!--- KNIT example-llm-clients-01.kt -->
-
-2) Call the `execute()` method with the prompt and LLM as arguments.
-
-<!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi01.prompt
-import ai.koog.agents.example.examplePromptApi06.client
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlinx.coroutines.runBlocking
-
-fun main() {
-runBlocking {
--->
-<!--- SUFFIX
-}
-}
--->
-```kotlin
-// Execute the prompt
-val response = client.execute(
-    prompt = prompt,
-    model = OpenAIModels.Chat.GPT4o  // You can choose different models
-)
-```
-<!--- KNIT example-llm-clients-02.kt -->
+1. Create an LLM client that handles the connection between your application and LLM providers.
+2. Call the `execute()` method with the prompt and LLM as arguments.
 
 Here is an example that uses `OpenAILLMClient` to run prompts:
 
@@ -73,7 +40,7 @@ import kotlinx.coroutines.runBlocking
 ```kotlin
 fun main() {
     runBlocking {
-        // Set up the OpenAI client with your API key
+        // Create an OpenAI client
         val token = System.getenv("OPENAI_API_KEY")
         val client = OpenAILLMClient(token)
 
@@ -92,8 +59,9 @@ fun main() {
             user("What are its key features?")
         }
 
-        // Execute the prompt and get the response
-        val response = client.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
+        // Run the prompt
+        val response = client.execute(prompt, OpenAIModels.Chat.GPT4o)
+        // Print the response
         println(response)
     }
 }
@@ -133,7 +101,7 @@ response.collect { event ->
 !!! note
     Available for all LLM clients except `GoogleLLMClient`, `BedrockLLMClient`, and `OllamaClient`.
 
-You can use the `executeMultipleChoices()` method to request mutiple alternative responses from the model in a single call:
+You can use the `executeMultipleChoices()` method to request multiple alternative responses from the model in a single call:
 
 ```kotlin
 fun main() = runBlocking {
@@ -180,7 +148,7 @@ fun main() = runBlocking {
 ## Embeddings
 
 !!! note
-    Available for `OpenAILLMClient`, `GoogleLLMClient`, `BedrockLLMClient`, `MistralAILLMClient`, `OllamaClient`.
+    Available for `OpenAILLMClient`, `GoogleLLMClient`, `BedrockLLMClient`, `MistralAILLMClient`, and `OllamaClient`.
 
 You convert text into embedding vectors using the `embed()` method.
 Choose an embedding model and pass your text to this method:
@@ -223,172 +191,6 @@ fun main() = runBlocking {
 }
 ```
 <!--- KNIT example-llm-clients-08.kt -->
-
-## Retry functionality
-
-When working with LLM providers, you may encounter transient errors like rate limits or temporary service unavailability. 
-The `RetryingLLMClient` decorator adds automatic retry logic to any LLM client.
-
-### Basic usage
-
-Wrap any existing client with retry capability:
-
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
-import ai.koog.prompt.dsl.prompt
-import kotlinx.coroutines.runBlocking
-
-fun main() {
-    runBlocking {
-        val apiKey = System.getenv("OPENAI_API_KEY")
-        val prompt = prompt("test") {
-            user("Hello")
-        }
--->
-<!--- SUFFIX
-    }
-}
--->
-```kotlin
-// Wrap any client with retry capability
-val client = OpenAILLMClient(apiKey)
-val resilientClient = RetryingLLMClient(client)
-
-// Now all operations will automatically retry on transient errors
-val response = resilientClient.execute(prompt, OpenAIModels.Chat.GPT4o)
-```
-<!--- KNIT example-llm-clients-09.kt -->
-
-### Configuring retry behavior
-
-Koog provides several predefined retry configurations:
-
-| Configuration              | Max attempts | Initial delay | Max delay | Use case                |
-|----------------------------|--------------|---------------|-----------|-------------------------|
-| `RetryConfig.DISABLED`     | 1 (no retry) | -             | -         | Development and testing |
-| `RetryConfig.CONSERVATIVE` | 3            | 2s            | 30s       | Normal production use   |
-| `RetryConfig.AGGRESSIVE`   | 5            | 500ms         | 20s       | Critical operations     |
-| `RetryConfig.PRODUCTION`   | 3            | 1s            | 20s       | Recommended default     |
-
-You can use them directly or create custom configurations:
-
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.retry.RetryConfig
-import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
-import kotlin.time.Duration.Companion.seconds
-
-val apiKey = System.getenv("OPENAI_API_KEY")
-val client = OpenAILLMClient(apiKey)
--->
-```kotlin
-// Use the predefined configuration
-val conservativeClient = RetryingLLMClient(
-    delegate = client,
-    config = RetryConfig.CONSERVATIVE
-)
-
-// Or create a custom configuration
-val customClient = RetryingLLMClient(
-    delegate = client,
-    config = RetryConfig(
-        maxAttempts = 5,
-        initialDelay = 1.seconds,
-        maxDelay = 30.seconds,
-        backoffMultiplier = 2.0,
-        jitterFactor = 0.2
-    )
-)
-```
-<!--- KNIT example-llm-clients-10.kt -->
-
-### Retry error patterns
-
-By default, the `RetryingLLMClient` recognizes common transient errors.
-This behavior is controlled by the [`RetryConfig.retryablePatterns`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients.retry/-retry-config/retryable-patterns.html) patterns.
-Each pattern is represented by
-[`RetryablePattern`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients.retry/-retryable-pattern/index.html)
-that checks the error message from a failed request and determines whether it should be retried.
-
-Koog provides the predefined retry configurations and patterns that work across all the supported LLM providers.
-You can keep the defaults or customize them for your specific needs.
-
-#### Pattern types
-
-You can use the following pattern types and combine any number of them:
-
-* `RetryablePattern.Status`: Matches a specific HTTP status code in the error message (such as `429`, `500`,`502`, etc.).
-* `RetryablePattern.Keyword`: Matches a keyword in the error message (such as `rate limit` or `request timeout`).
-* `RetryablePattern.Regex`: Matches a regular expression in the error message.
-* `RetryablePattern.Custom`: Matches a custom logic using a lambda function.
-
-If any pattern returns `true`, the error is considered retryable, and the LLM client can retry the request.
-
-#### Default patterns
-
-Unless you customize the retry configuration, the following patterns are used by default:
-
-* **HTTP status codes**:
-    * `429`: Rate limit
-    * `500`: Internal server error
-    * `502`: Bad gateway
-    * `503`: Service unavailable
-    * `504`: Gateway timeout
-    * `529`: Anthropic overloaded
-
-* **Error keywords**:
-    * rate limit
-    * too many requests
-    * request timeout
-    * connection timeout
-    * read timeout
-    * write timeout
-    * connection reset by peer
-    * connection refused
-    * temporarily unavailable
-    * service unavailable
-
-These default patterns are defined in Koog as [`RetryConfig.DEFAULT_PATTERNS`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients.retry/-retry-config/-companion/-d-e-f-a-u-l-t_-p-a-t-t-e-r-n-s.html).
-
-#### Custom patterns
-
-You can define custom patterns for your specific needs:
-
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.retry.RetryConfig
-import ai.koog.prompt.executor.clients.retry.RetryablePattern
--->
-```kotlin
-val config = RetryConfig(
-    retryablePatterns = listOf(
-        RetryablePattern.Status(429),   // Specific status code
-        RetryablePattern.Keyword("quota"),  // Keyword in error message
-        RetryablePattern.Regex(Regex("ERR_\\d+")),  // Custom regex pattern
-        RetryablePattern.Custom { error ->  // Custom logic
-            error.contains("temporary") && error.length > 20
-        }
-    )
-)
-```
-<!--- KNIT example-llm-clients-11.kt -->
-
-You can also append custom patterns to the default `RetryConfig.DEFAULT_PATTERNS`:
-
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.retry.RetryConfig
-import ai.koog.prompt.executor.clients.retry.RetryablePattern
--->
-```kotlin
-val config = RetryConfig(
-    retryablePatterns = RetryConfig.DEFAULT_PATTERNS + listOf(
-        RetryablePattern.Keyword("custom_error")
-    )
-)
-```
-<!--- KNIT example-llm-clients-12.kt -->
-
 
 ## Integration with prompt executors
 

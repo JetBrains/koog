@@ -18,11 +18,10 @@ nav:
           - Structured prompts: prompts/structured-prompts.md
           - Multimodal inputs: prompts/multimodal-inputs.md
           - Running prompts:
-            - LLM clients: prompts/lm-clients.md
+            - LLM clients: prompts/llm-clients.md
             - Prompt executors: prompts/prompt-executors.md
-          - Prompt caching: prompts/prompt-caching.md
-          - Failure handling: prompts/retry-and-error-handling.md
-      - LLM parameters: llm-parameters.md
+          - Handling failures: prompts/handling-failures.md
+          - LLM response caching: prompts/llm-response-caching.md
       - Tools:
           - Overview: tools-overview.md
           - Built-in tools: built-in-tools.md
@@ -139,6 +138,15 @@ plugins:
           - basic-agents.md: This guide lets you build a basic agent with minimum required configuration.
           - functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
+        Prompts:
+          - prompts/index.md: This page includes an overview of how to create and run prompts with Koog.
+          - prompts/structured-prompts.md: This page provides details about structured prompts created using the Kotlin DSL.
+          - prompts/multimodal-inputs.md: This page provides details about multimodal inputs, which allow you to send text, images, audio, video, and documents in your prompts.
+          - prompts/handling-failures.md: This page provides details about handling failures in prompts.
+          - prompts/llm-response-caching.md: This page provides details about prompt caching, which lets you cache responses from LLMs to avoid repeated requests.
+        Running prompts:
+          - prompts/llm-clients.md: This page provides details about LLM clients, which are used to run prompts and receive responses from LLMs. They allow working with a single LLM provider only.
+          - prompts/prompt-executors.md: This page provides details about prompt executors, which wrap LLM clients and are used to run prompts and receive responses from LLMs. They allow working with multiple LLM providers in a unified way.
         Tools:
           - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
           - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.
