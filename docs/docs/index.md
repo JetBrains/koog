@@ -55,7 +55,7 @@ You can customize agent capabilities with a modular feature system and deploy yo
 
 <div class="grid cards" markdown>
 
--   :material-chat-processing-outline:{ .lg .middle } [**Prompts**](prompt-api.md)
+-   :material-chat-processing-outline:{ .lg .middle } [**Prompts**](prompts/index.md)
 
     ---
 

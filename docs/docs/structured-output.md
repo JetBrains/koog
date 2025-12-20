@@ -265,7 +265,7 @@ The `executeStructured` method takes the following arguments:
 
 | Name           | Data type              | Required | Default       | Description                                                                                                     |
 |----------------|------------------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------|
-| `prompt`       | Prompt                 | Yes      |               | The prompt to execute. For more information, see [Prompt API](prompt-api.md).                                   |
+| `prompt`       | Prompt                 | Yes      |               | The prompt to execute. For more information, see [Prompts](prompts/index.md).                                   |
 | `model`        | LLModel                | Yes      |               | The main model to execute the prompt.                                                                           |
 | `examples`     | List<T>                | No       | `emptyList()` | Optional list of examples to help the model understand the expected format.                                     |
 | `fixingParser` | StructureFixingParser? | No       | `null`        | Optional parser that handles malformed responses by using an auxiliary LLM to intelligently fix parsing errors. |

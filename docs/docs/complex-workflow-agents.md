@@ -42,7 +42,7 @@ For all available installation methods, see [Install Koog](getting-started.md#in
 Prompt executors manage and run prompts.
 You can choose a prompt executor based on the LLM provider you plan to use.
 Also, you can create a custom prompt executor using one of the available LLM clients.
-To learn more, see [Prompt executors](prompt-api.md#running-prompts-with-prompt-executors).
+To learn more, see [Prompt executors](prompts/prompt-executors.md).
 
 For example, to provide the OpenAI prompt executor, you need to call the `simpleOpenAIExecutor` function and provide it with the API key required for authentication with the OpenAI service:
 

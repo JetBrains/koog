@@ -13,7 +13,15 @@ nav:
           - Functional agents: functional-agents.md
           - Complex workflow agents: complex-workflow-agents.md
           - Planner agents: planner-agents.md
-      - Prompts: prompt-api.md
+      - Prompts:
+          - prompts/index.md
+          - Structured prompts: prompts/structured-prompts.md
+          - Multimodal inputs: prompts/multimodal-inputs.md
+          - Running prompts:
+            - LLM clients: prompts/llm-clients.md
+            - Prompt executors: prompts/prompt-executors.md
+          - Handling failures: prompts/handling-failures.md
+          - LLM response caching: prompts/llm-response-caching.md
       - Tools:
           - Overview: tools-overview.md
           - Built-in tools: built-in-tools.md
@@ -86,12 +94,13 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets:
-      # Check whether snippets are loaded correctly
-      # check_paths: true
-      base_path: ["docs/snippets"]
+  - pymdownx.snippets
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - admonition
   - attr_list
   - md_in_html
@@ -130,7 +139,14 @@ plugins:
           - functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
         Prompts:
-          - prompt-api.md: This page includes detailed instructions about the use of Prompt API, which provides a comprehensive toolkit for interacting with Large Language Models in production applications.
+          - prompts/index.md: This page includes an overview of how to create and run prompts with Koog.
+          - prompts/structured-prompts.md: This page provides details about structured prompts created using the Kotlin DSL.
+          - prompts/multimodal-inputs.md: This page provides details about multimodal inputs, which allow you to send text, images, audio, video, and documents in your prompts.
+          - prompts/handling-failures.md: This page provides details about handling failures in prompts.
+          - prompts/llm-response-caching.md: This page provides details about prompt caching, which lets you cache responses from LLMs to avoid repeated requests.
+        Running prompts:
+          - prompts/llm-clients.md: This page provides details about LLM clients, which are used to run prompts and receive responses from LLMs. They allow working with a single LLM provider only.
+          - prompts/prompt-executors.md: This page provides details about prompt executors, which wrap LLM clients and are used to run prompts and receive responses from LLMs. They allow working with multiple LLM providers in a unified way.
         Tools:
           - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
           - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.

@@ -31,7 +31,7 @@ val prompt = prompt(
 ```
 <!--- KNIT example-llm-parameters-01.kt -->
 
-For more information about prompt creation, see [Prompts](prompt-api.md).
+For more information about prompt creation, see [Prompts](prompts/structured-prompts.md).
 
 - When creating a subgraph:
 
@@ -102,7 +102,7 @@ For more information about sessions, see [LLM sessions and manual history manage
 
 ## LLM parameter reference
 
-The following table provides a reference of LLM parameters included in the `LLMParams` class and supported by all LLM providers that are available in Koog out of the box. 
+The following table provides a reference of LLM parameters included in the `LLMParams` class and supported by all LLM providers that are available in Koog out of the box.
 For a list of parameters that are specific to some providers, see [Provider-specific parameters](#provider-specific-parameters).
 
 | Parameter              | Type                           | Description                                                                                                                                                                                     |
@@ -129,7 +129,7 @@ For a list of default values for each parameter, see the corresponding LLM provi
 
 ## Schema
 
-The `Schema` interface defines the structure for the model's response format. 
+The `Schema` interface defines the structure for the model's response format.
 Koog supports JSON schemas, as described in the sections below.
 
 ### JSON schemas
@@ -217,7 +217,7 @@ val standardJsonParams = LLMParams(
 The `ToolChoice` class controls how the language model uses tools. It provides the following options:
 
 * `LLMParams.ToolChoice.Named`: the language model calls the specified tool. Takes the `name` string argument that
-represents the name of the tool to call.
+  represents the name of the tool to call.
 * `LLMParams.ToolChoice.All`: the language model calls all tools.
 * `LLMParams.ToolChoice.None`: the language model does not call tools and only generates text.
 * `LLMParams.ToolChoice.Auto`: the language model automatically decides whether to call tools and which tool to call.
@@ -414,8 +414,8 @@ val basicParams = LLMParams(
 
 ### Reasoning control
 
-You implement reasoning control through provider-specific parameters that control model reasoning. 
-When using the OpenAI Chat API and models that support reasoning, use the `reasoningEffort` parameter 
+You implement reasoning control through provider-specific parameters that control model reasoning.
+When using the OpenAI Chat API and models that support reasoning, use the `reasoningEffort` parameter
 to control how many reasoning tokens the model generates before providing a response:
 
 <!--- INCLUDE
@@ -429,7 +429,7 @@ val openAIReasoningEffortParams = OpenAIChatParams(
 ```
 <!--- KNIT example-llm-parameters-09.kt -->
 
-In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`. 
+In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`.
 You can then pass the encrypted reasoning tokens back to the model in the next conversation turns.
 
 <!--- INCLUDE
@@ -445,7 +445,7 @@ val openAIStatelessReasoningParams = OpenAIResponsesParams(
 
 ### Custom parameters
 
-To add custom parameters that may be provider specific and not supported in Koog out of the box, use the `additionalProperties` property as shown in the example below. 
+To add custom parameters that may be provider specific and not supported in Koog out of the box, use the `additionalProperties` property as shown in the example below.
 
 <!--- INCLUDE
 import ai.koog.prompt.params.LLMParams
@@ -466,8 +466,8 @@ val customParams = LLMParams(
 ### Setting and overriding parameters
 
 The code sample below shows how you can define a set of LLM parameters that you may want to use primarily,
-then create another set by partially overriding values from the original set and adding new values to it. 
-This lets you define parameters that are common to most requests but also add more specific parameter combinations without having to repeat the common parameters. 
+then create another set by partially overriding values from the original set and adding new values to it.
+This lets you define parameters that are common to most requests but also add more specific parameter combinations without having to repeat the common parameters.
 
 <!--- INCLUDE
 import ai.koog.prompt.params.LLMParams
