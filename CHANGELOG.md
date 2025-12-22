@@ -1,3 +1,60 @@
+# 0.6.0
+> Published 22 December 2025
+
+## Major Features
+
+- **ACP Integration**: Introduce initial ACP (Agent Communication Protocol) integration to create ACP-compatible agents in Koog (#1253)
+- **Planner Agent Type**: Introduce new "planner" agent type with iterative planning capabilities. Provide two out-of-the box strategies: simple LLM planner and GOAP (Goal-Oriented Action Planning) (#1232)
+- **Response Processor**: Introduce `ResponseProcessor` to fix tool call messages from weak models that fail to properly generate tool calls ([KG-212](https://youtrack.jetbrains.com/issue/KG-212), #871)
+
+## Improvements
+
+- **Event ID Propagation**: Integrate event ID and execution info propagation across all pipeline events, agent execution flow, and features including Debugger and Tracing ([KG-178](https://youtrack.jetbrains.com/issue/KG-178))
+- **Bedrock Enhancements**:
+  - Add fallback model support and warning mechanism for unsupported Bedrock models with custom families ([KG-595](https://youtrack.jetbrains.com/issue/KG-595), #1224)
+  - Add global inference profile prefix support to Bedrock models for improved availability and latency (#1139)
+  - Add Bedrock support in Ktor integration for configuring and initializing Bedrock LLM clients (#1141)
+  - Improve Bedrock moderation implementation with conditional guardrails API calls (#1105)
+- **Ollama**: Add support for file attachments in Ollama client (#1221)
+- **Tool Schema**: Add extension point for custom tool schemas to allow clients to provide custom schemas or modify existing ones (#1158)
+- **Google Client**:
+  - Add support for `/models` request in Google LLM Client (#1181)
+  - Add text embedding support for Google's **Gemini models** via `gemini-embedding-001` ([KG-314](https://youtrack.jetbrains.com/issue/KG-314), #1235)
+- **HTTP Client**: Make `KoogHttpClient` auto-closable and add `clientName` parameter (#1184)
+- Update MCP SDK version to 0.7.7 (#1154)
+- Use SEQUENTIAL mode as default for `singleRunStrategy` (#1195)
+
+## Bug Fixes
+
+- **Streaming**: Fix streaming + tool call issues for Google and OpenRouter clients - Google client now passes tools parameter, OpenRouter uses CIO engine for SSE, improved SSE error handling ([KG-616](https://youtrack.jetbrains.com/issue/KG-616), #1262)
+- **Tool Calling**: Fix `requestLLMOnlyCallingTools` ignoring tool calls after reasoning messages from models with Chain of Thought ([KG-545](https://youtrack.jetbrains.com/issue/KG-545), #1198)
+- **File Tools**:
+  - Handle empty filters in `ListDirectoryTool` ([KG-628](https://youtrack.jetbrains.com/issue/KG-628), #1285)
+  - Fix directory collapse in `ListDirectoryUtil` ([KG-583](https://youtrack.jetbrains.com/issue/KG-583), #1260)
+  - Clamp `endLine` to file length and add warnings for overflow in `ReadFileTool` ([KG-534](https://youtrack.jetbrains.com/issue/KG-534), #1182)
+- **Model-Specific Fixes**:
+  - Pass `jsonObject` as `responseFormat` for DeepSeek to fix JSON mode ([KG-537](https://youtrack.jetbrains.com/issue/KG-537), #1258)
+  - Remove `LLMCapability.Temperature` from GPT-5 model capabilities (#1277)
+  - Fix OpenAI streaming with tools in Responses API ([KG-584](https://youtrack.jetbrains.com/issue/KG-584), #1255)
+  - Fix Bedrock timeout setting propagation to `BedrockRuntimeClient.HttpClient` (#1190)
+  - Add handler for `GooglePart.InlineData` to support binary content responses ([KG-487](https://youtrack.jetbrains.com/issue/KG-487), #1094)
+- **Other Fixes**:
+  - Fix reasoning message handling in provided simple strategies (#1166)
+  - Fix empty list condition check in `onMultipleToolResults` and `onMultipleAssistantMessages` (#1192)
+  - Fix timeout not respected in executor because `join()` was called before timeout check (#1005)
+  - Fix `ContentPartsBuilder` to flush whenever `textBuilder` is not empty ([KG-504](https://youtrack.jetbrains.com/issue/KG-504), #1123)
+  - Fix and simplify `McpTool` to properly support updated Tool serialization (#1128)
+  - Fix `OpenAIConfig.moderationsPath` to be mutable (`var` instead of `val`) (#1097)
+  - Finalize pipeline feature processors after agent run for `StatefulSingleUseAIAgent` ([KG-576](https://youtrack.jetbrains.com/issue/KG-576))
+
+## Breaking Changes
+
+- **Persistence**: Remove requirement for unique graph node names in Persistence feature, migrate to node path usage (#1288)
+- **Tool API**: Update Tool API to fix name and descriptor discrepancy - moved configurable tool properties to constructors, removed `doExecute` in favor of `execute` ([KG-508](https://youtrack.jetbrains.com/issue/KG-508), #1226)
+- **OpenAI Models**: GPT-5-Codex and GPT-5.1 reasoning models moved from Chat section to Reasoning section ([KG-562](https://youtrack.jetbrains.com/issue/KG-562), #1146)
+- **Structured Output**: Rename structured output classes - `StructuredOutput` → `StructuredRequest`, `StructuredData` → `Structure`, `JsonStructuredData` → `JsonStructure` (#1107)
+- **Module Organization**: Move `LLMChoice` from `prompt-llm` to `prompt-executor-model` module (#1109)
+
 # 0.5.4
 > Published 03 December 2025
 
