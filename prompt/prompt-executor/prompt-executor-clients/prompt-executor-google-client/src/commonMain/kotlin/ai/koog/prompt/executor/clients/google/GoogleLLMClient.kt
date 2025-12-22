@@ -37,6 +37,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.EmbeddingParams
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitAppend
@@ -762,18 +763,35 @@ public open class GoogleLLMClient(
         httpClient.close()
     }
 
-    override suspend fun embed(text: String, model: LLModel): List<Double> {
+    override suspend fun embed(
+        text: String,
+        model: LLModel,
+        params: EmbeddingParams
+    ): List<Double> {
         require(model.capabilities.contains(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
         }
+        
+        // Validate dimensions capability
+        if (params.dimensions != null) {
+            require(model.supports(LLMCapability.Embedding.Dimensions)) {
+                "Model ${model.id} does not support custom embedding dimensions. " +
+                "Use a model with LLMCapability.Embedding.Dimensions or omit the dimensions parameter."
+            }
+        }
 
         logger.debug { "Embedding text with model: ${model.id}" }
+        
+        val googleParams = params.toGoogleEmbeddingParams()
 
         val request = GoogleEmbeddingRequest(
             model = "models/${model.id}",
             content = GoogleContent(
                 parts = listOf(GooglePart.Text(text))
-            )
+            ),
+            outputDimensionality = googleParams.dimensions,
+            taskType = googleParams.taskType?.apiValue,
+            title = googleParams.title,
         )
 
         try {

@@ -25,7 +25,8 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                // TODO: Re-enable after OpenAI migration
+                // implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)

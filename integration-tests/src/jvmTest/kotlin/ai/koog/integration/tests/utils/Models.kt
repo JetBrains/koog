@@ -61,12 +61,22 @@ object Models {
 
     @JvmStatic
     fun embeddingModels(): Stream<LLModel> {
+        // TODO: Re-enable after provider migration complete
         return Stream.of(
-            BedrockModels.Embeddings.AmazonTitanEmbedText,
-            OpenAIModels.Embeddings.TextEmbedding3Large,
-            MistralAIModels.Embeddings.MistralEmbed,
+            // BedrockModels.Embeddings.AmazonTitanEmbedText,
+            // OpenAIModels.Embeddings.TextEmbedding3Large,
+            // MistralAIModels.Embeddings.MistralEmbed,
             GoogleModels.Embeddings.GeminiEmbedding001,
         )
+    }
+
+    /**
+     * Returns embedding models that support variable output dimensions via the dimensions parameter.
+     * Only includes models with [LLMCapability.Embedding.Dimensions].
+     */
+    @JvmStatic
+    fun dimensionCapableEmbeddingModels(): Stream<LLModel> {
+        return embeddingModels().filter { it.capabilities.contains(LLMCapability.Embedding.Dimensions) }
     }
 
     /**

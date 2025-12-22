@@ -34,6 +34,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         @JvmStatic
+        fun dimensionCapableEmbeddingModels(): Stream<Arguments> {
+            return Models.dimensionCapableEmbeddingModels().map { model -> Arguments.of(model) }
+        }
+
+        @JvmStatic
         fun bedrockMarkdownScenarioModelCombinations(): Stream<Arguments> {
             return Models.bedrockModels().flatMap { model ->
                 listOf(
@@ -275,6 +280,18 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("embeddingModels")
     override fun integration_testEmbed(model: LLModel) {
         super.integration_testEmbed(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("dimensionCapableEmbeddingModels")
+    override fun integration_testEmbedWithDimensions(model: LLModel) {
+        super.integration_testEmbedWithDimensions(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("embeddingModels")
+    override fun integration_testEmbedBatch(model: LLModel) {
+        super.integration_testEmbedBatch(model)
     }
 
     @ParameterizedTest
