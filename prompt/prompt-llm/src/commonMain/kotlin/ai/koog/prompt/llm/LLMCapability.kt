@@ -119,9 +119,33 @@ public sealed class LLMCapability(public val id: String) {
      *
      * This capability can be utilized in tasks like semantic search, document clustering,
      * or other operations requiring an understanding of textual similarity.
+     *
+     * Note: For models that support additional embedding features (like variable dimensions),
+     * see [Embedding] sealed class for more granular capabilities.
      */
     @Serializable
     public data object Embed : LLMCapability("embed")
+
+    /**
+     * Represents embedding-specific capabilities beyond basic embedding generation.
+     *
+     * These capabilities are **additive** to the base [Embed] capability. A model should have
+     * both [Embed] and the relevant [Embedding] sub-capability. For example:
+     * - OpenAI text-embedding-ada-002: has [Embed] only
+     * - OpenAI text-embedding-3-small: has [Embed] AND [Embedding.Dimensions]
+     *
+     * @property embeddingFeature The specific embedding feature identifier.
+     */
+    @Serializable
+    public sealed class Embedding(public val embeddingFeature: String) : LLMCapability(embeddingFeature) {
+        /**
+         * Indicates that the model supports variable output dimensions for embeddings.
+         * Models with this capability can accept a `dimensions` parameter to control
+         * the size of the output embedding vector.
+         */
+        @Serializable
+        public data object Dimensions : Embedding("embedding-dimensions")
+    }
 
     /**
      * Represents the "completion" capability for Language Learning Models (LLMs). This capability

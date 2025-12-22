@@ -330,10 +330,15 @@ public class OllamaClient(
      *
      * @param text The text to embed.
      * @param model The model to use for embedding. Must have the Embed capability.
+     * @param params Embedding parameters (dimensions support TODO in Ollama migration)
      * @return A vector representation of the text.
      * @throws LLMClientException if the model does not have the Embed capability.
      */
-    override suspend fun embed(text: String, model: LLModel): List<Double> {
+    override suspend fun embed(
+        text: String,
+        model: LLModel,
+        params: ai.koog.prompt.params.EmbeddingParams
+    ): List<Double> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         if (!model.capabilities.contains(LLMCapability.Embed)) {

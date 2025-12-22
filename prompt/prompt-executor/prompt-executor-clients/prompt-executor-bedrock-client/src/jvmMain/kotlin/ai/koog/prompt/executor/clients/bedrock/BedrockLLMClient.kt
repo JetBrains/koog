@@ -354,7 +354,11 @@ public class BedrockLLMClient(
         }
     }
 
-    override suspend fun embed(text: String, model: LLModel): List<Double> {
+    override suspend fun embed(
+        text: String,
+        model: LLModel,
+        params: ai.koog.prompt.params.EmbeddingParams
+    ): List<Double> {
         model.requireCapability(LLMCapability.Embed)
         logger.debug { "Embedding text with model: ${model.id}" }
         val modelFamily = getBedrockModelFamily(model)

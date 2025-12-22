@@ -398,10 +398,15 @@ public open class OpenAILLMClient(
      *
      * @param text The text to embed.
      * @param model The model to use for embedding. Must have the Embed capability.
+     * @param params Embedding parameters (dimensions support TODO in OpenAI migration)
      * @return A list of floating-point values representing the embedding.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
-    override suspend fun embed(text: String, model: LLModel): List<Double> {
+    override suspend fun embed(
+        text: String,
+        model: LLModel,
+        params: ai.koog.prompt.params.EmbeddingParams
+    ): List<Double> {
         model.requireCapability(LLMCapability.Embed)
 
         logger.debug { "Embedding text with model: ${model.id}" }
