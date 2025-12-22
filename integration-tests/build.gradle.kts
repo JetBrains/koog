@@ -28,6 +28,7 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":agents:agents-features:agents-features-snapshot"))
+                implementation(project(":agents:agents-features:agents-features-acp"))
                 implementation(project(":agents:agents-mcp"))
                 implementation(project(":agents:agents-mcp-server"))
                 implementation(project(":agents:agents-test"))
