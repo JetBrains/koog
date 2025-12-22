@@ -1,7 +1,7 @@
 # LLM clients
 
 LLM clients are designed for direct interaction with LLM providers.
-Each client implements the `LLMClient` interface, which provides methods for executing prompts and streaming responses.
+Each client implements the [`LLMClient`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients/-l-l-m-client/index.html) interface, which provides methods for executing prompts and streaming responses.
 
 You can use an LLM client when you work with a single LLM provider and don't need advanced lifecycle management.
 If you need to manage multiple LLM providers, use a [prompt executor](prompt-executors.md).
@@ -112,7 +112,7 @@ response.collect { event ->
     Available for all LLM clients except `GoogleLLMClient`, `BedrockLLMClient`, and `OllamaClient`
 
 You can request multiple alternative responses from the model in a single call by using the `executeMultipleChoices()` method.
-It requires additionally specifying the [`numberOfChoices`](structured-prompts.md#prompt-parameters) LLM parameter in the prompt
+It requires additionally specifying the [`numberOfChoices`](prompt-creation/index.md#prompt-parameters) LLM parameter in the prompt
 being executed.
 
 <!--- INCLUDE
@@ -142,9 +142,6 @@ fun main() = runBlocking {
 }
 ```
 <!--- KNIT example-llm-clients-03.kt -->
-
-!!! tip
-    You can also request multiple choices by adding the [`numberOfChoices`](structured-prompts.md#prompt-parameters) LLM parameter into the prompt.
 
 ## Listing available models
 

@@ -20,6 +20,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.cached.CachedPromptExecutor
 import ai.koog.prompt.cache.files.FilePromptCache
+import kotlin.system.measureTimeMillis
 import ai.koog.prompt.dsl.prompt
 import kotlin.io.path.Path
 
@@ -38,21 +39,42 @@ fun main() {
 --> 
 ```kotlin
 // Create a prompt executor
-val client = OpenAILLMClient(System.getenv("OPENAI_KEY"))
+val client = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
 val promptExecutor = SingleLLMPromptExecutor(client)
 
 // Create a cached prompt executor
 val cachedExecutor = CachedPromptExecutor(
-    cache = FilePromptCache(Path("/cache_directory")),
+    cache = FilePromptCache(Path("path/to/your/cache/directory")),
     nested = promptExecutor
 )
 
-// Run the cached prompt executor
-val response = cachedExecutor.execute(prompt, OpenAIModels.Chat.GPT4o)
+// Run cached prompt executor for the first time
+// This will perform an actual LLM request
+val firstTime = measureTimeMillis {
+    val firstResponse = cachedExecutor.execute(prompt, OpenAIModels.Chat.GPT4o)
+    println("First response: ${firstResponse.first().content}")
+}
+println("First execution took: ${firstTime}ms")
+
+// Run cached prompt executor for the second time
+// This will return the result immediately from the cache
+val secondTime = measureTimeMillis {
+    val secondResponse = cachedExecutor.execute(prompt, OpenAIModels.Chat.GPT4o)
+    println("Second response: ${secondResponse.first().content}")
+}
+println("Second execution took: ${secondTime}ms")
 ```
 <!--- KNIT example-llm-response-caching-01.kt -->
 
-Now you can run the same prompt with the same model multiple times. The response will be retrieved from the cache.
+The example produces the following output:
+
+```
+First response: Hello! It seems like we're starting a new conversation. What can I help you with today?
+First execution took: 48ms
+Second response: Hello! It seems like we're starting a new conversation. What can I help you with today?
+Second execution took: 1ms
+```
+The second response is retrieved from the cache, which took only 1ms.
 
 !!!note
     * If you call `executeStreaming()` with the cached prompt executor, it produces a response as a single chunk.
