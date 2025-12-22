@@ -1,5 +1,5 @@
 # 0.6.0
-> Published 21 December 2025
+> Published 22 December 2025
 
 ## Major Features
 
