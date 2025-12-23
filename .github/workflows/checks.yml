@@ -14,14 +14,12 @@ on:
       - 'examples/**'
       - '!examples/code-agent/**'
       - '!examples/simple-examples/**'
-      - 'docs/**'
       - '*.md'
   pull_request:
     paths-ignore:
       - 'examples/**'
       - '!examples/code-agent/**'
       - '!examples/simple-examples/**'
-      - 'docs/**'
       - '*.md'
   workflow_dispatch:
 
