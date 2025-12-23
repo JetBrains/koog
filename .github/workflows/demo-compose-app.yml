@@ -25,12 +25,12 @@ jobs:
         gradle-tasks: [
           "ktlintCheck lint :androidApp:assembleDebug :androidApp:assembleRelease",
           ":desktopApp:jar",
-          ":webApp:composeCompatibilityBrowserDistribution"
+          ":webApp:jsBrowserDevelopmentWebpack"
         ]
         os: [ ubuntu-latest ]
         include:
           - gradle-tasks: ":commonApp:iosSimulatorArm64Binaries"
-            os: macos-latest-xlarge
+            os: macos-latest
 
     steps:
       - name: Configure Git

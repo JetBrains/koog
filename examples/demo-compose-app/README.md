@@ -39,7 +39,7 @@ To run the application on iPhone device/simulator:
 - Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio
 
 ### Web Distribution
-Build web distribution: `./gradlew :webApp:composeCompatibilityBrowserDistribution`  
+Build web pack: `./gradlew :webApp:jsBrowserDevelopmentWebpack`  
 Deploy a dir `webApp/build/dist/composeWebCompatibility/productionExecutable` to a web server
 
 ### JS Browser
