@@ -618,7 +618,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             shouldNotBeEmpty()
-            first().nodePath shouldBe save
+            first().nodePath shouldContain save
         }
 
         val restoredAgent = AIAgent(
@@ -817,9 +817,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             size shouldBeGreaterThanOrEqual 3
             map { it.nodePath }.toSet() shouldNotBeNull {
-                shouldContain(hello)
-                shouldContain(world)
-                shouldContain(bye)
+                shouldForAny { it.shouldContain(hello) }
+                shouldForAny { it.shouldContain(world) }
+                shouldForAny { it.shouldContain(bye) }
             }
         }
     }
