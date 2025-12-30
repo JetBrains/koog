@@ -22,7 +22,7 @@ import kotlin.uuid.Uuid
  * @property checkpointId The unique identifier of the checkpoint. This allows tracking and restoring the agent's session to a specific state.
  * @property messageHistory A list of messages exchanged in the session up to the checkpoint. Messages include interactions between the user, system, assistant, and tools.
  * @property nodePath The identifier of the node where the checkpoint was created.
- * @property lastInput Serialized input received for node with [nodePath]
+ * @property lastOutput Serialized output received from node with [nodePath]
  * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
  * @property createdAt The timestamp when the checkpoint was created.
  * @property version The version of the checkpoint data structure
@@ -32,7 +32,7 @@ public data class AgentCheckpointData(
     val checkpointId: String,
     val createdAt: Instant,
     val nodePath: String,
-    val lastInput: JsonElement,
+    val lastOutput: JsonElement,
     val messageHistory: List<Message>,
     val version: Long,
     val properties: Map<String, JsonElement>? = null
@@ -51,7 +51,7 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
         checkpointId = Uuid.random().toString(),
         createdAt = time,
         nodePath = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
-        lastInput = JsonNull,
+        lastOutput = JsonNull,
         messageHistory = emptyList(),
         properties = mapOf(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JsonPrimitive(true)),
         version = version
@@ -61,7 +61,7 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
 /**
  * Converts an instance of [AgentCheckpointData] to [AgentContextData].
  *
- * The conversion maps the `messageHistory`, `nodeId`, and `lastInput` properties of
+ * The conversion maps the `messageHistory`, `nodeId`, and `lastOutput` properties of
  * [AgentCheckpointData] directly to a new [AgentContextData] instance.
  *
  * @return A new [AgentContextData] instance containing the message history, node ID,
@@ -75,7 +75,7 @@ public fun AgentCheckpointData.toAgentContextData(
     return AgentContextData(
         messageHistory = messageHistory,
         nodePath = nodePath,
-        lastInput = lastInput,
+        lastOutput = lastOutput,
         rollbackStrategy,
         additionalRollbackAction
     )

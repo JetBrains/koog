@@ -30,7 +30,7 @@ class CheckpointSerializationTest {
             checkpointId = "cp-1",
             createdAt = now,
             nodePath = "NodeA",
-            lastInput = JsonPrimitive("last-input"),
+            lastOutput = JsonPrimitive("last-input"),
             messageHistory = sampleMessages(now),
             version = 0L
         )
@@ -47,7 +47,7 @@ class CheckpointSerializationTest {
         assertEquals("cp-1", restored.checkpointId)
         assertEquals(now, restored.createdAt)
         assertEquals("NodeA", restored.nodePath)
-        assertEquals(JsonPrimitive("last-input"), restored.lastInput)
+        assertEquals(JsonPrimitive("last-input"), restored.lastOutput)
         assertNull(restored.properties, "properties should be null after deserialization when omitted in JSON")
 
         // Message history assertions
@@ -88,7 +88,7 @@ class CheckpointSerializationTest {
             checkpointId = "cp-2",
             createdAt = now,
             nodePath = "NodeB",
-            lastInput = JsonObject(mapOf("inputKey" to JsonPrimitive("inputVal"))),
+            lastOutput = JsonObject(mapOf("inputKey" to JsonPrimitive("inputVal"))),
             messageHistory = sampleMessages(now),
             properties = properties,
             version = 0L

@@ -125,8 +125,8 @@ public class Persistence(
                     persistence.createCheckpoint(
                         agentContext = eventCtx.context,
                         nodePath = eventCtx.context.executionInfo.path(),
-                        lastInput = eventCtx.input,
-                        lastInputType = eventCtx.inputType,
+                        lastOutput = eventCtx.output,
+                        lastOutputType = eventCtx.outputType,
                         version = parent?.version?.plus(1) ?: 0L,
                     )
                 }
@@ -159,23 +159,23 @@ public class Persistence(
      *
      * @param agentContext The context of the agent containing the state to checkpoint
      * @param nodeId The ID of the node where the checkpoint is created
-     * @param lastInput The input data to include in the checkpoint
+     * @param lastOutput The latest node output data to include in the checkpoint
      * @param checkpointId Optional ID for the checkpoint; a random UUID is generated if not provided
      * @return The created checkpoint data
      */
     public suspend fun createCheckpoint(
         agentContext: AIAgentContext,
         nodePath: String,
-        lastInput: Any?,
-        lastInputType: KType,
+        lastOutput: Any?,
+        lastOutputType: KType,
         version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
-        val inputJson = SerializationUtils.encodeDataToJsonElementOrNull(lastInput, lastInputType)
+        val outputJson = SerializationUtils.encodeDataToJsonElementOrNull(lastOutput, lastOutputType)
 
-        if (inputJson == null) {
+        if (outputJson == null) {
             logger.warn {
-                "Failed to serialize input of type $lastInputType for checkpoint creation for $nodePath, skipping..."
+                "Failed to serialize output of type $lastOutputType for checkpoint creation for $nodePath, skipping..."
             }
             return null
         }
@@ -185,7 +185,7 @@ public class Persistence(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
                 nodePath = agentContext.executionInfo.path(),
-                lastInput = inputJson,
+                lastOutput = outputJson,
                 createdAt = Clock.System.now(),
                 version = version,
             )

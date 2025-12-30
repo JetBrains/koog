@@ -123,7 +123,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodePath = path(agentId, "straight-forward", "Node2"),
-            lastInput = JsonPrimitive("Test input"),
+            lastOutput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -164,7 +164,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId2",
             createdAt = time - 10.seconds,
             nodePath = path(agentId, "straight-forward", "Node1"),
-            lastInput = JsonPrimitive("Test input"),
+            lastOutput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
@@ -176,7 +176,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodePath = path(agentId, "straight-forward", "Node2"),
-            lastInput = JsonPrimitive("Test input"),
+            lastOutput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))

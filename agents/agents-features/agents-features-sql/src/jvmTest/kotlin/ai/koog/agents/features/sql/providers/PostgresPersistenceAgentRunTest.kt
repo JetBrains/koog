@@ -287,7 +287,7 @@ class PostgresPersistenceAgentRunTest {
             checkpointId = id,
             createdAt = time,
             nodePath = nodePath,
-            lastInput = JsonPrimitive("Test input"),
+            lastOutput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", RequestMetaInfo(time)),
                 Message.User("Node 1 output", RequestMetaInfo(time)),
