@@ -9,22 +9,35 @@ import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.ContentType
+import io.ktor.http.headersOf
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class GoogleLLMClientTest {
 
@@ -383,5 +396,66 @@ class GoogleLLMClientTest {
         val filePart = assistantMessage.parts.single() as ContentPart.File
         filePart.mimeType shouldBe "application/pdf"
         (filePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe fileData
+    }
+
+    @Test
+    fun `should preserve thoughtSignature for function calls`() = runTest {
+        val thoughtSignature = "encrypted-signature"
+        val client = clientWithMockResponse(thoughtSignature)
+
+        // Verify processing extracts signature
+        val response = client.execute(
+            Prompt(messages = emptyList(), id = "id"),
+            GoogleModels.Gemini3_Pro_Preview,
+            listOf(ToolDescriptor("testTool", "desc", emptyList()))
+        ).first()
+
+        assertTrue(response is Message.Tool.Call)
+        val toolCall = response as Message.Tool.Call
+        assertEquals(thoughtSignature, toolCall.metaInfo.metadata?.get("thoughtSignature")?.jsonPrimitive?.content)
+
+        // Verify request creation includes signature
+        val request = client.createGoogleRequest(
+            Prompt(messages = listOf(Message.User("Execute tool", RequestMetaInfo.Empty), toolCall), id = "id"),
+            GoogleModels.Gemini3_Pro_Preview,
+            listOf(ToolDescriptor("testTool", "desc", emptyList()))
+        )
+
+        val content = request.contents.last()
+        val part = content.parts?.first() as GooglePart.FunctionCall
+        assertEquals(thoughtSignature, part.thoughtSignature)
+        assertEquals("testTool", part.functionCall.name)
+    }
+
+    private fun clientWithMockResponse(thoughtSignature: String): GoogleLLMClient {
+        val functionCall = GoogleData.FunctionCall(name = "testTool", args = buildJsonObject { put("arg", "value") })
+        val candidates = listOf(
+            GoogleCandidate(
+                content = GoogleContent(
+                    parts = listOf(
+                        GooglePart.FunctionCall(
+                            functionCall = functionCall,
+                            thoughtSignature = thoughtSignature
+                        )
+                    ),
+                    role = "model"
+                ),
+                finishReason = "STOP"
+            )
+        )
+
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(
+                    GoogleResponse(candidates = candidates)
+                ),
+                headers = headersOf("Content-Type" to listOf(ContentType.Application.Json.toString()))
+            )
+        }
+
+        return GoogleLLMClient(
+            apiKey = "test-api-key",
+            baseClient = HttpClient(mockEngine)
+        )
     }
 }

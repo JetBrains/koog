@@ -65,6 +65,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlin.uuid.ExperimentalUuidApi
@@ -287,12 +289,25 @@ public open class GoogleLLMClient(
         val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
+        val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
 
         fun flushCalls() {
             if (pendingCalls.isNotEmpty()) {
                 contents += GoogleContent(role = "model", parts = pendingCalls.toList())
                 pendingCalls.clear()
             }
+        }
+
+        fun flushResults() {
+            if (pendingResults.isNotEmpty()) {
+                contents += GoogleContent(role = "user", parts = pendingResults.toList())
+                pendingResults.clear()
+            }
+        }
+
+        fun flushAll() {
+            flushCalls()
+            flushResults()
         }
 
         for (message in prompt.messages) {
@@ -302,13 +317,13 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.User -> {
-                    flushCalls()
+                    flushAll()
                     // User messages become 'user' role content
                     contents.add(message.toGoogleContent(model))
                 }
 
                 is Message.Assistant -> {
-                    flushCalls()
+                    flushAll()
                     contents.add(
                         GoogleContent(
                             role = "model",
@@ -318,7 +333,7 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Reasoning -> {
-                    flushCalls()
+                    flushAll()
                     contents.add(
                         GoogleContent(
                             role = "model",
@@ -334,35 +349,49 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Tool.Result -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "user",
-                            parts = listOf(
-                                GooglePart.FunctionResponse(
-                                    functionResponse = GoogleData.FunctionResponse(
-                                        id = message.id,
-                                        name = message.tool,
-                                        response = buildJsonObject { put("result", message.content) }
-                                    )
-                                )
+                    // Just buffer results. We only flush when we know the current tool turn is complete.
+                    pendingResults.add(
+                        GooglePart.FunctionResponse(
+                            functionResponse = GoogleData.FunctionResponse(
+                                id = message.id,
+                                name = message.tool,
+                                response = buildJsonObject { put("result", message.content) }
                             )
                         )
                     )
                 }
 
                 is Message.Tool.Call -> {
+                    val signature = message.metaInfo.metadata?.get("thoughtSignature")?.jsonPrimitive?.contentOrNull
+
+                    // Determine whether to flush based on current state and signature presence.
+                    // - signature != null on a subsequent call indicates a new turn (sequential calls)
+                    // - signature == null on a subsequent call indicates parallel calls in the same turn
+                    when {
+                        pendingCalls.isNotEmpty() && signature != null -> {
+                            // New turn: flush the previous turn's calls and results
+                            flushCalls()
+                            flushResults()
+                        }
+                        pendingCalls.isEmpty() -> {
+                            // Starting fresh: ensure no stale results from a previous turn
+                            flushResults()
+                        }
+                        // else: parallel call in same turn, just buffer it
+                    }
+
                     pendingCalls += GooglePart.FunctionCall(
                         functionCall = GoogleData.FunctionCall(
                             id = message.id,
                             name = message.tool,
                             args = json.decodeFromString(message.content)
-                        )
+                        ),
+                        thoughtSignature = signature
                     )
                 }
             }
         }
-        flushCalls()
+        flushAll()
 
         val googleTools = tools
             .map { tool ->
@@ -630,14 +659,29 @@ public open class GoogleLLMClient(
                         }
                     }
 
-                    is GooglePart.FunctionCall -> add(
-                        Message.Tool.Call(
-                            id = Uuid.random().toString(),
-                            tool = part.functionCall.name,
-                            content = part.functionCall.args.toString(),
-                            metaInfo = metaInfo
+                    is GooglePart.FunctionCall -> {
+                        // Store thoughtSignature in metadata to preserve it for subsequent turns
+                        val signature = part.thoughtSignature
+
+                        val callMetaInfo = if (signature != null) {
+                            metaInfo.copy(
+                                metadata = buildJsonObject {
+                                    metaInfo.metadata?.forEach { (key, value) -> put(key, value) }
+                                    put("thoughtSignature", signature)
+                                }
+                            )
+                        } else {
+                            metaInfo
+                        }
+                        add(
+                            Message.Tool.Call(
+                                id = Uuid.random().toString(),
+                                tool = part.functionCall.name,
+                                content = part.functionCall.args.toString(),
+                                metaInfo = callMetaInfo
+                            )
                         )
-                    )
+                    }
 
                     is GooglePart.InlineData -> {
                         val inlineData = part.inlineData
