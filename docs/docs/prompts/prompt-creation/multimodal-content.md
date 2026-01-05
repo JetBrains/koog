@@ -102,7 +102,7 @@ All `ContentPart.Attachment` types accept the following parameters:
 
 #### Attachment content
 
-The AttachmentContent interface defines the type and source of content that is provided as input to the LLM:
+Implementations of the AttachmentContent interface define the type and source of content that is provided as input to the LLM:
 
 - [`AttachmentContent.URL`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-u-r-l/index.html) defines the URL of the provided content:
     ```kotlin
