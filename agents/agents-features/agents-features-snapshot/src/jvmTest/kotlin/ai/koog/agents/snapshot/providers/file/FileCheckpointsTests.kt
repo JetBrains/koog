@@ -123,7 +123,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodePath = path(agentId, "straight-forward", "Node2"),
-            lastOutput = JsonPrimitive("Test input"),
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -156,6 +156,48 @@ class FileCheckpointsTests {
     }
 
     @Test
+    fun testRestoreFromSingleCheckpointWithNodeOutput() = runTest {
+        val time = Clock.System.now()
+        val agentId = "testAgentId"
+
+        val testCheckpoint = AgentCheckpointData(
+            checkpointId = "testCheckpointId",
+            createdAt = time,
+            nodePath = path(agentId, "straight-forward", "Node2"),
+            lastOutput = JsonPrimitive("Test output"),
+            messageHistory = listOf(
+                Message.User("User message", metaInfo = RequestMetaInfo(time)),
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time)),
+                Message.User("Node 2 output (already calculated)", metaInfo = RequestMetaInfo(time))
+            ),
+            version = 0L
+        )
+
+        provider.saveCheckpoint(agentId, testCheckpoint)
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor { },
+            strategy = straightForwardGraphNoCheckpoint(),
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+            id = agentId
+        ) {
+            install(Persistence) {
+                storage = provider
+            }
+        }
+
+        val output = agent.run("Start the test")
+
+        assertEquals(
+            "History: User message\n" +
+                "Assistant message\n" +
+                "Node 2 output (already calculated)",
+            output
+        )
+    }
+
+    @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
         val time = Clock.System.now()
         val agentId = "testAgentId"
@@ -164,7 +206,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId2",
             createdAt = time - 10.seconds,
             nodePath = path(agentId, "straight-forward", "Node1"),
-            lastOutput = JsonPrimitive("Test input"),
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
@@ -176,7 +218,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodePath = path(agentId, "straight-forward", "Node2"),
-            lastOutput = JsonPrimitive("Test input"),
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
