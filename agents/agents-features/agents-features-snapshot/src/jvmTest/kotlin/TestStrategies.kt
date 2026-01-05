@@ -106,7 +106,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
         teleportState.teleported = true
         withPersistence { ctx ->
             val history = llm.readSession { this.prompt.messages }
-            setExecutionPoint(ctx, teleportToPath, history, JsonPrimitive("$it\nTeleported"))
+            setExecutionPoint(ctx, teleportToPath, history, input = JsonPrimitive("$it\nTeleported"))
             return@withPersistence "Teleported"
         }
     } else {
@@ -129,9 +129,9 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
     }
 }
 
+@Suppress("DEPRECATION")
 private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? = null, checkpointId: String) =
-    node<String, String>(name) {
-        val input = it
+    node<String, String>(name) { input ->
         withPersistence { ctx ->
             createCheckpoint(ctx, name!!, input, typeOf<String>(), 0L, checkpointId)
             llm.writeSession {
@@ -176,7 +176,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
 ): AIAgentNodeDelegate<String, String> = node(name) {
     val input = it
     withPersistence { ctx ->
-        val checkpoint = createCheckpoint(
+        val checkpoint = createCheckpointAfterNode(
             ctx,
             ctx.executionInfo.path(),
             input,
@@ -310,10 +310,7 @@ internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) 
         collector = collector,
     )
 
-    edge(nodeStart forwardTo node1)
-    edge(node1 forwardTo node2)
-    edge(node2 forwardTo nodeForSecondTry)
-    edge(nodeForSecondTry forwardTo nodeFinish)
+    nodeStart then node1 then node2 then nodeForSecondTry then nodeFinish
 }
 
 fun simpleTeleportSubgraphWithInnerSubgraph(teleportToId: String): AIAgentGraphStrategy<String, String> {

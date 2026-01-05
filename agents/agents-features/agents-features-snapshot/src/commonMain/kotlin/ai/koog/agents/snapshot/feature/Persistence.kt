@@ -122,7 +122,7 @@ public class Persistence(
 
                 if (config.enableAutomaticPersistence) {
                     val parent = persistence.getLatestCheckpoint(eventCtx.context.agentId)
-                    persistence.createCheckpoint(
+                    persistence.createCheckpointAfterNode(
                         agentContext = eventCtx.context,
                         nodePath = eventCtx.context.executionInfo.path(),
                         lastOutput = eventCtx.output,
@@ -159,11 +159,56 @@ public class Persistence(
      *
      * @param agentContext The context of the agent containing the state to checkpoint
      * @param nodeId The ID of the node where the checkpoint is created
+     * @param lastInput The latest node input data to include in the checkpoint
+     * @param checkpointId Optional ID for the checkpoint; a random UUID is generated if not provided
+     * @return The created checkpoint data
+     */
+    @Deprecated("Use `createCheckpointAfterNode` instead")
+    public suspend fun createCheckpoint(
+        agentContext: AIAgentContext,
+        nodePath: String,
+        lastInput: Any?,
+        lastInputType: KType,
+        version: Long,
+        checkpointId: String? = null,
+    ): AgentCheckpointData? {
+        val inputJson = SerializationUtils.encodeDataToJsonElementOrNull(lastInput, lastInputType)
+
+        if (inputJson == null) {
+            logger.warn {
+                "Failed to serialize input of type $lastInputType for checkpoint creation for $nodePath, skipping..."
+            }
+            return null
+        }
+
+        val checkpoint = agentContext.llm.readSession {
+            return@readSession AgentCheckpointData(
+                checkpointId = checkpointId ?: Uuid.random().toString(),
+                messageHistory = prompt.messages,
+                nodePath = agentContext.executionInfo.path(),
+                lastInput = inputJson,
+                createdAt = Clock.System.now(),
+                version = version,
+            )
+        }
+
+        saveCheckpoint(agentContext.agentId, checkpoint)
+        return checkpoint
+    }
+
+    /**
+     * Creates a checkpoint of the agent's current state.
+     *
+     * This method captures the agent's message history, current node, and input data
+     * and stores it as a checkpoint using the configured storage provider.
+     *
+     * @param agentContext The context of the agent containing the state to checkpoint
+     * @param nodeId The ID of the node where the checkpoint is created
      * @param lastOutput The latest node output data to include in the checkpoint
      * @param checkpointId Optional ID for the checkpoint; a random UUID is generated if not provided
      * @return The created checkpoint data
      */
-    public suspend fun createCheckpoint(
+    public suspend fun createCheckpointAfterNode(
         agentContext: AIAgentContext,
         nodePath: String,
         lastOutput: Any?,
@@ -250,13 +295,48 @@ public class Persistence(
      * @param messageHistory The message history to set for the agent
      * @param input The input data to set for the agent
      */
+    @Deprecated("Use `setExecutionPointWithOutput` instead")
     public fun setExecutionPoint(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
         input: JsonElement
     ) {
-        agentContext.store(AgentContextData(messageHistory, agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath, input, rollbackStrategy))
+        agentContext.store(
+            AgentContextData(
+                messageHistory,
+                agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
+                lastInput = input,
+                rollbackStrategy = rollbackStrategy
+            )
+        )
+    }
+
+    /**
+     * Sets the execution point of an agent to a specified state.
+     *
+     * This method updates the agent's context to start execution from a specific point
+     * in its graph, using the provided message history and finished node output data.
+     *
+     * @param agentContext The context of the agent to modify.
+     * @param nodePath The path to the node inside the agent's graph where execution will begin.
+     * @param messageHistory The sequence of messages representing the agent's prior interactions.
+     * @param output The output data to associate with the specified execution point.
+     */
+    public fun setExecutionPointWithOutput(
+        agentContext: AIAgentContext,
+        nodePath: String,
+        messageHistory: List<Message>,
+        output: JsonElement
+    ) {
+        agentContext.store(
+            AgentContextData(
+                messageHistory,
+                agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
+                lastOutput = output,
+                rollbackStrategy = rollbackStrategy
+            )
+        )
     }
 
     /**

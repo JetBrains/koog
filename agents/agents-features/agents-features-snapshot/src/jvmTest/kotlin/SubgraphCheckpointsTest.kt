@@ -180,7 +180,7 @@ class SubgraphCheckpointsTest {
             checkpointId = "checkpoint-1",
             createdAt = Clock.System.now(),
             nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
-            lastOutput = JsonPrimitive("Input at checkpoint"),
+            lastInput = JsonPrimitive("Input at checkpoint"),
             messageHistory = listOf(),
             version = 1L
         )

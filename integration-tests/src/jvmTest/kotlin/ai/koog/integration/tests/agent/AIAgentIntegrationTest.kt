@@ -575,7 +575,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 // Create a checkpoint
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
-                    createCheckpoint(
+                    createCheckpointAfterNode(
                         agentContext = agentContext,
                         nodePath = save,
                         lastOutput = input,
@@ -681,7 +681,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             val nodeSave by node<String, String>(save) { input ->
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
-                    createCheckpoint(
+                    createCheckpointAfterNode(
                         agentContext = agentContext,
                         nodePath = save,
                         lastOutput = input,
@@ -856,7 +856,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             val nodeBye by node<String, String>(bye) { input ->
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
-                    createCheckpoint(
+                    createCheckpointAfterNode(
                         agentContext = agentContext,
                         nodePath = bye,
                         lastOutput = input,

@@ -104,7 +104,14 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
         data.additionalRollbackActions(agentContext)
 
         // Set current graph node:
-        setExecutionPoint(nodePath, data.lastOutput, agentContext)
+        @Suppress("DEPRECATION")
+        when {
+            data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput)
+            data.lastOutput != null -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
+
+            // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpiints:
+            else -> {}
+        }
 
         // Reset the message history:
         agentContext.llm.withPrompt {
@@ -148,7 +155,37 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     /**
      * Finds and sets the node for the strategy based on the provided context.
      */
-    public suspend fun setExecutionPoint(nodePath: String, output: JsonElement, agentContext: AIAgentGraphContextBase) {
+    @Deprecated("Use setExecutionPointAfterNode instead, setExecutionPoint will be removed in future versions")
+    public suspend fun setExecutionPoint(nodePath: String, input: JsonElement) {
+        // we drop first because it's agent's id, we don't need it here
+        val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
+
+        if (segments.isEmpty()) {
+            throw IllegalArgumentException("Invalid node path: $nodePath")
+        }
+
+        val actualPath = segments.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
+
+        val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
+
+        val actualInput = serializer.decodeFromJsonElement(
+            serializer.serializersModule.serializer(completedNode.inputType),
+            input
+        )
+
+        // Note: completed node will be re-executed because the output wasn't saved in checkpoints
+        // (this was the original behavior before 0.6.1)
+        setExecutionPointImpl(segments, completedNode, actualInput)
+    }
+
+    /**
+     * Finds and sets the node for the strategy based on the provided context.
+     */
+    public suspend fun setExecutionPointAfterNode(
+        nodePath: String,
+        output: JsonElement,
+        agentContext: AIAgentGraphContextBase
+    ) {
         // we drop first because it's agent's id, we don't need it here
         val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
 

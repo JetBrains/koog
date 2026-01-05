@@ -27,7 +27,7 @@ class PersistenceRestoreStrategyTests {
             checkpointId = "chk-1",
             createdAt = Clock.System.now(),
             nodePath = "$agentId/restore-strategy/Node2",
-            lastOutput = JsonPrimitive("input-for-node2"),
+            lastInput = JsonPrimitive("input-for-node2"),
             messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(Clock.System.now()))),
             version = 0L
         )
