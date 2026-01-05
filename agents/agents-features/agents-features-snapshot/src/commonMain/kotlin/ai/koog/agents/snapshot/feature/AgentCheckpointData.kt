@@ -53,16 +53,15 @@ public data class AgentCheckpointData(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is AgentCheckpointData) return false
-        return checkpointId == other.checkpointId
-            && nodePath == other.nodePath
-            && createdAt == other.createdAt
-            && eq(lastInput, other.lastInput)
-            && eq(lastOutput, other.lastOutput)
-            && messageHistory == other.messageHistory
-            && version == other.version
-            && properties == other.properties
+        return checkpointId == other.checkpointId &&
+            nodePath == other.nodePath &&
+            createdAt == other.createdAt &&
+            eq(lastInput, other.lastInput) &&
+            eq(lastOutput, other.lastOutput) &&
+            messageHistory == other.messageHistory &&
+            version == other.version &&
+            properties == other.properties
     }
-
 }
 
 /**

@@ -55,10 +55,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.put
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.typeOf
@@ -524,7 +521,8 @@ class CheckpointsTests {
 
     class CLI(private val userAnswer: (String) -> String? = { null }) {
         enum class Role {
-            USER, SYSTEM;
+            USER,
+            SYSTEM
         }
 
         var currentLines: MutableList<String> = mutableListOf()
@@ -563,7 +561,6 @@ class CheckpointsTests {
 
     @Test
     fun testLastSuccessfulNodeIsNotExecutedTwice() = runTest {
-
         // Expected communication (via tool):
         // user input: Test my Earth knowledge
         // `askQuestion` tool : Is the Earth a sphere?
@@ -573,7 +570,6 @@ class CheckpointsTests {
         // `askQuestion` tool : Who discovered this?
         // user output: Ferdinand Magellan
         // assistant: Excellent job! You are smart
-
 
         val cli = CLI { systemMessage ->
             when (systemMessage) {
@@ -679,7 +675,8 @@ class CheckpointsTests {
                        - tool result: `ask` == "Ferdinand Magellan"
                  - exit node: `executeTool`
                  - enter node: `nodeThrow`
-            """.trimIndent(), tracer.traceAsString().trimIndent()
+            """.trimIndent(),
+            tracer.traceAsString().trimIndent()
         )
 
         val lastCheckpoint = checkpointStorage.getLatestCheckpoint(agent.id)!!
@@ -703,7 +700,8 @@ class CheckpointsTests {
               - tool call `ask` ({"__wrapped_value__":"Why?"})
               - tool result `ask` == Because when ships sail away, they start to disappear from the bottom
               - tool call `ask` ({"__wrapped_value__":"Who discovered this?"})
-        """.trimIndent(), lastMessageHistory
+            """.trimIndent(),
+            lastMessageHistory
         )
 
         assertTrue(
@@ -736,7 +734,8 @@ class CheckpointsTests {
                  - exit node: `sendToolResult`
                  - enter node: `__finish__`
                  - exit node: `__finish__`
-            """.trimIndent(), tracer.traceAsString().trimIndent()
+            """.trimIndent(),
+            tracer.traceAsString().trimIndent()
         )
     }
 
@@ -850,7 +849,8 @@ class CheckpointsTests {
                        - tool result: `ask` == "Ferdinand Magellan"
                  - exit node: `executeTool`
                  - enter node: `nodeThrow`
-            """.trimIndent(), tracer.traceAsString().trimIndent()
+            """.trimIndent(),
+            tracer.traceAsString().trimIndent()
         )
 
         val lastCheckpoint = checkpointStorage.getLatestCheckpoint(agent.id)!!
@@ -874,14 +874,17 @@ class CheckpointsTests {
               - tool call `ask` ({"__wrapped_value__":"Why?"})
               - tool result `ask` == Because when ships sail away, they start to disappear from the bottom
               - tool call `ask` ({"__wrapped_value__":"Who discovered this?"})
-        """.trimIndent(), lastMessageHistory
+            """.trimIndent(),
+            lastMessageHistory
         )
 
         checkpointStorage.removeCheckpoints()
         checkpointStorage.saveCheckpoint(
             agent.id,
             lastCheckpoint.copy(
-                version = 0, lastOutput = null, lastInput = Json.encodeToJsonElement(
+                version = 0,
+                lastOutput = null,
+                lastInput = Json.encodeToJsonElement(
                     Message.Tool.Call(
                         id = "call-1",
                         tool = "ask",
@@ -891,7 +894,6 @@ class CheckpointsTests {
                 )
             )
         )
-
 
         println(checkpointStorage.getLatestCheckpoint(agent.id))
 
@@ -929,7 +931,8 @@ class CheckpointsTests {
                  - exit node: `sendToolResult`
                  - enter node: `__finish__`
                  - exit node: `__finish__`
-            """.trimIndent(), tracer.traceAsString().trimIndent()
+            """.trimIndent(),
+            tracer.traceAsString().trimIndent()
         )
     }
 }

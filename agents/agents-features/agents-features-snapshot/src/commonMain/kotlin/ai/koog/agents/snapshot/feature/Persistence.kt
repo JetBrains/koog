@@ -295,7 +295,6 @@ public class Persistence(
      * @param messageHistory The message history to set for the agent
      * @param input The input data to set for the agent
      */
-    @Deprecated("Use `setExecutionPointWithOutput` instead")
     public fun setExecutionPoint(
         agentContext: AIAgentContext,
         nodePath: String,
@@ -323,7 +322,7 @@ public class Persistence(
      * @param messageHistory The sequence of messages representing the agent's prior interactions.
      * @param output The output data to associate with the specified execution point.
      */
-    public fun setExecutionPointWithOutput(
+    public fun setExecutionPointAfterNode(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,

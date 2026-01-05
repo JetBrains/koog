@@ -111,6 +111,5 @@ class CheckpointSerializationTest {
 
         // Full equality as a final check
         assertEquals(checkpoint, restored)
-
     }
 }

@@ -49,7 +49,7 @@ public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider<A
     public suspend fun removeCheckpoints(filter: AgentCheckpointPredicateFilter? = null) {
         mutex.withLock {
             if (filter != null) {
-                snapshotMap.keys.forEach { agentId -> snapshotMap[agentId] = snapshotMap[agentId]!!.filterNot { filter.check(it)} }
+                snapshotMap.keys.forEach { agentId -> snapshotMap[agentId] = snapshotMap[agentId]!!.filterNot { filter.check(it) } }
             } else {
                 snapshotMap.clear()
             }

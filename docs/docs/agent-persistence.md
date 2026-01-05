@@ -232,18 +232,18 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.snapshot.feature.persistence
 import kotlin.reflect.typeOf
 
-const val inputData = "some-input-data"
-val inputType = typeOf<String>()
+const val outputData = "some-output-data"
+val outputType = typeOf<String>()
 -->
 
 ```kotlin
 suspend fun example(context: AIAgentContext) {
     // Create a checkpoint with the current state
-    val checkpoint = context.persistence().createCheckpoint(
+    val checkpoint = context.persistence().createCheckpointAfterNode(
         agentContext = context,
         nodePath = context.executionInfo.path(),
-        lastInput = inputData,
-        lastInputType = inputType,
+        lastOutput = outputData,
+        lastOutputType = outputType,
         checkpointId = context.runId,
         version = 0L
     )
@@ -340,8 +340,8 @@ The Agent Persistence feature provides convenient extension functions for workin
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.example.exampleAgentPersistence06.inputData
-import ai.koog.agents.example.exampleAgentPersistence06.inputType
+import ai.koog.agents.example.exampleAgentPersistence06.outputData
+import ai.koog.agents.example.exampleAgentPersistence06.outputType
 import ai.koog.agents.snapshot.feature.persistence
 import ai.koog.agents.snapshot.feature.withPersistence
 -->
@@ -354,11 +354,11 @@ suspend fun example(context: AIAgentContext) {
     // Or perform an action with the checkpoint feature
     context.withPersistence { ctx ->
         // 'this' is the checkpoint feature
-        createCheckpoint(
+        createCheckpointAfterNode(
             agentContext = ctx,
             nodePath = ctx.executionInfo.path(),
-            lastInput = inputData,
-            lastInputType = inputType,
+            lastOutput = outputData,
+            lastOutputType = outputType,
             checkpointId = ctx.runId,
             version = 0L
         )
@@ -455,16 +455,26 @@ import ai.koog.prompt.message.Message.User
 import kotlinx.serialization.json.JsonPrimitive
 
 val customInput = JsonPrimitive("custom-input")
+val customOutput = JsonPrimitive("custom-output")
 val customMessageHistory = emptyList<User>()
 -->
 
 ```kotlin
 fun example(context: AIAgentContext) {
+    // You can set the execution point before some node and provide an input for it:
     context.persistence().setExecutionPoint(
         agentContext = context,
         nodePath = context.executionInfo.path(),
         messageHistory = customMessageHistory,
         input = customInput
+    )
+
+    // Or after some node and provide an output from the node:
+    context.persistence().setExecutionPointAfterNode(
+        agentContext = context,
+        nodePath = context.executionInfo.path(),
+        messageHistory = customMessageHistory,
+        output = customOutput
     )
 }
 
