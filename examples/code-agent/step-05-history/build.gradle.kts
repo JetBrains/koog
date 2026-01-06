@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.shadow)
     application
 }
@@ -11,10 +10,6 @@ dependencies {
     implementation("ai.koog:koog-agents")
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.logback.classic)
-
-    testImplementation(kotlin("test"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-    testImplementation("ai.koog:agents-test")
 }
 
 tasks.test {
