@@ -14,18 +14,17 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-private object CreateTool : SimpleTool<CreateTool.Args>() {
+object CreateTool : SimpleTool<CreateTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "create",
+    description = "Create something"
+) {
     @Serializable
     data class Args(
         @property:LLMDescription("Name of the entity to create") val name: String
     )
 
-    override val argsSerializer = Args.serializer()
-
-    override val name: String = "create"
-    override val description: String = "Create something"
-
-    override suspend fun doExecute(args: Args): String = "created"
+    override suspend fun execute(args: Args): String = "created"
 }
 
 class SingleRunStrategyWithHistoryCompressionTests {
