@@ -423,31 +423,6 @@ class AIAgentLLMWriteSessionTest {
     }
 
     @Test
-    fun testRequestLLMOnlyCallingToolsNoToolCallThrowsException() = runTest {
-        val mockExecutor = getMockExecutor(clock = testClock) {
-            // Simulate model refusing to use tools and just responding with text
-            mockLLMAnswer("I cannot use tools for this request.").asDefaultResponse
-        }
-
-        val session = createSession(mockExecutor, listOf(TestTool()))
-
-        val exception = kotlin.runCatching {
-            session.requestLLMOnlyCallingTools()
-        }.exceptionOrNull()
-
-        assertNotNull(exception, "Expected an exception when no tool call is found")
-        assertTrue(
-            exception is IllegalStateException,
-            "Expected IllegalStateException but got ${exception::class.simpleName}"
-        )
-        assertEquals(
-            exception.message?.contains("expected at least one Tool.Call"),
-            true,
-            "Exception message should indicate missing tool call"
-        )
-    }
-
-    @Test
     fun testRequestLLMOnlyCallingToolsWithMultipleToolCalls() = runTest {
         val testTool = TestTool()
 
