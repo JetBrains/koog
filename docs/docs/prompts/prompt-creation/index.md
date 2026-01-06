@@ -1,9 +1,9 @@
-# Structured prompts
+# Creating prompts
 
-Koog uses the type-safe Kotlin DSL to create structured prompts with control over message types,
+Koog uses the type-safe Kotlin DSL to create prompts with control over message types,
 their order, and content.
 
-The structured prompts let you pre-configure conversation history with multiple messages, provide multimodal content, 
+These prompts let you pre-configure conversation history with multiple messages, provide multimodal content,
 examples, tool calls, and their results.
 
 ## Basic structure
@@ -18,14 +18,14 @@ val prompt = prompt("unique_prompt_id") {
     // List of messages
 }
 ```
-<!--- KNIT example-structured-prompts-01.kt -->
+<!--- KNIT example-creating-prompts-01.kt -->
 
 ## Message types
 
 The Kotlin DSL supports the following types of messages, each of which corresponds to a specific role in a conversation:
 
 - **System message**: Provides the context, instructions, and constraints to the LLM, defining its behavior.
-- **User message**: Represents the user input that can contain text, images, audio, video, or documents.
+- **User message**: Represents the user input.
 - **Assistant message**: Represents LLM responses that are used for few-shot learning or to continue the conversation.
 - **Tool message**: Represents tool calls and their results.
 
@@ -42,7 +42,7 @@ val prompt = prompt("unique_prompt_id") {
     assistant("The result is 8.")
 }
 ```
-<!--- KNIT example-structured-prompts-02.kt -->
+<!--- KNIT example-creating-prompts-02.kt -->
 
 ### System message
 
@@ -59,13 +59,11 @@ val prompt = prompt("assistant") {
     system("You are a helpful assistant that explains technical concepts.")
 }
 ```
-<!--- KNIT example-structured-prompts-03.kt -->
+<!--- KNIT example-creating-prompts-03.kt -->
 
 ### User messages
 
 A user message represents input from the user.
-It can include plain text or multimodal content (such as images, audio, video, and documents).
-
 To create the user message, provide a string to the `user()` function as an argument:
 
 <!--- INCLUDE
@@ -77,9 +75,10 @@ val prompt = prompt("question") {
     user("What is Koog?")
 }
 ```
-<!--- KNIT example-structured-prompts-04.kt -->
+<!--- KNIT example-creating-prompts-04.kt -->
 
-For details about multimodal content, see [Multimodal inputs](#multimodal-inputs).
+Most user messages contain plain text, but they can also include multimodal content, such as images, audio, video, and documents.
+For details and examples, see [Multimodal content](multimodal-content.md).
 
 ### Assistant messages
 
@@ -111,7 +110,7 @@ val prompt = prompt("article_review") {
     user("The article is interesting and helpful.")
 }
 ```
-<!--- KNIT example-structured-prompts-05.kt -->
+<!--- KNIT example-creating-prompts-05.kt -->
 
 ### Tool messages
 
@@ -148,9 +147,10 @@ val prompt = prompt("calculator_example") {
 
     // LLM response based on tool result
     assistant("The result of 5 + 3 is 8.")
+    user("What is 4 + 5?")
 }
 ```
-<!--- KNIT example-structured-prompts-06.kt -->
+<!--- KNIT example-creating-prompts-06.kt -->
 
 ## Text message builders
 
@@ -179,7 +179,7 @@ val prompt = prompt("text_example") {
     }
 }
 ```
-<!--- KNIT example-structured-prompts-07.kt -->
+<!--- KNIT example-creating-prompts-07.kt -->
 
 You can also use the [Markdown](https://api.koog.ai/prompt/prompt-markdown/ai.koog.prompt.markdown/markdown.html) 
 and [XML](https://api.koog.ai/prompt/prompt-xml/ai.koog.prompt.xml/xml.html) builders to add the content in 
@@ -216,7 +216,7 @@ val prompt = prompt("markdown_xml_example") {
     }
 }
 ```
-<!--- KNIT example-structured-prompts-08.kt -->
+<!--- KNIT example-creating-prompts-08.kt -->
 
 !!! tip
     You can mix the text building functions with the XML and Markdown builders.
@@ -243,16 +243,18 @@ val prompt = prompt(
     user("Write a song about winter.")
 }
 ```
-<!--- KNIT example-structured-prompts-09.kt -->
+<!--- KNIT example-creating-prompts-09.kt -->
 
 The following parameters are supported:
 
-- `temperature`: Controls randomness (0.0 = focused/deterministic, 1.0+ = creative/diverse)
-- `toolChoice`: Tool usage strategy (`Auto`, `Required`, `Named(toolName)`)
-- `numberOfChoices`: Request multiple independent responses
-- `schema`: Define structured output format (for structured outputs)
+- `temperature`: Controls randomness in the model's responses.
+- `toolChoice`: Controls tool calling behavior of the model.
+- `numberOfChoices`: Requests multiple alternative responses.
+- `schema`: Defines the structure for the model's response format.
+- `maxTokens`: Limits the number of tokens in the response.
+- `speculation`: Provides a hint about the expected response format (only supported by specific models).
 
-For more information, see [LLM parameters](llm-parameters.md).
+For more information, see [LLM parameters](../../llm-parameters.md).
 
 ## Extending existing prompts
 
@@ -272,12 +274,12 @@ val extendedPrompt = prompt(basePrompt) {
     user("What's the weather like?")
 }
 ```
-<!--- KNIT example-structured-prompts-10.kt -->
+<!--- KNIT example-creating-prompts-10.kt -->
 
 This creates a new prompt that includes all messages from `basePrompt` and the new user message.
 
 ## Next steps
 
-- Learn how to work with [multimodal content](multimodal-inputs.md).
-- Run prompts with [LLM clients](llm-clients.md) if you work with a single LLM provider.
-- Run prompts with [prompt executors](prompt-executors.md) if you work with multiple LLM providers.
+- Learn how to work with [multimodal content](multimodal-content.md).
+- Run prompts with [LLM clients](../llm-clients.md) if you work with a single LLM provider.
+- Run prompts with [prompt executors](../prompt-executors.md) if you work with multiple LLM providers.

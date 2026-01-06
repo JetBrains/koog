@@ -41,14 +41,36 @@ val response = resilientClient.execute(prompt, OpenAIModels.Chat.GPT4o)
 
 ### Configuring retry behavior
 
+By default, `RetryingLLMClient` configures an LLM client with the maximum of 3 retry attempts, a 1-second initial delay,
+and a 30-second maximum delay.
+You can specify a different retry configuration using a `RetryConfig` passed to `RetryingLLMClient`.
+For example:
+
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.retry.RetryConfig
+import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
+
+val apiKey = System.getenv("OPENAI_API_KEY")
+val client = OpenAILLMClient(apiKey)
+-->
+```kotlin
+// Use the predefined configuration
+val conservativeClient = RetryingLLMClient(
+    delegate = client,
+    config = RetryConfig.CONSERVATIVE
+)
+```
+<!--- KNIT example-handling-failures-02.kt -->
+
 Koog provides several predefined retry configurations:
 
-| Configuration              | Max attempts | Initial delay | Max delay | Use case                |
-|----------------------------|--------------|---------------|-----------|-------------------------|
-| `RetryConfig.DISABLED`     | 1 (no retry) | -             | -         | Development and testing |
-| `RetryConfig.CONSERVATIVE` | 3            | 2s            | 30s       | Normal production use   |
-| `RetryConfig.AGGRESSIVE`   | 5            | 500ms         | 20s       | Critical operations     |
-| `RetryConfig.PRODUCTION`   | 3            | 1s            | 20s       | Recommended default     |
+| Configuration              | Max attempts | Initial delay | Max delay | Use case                                                                                                 |
+|----------------------------|--------------|---------------|-----------|----------------------------------------------------------------------------------------------------------|
+| `RetryConfig.DISABLED`     | 1 (no retry) | -             | -         | Development, testing, and debugging.                                                                     |
+| `RetryConfig.CONSERVATIVE` | 3            | 2s            | 30s       | Background or scheduled tasks where reliability is more important than speed.                            |
+| `RetryConfig.AGGRESSIVE`   | 5            | 500ms         | 20s       | Critical operations where fast recovery from transient errors is more important than reducing API calls. |
+| `RetryConfig.PRODUCTION`   | 3            | 1s            | 20s       | General production use.                                                                                  |
 
 You can use them directly or create custom configurations:
 
@@ -62,12 +84,6 @@ val apiKey = System.getenv("OPENAI_API_KEY")
 val client = OpenAILLMClient(apiKey)
 -->
 ```kotlin
-// Use the predefined configuration
-val conservativeClient = RetryingLLMClient(
-    delegate = client,
-    config = RetryConfig.CONSERVATIVE
-)
-
 // Or create a custom configuration
 val customClient = RetryingLLMClient(
     delegate = client,
@@ -80,7 +96,7 @@ val customClient = RetryingLLMClient(
     )
 )
 ```
-<!--- KNIT example-handling-failures-02.kt -->
+<!--- KNIT example-handling-failures-03.kt -->
 
 ### Retry error patterns
 
@@ -102,7 +118,7 @@ You can use the following pattern types and combine any number of them:
 * `RetryablePattern.Regex`: Matches a regular expression in the error message.
 * `RetryablePattern.Custom`: Matches a custom logic using a lambda function.
 
-If any pattern returns `true`, the error is considered retryable, and the LLM client can retry the request.
+If any pattern returns `true`, the error is considered retryable, and the LLM client retries the request.
 
 #### Default patterns
 
@@ -150,7 +166,7 @@ val config = RetryConfig(
     )
 )
 ```
-<!--- KNIT example-handling-failures-03.kt -->
+<!--- KNIT example-handling-failures-04.kt -->
 
 You can also append custom patterns to the default `RetryConfig.DEFAULT_PATTERNS`:
 
@@ -165,7 +181,7 @@ val config = RetryConfig(
     )
 )
 ```
-<!--- KNIT example-handling-failures-04.kt -->
+<!--- KNIT example-handling-failures-05.kt -->
 
 
 ### Streaming with retry
@@ -199,11 +215,12 @@ val config = RetryConfig(
 val client = RetryingLLMClient(baseClient, config)
 val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
 ```
-<!--- KNIT example-handling-failures-05.kt -->
+<!--- KNIT example-handling-failures-06.kt -->
 
 !!!note
     Streaming retries only apply to connection failures that occur before the first token is received.
-    After streaming has started, any errors will be passed through.
+    Once streaming has started, the retry logic is disabled.
+    If an error occurs during streaming, the operation is terminated.
 
 ### Retry with prompt executors
 
@@ -250,13 +267,23 @@ val multiExecutor = MultiLLMPromptExecutor(
     ),
 )
 ```
-<!--- KNIT example-handling-failures-06.kt -->
+<!--- KNIT example-handling-failures-07.kt -->
 
 ## Timeout configuration
 
 All LLM clients support timeout configuration to prevent hanging requests.
 You can specify timeout values for network connections when creating the client using
-the [`ConnectionTimeoutConfig`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients/-connection-timeout-config/index.html) class:
+the [`ConnectionTimeoutConfig`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients/-connection-timeout-config/index.html) class.
+
+`ConnectionTimeoutConfig` has the following properties:
+
+| Property               | Default Value        | Description                                                   |
+|------------------------|----------------------|---------------------------------------------------------------|
+| `connectTimeoutMillis` | 60 seconds (60,000)  | Maximum time to establish a connection to the server.         |
+| `requestTimeoutMillis` | 15 minutes (900,000) | Maximum time for the entire request to complete.              |
+| `socketTimeoutMillis`  | 15 minutes (900,000) | Maximum time to wait for data over an established connection. |
+
+You can customize these values for your specific needs. For example:
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -277,7 +304,7 @@ val client = OpenAILLMClient(
     )
 )
 ```
-<!--- KNIT example-handling-failures-07.kt -->
+<!--- KNIT example-handling-failures-08.kt -->
 
 !!! tip
     For long-running or streaming calls, set higher values for `requestTimeoutMillis` and `socketTimeoutMillis`.
@@ -342,4 +369,4 @@ fun main() {
     }
 }
 ```
-<!--- KNIT example-handling-failures-08.kt -->
+<!--- KNIT example-handling-failures-09.kt -->
