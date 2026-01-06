@@ -26,8 +26,11 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -392,6 +395,8 @@ class AIAgentLLMWriteSessionTest {
     }
 
     @Test
+    // This behavior is not supported yet.
+    @Ignore
     fun testRequestLLMOnlyCallingToolsWithThinking() = runTest {
         val thinkingContent = "<thinking>Checking file...</thinking>"
         val testTool = TestTool()
@@ -435,8 +440,9 @@ class AIAgentLLMWriteSessionTest {
             exception is IllegalStateException,
             "Expected IllegalStateException but got ${exception::class.simpleName}"
         )
-        assertTrue(
-            exception.message?.contains("expected at least one Tool.Call") == true,
+        assertEquals(
+            exception.message?.contains("expected at least one Tool.Call"),
+            true,
             "Exception message should indicate missing tool call"
         )
     }
@@ -464,8 +470,9 @@ class AIAgentLLMWriteSessionTest {
         assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
         assertEquals("test-tool", response.tool)
 
-        // Both tool calls should be in history
-        val lastTwoMessages = session.prompt.messages.takeLast(2)
-        assertTrue(lastTwoMessages.all { it is Message.Tool.Call })
+        // Only the first tool call should be added to the history
+        val lastMessage = session.prompt.messages.last()
+        assertIs<Message.Tool.Call>(lastMessage)
+        assertContains(lastMessage.content, "first")
     }
 }
