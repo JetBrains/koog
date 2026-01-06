@@ -37,7 +37,7 @@ val promptExecutor = SingleLLMPromptExecutor(openAIClient)
 To create a prompt executor that works with multiple LLM providers, do the following:
 
 1. Configure clients for the required LLM providers with the corresponding API keys.
-2. Pass the configured clients to the `MultiLLMPromptExecutor` class constructor to create a prompt executor
+2. Pass the configured clients to the [`MultiLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-multi-l-l-m-prompt-executor/index.html) class constructor to create a prompt executor
    with multiple LLM providers.
 
 <!--- INCLUDE
@@ -64,15 +64,17 @@ For faster setup, Koog provides the ready-to-use executor implementations for co
 The following table includes the **pre-defined single-provider executors**
 that return `SingleLLMPromptExecutor` configured with a specific LLM client.
 
-| LLM provider   | Prompt executor                                                                                                                                                                                                                                                                                                                                             | Description                                                                                                                                                                                                          |
-|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| OpenAI         | [simpleOpenAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-open-a-i-executor.html),<br/>[simpleAzureOpenAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-azure-open-a-i-executor.html)                       | * `simpleOpenAIExecutor` wraps `OpenAILLMClient` that runs prompts with OpenAI models.<br/>* `simpleAzureOpenAIExecutor` wraps `OpenAILLMClient` configured for using Azure OpenAI Service.                          |
-| Anthropic      | [simpleAnthropicExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-anthropic-executor.html)                                                                                                                                                                                              | Wraps `AnthropicLLMClient` that runs prompts with Anthropic models.                                                                                                                                                  |
-| Google         | [simpleGoogleAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-google-a-i-executor.html)                                                                                                                                                                                              | Wraps `GoogleLLMClient` that runs prompts with Google models.                                                                                                                                                        |
-| OpenRouter     | [simpleOpenRouterExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-open-router-executor.html)                                                                                                                                                                                           | Wraps `OpenRouterLLMClient` that runs prompts with OpenRouter.                                                                                                                                                       |
-| Amazon Bedrock | [simpleBedrockExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-bedrock-executor.html),<br/>[simpleBedrockExecutorWithBearerToken](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-bedrock-executor-with-bearer-token.html) | * `simpleBedrockExecutor` wraps `BedrockLLMClient` that runs prompts with AWS Bedrock.<br/>* `simpleBedrockExecutorWithBearerToken` wraps `BedrockLLMClient` and uses the provided Bedrock API key to send requests. |
-| Mistral        | [simpleMistralAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-mistral-a-i-executor.html)                                                                                                                                                                                            | Wraps `MistralAILLMClient` that runs prompts with Mistral models.                                                                                                                                                    |
-| Ollama         | [simpleOllamaAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-ollama-a-i-executor.html)                                                                                                                                                                                              | Wraps `OllamaClient` that runs prompts with Ollama.                                                                                                                                                                  |
+| LLM provider   | Prompt executor                                                                                                                                                                             | Description                                                                      |
+|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| OpenAI         | [simpleOpenAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-open-a-i-executor.html)                                  | Wraps `OpenAILLMClient` that runs prompts with OpenAI models.                    |
+| OpenAI         | [simpleAzureOpenAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-azure-open-a-i-executor.html)                       | Wraps `OpenAILLMClient` configured for using Azure OpenAI Service.               |
+| Anthropic      | [simpleAnthropicExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-anthropic-executor.html)                              | Wraps `AnthropicLLMClient` that runs prompts with Anthropic models.              |
+| Google         | [simpleGoogleAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-google-a-i-executor.html)                              | Wraps `GoogleLLMClient` that runs prompts with Google models.                    |
+| OpenRouter     | [simpleOpenRouterExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-open-router-executor.html)                           | Wraps `OpenRouterLLMClient` that runs prompts with OpenRouter.                   |
+| Amazon Bedrock | [simpleBedrockExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-bedrock-executor.html)                                  | Wraps `BedrockLLMClient` that runs prompts with AWS Bedrock.                     |
+| Amazon Bedrock | [simpleBedrockExecutorWithBearerToken](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-bedrock-executor-with-bearer-token.html) | Wraps `BedrockLLMClient` and uses the provided Bedrock API key to send requests. |
+| Mistral        | [simpleMistralAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-mistral-a-i-executor.html)                            | Wraps `MistralAILLMClient` that runs prompts with Mistral models.                |
+| Ollama         | [simpleOllamaAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-ollama-a-i-executor.html)                              | Wraps `OllamaClient` that runs prompts with Ollama.                              |
 
 Koog also provides the **pre-defined multi-provider executor** `DefaultMultiLLMPromptExecutor`.
 This is an implementation of `MultiLLMPromptExecutor` that wraps `OpenAILLMClient`,
@@ -165,10 +167,16 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.dsl.prompt
 import kotlinx.coroutines.runBlocking
 
+fun main() = runBlocking {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
 // Create LLM clients for OpenAI, Anthropic, and Google providers
-val openAIClient = OpenAILLMClient("OPENAI_KEY")
-val anthropicClient = AnthropicLLMClient("ANTHROPIC_KEY")
-val googleClient = GoogleLLMClient("GOOGLE_KEY")
+val openAIClient = OpenAILLMClient("OPENAI_API_KEY")
+val anthropicClient = AnthropicLLMClient("ANTHROPIC_API_KEY")
+val googleClient = GoogleLLMClient("GOOGLE_API_KEY")
 
 // Create a MultiLLMPromptExecutor that maps LLM providers to LLM clients
 val executor = MultiLLMPromptExecutor(
@@ -177,12 +185,6 @@ val executor = MultiLLMPromptExecutor(
     LLMProvider.Google to googleClient
 )
 
-fun main() = runBlocking {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
 // Create a prompt
 val p = prompt("demo") { user("Summarize this.") }
 
