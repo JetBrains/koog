@@ -10,6 +10,11 @@ name: Heavy Tests
 on:
   workflow_dispatch:  # Manual trigger
   push:
+    paths-ignore:
+      - examples/**
+      - docs/**
+      - inspections/**
+      - "*.md"
     branches: [ main, develop ]
 
 env:
