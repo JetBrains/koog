@@ -170,7 +170,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                         tools = newTools,
                         model = llmModel ?: context.llm.model,
                         prompt = context.llm.prompt.copy(params = llmParams ?: context.llm.prompt.params),
-                        responseProcessor = responseProcessor
+                        responseProcessor = responseProcessor ?: context.llm.responseProcessor,
                     ),
                 ),
             )
