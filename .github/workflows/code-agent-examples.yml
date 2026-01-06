@@ -58,6 +58,6 @@ jobs:
 
       - name: Compile
         working-directory: ./examples/code-agent/${{ matrix.step }}
-        run: ./gradlew assemble testClasses --stacktrace
+        run: ./gradlew assemble testClasses --refresh-dependencies --stacktrace
         env:
           JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
