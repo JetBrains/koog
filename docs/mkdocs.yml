@@ -15,8 +15,9 @@ nav:
           - Planner agents: planner-agents.md
       - Prompts:
           - prompts/index.md
-          - Structured prompts: prompts/structured-prompts.md
-          - Multimodal inputs: prompts/multimodal-inputs.md
+          - Creating prompts:
+            - prompts/prompt-creation/index.md
+            - Multimodal content: prompts/prompt-creation/multimodal-content.md
           - Running prompts:
             - LLM clients: prompts/llm-clients.md
             - Prompt executors: prompts/prompt-executors.md
@@ -140,8 +141,8 @@ plugins:
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
         Prompts:
           - prompts/index.md: This page includes an overview of how to create and run prompts with Koog.
-          - prompts/structured-prompts.md: This page provides details about structured prompts created using the Kotlin DSL.
-          - prompts/multimodal-inputs.md: This page provides details about multimodal inputs, which allow you to send text, images, audio, video, and documents in your prompts.
+          - prompts/prompt-creation/index.md: This page provides details about structured prompts created using the Kotlin DSL.
+          - prompts/prompt-creation/multimodal-content.md: This page provides details about multimodal inputs, which allow you to send text, images, audio, video, and documents in your prompts.
           - prompts/handling-failures.md: This page provides details about handling failures in prompts.
           - prompts/llm-response-caching.md: This page provides details about prompt caching, which lets you cache responses from LLMs to avoid repeated requests.
         Running prompts:
