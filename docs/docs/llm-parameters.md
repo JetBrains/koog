@@ -31,7 +31,7 @@ val prompt = prompt(
 ```
 <!--- KNIT example-llm-parameters-01.kt -->
 
-For more information about prompt creation, see [Prompts](prompts/structured-prompts.md).
+For more information about prompt creation, see [Prompts](prompts/prompt-creation/index.md).
 
 - When creating a subgraph:
 

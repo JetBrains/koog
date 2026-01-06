@@ -32,7 +32,7 @@ To use the `AIAgent` functionality, include all necessary dependencies in your b
 
 ```
 dependencies {
-    implementation("ai.koog:koog-agents:$koog_version")
+    implementation("ai.koog:koog-agents:VERSION")
 }
 ```
 
@@ -40,7 +40,7 @@ For all available installation methods, see [Install Koog](getting-started.md#in
 
 ### 2. Create an agent 
 
-To create an agent, create an instance of the `AIAgent` class and provide the `executor` and `llmModel` parameters:
+To create an agent, create an instance of the `AIAgent` class and provide the `promptExecutor` and `llmModel` parameters:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
