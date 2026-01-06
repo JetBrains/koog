@@ -21,7 +21,7 @@ fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
     }
     handleEvents {
         onToolCallStarting { ctx ->
-            println("[$agentName] Tool '${ctx.tool.name}' called with args: ${ctx.toolArgs.toString().take(100)}")
+            println("[$agentName] Tool '${ctx.toolName}' called with args: ${ctx.toolArgs.toString().take(100)}")
         }
     }
 }
