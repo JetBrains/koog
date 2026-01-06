@@ -53,7 +53,7 @@ Koog lets you work with LLM providers on two levels:
     It can switch between providers
     and optionally fall back to a configured provider and LLM using the corresponding client.
     You can either create your own executor or use a pre-defined prompt executor for a specific provider.
-    For details, see [Prompt executors](prompts/llm-clients.md).
+    For details, see [Prompt executors](prompts/prompt-executors.md).
 
 
 Using a prompt executor offers a higher‑level layer over one or more LLMClients. 
