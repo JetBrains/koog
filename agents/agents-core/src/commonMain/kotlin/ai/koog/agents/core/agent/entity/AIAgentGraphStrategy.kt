@@ -78,7 +78,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun restoreStateIfNeeded(
-        agentContext: AIAgentContext
+        agentContext: AIAgentGraphContextBase
     ) {
         val additionalContextData: AgentContextData = agentContext.getAgentContextData() ?: return
 
@@ -97,14 +97,21 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun restoreDefault(agentContext: AIAgentContext, data: AgentContextData) {
+    private suspend fun restoreDefault(agentContext: AIAgentGraphContextBase, data: AgentContextData) {
         val nodePath = data.nodePath
 
         // Perform additional cleanup (ex: rollback tools):
         data.additionalRollbackActions(agentContext)
 
         // Set current graph node:
-        setExecutionPoint(nodePath, data.lastInput)
+        @Suppress("DEPRECATION")
+        when {
+            data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput)
+            data.lastOutput != null -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
+
+            // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpiints:
+            else -> {}
+        }
 
         // Reset the message history:
         agentContext.llm.withPrompt {
@@ -112,29 +119,22 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
         }
     }
 
-    /**
-     * Finds and sets the node for the strategy based on the provided context.
-     */
-    public fun setExecutionPoint(nodePath: String, input: JsonElement) {
-        // we drop first because it's agent's id, we don't need it here
-        val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
-
-        if (segments.isEmpty()) {
-            throw IllegalArgumentException("Invalid node path: $nodePath")
-        }
-
-        val actualPath = segments.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
-        val strategyName = segments.firstOrNull() ?: return
+    private fun setExecutionPointImpl(pathSegments: List<String>, node: AIAgentNodeBase<*, *>, input: Any?) {
+        val strategyName = pathSegments.firstOrNull() ?: return
 
         // getting the very first segment (it should be a root strategy node)
         var currentNode: AIAgentNodeBase<*, *>? = metadata.nodesMap[strategyName]
         var currentPath = strategyName
 
         // restoring the current node for each subgraph including strategy
-        val segmentsInbetween = segments.drop(1).dropLast(1)
+        val segmentsInbetween = pathSegments.drop(1).dropLast(1)
         for (segment in segmentsInbetween) {
             val currNode = currentNode as? ExecutionPointNode
-                ?: throw IllegalStateException("Restore for path $nodePath failed: one of middle segments is not a subgraph")
+                ?: throw IllegalStateException(
+                    "Restore for path " +
+                        "${pathSegments.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)} failed: " +
+                        "one of middle segments is not a subgraph"
+                )
 
             currentPath = "$currentPath${DEFAULT_AGENT_PATH_SEPARATOR}$segment"
             val nextNode = metadata.nodesMap[currentPath]
@@ -144,15 +144,81 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
             }
         }
 
-        // forcing the very last segment to the latest pre-leaf node to complete the chain
-        val leaf = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
-        val inputType = leaf.inputType
-
-        val actualInput = serializer.decodeFromJsonElement(serializer.serializersModule.serializer(inputType), input)
-        leaf.let {
+        val leaf = node
+        node.let {
             currentNode as? ExecutionPointNode
                 ?: throw IllegalStateException("Node ${currentNode?.name} is not a valid leaf node")
-            currentNode.enforceExecutionPoint(it, actualInput)
+            currentNode.enforceExecutionPoint(it, input)
+        }
+    }
+
+    /**
+     * Finds and sets the node for the strategy based on the provided context.
+     */
+    @Deprecated("Use setExecutionPointAfterNode instead, setExecutionPoint will be removed in future versions")
+    public suspend fun setExecutionPoint(nodePath: String, input: JsonElement) {
+        // we drop first because it's agent's id, we don't need it here
+        val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
+
+        if (segments.isEmpty()) {
+            throw IllegalArgumentException("Invalid node path: $nodePath")
+        }
+
+        val actualPath = segments.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
+
+        val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
+
+        val actualInput = serializer.decodeFromJsonElement(
+            serializer.serializersModule.serializer(completedNode.inputType),
+            input
+        )
+
+        // Note: completed node will be re-executed because the output wasn't saved in checkpoints
+        // (this was the original behavior before 0.6.1)
+        setExecutionPointImpl(segments, completedNode, actualInput)
+    }
+
+    /**
+     * Finds and sets the node for the strategy based on the provided context.
+     */
+    public suspend fun setExecutionPointAfterNode(
+        nodePath: String,
+        output: JsonElement,
+        agentContext: AIAgentGraphContextBase
+    ) {
+        // we drop first because it's agent's id, we don't need it here
+        val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
+
+        if (segments.isEmpty()) {
+            throw IllegalArgumentException("Invalid node path: $nodePath")
+        }
+
+        val actualPath = segments.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
+
+        val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
+
+        val actualOutput = serializer.decodeFromJsonElement(
+            serializer.serializersModule.serializer(completedNode.outputType),
+            output
+        )
+
+        if (completedNode is FinishNode<*>) {
+            // finish node (of some subgraph) doesn't have next edges, and it's input equals output, so it's safe to re-start it:
+            setExecutionPointImpl(
+                pathSegments = segments,
+                node = completedNode,
+                input = actualOutput
+            )
+        } else {
+            val resolvedEdge = completedNode.resolveEdgeUnsafe(agentContext, actualOutput)
+            val nextNode = resolvedEdge?.edge?.toNode ?: throw IllegalStateException("Node $nodePath not found")
+            val nextNodeInput = resolvedEdge.output
+
+            setExecutionPointImpl(
+                pathSegments = segments.dropLast(1) + nextNode.name,
+                node = nextNode,
+                input = nextNodeInput
+            )
         }
     }
 }

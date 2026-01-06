@@ -163,7 +163,7 @@ class SQLPersistenceProvidersTest {
             checkpointId = id,
             createdAt = Clock.System.now(),
             nodePath = "test-node",
-            lastInput = JsonPrimitive("Test input"),
+            lastOutput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),

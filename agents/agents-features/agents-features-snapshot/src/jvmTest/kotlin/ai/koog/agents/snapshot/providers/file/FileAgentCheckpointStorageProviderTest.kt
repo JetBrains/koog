@@ -50,7 +50,7 @@ class FileAgentCheckpointStorageProviderTest {
             checkpointId = checkpointId,
             createdAt = createdAt,
             nodePath = nodeId,
-            lastInput = lastInput,
+            lastOutput = lastInput,
             messageHistory = messageHistory,
             version = 0L
         )
@@ -68,7 +68,7 @@ class FileAgentCheckpointStorageProviderTest {
         assertEquals(checkpointId, retrievedCheckpoint.checkpointId)
         assertEquals(createdAt, retrievedCheckpoint.createdAt)
         assertEquals(nodeId, retrievedCheckpoint.nodePath)
-        assertEquals(lastInput, retrievedCheckpoint.lastInput)
+        assertEquals(lastInput, retrievedCheckpoint.lastOutput)
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
 
         // Check first message (User)
@@ -93,7 +93,7 @@ class FileAgentCheckpointStorageProviderTest {
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,
             nodePath = nodeId,
-            lastInput = lastInput,
+            lastOutput = lastInput,
             messageHistory = messageHistory,
             version = checkpoint.version.plus(1)
         )

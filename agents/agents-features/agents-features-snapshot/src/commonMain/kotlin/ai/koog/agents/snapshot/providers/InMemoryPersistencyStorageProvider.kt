@@ -38,4 +38,21 @@ public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider<A
             return snapshotMap[agentId]?.maxBy { it.version }
         }
     }
+
+    /**
+     * Removes all stored checkpoints from the in-memory storage. If a filter is provided,
+     * this method will determine which checkpoints to remove based on the filter's logic.
+     *
+     * @param filter Optional filter to determine whether any checkpoints should be removed
+     *               conditionally. If `null`, all checkpoints will be removed unconditionally.
+     */
+    public suspend fun removeCheckpoints(filter: AgentCheckpointPredicateFilter? = null) {
+        mutex.withLock {
+            if (filter != null) {
+                snapshotMap.keys.forEach { agentId -> snapshotMap[agentId] = snapshotMap[agentId]!!.filterNot { filter.check(it) } }
+            } else {
+                snapshotMap.clear()
+            }
+        }
+    }
 }

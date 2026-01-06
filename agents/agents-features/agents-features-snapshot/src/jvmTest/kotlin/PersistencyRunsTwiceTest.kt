@@ -126,13 +126,12 @@ class PersistenceRunsTwiceTest {
         agentService.createAgent(id = agentId).run("Start the test")
 
         testCollector.logs() shouldContainExactly listOf(
-            "Second Step",
             "Second try successful",
         )
 
         await.until {
             runBlocking {
-                provider.getCheckpoints(agentId).filter { !it.isTombstone() }.size == 4
+                provider.getCheckpoints(agentId).filter { !it.isTombstone() }.size == 3
             }
         }
     }
