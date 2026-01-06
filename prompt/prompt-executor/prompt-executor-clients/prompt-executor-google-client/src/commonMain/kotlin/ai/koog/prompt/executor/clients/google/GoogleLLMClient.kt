@@ -287,12 +287,26 @@ public open class GoogleLLMClient(
         val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
+        val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
+        var lastSignature: String? = null
 
         fun flushCalls() {
             if (pendingCalls.isNotEmpty()) {
                 contents += GoogleContent(role = "model", parts = pendingCalls.toList())
                 pendingCalls.clear()
             }
+        }
+
+        fun flushResults() {
+            if (pendingResults.isNotEmpty()) {
+                contents += GoogleContent(role = "user", parts = pendingResults.toList())
+                pendingResults.clear()
+            }
+        }
+
+        fun flushAll() {
+            flushCalls()
+            flushResults()
         }
 
         for (message in prompt.messages) {
@@ -302,13 +316,13 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.User -> {
-                    flushCalls()
+                    flushAll()
                     // User messages become 'user' role content
                     contents.add(message.toGoogleContent(model))
                 }
 
                 is Message.Assistant -> {
-                    flushCalls()
+                    flushAll()
                     contents.add(
                         GoogleContent(
                             role = "model",
@@ -318,51 +332,64 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Reasoning -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "model",
-                            parts = listOf(
-                                GooglePart.Text(
-                                    text = message.content,
-                                    thoughtSignature = message.encrypted,
-                                    thought = true,
+                    // Reasoning indicates a new step - flush previous step
+                    flushAll()
+
+                    if (message.content.isNotBlank()) {
+                        // If content is present, it's a "Thought Summary" -> Convert to Text part with thought=true
+                        contents.add(
+                            GoogleContent(
+                                role = "model",
+                                parts = listOf(
+                                    GooglePart.Text(
+                                        text = message.content,
+                                        thought = true,
+                                        thoughtSignature = message.encrypted
+                                    )
                                 )
                             )
                         )
-                    )
+                    } else {
+                        // If content is empty/blank, it's strictly a signature carrier for the next Tool.Call
+                        lastSignature = message.encrypted
+                    }
                 }
 
                 is Message.Tool.Result -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "user",
-                            parts = listOf(
-                                GooglePart.FunctionResponse(
-                                    functionResponse = GoogleData.FunctionResponse(
-                                        id = message.id,
-                                        name = message.tool,
-                                        response = buildJsonObject { put("result", message.content) }
-                                    )
-                                )
+                    // Just buffer results. We only flush when we know the current tool turn is complete.
+                    pendingResults.add(
+                        GooglePart.FunctionResponse(
+                            functionResponse = GoogleData.FunctionResponse(
+                                id = message.id,
+                                name = message.tool,
+                                response = buildJsonObject { put("result", message.content) }
                             )
                         )
                     )
                 }
 
                 is Message.Tool.Call -> {
+                    // First call in step needs to flush stale results
+                    if (pendingCalls.isEmpty()) {
+                        flushResults()
+                    }
+
+                    // Use signature from preceding Reasoning message
+                    val signature = lastSignature
+                    lastSignature = null // Consume: only first call gets the signature
+
                     pendingCalls += GooglePart.FunctionCall(
                         functionCall = GoogleData.FunctionCall(
                             id = message.id,
                             name = message.tool,
                             args = json.decodeFromString(message.content)
-                        )
+                        ),
+                        thoughtSignature = signature
                     )
                 }
             }
         }
-        flushCalls()
+        flushAll()
 
         val googleTools = tools
             .map { tool ->
@@ -599,23 +626,21 @@ public open class GoogleLLMClient(
         val responses = mutableListOf<Message.Response>()
         with(responses) {
             parts.forEach { part ->
-                if (part.thoughtSignature != null && part.thought == false) {
-                    add(
-                        Message.Reasoning(
-                            encrypted = part.thoughtSignature,
-                            content = "",
-                            metaInfo = metaInfo
-                        )
-                    )
+                // Create Reasoning for any part with signature (signature carrier),
+                // unless the part itself is a thought (in which case it carries the signature)
+                val signature = part.thoughtSignature
+                val isThought = part.thought == true
+                if (signature != null && !isThought) {
+                    add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
                 }
 
                 when (part) {
                     is GooglePart.Text -> {
-                        if (part.thought ?: false) {
+                        if (isThought) {
                             add(
                                 Message.Reasoning(
-                                    encrypted = part.thoughtSignature,
                                     content = part.text,
+                                    encrypted = signature,
                                     metaInfo = metaInfo
                                 )
                             )
@@ -630,14 +655,16 @@ public open class GoogleLLMClient(
                         }
                     }
 
-                    is GooglePart.FunctionCall -> add(
-                        Message.Tool.Call(
-                            id = Uuid.random().toString(),
-                            tool = part.functionCall.name,
-                            content = part.functionCall.args.toString(),
-                            metaInfo = metaInfo
+                    is GooglePart.FunctionCall -> {
+                        add(
+                            Message.Tool.Call(
+                                id = Uuid.random().toString(),
+                                tool = part.functionCall.name,
+                                content = part.functionCall.args.toString(),
+                                metaInfo = metaInfo
+                            )
                         )
-                    )
+                    }
 
                     is GooglePart.InlineData -> {
                         val inlineData = part.inlineData
@@ -669,8 +696,8 @@ public open class GoogleLLMClient(
         }
 
         return when {
-            // Fix the situation when the model decides to both call tools and talk
-            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+            // When the model calls tools, keep Reasoning (for signature) and Tool.Call, filter out Assistant text
+            responses.any { it is Message.Tool.Call } -> responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(

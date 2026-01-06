@@ -13,14 +13,17 @@ import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -383,5 +386,166 @@ class GoogleLLMClientTest {
         val filePart = assistantMessage.parts.single() as ContentPart.File
         filePart.mimeType shouldBe "application/pdf"
         (filePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe fileData
+    }
+
+    @Test
+    fun `createGoogleRequest groups parallel Tool Results into single content`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Reasoning(encrypted = "sig", content = "", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Result(id = "1", tool = "t1", content = "r1", metaInfo = RequestMetaInfo.Empty),
+                    Message.Tool.Result(id = "2", tool = "t2", content = "r2", metaInfo = RequestMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        // Structure: User, FunctionCalls(grouped), FunctionResponses(grouped)
+        request.contents shouldHaveSize 3
+        request.contents[0].role shouldBe "user"
+        request.contents[1].role shouldBe "model"
+        request.contents[2].role shouldBe "user"
+
+        // FunctionResponses are grouped
+        val responsesParts = request.contents[2].parts!!
+        responsesParts shouldHaveSize 2
+        responsesParts.forEach { it.shouldBeInstanceOf<GooglePart.FunctionResponse>() }
+    }
+
+    @Test
+    fun `createGoogleRequest attaches signature from Reasoning to first call only`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Reasoning(encrypted = "my-sig", content = "", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        val callsParts = request.contents[1].parts!!
+        callsParts shouldHaveSize 2
+
+        val fc1 = callsParts[0] as GooglePart.FunctionCall
+        val fc2 = callsParts[1] as GooglePart.FunctionCall
+
+        fc1.thoughtSignature shouldBe "my-sig" // First gets signature
+        fc2.thoughtSignature shouldBe null // Second doesn't
+    }
+
+    @Test
+    fun `processGoogleCandidate creates Reasoning before FunctionCall with signature`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.FunctionCall(
+                        functionCall = GoogleData.FunctionCall(name = "tool", args = buildJsonObject {}),
+                        thoughtSignature = "sig-123"
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 2
+        responses[0].shouldBeInstanceOf<Message.Reasoning>()
+        responses[1].shouldBeInstanceOf<Message.Tool.Call>()
+        (responses[0] as Message.Reasoning).encrypted shouldBe "sig-123"
+        (responses[0] as Message.Reasoning).content shouldBe ""
+    }
+
+    @Test
+    fun `processGoogleCandidate creates Reasoning from Text with thought=true`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.Text(
+                        text = "I am thinking...",
+                        thought = true,
+                        thoughtSignature = "thought-sig"
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 1
+        responses[0].shouldBeInstanceOf<Message.Reasoning>()
+        val reasoning = responses[0] as Message.Reasoning
+        reasoning.content shouldBe "I am thinking..."
+        reasoning.encrypted shouldBe "thought-sig"
+    }
+
+    @Test
+    fun `createGoogleRequest includes Reasoning as Text part with thought=true`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Reasoning(content = "Previous thought", encrypted = "prev-sig", metaInfo = ResponseMetaInfo.Empty)
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        request.contents shouldHaveSize 2
+        val thoughtContent = request.contents[1]
+        thoughtContent.role shouldBe "model"
+        thoughtContent.parts!!.single().shouldBeInstanceOf<GooglePart.Text>()
+        val textPart = thoughtContent.parts!!.single() as GooglePart.Text
+        textPart.text shouldBe "Previous thought"
+        textPart.thought shouldBe true
+        textPart.thoughtSignature shouldBe "prev-sig"
+    }
+
+    @Test
+    fun `processGoogleCandidate creates Reasoning for InlineData with signature`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.InlineData(
+                        inlineData = GoogleData.Blob("image/png", "png-bytes".encodeToByteArray()),
+                        thoughtSignature = "image-sig"
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 2
+        responses[0].shouldBeInstanceOf<Message.Reasoning>()
+        (responses[0] as Message.Reasoning).encrypted shouldBe "image-sig"
+
+        responses[1].shouldBeInstanceOf<Message.Assistant>()
+        val filePart = (responses[1] as Message.Assistant).parts.single() as ContentPart.Image
+        filePart.format shouldBe "png"
     }
 }
