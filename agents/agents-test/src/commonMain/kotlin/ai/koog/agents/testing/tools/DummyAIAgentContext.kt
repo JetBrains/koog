@@ -69,7 +69,7 @@ public class DummyAIAgentContext(
 
     @OptIn(InternalAgentsApi::class)
     private var _pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(
-        _config ?: AIAgentConfig(Prompt.Empty, OllamaModels.Meta.LLAMA_3_2, 0)
+        _config ?: AIAgentConfig(Prompt.Empty, OllamaModels.Meta.LLAMA_3_2, 100)
     )
 
     override val environment: AIAgentEnvironment

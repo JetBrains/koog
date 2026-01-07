@@ -41,8 +41,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
     override val clock: Clock,
-    private val readSessionDelegate: AIAgentLLMSessionImpl
-) : AIAgentLLMSession by readSessionDelegate, AIAgentLLMWriteSessionAPI {
+) : AIAgentLLMSession(executor, tools, prompt, model, responseProcessor, config), AIAgentLLMWriteSessionAPI {
 
     override var prompt: Prompt by ActiveProperty(prompt) { isActive }
 
@@ -65,7 +64,9 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     }
 
     public override fun appendPrompt(body: PromptBuilder.() -> Unit) {
+        println("  =========   appendPrompt  =========   (write session)")
         prompt = prompt(prompt, clock, body)
+        println("  =========   (new) appendPrompt's prompt = ${prompt.messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
     }
 
     @Deprecated("Use `appendPrompt` instead", ReplaceWith("appendPrompt(body)"))
@@ -86,7 +87,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     }
 
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
-        return readSessionDelegate.requestLLMMultipleWithoutTools().also { responses ->
+        return super<AIAgentLLMSession>.requestLLMMultipleWithoutTools().also { responses ->
             appendPrompt {
                 responses.forEach { message(it) }
             }
@@ -95,32 +96,40 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
 
     override suspend fun requestLLMWithoutTools(): Message.Response {
         config
-        return readSessionDelegate.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
+        return super<AIAgentLLMSession>.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLMOnlyCallingTools(): Message.Response {
-        return readSessionDelegate.requestLLMOnlyCallingTools().also { response -> appendPrompt { message(response) } }
+        return super<AIAgentLLMSession>.requestLLMOnlyCallingTools().also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
-        return readSessionDelegate.requestLLMMultipleOnlyCallingTools()
+        return super<AIAgentLLMSession>.requestLLMMultipleOnlyCallingTools()
             .also { responses -> appendPrompt { messages(responses) } }
     }
 
     override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
-        return readSessionDelegate.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
+        return super<AIAgentLLMSession>.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
-        return readSessionDelegate.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
+        return super<AIAgentLLMSession>.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLM(): Message.Response {
-        return readSessionDelegate.requestLLM().also { response -> appendPrompt { message(response) } }
+        println("  =========   requestLLM  =========   (write session)")
+        println("  =========   requestLLM's prompt = ${prompt.messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
+        return super<AIAgentLLMSession>.requestLLM().also { response ->
+            println("  =========   requestLLM's response = ${response}  =========   (write session)")
+            appendPrompt { message(response) }
+        }
     }
 
     override suspend fun requestLLMMultiple(): List<Message.Response> {
-        return readSessionDelegate.requestLLMMultiple().also { responses ->
+        println("  =========   requestLLMMultiple  =========   (write session)")
+        println("  =========   requestLLMMultiple's prompt = ${prompt.messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
+        return super<AIAgentLLMSession>.requestLLMMultiple().also { responses ->
+            println("  =========   requestLLMMultiple's response = ${responses.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
             appendPrompt {
                 responses.forEach { message(it) }
             }
@@ -130,7 +139,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     override suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
     ): Result<StructuredResponse<T>> {
-        return readSessionDelegate.requestLLMStructured(config).also {
+        return super<AIAgentLLMSession>.requestLLMStructured(config).also {
             it.onSuccess { response ->
                 appendPrompt {
                     message(response.message)
@@ -144,7 +153,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         examples: List<T>,
         fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>> {
-        return readSessionDelegate.requestLLMStructured(serializer, examples, fixingParser).also {
+        return super<AIAgentLLMSession>.requestLLMStructured(serializer, examples, fixingParser).also {
             it.onSuccess { response ->
                 appendPrompt {
                     message(response.message)
@@ -162,7 +171,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
             }
             this.prompt = prompt
         }
-        return readSessionDelegate.requestLLMStreaming()
+        return super<AIAgentLLMSession>.requestLLMStreaming()
     }
 
     @PublishedApi

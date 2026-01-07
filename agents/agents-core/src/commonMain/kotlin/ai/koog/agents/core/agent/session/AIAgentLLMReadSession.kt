@@ -100,5 +100,4 @@ public expect class AIAgentLLMReadSession internal constructor(
     ): StructuredResponse<T>
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice>
-    override fun close()
 }

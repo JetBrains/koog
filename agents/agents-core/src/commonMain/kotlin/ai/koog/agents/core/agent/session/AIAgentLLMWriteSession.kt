@@ -53,18 +53,9 @@ public expect class AIAgentLLMWriteSession internal constructor(
     config: AIAgentConfig,
     clock: Clock,
     delegate: AIAgentLLMWriteSessionImpl = AIAgentLLMWriteSessionImpl(
-        environment,
-        executor,
-        tools,
-        toolRegistry,
-        prompt,
-        model,
-        responseProcessor,
-        config,
-        clock,
-        readSessionDelegate = AIAgentLLMSessionImpl(executor, tools, prompt, model, responseProcessor, config)
+        environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock
     )
-) : AIAgentLLMSession, AIAgentLLMWriteSessionAPI {
+) : AIAgentLLMWriteSessionAPI {
     @PublishedApi
     internal val delegate: AIAgentLLMWriteSessionImpl
 
@@ -168,7 +159,8 @@ public expect class AIAgentLLMWriteSession internal constructor(
     ): StructuredResponse<T>
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice>
-    override fun close()
+
+    final override fun close()
 
     public open override suspend fun requestLLMStreaming(definition: StructureDefinition?): Flow<StreamFrame>
 

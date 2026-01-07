@@ -106,7 +106,11 @@ public class PromptBuilder internal constructor(
      */
     @JavaAPI
     public fun user(content: String): PromptBuilder = apply {
+        println("  =========   user($content)  =========   (prompt builder)")
+        println("  =========   messages: ${messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (prompt builder)")
         messages.add(Message.User(content, RequestMetaInfo.create(clock)))
+    }.also {
+        println("  =========   (new) messages: ${messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (prompt builder)")
     }
 
     /**

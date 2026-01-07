@@ -28,7 +28,7 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
     config: AIAgentConfig,
     clock: Clock,
     @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl
-) : AIAgentLLMSession, AIAgentLLMWriteSessionAPI by delegate {
+) : AIAgentLLMWriteSessionAPI by delegate {
 
     public actual inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
         safeTool: SafeTool<TArgs, TResult>,

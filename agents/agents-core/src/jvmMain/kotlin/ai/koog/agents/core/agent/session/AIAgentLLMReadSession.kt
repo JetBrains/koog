@@ -31,7 +31,7 @@ public actual class AIAgentLLMReadSession actual constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-) : AIAgentLLMSession by AIAgentLLMSessionImpl(executor, tools, prompt, model, responseProcessor, config) {
+) : AIAgentLLMSession(executor, tools, prompt, model, responseProcessor, config) {
 
     /**
      * Executes multiple tasks or requests associated with the given `Prompt` and `ToolDescriptor` list.

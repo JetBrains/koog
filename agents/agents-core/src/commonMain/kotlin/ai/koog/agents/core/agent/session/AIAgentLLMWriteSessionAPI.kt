@@ -23,7 +23,6 @@ import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
-import kotlin.jvm.JvmName
 import kotlin.reflect.KClass
 
 /**
@@ -34,7 +33,7 @@ import kotlin.reflect.KClass
  * @property toolRegistry The registry containing tools available for use within the session.
  * @property clock The clock used for message timestamps
  */
-public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSession {
+public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
     /**
      * Represents the current execution environment for the AI agent.
      *

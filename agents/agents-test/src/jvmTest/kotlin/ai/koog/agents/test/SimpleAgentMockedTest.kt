@@ -82,6 +82,14 @@ class SimpleAgentMockedTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+        onNodeExecutionStarting { eventContext ->
+            println("   -----------      node: ${eventContext.node.name}      -----------      ")
+        }
+
+        onLLMCallStarting { eventContext ->
+            println("   -----------      LLM call: ${eventContext.prompt.messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}      -----------      ")
+        }
+
         onToolCallCompleted { eventContext ->
             succeedToolCalls.add(eventContext.toolName)
         }
@@ -100,6 +108,7 @@ class SimpleAgentMockedTest {
         }
 
         onLLMCallCompleted { eventContext ->
+            println("   -----------      LLM response: ${eventContext.responses.joinToString(", ", "[", "]") { it.content  }}      -----------      ")
             // Capture which tools the LLM requested (whether they exist or not)
             eventContext.responses.filterIsInstance<Message.Tool.Call>().forEach { toolCall ->
                 llmRequestedTools.add(toolCall.tool)

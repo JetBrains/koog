@@ -16,4 +16,4 @@ public actual class AIAgentLLMReadSession actual constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-) : AIAgentLLMSession by AIAgentLLMSessionImpl(executor, tools, prompt, model, responseProcessor, config)
+) : AIAgentLLMSession(executor, tools, prompt, model, responseProcessor, config)

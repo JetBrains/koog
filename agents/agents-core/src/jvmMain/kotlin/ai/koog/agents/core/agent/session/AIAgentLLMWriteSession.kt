@@ -41,7 +41,7 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
     config: AIAgentConfig,
     clock: Clock,
     @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl
-) : AIAgentLLMSession, AIAgentLLMWriteSessionAPI by delegate {
+) : AIAgentLLMWriteSessionAPI by delegate {
 
     /**
      * Executes multiple tasks or requests associated with the given `Prompt` and `ToolDescriptor` list.
