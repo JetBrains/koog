@@ -44,7 +44,7 @@ object Models {
     @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.DeepSeekV30324,
-        OpenRouterModels.Qwen3VL,
+        OpenRouterModels.Qwen2_5,
     )
 
     @JvmStatic

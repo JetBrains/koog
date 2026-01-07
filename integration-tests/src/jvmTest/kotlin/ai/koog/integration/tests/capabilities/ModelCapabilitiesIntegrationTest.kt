@@ -236,6 +236,10 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.MultipleChoices -> {
+                    assumeTrue(
+                        model.provider !is LLMProvider.Google,
+                        "https://github.com/googleapis/python-genai/issues/1723"
+                    )
                     val prompt = prompt(
                         "cap-multiple-choices-positive",
                         params = LLMParams(numberOfChoices = 2)
