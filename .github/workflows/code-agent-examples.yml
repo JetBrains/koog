@@ -30,6 +30,7 @@ jobs:
           - step-02-add-execution-tool
           - step-03-add-observability
           - step-04-add-subagent
+          - step-05-history
 
     steps:
       - name: Configure Git
