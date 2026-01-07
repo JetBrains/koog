@@ -749,7 +749,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             shouldContain(saySaveLog.trim())
             shouldContain(sayByeLog.trim())
             shouldContain(rollbackPerformingLog.trim())
-            saySaveLog.trim().toRegex().findAll(this).count() shouldBe 2
+            // After #1308: checkpoint restoration doesn't re-execute the checkpointed node
+            // nodeHello and nodeSave are executed once (no re-execution after rollback)
+            sayHelloLog.trim().toRegex().findAll(this).count() shouldBe 1
+            saySaveLog.trim().toRegex().findAll(this).count() shouldBe 1
+            // one rollback should be performed and tracked
+            rollbackPerformingLog.trim().toRegex().findAll(this).count() shouldBe 1
+            // nodeBye is executed twice (once before rollback, once after rollback)
             sayByeLog.trim().toRegex().findAll(this).count() shouldBe 2
         }
     }
