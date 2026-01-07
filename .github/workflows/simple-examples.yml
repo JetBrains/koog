@@ -3,7 +3,11 @@ name: Simple Examples
 on:
   push:
     branches: [ "main", "develop" ]
+    paths:
+      - 'examples/simple-examples/**'
   pull_request:
+    paths:
+      - 'examples/simple-examples/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
