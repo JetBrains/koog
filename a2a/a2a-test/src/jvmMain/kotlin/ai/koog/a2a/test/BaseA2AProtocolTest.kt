@@ -21,6 +21,7 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.Request
+import ai.koog.test.utils.untilAsserted
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.inspectors.shouldForAll
 import io.kotest.matchers.collections.shouldHaveSize
@@ -32,6 +33,7 @@ import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import org.awaitility.kotlin.await
 import kotlin.time.Duration
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -265,15 +267,19 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val response = client.getTask(getTaskRequest)
+        await
+            .ignoreExceptions()
+            .untilAsserted(this) {
+                val response = client.getTask(getTaskRequest)
 
-        response.data should {
-            it.id shouldBe taskId
-            it.contextId shouldBe "test-context"
-            it.status should {
-                it.state shouldBe TaskState.Completed
+                response.data should { task ->
+                    task.id shouldBe taskId
+                    task.contextId shouldBe "test-context"
+                    task.status should { status ->
+                        status.state shouldBe TaskState.Completed
+                    }
+                }
             }
-        }
     }
 
     open fun `test cancel task`() = runTest(timeout = testTimeout) {
