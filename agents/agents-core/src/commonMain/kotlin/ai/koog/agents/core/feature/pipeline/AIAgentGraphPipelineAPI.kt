@@ -3,11 +3,10 @@
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.AgentExecutionInfo
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
@@ -26,6 +25,7 @@ public interface AIAgentGraphPipelineAPI {
 
     //region Trigger Node Handlers
     public suspend fun onNodeExecutionStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
@@ -34,6 +34,7 @@ public interface AIAgentGraphPipelineAPI {
     )
 
     public suspend fun onNodeExecutionCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
@@ -44,6 +45,7 @@ public interface AIAgentGraphPipelineAPI {
     )
 
     public suspend fun onNodeExecutionFailed(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
@@ -55,6 +57,7 @@ public interface AIAgentGraphPipelineAPI {
 
     //region Trigger Subgraph Handlers
     public suspend fun onSubgraphExecutionStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
@@ -63,6 +66,7 @@ public interface AIAgentGraphPipelineAPI {
     )
 
     public suspend fun onSubgraphExecutionCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
@@ -73,6 +77,7 @@ public interface AIAgentGraphPipelineAPI {
     )
 
     public suspend fun onSubgraphExecutionFailed(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,

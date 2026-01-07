@@ -35,10 +35,14 @@ private const val nonSerializableParameterPrefix = "__##nonSerializableParameter
 public class ToolFromJavaMethod(
     private val method: java.lang.reflect.Method,
     private val thisRef: Any? = null,
-    override val descriptor: ToolDescriptor,
+    descriptor: ToolDescriptor,
     override val json: Json = Json,
-    override val resultSerializer: KSerializer<Any?>,
-) : Tool<ToolFromJavaMethod.VarArgs, Any?>() {
+    resultSerializer: KSerializer<Any?>,
+) : Tool<ToolFromJavaMethod.VarArgs, Any?>(
+    argsSerializer = VarArgsSerializer(method),
+    resultSerializer = resultSerializer,
+    descriptor = descriptor,
+) {
 
     /**
      * Represents a data structure to hold arguments conforming to the Args interface.
@@ -106,12 +110,6 @@ public class ToolFromJavaMethod(
             method.invoke(thisRef, *orderedArgs)
         }
     }
-
-    override val argsSerializer: KSerializer<VarArgs>
-        get() = VarArgsSerializer(method)
-
-    override val name: String = descriptor.name
-    override val description: String = descriptor.description
 
     /**
      * A serializer for the `VarArgs` class, enabling Kotlin serialization for arguments provided dynamically

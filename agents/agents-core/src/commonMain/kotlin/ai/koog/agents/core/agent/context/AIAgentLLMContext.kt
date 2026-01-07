@@ -17,7 +17,6 @@ import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 import kotlin.jvm.JvmName
 
-
 /**
  * Represents the context for an AI agent LLM, managing tools, prompt handling, and interaction with the
  * environment and execution layers. It provides mechanisms for concurrent read and write operations
@@ -43,7 +42,7 @@ public expect class AIAgentLLMContext constructor(
     config: AIAgentConfig,
     clock: Clock,
     delegate: AIAgentLLMContextImpl = AIAgentLLMContextImpl(
-        tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock
+        tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock
     )
 ) : AIAgentLLMContextAPI {
     internal val delegate: AIAgentLLMContextImpl
@@ -88,7 +87,7 @@ public expect class AIAgentLLMContext constructor(
      */
     @DetachedPromptExecutorAPI
     @get:JvmName("responseProcessor")
-    public var responseProcessor: ResponseProcessor? = responseProcessor
+    override public var responseProcessor: ResponseProcessor?
         @InternalAgentsApi set
 
     /**
@@ -116,16 +115,17 @@ public expect class AIAgentLLMContext constructor(
      * @return A new instance of [AIAgentLLMContext] with deep copies of mutable properties.
      */
     public override suspend fun copy(
-        tools: List<ToolDescriptor> = this.tools,
-        toolRegistry: ToolRegistry = this.toolRegistry,
-        prompt: Prompt = this.prompt,
-        model: LLModel = this.model,
-        responseProcessor: ResponseProcessor? = this.responseProcessor,
-        promptExecutor: PromptExecutor = this.promptExecutor,
-        environment: AIAgentEnvironment = this.environment,
-        config: AIAgentConfig = this.config,
-        clock: Clock = this.clock,
+        tools: List<ToolDescriptor>,
+        toolRegistry: ToolRegistry,
+        prompt: Prompt,
+        model: LLModel,
+        responseProcessor: ResponseProcessor?,
+        promptExecutor: PromptExecutor,
+        environment: AIAgentEnvironment,
+        config: AIAgentConfig,
+        clock: Clock
     ): AIAgentLLMContext
+
     /**
      * Executes a write session on the [AIAgentLLMContext], ensuring that all active write and read sessions
      * are completed before initiating the write session.
@@ -146,13 +146,13 @@ public expect class AIAgentLLMContext constructor(
      * @return The current [Prompt] instance.
      */
     public override fun copy(
-        tools: List<ToolDescriptor> = this.tools,
-        prompt: Prompt = this.prompt,
-        model: LLModel = this.model,
-        responseProcessor: ResponseProcessor? = this.responseProcessor,
-        promptExecutor: PromptExecutor = this.promptExecutor,
-        environment: AIAgentEnvironment = this.environment,
-        config: AIAgentConfig = this.config,
-        clock: Clock = this.clock
+        tools: List<ToolDescriptor>,
+        prompt: Prompt,
+        model: LLModel,
+        responseProcessor: ResponseProcessor?,
+        promptExecutor: PromptExecutor,
+        environment: AIAgentEnvironment,
+        config: AIAgentConfig,
+        clock: Clock
     ): AIAgentLLMContext
 }

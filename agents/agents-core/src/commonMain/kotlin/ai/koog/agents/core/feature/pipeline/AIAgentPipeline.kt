@@ -366,7 +366,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolDescription: String?,
         toolArgs: JsonObject,
         message: String,
-        error: AIAgentError?
+        error: AIAgentError?,
+        context: AIAgentContext
     )
 
     /**

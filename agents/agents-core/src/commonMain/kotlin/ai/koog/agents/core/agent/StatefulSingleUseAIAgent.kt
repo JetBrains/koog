@@ -1,4 +1,5 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.agent
 
@@ -71,7 +72,8 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      * executing workflows, handling inputs, and generating outputs in the
      * AI agent's functionality.
      */
-    internal abstract val pipeline: AIAgentPipeline
+    @InternalAgentsApi
+    public abstract val pipeline: AIAgentPipeline
 
     /**
      * Executes the agent's main functionality, coordinating with various components
@@ -108,15 +110,24 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
                 state = AIAgentState.Running(context.parentContext ?: context)
             }
 
-            logger.debug { formatLog(id, runId, "Starting agent execution") }
-            pipeline.onAgentStarting<Input, Output>(agentRunEventId, context.executionInfo, runId, this, context)
+                logger.debug { formatLog(id, runId, "Starting agent execution") }
+                pipeline.onAgentStarting<Input, Output>(
+                    agentRunEventId,
+                    context.executionInfo,
+                    runId,
+                    this@StatefulSingleUseAIAgent,
+                    context
+                )
 
             val result = try {
                 context.with(partName = strategy.name) { executionInfo, eventId ->
                         runCatchingCancellable {
-                            context.pipeline.onStrategyStarting(executionInfo, strategy, context)
+                            context.pipeline.onStrategyStarting(eventId, executionInfo, strategy, context)
                             val result = strategy.execute(context = context, input = agentInput)
+
+                            logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
                             context.pipeline.onStrategyCompleted(
+                                eventId,
                                 executionInfo,
                                 strategy,
                                 context,
@@ -124,7 +135,6 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
                                 typeOf<Any?>()
                             )
 
-                            logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
                             result
                         }.onFailure {
                             context.environment.reportProblem(it)

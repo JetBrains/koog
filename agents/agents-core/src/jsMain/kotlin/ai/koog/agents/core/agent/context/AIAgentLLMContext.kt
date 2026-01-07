@@ -11,6 +11,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 
 public actual open class AIAgentLLMContext actual constructor(
@@ -18,6 +19,7 @@ public actual open class AIAgentLLMContext actual constructor(
     toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     promptExecutor: PromptExecutor,
     environment: AIAgentEnvironment,
     config: AIAgentConfig,
@@ -28,6 +30,7 @@ public actual open class AIAgentLLMContext actual constructor(
     toolRegistry,
     prompt,
     model,
+    responseProcessor,
     promptExecutor,
     environment,
     config,

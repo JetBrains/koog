@@ -15,6 +15,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -28,8 +29,9 @@ public actual class AIAgentLLMReadSession actual constructor(
     executor: PromptExecutor,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-) : AIAgentLLMSession by AIAgentLLMSessionImpl(executor, tools, prompt, model, config) {
+) : AIAgentLLMSession by AIAgentLLMSessionImpl(executor, tools, prompt, model, responseProcessor, config) {
 
     /**
      * Executes multiple tasks or requests associated with the given `Prompt` and `ToolDescriptor` list.
@@ -122,6 +124,26 @@ public actual class AIAgentLLMReadSession actual constructor(
         executorService: ExecutorService? = null
     ): Message.Response = config.runOnStrategyDispatcher(executorService) {
         requestLLMOnlyCallingTools()
+    }
+
+    /**
+     * Sends a request to the language model that enforces the usage of tools and retrieves all responses.
+     *
+     * This is useful when the LLM returns multiple messages, such as a "thinking" block followed by tool calls,
+     * or multiple parallel tool calls.
+     *
+     * This method:
+     * 1. Validates that the session is active.
+     * 2. Updates the prompt configuration to mark tool usage as required (`ToolChoice.Required`).
+     *
+     * @return A list of responses from the language model.
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun requestLLMMultipleOnlyCallingTools(
+        executorService: ExecutorService? = null
+    ): List<Message.Response> = config.runOnStrategyDispatcher(executorService) {
+        requestLLMMultipleOnlyCallingTools()
     }
 
     /**

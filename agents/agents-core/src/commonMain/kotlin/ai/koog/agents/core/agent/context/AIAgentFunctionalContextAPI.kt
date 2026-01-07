@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -20,6 +21,7 @@ import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
@@ -41,7 +43,7 @@ public interface AIAgentFunctionalContextAPI : AIAgentContext {
 
     override val pipeline: AIAgentFunctionalPipeline
 
-    override val executionInfo: AgentExecutionInfo
+    override var executionInfo: AgentExecutionInfo
 
     override val runId: String
 
@@ -304,6 +306,7 @@ public interface AIAgentFunctionalContextAPI : AIAgentContext {
         llmParams: LLMParams? = null,
         runMode: ToolCalls = ToolCalls.SEQUENTIAL,
         assistantResponseRepeatMax: Int? = null,
+        responseProcessor: ResponseProcessor? = null,
     ): CriticResult<Input>
 
     /**
@@ -331,6 +334,7 @@ public interface AIAgentFunctionalContextAPI : AIAgentContext {
         llmParams: LLMParams? = null,
         runMode: ToolCalls = ToolCalls.SEQUENTIAL,
         assistantResponseRepeatMax: Int? = null,
+        responseProcessor: ResponseProcessor? = null,
     ): Output
 
     /**
@@ -358,5 +362,6 @@ public interface AIAgentFunctionalContextAPI : AIAgentContext {
         llmParams: LLMParams? = null,
         runMode: ToolCalls = ToolCalls.SEQUENTIAL,
         assistantResponseRepeatMax: Int? = null,
+        responseProcessor: ResponseProcessor? = null,
     ): OutputTransformed
 }

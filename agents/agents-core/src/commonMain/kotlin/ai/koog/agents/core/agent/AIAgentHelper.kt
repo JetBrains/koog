@@ -9,6 +9,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 import kotlin.jvm.JvmStatic
 import kotlin.reflect.typeOf
@@ -153,6 +154,7 @@ internal object AIAgentHelper {
     internal operator fun invoke(
         promptExecutor: PromptExecutor,
         llmModel: LLModel,
+        responseProcessor: ResponseProcessor? = null,
         strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
@@ -177,6 +179,7 @@ internal object AIAgentHelper {
             },
             model = llmModel,
             maxAgentIterations = maxIterations,
+            responseProcessor = responseProcessor
         ),
         toolRegistry = toolRegistry,
         installFeatures = installFeatures
@@ -206,6 +209,7 @@ internal object AIAgentHelper {
         promptExecutor: PromptExecutor,
         llmModel: LLModel,
         strategy: AIAgentGraphStrategy<Input, Output>,
+        responseProcessor: ResponseProcessor? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
         clock: Clock = Clock.System,
@@ -231,6 +235,7 @@ internal object AIAgentHelper {
                 },
                 model = llmModel,
                 maxAgentIterations = maxIterations,
+                responseProcessor = responseProcessor
             ),
             toolRegistry = toolRegistry,
             installFeatures = installFeatures
@@ -256,6 +261,7 @@ internal object AIAgentHelper {
     internal operator fun <Input, Output> invoke(
         promptExecutor: PromptExecutor,
         llmModel: LLModel,
+        responseProcessor: ResponseProcessor? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         strategy: AIAgentFunctionalStrategy<Input, Output>,
         id: String? = null,
@@ -278,6 +284,7 @@ internal object AIAgentHelper {
             },
             model = llmModel,
             maxAgentIterations = maxIterations,
+            responseProcessor = responseProcessor
         ),
         installFeatures = installFeatures,
         toolRegistry = toolRegistry,

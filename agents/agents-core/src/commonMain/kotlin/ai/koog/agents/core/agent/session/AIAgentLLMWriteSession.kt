@@ -62,7 +62,7 @@ public expect class AIAgentLLMWriteSession internal constructor(
         responseProcessor,
         config,
         clock,
-        readSessionDelegate = AIAgentLLMSessionImpl(executor, tools, prompt, model, config)
+        readSessionDelegate = AIAgentLLMSessionImpl(executor, tools, prompt, model, responseProcessor, config)
     )
 ) : AIAgentLLMSession, AIAgentLLMWriteSessionAPI {
     @PublishedApi
@@ -139,6 +139,8 @@ public expect class AIAgentLLMWriteSession internal constructor(
     override suspend fun requestLLMWithoutTools(): Message.Response
 
     override suspend fun requestLLMOnlyCallingTools(): Message.Response
+
+    override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response>
 
     override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response
 

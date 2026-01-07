@@ -17,6 +17,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
@@ -37,6 +38,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     override val toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
     override val clock: Clock,
     private val readSessionDelegate: AIAgentLLMSessionImpl
@@ -47,6 +49,8 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     override var tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
 
     override var model: LLModel by ActiveProperty(model) { isActive }
+
+    override var responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
 
     public override fun <TArgs, TResult> findTool(tool: Tool<TArgs, TResult>): SafeTool<TArgs, TResult> {
         return findTool(tool::class)
@@ -96,6 +100,11 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
 
     override suspend fun requestLLMOnlyCallingTools(): Message.Response {
         return readSessionDelegate.requestLLMOnlyCallingTools().also { response -> appendPrompt { message(response) } }
+    }
+
+    override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
+        return readSessionDelegate.requestLLMMultipleOnlyCallingTools()
+            .also { responses -> appendPrompt { messages(responses) } }
     }
 
     override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {

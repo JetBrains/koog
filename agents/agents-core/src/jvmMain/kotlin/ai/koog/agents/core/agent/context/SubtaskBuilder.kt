@@ -8,6 +8,7 @@ import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import java.util.concurrent.ExecutorService
 
 /**
@@ -89,6 +90,7 @@ public class SubtaskBuilderWithInput<Input>(
  * @param tools Optional list of tools that can be used during the subtask execution.
  * @param llmModel Optional language model to be used for the subtask.
  * @param llmParams Optional parameters for the language model configuration.
+ * @param responseProcessor Optional processor for post-processing LLM responses.
  * @param runMode Specifies the mode in which tools should be called (e.g., sequentially).
  * @param assistantResponseRepeatMax Optional maximum number of response repetitions allowed for the assistant.
  * @param executorService Optional executor service for managing asynchronous operations.
@@ -101,6 +103,7 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
     public var tools: List<Tool<*, *>>? = null,
     public var llmModel: LLModel? = null,
     public var llmParams: LLMParams? = null,
+    public var responseProcessor: ResponseProcessor? = null,
     public var runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     public var assistantResponseRepeatMax: Int? = null,
     public var executorService: ExecutorService? = null,
@@ -207,6 +210,15 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
         apply { this.llmParams = llmParams }
 
     /**
+     * Sets the response processor to be used for post-processing LLM responses during task execution.
+     *
+     * @param responseProcessor The instance of [ResponseProcessor] to handle and modify LLM responses during task execution.
+     * @return An updated instance of [SubtaskBuilderWithInputAndOutput] with the specified response processor applied.
+     */
+    public fun withResponseProcessor(responseProcessor: ResponseProcessor): SubtaskBuilderWithInputAndOutput<Input, Output> =
+        apply { this.responseProcessor = responseProcessor }
+
+    /**
      * Sets the execution mode for the AI agent's task execution.
      *
      * @param runMode Specifies the mode in which tool calls are executed. The available modes are:
@@ -257,7 +269,8 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
                     llmModel = llmModel,
                     llmParams = llmParams,
                     runMode = runMode,
-                    assistantResponseRepeatMax = assistantResponseRepeatMax
+                    assistantResponseRepeatMax = assistantResponseRepeatMax,
+                    responseProcessor = responseProcessor
                 )
             }
 
@@ -269,7 +282,8 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
                 llmModel = llmModel,
                 llmParams = llmParams,
                 runMode = runMode,
-                assistantResponseRepeatMax = assistantResponseRepeatMax
+                assistantResponseRepeatMax = assistantResponseRepeatMax,
+                responseProcessor = responseProcessor
             )
             is Verification<*> -> context.subtaskWithVerification(
                 taskDescription,
@@ -278,7 +292,8 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
                 llmModel = llmModel,
                 llmParams = llmParams,
                 runMode = runMode,
-                assistantResponseRepeatMax = assistantResponseRepeatMax
+                assistantResponseRepeatMax = assistantResponseRepeatMax,
+                responseProcessor = responseProcessor
             ) as Output // Output === CriticResult<Input> in this case
         }
     }

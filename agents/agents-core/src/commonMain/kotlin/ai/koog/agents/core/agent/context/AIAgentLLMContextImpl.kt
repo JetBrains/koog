@@ -14,6 +14,7 @@ import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 
 @InternalAgentsApi
@@ -22,6 +23,7 @@ public class AIAgentLLMContextImpl(
     override val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     override var prompt: Prompt,
     override var model: LLModel,
+    override var responseProcessor: ResponseProcessor?,
     override val promptExecutor: PromptExecutor,
     override val environment: AIAgentEnvironment,
     override val config: AIAgentConfig,
@@ -36,6 +38,7 @@ public class AIAgentLLMContextImpl(
         toolRegistry: ToolRegistry,
         prompt: Prompt,
         model: LLModel,
+        responseProcessor: ResponseProcessor?,
         promptExecutor: PromptExecutor,
         environment: AIAgentEnvironment,
         config: AIAgentConfig,
@@ -49,7 +52,8 @@ public class AIAgentLLMContextImpl(
             promptExecutor = promptExecutor,
             environment = environment,
             config = config,
-            clock = clock
+            clock = clock,
+            responseProcessor = responseProcessor
         )
     }
 
@@ -59,7 +63,17 @@ public class AIAgentLLMContextImpl(
     public override suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T =
         rwLock.withWriteLock {
             val session =
-                AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
+                AIAgentLLMWriteSession(
+                    environment,
+                    promptExecutor,
+                    tools,
+                    toolRegistry,
+                    prompt,
+                    model,
+                    responseProcessor,
+                    config,
+                    clock
+                )
 
             session.use {
                 val result = it.block()
@@ -75,7 +89,7 @@ public class AIAgentLLMContextImpl(
 
     @OptIn(ExperimentalStdlibApi::class)
     public override suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
-        val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, config)
+        val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, responseProcessor, config)
 
         session.use { block(it) }
     }
@@ -84,11 +98,22 @@ public class AIAgentLLMContextImpl(
         tools: List<ToolDescriptor>,
         prompt: Prompt,
         model: LLModel,
+        responseProcessor: ResponseProcessor?,
         promptExecutor: PromptExecutor,
         environment: AIAgentEnvironment,
         config: AIAgentConfig,
         clock: Clock,
     ): AIAgentLLMContext {
-        return AIAgentLLMContext(tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock)
+        return AIAgentLLMContext(
+            tools,
+            toolRegistry,
+            prompt,
+            model,
+            responseProcessor,
+            promptExecutor,
+            environment,
+            config,
+            clock
+        )
     }
 }

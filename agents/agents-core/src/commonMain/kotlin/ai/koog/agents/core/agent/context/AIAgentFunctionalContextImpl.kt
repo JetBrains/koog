@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
@@ -27,6 +28,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
@@ -50,7 +52,7 @@ internal class AIAgentFunctionalContextImpl(
     override val storage: AIAgentStorage,
     override val strategyName: String,
     override val pipeline: AIAgentFunctionalPipeline,
-    override val executionInfo: AgentExecutionInfo,
+    override var executionInfo: AgentExecutionInfo,
     override val parentContext: AIAgentContext? = null
 ) : AIAgentFunctionalContextAPI {
 
@@ -298,7 +300,8 @@ internal class AIAgentFunctionalContextImpl(
         llmModel: LLModel?,
         llmParams: LLMParams?,
         runMode: ToolCalls,
-        assistantResponseRepeatMax: Int?
+        assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
     ): CriticResult<Input> {
         val result = subtask(
             taskDescription,
@@ -308,7 +311,8 @@ internal class AIAgentFunctionalContextImpl(
             llmModel,
             llmParams,
             runMode,
-            assistantResponseRepeatMax
+            assistantResponseRepeatMax,
+            responseProcessor
         )
 
         return CriticResult(
@@ -327,6 +331,7 @@ internal class AIAgentFunctionalContextImpl(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
     ): Output {
         val finishTool = identityTool(outputClass)
 
@@ -338,7 +343,9 @@ internal class AIAgentFunctionalContextImpl(
             llmModel,
             llmParams,
             runMode,
-            assistantResponseRepeatMax
+            assistantResponseRepeatMax,
+            responseProcessor
+
         )
     }
 
@@ -351,6 +358,7 @@ internal class AIAgentFunctionalContextImpl(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
     ): OutputTransformed {
         val maxAssistantResponses = assistantResponseRepeatMax ?: SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
 
@@ -359,6 +367,7 @@ internal class AIAgentFunctionalContextImpl(
         val originalTools = llm.readSession { this.tools.toList() }
         val originalModel = llm.readSession { this.model }
         val originalParams = llm.readSession { this.prompt.params }
+        val originalResponseProcessor = llm.readSession { this.responseProcessor }
 
         // setup:
         llm.writeSession {
@@ -372,6 +381,10 @@ internal class AIAgentFunctionalContextImpl(
 
             if (llmParams != null) {
                 prompt = prompt.withParams(llmParams)
+            }
+
+            if (responseProcessor != null) {
+                this.responseProcessor = responseProcessor
             }
 
             setToolChoiceRequired()
@@ -398,6 +411,7 @@ internal class AIAgentFunctionalContextImpl(
             this.tools = originalTools
             this.model = originalModel
             this.prompt = prompt.withParams(originalParams)
+            this.responseProcessor = originalResponseProcessor
         }
 
         return result

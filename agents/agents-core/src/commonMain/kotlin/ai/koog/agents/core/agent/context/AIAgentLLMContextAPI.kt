@@ -13,6 +13,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 import kotlin.jvm.JvmName
 
@@ -113,6 +114,13 @@ public interface AIAgentLLMContextAPI {
         @InternalAgentsApi set
 
     /**
+     * Response processor currently associated with this context.
+     */
+    @DetachedPromptExecutorAPI
+    public var responseProcessor: ResponseProcessor?
+        @InternalAgentsApi set
+
+    /**
      * The current prompt used within the `AIAgentLLMContext`.
      *
      * This property defines the main [Prompt] instance used by the context and is updated as needed to reflect
@@ -140,6 +148,7 @@ public interface AIAgentLLMContextAPI {
         toolRegistry: ToolRegistry = this.toolRegistry,
         prompt: Prompt = this.prompt,
         model: LLModel = this.model,
+        responseProcessor: ResponseProcessor? = this.responseProcessor,
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,
@@ -169,6 +178,7 @@ public interface AIAgentLLMContextAPI {
         tools: List<ToolDescriptor> = this.tools,
         prompt: Prompt = this.prompt,
         model: LLModel = this.model,
+        responseProcessor: ResponseProcessor? = this.responseProcessor,
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,

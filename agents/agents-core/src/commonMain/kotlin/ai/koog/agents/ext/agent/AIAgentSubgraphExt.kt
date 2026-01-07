@@ -26,8 +26,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import kotlinx.serialization.InternalSerializationApi
 import ai.koog.prompt.processor.ResponseProcessor
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
@@ -124,14 +124,14 @@ internal inline fun <reified Output> identityTool(): Tool<Output, Output> = obje
  */
 @PublishedApi
 @OptIn(InternalAgentToolsApi::class, InternalSerializationApi::class)
-internal fun <Output : Any> identityTool(outputClass: KClass<Output>): Tool<Output, Output> =
-    object : Tool<Output, Output>() {
-        override val argsSerializer: KSerializer<Output> = outputClass.serializer()
-        override val resultSerializer: KSerializer<Output> = outputClass.serializer()
-        override val name: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
-        override val description: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
-        override suspend fun execute(args: Output): Output = args
-    }
+internal fun <Output: Any> identityTool(outputClass: KClass<Output>): Tool<Output, Output> = object : Tool<Output, Output>(
+    argsSerializer = outputClass.serializer(),
+    resultSerializer = outputClass.serializer(),
+    name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
+    description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+) {
+    override suspend fun execute(args: Output): Output = args
+}
 
 //region Subgraph With Task
 

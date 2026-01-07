@@ -16,6 +16,7 @@ import ai.koog.agents.core.utils.submitToMainDispatcher
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 import java.util.function.Function
 
@@ -25,6 +26,7 @@ public actual open class AIAgentLLMContext @JvmOverloads actual constructor(
     toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     promptExecutor: PromptExecutor,
     environment: AIAgentEnvironment,
     config: AIAgentConfig,
@@ -35,6 +37,7 @@ public actual open class AIAgentLLMContext @JvmOverloads actual constructor(
     toolRegistry,
     prompt,
     model,
+    responseProcessor,
     promptExecutor,
     environment,
     config,
@@ -47,11 +50,13 @@ public actual open class AIAgentLLMContext @JvmOverloads actual constructor(
         toolRegistry: ToolRegistry,
         prompt: Prompt,
         model: LLModel,
+        responseProcessor: ResponseProcessor?,
         promptExecutor: PromptExecutor,
         environment: AIAgentEnvironment,
         config: AIAgentConfig,
         clock: Clock
-    ): AIAgentLLMContext = delegate.copy(tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock)
+    ): AIAgentLLMContext =
+        delegate.copy(tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
 
     /**
      * Executes a block of code within a write session for the AI Agent LLM context.
@@ -100,9 +105,11 @@ public actual open class AIAgentLLMContext @JvmOverloads actual constructor(
         tools: List<ToolDescriptor>,
         prompt: Prompt,
         model: LLModel,
+        responseProcessor: ResponseProcessor?,
         promptExecutor: PromptExecutor,
         environment: AIAgentEnvironment,
         config: AIAgentConfig,
         clock: Clock
-    ): AIAgentLLMContext = delegate.copy(tools, prompt, model, promptExecutor, environment, config, clock)
+    ): AIAgentLLMContext =
+        delegate.copy(tools, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
 }

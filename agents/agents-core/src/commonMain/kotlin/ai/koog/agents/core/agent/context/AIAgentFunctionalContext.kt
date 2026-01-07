@@ -20,6 +20,7 @@ import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
@@ -62,21 +63,23 @@ public expect class AIAgentFunctionalContext internal constructor(
     pipeline: AIAgentFunctionalPipeline,
     executionInfo: AgentExecutionInfo,
     parentContext: AIAgentContext? = null,
-    delegate: AIAgentFunctionalContextImpl = AIAgentFunctionalContextImpl(
-        environment = environment,
-        agentId = agentId,
-        pipeline = pipeline,
-        runId = runId,
-        agentInput = agentInput,
-        config = config,
-        llm = llm,
-        stateManager = stateManager,
-        storage = storage,
-        strategyName = strategyName,
-        parentContext = parentContext,
-        executionInfo = executionInfo,
-    )
+    delegate: AIAgentFunctionalContextImpl
 ) : AIAgentContext, AIAgentFunctionalContextAPI {
+    public constructor(
+        environment: AIAgentEnvironment,
+        agentId: String,
+        runId: String,
+        agentInput: Any?,
+        config: AIAgentConfig,
+        llm: AIAgentLLMContext,
+        stateManager: AIAgentStateManager,
+        storage: AIAgentStorage,
+        strategyName: String,
+        pipeline: AIAgentFunctionalPipeline,
+        executionInfo: AgentExecutionInfo,
+        parentContext: AIAgentContext? = null
+    )
+
     @PublishedApi
     internal val delegate: AIAgentFunctionalContextImpl
 
@@ -242,6 +245,7 @@ public expect class AIAgentFunctionalContext internal constructor(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
     ): CriticResult<Input>
 
     override suspend fun <Input, Output : Any> subtask(
@@ -253,6 +257,7 @@ public expect class AIAgentFunctionalContext internal constructor(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
     ): Output
 
     override suspend fun <Input, OutputTransformed> subtask(
@@ -264,6 +269,7 @@ public expect class AIAgentFunctionalContext internal constructor(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
     ): OutputTransformed
 
 }

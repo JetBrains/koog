@@ -6,13 +6,15 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 
 public actual class AIAgentConfig actual constructor(
-    public actual val prompt: Prompt,
-    public actual val model: LLModel,
+    public actual override val prompt: Prompt,
+    public actual override val model: LLModel,
     public actual val maxAgentIterations: Int,
-    public actual val missingToolsConversionStrategy: MissingToolsConversionStrategy
-) {
+    public actual val missingToolsConversionStrategy: MissingToolsConversionStrategy,
+    public actual val responseProcessor: ResponseProcessor?
+) : AIAgentConfigBase {
 
     init {
         require(maxAgentIterations > 0) { "maxAgentIterations must be greater than 0" }

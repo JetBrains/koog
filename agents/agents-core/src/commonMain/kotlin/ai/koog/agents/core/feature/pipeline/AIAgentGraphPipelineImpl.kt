@@ -4,13 +4,12 @@ package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.AgentExecutionInfo
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedHandler
 import ai.koog.agents.core.feature.handler.node.NodeExecutionEventHandler
@@ -52,31 +51,34 @@ internal class AIAgentGraphPipelineImpl(
     //region Trigger Node Handlers
 
     public override suspend fun onNodeExecutionStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType
     ) {
-        val eventContext = NodeExecutionStartingContext(executionInfo, node, context, input, inputType)
+        val eventContext = NodeExecutionStartingContext(eventId, executionInfo, node, context, input, inputType)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionStartingHandler.handle(eventContext) }
     }
 
     public override suspend fun onNodeExecutionCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType,
         output: Any?,
-        outputType: KType,
+        outputType: KType
     ) {
         val eventContext =
-            NodeExecutionCompletedContext(executionInfo, node, context, input, inputType, output, outputType)
+            NodeExecutionCompletedContext(eventId, executionInfo, node, context, input, inputType, output, outputType)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionCompletedHandler.handle(eventContext) }
     }
 
     public override suspend fun onNodeExecutionFailed(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
@@ -84,7 +86,7 @@ internal class AIAgentGraphPipelineImpl(
         inputType: KType,
         throwable: Throwable
     ) {
-        val eventContext = NodeExecutionFailedContext(executionInfo, node, context, input, inputType, throwable)
+        val eventContext = NodeExecutionFailedContext(eventId, executionInfo, node, context, input, inputType, throwable)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionFailedHandler.handle(eventContext) }
     }
 
@@ -93,27 +95,29 @@ internal class AIAgentGraphPipelineImpl(
     //region Interceptors
 
     public override suspend fun onSubgraphExecutionStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType
     ) {
-        val eventContext = SubgraphExecutionStartingContext(executionInfo, subgraph, context, input, inputType)
+        val eventContext = SubgraphExecutionStartingContext(eventId, executionInfo, subgraph, context, input, inputType)
         executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionStartingHandler.handle(eventContext) }
     }
 
     public override suspend fun onSubgraphExecutionCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType,
         output: Any?,
-        outputType: KType,
+        outputType: KType
     ) {
         val eventContext =
-            SubgraphExecutionCompletedContext(executionInfo, subgraph, context, input, output, inputType, outputType)
+            SubgraphExecutionCompletedContext(eventId, executionInfo, subgraph, context, input, output, inputType, outputType)
         executeSubgraphHandlers.values.forEach { handler ->
             handler.subgraphExecutionCompletedHandler.handle(
                 eventContext
@@ -122,6 +126,7 @@ internal class AIAgentGraphPipelineImpl(
     }
 
     public override suspend fun onSubgraphExecutionFailed(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
@@ -129,7 +134,7 @@ internal class AIAgentGraphPipelineImpl(
         inputType: KType,
         throwable: Throwable
     ) {
-        val eventContext = SubgraphExecutionFailedContext(executionInfo, subgraph, context, input, inputType, throwable)
+        val eventContext = SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, throwable)
         executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionFailedHandler.handle(eventContext) }
     }
 

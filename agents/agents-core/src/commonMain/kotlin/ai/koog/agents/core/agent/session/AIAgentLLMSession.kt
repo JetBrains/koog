@@ -71,7 +71,7 @@ public interface AIAgentLLMSession : AutoCloseable {
      * Represents the active response processor within the session.
      * The processor defines the post-processing of messages returned from the LLM.
      */
-    public val responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
+    public val responseProcessor: ResponseProcessor?
 
     /**
      * A flag indicating whether the session is currently active.

@@ -18,6 +18,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -36,6 +37,7 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
     toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
     clock: Clock,
     @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl
@@ -132,6 +134,22 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
         executorService: ExecutorService? = null
     ): Message.Response = config.runOnStrategyDispatcher(executorService) {
         requestLLMOnlyCallingTools()
+    }
+
+    /**
+     * Requests a response from the Language Model (LLM) enforcing tool usage (`ToolChoice.Required`),
+     * validates the session, and processes all returned messages (e.g. thinking + tool call).
+     *
+     * Crucially, this method appends **all** received messages to the prompt history to preserve context.
+     *
+     * @return A list of responses received from the Language Model (LLM).
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun requestLLMMultipleOnlyCallingTools(
+        executorService: ExecutorService? = null
+    ): List<Message.Response> = config.runOnStrategyDispatcher(executorService) {
+        requestLLMMultipleOnlyCallingTools()
     }
 
     /**

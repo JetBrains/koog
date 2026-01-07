@@ -54,23 +54,19 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     public lateinit var metadata: SubgraphMetadata
 
     @OptIn(InternalAgentsApi::class)
-    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
-        context.with(partName = id) { executionInfo, eventId ->
-            runCatchingCancellable {
-                restoreStateIfNeeded(context)
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
+        restoreStateIfNeeded(context)
 
-                var result: TOutput? = super.execute(context = context, input = input)
+        var result: TOutput? = super.execute(context = context, input = input)
 
-                while (result == null && context.getAgentContextData() != null) {
-                    restoreStateIfNeeded(context)
-                    result = super.execute(context = context, input = input)
-                }
+        while (result == null && context.getAgentContextData() != null) {
+            restoreStateIfNeeded(context)
+            result = super.execute(context = context, input = input)
+        }
 
-                result
-            }
-        }.onFailure {
-            context.environment.reportProblem(it)
-        }.getOrThrow()
+        return result
+    }
+
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun restoreStateIfNeeded(

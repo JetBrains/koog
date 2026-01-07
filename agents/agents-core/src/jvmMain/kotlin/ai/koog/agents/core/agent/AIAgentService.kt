@@ -11,6 +11,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 import java.util.concurrent.ExecutorService
 
@@ -251,6 +252,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         public actual operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
+            responseProcessor: ResponseProcessor?,
             strategy: AIAgentGraphStrategy<String, String>,
             toolRegistry: ToolRegistry,
             systemPrompt: String?,
@@ -261,6 +263,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         ): GraphAIAgentService<String, String> = AIAgentServiceHelper.invoke(
             promptExecutor,
             llmModel,
+            responseProcessor,
             strategy,
             toolRegistry,
             systemPrompt,

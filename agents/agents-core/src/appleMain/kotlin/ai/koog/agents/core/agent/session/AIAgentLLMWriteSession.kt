@@ -11,6 +11,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlin.reflect.KClass
@@ -23,6 +24,7 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
     toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
     clock: Clock,
     @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl

@@ -37,7 +37,8 @@ public class ContextualAgentEnvironment(
             toolCallId = toolCall.id,
             toolName = toolCall.tool,
             toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description,
-            toolArgs = toolCall.contentJson
+            toolArgs = toolCall.contentJson,
+            context = context
         )
 
         val toolResult = environment.executeTool(toolCall)
@@ -79,7 +80,8 @@ public class ContextualAgentEnvironment(
                     toolName = toolResult.tool,
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
-                    toolResult = toolResult.result
+                    toolResult = toolResult.result,
+                    context = context
                 )
             }
 
@@ -93,7 +95,8 @@ public class ContextualAgentEnvironment(
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
                     message = toolResult.content,
-                    error = toolResultKind.error
+                    error = toolResultKind.error,
+                    context = context
                 )
             }
 
@@ -107,7 +110,8 @@ public class ContextualAgentEnvironment(
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
                     message = toolResult.content,
-                    error = toolResultKind.error
+                    error = toolResultKind.error,
+                    context = context
                 )
             }
         }

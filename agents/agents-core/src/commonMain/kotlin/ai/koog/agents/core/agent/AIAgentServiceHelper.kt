@@ -11,6 +11,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlin.reflect.typeOf
 
 @PublishedApi
@@ -92,6 +93,7 @@ internal object AIAgentServiceHelper {
     internal operator fun invoke(
         promptExecutor: PromptExecutor,
         llmModel: LLModel,
+        responseProcessor: ResponseProcessor? = null,
         strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         systemPrompt: String? = null,
@@ -114,6 +116,7 @@ internal object AIAgentServiceHelper {
             },
             model = llmModel,
             maxAgentIterations = maxIterations,
+            responseProcessor = responseProcessor
         ),
         toolRegistry = toolRegistry,
         installFeatures = installFeatures

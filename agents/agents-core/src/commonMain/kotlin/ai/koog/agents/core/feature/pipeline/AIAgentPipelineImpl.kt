@@ -7,10 +7,9 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.AgentExecutionInfo
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -58,10 +57,10 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallResultHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationErrorHandler
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
+import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolException
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
@@ -191,54 +190,54 @@ public class AIAgentPipelineImpl(
 
     @OptIn(InternalAgentsApi::class)
     public override suspend fun <TInput, TOutput> onAgentStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         agent: AIAgent<*, *>,
         context: AIAgentContext
     ) {
-        val eventContext = AgentStartingContext(executionInfo, agent, runId, context)
+        val eventContext = AgentStartingContext(eventId, executionInfo, agent, runId, context)
         agentEventHandlers.values.forEach { handler ->
             handler.handleAgentStarting(eventContext)
         }
     }
 
     public override suspend fun onAgentCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String,
         runId: String,
         result: Any?,
         context: AIAgentContext
     ) {
-        val eventContext = AgentCompletedContext(executionInfo, agentId, runId, result, context)
+        val eventContext = AgentCompletedContext(eventId, executionInfo, agentId, runId, result, context)
         agentEventHandlers.values.forEach { handler -> handler.agentCompletedHandler.handle(eventContext) }
     }
 
     public override suspend fun onAgentExecutionFailed(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String,
         runId: String,
-        exception: Throwable?,
+        throwable: Throwable,
         context: AIAgentContext
     ) {
-        val eventContext = AgentExecutionFailedContext(executionInfo, agentId, runId, exception, context)
+        val eventContext = AgentExecutionFailedContext(eventId, executionInfo, agentId, runId, throwable, context)
         agentEventHandlers.values.forEach { handler -> handler.agentExecutionFailedHandler.handle(eventContext) }
     }
 
-    public override suspend fun onAgentClosing(
-        executionInfo: AgentExecutionInfo,
-        agentId: String
-    ) {
-        val eventContext = AgentClosingContext(executionInfo, agentId, agentConfig)
+    public override suspend fun onAgentClosing(eventId: String, executionInfo: AgentExecutionInfo, agentId: String) {
+        val eventContext = AgentClosingContext(eventId, executionInfo, agentId, agentConfig)
         agentEventHandlers.values.forEach { handler -> handler.agentClosingHandler.handle(eventContext) }
     }
 
     public override suspend fun onAgentEnvironmentTransforming(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
-        strategy: AIAgentStrategy<*, *, AIAgentGraphContextBase>,
         agent: GraphAIAgent<*, *>,
-        baseEnvironment: AIAgentEnvironment,
+        baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
-        val eventContext = AgentEnvironmentTransformingContext(executionInfo, strategy, agent, agentConfig)
+        val eventContext = AgentEnvironmentTransformingContext(eventId, executionInfo, agent, agentConfig)
         return agentEventHandlers.values.fold(baseEnvironment) { environment, handler ->
             handler.transformEnvironment(eventContext, environment)
         }
@@ -250,24 +249,26 @@ public class AIAgentPipelineImpl(
 
     @OptIn(InternalAgentsApi::class)
     public override suspend fun onStrategyStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         strategy: AIAgentStrategy<*, *, *>,
         context: AIAgentContext
     ) {
-        val eventContext = StrategyStartingContext(executionInfo, strategy, context)
+        val eventContext = StrategyStartingContext(eventId, executionInfo, strategy, context)
         strategyEventHandlers.values.forEach { handler -> handler.handleStrategyStarting(eventContext) }
     }
 
     @OptIn(InternalAgentsApi::class)
     public override suspend fun onStrategyCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         strategy: AIAgentStrategy<*, *, *>,
         context: AIAgentContext,
         result: Any?,
-        resultType: KType,
+        resultType: KType
     ) {
         val eventContext =
-            StrategyCompletedContext(executionInfo, strategy, context, result, resultType)
+            StrategyCompletedContext(eventId, executionInfo, strategy, context, result, resultType)
         strategyEventHandlers.values.forEach { handler -> handler.handleStrategyCompleted(eventContext) }
     }
 
@@ -276,6 +277,7 @@ public class AIAgentPipelineImpl(
     //region Trigger LLM Call Handlers
 
     public override suspend fun onLLMCallStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         prompt: Prompt,
@@ -283,11 +285,12 @@ public class AIAgentPipelineImpl(
         tools: List<ToolDescriptor>,
         context: AIAgentContext
     ) {
-        val eventContext = LLMCallStartingContext(executionInfo, runId, prompt, model, tools, context)
+        val eventContext = LLMCallStartingContext(eventId, executionInfo, runId, prompt, model, tools, context)
         llmCallEventHandlers.values.forEach { handler -> handler.llmCallStartingHandler.handle(eventContext) }
     }
 
     public override suspend fun onLLMCallCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         prompt: Prompt,
@@ -298,7 +301,17 @@ public class AIAgentPipelineImpl(
         context: AIAgentContext
     ) {
         val eventContext =
-            LLMCallCompletedContext(executionInfo, runId, prompt, model, tools, responses, moderationResponse, context)
+            LLMCallCompletedContext(
+                eventId,
+                executionInfo,
+                runId,
+                prompt,
+                model,
+                tools,
+                responses,
+                moderationResponse,
+                context
+            )
         llmCallEventHandlers.values.forEach { handler -> handler.llmCallCompletedHandler.handle(eventContext) }
     }
 
@@ -307,35 +320,48 @@ public class AIAgentPipelineImpl(
     //region Trigger Tool Call Handlers
 
     public override suspend fun onToolCallStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         toolCallId: String?,
         toolName: String,
-        toolArgs: JsonObject,
-        context: AIAgentContext
-    ) {
-        val eventContext = ToolCallStartingContext(executionInfo, runId, toolCallId, toolName, toolArgs, context)
-        toolCallEventHandlers.values.forEach { handler -> handler.toolCallHandler.handle(eventContext) }
-    }
-
-    public override suspend fun onToolValidationFailed(
-        executionInfo: AgentExecutionInfo,
-        runId: String,
-        toolCallId: String?,
-        toolName: String,
-        toolArgs: JsonObject,
         toolDescription: String?,
-        message: String,
-        error: ToolException,
+        toolArgs: JsonObject,
         context: AIAgentContext
     ) {
-        val eventContext = ToolValidationFailedContext(
+        val eventContext = ToolCallStartingContext(
+            eventId,
             executionInfo,
             runId,
             toolCallId,
             toolName,
-            toolArgs,
             toolDescription,
+            toolArgs,
+            context
+        )
+        toolCallEventHandlers.values.forEach { handler -> handler.toolCallHandler.handle(eventContext) }
+    }
+
+    public override suspend fun onToolValidationFailed(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        toolCallId: String?,
+        toolName: String,
+        toolDescription: String?,
+        toolArgs: JsonObject,
+        message: String,
+        error: AIAgentError,
+        context: AIAgentContext
+    ) {
+        val eventContext = ToolValidationFailedContext(
+            eventId,
+            executionInfo,
+            runId,
+            toolCallId,
+            toolName,
+            toolDescription,
+            toolArgs,
             message,
             error,
             context
@@ -344,47 +370,51 @@ public class AIAgentPipelineImpl(
     }
 
     public override suspend fun onToolCallFailed(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         toolCallId: String?,
         toolName: String,
-        toolArgs: JsonObject,
         toolDescription: String?,
+        toolArgs: JsonObject,
         message: String,
-        exception: Throwable?,
+        error: AIAgentError?,
         context: AIAgentContext
     ) {
         val eventContext = ToolCallFailedContext(
+            eventId,
             executionInfo,
             runId,
             toolCallId,
             toolName,
-            toolArgs,
             toolDescription,
+            toolArgs,
             message,
-            exception,
+            error,
             context
         )
         toolCallEventHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(eventContext) }
     }
 
     public override suspend fun onToolCallCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         toolCallId: String?,
         toolName: String,
-        toolArgs: JsonObject,
         toolDescription: String?,
+        toolArgs: JsonObject,
         toolResult: JsonElement?,
         context: AIAgentContext
     ) {
         val eventContext = ToolCallCompletedContext(
+            eventId,
             executionInfo,
             runId,
             toolCallId,
             toolName,
-            toolArgs,
             toolDescription,
+            toolArgs,
             toolResult,
             context
         )
@@ -396,6 +426,7 @@ public class AIAgentPipelineImpl(
     //region Trigger LLM Streaming
 
     public override suspend fun onLLMStreamingStarting(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         prompt: Prompt,
@@ -404,11 +435,12 @@ public class AIAgentPipelineImpl(
         context: AIAgentContext
     ) {
         val eventContext =
-            LLMStreamingStartingContext(executionInfo, runId, prompt, model, tools, context)
+            LLMStreamingStartingContext(eventId, executionInfo, runId, prompt, model, tools, context)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingStartingHandler.handle(eventContext) }
     }
 
     public override suspend fun onLLMStreamingFrameReceived(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         prompt: Prompt,
@@ -416,7 +448,8 @@ public class AIAgentPipelineImpl(
         streamFrame: StreamFrame,
         context: AIAgentContext
     ) {
-        val eventContext = LLMStreamingFrameReceivedContext(executionInfo, runId, prompt, model, streamFrame, context)
+        val eventContext =
+            LLMStreamingFrameReceivedContext(eventId, executionInfo, runId, prompt, model, streamFrame, context)
         llmStreamingEventHandlers.values.forEach { handler ->
             handler.llmStreamingFrameReceivedHandler.handle(
                 eventContext
@@ -425,19 +458,21 @@ public class AIAgentPipelineImpl(
     }
 
     public override suspend fun onLLMStreamingFailed(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         prompt: Prompt,
         model: LLModel,
-        exception: Throwable,
+        throwable: Throwable,
         context: AIAgentContext
     ) {
         val eventContext =
-            LLMStreamingFailedContext(executionInfo, runId, prompt, model, exception, context)
+            LLMStreamingFailedContext(eventId, executionInfo, runId, prompt, model, throwable, context)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingFailedHandler.handle(eventContext) }
     }
 
     public override suspend fun onLLMStreamingCompleted(
+        eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
         prompt: Prompt,
@@ -446,7 +481,7 @@ public class AIAgentPipelineImpl(
         context: AIAgentContext
     ) {
         val eventContext =
-            LLMStreamingCompletedContext(executionInfo, runId, prompt, model, tools, context)
+            LLMStreamingCompletedContext(eventId, executionInfo, runId, prompt, model, tools, context)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingCompletedHandler.handle(eventContext) }
     }
 

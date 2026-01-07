@@ -45,6 +45,7 @@ public expect class AIAgentLLMReadSession internal constructor(
     override val prompt: Prompt
     override val tools: List<ToolDescriptor>
     override val model: LLModel
+    override val responseProcessor: ResponseProcessor?
 
     @InternalAgentsApi
     override var isActive: Boolean
@@ -79,6 +80,7 @@ public expect class AIAgentLLMReadSession internal constructor(
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response>
     override suspend fun requestLLMWithoutTools(): Message.Response
     override suspend fun requestLLMOnlyCallingTools(): Message.Response
+    override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response>
     override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response
     override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response
     override suspend fun requestLLM(): Message.Response

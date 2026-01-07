@@ -14,6 +14,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -29,6 +30,7 @@ internal class AIAgentLLMSessionImpl(
     tools: List<ToolDescriptor>,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     public override val config: AIAgentConfig,
 ) : AIAgentLLMSession {
     public override val prompt: Prompt by ActiveProperty(prompt) { isActive }
@@ -36,6 +38,8 @@ internal class AIAgentLLMSessionImpl(
     public override val tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
 
     public override val model: LLModel by ActiveProperty(model) { isActive }
+
+    public override val responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
 
     public override var isActive: Boolean = true
 
@@ -94,6 +98,14 @@ internal class AIAgentLLMSessionImpl(
             toolChoice = LLMParams.ToolChoice.Required
         }
         return executeSingle(promptWithOnlyCallingTools, tools)
+    }
+
+    override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
+        validateSession()
+        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
+            toolChoice = LLMParams.ToolChoice.Required
+        }
+        return executeMultiple(promptWithOnlyCallingTools, tools)
     }
 
     public override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {

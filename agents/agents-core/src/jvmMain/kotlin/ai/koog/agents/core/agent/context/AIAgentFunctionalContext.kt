@@ -8,6 +8,7 @@ import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -51,6 +52,47 @@ public actual class AIAgentFunctionalContext internal actual constructor(
     parentContext: AIAgentContext?,
     @PublishedApi internal actual val delegate: AIAgentFunctionalContextImpl
 ) : AIAgentContext, AIAgentFunctionalContextAPI by delegate {
+    public actual constructor(
+        environment: AIAgentEnvironment,
+        agentId: String,
+        runId: String,
+        agentInput: Any?,
+        config: AIAgentConfig,
+        llm: AIAgentLLMContext,
+        stateManager: AIAgentStateManager,
+        storage: AIAgentStorage,
+        strategyName: String,
+        pipeline: AIAgentFunctionalPipeline,
+        executionInfo: AgentExecutionInfo,
+        parentContext: AIAgentContext?
+    ) : this(
+        environment = environment,
+        agentId = agentId,
+        runId = runId,
+        agentInput = agentInput,
+        config = config,
+        llm = llm,
+        stateManager = stateManager,
+        storage = storage,
+        strategyName = strategyName,
+        pipeline = pipeline,
+        executionInfo = executionInfo,
+        delegate = AIAgentFunctionalContextImpl(
+            environment = environment,
+            agentId = agentId,
+            pipeline = pipeline,
+            runId = runId,
+            agentInput = agentInput,
+            config = config,
+            llm = llm,
+            stateManager = stateManager,
+            storage = storage,
+            strategyName = strategyName,
+            parentContext = parentContext,
+            executionInfo = executionInfo,
+        )
+    )
+
     public actual suspend inline fun <reified T> requestLLMStructured(
         message: String,
         examples: List<T>,
@@ -87,6 +129,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         storage: AIAgentStorage,
         strategyName: String,
         pipeline: AIAgentFunctionalPipeline,
+        executionInfo: AgentExecutionInfo,
         parentRootContext: AIAgentContext?
     ): AIAgentFunctionalContext = AIAgentFunctionalContext(
         environment = environment,
@@ -488,9 +531,4 @@ public actual class AIAgentFunctionalContext internal actual constructor(
 
     @JavaAPI
     public fun subtask(taskDescription: String): SubtaskBuilder = SubtaskBuilder(this, taskDescription)
-}
-
-
-private suspend fun f(ctx: AIAgentFunctionalContext) {
-    ctx.requestLLM("hello")
 }
