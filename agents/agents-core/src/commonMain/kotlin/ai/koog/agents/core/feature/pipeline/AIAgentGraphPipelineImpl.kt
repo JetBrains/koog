@@ -31,8 +31,8 @@ import kotlin.reflect.KType
 internal class AIAgentGraphPipelineImpl(
     agentConfig: AIAgentConfig,
     clock: Clock = Clock.System,
-    private val basePipelineDelegate: AIAgentPipelineImpl
-) : AIAgentGraphPipelineAPI {
+    basePipelineDelegate: AIAgentPipelineImpl
+) : AIAgentGraphPipelineAPI, AIAgentPipelineAPI by basePipelineDelegate {
     /**
      * Map of node execution handlers registered for features.
      */
@@ -86,7 +86,8 @@ internal class AIAgentGraphPipelineImpl(
         inputType: KType,
         throwable: Throwable
     ) {
-        val eventContext = NodeExecutionFailedContext(eventId, executionInfo, node, context, input, inputType, throwable)
+        val eventContext =
+            NodeExecutionFailedContext(eventId, executionInfo, node, context, input, inputType, throwable)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionFailedHandler.handle(eventContext) }
     }
 
@@ -117,7 +118,16 @@ internal class AIAgentGraphPipelineImpl(
         outputType: KType
     ) {
         val eventContext =
-            SubgraphExecutionCompletedContext(eventId, executionInfo, subgraph, context, input, output, inputType, outputType)
+            SubgraphExecutionCompletedContext(
+                eventId,
+                executionInfo,
+                subgraph,
+                context,
+                input,
+                output,
+                inputType,
+                outputType
+            )
         executeSubgraphHandlers.values.forEach { handler ->
             handler.subgraphExecutionCompletedHandler.handle(
                 eventContext
@@ -134,7 +144,8 @@ internal class AIAgentGraphPipelineImpl(
         inputType: KType,
         throwable: Throwable
     ) {
-        val eventContext = SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, throwable)
+        val eventContext =
+            SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, throwable)
         executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionFailedHandler.handle(eventContext) }
     }
 
@@ -145,7 +156,7 @@ internal class AIAgentGraphPipelineImpl(
         val handler = executeNodeHandlers.getOrPut(feature.key) { NodeExecutionEventHandler() }
 
         handler.nodeExecutionStartingHandler = NodeExecutionStartingHandler(
-            function = basePipelineDelegate.createConditionalHandler(feature, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
@@ -156,7 +167,7 @@ internal class AIAgentGraphPipelineImpl(
         val handler = executeNodeHandlers.getOrPut(feature.key) { NodeExecutionEventHandler() }
 
         handler.nodeExecutionCompletedHandler = NodeExecutionCompletedHandler(
-            function = basePipelineDelegate.createConditionalHandler(feature, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
@@ -167,7 +178,7 @@ internal class AIAgentGraphPipelineImpl(
         val handler = executeNodeHandlers.getOrPut(feature.key) { NodeExecutionEventHandler() }
 
         handler.nodeExecutionFailedHandler = NodeExecutionFailedHandler(
-            function = basePipelineDelegate.createConditionalHandler(feature, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
@@ -178,7 +189,7 @@ internal class AIAgentGraphPipelineImpl(
         val handler = executeSubgraphHandlers.getOrPut(feature.key) { SubgraphExecutionEventHandler() }
 
         handler.subgraphExecutionStartingHandler = SubgraphExecutionStartingHandler(
-            function = basePipelineDelegate.createConditionalHandler(feature, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
@@ -189,7 +200,7 @@ internal class AIAgentGraphPipelineImpl(
         val handler = executeSubgraphHandlers.getOrPut(feature.key) { SubgraphExecutionEventHandler() }
 
         handler.subgraphExecutionCompletedHandler = SubgraphExecutionCompletedHandler(
-            function = basePipelineDelegate.createConditionalHandler(feature, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
@@ -200,7 +211,7 @@ internal class AIAgentGraphPipelineImpl(
         val handler = executeSubgraphHandlers.getOrPut(feature.key) { SubgraphExecutionEventHandler() }
 
         handler.subgraphExecutionFailedHandler = SubgraphExecutionFailedHandler(
-            function = basePipelineDelegate.createConditionalHandler(feature, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
