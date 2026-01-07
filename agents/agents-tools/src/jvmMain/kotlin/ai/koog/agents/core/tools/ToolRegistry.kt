@@ -3,7 +3,6 @@ package ai.koog.agents.core.tools
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.core.tools.reflect.java.asJavaTools
 import ai.koog.agents.core.tools.reflect.java.asTool
 import ai.koog.agents.core.tools.reflect.tool
