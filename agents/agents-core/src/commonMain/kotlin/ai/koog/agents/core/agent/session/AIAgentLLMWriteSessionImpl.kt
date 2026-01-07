@@ -64,9 +64,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     }
 
     public override fun appendPrompt(body: PromptBuilder.() -> Unit) {
-        println("  =========   appendPrompt  =========   (write session)")
         prompt = prompt(prompt, clock, body)
-        println("  =========   (new) appendPrompt's prompt = ${prompt.messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
     }
 
     @Deprecated("Use `appendPrompt` instead", ReplaceWith("appendPrompt(body)"))
@@ -117,19 +115,13 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     }
 
     override suspend fun requestLLM(): Message.Response {
-        println("  =========   requestLLM  =========   (write session)")
-        println("  =========   requestLLM's prompt = ${prompt.messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
         return super<AIAgentLLMSession>.requestLLM().also { response ->
-            println("  =========   requestLLM's response = ${response}  =========   (write session)")
             appendPrompt { message(response) }
         }
     }
 
     override suspend fun requestLLMMultiple(): List<Message.Response> {
-        println("  =========   requestLLMMultiple  =========   (write session)")
-        println("  =========   requestLLMMultiple's prompt = ${prompt.messages.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
         return super<AIAgentLLMSession>.requestLLMMultiple().also { responses ->
-            println("  =========   requestLLMMultiple's response = ${responses.joinToString(", ", "[", "]") { it.content.replace("\n", " * ")  }}  =========   (write session)")
             appendPrompt {
                 responses.forEach { message(it) }
             }

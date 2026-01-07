@@ -63,17 +63,7 @@ public open class AIAgentLLMSession(
 
     @InternalAgentsApi
     public open override suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
-        println("  =========   executeMultiple  =========   (read session delegate impl)")
         val preparedPrompt = preparePrompt(prompt, tools)
-        println(
-            "  =========   executeMultiple's preparedPrompt = ${
-                preparedPrompt.messages.joinToString(
-                    ", ",
-                    "[",
-                    "]"
-                ) { it.content.replace("\n", " * ") }
-            }  =========   (read session delegate impl)"
-        )
         return executor.execute(preparedPrompt, model, tools)
     }
 
@@ -134,7 +124,6 @@ public open class AIAgentLLMSession(
     }
 
     public open override suspend fun requestLLM(): Message.Response {
-        println("  =========   requestLLM  =========   (read session delegate impl)")
         validateSession()
         return executeMultiple(prompt, tools).first { it !is Message.Reasoning }
     }
