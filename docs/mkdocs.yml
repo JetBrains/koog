@@ -95,7 +95,9 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
@@ -104,8 +106,9 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - admonition
   - attr_list
+  - abbr
+  - footnotes
   - md_in_html
-  - admonition
   - pymdownx.tabbed:
       alternate_style: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify
@@ -213,6 +216,8 @@ plugins:
 
 
 theme:
+  icon:
+    repo: fontawesome/brands/github
   name: material
   custom_dir: overrides
   favicon: img/favicon.ico
@@ -221,6 +226,7 @@ theme:
     - content.code.copy
     - content.action.edit
     - content.tabs.link
+    - content.footnote.tooltips
     - navigation.expand
     - navigation.tabs
     - navigation.tabs.sticky
@@ -258,3 +264,6 @@ extra:
     - icon: fontawesome/brands/slack
       link: https://docs.koog.ai/koog-slack-channel/
       name: Koog on Slack
+
+watch:
+  - includes
