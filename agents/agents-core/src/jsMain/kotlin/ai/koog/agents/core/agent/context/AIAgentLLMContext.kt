@@ -25,14 +25,4 @@ public actual open class AIAgentLLMContext actual constructor(
     config: AIAgentConfig,
     clock: Clock,
     internal actual val delegate: AIAgentLLMContextImpl
-) : AIAgentLLMContextAPI by AIAgentLLMContextImpl(
-    tools,
-    toolRegistry,
-    prompt,
-    model,
-    responseProcessor,
-    promptExecutor,
-    environment,
-    config,
-    clock
-)
+) : AIAgentLLMContextAPI by delegate

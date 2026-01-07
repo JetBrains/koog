@@ -32,17 +32,7 @@ public actual open class AIAgentLLMContext @JvmOverloads actual constructor(
     config: AIAgentConfig,
     clock: Clock,
     internal actual val delegate: AIAgentLLMContextImpl
-) : AIAgentLLMContextAPI by AIAgentLLMContextImpl(
-    tools,
-    toolRegistry,
-    prompt,
-    model,
-    responseProcessor,
-    promptExecutor,
-    environment,
-    config,
-    clock
-) {
+) : AIAgentLLMContextAPI by delegate {
 
     @JvmOverloads
     public actual final override suspend fun copy(
