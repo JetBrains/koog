@@ -126,7 +126,6 @@ while the LLM performs the actual content generation within each action.
 <!--- INCLUDE
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
-import ai.koog.agents.core.dsl.extension.requestLLM
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.agents.planner.goap.goap

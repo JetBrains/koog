@@ -6,7 +6,9 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
+import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.agents.core.tools.reflect.java.asJavaTools
+import kotlin.reflect.KFunction
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
 public actual open class RollbackToolRegistryBuilder actual constructor(
@@ -50,6 +52,19 @@ public actual open class RollbackToolRegistryBuilder actual constructor(
         tool: Tool<TArgs, *>,
         rollbackTool: Tool<TArgs, *>
     ): RollbackToolRegistryBuilder = apply { delegate.registerRollback(tool, rollbackTool) }
+
+    /**
+     * Registers a relationship between a tool and its corresponding rollback tool using the specified functions.
+     *
+     * @param toolFunction The function representing the primary tool to register.
+     * @param rollbackToolFunction The function representing the rollback counterpart to the primary tool.
+     */
+    public fun registerRollback(
+        toolFunction: KFunction<*>,
+        rollbackToolFunction: KFunction<*>
+    ) {
+        this.registerRollback(toolFunction.asTool(), rollbackToolFunction.asTool())
+    }
 
     actual override fun build(): RollbackToolRegistry = delegate.build()
 }

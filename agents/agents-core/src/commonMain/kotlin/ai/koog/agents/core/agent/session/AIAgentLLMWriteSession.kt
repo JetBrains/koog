@@ -152,6 +152,22 @@ public expect class AIAgentLLMWriteSession internal constructor(
         fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>>
 
+    /**
+     * Requests a structured response from the language model session, with optional examples for guidance
+     * and a parser to fix structure-related issues in the response.
+     *
+     * @param T The type of the structured data expected in the response.
+     * @param examples A list of examples to guide the language model in producing the desired structured response.
+     *                 Defaults to an empty list if no examples are provided.
+     * @param fixingParser An optional parser to validate and correct the structure of the language model's response.
+     *                     Defaults to null if no fixing parser is provided.
+     * @return A [Result] containing a [StructuredResponse] of type [T], which includes the structured data or error details.
+     */
+    public suspend inline fun <reified T> requestLLMStructured(
+        examples: List<T> = emptyList(),
+        fixingParser: StructureFixingParser? = null
+    ): Result<StructuredResponse<T>>
+
     override suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>

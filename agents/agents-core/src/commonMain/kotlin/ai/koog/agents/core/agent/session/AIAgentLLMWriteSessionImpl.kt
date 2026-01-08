@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
 @PublishedApi
@@ -140,6 +141,16 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
             }
         }
     }
+
+    @PublishedApi
+    internal suspend inline fun <reified T> requestLLMStructuredImpl(
+        examples: List<T> = emptyList(),
+        fixingParser: StructureFixingParser? = null
+    ): Result<StructuredResponse<T>> = requestLLMStructured(
+        serializer = serializer<T>(),
+        examples = examples,
+        fixingParser = fixingParser,
+    )
 
     override suspend fun <T> requestLLMStructured(
         serializer: KSerializer<T>,

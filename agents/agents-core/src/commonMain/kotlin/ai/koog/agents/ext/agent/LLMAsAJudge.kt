@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.agent
 
-import ai.koog.agents.core.agent.session.requestLLMStructured
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase

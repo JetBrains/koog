@@ -2,7 +2,6 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.session.callTool
-import ai.koog.agents.core.agent.session.requestLLMStructured
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase

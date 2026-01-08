@@ -12,6 +12,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.prompt.structure.StructureFixingParser
+import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlin.reflect.KClass
@@ -54,4 +56,9 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int
     ): Flow<String> = with(delegate) { toParallelToolCallsRawImpl(toolClass, concurrency) }
+
+    public actual suspend inline fun <reified T> requestLLMStructured(
+        examples: List<T>,
+        fixingParser: StructureFixingParser?
+    ): Result<StructuredResponse<T>> = with(delegate) { requestLLMStructuredImpl(examples, fixingParser) }
 }

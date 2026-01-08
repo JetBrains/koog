@@ -346,4 +346,9 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int
     ): Flow<String> = with(delegate) { toParallelToolCallsRawImpl(toolClass, concurrency) }
+
+    public actual suspend inline fun <reified T> requestLLMStructured(
+        examples: List<T>,
+        fixingParser: StructureFixingParser?
+    ): Result<StructuredResponse<T>> = with(delegate) { requestLLMStructuredImpl(examples, fixingParser) }
 }
