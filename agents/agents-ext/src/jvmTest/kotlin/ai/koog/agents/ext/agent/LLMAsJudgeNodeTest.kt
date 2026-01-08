@@ -63,6 +63,8 @@ class LLMAsJudgeNodeTest {
 
         val initialModel = OllamaModels.Meta.LLAMA_3_2
 
+        val agentConfig = AIAgentConfig(prompt = prompt("id") {}, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10)
+
         val mockLLM = AIAgentLLMContext(
             tools = emptyList(),
             toolRegistry = ToolRegistry {},
@@ -71,7 +73,7 @@ class LLMAsJudgeNodeTest {
             responseProcessor = null,
             promptExecutor = mockPromptExecutor,
             environment = mockEnv,
-            config = AIAgentConfig(prompt = prompt("id") {}, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10),
+            config = agentConfig,
             clock = testClock
         )
 
