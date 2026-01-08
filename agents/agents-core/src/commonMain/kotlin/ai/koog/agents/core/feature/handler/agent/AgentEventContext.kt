@@ -100,7 +100,7 @@ public class AgentEnvironmentTransformingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     public val agent: GraphAIAgent<*, *>,
-    public val agentConfig: AIAgentConfig
+    public val config: AIAgentConfig
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentEnvironmentTransforming
 }

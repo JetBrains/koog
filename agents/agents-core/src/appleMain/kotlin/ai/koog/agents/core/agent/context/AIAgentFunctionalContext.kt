@@ -30,7 +30,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
     executionInfo: AgentExecutionInfo,
     parentContext: AIAgentContext?,
     @PublishedApi internal actual val delegate: AIAgentFunctionalContextImpl
-) : AIAgentContext, AIAgentFunctionalContextAPI by delegate {
+) : AIAgentFunctionalContextAPI by delegate {
 
     public actual constructor(
         environment: AIAgentEnvironment,
@@ -77,7 +77,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         message: String,
         examples: List<T>,
         fixingParser: StructureFixingParser?
-    ): Result<StructuredResponse<T>> = delegate.requestLLMStructuredImpl(message, examples, fixingParser)
+    ): Result<StructuredResponse<T>> = delegate.requestLLMStructured(message, examples, fixingParser)
 
     public actual suspend inline fun <Input, reified Output> subtask(
         taskDescription: String,
@@ -87,7 +87,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
-    ): Output = delegate.subtaskImpl(
+    ): Output = delegate.subtask(
         taskDescription,
         input,
         tools,

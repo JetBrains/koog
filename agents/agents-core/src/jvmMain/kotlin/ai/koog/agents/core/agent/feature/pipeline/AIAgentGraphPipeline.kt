@@ -57,7 +57,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionStartingContext>
     ) {
         interceptNodeExecutionStarting(feature) {
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(it)
             }
         }
@@ -83,7 +83,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionCompletedContext>
     ) {
         interceptNodeExecutionCompleted(feature) {
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(it)
             }
         }
@@ -109,7 +109,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionFailedContext>
     ) {
         interceptNodeExecutionFailed(feature) {
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(it)
             }
         }
@@ -135,7 +135,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionStartingContext>
     ) {
         interceptSubgraphExecutionStarting(feature) {
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(it)
             }
         }
@@ -161,7 +161,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionCompletedContext>
     ) {
         interceptSubgraphExecutionCompleted(feature) {
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(it)
             }
         }
@@ -187,7 +187,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionFailedContext>
     ) {
         interceptSubgraphExecutionFailed(feature) {
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(it)
             }
         }

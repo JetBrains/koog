@@ -76,7 +76,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * and capabilities of the agent. It can be overridden to customize the
      * configuration as needed in subclasses.
      */
-    public override val agentConfig: AIAgentConfig
+    public override val config: AIAgentConfig
 
     /**
      * Retrieves a feature implementation from the current pipeline using the specified [feature], if it is registered.

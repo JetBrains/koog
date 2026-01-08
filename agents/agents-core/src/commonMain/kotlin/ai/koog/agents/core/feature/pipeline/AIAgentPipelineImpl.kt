@@ -78,7 +78,7 @@ import kotlin.reflect.safeCast
  * Default implementation of [AIAgentPipelineAPI]
  */
 public class AIAgentPipelineImpl(
-    override val agentConfig: AIAgentConfig,
+    override val config: AIAgentConfig,
     clock: Clock
 ) : AIAgentPipelineAPI {
 
@@ -228,7 +228,7 @@ public class AIAgentPipelineImpl(
     }
 
     public override suspend fun onAgentClosing(eventId: String, executionInfo: AgentExecutionInfo, agentId: String) {
-        val eventContext = AgentClosingContext(eventId, executionInfo, agentId, agentConfig)
+        val eventContext = AgentClosingContext(eventId, executionInfo, agentId, config)
         agentEventHandlers.values.forEach { handler -> handler.agentClosingHandler.handle(eventContext) }
     }
 
@@ -238,7 +238,7 @@ public class AIAgentPipelineImpl(
         agent: GraphAIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
-        val eventContext = AgentEnvironmentTransformingContext(eventId, executionInfo, agent, agentConfig)
+        val eventContext = AgentEnvironmentTransformingContext(eventId, executionInfo, agent, config)
         return agentEventHandlers.values.fold(baseEnvironment) { environment, handler ->
             handler.transformEnvironment(eventContext, environment)
         }

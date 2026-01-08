@@ -64,7 +64,7 @@ public expect class AIAgentFunctionalContext internal constructor(
     executionInfo: AgentExecutionInfo,
     parentContext: AIAgentContext? = null,
     delegate: AIAgentFunctionalContextImpl
-) : AIAgentContext, AIAgentFunctionalContextAPI {
+) : AIAgentFunctionalContextAPI {
     public constructor(
         environment: AIAgentEnvironment,
         agentId: String,

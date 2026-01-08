@@ -127,14 +127,14 @@ internal class AIAgentFunctionalContextImpl(
     }
 
     @PublishedApi
-    internal suspend inline fun <reified T> requestLLMStructuredImpl(
+    internal suspend inline fun <reified T> requestLLMStructured(
         message: String,
         examples: List<T> = emptyList(),
         fixingParser: StructureFixingParser? = null
-    ): Result<StructuredResponse<T>> = requestLLMStructuredImpl(message, serializer<T>(), examples, fixingParser)
+    ): Result<StructuredResponse<T>> = requestLLMStructured(message, serializer<T>(), examples, fixingParser)
 
     @PublishedApi
-    internal suspend fun <T> requestLLMStructuredImpl(
+    internal suspend fun <T> requestLLMStructured(
         message: String,
         serializer: KSerializer<T>,
         examples: List<T> = emptyList(),
@@ -418,7 +418,7 @@ internal class AIAgentFunctionalContextImpl(
 
     @OptIn(InternalAgentToolsApi::class)
     @PublishedApi
-    internal suspend inline fun <Input, reified Output : Any> subtaskImpl(
+    internal suspend inline fun <Input, reified Output : Any> subtask(
         taskDescription: String,
         input: Input,
         tools: List<Tool<*, *>>? = null,
@@ -437,8 +437,6 @@ internal class AIAgentFunctionalContextImpl(
             runMode = runMode,
             assistantResponseRepeatMax = assistantResponseRepeatMax,
         )
-
-//        return //subtask(input, tools, finishTool, llmModel, llmParams, runMode, assistantResponseRepeatMax, defineTask)
     }
 
     @PublishedApi

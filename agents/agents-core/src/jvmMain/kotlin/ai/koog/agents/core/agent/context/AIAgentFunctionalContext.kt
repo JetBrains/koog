@@ -51,7 +51,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
     executionInfo: AgentExecutionInfo,
     parentContext: AIAgentContext?,
     @PublishedApi internal actual val delegate: AIAgentFunctionalContextImpl
-) : AIAgentContext, AIAgentFunctionalContextAPI by delegate {
+) : AIAgentFunctionalContextAPI by delegate {
     public actual constructor(
         environment: AIAgentEnvironment,
         agentId: String,
@@ -97,7 +97,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         message: String,
         examples: List<T>,
         fixingParser: StructureFixingParser?
-    ): Result<StructuredResponse<T>> = delegate.requestLLMStructuredImpl(message, examples, fixingParser)
+    ): Result<StructuredResponse<T>> = delegate.requestLLMStructured(message, examples, fixingParser)
 
     public actual suspend inline fun <Input, reified Output> subtask(
         taskDescription: String,
@@ -107,7 +107,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
-    ): Output = delegate.subtaskImpl(
+    ): Output = delegate.subtask(
         taskDescription,
         input,
         tools,
@@ -303,7 +303,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         examples: List<T> = emptyList(),
         fixingParser: StructureFixingParser? = null
     ): Result<StructuredResponse<T>> =
-        delegate.requestLLMStructuredImpl(message, clazz.serializer(), examples, fixingParser)
+        delegate.requestLLMStructured(message, clazz.serializer(), examples, fixingParser)
 
     /**
      * Sends a request to the Language Learning Model (LLM) for streaming data.

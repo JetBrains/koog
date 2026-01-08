@@ -51,7 +51,7 @@ import kotlin.reflect.KType
 public interface AIAgentPipelineAPI {
     public val clock: Clock
 
-    public val agentConfig: AIAgentConfig
+    public val config: AIAgentConfig
 
     public fun <TFeature : Any> feature(
         featureClass: KClass<TFeature>,

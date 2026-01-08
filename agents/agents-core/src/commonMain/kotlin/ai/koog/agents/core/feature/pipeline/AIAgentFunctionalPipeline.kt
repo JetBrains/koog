@@ -19,8 +19,6 @@ public class AIAgentFunctionalPipeline(
     agentConfig: AIAgentConfig,
     clock: Clock = Clock.System
 ) : AIAgentPipeline(agentConfig, clock) {
-    private val registeredFeatures: MutableMap<AIAgentStorageKey<*>, RegisteredFeature> = mutableMapOf()
-
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *

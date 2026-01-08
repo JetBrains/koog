@@ -76,7 +76,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentStartingContext>
     ) {
         interceptAgentStarting(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -99,7 +99,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentCompletedContext>
     ) {
         interceptAgentCompleted(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -122,7 +122,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentExecutionFailedContext>
     ) {
         interceptAgentExecutionFailed(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -145,7 +145,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentClosingContext>
     ) {
         interceptAgentClosing(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -168,7 +168,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<StrategyStartingContext>
     ) {
         interceptStrategyStarting(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -191,7 +191,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<StrategyCompletedContext>
     ) {
         interceptStrategyCompleted(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -214,7 +214,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallStartingContext>
     ) {
         interceptLLMCallStarting(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -237,7 +237,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallCompletedContext>
     ) {
         interceptLLMCallCompleted(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -260,7 +260,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingStartingContext>
     ) {
         interceptLLMStreamingStarting(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -283,7 +283,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingFrameReceivedContext>
     ) {
         interceptLLMStreamingFrameReceived(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -306,7 +306,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingFailedContext>
     ) {
         interceptLLMStreamingFailed(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -329,7 +329,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingCompletedContext>
     ) {
         interceptLLMStreamingCompleted(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -352,7 +352,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolCallStartingContext>
     ) {
         interceptToolCallStarting(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -375,7 +375,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolValidationFailedContext>
     ) {
         interceptToolValidationFailed(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -398,7 +398,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolCallFailedContext>
     ) {
         interceptToolCallFailed(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }
@@ -421,7 +421,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolCallCompletedContext>
     ) {
         interceptToolCallCompleted(feature) { ctx ->
-            agentConfig.submitToMainDispatcher {
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }

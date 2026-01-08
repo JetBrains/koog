@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients
 
 import ai.koog.prompt.llm.LLModel
+import kotlin.reflect.KCallable
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.memberExtensionProperties
@@ -18,7 +19,13 @@ public fun allModelsIn(obj: Any): List<LLModel> {
     val immediateModels = (obj::class.memberProperties + obj::class::memberExtensionProperties)
         .filter { it.visibility == KVisibility.PUBLIC }
         .filter { it.returnType == LLModel::class.createType() }
-        .map { it.getter.call() as LLModel }
+        .map {
+            when (it.getter.parameters.size) {
+                0 -> it.getter.call()
+                1 -> it.getter.call(obj)
+                else -> throw IllegalArgumentException("Unsupported number of parameters for getter: ${it.name}")
+            } as LLModel
+        }
 
     val nestedModels = obj::class.nestedClasses
         .mapNotNull { it.objectInstance }
