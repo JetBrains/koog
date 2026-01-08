@@ -239,3 +239,44 @@ public class SamplerConfigBuilder {
 public fun liteRTLMConfig(block: LiteRTLMClientConfigBuilder.() -> Unit): LiteRTLMClientConfig {
     return LiteRTLMClientConfigBuilder().apply(block).build()
 }
+
+// ==================== Simple Helpers (Cactus-style) ====================
+
+/**
+ * Creates a simple [LiteRTLMClientConfig] with just a model path.
+ *
+ * This is the simplest way to get started - just provide the model file path.
+ *
+ * Example:
+ * ```kotlin
+ * val config = liteRTLMConfig("/path/to/model.litertlm")
+ * ```
+ *
+ * @param modelPath Path to the LiteRT-LM model file.
+ * @param backend Backend for inference (default: CPU).
+ * @return A configured [LiteRTLMClientConfig].
+ */
+public fun liteRTLMConfig(
+    modelPath: String,
+    backend: LiteRTLMBackend = LiteRTLMBackend.CPU,
+): LiteRTLMClientConfig = LiteRTLMClientConfig(modelPath = modelPath, backend = backend)
+
+/**
+ * Creates a [LiteRTLMSamplerConfig] with common parameters.
+ *
+ * Example:
+ * ```kotlin
+ * val sampler = samplerConfig(temperature = 0.7, topK = 50)
+ * ```
+ */
+public fun samplerConfig(
+    temperature: Double = LiteRTLMSamplerConfig.DEFAULT_TEMPERATURE,
+    topK: Int = LiteRTLMSamplerConfig.DEFAULT_TOP_K,
+    topP: Double = LiteRTLMSamplerConfig.DEFAULT_TOP_P,
+    seed: Int = 0,
+): LiteRTLMSamplerConfig = LiteRTLMSamplerConfig(
+    topK = topK,
+    topP = topP,
+    temperature = temperature,
+    seed = seed,
+)

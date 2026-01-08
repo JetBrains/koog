@@ -633,23 +633,12 @@ public class ManagedConversation internal constructor(
      * @return The assistant's response.
      */
     @MustUseReturnValue("The assistant's response should be processed")
-    public suspend fun sendImage(imageBytes: ByteArray, text: String? = null): Message.Assistant = mutex.withLock {
-        val userContent = text ?: "[Image: ${imageBytes.size} bytes]"
-        _history.add(ConversationEntry(ConversationEntry.Role.USER, userContent, clock.now()))
-
-        val contents = buildList {
-            if (text != null) add(Content.Text(text))
-            add(Content.ImageBytes(imageBytes))
-        }
-        val response = conversation.sendMessage(LiteRTMessage.of(*contents.toTypedArray()))
-        val responseText = response.toString()
-        _history.add(ConversationEntry(ConversationEntry.Role.ASSISTANT, responseText, clock.now()))
-
-        Message.Assistant(
-            content = responseText,
-            metaInfo = ResponseMetaInfo.create(clock),
+    public suspend fun sendImage(imageBytes: ByteArray, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Image: ${imageBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.ImageBytes(imageBytes),
         )
-    }
 
     /**
      * Sends an image from a file path with optional text and returns the response.
@@ -661,23 +650,12 @@ public class ManagedConversation internal constructor(
      * @return The assistant's response.
      */
     @MustUseReturnValue("The assistant's response should be processed")
-    public suspend fun sendImageFile(imagePath: String, text: String? = null): Message.Assistant = mutex.withLock {
-        val userContent = text ?: "[Image: $imagePath]"
-        _history.add(ConversationEntry(ConversationEntry.Role.USER, userContent, clock.now()))
-
-        val contents = buildList {
-            if (text != null) add(Content.Text(text))
-            add(Content.ImageFile(imagePath))
-        }
-        val response = conversation.sendMessage(LiteRTMessage.of(*contents.toTypedArray()))
-        val responseText = response.toString()
-        _history.add(ConversationEntry(ConversationEntry.Role.ASSISTANT, responseText, clock.now()))
-
-        Message.Assistant(
-            content = responseText,
-            metaInfo = ResponseMetaInfo.create(clock),
+    public suspend fun sendImageFile(imagePath: String, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Image: $imagePath]",
+            text = text,
+            mediaContent = Content.ImageFile(imagePath),
         )
-    }
 
     /**
      * Sends an image with optional text and streams the response.
@@ -688,27 +666,11 @@ public class ManagedConversation internal constructor(
      */
     @MustUseReturnValue("The returned Flow must be collected to receive the response")
     public fun sendImageStreaming(imageBytes: ByteArray, text: String? = null): Flow<String> =
-        kotlinx.coroutines.flow.flow {
-            mutex.withLock {
-                val userContent = text ?: "[Image: ${imageBytes.size} bytes]"
-                _history.add(ConversationEntry(ConversationEntry.Role.USER, userContent, clock.now()))
-
-                val contents = buildList {
-                    if (text != null) add(Content.Text(text))
-                    add(Content.ImageBytes(imageBytes))
-                }
-                val responseBuilder = StringBuilder()
-                conversation.sendMessageAsync(LiteRTMessage.of(*contents.toTypedArray()))
-                    .collect { message ->
-                        val chunk = message.toString()
-                        responseBuilder.append(chunk)
-                        emit(chunk)
-                    }
-                _history.add(
-                    ConversationEntry(ConversationEntry.Role.ASSISTANT, responseBuilder.toString(), clock.now())
-                )
-            }
-        }
+        sendMultimodalStreaming(
+            historyDescription = text ?: "[Image: ${imageBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.ImageBytes(imageBytes),
+        )
 
     // ==================== Audio Messages ====================
 
@@ -722,23 +684,12 @@ public class ManagedConversation internal constructor(
      * @return The assistant's response.
      */
     @MustUseReturnValue("The assistant's response should be processed")
-    public suspend fun sendAudio(audioBytes: ByteArray, text: String? = null): Message.Assistant = mutex.withLock {
-        val userContent = text ?: "[Audio: ${audioBytes.size} bytes]"
-        _history.add(ConversationEntry(ConversationEntry.Role.USER, userContent, clock.now()))
-
-        val contents = buildList {
-            if (text != null) add(Content.Text(text))
-            add(Content.AudioBytes(audioBytes))
-        }
-        val response = conversation.sendMessage(LiteRTMessage.of(*contents.toTypedArray()))
-        val responseText = response.toString()
-        _history.add(ConversationEntry(ConversationEntry.Role.ASSISTANT, responseText, clock.now()))
-
-        Message.Assistant(
-            content = responseText,
-            metaInfo = ResponseMetaInfo.create(clock),
+    public suspend fun sendAudio(audioBytes: ByteArray, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Audio: ${audioBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.AudioBytes(audioBytes),
         )
-    }
 
     /**
      * Sends audio from a file path with optional text and returns the response.
@@ -750,13 +701,44 @@ public class ManagedConversation internal constructor(
      * @return The assistant's response.
      */
     @MustUseReturnValue("The assistant's response should be processed")
-    public suspend fun sendAudioFile(audioPath: String, text: String? = null): Message.Assistant = mutex.withLock {
-        val userContent = text ?: "[Audio: $audioPath]"
-        _history.add(ConversationEntry(ConversationEntry.Role.USER, userContent, clock.now()))
+    public suspend fun sendAudioFile(audioPath: String, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Audio: $audioPath]",
+            text = text,
+            mediaContent = Content.AudioFile(audioPath),
+        )
+
+    /**
+     * Sends audio with optional text and streams the response.
+     *
+     * @param audioBytes The audio data as bytes.
+     * @param text Optional text to accompany the audio.
+     * @return A flow of response chunks.
+     */
+    @MustUseReturnValue("The returned Flow must be collected to receive the response")
+    public fun sendAudioStreaming(audioBytes: ByteArray, text: String? = null): Flow<String> =
+        sendMultimodalStreaming(
+            historyDescription = text ?: "[Audio: ${audioBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.AudioBytes(audioBytes),
+        )
+
+    // ==================== Internal Helpers ====================
+
+    /**
+     * Internal helper for sending multimodal content (image/audio) synchronously.
+     * Reduces code duplication across sendImage, sendImageFile, sendAudio, sendAudioFile.
+     */
+    private suspend fun sendMultimodal(
+        historyDescription: String,
+        text: String?,
+        mediaContent: Content,
+    ): Message.Assistant = mutex.withLock {
+        _history.add(ConversationEntry(ConversationEntry.Role.USER, historyDescription, clock.now()))
 
         val contents = buildList {
             if (text != null) add(Content.Text(text))
-            add(Content.AudioFile(audioPath))
+            add(mediaContent)
         }
         val response = conversation.sendMessage(LiteRTMessage.of(*contents.toTypedArray()))
         val responseText = response.toString()
@@ -769,35 +751,33 @@ public class ManagedConversation internal constructor(
     }
 
     /**
-     * Sends audio with optional text and streams the response.
-     *
-     * @param audioBytes The audio data as bytes.
-     * @param text Optional text to accompany the audio.
-     * @return A flow of response chunks.
+     * Internal helper for sending multimodal content with streaming response.
+     * Reduces code duplication across sendImageStreaming, sendAudioStreaming.
      */
-    @MustUseReturnValue("The returned Flow must be collected to receive the response")
-    public fun sendAudioStreaming(audioBytes: ByteArray, text: String? = null): Flow<String> =
-        kotlinx.coroutines.flow.flow {
-            mutex.withLock {
-                val userContent = text ?: "[Audio: ${audioBytes.size} bytes]"
-                _history.add(ConversationEntry(ConversationEntry.Role.USER, userContent, clock.now()))
+    private fun sendMultimodalStreaming(
+        historyDescription: String,
+        text: String?,
+        mediaContent: Content,
+    ): Flow<String> = kotlinx.coroutines.flow.flow {
+        mutex.withLock {
+            _history.add(ConversationEntry(ConversationEntry.Role.USER, historyDescription, clock.now()))
 
-                val contents = buildList {
-                    if (text != null) add(Content.Text(text))
-                    add(Content.AudioBytes(audioBytes))
-                }
-                val responseBuilder = StringBuilder()
-                conversation.sendMessageAsync(LiteRTMessage.of(*contents.toTypedArray()))
-                    .collect { message ->
-                        val chunk = message.toString()
-                        responseBuilder.append(chunk)
-                        emit(chunk)
-                    }
-                _history.add(
-                    ConversationEntry(ConversationEntry.Role.ASSISTANT, responseBuilder.toString(), clock.now())
-                )
+            val contents = buildList {
+                if (text != null) add(Content.Text(text))
+                add(mediaContent)
             }
+            val responseBuilder = StringBuilder()
+            conversation.sendMessageAsync(LiteRTMessage.of(*contents.toTypedArray()))
+                .collect { message ->
+                    val chunk = message.toString()
+                    responseBuilder.append(chunk)
+                    emit(chunk)
+                }
+            _history.add(
+                ConversationEntry(ConversationEntry.Role.ASSISTANT, responseBuilder.toString(), clock.now())
+            )
         }
+    }
 
     // ==================== Control Methods ====================
 
