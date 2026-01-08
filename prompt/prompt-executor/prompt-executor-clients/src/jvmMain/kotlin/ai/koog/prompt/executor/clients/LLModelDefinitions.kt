@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients
 
 import ai.koog.prompt.llm.LLModel
-import kotlin.reflect.KCallable
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.memberExtensionProperties
