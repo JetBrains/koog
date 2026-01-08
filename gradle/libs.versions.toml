@@ -29,7 +29,7 @@ mockito = "5.21.0"
 mockk = "1.14.7"
 mokksy = "0.5.1"
 mysql = "8.0.33"
-netty = "4.2.6.Final"
+netty = "4.2.9.Final"
 okhttp = "5.3.2"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
@@ -38,7 +38,7 @@ slf4j = "2.0.17"
 spring-boot = "3.5.9"
 spring-management = "1.1.7"
 sqlite = "3.51.1.0"
-testcontainers = "1.19.7"
+testcontainers = "1.21.4"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -90,7 +90,6 @@ mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
-testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }

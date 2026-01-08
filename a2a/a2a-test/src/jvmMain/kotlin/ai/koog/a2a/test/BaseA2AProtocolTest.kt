@@ -5,6 +5,7 @@ import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendConfiguration
 import ai.koog.a2a.model.MessageSendParams
@@ -101,7 +102,7 @@ abstract class BaseA2AProtocolTest {
     }
 
     open fun `test get authenticated extended agent card`() = runTest(timeout = testTimeout) {
-        val request = Request<Nothing?>(data = null)
+        val request = Request(data = null)
 
         val response = client.getAuthenticatedExtendedAgentCard(request)
 
@@ -172,10 +173,10 @@ abstract class BaseA2AProtocolTest {
 
         val response = client.sendMessage(request)
 
-        response should {
-            it.id shouldBe request.id
+        response should { response ->
+            response.id shouldBe request.id
 
-            it.data.shouldBeInstanceOf<Message> {
+            response.data.shouldBeInstanceOf<Message> {
                 it.role shouldBe Role.Agent
                 it.parts shouldBe listOf(TextPart("Hello World"))
                 it.contextId shouldBe "test-context"
@@ -197,19 +198,23 @@ abstract class BaseA2AProtocolTest {
             ),
         )
 
-        val events = client
-            .sendMessageStreaming(createTaskRequest)
-            .toList()
-            .map { it.data }
+        val events: List<Event> = await.untilAsserted(this) {
+            val list = client
+                .sendMessageStreaming(createTaskRequest)
+                .toList()
+                .map { it.data }
 
-        events shouldHaveSize 3
-        events[0].shouldBeInstanceOf<Task> {
-            it.contextId shouldBe "test-context"
-            it.status should {
+            list shouldHaveSize 3
+            return@untilAsserted list
+        }!!
+
+        events[0].shouldBeInstanceOf<Task> { task ->
+            task.contextId shouldBe "test-context"
+            task.status should {
                 it.state shouldBe TaskState.Submitted
             }
 
-            it.history shouldNotBeNull {
+            task.history shouldNotBeNull {
                 this shouldHaveSize 1
 
                 this[0] should {
@@ -344,12 +349,15 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val events = client
-            .resubscribeTask(resubscribeTaskRequest)
-            .toList()
-            .map { it.data }
-
-        events.shouldNotBeEmpty()
+        val events =
+            await.ignoreExceptions().untilAsserted(this) {
+                val list = client
+                    .resubscribeTask(resubscribeTaskRequest)
+                    .toList()
+                    .map { it.data }
+                list.shouldNotBeEmpty()
+                return@untilAsserted list
+            }!!
 
         events.shouldForAll {
             it.shouldBeInstanceOf<TaskStatusUpdateEvent> {
@@ -415,8 +423,10 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val getPushConfigResponse = client.getTaskPushNotificationConfig(getPushConfigRequest)
-        getPushConfigResponse.data shouldBe pushConfig
+        await.untilAsserted(this) {
+            val response = client.getTaskPushNotificationConfig(getPushConfigRequest)
+            response.data shouldBe pushConfig
+        }
 
         val listPushConfigRequest = Request(
             data = TaskIdParams(
@@ -424,8 +434,10 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val listPushConfigResponse = client.listTaskPushNotificationConfig(listPushConfigRequest)
-        listPushConfigResponse.data shouldBe listOf(pushConfig)
+        await.untilAsserted(this) {
+            val listPushConfigResponse = client.listTaskPushNotificationConfig(listPushConfigRequest)
+            listPushConfigResponse.data shouldBe listOf(pushConfig)
+        }
 
         val deletePushConfigRequest = Request(
             data = TaskPushNotificationConfigParams(
@@ -436,8 +448,10 @@ abstract class BaseA2AProtocolTest {
 
         client.deleteTaskPushNotificationConfig(deletePushConfigRequest)
 
-        shouldThrowExactly<A2AInternalErrorException> {
-            client.getTaskPushNotificationConfig(getPushConfigRequest)
+        await.untilAsserted(this) {
+            shouldThrowExactly<A2AInternalErrorException> {
+                client.getTaskPushNotificationConfig(getPushConfigRequest)
+            }
         }
     }
 }

@@ -20,6 +20,8 @@ Also, please tick the appropriate points in the checklist below.
 - [ ] Documentation update
 - [ ] Tests improvement
 - [ ] Refactoring
+- [ ] CI/CD changes
+- [ ] Dependencies update
 
 #### Checklist
 - [ ] The pull request has a description of the proposed change
