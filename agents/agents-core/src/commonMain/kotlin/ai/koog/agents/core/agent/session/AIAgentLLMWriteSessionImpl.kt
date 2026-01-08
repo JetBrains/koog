@@ -87,9 +87,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
 
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
         return super<AIAgentLLMSession>.requestLLMMultipleWithoutTools().also { responses ->
-            appendPrompt {
-                responses.forEach { message(it) }
-            }
+            appendPrompt { messages(responses) }
         }
     }
 
@@ -98,21 +96,21 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         return super<AIAgentLLMSession>.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
     }
 
-    override suspend fun requestLLMOnlyCallingTools(): Message.Response {
-        return super<AIAgentLLMSession>.requestLLMOnlyCallingTools().also { response -> appendPrompt { message(response) } }
-    }
-
     override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         return super<AIAgentLLMSession>.requestLLMMultipleOnlyCallingTools()
-            .also { responses -> appendPrompt { messages(responses) } }
+            .also { responses ->
+                appendPrompt { messages(responses) }
+            }
     }
 
     override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
-        return super<AIAgentLLMSession>.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
+        return super<AIAgentLLMSession>.requestLLMForceOneTool(tool)
+            .also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
-        return super<AIAgentLLMSession>.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
+        return super<AIAgentLLMSession>.requestLLMForceOneTool(tool)
+            .also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLM(): Message.Response {

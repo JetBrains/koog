@@ -20,17 +20,24 @@ import kotlin.reflect.KClass
 
 @Suppress("DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
 public actual class AIAgentLLMWriteSession internal actual constructor(
-    environment: AIAgentEnvironment,
-    executor: PromptExecutor,
-    tools: List<ToolDescriptor>,
-    toolRegistry: ToolRegistry,
-    prompt: Prompt,
-    model: LLModel,
-    responseProcessor: ResponseProcessor?,
-    config: AIAgentConfig,
-    clock: Clock,
     @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl
 ) : AIAgentLLMWriteSessionAPI by delegate {
+
+    public actual constructor(
+        environment: AIAgentEnvironment,
+        executor: PromptExecutor,
+        tools: List<ToolDescriptor>,
+        toolRegistry: ToolRegistry,
+        prompt: Prompt,
+        model: LLModel,
+        responseProcessor: ResponseProcessor?,
+        config: AIAgentConfig,
+        clock: Clock
+    ) : this(
+        delegate = AIAgentLLMWriteSessionImpl(
+            environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock
+        )
+    )
 
     public actual inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
         safeTool: SafeTool<TArgs, TResult>,

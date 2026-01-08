@@ -42,19 +42,34 @@ import kotlin.reflect.KClass
  * @property clock The clock used for message timestamps
  */
 public expect class AIAgentLLMWriteSession internal constructor(
-    environment: AIAgentEnvironment,
-    executor: PromptExecutor,
-    tools: List<ToolDescriptor>,
-    toolRegistry: ToolRegistry,
-    prompt: Prompt,
-    model: LLModel,
-    responseProcessor: ResponseProcessor?,
-    config: AIAgentConfig,
-    clock: Clock,
-    delegate: AIAgentLLMWriteSessionImpl = AIAgentLLMWriteSessionImpl(
-        environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock
-    )
+    delegate: AIAgentLLMWriteSessionImpl
 ) : AIAgentLLMWriteSessionAPI {
+
+    /**
+     * Creates an instance of `AIAgentLLMWriteSession` with the provided dependencies and configuration.
+     *
+     * @param environment The environment in which the AI agent operates, providing context or resources.
+     * @param executor The `PromptExecutor` responsible for executing prompts and managing interactions.
+     * @param tools A list of tool descriptors that define the behavior and capabilities of the tools available to the session.
+     * @param toolRegistry The registry maintaining a collection of available tools for the session.
+     * @param prompt The initial prompt that sets the context or goal for the session.
+     * @param model The language model (`LLModel`) used by the session for generating responses and actions.
+     * @param responseProcessor An optional processor for handling and transforming model responses, or null if not required.
+     * @param config Configuration settings (`AIAgentConfig`) that define session-specific parameters and behavior.
+     * @param clock The clock used to track time-related operations within the session.
+     */
+    public constructor(
+        environment: AIAgentEnvironment,
+        executor: PromptExecutor,
+        tools: List<ToolDescriptor>,
+        toolRegistry: ToolRegistry,
+        prompt: Prompt,
+        model: LLModel,
+        responseProcessor: ResponseProcessor?,
+        config: AIAgentConfig,
+        clock: Clock
+    )
+
     @PublishedApi
     internal val delegate: AIAgentLLMWriteSessionImpl
 

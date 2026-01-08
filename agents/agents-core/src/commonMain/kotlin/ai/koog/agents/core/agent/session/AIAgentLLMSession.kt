@@ -96,10 +96,11 @@ public open class AIAgentLLMSession(
 
     public open override suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
-        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
-            toolChoice = LLMParams.ToolChoice.Required
-        }
-        return executeSingle(promptWithOnlyCallingTools, tools)
+        // We use the multiple-response method to ensure we capture all context (e.g. thinking)
+        // even though we only return the specific tool call.
+        val responses = requestLLMMultipleOnlyCallingTools()
+        return responses.firstOrNull { it is Message.Tool.Call }
+            ?: error("requestLLMOnlyCallingTools expected at least one Tool.Call but received: ${responses.map { it::class.simpleName }}")
     }
 
     public open override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
