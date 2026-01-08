@@ -431,7 +431,7 @@ public object OpenRouterModels : LLModelDefinitions {
 
     /**
      * Represents the Llama3 model configuration provided by OpenRouter.
-     * This model is identified by the unique ID "meta/llama-3-70b" and
+     * This model is identified by the unique ID "meta-llama/llama-3-70b" and
      * supports the standard set of language model capabilities.
      *
      * @see <a href="https://huggingface.co/meta-llama/Meta-Llama-3-70B">
@@ -439,7 +439,7 @@ public object OpenRouterModels : LLModelDefinitions {
     @JvmField
     public val Llama3: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
-        id = "meta/llama-3-70b",
+        id = "meta-llama/llama-3-70b",
         capabilities = standardCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
@@ -456,7 +456,7 @@ public object OpenRouterModels : LLModelDefinitions {
     @JvmField
     public val Llama3Instruct: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
-        id = "meta/llama-3-70b-instruct",
+        id = "meta-llama/llama-3-70b-instruct",
         capabilities = standardCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
