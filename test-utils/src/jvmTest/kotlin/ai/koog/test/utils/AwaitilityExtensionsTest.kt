@@ -7,7 +7,6 @@ import org.awaitility.core.ConditionTimeoutException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.milliseconds
@@ -19,7 +18,7 @@ class AwaitilityExtensionsTest {
     fun `untilAsserted with suspend block eventually succeeds`() = runTest {
         val counter = AtomicInteger(0)
 
-        await()
+        val result = await()
             .atMost(2.seconds)
             .untilAsserted(block = {
                 delay(30)
@@ -27,8 +26,10 @@ class AwaitilityExtensionsTest {
                 if (current < 5) {
                     throw AssertionError("Not enough yet: $current")
                 }
+                "success-$current"
             })
 
+        assertEquals("success-5", result)
         assertEquals(5, counter.get())
     }
 
@@ -49,7 +50,7 @@ class AwaitilityExtensionsTest {
     fun `untilAsserted with scope and suspend block should eventually succeed`() = runTest {
         val counter = AtomicInteger(0)
 
-        await()
+        val result = await()
             .atMost(2.seconds)
             .atLeast(40.milliseconds)
             .pollInterval(10.milliseconds)
@@ -58,8 +59,10 @@ class AwaitilityExtensionsTest {
                 if (current < 5) {
                     throw AssertionError("Not enough yet: $current")
                 }
+                "result-$current"
             }
 
+        assertEquals("result-5", result)
         assertEquals(5, counter.get())
     }
 
@@ -70,7 +73,7 @@ class AwaitilityExtensionsTest {
                 .pollDelay(0.milliseconds)
                 .atLeast(10.milliseconds)
                 .atMost(200.milliseconds)
-                .pollInterval(Duration.ofMillis(10))
+                .pollInterval(10.milliseconds)
                 .untilAsserted(this) {
                     delay(50)
                     throw AssertionError("Always failing")
