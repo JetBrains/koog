@@ -7,12 +7,12 @@ import ai.koog.agents.tools.test.Payload;
 public class JavaToolbox {
 
     // primitives
-    public static int add(@LLMDescription(description = "a") int a, @LLMDescription(description = "b") int b) {
+    public static int add(int a, int b) {
         return a + b;
     }
 
     // boxed types and strings
-    public static String concat(@LLMDescription(description = "a") String a, @LLMDescription(description = "b") String b) {
+    public static String concat(String a, String b) {
         return (a == null ? "" : a) + (b == null ? "" : b);
     }
 
@@ -22,12 +22,12 @@ public class JavaToolbox {
     }
 
     // serializable data class
-    public static Payload echo(@LLMDescription(description = "p") Payload p) {
+    public static Payload echo(Payload p) {
         return p;
     }
 
     // instance method with primitive
-    public int inc(@LLMDescription(description = "x") int x) {
+    public int inc(int x) {
         return x + 1;
     }
 }
