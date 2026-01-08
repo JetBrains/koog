@@ -51,18 +51,6 @@ import kotlin.reflect.KClass
 @OptIn(InternalAgentsApi::class)
 @Suppress("UNCHECKED_CAST", "MissingKDocForPublicAPI")
 public expect class AIAgentFunctionalContext internal constructor(
-    environment: AIAgentEnvironment,
-    agentId: String,
-    runId: String,
-    agentInput: Any?,
-    config: AIAgentConfig,
-    llm: AIAgentLLMContext,
-    stateManager: AIAgentStateManager,
-    storage: AIAgentStorage,
-    strategyName: String,
-    pipeline: AIAgentFunctionalPipeline,
-    executionInfo: AgentExecutionInfo,
-    parentContext: AIAgentContext? = null,
     delegate: AIAgentFunctionalContextImpl
 ) : AIAgentFunctionalContextAPI {
     public constructor(

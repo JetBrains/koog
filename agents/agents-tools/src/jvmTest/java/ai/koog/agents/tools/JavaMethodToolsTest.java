@@ -77,7 +77,7 @@ public class JavaMethodToolsTest {
             throw new RuntimeException(e);
         }
         Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        ToolFromJavaMethod.VarArgs decoded = tool.decodeArgs(jsonObject("{\"p\":{\"id\":7,\"name\":\"x\"}}"));
+        ToolFromJavaMethod.VarArgs decoded = tool.decodeArgs(jsonObject("{\"arg0\":{\"arg0\":7,\"arg1\":\"x\"}}"));
         Payload result = (Payload) ToolUtils.executeToolBlocking(tool, decoded);
         assertEquals(7, result.getId());
         assertEquals("x", result.getName());
@@ -93,7 +93,7 @@ public class JavaMethodToolsTest {
             throw new RuntimeException(e);
         }
         Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, inst);
-        ToolFromJavaMethod.VarArgs decoded = tool.decodeArgs(jsonObject("{\"x\":41}"));
+        ToolFromJavaMethod.VarArgs decoded = tool.decodeArgs(jsonObject("{\"arg0\":41}"));
         var result = ToolUtils.executeToolBlocking(tool, decoded);
         assertEquals(42, (int) result);
     }

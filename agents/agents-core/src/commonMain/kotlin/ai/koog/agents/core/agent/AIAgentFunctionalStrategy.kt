@@ -44,5 +44,7 @@ public fun <Input, Output> functionalStrategy(
     func: suspend AIAgentFunctionalContext.(input: Input) -> Output
 ): AIAgentFunctionalStrategy<Input, Output> = object : AIAgentFunctionalStrategy<Input, Output> {
     override val name: String = name
-    override suspend fun execute(context: AIAgentFunctionalContext, input: Input): Output = context.func(input)
+    override suspend fun execute(context: AIAgentFunctionalContext, input: Input): Output {
+        return context.func(input)
+    }
 }

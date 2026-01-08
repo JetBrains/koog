@@ -38,20 +38,9 @@ import kotlin.reflect.KClass
 
 @Suppress("MissingKDocForPublicAPI")
 public actual class AIAgentFunctionalContext internal actual constructor(
-    environment: AIAgentEnvironment,
-    agentId: String,
-    runId: String,
-    agentInput: Any?,
-    config: AIAgentConfig,
-    llm: AIAgentLLMContext,
-    stateManager: AIAgentStateManager,
-    storage: AIAgentStorage,
-    strategyName: String,
-    pipeline: AIAgentFunctionalPipeline,
-    executionInfo: AgentExecutionInfo,
-    parentContext: AIAgentContext?,
     @PublishedApi internal actual val delegate: AIAgentFunctionalContextImpl
 ) : AIAgentFunctionalContextAPI by delegate {
+    @JvmOverloads
     public actual constructor(
         environment: AIAgentEnvironment,
         agentId: String,
@@ -66,17 +55,6 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         executionInfo: AgentExecutionInfo,
         parentContext: AIAgentContext?
     ) : this(
-        environment = environment,
-        agentId = agentId,
-        runId = runId,
-        agentInput = agentInput,
-        config = config,
-        llm = llm,
-        stateManager = stateManager,
-        storage = storage,
-        strategyName = strategyName,
-        pipeline = pipeline,
-        executionInfo = executionInfo,
         delegate = AIAgentFunctionalContextImpl(
             environment = environment,
             agentId = agentId,
@@ -93,12 +71,14 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         )
     )
 
+    @JvmOverloads
     public actual suspend inline fun <reified T> requestLLMStructured(
         message: String,
         examples: List<T>,
         fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>> = delegate.requestLLMStructured(message, examples, fixingParser)
 
+    @JvmOverloads
     public actual suspend inline fun <Input, reified Output> subtask(
         taskDescription: String,
         input: Input,
@@ -132,19 +112,21 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         executionInfo: AgentExecutionInfo,
         parentRootContext: AIAgentContext?
     ): AIAgentFunctionalContext = AIAgentFunctionalContext(
-        environment = environment,
-        agentId = agentId,
-        runId = runId,
-        agentInput = agentInput,
-        config = config,
-        llm = llm,
-        stateManager = stateManager,
-        storage = storage,
-        strategyName = strategyName,
-        pipeline = pipeline,
-        executionInfo = executionInfo,
-        parentContext = parentRootContext,
-        delegate = delegate,
+        delegate = AIAgentFunctionalContextImpl(
+            environment = environment,
+            agentId = agentId,
+            pipeline = pipeline,
+            runId = runId,
+            agentInput = agentInput,
+            config = config,
+            llm = llm,
+            stateManager = stateManager,
+            storage = storage,
+            strategyName = strategyName,
+            parentContext = parentContext,
+            executionInfo = executionInfo,
+            storeMap = delegate.storeMap
+        )
     )
 
     /**

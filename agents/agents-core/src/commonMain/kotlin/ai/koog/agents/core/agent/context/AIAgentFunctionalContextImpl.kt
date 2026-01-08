@@ -53,10 +53,9 @@ internal class AIAgentFunctionalContextImpl(
     override val strategyName: String,
     override val pipeline: AIAgentFunctionalPipeline,
     override var executionInfo: AgentExecutionInfo,
+    internal val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf(),
     override val parentContext: AIAgentContext? = null
 ) : AIAgentFunctionalContextAPI {
-
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
 
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         storeMap[key] = value
