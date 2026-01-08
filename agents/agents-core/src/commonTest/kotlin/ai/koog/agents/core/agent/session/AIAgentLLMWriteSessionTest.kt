@@ -39,7 +39,6 @@ class AIAgentLLMWriteSessionTest {
 
     private class TestEnvironment(private val toolRegistry: ToolRegistry) : AIAgentEnvironment {
 
-
         @OptIn(InternalAgentToolsApi::class)
         override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
             val tool = toolRegistry.getTool(toolCall.tool)

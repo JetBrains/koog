@@ -18,7 +18,6 @@ import java.lang.reflect.Parameter
 import java.lang.reflect.ParameterizedType
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.kotlinFunction
 
@@ -188,7 +187,11 @@ private fun Parameter.getPreferredParameterDescriptionAnnotation(method: Method)
 public fun Parameter.getParameterName(): String? {
     if (isNamePresent) return name
     val method = declaringExecutable as? Method ?: return name
-    val kFunction = try { method.kotlinFunction } catch (e: Throwable) { null }
+    val kFunction = try {
+        method.kotlinFunction
+    } catch (e: Throwable) {
+        null
+    }
     if (kFunction != null) {
         val valueParameters = kFunction.parameters.filter { it.kind == kotlin.reflect.KParameter.Kind.VALUE }
         val indexInJava = method.parameters.indexOf(this)

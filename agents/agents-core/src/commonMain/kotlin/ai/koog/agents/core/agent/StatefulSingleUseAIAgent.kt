@@ -108,39 +108,39 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
                 state = AIAgentState.Running(context.parentContext ?: context)
             }
 
-                logger.debug { formatLog(id, runId, "Starting agent execution") }
-                pipeline.onAgentStarting<Input, Output>(
-                    agentRunEventId,
-                    context.executionInfo,
-                    runId,
-                    this@StatefulSingleUseAIAgent,
-                    context
-                )
+            logger.debug { formatLog(id, runId, "Starting agent execution") }
+            pipeline.onAgentStarting<Input, Output>(
+                agentRunEventId,
+                context.executionInfo,
+                runId,
+                this@StatefulSingleUseAIAgent,
+                context
+            )
 
             val result = try {
                 context.with(partName = strategy.name) { executionInfo, eventId ->
-                        runCatchingCancellable {
-                            context.pipeline.onStrategyStarting(eventId, executionInfo, strategy, context)
-                            val result = strategy.execute(context = context, input = agentInput)
+                    runCatchingCancellable {
+                        context.pipeline.onStrategyStarting(eventId, executionInfo, strategy, context)
+                        val result = strategy.execute(context = context, input = agentInput)
 
-                            logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
-                            context.pipeline.onStrategyCompleted(
-                                eventId,
-                                executionInfo,
-                                strategy,
-                                context,
-                                result,
-                                typeOf<Any?>()
-                            )
+                        logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
+                        context.pipeline.onStrategyCompleted(
+                            eventId,
+                            executionInfo,
+                            strategy,
+                            context,
+                            result,
+                            typeOf<Any?>()
+                        )
 
-                            result
-                        }.onFailure {
-                            context.environment.reportProblem(it)
-                        }.getOrThrow()
-                    }
-                } catch (e: Throwable) {
-                    logger.error(e) { "Execution exception reported by server!" }
-                    pipeline.onAgentExecutionFailed(agentRunEventId, context.executionInfo, id, runId, e, context)
+                        result
+                    }.onFailure {
+                        context.environment.reportProblem(it)
+                    }.getOrThrow()
+                }
+            } catch (e: Throwable) {
+                logger.error(e) { "Execution exception reported by server!" }
+                pipeline.onAgentExecutionFailed(agentRunEventId, context.executionInfo, id, runId, e, context)
                 agentStateMutex.withLock { state = AIAgentState.Failed(e) }
                 throw e
             }
