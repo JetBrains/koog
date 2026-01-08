@@ -5,7 +5,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgentState.NotStarted
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
