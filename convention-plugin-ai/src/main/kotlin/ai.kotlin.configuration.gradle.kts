@@ -1,4 +1,5 @@
 import org.gradle.accessors.dm.LibrariesForLibs
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -57,11 +58,13 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
-        freeCompilerArgs.add("-Xjvm-default=all")
+        jvmDefault = JvmDefaultMode.ENABLE
+        javaParameters = true
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
+    this.options.compilerArgs.addAll(listOf("-parameters", "-g"))
     sourceCompatibility = JavaVersion.VERSION_11.toString()
     targetCompatibility = JavaVersion.VERSION_11.toString()
 }
