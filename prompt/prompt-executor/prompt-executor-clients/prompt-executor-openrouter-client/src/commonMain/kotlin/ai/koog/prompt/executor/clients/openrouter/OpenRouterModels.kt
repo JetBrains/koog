@@ -150,6 +150,7 @@ public object OpenRouterModels : LLModelDefinitions {
      * Claude Haiku 4.5 is Anthropic’s fastest and most efficient model,
      * delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models.
      */
+    @JvmField
     public val Claude4_5Haiku: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-haiku-4.5",
@@ -162,6 +163,7 @@ public object OpenRouterModels : LLModelDefinitions {
      * Claude Sonnet 4.5 is Anthropic’s most advanced Sonnet model to date, optimized for real-world agents
      * and coding workflows.
      */
+    @JvmField
     public val Claude4_5Sonnet: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-sonnet-4.5",
@@ -174,6 +176,7 @@ public object OpenRouterModels : LLModelDefinitions {
      * Claude Opus 4.5 is Anthropic’s frontier reasoning model optimized for complex software engineering,
      * agentic workflows, and long-horizon computer use.
      */
+    @JvmField
     public val Claude4_5Opus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-opus-4.5",
@@ -331,6 +334,7 @@ public object OpenRouterModels : LLModelDefinitions {
      * It uses adaptive reasoning to allocate computation dynamically, responding quickly to simple queries
      * while spending more depth on complex tasks.
      */
+    @JvmField
     public val GPT5_2: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-5.2",
@@ -343,6 +347,7 @@ public object OpenRouterModels : LLModelDefinitions {
      * It is optimized for complex tasks that require step-by-step reasoning, instruction following,
      * and accuracy in high-stakes use cases.
      */
+    @JvmField
     public val GPT5_2Pro: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-5.2-pro",
@@ -530,6 +535,7 @@ public object OpenRouterModels : LLModelDefinitions {
      * Multimodal vision-language model from the Qwen3-VL series, built for high-fidelity understanding
      * and reasoning across text, images, and video.
      */
+    @JvmField
     public val Qwen3VL: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "qwen/qwen3-vl-8b-instruct",

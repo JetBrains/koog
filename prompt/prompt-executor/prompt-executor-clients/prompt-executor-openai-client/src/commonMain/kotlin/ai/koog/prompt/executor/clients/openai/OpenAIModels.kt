@@ -601,7 +601,7 @@ public object OpenAIModels : LLModelDefinitions {
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-5.2"\>Model page</a>
          */
-
+        @JvmField
         public val GPT5_2: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
             id = "gpt-5.2",
@@ -634,7 +634,7 @@ public object OpenAIModels : LLModelDefinitions {
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-5.2-pro"\>Model page</a>
          */
-
+        @JvmField
         public val GPT5_2Pro: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
             id = "gpt-5.2-pro",

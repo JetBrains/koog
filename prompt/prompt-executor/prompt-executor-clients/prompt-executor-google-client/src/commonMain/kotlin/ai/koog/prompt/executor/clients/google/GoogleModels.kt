@@ -169,6 +169,7 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="ai.google.dev/gemini-api/docs/gemini-3">
      */
+    @JvmField
     public val Gemini3_Pro_Preview: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-3-pro-preview",
@@ -188,6 +189,7 @@ public object GoogleModels : LLModelDefinitions {
          *
          * @see <a href="https://ai.google.dev/gemini-api/docs/embeddings#model-versions">
          */
+        @JvmField
         public val GeminiEmbedding001: LLModel = LLModel(
             provider = LLMProvider.Google,
             id = "gemini-embedding-001",

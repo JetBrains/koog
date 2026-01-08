@@ -20,11 +20,7 @@ public fun allModelsIn(obj: Any): List<LLModel> {
         .filter { it.visibility == KVisibility.PUBLIC }
         .filter { it.returnType == LLModel::class.createType() }
         .map {
-            when (it.getter.parameters.size) {
-                0 -> it.getter.call()
-                1 -> it.getter.call(obj)
-                else -> throw IllegalArgumentException("Unsupported number of parameters for getter: ${it.name}")
-            } as LLModel
+            it.getter.call() as LLModel
         }
 
     val nestedModels = obj::class.nestedClasses
