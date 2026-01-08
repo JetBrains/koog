@@ -418,7 +418,7 @@ internal class AIAgentFunctionalContextImpl(
 
     @OptIn(InternalAgentToolsApi::class)
     @PublishedApi
-    internal suspend inline fun <Input, reified Output : Any> subtask(
+    internal suspend inline fun <Input, reified Output : Any> subtaskImpl(
         taskDescription: String,
         input: Input,
         tools: List<Tool<*, *>>? = null,

@@ -107,7 +107,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
-    ): Output = delegate.subtask(
+    ): Output = delegate.subtaskImpl(
         taskDescription,
         input,
         tools,

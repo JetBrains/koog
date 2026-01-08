@@ -19,7 +19,6 @@ import java.lang.reflect.ParameterizedType
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.kotlinFunction
 
 /**
  * Converts this [ToolSet] instance into a list of [Tool]s by reflecting on its functions.

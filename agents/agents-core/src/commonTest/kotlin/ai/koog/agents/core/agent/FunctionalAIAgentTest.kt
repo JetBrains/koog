@@ -146,7 +146,9 @@ class FunctionalAIAgentTest {
             }
         ) {
             install(EventHandler) {
-                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext ->
+                    actualToolCalls += eventContext.toolArgs.toString()
+                }
             }
         }
 
