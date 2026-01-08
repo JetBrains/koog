@@ -174,7 +174,7 @@ public class LiteRTLMClient(
             message = "LiteRT-LM engine not initialized"
         )
 
-        val conversationConfig = createConversationConfig(prompt, emptyList())
+        val conversationConfig = createConversationConfig(prompt, tools)
 
         currentEngine.createConversation(conversationConfig).use { conversation ->
             val conversationMessages = buildConversationMessages(prompt, model)
@@ -318,6 +318,13 @@ public class LiteRTLMClient(
                     contentParts.add(Content.Text("[File: ${part.fileName ?: "unnamed"}]\n$fileText"))
                 }
             }
+        }
+
+        if (contentParts.isEmpty()) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = "User message must contain at least one content part"
+            )
         }
 
         return if (contentParts.size == 1 && contentParts.first() is Content.Text) {
