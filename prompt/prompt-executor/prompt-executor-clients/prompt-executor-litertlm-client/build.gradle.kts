@@ -1,4 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -8,9 +9,29 @@ plugins {
 group = rootProject.group
 version = rootProject.version
 
+// Check if Kotlin version is >= 2.3 for experimental features
+val kotlinVersionString = libs.versions.kotlin.get()
+val kotlinMajorMinor = kotlinVersionString.split(".").take(2).joinToString(".")
+val isKotlin23OrHigher = try {
+    val (major, minor) = kotlinMajorMinor.split(".").map { it.toInt() }
+    major > 2 || (major == 2 && minor >= 3)
+} catch (e: Exception) {
+    false
+}
+
 kotlin {
     // LiteRT-LM has full implementation on JVM/Android, stubs on other platforms
     // The convention plugin handles all target declarations
+
+    // Enable Kotlin 2.3+ experimental features when available
+    if (isKotlin23OrHigher) {
+        compilerOptions {
+            // @MustUseReturnValues checker - warns when return values are ignored
+            freeCompilerArgs.add("-Xreturn-value-checker=check")
+            // Explicit backing fields - allows field keyword in property accessors
+            freeCompilerArgs.add("-Xexplicit-backing-fields")
+        }
+    }
 
     sourceSets {
         commonMain {

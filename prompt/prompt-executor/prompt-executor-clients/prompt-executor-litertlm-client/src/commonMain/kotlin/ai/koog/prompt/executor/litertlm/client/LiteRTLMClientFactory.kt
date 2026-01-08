@@ -120,6 +120,7 @@ public data class LiteRTLMClientConfig(
  * @return An [LLMClient] implementation for LiteRT-LM.
  * @throws UnsupportedOperationException on platforms where LiteRT-LM is not available (iOS, JS, WasmJS).
  */
+@MustUseReturnValue("The returned LLMClient must be used and eventually closed")
 public expect fun createLiteRTLMClient(config: LiteRTLMClientConfig): LLMClient
 
 /**

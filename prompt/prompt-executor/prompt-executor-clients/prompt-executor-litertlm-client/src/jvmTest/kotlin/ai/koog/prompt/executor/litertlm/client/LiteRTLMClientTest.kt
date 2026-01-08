@@ -11,101 +11,135 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for LiteRTLMClient.
+ * Unit tests for LiteRTLMClient configuration and validation.
  *
  * Note: Integration tests require the LiteRT-LM library and a valid model file.
- * These tests focus on configuration and error handling.
+ * See [LiteRTLMClientIntegrationTest] for tests that use an actual model.
  */
 class LiteRTLMClientTest {
 
     @Test
-    fun `llmProvider returns LiteRTLM`() {
-        val client = LiteRTLMClient(modelPath = "/path/to/model.litertlm")
-        client.llmProvider() shouldBe LLMProvider.LiteRTLM
+    fun `LiteRTLMBackend enum has CPU, GPU, and NPU values`() {
+        LiteRTLMBackend.CPU shouldBe LiteRTLMBackend.CPU
+        LiteRTLMBackend.GPU shouldBe LiteRTLMBackend.GPU
+        LiteRTLMBackend.NPU shouldBe LiteRTLMBackend.NPU
     }
 
     @Test
-    fun `execute throws exception when not initialized`() = runTest {
-        val client = LiteRTLMClient(modelPath = "/path/to/model.litertlm")
+    fun `LiteRTLMEngineConfig validates maxNumTokens`() {
+        // Null is valid (use default)
+        LiteRTLMEngineConfig(modelPath = "/path/to/model", maxNumTokens = null)
 
-        val prompt = prompt {
-            user("Hello")
-        }
+        // Positive values are valid
+        LiteRTLMEngineConfig(modelPath = "/path/to/model", maxNumTokens = 1024)
+        LiteRTLMEngineConfig(modelPath = "/path/to/model", maxNumTokens = 1)
 
-        val exception = shouldThrow<LLMClientException> {
-            client.execute(prompt, LiteRTLMModels.Google.GEMMA_3N_E4B)
-        }
-
-        exception.message shouldContain "not initialized"
-    }
-
-    @Test
-    fun `execute throws exception for wrong provider`() = runTest {
-        val client = LiteRTLMClient(modelPath = "/path/to/model.litertlm")
-
-        val prompt = prompt {
-            user("Hello")
-        }
-
-        // Create a model with wrong provider
-        val wrongProviderModel = LiteRTLMModels.Google.GEMMA_3N_E4B.copy(
-            provider = LLMProvider.Ollama
-        )
-
+        // Zero and negative should throw
         shouldThrow<IllegalArgumentException> {
-            client.execute(prompt, wrongProviderModel)
+            LiteRTLMEngineConfig(modelPath = "/path/to/model", maxNumTokens = 0)
+        }
+        shouldThrow<IllegalArgumentException> {
+            LiteRTLMEngineConfig(modelPath = "/path/to/model", maxNumTokens = -1)
         }
     }
 
     @Test
-    fun `Backend enum has CPU and GPU values`() {
-        LiteRTLMClient.Backend.CPU shouldBe LiteRTLMClient.Backend.CPU
-        LiteRTLMClient.Backend.GPU shouldBe LiteRTLMClient.Backend.GPU
+    fun `LiteRTLMSamplerConfig validates parameters`() {
+        // Valid configuration
+        LiteRTLMSamplerConfig(topK = 40, topP = 0.95, temperature = 0.8)
+
+        // topK must be positive
+        shouldThrow<IllegalArgumentException> {
+            LiteRTLMSamplerConfig(topK = 0)
+        }
+        shouldThrow<IllegalArgumentException> {
+            LiteRTLMSamplerConfig(topK = -1)
+        }
+
+        // topP must be between 0 and 1
+        shouldThrow<IllegalArgumentException> {
+            LiteRTLMSamplerConfig(topP = -0.1)
+        }
+        shouldThrow<IllegalArgumentException> {
+            LiteRTLMSamplerConfig(topP = 1.1)
+        }
+
+        // temperature must be non-negative
+        shouldThrow<IllegalArgumentException> {
+            LiteRTLMSamplerConfig(temperature = -0.1)
+        }
+
+        // Edge cases that should be valid
+        LiteRTLMSamplerConfig(topP = 0.0)
+        LiteRTLMSamplerConfig(topP = 1.0)
+        LiteRTLMSamplerConfig(temperature = 0.0)
     }
 
     @Test
-    fun `client can be created with custom backend`() {
-        val cpuClient = LiteRTLMClient(
+    fun `LiteRTLMClientConfig convenience constructor works`() {
+        val config = LiteRTLMClientConfig(
             modelPath = "/path/to/model.litertlm",
-            backend = LiteRTLMClient.Backend.CPU
-        )
-        cpuClient.llmProvider() shouldBe LLMProvider.LiteRTLM
-
-        val gpuClient = LiteRTLMClient(
-            modelPath = "/path/to/model.litertlm",
-            backend = LiteRTLMClient.Backend.GPU
-        )
-        gpuClient.llmProvider() shouldBe LLMProvider.LiteRTLM
-    }
-
-    @Test
-    fun `client can be created with cache directory`() {
-        val client = LiteRTLMClient(
-            modelPath = "/path/to/model.litertlm",
+            backend = LiteRTLMBackend.GPU,
             cacheDir = "/tmp/cache"
         )
-        client.llmProvider() shouldBe LLMProvider.LiteRTLM
+
+        config.engineConfig.modelPath shouldBe "/path/to/model.litertlm"
+        config.engineConfig.backend shouldBe LiteRTLMBackend.GPU
+        config.engineConfig.cacheDir shouldBe "/tmp/cache"
+        config.samplerConfig shouldBe null
     }
 
     @Test
-    fun `moderation throws unsupported exception`() = runTest {
-        val client = LiteRTLMClient(modelPath = "/path/to/model.litertlm")
+    fun `LiteRTLMClientConfig full constructor works`() {
+        val engineConfig = LiteRTLMEngineConfig(
+            modelPath = "/path/to/model.litertlm",
+            backend = LiteRTLMBackend.NPU,
+            visionBackend = LiteRTLMBackend.GPU,
+            audioBackend = LiteRTLMBackend.CPU,
+            maxNumTokens = 8192,
+            cacheDir = "/tmp/cache"
+        )
 
-        val prompt = prompt {
-            user("Test content")
-        }
+        val samplerConfig = LiteRTLMSamplerConfig(
+            topK = 50,
+            topP = 0.9,
+            temperature = 1.0,
+            seed = 42
+        )
 
-        val exception = shouldThrow<LLMClientException> {
-            client.moderate(prompt, LiteRTLMModels.Google.GEMMA_3N_E4B)
-        }
+        val config = LiteRTLMClientConfig(
+            engineConfig = engineConfig,
+            samplerConfig = samplerConfig
+        )
 
-        exception.message shouldContain "not supported"
+        config.engineConfig.backend shouldBe LiteRTLMBackend.NPU
+        config.engineConfig.visionBackend shouldBe LiteRTLMBackend.GPU
+        config.engineConfig.audioBackend shouldBe LiteRTLMBackend.CPU
+        config.engineConfig.maxNumTokens shouldBe 8192
+        config.samplerConfig?.topK shouldBe 50
+        config.samplerConfig?.seed shouldBe 42
     }
 
     @Test
-    fun `close can be called safely on uninitialized client`() {
-        val client = LiteRTLMClient(modelPath = "/path/to/model.litertlm")
-        // Should not throw
-        client.close()
+    fun `LiteRTLMLogSeverity has all expected levels`() {
+        LiteRTLMLogSeverity.VERBOSE
+        LiteRTLMLogSeverity.DEBUG
+        LiteRTLMLogSeverity.INFO
+        LiteRTLMLogSeverity.WARNING
+        LiteRTLMLogSeverity.ERROR
+        LiteRTLMLogSeverity.FATAL
+        LiteRTLMLogSeverity.SILENT
+    }
+
+    @Test
+    fun `isLiteRTLMSupported returns true on JVM`() {
+        isLiteRTLMSupported() shouldBe true
+    }
+
+    @Test
+    fun `LiteRTLMSamplerConfig default values match official API`() {
+        LiteRTLMSamplerConfig.DEFAULT_TOP_K shouldBe 40
+        LiteRTLMSamplerConfig.DEFAULT_TOP_P shouldBe 0.95
+        LiteRTLMSamplerConfig.DEFAULT_TEMPERATURE shouldBe 0.8
     }
 }
