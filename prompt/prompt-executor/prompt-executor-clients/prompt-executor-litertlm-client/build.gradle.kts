@@ -44,6 +44,15 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
             }
         }
+
+        jvmTest {
+            dependencies {
+                // Add LiteRT-LM for testing (when available)
+                implementation(libs.litertlm.jvm)
+                implementation(libs.mockk)
+                implementation(libs.kotest.assertions.core)
+            }
+        }
     }
 
     explicitApi()
