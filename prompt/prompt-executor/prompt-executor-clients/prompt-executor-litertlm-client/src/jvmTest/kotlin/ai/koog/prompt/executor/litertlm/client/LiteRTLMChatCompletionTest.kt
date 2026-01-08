@@ -237,7 +237,8 @@ class LiteRTLMChatCompletionTest {
         client = LiteRTLMClient.create(config, toolExecutor)
 
         client!!.conversation(
-            systemPrompt = "You are a helpful weather assistant. Use tools when asked about weather."
+            systemPrompt = "You are a helpful weather assistant. Use tools when asked about weather.",
+            tools = listOf(weatherTool, calculatorTool)
         ).use { conv ->
             // First turn
             val r1 = conv.send("Hi! Can you check the weather in Tokyo?")
