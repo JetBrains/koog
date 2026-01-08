@@ -44,7 +44,6 @@ internal class AIAgentGraphPipelineImpl(
     private val executeSubgraphHandlers: MutableMap<AIAgentStorageKey<*>, SubgraphExecutionEventHandler> =
         mutableMapOf()
 
-
     private val registeredFeatures: MutableMap<AIAgentStorageKey<*>, RegisteredFeature> = mutableMapOf()
     private val featurePrepareDispatcher = Dispatchers.Default.limitedParallelism(5)
 

@@ -8,20 +8,16 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ParamInfo
-import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.agents.core.tools.reflect.asToolType
-import ai.koog.agents.core.tools.reflect.asTools
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import java.lang.reflect.ParameterizedType
-import kotlin.reflect.KClass
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.functions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.kotlinFunction
 
@@ -63,8 +59,6 @@ public fun <T : ToolSet> Class<out T>.asJavaTools(
     }
 }
 
-
-
 /**
  * Converts a Java `Method` into a `Tool` representation for use within the agent framework.
  *
@@ -102,7 +96,6 @@ public fun java.lang.reflect.Method.asTool(
         resultSerializer = serializer(returnType.kotlin.createType())
     )
 }
-
 
 // For Java methods
 internal fun Method.asToolDescriptor(
@@ -288,8 +281,10 @@ public fun java.lang.reflect.Type.asToolType(): ai.koog.agents.core.tools.ToolPa
                 // Handle enums
                 this.isEnum -> {
                     @Suppress("UNCHECKED_CAST")
-                    ToolParameterType.Enum((this as Class<out Enum<*>>).enumConstants.map { it.name }
-                        .toTypedArray())
+                    ToolParameterType.Enum(
+                        (this as Class<out Enum<*>>).enumConstants.map { it.name }
+                            .toTypedArray()
+                    )
                 }
 
                 // Handle arrays
@@ -362,7 +357,6 @@ private fun Class<*>.asJavaObjectProperties(): List<ai.koog.agents.core.tools.To
             method.returnType != Void.TYPE &&
             properties.none { it.name == propertyName }
         ) {
-
             val description = method.getAnnotation(LLMDescription::class.java)?.description ?: propertyName
             properties.add(
                 ToolParameterDescriptor(

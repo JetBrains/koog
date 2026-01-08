@@ -1,9 +1,7 @@
 package ai.koog.prompt
 
-import ai.koog.prompt.dsl.ContentPartsBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
-import ai.koog.prompt.text.TextContentBuilder
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock

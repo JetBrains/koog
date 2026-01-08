@@ -2,9 +2,7 @@
 
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
-import kotlin.jvm.JvmStatic
 
 /**
  * Default implementation of [RollbackToolRegistryBuilderAPI]

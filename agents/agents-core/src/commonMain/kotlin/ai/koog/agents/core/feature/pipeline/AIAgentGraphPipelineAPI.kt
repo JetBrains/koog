@@ -21,7 +21,7 @@ import kotlin.reflect.KType
  * Implemented by both the common expect AIAgentGraphPipeline and the concrete implementation
  * AIAgentGraphPipelineImpl, and used by all platform actual classes via delegation.
  */
-public interface AIAgentGraphPipelineAPI: AIAgentPipelineAPI {
+public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
 
     //region Trigger Node Handlers
     public suspend fun onNodeExecutionStarting(

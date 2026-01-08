@@ -55,7 +55,6 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
 
     override suspend fun getState(): AIAgentState<Output> = agentStateMutex.withLock { state.copy() }
 
-
     @OptIn(ExperimentalUuidApi::class)
     final override val id: String by lazy { id ?: Uuid.random().toString() }
 

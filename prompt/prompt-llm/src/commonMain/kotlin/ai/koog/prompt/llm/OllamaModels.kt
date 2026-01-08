@@ -1,7 +1,6 @@
 package ai.koog.prompt.llm
 
 import kotlin.jvm.JvmField
-import kotlin.jvm.JvmStatic
 
 /**
  * Represents a collection of predefined Large Language Models (LLM) categorized by makers.

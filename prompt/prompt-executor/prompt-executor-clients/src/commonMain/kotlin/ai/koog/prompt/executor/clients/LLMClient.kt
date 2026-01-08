@@ -9,7 +9,6 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
-import kotlin.jvm.JvmOverloads
 
 /**
  * Common interface for direct communication with LLM providers.

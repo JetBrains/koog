@@ -37,11 +37,11 @@ public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
     /**
      * Represents the current execution environment for the AI agent.
      *
-     * This property provides access to the configuration, context, and resources 
-     * necessary for the AI agent's operation. The environment encapsulates all 
+     * This property provides access to the configuration, context, and resources
+     * necessary for the AI agent's operation. The environment encapsulates all
      * relevant state and dependencies required for the agent to perform its tasks.
      *
-     * Note that this API is intended for internal use only and may be subject 
+     * Note that this API is intended for internal use only and may be subject
      * to changes or removal in future updates.
      */
     @InternalAgentsApi
@@ -50,10 +50,10 @@ public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
     /**
      * A registry that holds information about available tools within the system.
      * This registry is typically used for managing tool instances and their configurations.
-     * 
+     *
      * The `@InternalAgentsApi` annotation indicates that this property is intended for
      * internal use within the agents API and may be subject to changes without notice.
-     * 
+     *
      */
     @InternalAgentsApi
     public val toolRegistry: ToolRegistry

@@ -65,7 +65,6 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
         executeMultiple(prompt, tools)
     }
 
-
     /**
      * Executes a single task or request associated with the given `Prompt` and `ToolDescriptor` list.
      *
@@ -88,7 +87,6 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
         config.runOnStrategyDispatcher(executorService) {
             executeSingle(prompt, tools)
         }
-
 
     /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.
@@ -187,7 +185,6 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
         requestLLMForceOneTool(tool)
     }
 
-
     /**
      * Sends a request to the language model using the current session configuration
      * and returns a single response.
@@ -203,7 +200,6 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
     ): Message.Response = config.runOnStrategyDispatcher(executorService) {
         requestLLM()
     }
-
 
     /**
      * Sends a request to the language model and returns a streaming response as a [Flow] of [StreamFrame].

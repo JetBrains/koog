@@ -11,7 +11,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -291,7 +290,6 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         agentConfig: AIAgentConfig,
         clock: Clock
     ): Output = createAgent(id, additionalToolRegistry, agentConfig, clock).run(agentInput)
-
 
     /**
      * Creates and registers a new managed AI agent with the specified configuration and tool registry.

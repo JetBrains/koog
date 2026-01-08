@@ -8,10 +8,8 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
 import kotlinx.datetime.Clock
@@ -59,7 +57,6 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
      * @return The output produced by the agent.
      */
     public abstract suspend fun run(agentInput: Input): Output
-
 
     /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent

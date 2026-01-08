@@ -11,7 +11,6 @@ import java.util.concurrent.Executors
 import java.util.function.BiFunction
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 
 class JavaAPIAgentCreationAndRunTest {
 

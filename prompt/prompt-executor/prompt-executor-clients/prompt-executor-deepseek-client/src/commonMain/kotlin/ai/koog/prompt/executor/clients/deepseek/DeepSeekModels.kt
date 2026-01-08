@@ -5,7 +5,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlin.jvm.JvmField
-import kotlin.jvm.JvmStatic
 
 /**
  * Object containing a collection of predefined DeepSeek model configurations.

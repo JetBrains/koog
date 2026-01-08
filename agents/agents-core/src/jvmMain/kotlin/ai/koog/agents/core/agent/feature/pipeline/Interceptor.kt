@@ -3,7 +3,6 @@ package ai.koog.agents.core.feature.pipeline
 import ai.koog.agents.annotations.JavaAPI
 import java.util.concurrent.CompletableFuture
 
-
 /**
  * Represents an interceptor that can intercept and process a given context of type [ContextT].
  * This is a functional interface, allowing functional-style usage.
@@ -62,4 +61,3 @@ public fun interface AsyncInterceptor<ContextT> {
      */
     public fun intercept(contextT: ContextT): CompletableFuture<Boolean>
 }
-

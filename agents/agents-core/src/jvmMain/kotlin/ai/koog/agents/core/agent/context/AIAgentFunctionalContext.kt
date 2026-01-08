@@ -422,7 +422,6 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         requestLLMForceOneTool(message, tool)
     }
 
-
     /**
      * Executes the specified tool call using an optional executor service.
      *
@@ -488,7 +487,6 @@ public actual class AIAgentFunctionalContext internal actual constructor(
     ): List<Message.Response> = config.runOnLLMDispatcher(executorService) {
         sendMultipleToolResults(results)
     }
-
 
     /**
      * Executes a single tool with the specified arguments.

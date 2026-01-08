@@ -31,6 +31,7 @@ public class MockExecutorBuilder internal constructor() {
      * during the lifecycle of a `MockExecutorBuilder` instance.
      */
     private var toolRegistry: ToolRegistry? = null
+
     /**
      * A configurable clock instance used to control and manipulate time-related operations.
      *
@@ -43,6 +44,7 @@ public class MockExecutorBuilder internal constructor() {
      * time-sensitive logic or simulating specific timestamps.
      */
     private var clock: Clock = Clock.System
+
     /**
      * Holds the instance of the `Tokenizer` interface used for tokenizing text and counting tokens.
      * This variable is used within the `MockExecutorBuilder` to configure tokenization behavior for
@@ -55,6 +57,7 @@ public class MockExecutorBuilder internal constructor() {
      * The variable defaults to `null`, and a specific implementation must be provided to function properly.
      */
     private var tokenizer: Tokenizer? = null
+
     /**
      * Indicates whether the last message from the assistant should be handled during the mock execution process.
      *

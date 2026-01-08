@@ -87,7 +87,7 @@ public expect class AIAgentLLMContext constructor(
      */
     @DetachedPromptExecutorAPI
     @get:JvmName("responseProcessor")
-    override public var responseProcessor: ResponseProcessor?
+    public override var responseProcessor: ResponseProcessor?
         @InternalAgentsApi set
 
     /**

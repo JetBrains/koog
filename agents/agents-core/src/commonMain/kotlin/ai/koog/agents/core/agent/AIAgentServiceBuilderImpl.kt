@@ -115,12 +115,15 @@ internal class AIAgentServiceBuilderImpl : AIAgentServiceBuilderAPI {
         val config = AIAgentConfig(
             prompt = if (prompt === Prompt.Empty) {
                 prompt(
-                    id = "chat", params = LLMParams(
+                    id = "chat",
+                    params = LLMParams(
                         temperature = temperature,
                         numberOfChoices = numberOfChoices
                     )
                 ) {}
-            } else prompt,
+            } else {
+                prompt
+            },
             model = model,
             maxAgentIterations = maxIterations
         )

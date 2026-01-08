@@ -6,12 +6,12 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
-import java.util.concurrent.ExecutorService
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ExecutorService
+import kotlin.coroutines.CoroutineContext
 
 internal fun ExecutorService?.asCoroutineContext(
     defaultExecutorService: ExecutorService? = null,

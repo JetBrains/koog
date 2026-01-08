@@ -77,7 +77,6 @@ public class SubtaskBuilderWithInput<Input>(
         SubtaskBuilderWithInputAndOutput(context, taskDescription, input, Verification())
 }
 
-
 /**
  * Builder class to create and configure a subtask with specified input and output types.
  *
@@ -298,4 +297,3 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
         }
     }
 }
-

@@ -78,7 +78,8 @@ import kotlin.reflect.safeCast
  * Default implementation of [AIAgentPipelineAPI]
  */
 public class AIAgentPipelineImpl(
-    override val agentConfig: AIAgentConfig, clock: Clock
+    override val agentConfig: AIAgentConfig,
+    clock: Clock
 ) : AIAgentPipelineAPI {
 
     public override val clock: Clock = clock

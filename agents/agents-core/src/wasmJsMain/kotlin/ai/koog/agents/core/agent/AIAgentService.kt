@@ -23,7 +23,8 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     ): TAgent
 
     public actual abstract suspend fun createAgentAndRun(
-        agentInput: Input, id: String?,
+        agentInput: Input,
+        id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
         clock: Clock

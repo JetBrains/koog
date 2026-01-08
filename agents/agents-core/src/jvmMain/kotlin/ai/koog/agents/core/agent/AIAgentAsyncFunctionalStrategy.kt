@@ -5,12 +5,6 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.NonSuspendAIAgentStrategy
-import ai.koog.agents.core.utils.asCoroutineContext
-import ai.koog.prompt.message.Message
-import io.ktor.util.reflect.instanceOf
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.runBlocking
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 
 /**

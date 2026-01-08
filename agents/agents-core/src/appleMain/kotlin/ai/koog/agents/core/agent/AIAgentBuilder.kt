@@ -4,7 +4,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
-import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -14,7 +13,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import kotlinx.datetime.Clock
-import kotlin.reflect.typeOf
 
 public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilderAPI {
     private val delegate: AIAgentBuilderImpl = AIAgentBuilderImpl()
@@ -22,52 +20,72 @@ public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilde
     @property:PublishedApi
     internal actual var promptExecutor: PromptExecutor?
         get() = delegate.promptExecutor
-        set(value) { delegate.promptExecutor = value }
+        set(value) {
+            delegate.promptExecutor = value
+        }
 
     @property:PublishedApi
     internal actual var toolRegistry: ToolRegistry
         get() = delegate.toolRegistry
-        set(value) { delegate.toolRegistry = value }
+        set(value) {
+            delegate.toolRegistry = value
+        }
 
     @property:PublishedApi
     internal actual var id: String?
         get() = delegate.id
-        set(value) { delegate.id = value }
+        set(value) {
+            delegate.id = value
+        }
 
     @property:PublishedApi
     internal actual var prompt: Prompt
         get() = delegate.prompt
-        set(value) { delegate.prompt = value }
+        set(value) {
+            delegate.prompt = value
+        }
 
     @property:PublishedApi
     internal actual var llmModel: LLModel?
         get() = delegate.llmModel
-        set(value) { delegate.llmModel = value }
+        set(value) {
+            delegate.llmModel = value
+        }
 
     @property:PublishedApi
     internal actual var temperature: Double
         get() = delegate.temperature
-        set(value) { delegate.temperature = value }
+        set(value) {
+            delegate.temperature = value
+        }
 
     @property:PublishedApi
     internal actual var numberOfChoices: Int
         get() = delegate.numberOfChoices
-        set(value) { delegate.numberOfChoices = value }
+        set(value) {
+            delegate.numberOfChoices = value
+        }
 
     @property:PublishedApi
     internal actual var missingToolsConversionStrategy: MissingToolsConversionStrategy
         get() = delegate.missingToolsConversionStrategy
-        set(value) { delegate.missingToolsConversionStrategy = value }
+        set(value) {
+            delegate.missingToolsConversionStrategy = value
+        }
 
     @property:PublishedApi
     internal actual var maxIterations: Int
         get() = delegate.maxIterations
-        set(value) { delegate.maxIterations = value }
+        set(value) {
+            delegate.maxIterations = value
+        }
 
     @property:PublishedApi
     internal actual var clock: Clock
         get() = delegate.clock
-        set(value) { delegate.clock = value }
+        set(value) {
+            delegate.clock = value
+        }
 
     public actual override fun promptExecutor(promptExecutor: PromptExecutor): AIAgentBuilder =
         apply { delegate.promptExecutor(promptExecutor) }

@@ -15,7 +15,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
-import kotlin.jvm.JvmName
 
 /**
  * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.
@@ -86,13 +85,13 @@ public interface AIAgentLLMContextAPI {
     public val config: AIAgentConfig
 
     /**
-     * Represents the clock instance used for time-related operations and scheduling within the 
+     * Represents the clock instance used for time-related operations and scheduling within the
      * `AIAgentLLMContextAPI`. This property is intended for internal use in managing timing and
      * scheduling functionalities across the LLM context.
-     * 
+     *
      * As an `@InternalAgentsApi` element, it is not part of the public API and may be
      * subject to changes, removal, or modifications without notice.
-     * 
+     *
      * Use of this property requires an understanding of its role in the internal infrastructure
      * of the AI agents and should be approached with caution in specialized use cases.
      */

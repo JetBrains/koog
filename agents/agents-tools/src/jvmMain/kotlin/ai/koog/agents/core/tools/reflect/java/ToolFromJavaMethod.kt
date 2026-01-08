@@ -18,7 +18,6 @@ import kotlinx.serialization.serializerOrNull
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
-import kotlin.reflect.jvm.jvmErasure
 
 private const val nonSerializableParameterPrefix = "__##nonSerializableParameter##__"
 

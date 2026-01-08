@@ -5,7 +5,6 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * A strategy for implementing AI agent behavior that operates in a loop-based manner.
@@ -47,5 +46,3 @@ public fun <Input, Output> functionalStrategy(
     override val name: String = name
     override suspend fun execute(context: AIAgentFunctionalContext, input: Input): Output = context.func(input)
 }
-
-

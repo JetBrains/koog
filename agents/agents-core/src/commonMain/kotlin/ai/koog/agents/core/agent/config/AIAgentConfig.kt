@@ -5,9 +5,8 @@ package ai.koog.agents.core.agent.config
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
-import kotlin.jvm.JvmField
-import kotlin.jvm.JvmName
 import ai.koog.prompt.processor.ResponseProcessor
+import kotlin.jvm.JvmName
 
 /**
  * Configuration class for an AI agent that specifies the prompt, execution parameters, and behavior.
@@ -81,7 +80,6 @@ public expect class AIAgentConfig constructor(
      * or subgraphs where tools used in different*/
     @get:JvmName("missingToolsConversionStrategy")
     public val missingToolsConversionStrategy: MissingToolsConversionStrategy
-
 
     /**
      * Companion object for providing utility methods related to [AIAgentConfig].

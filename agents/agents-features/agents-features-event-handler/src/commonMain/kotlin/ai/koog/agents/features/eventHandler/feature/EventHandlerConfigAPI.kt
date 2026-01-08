@@ -1,7 +1,6 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
 import ai.koog.agents.core.feature.handler.AgentFinishedContext

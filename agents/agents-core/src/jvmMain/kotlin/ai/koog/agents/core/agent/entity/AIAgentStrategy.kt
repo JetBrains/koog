@@ -3,7 +3,6 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.asCoroutineContext
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService

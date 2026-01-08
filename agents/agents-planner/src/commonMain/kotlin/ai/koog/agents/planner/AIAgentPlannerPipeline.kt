@@ -2,7 +2,6 @@ package ai.koog.agents.planner
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import kotlinx.datetime.Clock
 

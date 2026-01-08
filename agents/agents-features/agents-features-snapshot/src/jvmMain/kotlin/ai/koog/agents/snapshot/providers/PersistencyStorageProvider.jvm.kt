@@ -3,12 +3,8 @@
 package ai.koog.agents.snapshot.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.withContext
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
-import java.util.concurrent.ThreadPoolExecutor
 
 /**
  * Storage provider (ex: database, S3, file) to be used in [ai.koog.agents.snapshot.feature.Persistence] feature.
@@ -38,7 +34,6 @@ public abstract class AsyncPersistenceStorageProvider<Filter> : PersistenceStora
         agentId: String,
         filter: Filter?
     ): CompletableFuture<AgentCheckpointData?>
-
 
     // ------- implementations ----------
 

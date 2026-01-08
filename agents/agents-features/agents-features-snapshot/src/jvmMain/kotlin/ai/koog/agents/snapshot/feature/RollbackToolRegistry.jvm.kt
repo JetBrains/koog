@@ -3,7 +3,6 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.tools.reflect.asTool
 import kotlin.reflect.KFunction
 
-
 /**
  * Adds a tool and its corresponding rollback tool to the registry.
  * This convenience method converts both `toolFunction` and `rollbackToolFunction` into `Tool` objects before adding them.

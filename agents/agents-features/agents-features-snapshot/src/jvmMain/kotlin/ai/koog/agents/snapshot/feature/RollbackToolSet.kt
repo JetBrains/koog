@@ -30,9 +30,9 @@ public interface RollbackToolSet {
     public fun revertToolFor(toolName: String, toolSet: ToolSet): Tool<ToolFromJavaMethod.VarArgs, *>? {
         return this::class.java.methods
             .find {
-                it.isAnnotationPresent(Reverts::class.java)
-                    && it.getAnnotation(Reverts::class.java).toolName == toolName
-                    && it.getAnnotation(Reverts::class.java).toolSet.isInstance(toolSet)
+                it.isAnnotationPresent(Reverts::class.java) &&
+                    it.getAnnotation(Reverts::class.java).toolName == toolName &&
+                    it.getAnnotation(Reverts::class.java).toolSet.isInstance(toolSet)
             }
             ?.asTool() as? Tool<ToolFromJavaMethod.VarArgs, *>
     }

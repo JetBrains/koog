@@ -390,7 +390,6 @@ internal class AIAgentFunctionalContextImpl(
             setToolChoiceRequired()
         }
 
-
         val result = when (runMode) {
             ToolCalls.SINGLE_RUN_SEQUENTIAL -> subtaskWithSingleToolMode(
                 taskDescription,
@@ -428,7 +427,6 @@ internal class AIAgentFunctionalContextImpl(
         runMode: ToolCalls = ToolCalls.SEQUENTIAL,
         assistantResponseRepeatMax: Int? = null
     ): Output {
-
         return subtask(
             taskDescription = taskDescription,
             input = input,
@@ -512,7 +510,6 @@ internal class AIAgentFunctionalContextImpl(
         toolCall: Message.Tool.Call,
         finishTool: Tool<Output, OutputTransformed>
     ): ReceivedToolResult = executeMultipleToolsHacked(listOf(toolCall), finishTool).first()
-
 
     @PublishedApi
     @OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class)

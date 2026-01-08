@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
 import org.junit.jupiter.api.Test
 import java.util.function.BiFunction
 import kotlin.test.assertEquals

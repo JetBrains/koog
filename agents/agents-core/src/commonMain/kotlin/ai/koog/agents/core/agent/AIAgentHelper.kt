@@ -22,7 +22,6 @@ internal object AIAgentHelper {
         else -> throw IllegalStateException("Output is not ready, agent's state is: $state")
     }
 
-
     /**
      * Creates and returns a new instance of the `Builder` class to configure and construct an AI agent.
      *

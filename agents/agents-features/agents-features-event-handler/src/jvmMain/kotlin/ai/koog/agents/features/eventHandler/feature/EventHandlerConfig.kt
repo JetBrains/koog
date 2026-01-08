@@ -32,7 +32,8 @@ import ai.koog.agents.core.feature.pipeline.Interceptor
 import ai.koog.agents.core.utils.submitToMainDispatcher
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-public actual open class EventHandlerConfig actual constructor() : FeatureConfig(),
+public actual open class EventHandlerConfig actual constructor() :
+    FeatureConfig(),
     EventHandlerConfigAPI by EventHandlerConfigImpl() {
 
     // Java Specific Handlers:

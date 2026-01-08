@@ -2,7 +2,6 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.annotations.JavaAPI
 
-
 /**
  * A class designed for mocking the execution of specific scenarios, typically used in testing environments.
  *

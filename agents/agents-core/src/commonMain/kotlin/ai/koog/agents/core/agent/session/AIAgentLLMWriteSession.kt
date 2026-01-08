@@ -10,7 +10,6 @@ import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
@@ -163,7 +162,6 @@ public expect class AIAgentLLMWriteSession internal constructor(
     final override fun close()
 
     public open override suspend fun requestLLMStreaming(definition: StructureDefinition?): Flow<StreamFrame>
-
 
     /**
      * Transforms a flow of arguments into a flow of results by asynchronously executing the given tool in parallel.

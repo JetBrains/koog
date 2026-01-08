@@ -271,5 +271,4 @@ public expect class AIAgentFunctionalContext internal constructor(
         assistantResponseRepeatMax: Int?,
         responseProcessor: ResponseProcessor?
     ): OutputTransformed
-
 }

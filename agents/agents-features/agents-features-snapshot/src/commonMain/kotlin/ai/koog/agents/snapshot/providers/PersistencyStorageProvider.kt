@@ -3,8 +3,6 @@
 package ai.koog.agents.snapshot.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.providers.filters.AgentCheckpointPredicateFilter
-import kotlin.jvm.JvmOverloads
 
 @Deprecated(
     "`PersistencyStorageProvider` has been renamed to `PersistenceStorageProvider`",

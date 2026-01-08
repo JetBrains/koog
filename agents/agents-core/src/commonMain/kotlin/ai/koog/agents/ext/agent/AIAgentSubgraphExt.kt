@@ -124,7 +124,7 @@ internal inline fun <reified Output> identityTool(): Tool<Output, Output> = obje
  */
 @PublishedApi
 @OptIn(InternalAgentToolsApi::class, InternalSerializationApi::class)
-internal fun <Output: Any> identityTool(outputClass: KClass<Output>): Tool<Output, Output> = object : Tool<Output, Output>(
+internal fun <Output : Any> identityTool(outputClass: KClass<Output>): Tool<Output, Output> = object : Tool<Output, Output>(
     argsSerializer = outputClass.serializer(),
     resultSerializer = outputClass.serializer(),
     name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
