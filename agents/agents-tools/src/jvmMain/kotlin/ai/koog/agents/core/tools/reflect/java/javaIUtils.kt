@@ -77,13 +77,7 @@ public fun java.lang.reflect.Method.asTool(
     thisRef: Any? = null,
     name: String? = null,
     description: String? = null
-): ai.koog.agents.core.tools.Tool<*, *> {
-    // Convert Method to KFunction if it's a Kotlin function
-    val kFunction = this.kotlinFunction
-    if (kFunction != null) {
-        return kFunction.asTool(json, thisRef, name, description)
-    }
-
+): ai.koog.agents.core.tools.Tool<ToolFromJavaMethod.VarArgs, Any?> {
     // Otherwise, build tool descriptor from Java reflection
     val toolDescriptor = this.asToolDescriptor(name = name, description = description)
 
