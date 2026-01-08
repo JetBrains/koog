@@ -20,19 +20,24 @@ import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 import java.util.function.Function
 
-@OptIn(DetachedPromptExecutorAPI::class)
-public actual open class AIAgentLLMContext @JvmOverloads actual constructor(
-    tools: List<ToolDescriptor>,
-    toolRegistry: ToolRegistry,
-    prompt: Prompt,
-    model: LLModel,
-    responseProcessor: ResponseProcessor?,
-    promptExecutor: PromptExecutor,
-    environment: AIAgentEnvironment,
-    config: AIAgentConfig,
-    clock: Clock,
+public actual open class AIAgentLLMContext internal actual constructor(
     internal actual val delegate: AIAgentLLMContextImpl
 ) : AIAgentLLMContextAPI by delegate {
+    public actual constructor(
+        tools: List<ToolDescriptor>,
+        toolRegistry: ToolRegistry,
+        prompt: Prompt,
+        model: LLModel,
+        responseProcessor: ResponseProcessor?,
+        promptExecutor: PromptExecutor,
+        environment: AIAgentEnvironment,
+        config: AIAgentConfig,
+        clock: Clock
+    ) : this(
+        delegate = AIAgentLLMContextImpl(
+            tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock
+        )
+    )
 
     @JvmOverloads
     public actual final override suspend fun copy(

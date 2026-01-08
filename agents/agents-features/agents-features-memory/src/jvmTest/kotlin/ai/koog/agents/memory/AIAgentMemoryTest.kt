@@ -258,7 +258,7 @@ class AIAgentMemoryTest {
 
         // Verify that writeSession was called and the prompt was updated with facts
         coVerify {
-            llm.writeSession(any())
+            llm.writeSession(any<suspend AIAgentLLMWriteSession.() -> Any?>())
         }
         assertTrue(promptUpdateSlot.isCaptured, "Prompt update should be captured")
 

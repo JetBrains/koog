@@ -17,8 +17,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 
-@InternalAgentsApi
-public class AIAgentLLMContextImpl(
+internal class AIAgentLLMContextImpl(
     override var tools: List<ToolDescriptor>,
     override val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     override var prompt: Prompt,

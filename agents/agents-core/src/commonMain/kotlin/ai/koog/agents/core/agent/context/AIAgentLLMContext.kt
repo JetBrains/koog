@@ -31,20 +31,35 @@ import kotlin.jvm.JvmName
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  * @property clock The clock used for timestamps of messages
  */
-public expect class AIAgentLLMContext constructor(
-    tools: List<ToolDescriptor>,
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    prompt: Prompt,
-    model: LLModel,
-    responseProcessor: ResponseProcessor?,
-    promptExecutor: PromptExecutor,
-    environment: AIAgentEnvironment,
-    config: AIAgentConfig,
-    clock: Clock,
-    delegate: AIAgentLLMContextImpl = AIAgentLLMContextImpl(
-        tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock
-    )
+public expect class AIAgentLLMContext internal constructor(
+    delegate: AIAgentLLMContextImpl
 ) : AIAgentLLMContextAPI {
+
+    /**
+     * Constructs a new instance of `AIAgentLLMContext` with the provided parameters.
+     *
+     * @param tools A list of tools described by [ToolDescriptor] that the agent can interact with.
+     * @param toolRegistry A registry of available tools, defaulting to an empty [ToolRegistry].
+     * @param prompt The initial prompt used in the context, represented by a [Prompt] instance.
+     * @param model The language model used for processing prompts and generating responses.
+     * @param responseProcessor An optional [ResponseProcessor] for handling and processing model responses.
+     * @param promptExecutor Responsible for executing the logic for prompt processing in the context.
+     * @param environment The operational environment of the AI agent, represented by an [AIAgentEnvironment].
+     * @param config Configuration settings for the AI agent, encapsulated in an [AIAgentConfig].
+     * @param clock A clock instance for managing time-related operations within the context.
+     */
+    public constructor(
+        tools: List<ToolDescriptor>,
+        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+        prompt: Prompt,
+        model: LLModel,
+        responseProcessor: ResponseProcessor?,
+        promptExecutor: PromptExecutor,
+        environment: AIAgentEnvironment,
+        config: AIAgentConfig,
+        clock: Clock
+    )
+
     internal val delegate: AIAgentLLMContextImpl
 
     @get:JvmName("toolRegistry")

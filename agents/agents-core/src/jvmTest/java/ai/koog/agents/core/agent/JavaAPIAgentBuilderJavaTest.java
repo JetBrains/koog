@@ -5,18 +5,12 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.agents.testing.tools.MockExecutor;
-import ai.koog.agents.testing.tools.MockLLMBuilder;
-import ai.koog.agents.testing.tools.MockLLMBuilderKt;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
-import kotlinx.datetime.Clock;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Executors;
-import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.*;
 
