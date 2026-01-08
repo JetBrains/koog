@@ -26,23 +26,24 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JavaAPIAgentBuilderJavaTest {
 
     private static AIAgentConfig baseConfig() {
-        return new AIAgentConfig(
-            Prompt.builder("id")
-                .system("system")
-                .user("user")
-                .assistant("assistant")
-                .user("user")
-                .assistant("assistant")
-                .toolCall("id-1", "tool-1", "args-1")
-                .toolResult("id-1", "tool-1", "result-1")
-                .toolCall("id-2", "tool-2", "args-2")
-                .toolResult("id-2", "tool-2", "result-2")
-                .build(),
-            OpenAIModels.Chat.GPT4_1,
-            100,
-            Executors.newSingleThreadExecutor(),
-            Executors.newSingleThreadExecutor()
-        );
+        return AIAgentConfig.builder(OpenAIModels.Chat.GPT4_1)
+            .prompt(
+                Prompt.builder("id")
+                    .system("system")
+                    .user("user")
+                    .assistant("assistant")
+                    .user("user")
+                    .assistant("assistant")
+                    .toolCall("id-1", "tool-1", "args-1")
+                    .toolResult("id-1", "tool-1", "result-1")
+                    .toolCall("id-2", "tool-2", "args-2")
+                    .toolResult("id-2", "tool-2", "result-2")
+                    .build()
+            )
+            .maxAgentIterations(100)
+            .llmRequestExecutorService(Executors.newSingleThreadExecutor())
+            .strategyExecutorService(Executors.newSingleThreadExecutor())
+            .build();
     }
 
     @Test
@@ -80,7 +81,12 @@ public class JavaAPIAgentBuilderJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(executor)
-            .agentConfig(new AIAgentConfig(Prompt.builder("p").user("hi").build(), OpenAIModels.Chat.GPT4o, 3))
+            .agentConfig(
+                AIAgentConfig.builder(OpenAIModels.Chat.GPT4o)
+                    .prompt(Prompt.builder("p").user("hi").build())
+                    .maxAgentIterations(3)
+                    .build()
+            )
             .functionalStrategy("myStrategy", (AIAgentFunctionalContext context, String userInput) -> {
                 // just echo last LLM answer to ensure the pipeline works
                 Message.Response resp = context.requestLLM(userInput);
@@ -124,7 +130,12 @@ public class JavaAPIAgentBuilderJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(executor)
-            .agentConfig(new AIAgentConfig(Prompt.builder("p").user("hi").build(), OpenAIModels.Chat.GPT4o, 3))
+            .agentConfig(
+                AIAgentConfig.builder(OpenAIModels.Chat.GPT4o)
+                    .prompt(Prompt.builder("p").user("hi").build())
+                    .maxAgentIterations(3)
+                    .build()
+            )
             .functionalStrategy(new MyJavaStrategy())
             .build();
 
