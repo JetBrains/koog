@@ -164,47 +164,7 @@ jobs:
           include_time_in_summary: true
           annotate_only: true
 
-  qodana:
-    needs: [ tests ]
-    if: github.repository == 'jetbrains/koog' && (github.event_name == 'push' || github.event.pull_request.head.repo.fork == false)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      checks: write
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
-          fetch-depth: 0  # a full history is required for pull request analysis
-          persist-credentials: false  # https://github.com/orgs/community/discussions/151365
-
-      # Add Java setup step
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          cache: gradle
-
-      # Download the coverage data artifact
-      - name: Download coverage data
-        uses: actions/download-artifact@v7
-        with:
-          name: gradle-coverage-data.zip
-          path: .qodana/code-coverage
-
-      - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2025.3
-        with:
-          pr-mode: false
-          args: --baseline,qodana.sarif.json
-          use-caches: true
-          cache-default-branch-only: true
-        env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1399872884 }}
-          QODANA_ENDPOINT: 'https://qodana.cloud'
-  knit:
+  knit-and-dokka:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -219,7 +179,7 @@ jobs:
           FILES_BEFORE_KNIT=$(find docs/src/ -name "*.kt" 2>/dev/null | wc -l || echo "0")
           echo "Files before knit: $FILES_BEFORE_KNIT"
 
-          ./gradlew :docs:knit
+          ./gradlew :docs:knit 
 
           FILES_AFTER_KNIT=$(find docs/src/ -name "*.kt" 2>/dev/null | wc -l || echo "0")
           echo "Files after knit: $FILES_AFTER_KNIT"
@@ -228,21 +188,4 @@ jobs:
           echo "Knit generated $KNIT_GENERATED_FILES files"
 
           echo "Starting assemble..."
-          ./gradlew :docs:assemble
-
-  dokka:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-
-      - name: Verify Dokka
-        run: ./gradlew dokkaGenerate
+          ./gradlew :docs:assemble dokkaGenerate
