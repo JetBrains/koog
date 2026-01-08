@@ -44,7 +44,7 @@ dependencies {
 // Create a prompt executor with multiple LLM providers
 val openAIClient = OpenAILLMClient("your-openai-api-key")
 val anthropicClient = AnthropicLLMClient("your-anthropic-api-key")
-val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
+val multiExecutor = MultiLLMPromptExecutor(openAIClient, anthropicClient)
 
 // Create a prompt
 val prompt = prompt {

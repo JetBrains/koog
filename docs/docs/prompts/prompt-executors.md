@@ -24,11 +24,11 @@ Here is an example:
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 -->
 ```kotlin
 val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
-val promptExecutor = SingleLLMPromptExecutor(openAIClient)
+val promptExecutor = MultiLLMPromptExecutor(openAIClient)
 ```
 <!--- KNIT example-prompt-executors-01.kt -->
 
@@ -76,15 +76,11 @@ that return `SingleLLMPromptExecutor` configured with a specific LLM client.
 | Mistral        | [simpleMistralAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-mistral-a-i-executor.html)                            | Wraps `MistralAILLMClient` that runs prompts with Mistral models.                |
 | Ollama         | [simpleOllamaAIExecutor](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms-all/ai.koog.prompt.executor.llms.all/simple-ollama-a-i-executor.html)                              | Wraps `OllamaClient` that runs prompts with Ollama.                              |
 
-Koog also provides the **pre-defined multi-provider executor** `DefaultMultiLLMPromptExecutor`.
-This is an implementation of `MultiLLMPromptExecutor` that wraps `OpenAILLMClient`,
-`AnthropicLLMClient`, and `GoogleLLMClient` models.
-
 Here is an example of creating pre-defined single and multi-provider executors:
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -94,11 +90,11 @@ import kotlinx.coroutines.runBlocking
 // Create an OpenAI executor
 val promptExecutor = simpleOpenAIExecutor("OPENAI_KEY")
 
-// Create a DefaultMultiLLMPromptExecutor with OpenAI, Anthropic, and Google LLM clients
+// Create a MultiLLMPromptExecutor with OpenAI, Anthropic, and Google LLM clients
 val openAIClient = OpenAILLMClient("OPENAI_KEY")
 val anthropicClient = AnthropicLLMClient("ANTHROPIC_KEY")
 val googleClient = GoogleLLMClient("GOOGLE_KEY")
-val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+val multiExecutor = MultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 ```
 <!--- KNIT example-prompt-executors-03.kt -->
 
