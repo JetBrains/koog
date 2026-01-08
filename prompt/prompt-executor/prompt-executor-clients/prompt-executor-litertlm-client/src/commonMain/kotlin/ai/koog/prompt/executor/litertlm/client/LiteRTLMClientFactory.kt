@@ -129,3 +129,154 @@ public expect fun createLiteRTLMClient(config: LiteRTLMClientConfig): LLMClient
  * @return true if LiteRT-LM is available, false otherwise.
  */
 public expect fun isLiteRTLMSupported(): Boolean
+
+/**
+ * DSL builder for [LiteRTLMClientConfig].
+ *
+ * Example:
+ * ```kotlin
+ * val config = liteRTLMConfig {
+ *     modelPath = "/path/to/model.litertlm"
+ *     backend = LiteRTLMBackend.GPU
+ *     sampler {
+ *         temperature = 0.7
+ *         topK = 50
+ *     }
+ * }
+ * ```
+ */
+@DslMarker
+public annotation class LiteRTLMConfigDsl
+
+/**
+ * Builder for [LiteRTLMClientConfig].
+ */
+@LiteRTLMConfigDsl
+public class LiteRTLMClientConfigBuilder {
+    /** Path to the LiteRT-LM model file. Required. */
+    public var modelPath: String? = null
+
+    /** Backend for the main inference engine. */
+    public var backend: LiteRTLMBackend = LiteRTLMBackend.CPU
+
+    /** Backend for vision processing, or null to disable. */
+    public var visionBackend: LiteRTLMBackend? = null
+
+    /** Backend for audio processing, or null to disable. */
+    public var audioBackend: LiteRTLMBackend? = null
+
+    /** Maximum number of tokens (input + output). */
+    public var maxNumTokens: Int? = null
+
+    /** Cache directory for model artifacts. */
+    public var cacheDir: String? = null
+
+    /** Clock for response timestamps. */
+    public var clock: Clock = Clock.System
+
+    private var samplerConfig: LiteRTLMSamplerConfig? = null
+
+    /**
+     * Configure sampling parameters.
+     */
+    public fun sampler(block: SamplerConfigBuilder.() -> Unit) {
+        samplerConfig = SamplerConfigBuilder().apply(block).build()
+    }
+
+    /**
+     * Builds the [LiteRTLMClientConfig].
+     * @throws IllegalStateException if modelPath is not set.
+     */
+    public fun build(): LiteRTLMClientConfig {
+        val path = requireNotNull(modelPath) { "modelPath must be set" }
+        return LiteRTLMClientConfig(
+            engineConfig = LiteRTLMEngineConfig(
+                modelPath = path,
+                backend = backend,
+                visionBackend = visionBackend,
+                audioBackend = audioBackend,
+                maxNumTokens = maxNumTokens,
+                cacheDir = cacheDir,
+            ),
+            samplerConfig = samplerConfig,
+            clock = clock,
+        )
+    }
+}
+
+/**
+ * Builder for [LiteRTLMSamplerConfig].
+ */
+@LiteRTLMConfigDsl
+public class SamplerConfigBuilder {
+    public var topK: Int = LiteRTLMSamplerConfig.DEFAULT_TOP_K
+    public var topP: Double = LiteRTLMSamplerConfig.DEFAULT_TOP_P
+    public var temperature: Double = LiteRTLMSamplerConfig.DEFAULT_TEMPERATURE
+    public var seed: Int = 0
+
+    public fun build(): LiteRTLMSamplerConfig = LiteRTLMSamplerConfig(
+        topK = topK,
+        topP = topP,
+        temperature = temperature,
+        seed = seed,
+    )
+}
+
+/**
+ * Creates a [LiteRTLMClientConfig] using a DSL builder.
+ *
+ * Example:
+ * ```kotlin
+ * val config = liteRTLMConfig {
+ *     modelPath = "/path/to/model.litertlm"
+ *     backend = LiteRTLMBackend.GPU
+ *     sampler {
+ *         temperature = 0.7
+ *     }
+ * }
+ * ```
+ */
+public fun liteRTLMConfig(block: LiteRTLMClientConfigBuilder.() -> Unit): LiteRTLMClientConfig {
+    return LiteRTLMClientConfigBuilder().apply(block).build()
+}
+
+// ==================== Simple Helpers (Cactus-style) ====================
+
+/**
+ * Creates a simple [LiteRTLMClientConfig] with just a model path.
+ *
+ * This is the simplest way to get started - just provide the model file path.
+ *
+ * Example:
+ * ```kotlin
+ * val config = liteRTLMConfig("/path/to/model.litertlm")
+ * ```
+ *
+ * @param modelPath Path to the LiteRT-LM model file.
+ * @param backend Backend for inference (default: CPU).
+ * @return A configured [LiteRTLMClientConfig].
+ */
+public fun liteRTLMConfig(
+    modelPath: String,
+    backend: LiteRTLMBackend = LiteRTLMBackend.CPU,
+): LiteRTLMClientConfig = LiteRTLMClientConfig(modelPath = modelPath, backend = backend)
+
+/**
+ * Creates a [LiteRTLMSamplerConfig] with common parameters.
+ *
+ * Example:
+ * ```kotlin
+ * val sampler = samplerConfig(temperature = 0.7, topK = 50)
+ * ```
+ */
+public fun samplerConfig(
+    temperature: Double = LiteRTLMSamplerConfig.DEFAULT_TEMPERATURE,
+    topK: Int = LiteRTLMSamplerConfig.DEFAULT_TOP_K,
+    topP: Double = LiteRTLMSamplerConfig.DEFAULT_TOP_P,
+    seed: Int = 0,
+): LiteRTLMSamplerConfig = LiteRTLMSamplerConfig(
+    topK = topK,
+    topP = topP,
+    temperature = temperature,
+    seed = seed,
+)

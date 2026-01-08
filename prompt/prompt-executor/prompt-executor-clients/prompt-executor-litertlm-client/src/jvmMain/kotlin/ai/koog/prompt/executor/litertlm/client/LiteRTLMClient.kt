@@ -88,13 +88,29 @@ public class LiteRTLMClient private constructor(
      * This is the recommended API for chat-like interactions where context
      * should be preserved across multiple messages.
      *
+     * ## Tool Support
+     *
+     * If the client was created with a [ToolExecutor], you can enable tool calling
+     * by passing tool descriptors:
+     *
+     * ```kotlin
+     * client.conversation(
+     *     systemPrompt = "You are helpful.",
+     *     tools = listOf(weatherTool, calculatorTool)
+     * ).use { conv ->
+     *     val response = conv.send("What's the weather in Paris?")
+     * }
+     * ```
+     *
      * @param systemPrompt Optional system prompt for the conversation.
+     * @param tools Optional list of tools available to the model.
      * @param samplerConfig Optional sampler configuration override.
      * @return A [ManagedConversation] that maintains state across turns.
      */
     @MustUseReturnValue("The returned ManagedConversation should be used for sending messages")
     public fun conversation(
         systemPrompt: String? = null,
+        tools: List<ToolDescriptor> = emptyList(),
         samplerConfig: LiteRTLMSamplerConfig? = null,
     ): ManagedConversation {
         checkNotClosed()
@@ -108,8 +124,25 @@ public class LiteRTLMClient private constructor(
                 seed = 0,
             )
 
+        // Create tool bridge if tools are provided and executor is available
+        val (toolBridge, finalSystemPrompt) = if (tools.isNotEmpty() && toolExecutor != null) {
+            val bridge = LiteRTLMToolBridge(tools, toolExecutor)
+            val toolsPrompt = bridge.generateToolsPrompt()
+            val enhancedSystemPrompt = buildString {
+                if (systemPrompt != null) {
+                    appendLine(systemPrompt)
+                    appendLine()
+                }
+                append(toolsPrompt)
+            }
+            bridge to enhancedSystemPrompt
+        } else {
+            null to systemPrompt
+        }
+
         val conversationConfig = ConversationConfig(
-            systemMessage = systemPrompt?.let { LiteRTMessage.of(it) },
+            systemMessage = finalSystemPrompt?.let { LiteRTMessage.of(it) },
+            tools = listOfNotNull(toolBridge),
             samplerConfig = nativeSamplerConfig,
         )
 
@@ -494,6 +527,21 @@ public enum class LiteRTLMLogSeverity {
  * }
  * ```
  */
+/**
+ * Represents an entry in the conversation history.
+ *
+ * @property role The role of the message sender.
+ * @property content The text content of the message.
+ * @property timestamp When the message was sent/received.
+ */
+public data class ConversationEntry(
+    val role: Role,
+    val content: String,
+    val timestamp: kotlinx.datetime.Instant,
+) {
+    public enum class Role { USER, ASSISTANT }
+}
+
 public class ManagedConversation internal constructor(
     private val conversation: Conversation,
     private val clock: Clock,
@@ -507,6 +555,28 @@ public class ManagedConversation internal constructor(
      */
     private val mutex = Mutex()
 
+    /** Internal mutable history. */
+    private val _history = mutableListOf<ConversationEntry>()
+
+    /**
+     * The conversation history as an immutable list.
+     *
+     * Each entry contains the role (USER or ASSISTANT), content, and timestamp.
+     * Useful for debugging, logging, or displaying conversation context.
+     */
+    public val history: List<ConversationEntry>
+        get() = _history.toList()
+
+    /** Number of user messages sent in this conversation. */
+    public val messageCount: Int
+        get() = _history.count { it.role == ConversationEntry.Role.USER }
+
+    /** Number of turns (user + assistant pairs) in this conversation. */
+    public val turnCount: Int
+        get() = _history.size / 2
+
+    // ==================== Text Messages ====================
+
     /**
      * Sends a text message and returns the response.
      *
@@ -517,26 +587,12 @@ public class ManagedConversation internal constructor(
      */
     @MustUseReturnValue("The assistant's response should be processed")
     public suspend fun send(text: String): Message.Assistant = mutex.withLock {
+        _history.add(ConversationEntry(ConversationEntry.Role.USER, text, clock.now()))
         val response = conversation.sendMessage(LiteRTMessage.of(text))
+        val responseText = response.toString()
+        _history.add(ConversationEntry(ConversationEntry.Role.ASSISTANT, responseText, clock.now()))
         Message.Assistant(
-            content = response.toString(),
-            metaInfo = ResponseMetaInfo.create(clock),
-        )
-    }
-
-    /**
-     * Sends a message with multimodal content.
-     *
-     * This method is thread-safe. Concurrent calls will be serialized.
-     *
-     * @param contents The content parts to send.
-     * @return The assistant's response.
-     */
-    @MustUseReturnValue("The assistant's response should be processed")
-    public suspend fun send(vararg contents: Content): Message.Assistant = mutex.withLock {
-        val response = conversation.sendMessage(LiteRTMessage.of(*contents))
-        Message.Assistant(
-            content = response.toString(),
+            content = responseText,
             metaInfo = ResponseMetaInfo.create(clock),
         )
     }
@@ -553,12 +609,177 @@ public class ManagedConversation internal constructor(
     @MustUseReturnValue("The returned Flow must be collected to receive the response")
     public fun sendStreaming(text: String): Flow<String> = kotlinx.coroutines.flow.flow {
         mutex.withLock {
+            _history.add(ConversationEntry(ConversationEntry.Role.USER, text, clock.now()))
+            val responseBuilder = StringBuilder()
             conversation.sendMessageAsync(LiteRTMessage.of(text))
                 .collect { message ->
-                    emit(message.toString())
+                    val chunk = message.toString()
+                    responseBuilder.append(chunk)
+                    emit(chunk)
                 }
+            _history.add(ConversationEntry(ConversationEntry.Role.ASSISTANT, responseBuilder.toString(), clock.now()))
         }
     }
+
+    // ==================== Image Messages ====================
+
+    /**
+     * Sends an image with optional text and returns the response.
+     *
+     * This method is thread-safe. Concurrent calls will be serialized.
+     *
+     * @param imageBytes The image data as bytes.
+     * @param text Optional text to accompany the image.
+     * @return The assistant's response.
+     */
+    @MustUseReturnValue("The assistant's response should be processed")
+    public suspend fun sendImage(imageBytes: ByteArray, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Image: ${imageBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.ImageBytes(imageBytes),
+        )
+
+    /**
+     * Sends an image from a file path with optional text and returns the response.
+     *
+     * This method is thread-safe. Concurrent calls will be serialized.
+     *
+     * @param imagePath The file path to the image.
+     * @param text Optional text to accompany the image.
+     * @return The assistant's response.
+     */
+    @MustUseReturnValue("The assistant's response should be processed")
+    public suspend fun sendImageFile(imagePath: String, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Image: $imagePath]",
+            text = text,
+            mediaContent = Content.ImageFile(imagePath),
+        )
+
+    /**
+     * Sends an image with optional text and streams the response.
+     *
+     * @param imageBytes The image data as bytes.
+     * @param text Optional text to accompany the image.
+     * @return A flow of response chunks.
+     */
+    @MustUseReturnValue("The returned Flow must be collected to receive the response")
+    public fun sendImageStreaming(imageBytes: ByteArray, text: String? = null): Flow<String> =
+        sendMultimodalStreaming(
+            historyDescription = text ?: "[Image: ${imageBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.ImageBytes(imageBytes),
+        )
+
+    // ==================== Audio Messages ====================
+
+    /**
+     * Sends audio with optional text and returns the response.
+     *
+     * This method is thread-safe. Concurrent calls will be serialized.
+     *
+     * @param audioBytes The audio data as bytes.
+     * @param text Optional text to accompany the audio.
+     * @return The assistant's response.
+     */
+    @MustUseReturnValue("The assistant's response should be processed")
+    public suspend fun sendAudio(audioBytes: ByteArray, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Audio: ${audioBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.AudioBytes(audioBytes),
+        )
+
+    /**
+     * Sends audio from a file path with optional text and returns the response.
+     *
+     * This method is thread-safe. Concurrent calls will be serialized.
+     *
+     * @param audioPath The file path to the audio.
+     * @param text Optional text to accompany the audio.
+     * @return The assistant's response.
+     */
+    @MustUseReturnValue("The assistant's response should be processed")
+    public suspend fun sendAudioFile(audioPath: String, text: String? = null): Message.Assistant =
+        sendMultimodal(
+            historyDescription = text ?: "[Audio: $audioPath]",
+            text = text,
+            mediaContent = Content.AudioFile(audioPath),
+        )
+
+    /**
+     * Sends audio with optional text and streams the response.
+     *
+     * @param audioBytes The audio data as bytes.
+     * @param text Optional text to accompany the audio.
+     * @return A flow of response chunks.
+     */
+    @MustUseReturnValue("The returned Flow must be collected to receive the response")
+    public fun sendAudioStreaming(audioBytes: ByteArray, text: String? = null): Flow<String> =
+        sendMultimodalStreaming(
+            historyDescription = text ?: "[Audio: ${audioBytes.size} bytes]",
+            text = text,
+            mediaContent = Content.AudioBytes(audioBytes),
+        )
+
+    // ==================== Internal Helpers ====================
+
+    /**
+     * Internal helper for sending multimodal content (image/audio) synchronously.
+     * Reduces code duplication across sendImage, sendImageFile, sendAudio, sendAudioFile.
+     */
+    private suspend fun sendMultimodal(
+        historyDescription: String,
+        text: String?,
+        mediaContent: Content,
+    ): Message.Assistant = mutex.withLock {
+        _history.add(ConversationEntry(ConversationEntry.Role.USER, historyDescription, clock.now()))
+
+        val contents = buildList {
+            if (text != null) add(Content.Text(text))
+            add(mediaContent)
+        }
+        val response = conversation.sendMessage(LiteRTMessage.of(*contents.toTypedArray()))
+        val responseText = response.toString()
+        _history.add(ConversationEntry(ConversationEntry.Role.ASSISTANT, responseText, clock.now()))
+
+        Message.Assistant(
+            content = responseText,
+            metaInfo = ResponseMetaInfo.create(clock),
+        )
+    }
+
+    /**
+     * Internal helper for sending multimodal content with streaming response.
+     * Reduces code duplication across sendImageStreaming, sendAudioStreaming.
+     */
+    private fun sendMultimodalStreaming(
+        historyDescription: String,
+        text: String?,
+        mediaContent: Content,
+    ): Flow<String> = kotlinx.coroutines.flow.flow {
+        mutex.withLock {
+            _history.add(ConversationEntry(ConversationEntry.Role.USER, historyDescription, clock.now()))
+
+            val contents = buildList {
+                if (text != null) add(Content.Text(text))
+                add(mediaContent)
+            }
+            val responseBuilder = StringBuilder()
+            conversation.sendMessageAsync(LiteRTMessage.of(*contents.toTypedArray()))
+                .collect { message ->
+                    val chunk = message.toString()
+                    responseBuilder.append(chunk)
+                    emit(chunk)
+                }
+            _history.add(
+                ConversationEntry(ConversationEntry.Role.ASSISTANT, responseBuilder.toString(), clock.now())
+            )
+        }
+    }
+
+    // ==================== Control Methods ====================
 
     /**
      * Cancels any ongoing inference in this conversation.
@@ -579,6 +800,17 @@ public class ManagedConversation internal constructor(
     @OptIn(ExperimentalApi::class)
     public suspend fun getBenchmarkInfo(): BenchmarkInfo = mutex.withLock {
         conversation.getBenchmarkInfo()
+    }
+
+    /**
+     * Clears the local history tracking.
+     *
+     * Note: This does NOT clear the conversation context in the native engine.
+     * The model will still remember previous messages. To start fresh, create
+     * a new conversation.
+     */
+    public fun clearLocalHistory() {
+        _history.clear()
     }
 
     override fun close() {
