@@ -9,8 +9,8 @@ group = rootProject.group
 version = rootProject.version
 
 kotlin {
-    // LiteRT-LM is only available for JVM and Android
-    jvm()
+    // LiteRT-LM has full implementation on JVM/Android, stubs on other platforms
+    // The convention plugin handles all target declarations
 
     sourceSets {
         commonMain {
