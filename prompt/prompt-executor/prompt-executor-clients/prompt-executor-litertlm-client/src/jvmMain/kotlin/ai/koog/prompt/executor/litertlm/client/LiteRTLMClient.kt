@@ -16,6 +16,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitAppend
 import ai.koog.prompt.streaming.streamFrameFlow
 import com.google.ai.edge.litertlm.Content
+import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
@@ -27,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import kotlin.jvm.Volatile
 
 /**
  * Client for interacting with LiteRT-LM for on-device LLM inference.
@@ -34,76 +36,76 @@ import kotlinx.datetime.Clock
  * LiteRT-LM is Google's on-device inference engine that enables running LLMs locally
  * on Android and JVM platforms without requiring network connectivity.
  *
- * Implements [LLMClient] for executing prompts and streaming responses.
+ * Example usage:
+ * ```kotlin
+ * val config = LiteRTLMClientConfig(
+ *     engineConfig = LiteRTLMEngineConfig(
+ *         modelPath = "/path/to/model.litertlm",
+ *         backend = LiteRTLMBackend.GPU,
+ *     ),
+ *     samplerConfig = LiteRTLMSamplerConfig(
+ *         topK = 40,
+ *         topP = 0.95,
+ *         temperature = 0.8,
+ *     ),
+ * )
+ * val client = LiteRTLMClient(config)
+ * client.initialize()
+ * // ... use client ...
+ * client.close()
+ * ```
  *
- * @param modelPath The absolute path to the LiteRT-LM model file (.litertlm format).
- * @param backend The compute backend to use for inference.
- * @param cacheDir Optional cache directory path to improve model load times.
- * @param defaultTopK Default top-K sampling parameter. Limits token selection to top N tokens.
- * @param defaultTopP Default top-P (nucleus) sampling parameter. Cumulative probability threshold.
- * @param defaultTemperature Default temperature for response randomness (lower = more deterministic).
- * @param clock Clock instance used for tracking response metadata timestamps.
+ * @param config The configuration for the client.
  */
 public class LiteRTLMClient(
-    private val modelPath: String,
-    private val backend: Backend = Backend.CPU,
-    private val cacheDir: String? = null,
-    private val defaultTopK: Int = DEFAULT_TOP_K,
-    private val defaultTopP: Float = DEFAULT_TOP_P,
-    private val defaultTemperature: Float = DEFAULT_TEMPERATURE,
-    private val clock: Clock = Clock.System,
+    private val config: LiteRTLMClientConfig,
 ) : LLMClient {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
-
-        private const val DEFAULT_TOP_K = 40
-        private const val DEFAULT_TOP_P = 0.95f
-        private const val DEFAULT_TEMPERATURE = 0.8f
     }
+
+    // A lock to protect access to the engine's state and native handle.
+    private val lock = Any()
 
     /**
-     * Compute backend options for LiteRT-LM inference.
+     * The underlying LiteRT-LM engine. A non-null value indicates an initialized engine.
+     *
+     * `@Volatile` ensures that changes to the engine are immediately visible across all threads.
      */
-    public enum class Backend {
-        /** CPU-based inference */
-        CPU,
-        /** GPU-accelerated inference */
-        GPU
-    }
-
+    @Volatile
     private var engine: Engine? = null
-    private var isInitialized = false
+
+    /** Returns `true` if the engine is initialized and ready for use; `false` otherwise. */
+    public fun isInitialized(): Boolean {
+        return engine != null
+    }
 
     /**
      * Initializes the LiteRT-LM engine.
-     * This should be called before executing any prompts.
-     * Initialization can take several seconds depending on model size.
+     *
+     * **Note:** This operation can take a significant amount of time (e.g., 10 seconds) depending on
+     * the model size and device hardware. It is strongly recommended to call this method on a
+     * background thread to avoid blocking the main thread.
+     *
+     * @throws IllegalStateException if the engine has already been initialized.
+     * @throws LLMClientException if initialization fails.
      */
     public suspend fun initialize(): Unit = withContext(Dispatchers.IO) {
-        if (isInitialized) return@withContext
+        synchronized(lock) {
+            check(!isInitialized()) { "Engine is already initialized." }
 
-        try {
-            val engineConfig = EngineConfig(
-                modelPath = modelPath,
-                backend = when (backend) {
-                    Backend.CPU -> LiteRTBackend.CPU
-                    Backend.GPU -> LiteRTBackend.GPU
-                },
-                cacheDir = cacheDir
-            )
-
-            engine = Engine(engineConfig).also { it.initialize() }
-            isInitialized = true
-            logger.info { "LiteRT-LM engine initialized with model: $modelPath" }
-        } catch (e: Exception) {
-            val exception = LLMClientException(
-                clientName = clientName,
-                message = "Failed to initialize LiteRT-LM engine: ${e.message}",
-                cause = e
-            )
-            logger.error(exception) { exception.message }
-            throw exception
+            try {
+                val engineConfig = createEngineConfig()
+                engine = Engine(engineConfig).also { it.initialize() }
+                logger.info { "LiteRT-LM engine initialized with model: ${config.engineConfig.modelPath}" }
+            } catch (e: Exception) {
+                throw LLMClientException(
+                    clientName = clientName,
+                    message = "Failed to initialize LiteRT-LM engine: ${e.message}",
+                    cause = e
+                )
+            }
         }
     }
 
@@ -120,7 +122,7 @@ public class LiteRTLMClient(
         tools: List<ToolDescriptor>
     ): List<Message.Response> = withContext(Dispatchers.IO) {
         require(model.provider == LLMProvider.LiteRTLM) { "Model not supported by LiteRT-LM" }
-        ensureInitialized()
+        checkInitialized()
 
         val currentEngine = engine ?: throw LLMClientException(
             clientName = clientName,
@@ -140,7 +142,7 @@ public class LiteRTLMClient(
                     response = conversation.sendMessage(message)
                 }
 
-                val responseMetadata = ResponseMetaInfo.create(clock)
+                val responseMetadata = ResponseMetaInfo.create(config.clock)
                 val responseText = response?.toString() ?: ""
 
                 listOf(
@@ -151,13 +153,11 @@ public class LiteRTLMClient(
                 )
             }
         } catch (e: Exception) {
-            val exception = LLMClientException(
+            throw LLMClientException(
                 clientName = clientName,
                 message = "Failed to execute prompt: ${e.message}",
                 cause = e
             )
-            logger.error(exception) { exception.message }
-            throw exception
         }
     }
 
@@ -167,7 +167,7 @@ public class LiteRTLMClient(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = streamFrameFlow {
         require(model.provider == LLMProvider.LiteRTLM) { "Model not supported by LiteRT-LM" }
-        ensureInitialized()
+        checkInitialized()
 
         val currentEngine = engine ?: throw LLMClientException(
             clientName = clientName,
@@ -203,6 +203,50 @@ public class LiteRTLMClient(
     }
 
     /**
+     * Cancels any ongoing inference process.
+     *
+     * If there is no ongoing inference process, it is a no-op.
+     *
+     * Note: This method requires an active conversation context. For conversation-level
+     * cancellation, use the conversation's cancelProcess() method directly.
+     *
+     * @throws IllegalStateException if the engine is not initialized.
+     */
+    public fun cancelProcess(conversation: Conversation) {
+        checkInitialized()
+        conversation.cancelProcess()
+    }
+
+    /**
+     * Closes the engine and releases the native LiteRT-LM engine's resources.
+     *
+     * @throws IllegalStateException if the engine is not initialized.
+     */
+    override fun close() {
+        synchronized(lock) {
+            checkInitialized()
+            engine?.close()
+            engine = null
+            logger.info { "LiteRT-LM engine closed" }
+        }
+    }
+
+    /**
+     * Creates an EngineConfig from the client configuration.
+     */
+    private fun createEngineConfig(): EngineConfig {
+        val cfg = config.engineConfig
+        return EngineConfig(
+            modelPath = cfg.modelPath,
+            backend = cfg.backend.toLiteRTBackend(),
+            visionBackend = cfg.visionBackend?.toLiteRTBackend(),
+            audioBackend = cfg.audioBackend?.toLiteRTBackend(),
+            maxNumTokens = cfg.maxNumTokens,
+            cacheDir = cfg.cacheDir,
+        )
+    }
+
+    /**
      * Creates a ConversationConfig from the prompt parameters.
      */
     @Suppress("UNUSED_PARAMETER")
@@ -212,16 +256,31 @@ public class LiteRTLMClient(
             .firstOrNull()
             ?.content
 
-        // Use prompt temperature if provided, otherwise use default
-        val temperature = prompt.params.temperature?.toFloat() ?: defaultTemperature
+        // Use prompt temperature if provided, otherwise use config sampler or default
+        val samplerConfig = config.samplerConfig
+        val temperature = prompt.params.temperature
+            ?: samplerConfig?.temperature
+            ?: LiteRTLMSamplerConfig.DEFAULT_TEMPERATURE
+
+        val finalSamplerConfig = if (samplerConfig != null) {
+            SamplerConfig(
+                topK = samplerConfig.topK,
+                topP = samplerConfig.topP,
+                temperature = temperature,
+                seed = samplerConfig.seed,
+            )
+        } else {
+            SamplerConfig(
+                topK = LiteRTLMSamplerConfig.DEFAULT_TOP_K,
+                topP = LiteRTLMSamplerConfig.DEFAULT_TOP_P,
+                temperature = temperature,
+                seed = 0,
+            )
+        }
 
         return ConversationConfig(
             systemMessage = systemMessage?.let { LiteRTMessage.of(it) },
-            samplerConfig = SamplerConfig(
-                topK = defaultTopK,
-                topP = defaultTopP,
-                temperature = temperature
-            )
+            samplerConfig = finalSamplerConfig,
             // Note: LiteRT-LM tools are registered via annotation-based classes.
             // Integration with ToolDescriptor would require runtime code generation
             // or a bridge layer. For now, tools parameter is accepted but not used.
@@ -345,12 +404,16 @@ public class LiteRTLMClient(
                 Content.ImageBytes(content.asBytes())
             }
             is AttachmentContent.URL -> {
-                // LiteRT-LM supports ImageFile for local paths
-                // For URLs, we'd need to download first - throw for now
-                throw LLMClientException(
-                    clientName = clientName,
-                    message = "Image URLs are not supported. Please provide image as binary content."
-                )
+                // Check if it's a file:// URL (local file path)
+                val url = content.url
+                if (url.startsWith("file://")) {
+                    Content.ImageFile(url.removePrefix("file://"))
+                } else {
+                    throw LLMClientException(
+                        clientName = clientName,
+                        message = "Remote image URLs are not supported. Use file:// URLs or binary content."
+                    )
+                }
             }
             is AttachmentContent.PlainText -> {
                 throw LLMClientException(
@@ -370,10 +433,16 @@ public class LiteRTLMClient(
                 Content.AudioBytes(content.asBytes())
             }
             is AttachmentContent.URL -> {
-                throw LLMClientException(
-                    clientName = clientName,
-                    message = "Audio URLs are not supported. Please provide audio as binary content."
-                )
+                // Check if it's a file:// URL (local file path)
+                val url = content.url
+                if (url.startsWith("file://")) {
+                    Content.AudioFile(url.removePrefix("file://"))
+                } else {
+                    throw LLMClientException(
+                        clientName = clientName,
+                        message = "Remote audio URLs are not supported. Use file:// URLs or binary content."
+                    )
+                }
             }
             is AttachmentContent.PlainText -> {
                 throw LLMClientException(
@@ -384,19 +453,15 @@ public class LiteRTLMClient(
         }
     }
 
-    private fun ensureInitialized() {
-        if (!isInitialized) {
-            throw LLMClientException(
-                clientName = clientName,
-                message = "LiteRT-LM client not initialized. Call initialize() first."
-            )
-        }
+    /** Throws [IllegalStateException] if the engine is not initialized. */
+    private fun checkInitialized() {
+        check(isInitialized()) { "Engine is not initialized." }
     }
 
-    override fun close() {
-        engine?.close()
-        engine = null
-        isInitialized = false
-        logger.info { "LiteRT-LM engine closed" }
+    /** Converts LiteRTLMBackend to the native LiteRT Backend. */
+    private fun LiteRTLMBackend.toLiteRTBackend(): LiteRTBackend = when (this) {
+        LiteRTLMBackend.CPU -> LiteRTBackend.CPU
+        LiteRTLMBackend.GPU -> LiteRTBackend.GPU
+        LiteRTLMBackend.NPU -> LiteRTBackend.NPU
     }
 }
