@@ -107,7 +107,7 @@ class LLMAsJudgeNodeTest {
             task = CRITIC_TASK
         )
 
-        coEvery { mockPromptExecutor.execute(any(), any(), any()) } returns listOf(
+        coEvery { mockPromptExecutor.execute(any(), any()) } returns listOf(
             Message.Assistant(
                 content = Json.encodeToString(
                     CriticResultFromLLM.serializer(),
@@ -158,8 +158,7 @@ class LLMAsJudgeNodeTest {
                 },
                 model = match {
                     it == anotherModel
-                },
-                tools = any()
+                }
             )
         }
 
