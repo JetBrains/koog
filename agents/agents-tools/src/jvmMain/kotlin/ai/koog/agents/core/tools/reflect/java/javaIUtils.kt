@@ -18,7 +18,9 @@ import java.lang.reflect.Parameter
 import java.lang.reflect.ParameterizedType
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.kotlinFunction
 
 /**
  * Converts this [ToolSet] instance into a list of [Tool]s by reflecting on its functions.
@@ -77,12 +79,11 @@ public fun java.lang.reflect.Method.asTool(
     name: String? = null,
     description: String? = null
 ): ai.koog.agents.core.tools.Tool<ToolFromJavaMethod.VarArgs, Any?> {
-    // Otherwise, build tool descriptor from Java reflection
+    // build tool descriptor from Java reflection
     val toolDescriptor = this.asToolDescriptor(name = name, description = description)
 
-    @Suppress("UNCHECKED_CAST")
     return ToolFromJavaMethod(
-        method = this, // Your ToolFromCallable should handle both KFunction and Method
+        method = this,
         thisRef = thisRef,
         descriptor = toolDescriptor,
         json = json,
@@ -90,7 +91,8 @@ public fun java.lang.reflect.Method.asTool(
     )
 }
 
-// For Java methods
+@InternalAgentToolsApi
+@JavaAPI
 internal fun Method.asToolDescriptor(
     name: String? = null,
     description: String? = null
@@ -103,7 +105,7 @@ internal fun Method.asToolDescriptor(
         ?: this.name
 
     val toolParameters = this.parameters.mapNotNull { param ->
-        val parameterName = param.name ?: return@mapNotNull null // likely `this` parameter
+        val parameterName = param.getParameterName() ?: return@mapNotNull null
         val toolParameterDescription =
             param.getPreferredParameterDescriptionAnnotation(this)?.description ?: parameterName
         val paramType = param.type
@@ -179,6 +181,30 @@ private fun Parameter.getPreferredParameterDescriptionAnnotation(method: Method)
     val thisParameterDescription = getAnnotation(LLMDescription::class.java)
     if (thisParameterDescription != null) return thisParameterDescription
     return null
+}
+
+@InternalAgentToolsApi
+@JavaAPI
+public fun Parameter.getParameterName(): String? {
+    if (isNamePresent) return name
+    val method = declaringExecutable as? Method ?: return name
+    val kFunction = try { method.kotlinFunction } catch (e: Throwable) { null }
+    if (kFunction != null) {
+        val valueParameters = kFunction.parameters.filter { it.kind == kotlin.reflect.KParameter.Kind.VALUE }
+        val indexInJava = method.parameters.indexOf(this)
+        if (indexInJava in valueParameters.indices) {
+            val kName = valueParameters[indexInJava].name
+            if (kName != null && !kName.startsWith("arg")) return kName
+        }
+    }
+
+    // fallback to LLMDescription if present on the parameter
+    val description = getAnnotation(LLMDescription::class.java)?.description
+    if (description != null && description.split(" ").size == 1 && description.all { it.isLetterOrDigit() || it == '_' }) {
+        return description
+    }
+
+    return name
 }
 
 private fun Method.getPreferredToolAnnotation(): Tool? {

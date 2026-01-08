@@ -122,9 +122,9 @@ public class ToolFromJavaMethod(
     public class VarArgsSerializer(public val method: java.lang.reflect.Method) : KSerializer<VarArgs> {
         @OptIn(InternalSerializationApi::class)
         override val descriptor: SerialDescriptor
-            get() = buildClassSerialDescriptor("ai.koog.agents.core.tools.reflect.ToolFromJavaMethod.VarArgs") {
+            get() = buildClassSerialDescriptor("ai.koog.agents.core.tools.reflect.java.ToolFromJavaMethod.VarArgs") {
                 for ((i, parameter) in method.parameters.withIndex()) {
-                    val name = parameter.name
+                    val name = parameter.getParameterName() ?: parameter.name
                     val paramType = parameter.parameterizedType.toKType()
                     val parameterSerializer = serializer(paramType)
                     element(
@@ -142,8 +142,6 @@ public class ToolFromJavaMethod(
         ) {
             val compositeEncoder = encoder.beginStructure(descriptor)
             for ((i, parameter) in method.parameters.withIndex()) {
-                if (!parameter.isNamePresent) continue
-
                 val paramValue = value.args[parameter]
                 if (paramValue != null) {
                     val paramType = parameter.parameterizedType.toKType()
