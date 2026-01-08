@@ -19,17 +19,17 @@ val CODE_AGENT_HISTORY_TOO_BIG: (Prompt) -> Boolean = { prompt ->
 val CODE_AGENT_COMPRESSION = RetrieveFactsFromHistory(
     Concept(
         "project-structure",
-        "What is the project structure of this project?",
+        "What is the structure of this project?",
         FactType.MULTIPLE
     ),
     Concept(
         "project-dependencies",
-        "What are the project dependencies of this project?",
+        "What are the dependencies of this project?",
         FactType.MULTIPLE
     ),
     Concept(
         "important-achievements",
-        "What has been achieved during the execution of this current agent",
+        "What has been achieved during the execution of this current agent?",
         FactType.MULTIPLE
     ),
     Concept(
