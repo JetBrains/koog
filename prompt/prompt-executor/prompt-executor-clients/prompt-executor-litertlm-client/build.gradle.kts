@@ -71,6 +71,7 @@ kotlin {
 
         commonTest {
             dependencies {
+                implementation(project(":test-utils"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)
             }
