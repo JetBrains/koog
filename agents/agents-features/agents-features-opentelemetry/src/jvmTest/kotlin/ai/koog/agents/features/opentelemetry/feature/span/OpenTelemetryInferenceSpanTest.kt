@@ -50,7 +50,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "inference.${actualLLMCallEventIds[0]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
                         "gen_ai.system" to defaultModel.provider.id,
@@ -115,7 +115,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "inference.${actualLLMCallEventIds[0]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
                         "gen_ai.system" to model.provider.id,
@@ -146,7 +146,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "inference.${actualLLMCallEventIds[1]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
                         "gen_ai.system" to model.provider.id,
@@ -224,7 +224,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "inference.${actualLLMCallEventIds[0]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
                         "gen_ai.system" to model.provider.id,
@@ -255,7 +255,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "inference.${actualLLMCallEventIds[1]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
                         "gen_ai.system" to model.provider.id,
@@ -344,7 +344,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "inference.${actualLLMCallEventIds[0]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
                         "gen_ai.system" to model.provider.id,
@@ -373,7 +373,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "inference.${actualLLMCallEventIds[1]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
                         "gen_ai.system" to model.provider.id,
@@ -447,7 +447,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "inference.${actualLLMCallEventIds[0]}" to mapOf(
+                "${OperationNameType.CHAT.id} ${defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.system" to model.provider.id,
                         "gen_ai.request.model" to model.id,

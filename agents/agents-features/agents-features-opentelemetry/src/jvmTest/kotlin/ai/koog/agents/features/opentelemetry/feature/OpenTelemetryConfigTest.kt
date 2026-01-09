@@ -253,7 +253,7 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
 
             val expectedInvokeAgentSpans = listOf(
                 mapOf(
-                    "invoke.${mockExporter.lastRunId}" to mapOf(
+                    "${SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             customBeforeStartAttribute.key to customBeforeStartAttribute.value,

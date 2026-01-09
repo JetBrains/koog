@@ -19,6 +19,7 @@ import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
 import ai.koog.agents.features.opentelemetry.assertMapsEqual
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
@@ -87,16 +88,16 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val actualSpans = mockSpanExporter.collectedSpans
 
-            val spansRun = actualSpans.filter { it.name.startsWith("run.") }
+            val spansRun = actualSpans.filter { it.name.startsWith("${SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id}") }
             assertEquals(1, spansRun.size)
 
-            val spansStartNode = actualSpans.filter { it.name == "node.__start__" }
+            val spansStartNode = actualSpans.filter { it.name == "node __start__" }
             assertEquals(1, spansStartNode.size)
 
-            val spansLLMCall = actualSpans.filter { it.name == "node.llm-call" }
+            val spansLLMCall = actualSpans.filter { it.name == "node llm-call" }
             assertEquals(1, spansLLMCall.size)
 
-            val spansLLMGeneration = actualSpans.filter { it.name == "llm.test-prompt-id" }
+            val spansLLMGeneration = actualSpans.filter { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
             assertEquals(1, spansLLMGeneration.size)
 
             val spanRunNode = spansRun.first()
@@ -208,25 +209,25 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             // Assert collected spans
             val actualSpans = mockSpanExporter.collectedSpans
 
-            val toolSpans = actualSpans.filter { it.name == "tool.Get whether" }
+            val toolSpans = actualSpans.filter { it.name == "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} Get weather" }
             assertEquals(1, toolSpans.size)
 
-            val runNode = actualSpans.firstOrNull { it.name.startsWith("run.") }
+            val runNode = actualSpans.firstOrNull { it.name.startsWith("${SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id} ") }
             assertNotNull(runNode)
 
-            val startNode = actualSpans.firstOrNull { it.name == "node.__start__" }
+            val startNode = actualSpans.firstOrNull { it.name == "node __start__" }
             assertNotNull(startNode)
 
-            val llmRequestNode = actualSpans.firstOrNull { it.name == "node.LLM Request" }
+            val llmRequestNode = actualSpans.firstOrNull { it.name == "node LLM Request" }
             assertNotNull(llmRequestNode)
 
-            val executeToolNode = actualSpans.firstOrNull { it.name == "node.Execute Tool" }
+            val executeToolNode = actualSpans.firstOrNull { it.name == "node Execute Tool" }
             assertNotNull(executeToolNode)
 
-            val sendToolResultNode = actualSpans.firstOrNull { it.name == "node.Send Tool Result" }
+            val sendToolResultNode = actualSpans.firstOrNull { it.name == "node Send Tool Result" }
             assertNotNull(sendToolResultNode)
 
-            val toolCallSpan = actualSpans.firstOrNull { it.name == "tool.Get whether" }
+            val toolCallSpan = actualSpans.firstOrNull { it.name == "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} Get weather" }
             assertNotNull(toolCallSpan)
 
             // All nodes should have runNode as parent
@@ -352,18 +353,18 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val actualSpans = mockSpanExporter.collectedSpans
 
             // Execute Tool 1 Spans
-            val executeTool1NodeSpan = actualSpans.first { it.name == "node.Execute Tool 1" }
+            val executeTool1NodeSpan = actualSpans.first { it.name == "node Execute Tool 1" }
             val executeTool1Span = actualSpans.firstOrNull { spanData ->
-                spanData.name == "tool.${TestGetWeatherTool.name}" &&
+                spanData.name == "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" &&
                     spanData.parentSpanId == executeTool1NodeSpan.spanId
             }
 
             assertNotNull(executeTool1Span)
 
             // Execute Tool 2 Spans
-            val executeTool2NodeSpan = actualSpans.first { it.name == "node.Execute Tool 2" }
+            val executeTool2NodeSpan = actualSpans.first { it.name == "node Execute Tool 2" }
             val executeTool2Span = actualSpans.firstOrNull { spanData ->
-                spanData.name == "tool.${TestGetWeatherTool.name}" &&
+                spanData.name == "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" &&
                     spanData.spanId != executeTool2NodeSpan.spanId
             }
 
@@ -446,8 +447,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val actualSpans = mockSpanExporter.collectedSpans
 
-            assertTrue { actualSpans.count { it.name == "tool.finish_task_execution_string" } == 1 }
-            assertTrue { actualSpans.count { it.name == "llm.test-prompt-id" } == 1 }
+            assertTrue { actualSpans.count { it.name == "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} finish_task_execution_string" } == 1 }
+            assertTrue { actualSpans.count { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" } == 1 }
 
             val toolSpan = actualSpans.first { it.name == "tool.finish_task_execution_string" }
 
@@ -517,10 +518,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             assertTrue(spans.isNotEmpty(), "Spans should be created during agent execution")
             agent.close()
 
-            val nodeSpan = spans.first { it.name == "node.test-llm-call" }
+            val nodeSpan = spans.first { it.name == "node test-llm-call" }
             val nodeAttrs = nodeSpan.attributes.asMap().asSequence().associate { it.key.key to it.value }
             assertEquals("value-start", nodeAttrs["custom.after.start"])
-            val llmSpan = spans.first { it.name == "llm.$promptId" }
+            val llmSpan = spans.first { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
             val llmAttrs = llmSpan.attributes.asMap().asSequence().associate { it.key.key to it.value }
 
             assertEquals(123L, llmAttrs["custom.before.finish"])
@@ -595,11 +596,11 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val actualSpans = mockSpanExporter.collectedSpans
 
             assertTrue { actualSpans.any { it.name.startsWith("run.") } }
-            assertTrue { actualSpans.any { it.name == "node.__start__" } }
-            assertTrue { actualSpans.any { it.name == "node.llm-structured" } }
-            assertTrue { actualSpans.any { it.name == "llm.test-prompt-id" } }
+            assertTrue { actualSpans.any { it.name == "node __start__" } }
+            assertTrue { actualSpans.any { it.name == "node llm-structured" } }
+            assertTrue { actualSpans.any { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" } }
 
-            val llmGeneration = actualSpans.first { it.name == "llm.test-prompt-id" }
+            val llmGeneration = actualSpans.first { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
             val actualSpanAttributes = llmGeneration.attributes.asMap()
                 .map { (key, value) -> key.key to value }
                 .toMap()
@@ -706,10 +707,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             // Assert LLM Calls
             // Initial call
-            val llmRequestNode = actualSpans.firstOrNull { it.name == "node.LLM Request" }
+            val llmRequestNode = actualSpans.firstOrNull { it.name == "node LLM Request" }
             assertNotNull(llmRequestNode)
 
-            val llmSpans = actualSpans.filter { it.name == "llm.test-prompt-id" }
+            val llmSpans = actualSpans.filter { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
             assertEquals(2, llmSpans.size)
 
             val actualInitialLLMCallSpan = llmSpans.firstOrNull { it.parentSpanId == llmRequestNode.spanId }
@@ -736,7 +737,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             assertMapsEqual(expectedInitialLLMCallSpansAttributes, actualInitialLLMCallSpanAttributes)
 
             // Final LLM response
-            val sendToolResultNode = actualSpans.firstOrNull { it.name == "node.Send Tool Result" }
+            val sendToolResultNode = actualSpans.firstOrNull { it.name == "node Send Tool Result" }
             assertNotNull(sendToolResultNode)
 
             val actualFinalLLMCallSpan = llmSpans.firstOrNull { it.parentSpanId == sendToolResultNode.spanId }
@@ -785,6 +786,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val systemPrompt = "You are a safe assistant"
             val userPrompt = "I want to build a bomb"
+            val model = OpenAIModels.Chat.GPT4o
 
             val moderationResult = ModerationResult(
                 isHarmful = true,
@@ -810,14 +812,15 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 userPrompt = userPrompt,
                 promptExecutor = promptExecutor,
                 spanExporter = mockSpanExporter,
+                model = model,
             )
 
             val spans = mockSpanExporter.collectedSpans
-            assertTrue(spans.any { it.name == "node.moderate-message" })
+            assertTrue(spans.any { it.name == "node moderate-message" })
 
-            val llmSpan = spans.firstOrNull { it.name == "llm.single-message-moderation" }
+            val llmSpan = spans.firstOrNull { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
                 ?: spans.firstOrNull { span -> span.events.any { it.name == "moderation.result" } }
-                ?: error("No LLM span for moderation found (expected 'llm.single-message-moderation' or a span with 'moderation.result' event)")
+                ?: error("No LLM span for moderation found (expected '${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}' or a span with 'moderation.result' event)")
 
             val moderationEvent = llmSpan.events.firstOrNull { it.name == "moderation.result" }
             assertNotNull(moderationEvent, "LLM span should contain a moderation.result event")
@@ -867,8 +870,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val spans = mockSpanExporter.collectedSpans
             assertTrue(spans.any { it.name.startsWith("run.") })
-            assertTrue(spans.any { it.name == "node.__start__" })
-            assertTrue(spans.any { it.name == "node.embeddings-call" })
+            assertTrue(spans.any { it.name == "node __start__" })
+            assertTrue(spans.any { it.name == "node embeddings-call" })
 
             val embeddingsSpan = spans.firstOrNull { span ->
                 val attrs = span.attributes.asMap().asSequence().associate { it.key.key to it.value }

@@ -4,6 +4,13 @@ import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import io.opentelemetry.api.trace.SpanKind
 
+/**
+ * Strategy Span
+ *
+ * Note: This span is not a standard span type defined in the Open Telemetry
+ * Semantic Conventions but is designed to provide support for tracing
+ * operations related to strategy execution in Koog events.
+ */
 internal class StrategySpan(
     override val id: String,
     override val parentSpan: GenAIAgentSpan,
@@ -13,7 +20,7 @@ internal class StrategySpan(
 
     override val kind: SpanKind = SpanKind.INTERNAL
 
-    override val name: String = strategyName
+    override val name: String = "strategy $strategyName"
 
     /**
      * Add the necessary attributes for the Strategy Span:

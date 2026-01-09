@@ -32,7 +32,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                agentId to mapOf(
+                "${OperationNameType.CREATE_AGENT.id} $agentId" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                         "gen_ai.system" to model.provider.id,
@@ -44,7 +44,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
             ),
 
             mapOf(
-                "invoke.$runId" to mapOf(
+                "${OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
                         "gen_ai.system" to model.provider.id,
@@ -87,7 +87,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                agentId to mapOf(
+                "${OperationNameType.CREATE_AGENT.id} $agentId" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                         "gen_ai.system" to model.provider.id,
@@ -99,7 +99,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
             ),
 
             mapOf(
-                "invoke.$runId" to mapOf(
+                "${OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
                         "gen_ai.system" to model.provider.id,
