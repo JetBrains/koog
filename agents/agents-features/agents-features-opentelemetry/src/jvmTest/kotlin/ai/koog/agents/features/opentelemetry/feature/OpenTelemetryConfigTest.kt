@@ -4,7 +4,11 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.TEMPERATURE
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getMessagesString
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getSystemInstructionsString
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
 import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
@@ -14,6 +18,8 @@ import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.utils.io.use
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -213,15 +219,19 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                 promptId = promptId,
                 executor = mockExecutor,
                 model = model,
+                systemPrompt = SYSTEM_PROMPT,
+                temperature = TEMPERATURE,
+                userPrompt = userPrompt,
             ) {
                 install(OpenTelemetry) {
                     addSpanExporter(mockExporter)
 
                     // Add custom span adapter
                     addSpanAdapter(adapter)
+                    setVerbose(true)
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run("")
             }
 
             val collectedSpans = mockExporter.collectedSpans
@@ -255,12 +265,32 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                 mapOf(
                     "${SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
+                            "gen_ai.operation.name" to SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id,
+                            "gen_ai.provider.name" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "gen_ai.output.type" to "text",
+                            "gen_ai.request.model" to model.id,
+                            "gen_ai.request.temperature" to TEMPERATURE,
+                            "gen_ai.input.messages" to getMessagesString(
+                                listOf(
+                                    Message.System(SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+                                    Message.User(userPrompt, RequestMetaInfo(testClock.now()))
+                                )
+                            ),
+                            "system_instructions" to getSystemInstructionsString(listOf(SYSTEM_PROMPT)),
+                            "gen_ai.response.model" to model.id,
+                            "gen_ai.usage.input_tokens" to 0L,
+                            "gen_ai.usage.output_tokens" to 0L,
+                            "gen_ai.output.messages" to getMessagesString(
+                                listOf(
+                                    Message.System(SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+                                    Message.User(userPrompt, RequestMetaInfo(testClock.now()))
+                                )
+                            ),
                             customBeforeStartAttribute.key to customBeforeStartAttribute.value,
                             customBeforeFinishAttribute.key to customBeforeFinishAttribute.value,
-                            "gen_ai.system" to model.provider.id,
-                            "gen_ai.agent.id" to agentId,
-                            "gen_ai.operation.name" to SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id,
+                            "koog.event.id" to mockExporter.lastRunId,
                         ),
                         "events" to emptyMap()
                     )

@@ -11,15 +11,18 @@ import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
-import ai.koog.agents.features.opentelemetry.span.CreateAgentSpan
-import ai.koog.agents.features.opentelemetry.span.InferenceSpan
-import ai.koog.agents.features.opentelemetry.span.InvokeAgentSpan
-import ai.koog.agents.features.opentelemetry.span.NodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.mock.MockTracer
+import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.span.startCreateAgentSpan
+import ai.koog.agents.features.opentelemetry.span.startInferenceSpan
+import ai.koog.agents.features.opentelemetry.span.startInvokeAgentSpan
+import ai.koog.agents.features.opentelemetry.span.startNodeExecuteSpan
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.LLMParams
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -38,26 +41,33 @@ class LangfuseSpanAdapterTest {
 
         val provider = MockLLMProvider()
         val model = createTestModel(provider)
+        val tracer = MockTracer()
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
 
-        val createAgentSpan = CreateAgentSpan(
-            id = createAgentSpanId,
+        val createAgentSpan = startCreateAgentSpan(
+            tracer = tracer,
             parentSpan = null,
+            id = createAgentSpanId,
+            agentId = agentId,
             model = model,
-            agentId = agentId
+            messages = emptyList()
         )
 
         val invokeAgentSpanId = "invoke-agent-span-id"
         val runId = "run-id"
 
-        val invokeSpan = InvokeAgentSpan(
-            id = invokeAgentSpanId,
+        val invokeSpan = startInvokeAgentSpan(
+            tracer = tracer,
             parentSpan = createAgentSpan,
-            provider = provider,
+            id = invokeAgentSpanId,
+            model = model,
             runId = runId,
-            agentId = agentId
+            agentId = agentId,
+            llmParams = LLMParams(),
+            messages = emptyList(),
+            tools = emptyList()
         )
 
         adapter.onBeforeSpanStarted(invokeSpan)
@@ -170,37 +180,45 @@ class LangfuseSpanAdapterTest {
 
         val provider = MockLLMProvider()
         val model = createTestModel(provider)
+        val tracer = MockTracer()
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
 
-        val createAgentSpan = CreateAgentSpan(
-            id = createAgentSpanId,
+        val createAgentSpan = startCreateAgentSpan(
+            tracer = tracer,
             parentSpan = null,
+            id = createAgentSpanId,
+            agentId = agentId,
             model = model,
-            agentId = agentId
+            messages = emptyList()
         )
 
         val invokeSpanId = "invoke-agent-span-id"
         val runId = "run-id"
 
-        val invokeSpan = InvokeAgentSpan(
-            id = invokeSpanId,
+        val invokeSpan = startInvokeAgentSpan(
+            tracer = tracer,
             parentSpan = createAgentSpan,
-            provider = provider,
+            id = invokeSpanId,
+            model = model,
             runId = runId,
-            agentId = agentId
+            agentId = agentId,
+            llmParams = LLMParams(),
+            messages = emptyList(),
+            tools = emptyList()
         )
 
         val firstNodeInput = "planner input"
         val firstNodeSpanId = "planner-node-id"
 
-        val firstNode = NodeExecuteSpan(
-            id = firstNodeSpanId,
+        val firstNode = startNodeExecuteSpan(
+            tracer = tracer,
             parentSpan = invokeSpan,
+            id = firstNodeSpanId,
             runId = runId,
-            nodeInput = firstNodeInput,
-            nodeId = "planner-node-id"
+            nodeId = "planner-node-id",
+            nodeInput = firstNodeInput
         )
         adapter.onBeforeSpanStarted(firstNode)
 
@@ -213,12 +231,13 @@ class LangfuseSpanAdapterTest {
         val secondNodeInput = "executor input"
         val secondNodeSpanId = "executor-node-id"
 
-        val secondNode = NodeExecuteSpan(
-            id = secondNodeSpanId,
+        val secondNode = startNodeExecuteSpan(
+            tracer = tracer,
             parentSpan = firstNode,
+            id = secondNodeSpanId,
             runId = runId,
-            nodeInput = secondNodeInput,
-            nodeId = secondNodeSpanId
+            nodeId = secondNodeSpanId,
+            nodeInput = secondNodeInput
         )
 
         adapter.onBeforeSpanStarted(secondNode)
@@ -238,20 +257,55 @@ class LangfuseSpanAdapterTest {
         nodeId: String = "node-id",
         promptId: String = "prompt-id",
         temperature: Double = 0.4,
-    ): InferenceSpan {
+    ): GenAIAgentSpan {
         val model = createTestModel(provider)
+        val tracer = MockTracer()
 
         val createAgentSpanId = "create-agent-span-id"
-        val createAgentSpan = CreateAgentSpan(id = createAgentSpanId, null, model, agentId)
+        val createAgentSpan = startCreateAgentSpan(
+            tracer = tracer,
+            parentSpan = null,
+            id = createAgentSpanId,
+            agentId = agentId,
+            model = model,
+            messages = emptyList()
+        )
 
         val invokeSpanId = "invoke-agent-span-id"
-        val invokeSpan = InvokeAgentSpan(invokeSpanId, createAgentSpan, provider, runId, agentId)
+        val invokeSpan = startInvokeAgentSpan(
+            tracer = tracer,
+            parentSpan = createAgentSpan,
+            id = invokeSpanId,
+            model = model,
+            runId = runId,
+            agentId = agentId,
+            llmParams = LLMParams(),
+            messages = emptyList(),
+            tools = emptyList()
+        )
 
         val nodeSpanId = "node-span-id"
-        val nodeSpan = NodeExecuteSpan(nodeSpanId, invokeSpan, runId, nodeId, nodeInput)
+        val nodeSpan = startNodeExecuteSpan(
+            tracer = tracer,
+            parentSpan = invokeSpan,
+            id = nodeSpanId,
+            runId = runId,
+            nodeId = nodeId,
+            nodeInput = nodeInput
+        )
 
         val inferenceSpanId = "inference-span-id"
-        val inferenceSpan = InferenceSpan(id = inferenceSpanId, nodeSpan, provider, runId, model, promptId, temperature)
+        val inferenceSpan = startInferenceSpan(
+            tracer = tracer,
+            parentSpan = nodeSpan,
+            id = inferenceSpanId,
+            provider = provider,
+            runId = runId,
+            model = model,
+            messages = emptyList(),
+            llmParams = LLMParams(temperature = temperature),
+            tools = emptyList()
+        )
 
         return inferenceSpan
     }

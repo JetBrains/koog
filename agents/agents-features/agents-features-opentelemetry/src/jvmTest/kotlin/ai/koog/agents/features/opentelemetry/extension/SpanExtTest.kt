@@ -16,7 +16,7 @@ class SpanExtTest {
     @Test
     fun `setSpanStatus sets OK by default`() {
         val span = MockSpan()
-        span.setSpanStatus()
+        span.setSpanStatus(endStatus = null)
         assertEquals(StatusCode.OK, span.status)
         assertEquals("", span.statusDescription)
     }
@@ -24,10 +24,12 @@ class SpanExtTest {
     @Test
     fun `setSpanStatus sets provided code and description`() {
         val span = MockSpan()
-        span.setSpanStatus(SpanEndStatus(StatusCode.ERROR, "test description"))
+        span.setSpanStatus(endStatus = SpanEndStatus(StatusCode.ERROR, "test description"))
         assertEquals(StatusCode.ERROR, span.status)
         assertEquals("test description", span.statusDescription)
     }
+
+    // TODO: Write tests to check setSpanStatus for [Throwable]
 
     @Test
     fun `setAttributes on Span writes all attributes`() {
