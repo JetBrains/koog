@@ -21,37 +21,41 @@ You can customize agent capabilities with a modular feature system and deploy yo
 
 </div>
 
-## Agent types
+## Agents
+
+Learn about [agents in general](agents/index.md) and how to create different types of agents using Koog:
 
 <div class="grid cards" markdown>
 
--   :material-robot-outline:{ .lg .middle } [**Basic agents**](basic-agents.md)
+-   :material-robot-outline:{ .lg .middle } [**Basic agents**](agents/basic-agents.md)
 
     ---
 
-    Create and run agents that process a single input and provide a response
+    Use a predefined strategy that works for most common use cases
 
--   :material-script-text-outline:{ .lg .middle } [**Functional agents**](functional-agents.md)
-
-    ---
-
-    Create and run lightweight agents with custom logic in plain Kotlin 
-
--   :material-graph-outline:{ .lg .middle } [**Complex workflow agents**](complex-workflow-agents.md)
+-   :material-function:{ .lg .middle } [**Functional agents**](agents/functional-agents.md)
 
     ---
 
-    Create and run agents that handle complex workflows with custom strategies
+    Define custom logic as a lambda function in plain Kotlin 
 
--   :material-state-machine:{ .lg .middle } [**Planner agents**](planner-agents.md)
+-   :material-state-machine:{ .lg .middle } [**Graph-based agents**](agents/graph-based-agents.md)
 
     ---
 
-    Create and run agents that iteratively build and execute plans
+    Implement a custom workflow as a strategy graph
+
+-   :material-list-status:{ .lg .middle } [**Planner agents**](agents/planner-agents.md)
+
+    ---
+
+    Iteratively build and execute a plan until the state matches the desired conditions
 
 </div>
 
-## Core functionality
+## Core components
+
+Learn about the core components of Koog agents in detail:
 
 <div class="grid cards" markdown>
 
@@ -59,27 +63,26 @@ You can customize agent capabilities with a modular feature system and deploy yo
 
     ---
 
-    Create prompts, run them using LLM clients or prompt executors,
-    switch between LLMs and providers, and handle failures with built-in retries
+    Create, manage, and run prompts that drive the agent's interaction with the LLM
 
--   :material-wrench:{ .lg .middle } [**Tools**](tools-overview.md)
-
-    ---
-
-    Enhance your agents with built‑in, annotation‑based, or class‑based tools
-    that can access external systems and APIs
-
--   :material-share-variant-outline:{ .lg .middle } [**Strategies**](predefined-agent-strategies.md)
+-   :material-strategy:{ .lg .middle } [**Strategies**](predefined-agent-strategies.md)
 
     ---
 
-    Design complex agent behaviors using intuitive graph-based workflows
+    Design the agent's intended workflow as a directed graph
 
--   :material-bell-outline:{ .lg .middle } [**Events**](agent-events.md)
+-   :material-tools:{ .lg .middle } [**Tools**](tools-overview.md)
 
     ---
 
-    Monitor and process agent lifecycle, strategy, node, LLM call, and tool call events with predefined handlers
+    Enable the agent to interact with external data sources and services
+
+-   :material-toy-brick-outline:{ .lg .middle } [**Features**](features-overview.md)
+
+    ---
+
+    Extend and enhance the functionality of AI agents
+
 
 </div>
 
@@ -93,7 +96,7 @@ You can customize agent capabilities with a modular feature system and deploy yo
 
     Optimize token usage while maintaining context in long-running conversations using advanced techniques
 
--   :material-state-machine:{ .lg .middle } [**Agent persistence**](agent-persistence.md)
+-   :material-floppy:{ .lg .middle } [**Agent persistence**](agent-persistence.md)
 
     ---
 

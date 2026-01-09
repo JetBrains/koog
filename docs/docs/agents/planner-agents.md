@@ -7,6 +7,16 @@ Planner agents are suitable for complex tasks
 that require breaking down a high-level goal into smaller, actionable steps
 and adapting the plan based on the results of each step.
 
+??? note "Prerequisites"
+
+    --8<-- "getting-started-snippets.md:prerequisites"
+
+    --8<-- "getting-started-snippets.md:dependencies"
+
+    --8<-- "getting-started-snippets.md:api-key"
+
+    Examples on this page assume that you have set the `OPENAI_API_KEY` environment variable.
+
 Planner agents operate through an iterative planning cycle:
 
 1. The planner creates or updates a plan based on the current state.
@@ -22,31 +32,6 @@ graph LR
   C -->|Completed| D[[Done]]
   C -->|"Not completed"| A
 ```
-
-## Prerequisites
-
-Before you start, make sure that you have the following:
-
-- A working Kotlin/JVM project.
-- Java 17+ installed.
-- A valid API key from the LLM provider that you use to implement an AI agent. For a list of all available providers, 
-see [LLM providers](llm-providers.md).
-
-!!! tip
-    Use environment variables or a secure configuration management system to store your API keys.
-    Avoid hardcoding API keys directly in your source code.
-
-## Add dependencies
-
-To use planner agents, include the following dependencies in your build configuration:
-
-```
-dependencies {
-    implementation("ai.koog:koog-agents:VERSION")
-}
-```
-
-For all available installation methods, see [Install Koog](getting-started.md#install-koog).
 
 ## Simple LLM-based planners
 
