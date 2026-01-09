@@ -1,10 +1,27 @@
 # Planner agents
 
 Planner agents are AI agents that can plan and execute multistep tasks through iterative planning cycles. 
-They continuously build or update plans, execute steps, and check if goals have been achieved.
+They continuously build or update plans, execute steps, and check completion criteria against the current state.
 
-Planner agents are suitable for complex tasks that require breaking down a high-level goal into smaller, actionable 
-steps and adapting the plan based on the results of each step.
+Planner agents are suitable for complex tasks
+that require breaking down a high-level goal into smaller, actionable steps
+and adapting the plan based on the results of each step.
+
+Planner agents operate through an iterative planning cycle:
+
+1. The planner creates or updates a plan based on the current state.
+2. The planner executes a single step from the plan, updating the state.
+3. The planner determines whether the plan is completed according to the current state.
+    - If the plan is completed, the cycle ends.
+    - If the plan is not completed, the cycle repeats from the first step.
+
+```mermaid
+graph LR
+  A[Create or update plan] --> B["Execute step and update state"]
+  B --> C["Check completion"]
+  C -->|Completed| D[[Done]]
+  C -->|"Not completed"| A
+```
 
 ## Prerequisites
 
@@ -31,37 +48,22 @@ dependencies {
 
 For all available installation methods, see [Install Koog](getting-started.md#install-koog).
 
-## How planner agents work
-
-Planner agents operate through an iterative planning cycle:
-
-1. **Build a plan**: The planner creates or updates a plan based on the current state.
-2. **Execute a step**: The planner executes a single step from the plan, updating the state.
-3. **Check completion**: The planner determines if the goal has been achieved by checking the state against the goal condition.
-4. **Repeat**: If the goal is not achieved, the cycle repeats from the first step.
-
-```mermaid
-graph LR
-  A[Build or update a plan] --> B["Execute a step <br> (update state)"]
-  B --> C["Check completion (compare state to goal)"]
-  C -->|Goal achieved| D[[Done]]
-  C -->|"Repeat <br> (goal not achieved)"| A
-```
-
 ## Simple LLM-based planners
 
 Simple LLM-based planners use LLMs to generate and evaluate plans. 
-They operate on a string-based state and execute steps through LLM requests. String-based state means that the agent
-state is noted as a single string, where the agent accepts an initial state string and returns the final state string as
-the result.
+They operate on a string-based state and execute steps through LLM requests.
+String-based state means that the agent state is noted as a single string,
+where the agent accepts an initial state string and returns the final state string as the result.
 
-Out of the box, Koog provides two simple planners: 
+Koog provides two simple planners: 
 
-- `SimpleLLMPlanner`: Generates a plan only once at the very beginning and then follows the plan until it is completed. 
-It includes a replanning logic, but to use it you need to extend `SimpleLLMPlanner` and override the `assessPlan` method,
-indicating when the agent should replan.
-- `SimpleLLMWithCriticPlanner`: Implements the `assessPlan` method that uses an LLM. The method checks the validity of 
-the plan with an LLM and assesses whether the agent should replan.
+- [SimpleLLMPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.llm/-simple-l-l-m-planner/index.html)
+    generates a plan only once at the very beginning and then follows the plan until it is completed. 
+    To include replanning, extend `SimpleLLMPlanner` and override the `assessPlan` method,
+    indicating when the agent should replan.
+- [SimpleLLMWithCriticPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.llm/-simple-l-l-m-with-critic-planner/index.html)
+    implements the `assessPlan` method that uses an LLM.
+    The method checks the validity of the plan via an LLM request and assesses whether the agent should replan.
 
 The following example shows how to create a simple planner agent using `SimpleLLMPlanner`:
 
@@ -112,34 +114,36 @@ suspend fun main() {
 
 ## GOAP (Goal-Oriented Action Planning)
 
-GOAP is an algorithmic planning approach that uses A* search to find optimal action sequences.
-Instead of using an LLM to generate plans, GOAP automatically discovers action sequences based on predefined goals and actions. In Koog, GOAP is implemented through a DSL that lets you define goals and actions declaratively.
-
-### Key concepts
+GOAP is an algorithmic planning approach that uses [A* search](https://en.wikipedia.org/wiki/A*_search_algorithm) to find optimal action sequences.
+Instead of using an LLM to generate plans,
+a GOAP agent automatically discovers action sequences based on predefined goals and actions.
+In Koog, GOAP is implemented through a DSL that lets you define goals and actions declaratively.
 
 GOAP planners work with three main concepts:
 
 - **State**: Represents the current state of the world.
-- **Actions**: Define what can be done, including preconditions, effects (beliefs), costs, and execution logic. 
-Represented by the [action](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/action.html) function.
-- **Goals**: Define target conditions, heuristic costs, and value functions. Defined using the [goal](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/goal.html) function.
+- **Actions**: Define what can be done, including preconditions, effects (beliefs), costs, and execution logic.
+- **Goals**: Define target conditions, heuristic costs, and value functions.
 
-The planner uses A* search to find the sequence of actions that satisfies the goal condition while minimizing total cost.
-
-### Creating a GOAP agent
+A GOAP planner uses A* search to find the sequence of actions that satisfies the goal condition while minimizing total cost.
 
 To create a GOAP agent, you need to:
 
-1. Define your state type. State type is usually modeled as a data class.
-2. Define actions with preconditions and beliefs. The planner then selects individual actions and their sequence.
-Each action includes a precondition that must hold true for the action to be executed and a belief that defines the
-predicted outcome. For more information about beliefs, see [State beliefs compared to actual execution](#state-beliefs-compared-to-actual-execution). 
-3. Define goals with completion conditions.
-4. Create the GOAP planner using the DSL.
-5. Wrap it in a planner strategy and agent.
+1. Define the state as a data class with properties representing various aspects specific to your goal.
+2. Create a [GOAPPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner/index.html) instance using the [goap()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/goap.html) function.
+    1. Define actions with preconditions and beliefs using the [action()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/action.html) function.
+    2. Define goals with completion conditions using the [goal()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/goal.html) function.
+3. Wrap the planner with [AIAgentPlannerStrategy](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-a-i-agent-planner-strategy/index.html) and pass it to the [PlannerAIAgent](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-planner-a-i-agent/index.html) constructor.
 
-In the following example, GOAP handles the high-level planning for creating an article (outline → draft → review → 
-publish), while the LLM performs the actual content generation within each action.
+!!! note
+
+    The planner selects individual actions and their sequence.
+    Each action includes a precondition that must hold true for the action to be executed
+    and a belief that defines the predicted outcome.
+    For more information about beliefs, see [State beliefs compared to actual execution](#state-beliefs-compared-to-actual-execution).
+
+In the following example, GOAP handles the high-level planning for creating an article (outline → draft → review → publish),
+while the LLM performs the actual content generation within each action.
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -227,6 +231,7 @@ val planner = goap<ContentState>(typeOf<ContentState>()) {
         println("Publishing article...")
         state.copy(isPublished = true)
     }
+    
     // Define the goal with a completion condition
     goal(
         name = "Published article",
@@ -236,7 +241,6 @@ val planner = goap<ContentState>(typeOf<ContentState>()) {
 }
 
 // Create and run the agent
-val strategy = AIAgentPlannerStrategy("content-planner", planner)
 val agentConfig = AIAgentConfig(
     prompt = prompt("writer") {
         system("You are a professional content writer.")
@@ -247,7 +251,7 @@ val agentConfig = AIAgentConfig(
 
 val agent = PlannerAIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    strategy = strategy,
+    strategy = AIAgentPlannerStrategy("content-planner", planner),
     agentConfig = agentConfig
 )
 
@@ -263,7 +267,8 @@ suspend fun main() {
 
 ### Custom cost functions
 
-As A* search uses cost as a factor in finding the optimal sequence of actions, you can define custom cost functions for actions and goals to guide the planner:
+As A* search uses cost as a factor in finding the optimal sequence of actions,
+you can define custom cost functions for actions and goals to guide the planner:
 
 ```kotlin
 action(
