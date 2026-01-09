@@ -106,6 +106,28 @@ subprojects {
 }
 
 subprojects {
+    tasks.matching { it.name.endsWith("Annotations") && it.name.startsWith("extract") }
+        .configureEach { enabled = false }
+
+    afterEvaluate {
+        val releaseTypedef = layout.buildDirectory
+            .file("intermediates/annotations_typedef_file/release/extractReleaseAnnotations/typedefs.txt")
+            .get()
+            .asFile
+        if (!releaseTypedef.exists()) {
+            releaseTypedef.parentFile.mkdirs()
+            releaseTypedef.writeText("")
+        }
+        val debugTypedef = layout.buildDirectory
+            .file("intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt")
+            .get()
+            .asFile
+        if (!debugTypedef.exists()) {
+            debugTypedef.parentFile.mkdirs()
+            debugTypedef.writeText("")
+        }
+    }
+
     extensions.configure<KtlintExtension> {
         outputToConsole = true
         coloredOutput = true
@@ -207,50 +229,16 @@ tasks {
 }
 
 dependencies {
-    dokka(project(":agents:agents-core"))
-    dokka(project(":agents:agents-ext"))
-    dokka(project(":agents:agents-features:agents-features-event-handler"))
-    dokka(project(":agents:agents-features:agents-features-memory"))
-    dokka(project(":agents:agents-features:agents-features-opentelemetry"))
-    dokka(project(":agents:agents-features:agents-features-snapshot"))
-    dokka(project(":agents:agents-features:agents-features-tokenizer"))
-    dokka(project(":agents:agents-features:agents-features-trace"))
-    dokka(project(":agents:agents-planner"))
-    dokka(project(":agents:agents-mcp"))
-    dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))
     dokka(project(":agents:agents-utils"))
-    dokka(project(":embeddings:embeddings-base"))
-    dokka(project(":embeddings:embeddings-llm"))
-    dokka(project(":koog-ktor"))
-    dokka(project(":koog-spring-boot-starter"))
-    dokka(project(":prompt:prompt-cache:prompt-cache-files"))
-    dokka(project(":prompt:prompt-cache:prompt-cache-model"))
-    dokka(project(":prompt:prompt-cache:prompt-cache-redis"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-cached"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litertlm-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))
     dokka(project(":prompt:prompt-llm"))
     dokka(project(":prompt:prompt-markdown"))
     dokka(project(":prompt:prompt-model"))
-    dokka(project(":prompt:prompt-processor"))
-    dokka(project(":prompt:prompt-structure"))
-    dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":rag:rag-base"))
-    dokka(project(":rag:vector-storage"))
     dokka(project(":utils"))
 }
 

@@ -1,11 +1,11 @@
 [versions]
 acp = "0.3.0"
-agp = "8.12.3"
+agp = "8.13.2"
 annotations = "26.0.2-1"
 assertj = "3.27.6"
 awaitility = "4.3.0"
 aws-sdk-kotlin = "1.5.16"
-litertlm = "0.1.0"
+litertlm = "0.8.0"
 dokka = "2.1.0"
 exposed = "0.61.0"
 h2 = "2.4.240"
@@ -15,7 +15,7 @@ jetsign = "45.47"
 junit = "5.8.2"
 knit = "0.5.0"
 kotest = "6.0.7"
-kotlin = "2.2.21"
+kotlin = "2.3.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
 kotlinx-io = "0.7.0"
@@ -47,6 +47,8 @@ mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 awaitility = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }

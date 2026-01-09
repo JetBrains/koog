@@ -9,6 +9,7 @@ group = rootProject.group
 version = rootProject.version
 
 kotlin {
+    jvm()
     sourceSets {
         commonMain {
             dependencies {
@@ -16,12 +17,6 @@ kotlin {
                 api(libs.jetbrains.annotations)
                 api(libs.kotlinx.coroutines.core)
                 implementation(libs.oshai.kotlin.logging)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(project(":test-utils"))
             }
         }
 

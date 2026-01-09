@@ -1,13 +1,7 @@
 package ai.koog.prompt.executor.litertlm.client
 
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LiteRTLMModels
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**

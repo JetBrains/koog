@@ -11,8 +11,10 @@ import kotlinx.datetime.Clock
 public enum class LiteRTLMBackend {
     /** CPU LiteRT backend. */
     CPU,
+
     /** GPU LiteRT backend. */
     GPU,
+
     /** NPU LiteRT backend. */
     NPU,
 }

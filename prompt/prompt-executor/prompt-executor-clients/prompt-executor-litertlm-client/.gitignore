@@ -1,0 +1,10 @@
+# LiteRT-LM native binaries
+# These should be obtained separately (see natives/README.md)
+
+# Native library staging directory
+natives/**
+!natives/**/.gitkeep
+
+# Copied native libraries in source sets
+src/androidMain/jniLibs/**
+!src/androidMain/jniLibs/**/.gitkeep

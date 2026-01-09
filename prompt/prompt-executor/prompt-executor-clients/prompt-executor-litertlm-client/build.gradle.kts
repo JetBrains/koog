@@ -1,8 +1,8 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("ai.kotlin.multiplatform")
+    // id("litertlm-natives-convention") // Disabled - natives come from Maven dependency
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -22,6 +22,7 @@ val isKotlin23OrHigher = try {
 kotlin {
     // LiteRT-LM has full implementation on JVM/Android, stubs on other platforms
     // The convention plugin handles all target declarations
+    jvm()
 
     // Enable Kotlin 2.3+ experimental features when available
     if (isKotlin23OrHigher) {
@@ -58,9 +59,18 @@ kotlin {
             }
         }
 
+        androidMain {
+            dependencies {
+                // LiteRT-LM Android dependency
+                // This is marked as compileOnly - users must add this dependency to their project
+                // at runtime when they want to use the LiteRT-LM provider.
+                // Native libraries are bundled separately via the litertlm-natives-convention plugin.
+                compileOnly(libs.litertlm.android)
+            }
+        }
+
         commonTest {
             dependencies {
-                implementation(project(":test-utils"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)
             }
@@ -72,11 +82,22 @@ kotlin {
                 implementation(libs.litertlm.jvm)
                 implementation(libs.mockk)
                 implementation(libs.kotest.assertions.core)
+                implementation(libs.junit.jupiter.api)
+                runtimeOnly(libs.junit.jupiter.engine)
             }
         }
     }
 
     explicitApi()
+}
+
+// Configure Android native library source directory
+android {
+    sourceSets {
+        getByName("main") {
+            jniLibs.srcDirs("src/androidMain/jniLibs")
+        }
+    }
 }
 
 publishToMaven()

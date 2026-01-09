@@ -190,12 +190,12 @@ class LiteRTLMToolBridgeTest {
             name = "sum",
             description = "Sum numbers",
             requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    "numbers",
-                    "Numbers to sum",
-                    ToolParameterType.Array(ToolParameterType.Integer)
+                    ToolParameterDescriptor(
+                        "numbers",
+                        "Numbers to sum",
+                        ToolParameterType.List(ToolParameterType.Integer)
+                    )
                 )
-            )
         )
 
         var capturedArgs: Map<String, Any?>? = null

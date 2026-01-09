@@ -1,12 +1,13 @@
 package ai.koog.prompt.executor.litertlm.client
 
 import ai.koog.prompt.executor.clients.LLMClient
+import kotlinx.coroutines.runBlocking
 
 /**
  * Creates a LiteRT-LM client for JVM platform.
  */
 public actual fun createLiteRTLMClient(config: LiteRTLMClientConfig): LLMClient {
-    return LiteRTLMClient(config)
+    return runBlocking { LiteRTLMClient.create(config) }
 }
 
 /**

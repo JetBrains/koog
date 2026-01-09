@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -31,7 +30,6 @@ import java.io.File
  *   --tests "*.LiteRTLMChatCompletionTest"
  * ```
  */
-@Disabled("Requires LiteRT-LM library and model file. Set LITERTLM_MODEL_PATH env var.")
 class LiteRTLMChatCompletionTest {
 
     private val modelPath: String by lazy {
@@ -115,7 +113,7 @@ class LiteRTLMChatCompletionTest {
         val config = LiteRTLMClientConfig(modelPath = modelPath)
         client = LiteRTLMClient.create(config)
 
-        val chatPrompt = prompt {
+        val chatPrompt = prompt("chat-no-tools") {
             system("You are a helpful assistant. Be concise.")
             user("What is the capital of France?")
         }
@@ -135,7 +133,7 @@ class LiteRTLMChatCompletionTest {
         val config = LiteRTLMClientConfig(modelPath = modelPath)
         client = LiteRTLMClient.create(config)
 
-        val chatPrompt = prompt {
+        val chatPrompt = prompt("chat-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5, one number per line.")
         }
@@ -157,12 +155,14 @@ class LiteRTLMChatCompletionTest {
         val config = LiteRTLMClientConfig(modelPath = modelPath)
         client = LiteRTLMClient.create(config, toolExecutor)
 
-        val chatPrompt = prompt {
-            system("""
+        val chatPrompt = prompt("chat-tools-weather") {
+            system(
+                """
                 You are a helpful assistant with access to tools.
                 When asked about weather, use the get_weather tool.
                 Respond naturally after getting the tool result.
-            """.trimIndent())
+                """.trimIndent()
+            )
             user("What's the weather like in Paris right now?")
         }
 
@@ -185,11 +185,13 @@ class LiteRTLMChatCompletionTest {
         val config = LiteRTLMClientConfig(modelPath = modelPath)
         client = LiteRTLMClient.create(config, toolExecutor)
 
-        val chatPrompt = prompt {
-            system("""
+        val chatPrompt = prompt("chat-tools-calculator") {
+            system(
+                """
                 You are a helpful assistant with access to a calculator tool.
                 When asked to do math, use the calculate tool.
-            """.trimIndent())
+                """.trimIndent()
+            )
             user("What is 42 multiplied by 7?")
         }
 
@@ -210,14 +212,16 @@ class LiteRTLMChatCompletionTest {
         val config = LiteRTLMClientConfig(modelPath = modelPath)
         client = LiteRTLMClient.create(config, toolExecutor)
 
-        val chatPrompt = prompt {
-            system("""
+        val chatPrompt = prompt("chat-tools-multiple") {
+            system(
+                """
                 You are a helpful assistant with access to tools:
                 - get_weather: Get current weather for a city
                 - calculate: Do math calculations
 
                 Use the appropriate tool when needed.
-            """.trimIndent())
+                """.trimIndent()
+            )
             user("What's the temperature in London, and what's 15 + 7?")
         }
 

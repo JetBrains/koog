@@ -9,6 +9,7 @@ plugins {
 }
 
 kotlin {
+    jvm()
     sourceSets {
         commonMain {
             dependencies {
@@ -23,7 +24,6 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(project(":test-utils"))
                 api(project(":prompt:prompt-markdown"))
             }
         }

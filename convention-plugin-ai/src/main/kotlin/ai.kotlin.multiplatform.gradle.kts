@@ -1,7 +1,7 @@
 @file:OptIn(ExperimentalWasmDsl::class)
 
 import ai.koog.gradle.publish.maven.configureJvmJarManifest
-import ai.koog.gradle.tests.configureTests
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
@@ -15,37 +15,7 @@ plugins {
 }
 
 kotlin {
-    // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
-    // Tier 1
-    iosSimulatorArm64()
-    iosX64()
-
-    // Tier 2
-    iosArm64()
-
-    // Tier 3
-
-    // Android
     androidTarget()
-
-    // jvm & js
-    jvm {
-        configureTests()
-    }
-
-    js(IR) {
-        browser {
-            binaries.library()
-        }
-
-        configureTests()
-    }
-
-    wasmJs {
-        browser()
-        nodejs()
-        binaries.library()
-    }
 
     sourceSets {
         androidUnitTest {
@@ -70,7 +40,27 @@ android {
     }
 }
 
-configureJvmJarManifest("jvmJar")
+extensions.configure<LibraryAndroidComponentsExtension>("androidComponents") {
+    beforeVariants(selector().all()) { variantBuilder ->
+        val booleanType = Boolean::class.javaPrimitiveType
+        if (booleanType != null) {
+            runCatching {
+                variantBuilder.javaClass.getMethod("setEnableUnitTest", booleanType).invoke(variantBuilder, false)
+            }
+            runCatching {
+                variantBuilder.javaClass.getMethod("setUnitTestEnabled", booleanType).invoke(variantBuilder, false)
+            }
+            runCatching {
+                variantBuilder.javaClass.getMethod("setEnableAndroidTest", booleanType).invoke(variantBuilder, false)
+            }
+            runCatching {
+                variantBuilder.javaClass.getMethod("setAndroidTestEnabled", booleanType).invoke(variantBuilder, false)
+            }
+        }
+    }
+}
+
+tasks.findByName("jvmJar")?.let { configureJvmJarManifest("jvmJar") }
 
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")

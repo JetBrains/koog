@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 public actual fun createLiteRTLMClient(config: LiteRTLMClientConfig): LLMClient {
     throw UnsupportedOperationException(
         "LiteRT-LM Android support requires litertlm-android dependency. " +
-        "Add 'com.google.ai.edge.litertlm:litertlm-android' to your dependencies."
+            "Add 'com.google.ai.edge.litertlm:litertlm-android' to your dependencies."
     )
 }
 

@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.litertlm.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import com.google.ai.edge.litertlm.Tool
 import com.google.ai.edge.litertlm.ToolParam
@@ -11,16 +10,12 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.double
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 
 /**
@@ -177,16 +172,20 @@ public class LiteRTLMToolBridge(
     private fun convertJsonToKotlin(element: JsonElement, type: ToolParameterType): Any? {
         return when (type) {
             is ToolParameterType.String -> element.jsonPrimitive.content
-            is ToolParameterType.Integer -> element.jsonPrimitive.intOrNull
-                ?: element.jsonPrimitive.longOrNull?.toInt()
-                ?: element.jsonPrimitive.content.toIntOrNull()
-            is ToolParameterType.Number -> element.jsonPrimitive.doubleOrNull
-                ?: element.jsonPrimitive.content.toDoubleOrNull()
-            is ToolParameterType.Boolean -> element.jsonPrimitive.booleanOrNull
-                ?: element.jsonPrimitive.content.toBooleanStrictOrNull()
-            is ToolParameterType.Array -> {
+            is ToolParameterType.Null -> null
+            is ToolParameterType.Integer ->
+                element.jsonPrimitive.intOrNull
+                    ?: element.jsonPrimitive.longOrNull?.toInt()
+                    ?: element.jsonPrimitive.content.toIntOrNull()
+            is ToolParameterType.Float ->
+                element.jsonPrimitive.doubleOrNull
+                    ?: element.jsonPrimitive.content.toDoubleOrNull()
+            is ToolParameterType.Boolean ->
+                element.jsonPrimitive.booleanOrNull
+                    ?: element.jsonPrimitive.content.toBooleanStrictOrNull()
+            is ToolParameterType.List -> {
                 element.jsonArray.map { item ->
-                    convertJsonToKotlin(item, type.items)
+                    convertJsonToKotlin(item, type.itemsType)
                 }
             }
             is ToolParameterType.Object -> {
@@ -196,17 +195,28 @@ public class LiteRTLMToolBridge(
                 }
             }
             is ToolParameterType.Enum -> element.jsonPrimitive.content
+            is ToolParameterType.AnyOf -> {
+                for (descriptor in type.types) {
+                    val value = runCatching { convertJsonToKotlin(element, descriptor.type) }.getOrNull()
+                    if (value != null) {
+                        return value
+                    }
+                }
+                element.jsonPrimitive.content
+            }
         }
     }
 
     private fun formatType(type: ToolParameterType): String = when (type) {
         is ToolParameterType.String -> "string"
+        is ToolParameterType.Null -> "null"
         is ToolParameterType.Integer -> "integer"
-        is ToolParameterType.Number -> "number"
+        is ToolParameterType.Float -> "float"
         is ToolParameterType.Boolean -> "boolean"
-        is ToolParameterType.Array -> "array<${formatType(type.items)}>"
+        is ToolParameterType.List -> "array<${formatType(type.itemsType)}>"
         is ToolParameterType.Object -> "object"
-        is ToolParameterType.Enum -> "enum(${type.values.joinToString("|")})"
+        is ToolParameterType.Enum -> "enum(${type.entries.joinToString("|")})"
+        is ToolParameterType.AnyOf -> "anyOf(${type.types.joinToString { formatType(it.type) }})"
     }
 
     private fun generateExampleCall(tool: ToolDescriptor): String {
@@ -220,12 +230,14 @@ public class LiteRTLMToolBridge(
 
     private fun generateExampleValue(type: ToolParameterType): Any = when (type) {
         is ToolParameterType.String -> "example"
+        is ToolParameterType.Null -> "null"
         is ToolParameterType.Integer -> 42
-        is ToolParameterType.Number -> 3.14
+        is ToolParameterType.Float -> 3.14
         is ToolParameterType.Boolean -> true
-        is ToolParameterType.Array -> listOf(generateExampleValue(type.items))
+        is ToolParameterType.List -> listOf(generateExampleValue(type.itemsType))
         is ToolParameterType.Object -> mapOf("key" to "value")
-        is ToolParameterType.Enum -> type.values.firstOrNull() ?: "value"
+        is ToolParameterType.Enum -> type.entries.firstOrNull() ?: "value"
+        is ToolParameterType.AnyOf -> generateExampleValue(type.types.first().type)
     }
 
     private fun jsonValueOf(value: Any?): JsonElement = when (value) {
@@ -233,8 +245,16 @@ public class LiteRTLMToolBridge(
         is String -> JsonPrimitive(value)
         is Number -> JsonPrimitive(value)
         is Boolean -> JsonPrimitive(value)
-        is List<*> -> JsonArray(value.map { jsonValueOf(it) })
-        is Map<*, *> -> JsonObject(value.entries.associate { (k, v) -> k.toString() to jsonValueOf(v) })
+        is List<*> -> JsonArray(
+            value.map { item ->
+                jsonValueOf(item)
+            }
+        )
+        is Map<*, *> -> JsonObject(
+            value.entries.associate { (k, v) ->
+                k.toString() to jsonValueOf(v)
+            }
+        )
         else -> JsonPrimitive(value.toString())
     }
 

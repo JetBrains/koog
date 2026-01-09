@@ -9,16 +9,11 @@ plugins {
 }
 
 kotlin {
+    jvm()
     sourceSets {
         commonMain {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(project(":test-utils"))
             }
         }
 

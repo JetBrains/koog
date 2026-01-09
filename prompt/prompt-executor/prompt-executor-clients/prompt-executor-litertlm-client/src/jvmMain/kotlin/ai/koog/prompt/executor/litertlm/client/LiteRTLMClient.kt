@@ -24,8 +24,6 @@ import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.ExperimentalApi
 import com.google.ai.edge.litertlm.LogSeverity
 import com.google.ai.edge.litertlm.SamplerConfig
-import com.google.ai.edge.litertlm.Backend as LiteRTBackend
-import com.google.ai.edge.litertlm.Message as LiteRTMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +32,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import java.util.concurrent.atomic.AtomicReference
+import com.google.ai.edge.litertlm.Backend as LiteRTBackend
+import com.google.ai.edge.litertlm.Message as LiteRTMessage
 
 /**
  * Client for interacting with LiteRT-LM for on-device LLM inference.
@@ -61,15 +61,13 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * @param config The configuration for the client.
  */
+private val logger = KotlinLogging.logger { }
+
 public class LiteRTLMClient private constructor(
     private val config: LiteRTLMClientConfig,
     private val engine: Engine,
     private val toolExecutor: ToolExecutor? = null,
 ) : LLMClient {
-
-    private companion object {
-        private val logger = KotlinLogging.logger { }
-    }
 
     // Atomic reference for lock-free reads of closed state
     private val closed = AtomicReference(false)
@@ -382,32 +380,46 @@ public class LiteRTLMClient private constructor(
     }
 
     // Using Kotlin 2.2 guard conditions in when for cleaner conditional logic
-    private fun convertImageContent(image: ContentPart.Image): Content = when (val content = image.content) {
-        is AttachmentContent.Binary -> Content.ImageBytes(content.asBytes())
-        is AttachmentContent.URL if content.url.startsWith("file://") ->
-            Content.ImageFile(content.url.removePrefix("file://"))
-        is AttachmentContent.URL -> throw LLMClientException(
-            clientName = clientName,
-            message = "Remote image URLs are not supported. Use file:// URLs or binary content."
-        )
-        is AttachmentContent.PlainText -> throw LLMClientException(
-            clientName = clientName,
-            message = "Image cannot have plain text content"
-        )
+    private fun convertImageContent(image: ContentPart.Image): Content {
+        val content = image.content
+        return when (content) {
+            is AttachmentContent.Binary -> Content.ImageBytes(content.asBytes())
+            is AttachmentContent.URL -> {
+                if (content.url.startsWith("file://")) {
+                    Content.ImageFile(content.url.removePrefix("file://"))
+                } else {
+                    throw LLMClientException(
+                        clientName = clientName,
+                        message = "Remote image URLs are not supported. Use file:// URLs or binary content."
+                    )
+                }
+            }
+            is AttachmentContent.PlainText -> throw LLMClientException(
+                clientName = clientName,
+                message = "Image cannot have plain text content"
+            )
+        }
     }
 
-    private fun convertAudioContent(audio: ContentPart.Audio): Content = when (val content = audio.content) {
-        is AttachmentContent.Binary -> Content.AudioBytes(content.asBytes())
-        is AttachmentContent.URL if content.url.startsWith("file://") ->
-            Content.AudioFile(content.url.removePrefix("file://"))
-        is AttachmentContent.URL -> throw LLMClientException(
-            clientName = clientName,
-            message = "Remote audio URLs are not supported. Use file:// URLs or binary content."
-        )
-        is AttachmentContent.PlainText -> throw LLMClientException(
-            clientName = clientName,
-            message = "Audio cannot have plain text content"
-        )
+    private fun convertAudioContent(audio: ContentPart.Audio): Content {
+        val content = audio.content
+        return when (content) {
+            is AttachmentContent.Binary -> Content.AudioBytes(content.asBytes())
+            is AttachmentContent.URL -> {
+                if (content.url.startsWith("file://")) {
+                    Content.AudioFile(content.url.removePrefix("file://"))
+                } else {
+                    throw LLMClientException(
+                        clientName = clientName,
+                        message = "Remote audio URLs are not supported. Use file:// URLs or binary content."
+                    )
+                }
+            }
+            is AttachmentContent.PlainText -> throw LLMClientException(
+                clientName = clientName,
+                message = "Audio cannot have plain text content"
+            )
+        }
     }
 
     private fun checkNotClosed() {
@@ -475,19 +487,19 @@ public class LiteRTLMClient private constructor(
             }
         }
 
-        private fun LiteRTLMBackend.toLiteRTBackend(): LiteRTBackend = when (this) {
-            LiteRTLMBackend.CPU -> LiteRTBackend.CPU
-            LiteRTLMBackend.GPU -> LiteRTBackend.GPU
-            LiteRTLMBackend.NPU -> LiteRTBackend.NPU
-        }
-
         /**
          * Sets the minimum log severity for all LiteRT-LM native libraries.
          */
         public fun setLogSeverity(level: LiteRTLMLogSeverity) {
-            Engine.setNativeMinLogSeverity(level.toNative())
+            Engine.Companion.setNativeMinLogServerity(level.toNative())
         }
     }
+}
+
+private fun LiteRTLMBackend.toLiteRTBackend(): LiteRTBackend = when (this) {
+    LiteRTLMBackend.CPU -> LiteRTBackend.CPU
+    LiteRTLMBackend.GPU -> LiteRTBackend.GPU
+    LiteRTLMBackend.NPU -> LiteRTBackend.NPU
 }
 
 /**

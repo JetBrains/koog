@@ -3,10 +3,10 @@ package ai.koog.prompt.executor.litertlm.client
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LiteRTLMModels
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -30,14 +30,13 @@ import java.io.File
  *   --tests "*.LiteRTLMClientIntegrationTest"
  * ```
  */
-@Disabled("Requires LiteRT-LM library and model file. Set LITERTLM_MODEL_PATH env var and remove @Disabled.")
 class LiteRTLMClientIntegrationTest {
 
     private val modelPath: String by lazy {
         System.getenv("LITERTLM_MODEL_PATH")
             ?: throw IllegalStateException(
                 "LITERTLM_MODEL_PATH environment variable not set. " +
-                "Please set it to the path of your .litertlm model file."
+                    "Please set it to the path of your .litertlm model file."
             )
     }
 
@@ -75,7 +74,7 @@ class LiteRTLMClientIntegrationTest {
         val config = LiteRTLMClientConfig(modelPath = modelPath)
         client = LiteRTLMClient.create(config)
 
-        val testPrompt = prompt {
+        val testPrompt = prompt("simple-prompt") {
             system("You are a helpful assistant. Keep responses brief.")
             user("What is 2 + 2?")
         }
@@ -91,7 +90,7 @@ class LiteRTLMClientIntegrationTest {
         val config = LiteRTLMClientConfig(modelPath = modelPath)
         client = LiteRTLMClient.create(config)
 
-        val testPrompt = prompt {
+        val testPrompt = prompt("streaming-prompt") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
@@ -152,7 +151,7 @@ class LiteRTLMClientIntegrationTest {
 
         client = LiteRTLMClient.create(config)
 
-        val testPrompt = prompt {
+        val testPrompt = prompt("gpu-backend-prompt") {
             user("Hello!")
         }
 
@@ -168,16 +167,16 @@ class LiteRTLMClientIntegrationTest {
                 backend = LiteRTLMBackend.CPU,
             ),
             samplerConfig = LiteRTLMSamplerConfig(
-                topK = 20,       // More focused sampling
-                topP = 0.8,      // Narrower nucleus
+                topK = 20, // More focused sampling
+                topP = 0.8, // Narrower nucleus
                 temperature = 0.5, // More deterministic
-                seed = 42,       // Reproducible results
+                seed = 42, // Reproducible results
             )
         )
 
         client = LiteRTLMClient.create(config)
 
-        val testPrompt = prompt {
+        val testPrompt = prompt("sampler-settings-prompt") {
             user("What color is the sky?")
         }
 
@@ -205,7 +204,7 @@ class LiteRTLMClientIntegrationTest {
 
         client!!.conversation().use { conv ->
             // Start a potentially long generation
-            val job = kotlinx.coroutines.launch {
+            val job = launch {
                 try {
                     conv.sendStreaming("Write a 1000 word essay about the history of computing.")
                         .collect { /* consume */ }
