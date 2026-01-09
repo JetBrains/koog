@@ -3,7 +3,6 @@ package ai.koog.agents.features.opentelemetry.feature.span
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.features.opentelemetry.NodeInfo
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_LONDON
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_PARIS
@@ -64,9 +63,6 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                 this.collectedSpans = mockExporter.collectedSpans
             }
 
-            var nodesInfo0 = listOf<NodeInfo>()
-            var nodesInfo1 = listOf<NodeInfo>()
-
             val agentService = OpenTelemetryTestAPI.createAgentService(
                 strategy = strategy,
                 promptId = promptId,
@@ -77,13 +73,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     setVerbose(true)
                 }
 
-                installEventDataCollector().also {
-                    if (index == 0) {
-                        nodesInfo0 = it.nodeData
-                    } else {
-                        nodesInfo1 = it.nodeData
-                    }
-                }
+                installEventDataCollector()
             }
 
             agentService.createAgentAndRun(userPrompt0, id = agentId)
@@ -102,7 +92,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
             val expectedSpans = listOf(
                 // First run
                 mapOf(
-                    "$START_NODE_PREFIX.${nodesInfo0.single { it.nodeId == START_NODE_PREFIX }.eventId}" to mapOf(
+                    "node $START_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "koog.node.id" to START_NODE_PREFIX,
@@ -113,7 +103,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    "$nodeName.${nodesInfo0.single { it.nodeId == nodeName }.eventId}" to mapOf(
+                    "node $nodeName" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "koog.node.id" to nodeName,
@@ -124,7 +114,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    "$FINISH_NODE_PREFIX.${nodesInfo0.single { it.nodeId == FINISH_NODE_PREFIX }.eventId}" to mapOf(
+                    "node $FINISH_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "koog.node.id" to FINISH_NODE_PREFIX,
@@ -135,7 +125,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    strategyName to mapOf(
+                    "strategy $strategyName" to mapOf(
                         "attributes" to mapOf(
                             "koog.strategy.name" to strategyName,
                             "gen_ai.conversation.id" to mockExporter.runIds[0]
@@ -144,7 +134,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    "invoke.${mockExporter.runIds[0]}" to mapOf(
+                    "${OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
                             "gen_ai.system" to model.provider.id,
@@ -155,7 +145,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    agentId to mapOf(
+                    "${OperationNameType.CREATE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                             "gen_ai.system" to model.provider.id,
@@ -168,7 +158,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
 
                 // Second run
                 mapOf(
-                    "$START_NODE_PREFIX.${nodesInfo1.single { it.nodeId == START_NODE_PREFIX }.eventId}" to mapOf(
+                    "node $START_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "koog.node.id" to START_NODE_PREFIX,
@@ -179,7 +169,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    "$nodeName.${nodesInfo1.single { it.nodeId == nodeName }.eventId}" to mapOf(
+                    "node $nodeName" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "koog.node.id" to nodeName,
@@ -190,7 +180,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    "$FINISH_NODE_PREFIX.${nodesInfo1.single { it.nodeId == FINISH_NODE_PREFIX}.eventId}" to mapOf(
+                    "node $FINISH_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "koog.node.id" to FINISH_NODE_PREFIX,
@@ -201,7 +191,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    strategyName to mapOf(
+                    "strategy $strategyName" to mapOf(
                         "attributes" to mapOf(
                             "koog.strategy.name" to strategyName,
                             "gen_ai.conversation.id" to mockExporter.runIds[1]
@@ -210,7 +200,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    "invoke.${mockExporter.runIds[1]}" to mapOf(
+                    "${OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
                             "gen_ai.system" to model.provider.id,
@@ -221,7 +211,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     )
                 ),
                 mapOf(
-                    agentId to mapOf(
+                    "${OperationNameType.CREATE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                             "gen_ai.system" to model.provider.id,

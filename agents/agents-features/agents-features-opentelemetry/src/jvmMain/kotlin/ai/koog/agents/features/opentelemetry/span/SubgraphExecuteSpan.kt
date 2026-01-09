@@ -8,7 +8,7 @@ import io.opentelemetry.api.trace.SpanKind
 /**
  * Subgraph Execute Span
  *
- * Note: This span is out of scope of Open Telemetry Semantic Convention for GenAI.
+ * Note: This span is out of scope of the Open Telemetry Semantic Convention for GenAI.
  */
 internal class SubgraphExecuteSpan(
     override val id: String,
@@ -20,7 +20,7 @@ internal class SubgraphExecuteSpan(
 
     override val kind: SpanKind = SpanKind.INTERNAL
 
-    override val name: String = "$subgraphId.$id"
+    override val name: String = "subgraph $subgraphId"
 
     /**
      * Add the necessary attributes for the Subgraph Execute Span:

@@ -17,7 +17,7 @@ internal class CreateAgentSpan(
 
     override val kind: SpanKind = SpanKind.CLIENT
 
-    override val name: String = agentId
+    override val name: String = "${SpanAttributes.Operation.OperationNameType.CREATE_AGENT.id} $agentId"
 
     /**
      * Add the necessary attributes for the Create Agent Span according to the Open Telemetry Semantic Convention:

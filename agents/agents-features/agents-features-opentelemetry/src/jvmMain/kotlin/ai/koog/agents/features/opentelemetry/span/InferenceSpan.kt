@@ -22,7 +22,7 @@ internal class InferenceSpan(
 
     override val kind: SpanKind = SpanKind.CLIENT
 
-    override val name: String = "inference.$id"
+    override val name: String = "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}"
 
     /**
      * Add the necessary attributes for the Inference Span according to the Open Telemetry Semantic Convention:

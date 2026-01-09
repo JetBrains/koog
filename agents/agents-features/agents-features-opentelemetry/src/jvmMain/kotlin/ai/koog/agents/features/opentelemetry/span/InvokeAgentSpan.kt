@@ -18,7 +18,7 @@ internal class InvokeAgentSpan(
 
     override val kind: SpanKind = SpanKind.CLIENT
 
-    override val name: String = "invoke.$runId"
+    override val name: String = "${SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id} $agentId"
 
     /**
      * Add the necessary attributes for the Invoke Agent Span, according to the Open Telemetry Semantic Convention:

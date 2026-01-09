@@ -17,7 +17,7 @@ internal class ExecuteToolSpan(
 
     override val kind: SpanKind = SpanKind.INTERNAL
 
-    override val name: String = "$toolName.$id"
+    override val name: String = "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} $toolName"
 
     /**
      * Add the necessary attributes for the Execute Tool Span, according to the Open Telemetry Semantic Convention:

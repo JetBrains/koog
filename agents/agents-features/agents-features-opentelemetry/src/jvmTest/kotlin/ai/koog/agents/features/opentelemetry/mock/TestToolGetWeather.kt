@@ -6,15 +6,15 @@ import kotlinx.serialization.Serializable
 
 internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>(
     argsSerializer = Args.serializer(),
-    name = "Get whether",
-    description = "The test tool to get a whether based on provided location."
+    name = "Get weather",
+    description = "The test tool to get a weather based on provided location."
 ) {
     const val DEFAULT_PARIS_RESULT: String = "rainy, 57°F"
     const val DEFAULT_LONDON_RESULT: String = "cloudy, 62°F"
 
     @Serializable
     data class Args(
-        @property:LLMDescription("Whether location")
+        @property:LLMDescription("Weather location")
         val location: String
     )
 

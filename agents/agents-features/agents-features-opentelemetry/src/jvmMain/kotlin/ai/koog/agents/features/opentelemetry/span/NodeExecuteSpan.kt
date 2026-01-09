@@ -20,7 +20,7 @@ internal class NodeExecuteSpan(
 
     override val kind: SpanKind = SpanKind.INTERNAL
 
-    override val name: String = "$nodeId.$id"
+    override val name: String = "node $nodeId"
 
     /**
      * Add the necessary attributes for the Node Execute Span:

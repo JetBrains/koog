@@ -47,7 +47,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "$START_NODE_PREFIX.${collectedTestData.singleNodeInfoById(START_NODE_PREFIX).eventId}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to START_NODE_PREFIX,
@@ -58,7 +58,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$nodeName.${collectedTestData.singleNodeInfoById(nodeName).eventId}" to mapOf(
+                "node $nodeName" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to nodeName,
@@ -69,7 +69,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$FINISH_NODE_PREFIX.${collectedTestData.singleNodeInfoById(FINISH_NODE_PREFIX).eventId}" to mapOf(
+                "node $FINISH_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to FINISH_NODE_PREFIX,
@@ -111,7 +111,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "$START_NODE_PREFIX.${collectedTestData.singleNodeInfoById(START_NODE_PREFIX).eventId}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to START_NODE_PREFIX,
@@ -122,7 +122,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$nodeName.${collectedTestData.singleNodeInfoById(nodeName).eventId}" to mapOf(
+                "node $nodeName" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to nodeName,
@@ -133,7 +133,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$FINISH_NODE_PREFIX.${collectedTestData.singleNodeInfoById(FINISH_NODE_PREFIX).eventId}" to mapOf(
+                "node $FINISH_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to FINISH_NODE_PREFIX,
@@ -196,7 +196,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "$START_NODE_PREFIX.${collectedTestData.singleNodeInfoById(START_NODE_PREFIX).eventId}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to START_NODE_PREFIX,
@@ -207,7 +207,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$node1Name.${collectedTestData.singleNodeInfoById(node1Name).eventId}" to mapOf(
+                "node $node1Name" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to node1Name,
@@ -218,7 +218,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$node2Name.${collectedTestData.singleNodeInfoById(node2Name).eventId}" to mapOf(
+                "node $node2Name" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to node2Name,
@@ -229,7 +229,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$node3Name.${collectedTestData.singleNodeInfoById(node3Name).eventId}" to mapOf(
+                "node $node3Name" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to node3Name,
@@ -240,7 +240,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$nodeParallelName.${collectedTestData.singleNodeInfoById(nodeParallelName).eventId}" to mapOf(
+                "node $nodeParallelName" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to nodeParallelName,
@@ -251,7 +251,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$FINISH_NODE_PREFIX.${collectedTestData.singleNodeInfoById(FINISH_NODE_PREFIX).eventId}" to mapOf(
+                "node $FINISH_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to FINISH_NODE_PREFIX,
@@ -298,7 +298,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "$START_NODE_PREFIX.${collectedTestData.singleNodeInfoById(START_NODE_PREFIX).eventId}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to START_NODE_PREFIX,
@@ -309,7 +309,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                 )
             ),
             mapOf(
-                "$nodeWithErrorName.${collectedTestData.singleNodeInfoById(nodeWithErrorName).eventId}" to mapOf(
+                "node $nodeWithErrorName" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to nodeWithErrorName,
