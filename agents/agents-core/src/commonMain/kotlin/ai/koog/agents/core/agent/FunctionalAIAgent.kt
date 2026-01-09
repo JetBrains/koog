@@ -53,7 +53,7 @@ public class FunctionalAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
+    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(agentConfig, clock)
 
     /**
      * Represents a context for managing and configuring features in an AI agent.

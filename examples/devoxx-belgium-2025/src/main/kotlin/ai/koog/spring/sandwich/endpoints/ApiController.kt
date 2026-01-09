@@ -1,6 +1,6 @@
 package ai.koog.spring.sandwich.endpoints
 
-import ai.koog.agents.core.agent.AIAgent.Companion.State
+import ai.koog.agents.core.agent.AIAgentState
 import ai.koog.spring.sandwich.agents.KoogAgentService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -39,11 +39,11 @@ internal class ApiController(
     suspend fun status(@PathVariable id: String): ResponseEntity<String> {
         return try {
             when (val state = agentService.getState(agentId = id)) {
-                is State.Failed<*> -> ResponseEntity.internalServerError().body("Agent failed")
-                is State.Finished<*> -> ResponseEntity.ok("Agent finished with result: ${state.result}")
-                is State.NotStarted<*> -> ResponseEntity.ok("Agent not started")
-                is State.Running<*> -> ResponseEntity.ok("Agent is running...")
-                is State.Starting<*> -> ResponseEntity.ok("Agent is starting...")
+                is AIAgentState.Failed<*> -> ResponseEntity.internalServerError().body("Agent failed")
+                is AIAgentState.Finished<*> -> ResponseEntity.ok("Agent finished with result: ${state.result}")
+                is AIAgentState.NotStarted<*> -> ResponseEntity.ok("Agent not started")
+                is AIAgentState.Running<*> -> ResponseEntity.ok("Agent is running...")
+                is AIAgentState.Starting<*> -> ResponseEntity.ok("Agent is starting...")
             }
         } catch (e: Throwable) {
             ResponseEntity.badRequest().body(e.message)

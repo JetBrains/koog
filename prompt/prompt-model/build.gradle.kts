@@ -38,8 +38,8 @@ kotlin {
     explicitApi()
 }
 
-dependencies {
-    testImplementation(project(":prompt:prompt-markdown"))
-}
+// dependencies {
+//    testImplementation(project(":prompt:prompt-markdown"))
+// }
 
 publishToMaven()

@@ -13,6 +13,7 @@ import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onMultipleAssistantMessages
 import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
 import ai.koog.agents.core.dsl.extension.onToolCall
+import kotlin.jvm.JvmOverloads
 
 /**
  * Creates a single-run strategy for an AI agent.
@@ -30,6 +31,7 @@ import ai.koog.agents.core.dsl.extension.onToolCall
  *                - SingleRunMode.PARALLEL: Executes multiple tool calls in parallel.
  * @return An instance of AIAgentStrategy configured according to the specified single-run mode.
  */
+@JvmOverloads
 public fun singleRunStrategy(runMode: ToolCalls = ToolCalls.SEQUENTIAL): AIAgentGraphStrategy<String, String> =
     when (runMode) {
         ToolCalls.SEQUENTIAL -> singleRunWithParallelAbility(false)

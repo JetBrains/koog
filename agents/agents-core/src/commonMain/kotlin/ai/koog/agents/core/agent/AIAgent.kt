@@ -1,60 +1,54 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.AIAgent.Companion.State.Finished
-import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
+import ai.koog.agents.core.agent.AIAgentState.Finished
+import ai.koog.agents.core.agent.AIAgentState.Running
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
 import kotlinx.datetime.Clock
-import kotlin.reflect.typeOf
+import kotlin.jvm.JvmStatic
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents a basic interface for AI agent.
  */
-public interface AIAgent<Input, Output> : Closeable {
+public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
 
     /**
      * Represents the unique identifier for the AI agent.
      */
-    public val id: String
+    public abstract val id: String
 
     /**
      * The configuration for the AI agent.
      */
-    public val agentConfig: AIAgentConfigBase
+    public abstract val agentConfig: AIAgentConfig
 
     /**
      * Retrieves the current state of the AI agent during its lifecycle.
      *
-     * This method provides the current `State` of the agent, which can
-     * be one of the defined states: [State.NotStarted], [State.Running], [State.Finished], or [State.Failed].
+     * This method provides the current [AIAgentState] of the agent, which can
+     * be one of the defined states: [AIAgentState.NotStarted], [AIAgentState.Running], [AIAgentState.Finished], or [AIAgentState.Failed].
      *
      * @return The current state of the AI agent.
      */
-    public suspend fun getState(): State<Output>
+    public abstract suspend fun getState(): AIAgentState<Output>
 
     /**
-     * Retrieves the result of the operation if the current state is `State.Finished`.
+     * Retrieves the result of the operation if the current state is [AIAgentState.Finished].
      * Throws an `IllegalStateException` if the operation is not in a finished state.
      *
      * @return The result of type `Output` when the operation is completed successfully.
-     * @throws IllegalStateException if the operation's state is not `State.Finished`.
+     * @throws IllegalStateException if the operation's state is not [AIAgentState.Finished].
      */
-    public suspend fun result(): Output = when (val state = getState()) {
-        is Finished<Output> -> state.result
-        else -> throw IllegalStateException("Output is not ready, agent's state is: $state")
-    }
+    public open suspend fun result(): Output
 
     /**
      * Executes the AI agent with the given input and retrieves the resulting output.
@@ -62,7 +56,7 @@ public interface AIAgent<Input, Output> : Closeable {
      * @param agentInput The input for the agent.
      * @return The output produced by the agent.
      */
-    public suspend fun run(agentInput: Input): Output
+    public abstract suspend fun run(agentInput: Input): Output
 
     /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent
@@ -70,86 +64,12 @@ public interface AIAgent<Input, Output> : Closeable {
      */
     public companion object {
         /**
-         * Represents the state of an AI agent during its lifecycle.
+         * Creates and returns a new instance of the [AIAgentBuilder] class to configure and construct an AI agent.
          *
-         * This sealed interface provides different states to reflect whether the agent
-         * has not started, is currently running, has completed its task successfully with a result,
-         * or has failed with an exception.
+         * @return An instance of `Builder` for configuring an AI agent.
          */
-        public sealed interface State<Output> {
-            /**
-             * Creates and returns a copy of the current state object.
-             *
-             * @return A new instance of `State<Output>` that is a copy of the current object.
-             */
-            public fun copy(): State<Output>
-
-            /**
-             * Represents a state that indicates an action or process has not yet started.
-             *
-             * This class is part of the `State` sealed interface and is used to define
-             * a specific state where no progress, execution, or processing has occurred.
-             */
-            public class NotStarted<Output> : State<Output> {
-                override fun copy(): State<Output> = NotStarted()
-            }
-
-            /**
-             * Represents the starting state of an operation or process.
-             *
-             * This class is a specialization of the `State` class, indicating the initial
-             * state prior to progression or change. It overrides the `copy` method to
-             * return a new instance of the same starting state.
-             *
-             * @param Output The type of output associated with the state.
-             */
-            public class Starting<Output> : State<Output> {
-                override fun copy(): State<Output> = Starting()
-            }
-
-            /**
-             * Represents the `Running` state of an AI agent, indicating that the agent is actively executing its tasks.
-             *
-             * This state provides access to the root context of the agent via the `rootContext` property, allowing
-             * interaction with the overall execution environment, configuration, and state management facilities.
-             *
-             * The `rootContext` is marked with the `@InternalAgentsApi` annotation, meaning its usage is intended for
-             * internal agent-related implementations and may not maintain backwards compatibility.
-             *
-             * @property rootContext Provides access to the root context of the agent, facilitating operations
-             *                       such as state management, feature retrieval, and context-based workflows.
-             *                       This allows the agent to perform actions and manage its execution lifecycle within the given context.
-             */
-            public class Running<Output>(
-                @property:InternalAgentsApi public val rootContext: AIAgentContext
-            ) : State<Output> {
-                @OptIn(InternalAgentsApi::class)
-                override fun copy(): State<Output> = Running(rootContext)
-            }
-
-            /**
-             * Represents the final state of a computation or process with its resulting output.
-             *
-             * @param Output The type of the result produced by the finished computation or process.
-             * @property result The computed result of the finished process.
-             */
-            public class Finished<Output>(
-                public val result: Output
-            ) : State<Output> {
-                override fun copy(): State<Output> = Finished(result)
-            }
-
-            /**
-             * Represents a state indicating an operation has failed.
-             *
-             * @property exception The throwable that caused the failure.
-             */
-            public class Failed<Output>(
-                public val exception: Throwable
-            ) : State<Output> {
-                override fun copy(): State<Output> = Failed(exception)
-            }
-        }
+        @JvmStatic
+        public fun builder(): AIAgentBuilder
 
         /**
          * Creates an instance of an AI agent based on the provided configuration, input/output types,
@@ -175,19 +95,7 @@ public interface AIAgent<Input, Output> : Closeable {
             id: String? = null,
             clock: Clock = Clock.System,
             noinline installFeatures: FeatureContext.() -> Unit = {},
-        ): GraphAIAgent<Input, Output> {
-            return GraphAIAgent(
-                inputType = typeOf<Input>(),
-                outputType = typeOf<Output>(),
-                promptExecutor = promptExecutor,
-                agentConfig = agentConfig,
-                toolRegistry = toolRegistry,
-                strategy = strategy,
-                id = id,
-                clock = clock,
-                installFeatures = installFeatures
-            )
-        }
+        ): AIAgent<Input, Output>
 
         /**
          * Operator function to create and invoke an AI agent with the given parameters.
@@ -208,17 +116,7 @@ public interface AIAgent<Input, Output> : Closeable {
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
             installFeatures: FeatureContext.() -> Unit = {},
-        ): GraphAIAgent<String, String> = GraphAIAgent(
-            inputType = typeOf<String>(),
-            outputType = typeOf<String>(),
-            promptExecutor = promptExecutor,
-            agentConfig = agentConfig,
-            toolRegistry = toolRegistry,
-            strategy = strategy,
-            id = id,
-            clock = Clock.System,
-            installFeatures = installFeatures
-        )
+        ): GraphAIAgent<String, String>
 
         /**
          * Creates a functional AI agent with the provided configurations and execution strategy.
@@ -243,17 +141,7 @@ public interface AIAgent<Input, Output> : Closeable {
             id: String? = null,
             clock: Clock = Clock.System,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
-        ): FunctionalAIAgent<Input, Output> {
-            return FunctionalAIAgent(
-                id = id,
-                promptExecutor = promptExecutor,
-                agentConfig = agentConfig,
-                toolRegistry = toolRegistry,
-                strategy = strategy,
-                clock = clock,
-                installFeatures = installFeatures
-            )
-        }
+        ): FunctionalAIAgent<Input, Output>
 
         /**
          * Construction of an AI agent with the specified configurations and parameters.
@@ -284,27 +172,7 @@ public interface AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FeatureContext.() -> Unit = {}
-        ): AIAgent<String, String> = AIAgent(
-            id = id,
-            promptExecutor = promptExecutor,
-            strategy = strategy,
-            agentConfig = AIAgentConfig(
-                prompt = prompt(
-                    id = "chat",
-                    params = LLMParams(
-                        temperature = temperature,
-                        numberOfChoices = numberOfChoices
-                    )
-                ) {
-                    systemPrompt?.let { system(it) }
-                },
-                model = llmModel,
-                maxAgentIterations = maxIterations,
-                responseProcessor = responseProcessor
-            ),
-            toolRegistry = toolRegistry,
-            installFeatures = installFeatures
-        )
+        ): AIAgent<String, String>
 
         /**
          * Creates and configures an AI agent using the provided parameters.
@@ -339,32 +207,7 @@ public interface AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             noinline installFeatures: FeatureContext.() -> Unit = {},
-        ): GraphAIAgent<Input, Output> {
-            return GraphAIAgent(
-                id = id,
-                inputType = typeOf<Input>(),
-                outputType = typeOf<Output>(),
-                promptExecutor = promptExecutor,
-                strategy = strategy,
-                agentConfig = AIAgentConfig(
-                    prompt = prompt(
-                        id = "chat",
-                        params = LLMParams(
-                            temperature = temperature,
-                            numberOfChoices = numberOfChoices
-                        )
-                    ) {
-                        systemPrompt?.let { system(it) }
-                    },
-                    model = llmModel,
-                    maxAgentIterations = maxIterations,
-                    responseProcessor = responseProcessor
-                ),
-                toolRegistry = toolRegistry,
-                clock = clock,
-                installFeatures = installFeatures
-            )
-        }
+        ): AIAgent<Input, Output>
 
         /**
          * Creates an [FunctionalAIAgent] with the specified parameters to execute a strategy with the assistance of a tool registry,
@@ -397,25 +240,7 @@ public interface AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
-        ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
-            promptExecutor = promptExecutor,
-            agentConfig = AIAgentConfig(
-                prompt = prompt(
-                    id = "chat",
-                    params = LLMParams(
-                        temperature = temperature,
-                        numberOfChoices = numberOfChoices
-                    )
-                ) {
-                    systemPrompt?.let { system(it) }
-                },
-                model = llmModel,
-                maxAgentIterations = maxIterations,
-            ),
-            installFeatures = installFeatures,
-            toolRegistry = toolRegistry,
-            strategy = strategy
-        )
+        ): AIAgent<Input, Output>
     }
 }
 

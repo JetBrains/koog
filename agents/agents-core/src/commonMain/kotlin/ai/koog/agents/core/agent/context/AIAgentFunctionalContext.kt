@@ -1,14 +1,32 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent.context
 
+import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.ext.agent.CriticResult
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.StructureDefinition
+import ai.koog.prompt.structure.StructureFixingParser
+import ai.koog.prompt.structure.StructuredResponse
+import kotlinx.coroutines.flow.Flow
+import kotlin.reflect.KClass
 
 /**
  * Represents the execution context for an AI agent operating in a loop.
@@ -31,35 +49,58 @@ import ai.koog.prompt.message.Message
  * during execution.
  */
 @OptIn(InternalAgentsApi::class)
-public class AIAgentFunctionalContext(
-    override val environment: AIAgentEnvironment,
-    override val agentId: String,
-    override val runId: String,
-    override val agentInput: Any?,
-    override val config: AIAgentConfig,
-    override val llm: AIAgentLLMContext,
-    override val stateManager: AIAgentStateManager,
-    override val storage: AIAgentStorage,
-    override val strategyName: String,
-    override val pipeline: AIAgentFunctionalPipeline,
-    override var executionInfo: AgentExecutionInfo,
-    override val parentContext: AIAgentContext?,
-) : AIAgentContext {
+@Suppress("UNCHECKED_CAST", "MissingKDocForPublicAPI")
+public expect class AIAgentFunctionalContext internal constructor(
+    delegate: AIAgentFunctionalContextImpl
+) : AIAgentFunctionalContextAPI {
+    public constructor(
+        environment: AIAgentEnvironment,
+        agentId: String,
+        runId: String,
+        agentInput: Any?,
+        config: AIAgentConfig,
+        llm: AIAgentLLMContext,
+        stateManager: AIAgentStateManager,
+        storage: AIAgentStorage,
+        strategyName: String,
+        pipeline: AIAgentFunctionalPipeline,
+        executionInfo: AgentExecutionInfo,
+        parentContext: AIAgentContext? = null
+    )
 
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
+    @PublishedApi
+    internal val delegate: AIAgentFunctionalContextImpl
 
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
+    override val environment: AIAgentEnvironment
 
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> get(key: AIAgentStorageKey<*>): T? = storeMap[key] as T?
+    override val agentId: String
 
-    override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null
+    override val pipeline: AIAgentFunctionalPipeline
 
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession { prompt.messages }
-    }
+    override var executionInfo: AgentExecutionInfo
+
+    override val runId: String
+
+    override val agentInput: Any?
+
+    override val config: AIAgentConfig
+
+    override val llm: AIAgentLLMContext
+
+    override val stateManager: AIAgentStateManager
+
+    override val storage: AIAgentStorage
+
+    override val strategyName: String
+
+    override val parentContext: AIAgentContext?
+    override fun store(key: AIAgentStorageKey<*>, value: Any)
+
+    override fun <T> get(key: AIAgentStorageKey<*>): T?
+
+    override fun remove(key: AIAgentStorageKey<*>): Boolean
+
+    override suspend fun getHistory(): List<Message>
 
     /**
      * Creates a copy of the current [AIAgentFunctionalContext], allowing for selective overriding of its properties.
@@ -93,25 +134,129 @@ public class AIAgentFunctionalContext(
         pipeline: AIAgentFunctionalPipeline = this.pipeline,
         executionInfo: AgentExecutionInfo = this.executionInfo,
         parentRootContext: AIAgentContext? = this.parentContext,
-    ): AIAgentFunctionalContext {
-        val freshContext = AIAgentFunctionalContext(
-            environment = environment,
-            agentId = agentId,
-            runId = runId,
-            agentInput = agentInput,
-            config = config,
-            llm = llm,
-            stateManager = stateManager,
-            storage = storage,
-            strategyName = strategyName,
-            pipeline = pipeline,
-            executionInfo = executionInfo,
-            parentContext = parentRootContext,
-        )
+    ): AIAgentFunctionalContext
 
-        // Copy over the internal store map to preserve any stored values
-        freshContext.storeMap.putAll(this.storeMap)
+    public override suspend fun requestLLM(
+        message: String,
+        allowToolCalls: Boolean
+    ): Message.Response
 
-        return freshContext
-    }
+    public override fun onAssistantMessage(
+        response: Message.Response,
+        action: (Message.Assistant) -> Unit
+    )
+
+    public override fun Message.Response.asAssistantMessageOrNull(): Message.Assistant?
+
+    public override fun Message.Response.asAssistantMessage(): Message.Assistant
+
+    public override fun onMultipleToolCalls(
+        response: List<Message.Response>,
+        action: (List<Message.Tool.Call>) -> Unit
+    )
+
+    public override fun extractToolCalls(
+        response: List<Message.Response>
+    ): List<Message.Tool.Call>
+
+    public override fun onMultipleAssistantMessages(
+        response: List<Message.Response>,
+        action: (List<Message.Assistant>) -> Unit
+    )
+
+    public override suspend fun latestTokenUsage(): Int
+
+    public suspend inline fun <reified T> requestLLMStructured(
+        message: String,
+        examples: List<T> = emptyList(),
+        fixingParser: StructureFixingParser? = null
+    ): Result<StructuredResponse<T>>
+
+    public override suspend fun requestLLMStreaming(
+        message: String,
+        structureDefinition: StructureDefinition?
+    ): Flow<StreamFrame>
+
+    public override suspend fun requestLLMMultiple(message: String): List<Message.Response>
+
+    public override suspend fun requestLLMOnlyCallingTools(message: String): Message.Response
+
+    public override suspend fun requestLLMForceOneTool(
+        message: String,
+        tool: ToolDescriptor
+    ): Message.Response
+
+    public override suspend fun requestLLMForceOneTool(
+        message: String,
+        tool: Tool<*, *>
+    ): Message.Response
+
+    public override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult
+
+    public override suspend fun executeMultipleTools(
+        toolCalls: List<Message.Tool.Call>,
+        parallelTools: Boolean
+    ): List<ReceivedToolResult>
+
+    public override suspend fun sendToolResult(toolResult: ReceivedToolResult): Message.Response
+
+    public override suspend fun sendMultipleToolResults(
+        results: List<ReceivedToolResult>
+    ): List<Message.Response>
+
+    public override suspend fun <ToolArg, TResult> executeSingleTool(
+        tool: Tool<ToolArg, TResult>,
+        toolArgs: ToolArg,
+        doUpdatePrompt: Boolean
+    ): SafeTool.Result<TResult>
+
+    public override suspend fun compressHistory(
+        strategy: HistoryCompressionStrategy,
+        preserveMemory: Boolean
+    )
+
+    public suspend inline fun <Input, reified Output> subtask(
+        taskDescription: String,
+        input: Input,
+        tools: List<Tool<*, *>>? = null,
+        llmModel: LLModel? = null,
+        llmParams: LLMParams? = null,
+        runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+        assistantResponseRepeatMax: Int? = null
+    ): Output
+
+    override suspend fun <Input> subtaskWithVerification(
+        taskDescription: String,
+        input: Input,
+        tools: List<Tool<*, *>>?,
+        llmModel: LLModel?,
+        llmParams: LLMParams?,
+        runMode: ToolCalls,
+        assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
+    ): CriticResult<Input>
+
+    override suspend fun <Input, Output : Any> subtask(
+        taskDescription: String,
+        input: Input,
+        outputClass: KClass<Output>,
+        tools: List<Tool<*, *>>?,
+        llmModel: LLModel?,
+        llmParams: LLMParams?,
+        runMode: ToolCalls,
+        assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
+    ): Output
+
+    override suspend fun <Input, OutputTransformed> subtask(
+        taskDescription: String,
+        input: Input,
+        tools: List<Tool<*, *>>?,
+        finishTool: Tool<*, OutputTransformed>,
+        llmModel: LLModel?,
+        llmParams: LLMParams?,
+        runMode: ToolCalls,
+        assistantResponseRepeatMax: Int?,
+        responseProcessor: ResponseProcessor?
+    ): OutputTransformed
 }

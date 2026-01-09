@@ -6,10 +6,8 @@ import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
-import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.utils.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -54,27 +52,18 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     public lateinit var metadata: SubgraphMetadata
 
     @OptIn(InternalAgentsApi::class)
-    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
-        context.with(partName = id) { executionInfo, eventId ->
-            runCatchingCancellable {
-                context.pipeline.onStrategyStarting(eventId, executionInfo, this, context)
-                restoreStateIfNeeded(context)
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
+        restoreStateIfNeeded(context)
 
-                var result: TOutput? = super.execute(context = context, input = input)
+        var result: TOutput? = super.execute(context = context, input = input)
 
-                while (result == null && context.getAgentContextData() != null) {
-                    restoreStateIfNeeded(context)
-                    result = super.execute(context = context, input = input)
-                }
+        while (result == null && context.getAgentContextData() != null) {
+            restoreStateIfNeeded(context)
+            result = super.execute(context = context, input = input)
+        }
 
-                logger.trace { "Finished executing strategy (name: $name) with output: $result" }
-                context.pipeline.onStrategyCompleted(eventId, executionInfo, this, context, result, outputType)
-
-                result
-            }
-        }.onFailure {
-            context.environment.reportProblem(it)
-        }.getOrThrow()
+        return result
+    }
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun restoreStateIfNeeded(

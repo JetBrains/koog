@@ -1,12 +1,16 @@
 package ai.koog.prompt.dsl
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.Schema
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmStatic
 import kotlin.time.Duration
 
 /**
@@ -30,12 +34,25 @@ public data class Prompt @JvmOverloads constructor(
      */
     public companion object {
         /**
+         * Constructs a new `PromptBuilder` instance for creating and configuring a `Prompt`.
+         *
+         * @param id The unique identifier for the prompt.
+         * @param clock The clock used for timestamping or time-related operations. Defaults to `Clock.System` if not provided.
+         * @return A new instance of `PromptBuilder` with the specified ID and clock.
+         */
+        @JvmStatic
+        @JvmOverloads
+        @JavaAPI
+        public fun builder(id: String, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(id, clock = clock)
+
+        /**
          * Represents an empty state for a [Prompt] object. This variable is initialized
          * with an empty list for the prompt's options and an empty string as the prompt's message.
          *
          * The `Empty` value can be used as a default or placeholder for scenarios
          * where no meaningful data or prompt has been provided.
          */
+        @JvmField
         public val Empty: Prompt = Prompt(emptyList(), "")
 
         /**
@@ -81,6 +98,7 @@ public data class Prompt @JvmOverloads constructor(
      *
      * Useful for tracking the token count of the most recently generated LLM response in the LLM chat flow.
      */
+    @get:JvmName("latestTokenUsage")
     public val latestTokenUsage: Int
         get() = messages
             .lastOrNull { it is Message.Response }
@@ -95,7 +113,7 @@ public data class Prompt @JvmOverloads constructor(
      *
      * If no messages are present, the total time spent is `0`.
      */
-
+    @get:JvmName("totalTimeSpent")
     public val totalTimeSpent: Duration
         get() = when {
             messages.isEmpty() -> Duration.ZERO

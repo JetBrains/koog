@@ -14,6 +14,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
@@ -66,7 +68,9 @@ public class DummyAIAgentContext(
     private var _executionInfo: AgentExecutionInfo? = builder.executionInfo
 
     @OptIn(InternalAgentsApi::class)
-    private var _pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline()
+    private var _pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(
+        _config ?: AIAgentConfig(Prompt.Empty, OllamaModels.Meta.LLAMA_3_2, 100)
+    )
 
     override val environment: AIAgentEnvironment
         get() = _environment ?: throw NotImplementedError("Environment is not mocked")

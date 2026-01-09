@@ -57,6 +57,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.jvm.JvmOverloads
 
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
@@ -72,7 +73,7 @@ import kotlinx.serialization.json.Json
  * @param contextWindowStrategy The [ContextWindowStrategy] to use for computing context window lengths.
  *   Defaults to [ContextWindowStrategy.None].
  */
-public class OllamaClient(
+public class OllamaClient @JvmOverloads constructor(
     public val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),

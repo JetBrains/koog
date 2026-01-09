@@ -1,6 +1,6 @@
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
+import ai.koog.agents.core.agent.AIAgentState.Running
 import ai.koog.agents.core.agent.StatefulSingleUseAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData

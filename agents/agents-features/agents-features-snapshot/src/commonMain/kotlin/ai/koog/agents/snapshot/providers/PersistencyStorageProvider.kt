@@ -13,8 +13,34 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 )
 public typealias PersistencyStorageProvider<Filter> = PersistenceStorageProvider<Filter>
 
+/**
+ * Storage provider (ex: database, S3, file) to be used in [ai.koog.agents.snapshot.feature.Persistence] feature.
+ * */
 public interface PersistenceStorageProvider<Filter> {
-    public suspend fun getCheckpoints(agentId: String, filter: Filter? = null): List<AgentCheckpointData>
+
+    /**
+     * Retrieves the list of checkpoints of the AI agent with the given [agentId]
+     * */
+    public suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> =
+        getCheckpoints(agentId, null)
+
+    /**
+     * Retrieves the list of checkpoints of the AI agent with the given [agentId] that match the provided [filter]
+     * */
+    public suspend fun getCheckpoints(agentId: String, filter: Filter?): List<AgentCheckpointData>
+
+    /**
+     * Saves provided checkpoint ([agentCheckpointData]) of the agent with [agentId] to the storage (ex: database, S3, file)
+     * */
     public suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData)
-    public suspend fun getLatestCheckpoint(agentId: String, filter: Filter? = null): AgentCheckpointData?
+
+    /**
+     * Retrieves the latest checkpoint of the AI agent with [agentId]
+     * */
+    public suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? = getLatestCheckpoint(agentId, null)
+
+    /**
+     * Retrieves the latest checkpoint of the AI agent with [agentId] matching the provided [filter]
+     * */
+    public suspend fun getLatestCheckpoint(agentId: String, filter: Filter?): AgentCheckpointData?
 }

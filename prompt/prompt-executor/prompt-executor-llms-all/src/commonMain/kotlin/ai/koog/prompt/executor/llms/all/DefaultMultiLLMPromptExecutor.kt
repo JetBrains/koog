@@ -13,6 +13,10 @@ import ai.koog.prompt.llm.LLMProvider
  * @param anthropicClient The Anthropic client
  * @param googleClient The Google client
  */
+@Deprecated(
+    "DefaultMultiLLMPromptExecutor is deprecated. Use MultiLLMPromptExecutor(OpenAILLMClient, AnthropicLMClient, GoogleLLMClient), instead.",
+    replaceWith = ReplaceWith("MultiLLMPromptExecutor", "ai.koog.prompt.executor.llms.MultiLLMPromptExecutor")
+)
 public class DefaultMultiLLMPromptExecutor(
     openAIClient: OpenAILLMClient,
     anthropicClient: AnthropicLLMClient,

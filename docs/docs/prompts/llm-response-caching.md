@@ -17,7 +17,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.cached.CachedPromptExecutor
 import ai.koog.prompt.cache.files.FilePromptCache
 import kotlin.system.measureTimeMillis
@@ -40,7 +40,7 @@ fun main() {
 ```kotlin
 // Create a prompt executor
 val client = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
-val promptExecutor = SingleLLMPromptExecutor(client)
+val promptExecutor = MultiLLMPromptExecutor(client)
 
 // Create a cached prompt executor
 val cachedExecutor = CachedPromptExecutor(

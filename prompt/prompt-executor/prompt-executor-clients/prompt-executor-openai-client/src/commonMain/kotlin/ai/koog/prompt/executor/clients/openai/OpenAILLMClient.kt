@@ -64,6 +64,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -97,7 +98,7 @@ public class OpenAIClientSettings(
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 @OptIn(ExperimentalAtomicApi::class)
-public open class OpenAILLMClient(
+public open class OpenAILLMClient @JvmOverloads constructor(
     apiKey: String,
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     baseClient: HttpClient = HttpClient(),
