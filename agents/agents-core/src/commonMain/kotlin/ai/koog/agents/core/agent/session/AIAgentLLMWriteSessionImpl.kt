@@ -96,6 +96,11 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         return super<AIAgentLLMSession>.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
     }
 
+    override suspend fun requestLLMOnlyCallingTools(): Message.Response {
+        return super<AIAgentLLMSession>.requestLLMOnlyCallingTools()
+            .also { response -> appendPrompt { message(response) } }
+    }
+
     override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         return super<AIAgentLLMSession>.requestLLMMultipleOnlyCallingTools()
             .also { responses ->

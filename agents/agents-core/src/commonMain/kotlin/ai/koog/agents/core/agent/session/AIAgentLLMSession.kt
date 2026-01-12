@@ -16,6 +16,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.prompt.processor.executeProcessed
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -64,7 +65,7 @@ public open class AIAgentLLMSession(
     @InternalAgentsApi
     public open override suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.execute(preparedPrompt, model, tools)
+        return executor.executeProcessed(preparedPrompt, model, tools, responseProcessor)
     }
 
     @InternalAgentsApi
@@ -94,29 +95,31 @@ public open class AIAgentLLMSession(
         return executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
     }
 
+    private fun preparePromptWithToolChoice(toolChoice: LLMParams.ToolChoice) =
+        prompt.withUpdatedParams {
+            this.toolChoice = toolChoice
+        }
+
     public open override suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
         // We use the multiple-response method to ensure we capture all context (e.g. thinking)
         // even though we only return the specific tool call.
-        val responses = requestLLMMultipleOnlyCallingTools()
+        val promptWithOnlyCallingTools = preparePromptWithToolChoice(LLMParams.ToolChoice.Required)
+        val responses = executeMultiple(promptWithOnlyCallingTools, tools)
         return responses.firstOrNull { it is Message.Tool.Call }
             ?: error("requestLLMOnlyCallingTools expected at least one Tool.Call but received: ${responses.map { it::class.simpleName }}")
     }
 
     public open override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         validateSession()
-        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
-            toolChoice = LLMParams.ToolChoice.Required
-        }
+        val promptWithOnlyCallingTools = preparePromptWithToolChoice(LLMParams.ToolChoice.Required)
         return executeMultiple(promptWithOnlyCallingTools, tools)
     }
 
     public open override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
-        val promptWithForcingOneTool = prompt.withUpdatedParams {
-            toolChoice = LLMParams.ToolChoice.Named(tool.name)
-        }
+        val promptWithForcingOneTool = preparePromptWithToolChoice(LLMParams.ToolChoice.Named(tool.name))
         return executeSingle(promptWithForcingOneTool, tools)
     }
 
