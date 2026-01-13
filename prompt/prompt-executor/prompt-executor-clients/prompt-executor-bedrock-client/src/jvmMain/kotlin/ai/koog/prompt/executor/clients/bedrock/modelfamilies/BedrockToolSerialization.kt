@@ -35,15 +35,19 @@ internal object BedrockToolSerialization {
 
             is ToolParameterType.List -> {
                 put("type", "array")
-                putJsonObject("items") {
-                    when (type.itemsType) {
-                        ToolParameterType.Boolean -> put("type", "boolean")
-                        ToolParameterType.Float -> put("type", "number")
-                        ToolParameterType.Integer -> put("type", "integer")
-                        ToolParameterType.String -> put("type", "string")
-                        else -> put("type", "string")
+                val itemDescriptor = ToolParameterDescriptor(
+                    name = "",
+                    description = "",
+                    type = type.itemsType
+                )
+                val itemSchemaMap = buildToolParameterSchema(itemDescriptor)
+                    .filterKeys { it != "description" }
+                val itemSchema = buildJsonObject {
+                    itemSchemaMap.forEach { (key, value) ->
+                        put(key, value)
                     }
                 }
+                put("items", itemSchema)
             }
 
             is ToolParameterType.AnyOf -> {
