@@ -1,7 +1,7 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.rag.base.files.model.FileSystemEntry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
@@ -30,8 +30,9 @@ class ReadFileUtilJvmTest {
 
         val entry = buildTextFileEntry(fs, file, metadata, 0, -1)
 
-        assertIs<FileSystemEntry.File.Content.Text>(entry.content)
-        assertEquals("line1\nline2\nline3", entry.content.text)
+        val content = entry.content
+        assertIs<FileSystemEntry.File.Content.Text>(content)
+        assertEquals("line1\nline2\nline3", content.text)
     }
 
     @Test
@@ -41,8 +42,9 @@ class ReadFileUtilJvmTest {
 
         val entry = buildTextFileEntry(fs, file, metadata, 0, 3)
 
-        assertIs<FileSystemEntry.File.Content.Text>(entry.content)
-        assertEquals("line1\nline2\nline3", entry.content.text)
+        val content = entry.content
+        assertIs<FileSystemEntry.File.Content.Text>(content)
+        assertEquals("line1\nline2\nline3", content.text)
     }
 
     @Test
@@ -52,8 +54,9 @@ class ReadFileUtilJvmTest {
 
         val entry = buildTextFileEntry(fs, file, metadata, 1, 3)
 
-        assertIs<FileSystemEntry.File.Content.Excerpt>(entry.content)
-        val snippet = entry.content.snippets.single()
+        val content = entry.content
+        assertIs<FileSystemEntry.File.Content.Excerpt>(content)
+        val snippet = content.snippets.single()
         assertEquals("line1\nline2", snippet.text.trim())
         assertEquals(1, snippet.range.start.line)
         assertEquals(3, snippet.range.end.line)
@@ -66,8 +69,9 @@ class ReadFileUtilJvmTest {
 
         val entry = buildTextFileEntry(fs, file, metadata, 0, -1)
 
-        assertIs<FileSystemEntry.File.Content.Text>(entry.content)
-        assertEquals("single line", entry.content.text)
+        val content = entry.content
+        assertIs<FileSystemEntry.File.Content.Text>(content)
+        assertEquals("single line", content.text)
     }
 
     @Test
@@ -146,8 +150,9 @@ class ReadFileUtilJvmTest {
             invokedWithFileLineCount = fileLineCount
         }
 
-        assertIs<FileSystemEntry.File.Content.Text>(entry.content)
-        assertEquals("line1\nline2", entry.content.text)
+        val content = entry.content
+        assertIs<FileSystemEntry.File.Content.Text>(content)
+        assertEquals("line1\nline2", content.text)
         assertEquals(50, invokedWithRequestedEndLine)
         assertEquals(2, invokedWithFileLineCount)
     }

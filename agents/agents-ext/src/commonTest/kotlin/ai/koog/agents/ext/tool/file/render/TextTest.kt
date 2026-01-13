@@ -1,10 +1,10 @@
 package ai.koog.agents.ext.tool.file.render
 
-import ai.koog.agents.ext.tool.file.model.FileSize
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.DocumentProvider
 import ai.koog.rag.base.files.FileMetadata
+import ai.koog.rag.base.files.model.FileSize
+import ai.koog.rag.base.files.model.FileSystemEntry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
