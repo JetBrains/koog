@@ -1,38 +1,30 @@
 package ai.koog.agents.example.acp
 
-import com.agentclientprotocol.client.Client
-import com.agentclientprotocol.client.ClientInfo
-import com.agentclientprotocol.client.ClientSession
-import com.agentclientprotocol.client.ClientSupport
+import com.agentclientprotocol.client.*
 import com.agentclientprotocol.common.ClientSessionOperations
 import com.agentclientprotocol.common.Event
-import com.agentclientprotocol.common.SessionParameters
-import com.agentclientprotocol.model.ContentBlock
-import com.agentclientprotocol.model.PermissionOption
-import com.agentclientprotocol.model.RequestPermissionOutcome
-import com.agentclientprotocol.model.RequestPermissionResponse
-import com.agentclientprotocol.model.SessionUpdate
-import com.agentclientprotocol.model.StopReason
+import com.agentclientprotocol.common.FileSystemOperations
+import com.agentclientprotocol.common.SessionCreationParameters
+import com.agentclientprotocol.common.TerminalOperations
+import com.agentclientprotocol.model.*
 import com.agentclientprotocol.protocol.Protocol
 import com.agentclientprotocol.transport.Transport
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.JsonElement
+import java.io.File
 import java.nio.file.Paths
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 private val logger = KotlinLogging.logger {}
 
-class TerminalClientSupport : ClientSupport {
-    override suspend fun createClientSession(
-        session: ClientSession,
-        _sessionResponseMeta: JsonElement?
-    ): ClientSessionOperations {
-        return TerminalClientSessionOperations()
-    }
-}
+class TerminalClientSessionOperations : ClientSessionOperations, FileSystemOperations, TerminalOperations {
+    private val activeTerminals = ConcurrentHashMap<String, Process>()
 
-class TerminalClientSessionOperations : ClientSessionOperations {
     override suspend fun requestPermissions(
         toolCall: SessionUpdate.ToolCallUpdate,
         permissions: List<PermissionOption>,
@@ -59,29 +51,119 @@ class TerminalClientSessionOperations : ClientSessionOperations {
         println("Agent sent notification:")
         notification.render()
     }
+
+    override suspend fun fsReadTextFile(
+        path: String,
+        line: UInt?,
+        limit: UInt?,
+        _meta: JsonElement?,
+    ): ReadTextFileResponse {
+        val content = Paths.get(path).readText()
+        return ReadTextFileResponse(content)
+    }
+
+    override suspend fun fsWriteTextFile(
+        path: String,
+        content: String,
+        _meta: JsonElement?,
+    ): WriteTextFileResponse {
+        Paths.get(path).writeText(content)
+        return WriteTextFileResponse()
+    }
+
+    override suspend fun terminalCreate(
+        command: String,
+        args: List<String>,
+        cwd: String?,
+        env: List<EnvVariable>,
+        outputByteLimit: ULong?,
+        _meta: JsonElement?,
+    ): CreateTerminalResponse {
+        val processBuilder = ProcessBuilder(listOf(command) + args)
+        if (cwd != null) {
+            processBuilder.directory(File(cwd))
+        }
+        env.forEach { processBuilder.environment()[it.name] = it.value }
+
+        val process = processBuilder.start()
+        val terminalId = UUID.randomUUID().toString()
+        activeTerminals[terminalId] = process
+
+        return CreateTerminalResponse(terminalId)
+    }
+
+    override suspend fun terminalOutput(
+        terminalId: String,
+        _meta: JsonElement?,
+    ): TerminalOutputResponse {
+        val process = activeTerminals[terminalId] ?: error("Terminal not found: $terminalId")
+        val stdout = process.inputStream.bufferedReader().readText()
+        val stderr = process.errorStream.bufferedReader().readText()
+        val output = if (stderr.isNotEmpty()) "$stdout\nSTDERR:\n$stderr" else stdout
+
+        return TerminalOutputResponse(output, truncated = false)
+    }
+
+    override suspend fun terminalRelease(
+        terminalId: String,
+        _meta: JsonElement?,
+    ): ReleaseTerminalResponse {
+        activeTerminals.remove(terminalId)
+        return ReleaseTerminalResponse()
+    }
+
+    override suspend fun terminalWaitForExit(
+        terminalId: String,
+        _meta: JsonElement?,
+    ): WaitForTerminalExitResponse {
+        val process = activeTerminals[terminalId] ?: error("Terminal not found: $terminalId")
+        val exitCode = process.waitFor()
+        return WaitForTerminalExitResponse(exitCode.toUInt())
+    }
+
+    override suspend fun terminalKill(
+        terminalId: String,
+        _meta: JsonElement?,
+    ): KillTerminalCommandResponse {
+        val process = activeTerminals[terminalId]
+        process?.destroy()
+        return KillTerminalCommandResponse()
+    }
 }
 
 suspend fun CoroutineScope.runTerminalClient(transport: Transport) {
     // Create client-side connection
     val protocol = Protocol(this, transport)
-    val client = Client(protocol, TerminalClientSupport())
+    val client = Client(
+        protocol
+    )
 
-    logger.info { "Starting agent process..." }
+    logger.info { "Starting Gemini agent process..." }
 
     // Connect to agent and start transport
     protocol.start()
 
-    logger.info { "Connected to agent, initializing..." }
+    logger.info { "Connected to Gemini agent, initializing..." }
 
-    val agentInfo = client.initialize(ClientInfo())
+    val agentInfo = client.initialize(
+        ClientInfo(
+            capabilities = ClientCapabilities(
+                fs = FileSystemCapability(
+                    readTextFile = true,
+                    writeTextFile = true
+                ),
+                terminal = true
+            )
+        )
+    )
     println("Agent info: $agentInfo")
 
     println()
 
     // Create a session
     val session = client.newSession(
-        SessionParameters(Paths.get("").absolutePathString(), emptyList())
-    )
+        SessionCreationParameters(Paths.get("").absolutePathString(), emptyList())
+    ) { session, _ -> TerminalClientSessionOperations() }
 
     println("=== Session created: ${session.sessionId} ===")
     println("Type your messages below. Use 'exit', 'quit', or Ctrl+C to stop.")
@@ -116,7 +198,6 @@ suspend fun CoroutineScope.runTerminalClient(transport: Transport) {
                             when (event.response.stopReason) {
                                 StopReason.END_TURN -> {
                                     // Normal completion - no action needed
-                                    println("Success!")
                                 }
 
                                 StopReason.MAX_TOKENS -> {
