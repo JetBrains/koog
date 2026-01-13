@@ -10,6 +10,7 @@ import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.EngineConnectorConfig
 import io.ktor.server.engine.embeddedServer
+import io.ktor.utils.io.CancellationException
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
@@ -123,7 +124,16 @@ public fun Server.addTool(
     tool: Tool<*, *>,
 ) {
     addTool(tool.descriptor.asSdkTool()) { request ->
-        val args = tool.decodeArgs(request.arguments ?: EmptyJsonObject)
+        val args = try {
+            tool.decodeArgs(request.arguments ?: EmptyJsonObject)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return@addTool CallToolResult(
+                content = listOf(TextContent("Failed to parse arguments for tool '${tool.name}': ${e.message}")),
+                isError = true,
+            )
+        }
         val result = tool.executeUnsafe(args)
 
         CallToolResult(

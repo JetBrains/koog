@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * A wrapper class designed to safely execute a tool within a given AI agent environment.
@@ -190,11 +191,15 @@ public data class SafeTool<TArgs, TResult>(
  * @return A [SafeTool.Result] which will either be a [SafeTool.Result.Failure] or [SafeTool.Result.Success]
  * based on the presence and validity of the `result` in the [ReceivedToolResult].
  */
-public fun <TResult> ReceivedToolResult.toSafeResult(tool: Tool<*, TResult>): SafeTool.Result<TResult> = when (result) {
-    null -> {
-        SafeTool.Result.Failure(message = content)
+public fun <TResult> ReceivedToolResult.toSafeResult(tool: Tool<*, TResult>): SafeTool.Result<TResult> {
+    val encodedResult = result ?: return SafeTool.Result.Failure(message = content)
+    val decodedResult = try {
+        tool.decodeResult(encodedResult)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        return SafeTool.Result.Failure("Tool with name '${tool.name}' failed to deserialize result with error: ${e.message}")
     }
-    else -> {
-        SafeTool.Result.Success(result = tool.decodeResult(this.result), content = content)
-    }
+
+    return SafeTool.Result.Success(result = decodedResult, content = content)
 }

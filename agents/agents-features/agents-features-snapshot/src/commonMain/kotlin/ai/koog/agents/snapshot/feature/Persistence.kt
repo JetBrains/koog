@@ -20,6 +20,7 @@ import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.utils.io.CancellationException
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
@@ -368,7 +369,13 @@ public class Persistence(
                         .reversed()
                         .forEach { toolCall ->
                             rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
-                                val toolArgs = toolCall.contentJsonResult.getOrNull()?.let { rollbackTool.decodeArgs(it) }
+                                val toolArgs = try{
+                                    toolCall.contentJsonResult.getOrNull()?.let { rollbackTool.decodeArgs(it) }
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (_: Exception) {
+                                    null
+                                }
 
                                 rollbackTool.executeUnsafe(toolArgs)
                             }
