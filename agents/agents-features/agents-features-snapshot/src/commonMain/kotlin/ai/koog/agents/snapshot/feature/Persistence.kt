@@ -369,7 +369,7 @@ public class Persistence(
                         .reversed()
                         .forEach { toolCall ->
                             rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
-                                val toolArgs = try{
+                                val toolArgs = try {
                                     toolCall.contentJsonResult.getOrNull()?.let { rollbackTool.decodeArgs(it) }
                                 } catch (e: CancellationException) {
                                     throw e
