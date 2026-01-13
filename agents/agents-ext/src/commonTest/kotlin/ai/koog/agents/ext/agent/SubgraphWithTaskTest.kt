@@ -4,28 +4,39 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.TestBlankTool
 import ai.koog.agents.testing.tools.TestFinishTool
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.dsl.ModerationResult
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertTrue
 
 class SubgraphWithTaskTest {
 
@@ -692,6 +703,87 @@ class SubgraphWithTaskTest {
     }
 
     //endregion Model Without tool_choice Support
+
+    //region Invalid Finish Tool Args Recovery Test
+
+    @Serializable
+    private data class StrictFinishArgs(val value: String)
+
+    private object StrictFinishTool : Tool<StrictFinishArgs, String>(
+        argsSerializer = StrictFinishArgs.serializer(),
+        resultSerializer = String.serializer(),
+        name = "strict_finish_tool",
+        description = "Strict finish tool",
+    ) {
+        override suspend fun execute(args: StrictFinishArgs): String = args.value
+    }
+
+    private class InvalidFinishThenValidExecutor(
+        private val finishToolName: String,
+        private val invalidArgsJson: String,
+        private val validArgsJson: String,
+    ) : PromptExecutor {
+        var callCount = 0
+
+        override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+            callCount += 1
+            val content = if (callCount == 1) invalidArgsJson else validArgsJson
+            return listOf(
+                Message.Tool.Call(
+                    id = callCount.toString(),
+                    tool = finishToolName,
+                    content = content,
+                    metaInfo = ResponseMetaInfo.Empty,
+                )
+            )
+        }
+
+        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+            emptyFlow()
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+            ModerationResult(isHarmful = false, categories = emptyMap())
+
+        override fun close() { }
+    }
+
+    @Test
+    @JsName("testSubgraphWithTaskRecoversFromInvalidFinishToolArgs")
+    fun `test subgraphWithTask recovers fom invalid finish tool args`() = runTest {
+        val executor = InvalidFinishThenValidExecutor(StrictFinishTool.name, "{}", "{\"value\": \"ok\"}")
+
+        val strategy = strategy<String, String>("test_strategy") {
+            val subgraph by subgraphWithTask<String, StrictFinishArgs, String>(
+                toolSelectionStrategy = ToolSelectionStrategy.ALL,
+                finishTool = StrictFinishTool,
+                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+            ) { input -> input }
+
+            nodeStart then subgraph then nodeFinish
+        }
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test_agent") {
+                system("You are a test agent.")
+            },
+            model = OpenAIModels.Chat.GPT5,
+            maxAgentIterations = 50,
+        )
+
+        AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry.EMPTY,
+        ).use { agent ->
+            val result = agent.run("Test input")
+            assertEquals("ok", result)
+        }
+
+        assertTrue(executor.callCount >= 2, "Expected at least 2 LLM calls for recovery")
+    }
+
+    //endregion
 
     //region Private Methods
 
