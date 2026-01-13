@@ -4,7 +4,7 @@ import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
-import com.agentclientprotocol.common.SessionParameters
+import com.agentclientprotocol.common.SessionCreationParameters
 import com.agentclientprotocol.model.AcpMethod
 import com.agentclientprotocol.model.AuthMethod
 import com.agentclientprotocol.model.AuthMethodId
@@ -65,15 +65,13 @@ class AcpProtocolTest {
 
                         withTimeout(5.seconds) {
                             while (
-                                setup.clientSupport.lastOperations.flatMap { it.notifications }
-                                    .none { it is SessionUpdate.AgentMessageChunk }
+                                setup.clientOperations.notifications.none { it is SessionUpdate.AgentMessageChunk }
                             ) {
                                 delay(10)
                             }
                         }
 
-                        val received = setup.clientSupport.lastOperations.flatMap { it.notifications }
-                        received.shouldForAny {
+                        setup.clientOperations.notifications.shouldForAny {
                             it is SessionUpdate.AgentMessageChunk && (it.content as? ContentBlock.Text)?.text == NOTIFICATION
                         }
                     } finally {
@@ -116,15 +114,15 @@ class AcpProtocolTest {
                         if (loadSession) {
                             val loaded = setup.client.loadSession(
                                 session.sessionId,
-                                SessionParameters(Paths.get("").absolutePathString(), emptyList())
-                            )
+                                SessionCreationParameters(Paths.get("").absolutePathString(), emptyList())
+                            ) { _, _ -> TestClientSessionOperations() }
                             loaded.sessionId shouldBe session.sessionId
                         } else {
                             shouldThrow<Exception> {
                                 setup.client.loadSession(
                                     session.sessionId,
-                                    SessionParameters(Paths.get("").absolutePathString(), emptyList())
-                                )
+                                    SessionCreationParameters(Paths.get("").absolutePathString(), emptyList())
+                                ) { _, _ -> TestClientSessionOperations() }
                             }
                         }
 
@@ -165,8 +163,8 @@ class AcpProtocolTest {
 
                         val loadedSession = setup.client.loadSession(
                             setup.session.shouldNotBeNull().sessionId,
-                            SessionParameters(Paths.get("").absolutePathString(), emptyList())
-                        )
+                            SessionCreationParameters(Paths.get("").absolutePathString(), emptyList())
+                        ) { _, _ -> TestClientSessionOperations() }
                         loadedSession.sessionId shouldBe setup.session.sessionId
                     } finally {
                         setup.cleanup()
@@ -194,15 +192,15 @@ class AcpProtocolTest {
                         val loadSessionException = shouldThrow<Exception> {
                             setup.client.loadSession(
                                 SessionId("test-session"),
-                                SessionParameters(Paths.get("").absolutePathString(), emptyList())
-                            )
+                                SessionCreationParameters(Paths.get("").absolutePathString(), emptyList())
+                            ) { _, _ -> TestClientSessionOperations() }
                         }
                         loadSessionException.message shouldContain AUTH_ERROR
 
                         val newSessionException = shouldThrow<Exception> {
                             setup.client.newSession(
-                                SessionParameters(Paths.get("").absolutePathString(), emptyList())
-                            )
+                                SessionCreationParameters(Paths.get("").absolutePathString(), emptyList())
+                            ) { _, _ -> TestClientSessionOperations() }
                         }
                         newSessionException.message shouldContain AUTH_ERROR
                     } finally {
