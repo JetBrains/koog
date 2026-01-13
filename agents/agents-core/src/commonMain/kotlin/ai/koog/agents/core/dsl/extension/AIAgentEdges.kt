@@ -98,7 +98,7 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Ar
     return onIsInstance(Message.Tool.Call::class)
         .onCondition { it.tool == tool.name }
         .onCondition { toolCall ->
-            val args = tool.decodeArgs(toolCall.contentJson)
+            val args = tool.decodeArgs(toolCall.contentJsonResult.getOrNull() ?: return@onCondition false)
             block(args)
         }
 }

@@ -2,6 +2,7 @@ package ai.koog.prompt.streaming
 
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -37,11 +38,25 @@ public sealed interface StreamFrame {
     ) : StreamFrame {
 
         /**
-         * Lazily parses the content of the tool call as a JSON object.
+         * Lazily parses and caches the result of parsing [content] as a JSON object.
          */
-        val contentJson: JsonObject by lazy {
-            Json.parseToJsonElement(content).jsonObject
+        private val contentJsonResult: Result<JsonObject> by lazy {
+            try {
+                Result.success(Json.parseToJsonElement(content).jsonObject)
+            } catch (e: Exception) {
+                when (e) {
+                    is SerializationException, is IllegalArgumentException -> Result.failure(e)
+                    else -> throw e
+                }
+            }
         }
+
+        /**
+         * Lazily parses the content of the tool call as a JSON object.
+         * Can throw an exception when parsing fails.
+         */
+        val contentJson: JsonObject
+            get() = contentJsonResult.getOrThrow()
     }
 
     /**

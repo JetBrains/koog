@@ -368,7 +368,7 @@ public class Persistence(
                         .reversed()
                         .forEach { toolCall ->
                             rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
-                                val toolArgs = rollbackTool.decodeArgs(toolCall.contentJson)
+                                val toolArgs = toolCall.contentJsonResult.getOrNull()?.let { rollbackTool.decodeArgs(it) }
 
                                 rollbackTool.executeUnsafe(toolArgs)
                             }

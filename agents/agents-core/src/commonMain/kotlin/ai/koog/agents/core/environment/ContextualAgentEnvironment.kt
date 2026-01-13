@@ -2,8 +2,11 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.utils.io.CancellationException
+import kotlinx.serialization.json.JsonObject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -20,6 +23,36 @@ public class ContextualAgentEnvironment(
     override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
+        val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
+
+        val toolArgs = try {
+            toolCall.contentJson
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error { "Failed to execute tool call with id '${toolCall.id}' while parsing args: ${e.message}" }
+            context.pipeline.onToolValidationFailed(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = toolCall.id,
+                toolName = toolCall.tool,
+                toolDescription = toolDescription,
+                toolArgs = JsonObject(emptyMap()),
+                message = "Failed to parse tool arguments: ${e.message}",
+                error = e.toAgentError(),
+                context = context
+            )
+            return ReceivedToolResult(
+                id = toolCall.id,
+                tool = toolCall.tool,
+                toolArgs = JsonObject(emptyMap()),
+                toolDescription = null,
+                content = "Failed to parse tool arguments: ${e.message}",
+                resultKind = ToolResultKind.ValidationError(e.toAgentError()),
+                result = null
+            )
+        }
 
         logger.trace {
             "Executing tool call (" +
@@ -27,7 +60,7 @@ public class ContextualAgentEnvironment(
                 "run id: ${context.runId}, " +
                 "tool call id: ${toolCall.id}, " +
                 "tool: ${toolCall.tool}, " +
-                "args: ${toolCall.contentJson})"
+                "args: $toolArgs)"
         }
 
         context.pipeline.onToolCallStarting(
@@ -36,8 +69,8 @@ public class ContextualAgentEnvironment(
             runId = context.runId,
             toolCallId = toolCall.id,
             toolName = toolCall.tool,
-            toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description,
-            toolArgs = toolCall.contentJson,
+            toolDescription = toolDescription,
+            toolArgs = toolArgs,
             context = context
         )
 
@@ -52,7 +85,7 @@ public class ContextualAgentEnvironment(
                 "tool call id: ${toolCall.id}, " +
                 "tool: ${toolCall.tool}, " +
                 "tool description: ${toolResult.toolDescription}, " +
-                "args: ${toolCall.contentJson}) " +
+                "args: $toolArgs) " +
                 "with result: $toolResult"
         }
 

@@ -7,6 +7,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KLogger
+import kotlinx.serialization.json.JsonObject
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Represents base agent environment with generic abstractions.
@@ -19,7 +21,7 @@ public class GenericAgentEnvironment(
 
     override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
         logger.info {
-            formatLog("Executing tool (name: ${toolCall.tool}, args: ${toolCall.contentJson})")
+            formatLog("Executing tool (name: ${toolCall.tool}, args: ${toolCall.contentJsonResult.getOrElse { "Failed to parse tool arguments: ${it.message}" }})")
         }
 
         val environmentToolResult = processToolCall(toolCall)
@@ -45,7 +47,21 @@ public class GenericAgentEnvironment(
         // Tool
         val id = toolCall.id
         val toolName = toolCall.tool
-        val toolArgsJson = toolCall.contentJson
+        val toolArgsJson = try {
+            toolCall.contentJson
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return ReceivedToolResult(
+                id = id,
+                tool = toolName,
+                toolArgs = JsonObject(emptyMap()),
+                toolDescription = null,
+                content = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
+                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                result = null,
+            )
+        }
 
         val tool = toolRegistry.getToolOrNull(toolName)
             ?: run {
@@ -66,6 +82,8 @@ public class GenericAgentEnvironment(
         // Tool Args
         val toolArgs = try {
             tool.decodeArgs(toolArgsJson)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             logger.error(e) { formatLog("Tool with name '$toolName' failed to parse arguments: $toolArgsJson") }
             return ReceivedToolResult(
@@ -82,6 +100,8 @@ public class GenericAgentEnvironment(
         val toolResult = try {
             @Suppress("UNCHECKED_CAST")
             (tool as Tool<Any?, Any?>).execute(toolArgs)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: ToolException) {
             return ReceivedToolResult(
                 id = id,
@@ -108,14 +128,31 @@ public class GenericAgentEnvironment(
 
         logger.trace { "Completed execution of the tool '$toolName' with result: $toolResult" }
 
+        val (content, result) = try {
+            tool.encodeResultToStringUnsafe(toolResult) to tool.encodeResult(toolResult)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error(e) { "Tool with name '$toolName' failed to encode result: $toolResult" }
+            return ReceivedToolResult(
+                id = id,
+                tool = toolName,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
+                content = "Tool with name '$toolName' failed to serialize result due to the error: ${e.message}!",
+                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                result = null
+            )
+        }
+
         return ReceivedToolResult(
             id = id,
             tool = toolName,
             toolArgs = toolArgsJson,
             toolDescription = toolDescription,
-            content = tool.encodeResultToStringUnsafe(toolResult),
+            content = content,
             resultKind = ToolResultKind.Success,
-            result = tool.encodeResult(toolResult)
+            result = result
         )
     }
 
