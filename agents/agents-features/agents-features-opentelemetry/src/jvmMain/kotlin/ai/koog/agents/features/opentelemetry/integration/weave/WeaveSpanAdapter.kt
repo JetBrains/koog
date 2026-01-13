@@ -16,7 +16,7 @@ import ai.koog.agents.features.opentelemetry.integration.isSdkArrayPrimitive
 import ai.koog.agents.features.opentelemetry.integration.replaceAttributes
 import ai.koog.agents.features.opentelemetry.integration.replaceBodyFields
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
-import ai.koog.agents.features.opentelemetry.span.InferenceSpan
+import ai.koog.agents.features.opentelemetry.span.SpanType
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.json.Json
 
@@ -25,7 +25,7 @@ import kotlinx.serialization.json.Json
  * spans related to Generative AI agent events. It provides customized handling for specific types of
  * events, converting their data fields into span attributes and removing processed events.
  *
- * This adapter specifically handles spans of type [InferenceSpan] and processes events such as
+ * This adapter specifically handles spans of type [SpanType.INFERENCE] and processes events such as
  * [SystemMessageEvent], [UserMessageEvent], [AssistantMessageEvent], and [ToolMessageEvent].
  * Events are converted into custom span attributes for better traceability and observability.
  *
@@ -39,8 +39,8 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
     }
 
     override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
-        when (span) {
-            is InferenceSpan -> {
+        when (span.type) {
+            SpanType.INFERENCE -> {
                 val eventsToProcess = span.events.toList()
 
                 // Each event - convert into the span attribute
@@ -55,12 +55,13 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
                     }
                 }
             }
+            else -> {}
         }
     }
 
     override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
-        when (span) {
-            is InferenceSpan -> {
+        when (span.type) {
+            SpanType.INFERENCE -> {
                 val eventsToProcess = span.events.toList()
 
                 eventsToProcess.forEachIndexed { index, event ->
@@ -70,6 +71,7 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
                     }
                 }
             }
+            else -> {}
         }
     }
 
@@ -138,7 +140,7 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
         span.removeEvent(this)
     }
 
-    private fun AssistantMessageEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+    private fun AssistantMessageEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
         // Convert token attributes to Weave format
         span.replaceAttributes<SpanAttributes.Usage.InputTokens> { attribute ->
             CustomAttribute("gen_ai.usage.prompt_tokens", attribute.value)
@@ -186,7 +188,7 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
         span.removeEvent(this)
     }
 
-    private fun ChoiceEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+    private fun ChoiceEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
         // Convert tokens attributes to Weave format
         span.replaceAttributes<SpanAttributes.Usage.InputTokens> { attribute ->
             CustomAttribute("gen_ai.usage.prompt_tokens", attribute.value)

@@ -21,9 +21,10 @@ Key OpenTelemetry concepts
 
 The OpenTelemetry feature in Koog automatically creates spans for various agent events, including:
 
-- Agent execution start and end
+- Agent creation and invocation
+- Strategy execution
 - Node execution
-- LLM calls
+- LLM calls (inference)
 - Tool calls
 
 ## Installation
@@ -177,8 +178,8 @@ The OpenTelemetry feature creates different types of spans for various operation
 2. **Invoke Agent Span**
     - Purpose: One concrete execution (run) of an agent.
     - Emitted: At the start of a run. Closed on successful finish or error.
-    - Parent: Parent: **Create Agent Span**. Children: **Node Execute Span** instances, and, indirectly, LLM and Tool spans within nodes.
-    - Useful for: Measuring run‑level timing, status, and grouping of all node, tool, and LLM activity for a run.
+    - Parent: **Create Agent Span**. Children: **Strategy Span** instances, and, indirectly, node, tool, and LLM spans within strategies.
+    - Useful for: Measuring run‑level timing, status, and grouping of all strategy, node, tool, and LLM activity for a run.
     - Key attributes:
         - `gen_ai.operation.name` = `invoke_agent`
         - `gen_ai.agent.id`
@@ -186,16 +187,27 @@ The OpenTelemetry feature creates different types of spans for various operation
         - `gen_ai.system` (LLM provider)
         - `gen_ai.response.finish_reasons` (on error)
 
-3. **Node Execute Span**
+3. **Strategy Span**
+    - Purpose: Execution of a strategy within an agent run.
+    - Emitted: At the start of strategy execution. Closed when the strategy completes or errors.
+    - Parent: **Invoke Agent Span**. Children: **Node Execute Span** instances.
+    - Useful for: Tracking strategy-level execution, grouping all node executions within a strategy, and measuring strategy performance.
+    - Key attributes:
+        - `gen_ai.conversation.id`
+        - `koog.strategy.name`
+        - `koog.event.id`
+    - Note: This is a custom span type specific to Koog, not defined in the OpenTelemetry Semantic Conventions.
+
+4. **Node Execute Span**
     - Purpose: Execution of a single node in the agent strategy.
     - Emitted: Immediately before a node runs. Closed after the node completes or errors.
-    - Parent: **Invoke Agent Span**. Children: **Inference Spans** and **Execute Tool Span** instances created by the node.
+    - Parent: **Strategy Span**. Children: **Inference Spans** and **Execute Tool Span** instances created by the node.
     - Useful for: Understanding strategy flow and attributing LLM or tool work to a specific node.
     - Key attributes:
         - `gen_ai.conversation.id`
         - `koog.node.id`
 
-4. **Inference Span**
+5. **Inference Span**
     - Purpose: A single LLM call (prompt execution).
     - Emitted: Before the LLM is invoked. Closed after responses are received.
     - Parent: **Node Execute Span**.
@@ -216,7 +228,7 @@ The OpenTelemetry feature creates different types of spans for various operation
         - `gen_ai.usage.total_tokens` (when available)
         - `gen_ai.response.finish_reasons` (Stop, ToolCalls, etc.)
 
-5. **Execute Tool Span**
+6. **Execute Tool Span**
     - Purpose: Execution of a tool or function call triggered by the agent or LLM.
     - Emitted: When a tool is called. Closed after the tool returns a result or fails with an error during validation or execution.
     - Parent: **Node Execute Span**.
