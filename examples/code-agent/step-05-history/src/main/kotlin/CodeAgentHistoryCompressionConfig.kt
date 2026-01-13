@@ -4,6 +4,13 @@ import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.llm.LLModel
+
+/**
+ * The model used for history compression
+ */
+val COMPRESSION_MODEL: LLModel = OpenAIModels.Chat.GPT4oMini
 
 /**
  * Triggers compression when history exceeds 200 messages OR 200k characters (~50k tokens).

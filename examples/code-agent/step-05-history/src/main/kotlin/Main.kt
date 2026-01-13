@@ -43,7 +43,8 @@ val agent = AIAgent(
     strategy = singleRunStrategyWithHistoryCompression(
         config = HistoryCompressionConfig(
             isHistoryTooBig = CODE_AGENT_HISTORY_TOO_BIG,
-            compressionStrategy = CODE_AGENT_COMPRESSION
+            compressionStrategy = CODE_AGENT_COMPRESSION,
+            retrievalModel = COMPRESSION_MODEL
         )
     ),
     maxIterations = 400

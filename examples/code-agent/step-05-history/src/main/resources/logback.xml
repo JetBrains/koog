@@ -16,12 +16,11 @@
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>${FILE_LOG_LEVEL:-INFO}</level>
-        </filter>
     </appender>
 
-    <root level="INFO">
+    <logger name="code-agent-events" level="INFO" />
+
+    <root level="ERROR">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
