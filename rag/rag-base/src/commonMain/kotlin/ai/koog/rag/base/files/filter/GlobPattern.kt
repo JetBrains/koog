@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.tool.file.filter
+package ai.koog.rag.base.files.filter
 
 /**
  * A pattern for matching file paths using glob syntax.
