@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.tool.file.model
+package ai.koog.rag.base.files.model
 
 import kotlinx.serialization.Serializable
 import kotlin.math.pow

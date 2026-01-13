@@ -2,13 +2,13 @@ package ai.koog.agents.ext.tool.search
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
-import ai.koog.agents.ext.tool.file.model.buildFileSize
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.DocumentProvider
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.extendRangeByLines
+import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.rag.base.files.model.buildFileSize
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.toPosition
 import kotlinx.coroutines.CancellationException
