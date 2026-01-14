@@ -54,6 +54,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
@@ -319,40 +320,57 @@ public class BedrockLLMClient @JvmOverloads constructor(
                 logger.error(exception) { exception.message }
                 close(exception)
             }
-        }.map { chunkJsonString ->
+        }.filterNot {
+            it.isBlank()
+        }.run {
+            when (modelFamily) {
+                is BedrockModelFamilies.AI21Jamba -> genericProcessStream(
+                    this,
+                    BedrockAI21JambaSerialization::parseJambaStreamChunk
+                )
+
+                is BedrockModelFamilies.AmazonNova -> genericProcessStream(
+                    this,
+                    BedrockAmazonNovaSerialization::parseNovaStreamChunk
+                )
+
+                is BedrockModelFamilies.Meta -> genericProcessStream(
+                    this,
+                    BedrockMetaLlamaSerialization::parseLlamaStreamChunk
+                )
+
+                is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.transformAnthropicStreamChunks(
+                    chunkJsonStringFlow = this,
+                    clock = clock,
+                )
+
+                is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere ->
+                    throw LLMClientException(
+                        clientName,
+                        "Embedding models do not support streaming chat completions. Use embed() instead."
+                    )
+            }
+        }
+    }
+
+    /**
+     * Processes a flow of JSON strings into StreamFrames using the provided processor function.
+     * Handles exceptions by logging and re-throwing them.
+     */
+    private fun genericProcessStream(
+        chunkJsonStringFlow: Flow<String>,
+        processor: (String) -> List<StreamFrame>
+    ): Flow<StreamFrame> =
+        chunkJsonStringFlow.map { chunkJsonString ->
             try {
-                if (chunkJsonString.isBlank()) return@map emptyList()
-                when (modelFamily) {
-                    is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaStreamChunk(
-                        chunkJsonString
-                    )
-
-                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaStreamChunk(
-                        chunkJsonString
-                    )
-
-                    is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(
-                        chunkJsonString
-                    )
-
-                    is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
-
-                    is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere ->
-                        throw LLMClientException(
-                            clientName,
-                            "Embedding models do not support streaming chat completions. Use embed() instead."
-                        )
-                }
+                processor(chunkJsonString)
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to parse Bedrock stream chunk: $chunkJsonString" }
                 throw e
             }
         }.transform { frames ->
-            frames.forEach {
-                emit(it)
-            }
+            frames.forEach { emit(it) }
         }
-    }
 
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         model.requireCapability(LLMCapability.Embed)
