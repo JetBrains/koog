@@ -29,15 +29,15 @@ fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
         onNodeExecutionStarting { ctx ->
             logger.info { "[$agentName] Node '${ctx.node.name}' STARTING" }
             if (ctx.node.name == "compressHistory") {
-                logger.info { "[$agentName] Pre-compression history size: ${ctx.context.config.prompt.messages.size} messages" }
-                logger.info { "[$agentName] Pre-compression total chars: ${ctx.context.config.prompt.messages.sumOf { it.content.length }}" }
+                val messages = ctx.context.llm.prompt.messages
+                logger.info { "[$agentName] Pre-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
             }
         }
         onNodeExecutionCompleted { ctx ->
             logger.info { "[$agentName] Node '${ctx.node.name}' COMPLETED" }
             if (ctx.node.name == "compressHistory") {
-                logger.info { "[$agentName] Post-compression history size: ${ctx.context.config.prompt.messages.size} messages" }
-                logger.info { "[$agentName] Post-compression total chars: ${ctx.context.config.prompt.messages.sumOf { it.content.length }}" }
+                val messages = ctx.context.llm.prompt.messages
+                logger.info { "[$agentName] Post-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
             }
         }
     }
