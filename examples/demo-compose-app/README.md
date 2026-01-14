@@ -30,8 +30,7 @@ To build the application bundle:
 - find `.apk` file in `androidApp/build/outputs/apk/debug/app-debug.apk`
 
 ### Desktop
-Run the desktop application: `./gradlew :desktopApp:run`  
-Run the desktop **hot reload** application: `./gradlew :desktopApp:hotRun`
+Run the desktop application: `./gradlew :desktopApp:run`
 
 ### iOS
 To run the application on iPhone device/simulator:
@@ -39,7 +38,7 @@ To run the application on iPhone device/simulator:
 - Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio
 
 ### Web Distribution
-Build web pack: `./gradlew :webApp:jsBrowserDevelopmentWebpack`  
+Build web pack: `./gradlew :webApp:jsBrowserDevelopmentWebpack`
 Deploy a dir `webApp/build/dist/composeWebCompatibility/productionExecutable` to a web server
 
 ### JS Browser
