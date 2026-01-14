@@ -16,7 +16,7 @@ val COMPRESSION_MODEL: LLModel = OpenAIModels.Chat.GPT4_1Mini
  * Triggers compression when history exceeds 200 messages OR 200k characters (~50k tokens).
  */
 val CODE_AGENT_HISTORY_TOO_BIG: (Prompt) -> Boolean = { prompt ->
-    prompt.messages.size > 3 || prompt.messages.sumOf { it.content.length } > 200_000
+    prompt.messages.size > 200 || prompt.messages.sumOf { it.content.length } > 200_000
 }
 
 /**

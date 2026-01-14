@@ -27,14 +27,12 @@ fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
             logger.info { "[$agentName] Tool '${ctx.toolName}' called with args: ${ctx.toolArgs.toString().take(100)}" }
         }
         onNodeExecutionStarting { ctx ->
-            logger.info { "[$agentName] Node '${ctx.node.name}' STARTING" }
             if (ctx.node.name == "compressHistory") {
                 val messages = ctx.context.llm.prompt.messages
                 logger.info { "[$agentName] Pre-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
             }
         }
         onNodeExecutionCompleted { ctx ->
-            logger.info { "[$agentName] Node '${ctx.node.name}' COMPLETED" }
             if (ctx.node.name == "compressHistory") {
                 val messages = ctx.context.llm.prompt.messages
                 logger.info { "[$agentName] Post-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
