@@ -31,24 +31,28 @@ public class ContextualAgentEnvironment(
             throw e
         } catch (e: Exception) {
             logger.error { "Failed to execute tool call with id '${toolCall.id}' while parsing args: ${e.message}" }
+
+            val tool = toolCall.tool
+            val toolArgs = JsonObject(emptyMap())
+            val message = "Failed to parse tool arguments: ${e.message}"
             context.pipeline.onToolValidationFailed(
                 eventId = eventId,
                 executionInfo = context.executionInfo,
                 runId = context.runId,
                 toolCallId = toolCall.id,
-                toolName = toolCall.tool,
+                toolName = tool,
                 toolDescription = toolDescription,
-                toolArgs = JsonObject(emptyMap()),
-                message = "Failed to parse tool arguments: ${e.message}",
+                toolArgs = toolArgs,
+                message = message,
                 error = e.toAgentError(),
                 context = context
             )
             return ReceivedToolResult(
                 id = toolCall.id,
-                tool = toolCall.tool,
-                toolArgs = JsonObject(emptyMap()),
+                tool = tool,
+                toolArgs = toolArgs,
                 toolDescription = null,
-                content = "Failed to parse tool arguments: ${e.message}",
+                content = message,
                 resultKind = ToolResultKind.ValidationError(e.toAgentError()),
                 result = null
             )
