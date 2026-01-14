@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.tool.file.filter
+package ai.koog.rag.base.files.filter
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

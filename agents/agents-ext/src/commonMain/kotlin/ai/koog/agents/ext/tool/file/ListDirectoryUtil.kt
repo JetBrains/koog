@@ -1,12 +1,12 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.ext.tool.file.filter.GlobPattern
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
-import ai.koog.agents.ext.tool.file.model.buildFileEntry
-import ai.koog.agents.ext.tool.file.model.buildFolderEntry
 import ai.koog.agents.ext.tool.file.render.norm
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.filter.GlobPattern
+import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.rag.base.files.model.buildFileEntry
+import ai.koog.rag.base.files.model.buildFolderEntry
 import kotlin.collections.plusAssign
 
 /**

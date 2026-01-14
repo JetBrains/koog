@@ -5,12 +5,12 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
-import ai.koog.agents.ext.tool.file.model.buildFileSystemEntry
 import ai.koog.agents.ext.tool.file.render.entry
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.rag.base.files.model.buildFileSystemEntry
 import ai.koog.rag.base.files.writeText
 import kotlinx.serialization.Serializable
 

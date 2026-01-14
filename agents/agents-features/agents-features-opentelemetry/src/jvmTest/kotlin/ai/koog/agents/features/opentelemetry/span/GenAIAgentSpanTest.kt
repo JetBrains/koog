@@ -3,13 +3,11 @@ package ai.koog.agents.features.opentelemetry.span
 import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
-import ai.koog.agents.features.opentelemetry.mock.MockSpan
+import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.context.Context
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -19,15 +17,38 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `constructor should initialize with parent`() {
-        val parentSpan = MockGenAIAgentSpan(id = "parent.span", name = "parent.span.name")
-        val childSpan = MockGenAIAgentSpan(id = "parent.span.child", name = "parent.span.child.name", parentSpan = parentSpan)
+        val tracer = MockTracer()
+
+        val parentSpan = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "parent.span",
+            kind = SpanKind.CLIENT,
+            name = "parent.span.name"
+        ).buildAndStart(tracer)
+
+        val childSpan = GenAIAgentSpanBuilder(
+            spanType = SpanType.NODE,
+            parentSpan = parentSpan,
+            id = "parent.span.child",
+            kind = SpanKind.INTERNAL,
+            name = "parent.span.child.name"
+        ).buildAndStart(tracer)
 
         assertEquals(parentSpan, childSpan.parentSpan)
     }
 
     @Test
     fun `constructor should initialize without parent`() {
-        val span = MockGenAIAgentSpan("span", "span.name")
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "span",
+            kind = SpanKind.CLIENT,
+            name = "span.name"
+        ).buildAndStart(tracer)
 
         assertNull(span.parentSpan)
     }
@@ -38,7 +59,15 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `name should return correct name without parent`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         assertEquals("test.span", span.id)
         assertEquals("test.span.name", span.name)
@@ -46,8 +75,23 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `name should return correct name with parent`() {
-        val parentSpan = MockGenAIAgentSpan("parent.span", "parent.span.name")
-        val childSpan = MockGenAIAgentSpan("parent.span.child", "parent.span.child.name", parentSpan = parentSpan)
+        val tracer = MockTracer()
+
+        val parentSpan = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "parent.span",
+            kind = SpanKind.CLIENT,
+            name = "parent.span.name"
+        ).buildAndStart(tracer)
+
+        val childSpan = GenAIAgentSpanBuilder(
+            spanType = SpanType.NODE,
+            parentSpan = parentSpan,
+            id = "parent.span.child",
+            kind = SpanKind.INTERNAL,
+            name = "parent.span.child.name"
+        ).buildAndStart(tracer)
 
         assertEquals("parent.span.child", childSpan.id)
         assertEquals("parent.span.child.name", childSpan.name)
@@ -55,51 +99,47 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `kind should return CLIENT by default`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         assertEquals(SpanKind.CLIENT, span.kind)
     }
 
     @Test
-    fun `context should throw error when not initialized`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-
-        val exception = assertFailsWith<IllegalStateException> {
-            span.context
-        }
-
-        assertEquals("Context for span 'test.span' is not initialized", exception.message)
-    }
-
-    @Test
     fun `context should return value when initialized`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val context = Context.root()
+        val tracer = MockTracer()
 
-        span.context = context
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
-        assertEquals(context, span.context)
-    }
-
-    @Test
-    fun `span should throw error when not initialized`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-
-        val exception = assertFailsWith<IllegalStateException> {
-            span.span
-        }
-
-        assertEquals("Span 'test.span' is not started", exception.message)
+        assertNotNull(span.context)
     }
 
     @Test
     fun `span should return value when initialized`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val mockSpan = MockSpan()
+        val tracer = MockTracer()
 
-        span.span = mockSpan
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
-        assertEquals(mockSpan, span.span)
+        assertNotNull(span.span)
     }
 
     //endregion Properties
@@ -108,9 +148,15 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add valid events to span`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val mockSpan = MockSpan()
-        span.span = mockSpan
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         val events = listOf(
             MockGenAIAgentEvent(name = "event1").apply {
@@ -132,9 +178,15 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add duplicate event should append`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val mockSpan = MockSpan()
-        span.span = mockSpan
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         val event = MockGenAIAgentEvent(name = "duplicate-event").apply {
             addAttribute(MockAttribute("key", "value"))
@@ -151,9 +203,15 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add events with body fields`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val mockSpan = MockSpan()
-        span.span = mockSpan
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         val event = MockGenAIAgentEvent(name = "event-with-body-fields").apply {
             addAttribute(MockAttribute("key", "value"))
@@ -169,9 +227,15 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add multiple events to span`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val mockSpan = MockSpan()
-        span.span = mockSpan
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         val events = listOf(
             MockGenAIAgentEvent(name = "event1").apply { addAttribute(MockAttribute("stringKey", "stringValue")) },
@@ -190,9 +254,15 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add multiple attributes to span`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val mockSpan = MockSpan()
-        span.span = mockSpan
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         val attributes = listOf(
             MockAttribute("stringKey", "stringValue"),
@@ -208,9 +278,15 @@ class GenAIAgentSpanTest {
 
     @Test
     fun `add duplicate attribute should override value`() {
-        val span = MockGenAIAgentSpan("test.span", "test.span.name")
-        val mockSpan = MockSpan()
-        span.span = mockSpan
+        val tracer = MockTracer()
+
+        val span = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test.span",
+            kind = SpanKind.CLIENT,
+            name = "test.span.name"
+        ).buildAndStart(tracer)
 
         val attribute1 = MockAttribute("key", "value1")
         val attribute2 = MockAttribute("key", "value2")

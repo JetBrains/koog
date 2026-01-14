@@ -5,12 +5,12 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
-import ai.koog.agents.ext.tool.file.filter.GlobPattern
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
 import ai.koog.agents.ext.tool.file.render.folder
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.filter.GlobPattern
+import ai.koog.rag.base.files.model.FileSystemEntry
 import kotlinx.serialization.Serializable
 
 /**
