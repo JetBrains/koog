@@ -28,10 +28,10 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import io.ktor.utils.io.CancellationException
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
 /**

@@ -5,8 +5,8 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.utils.io.CancellationException
 import kotlinx.serialization.json.JsonObject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

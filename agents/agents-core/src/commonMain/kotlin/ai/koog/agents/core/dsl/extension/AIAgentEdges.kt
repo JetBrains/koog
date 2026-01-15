@@ -8,7 +8,7 @@ import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
-import io.ktor.utils.io.CancellationException
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
 /**

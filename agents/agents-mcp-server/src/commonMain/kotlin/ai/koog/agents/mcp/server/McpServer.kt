@@ -10,7 +10,6 @@ import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.EngineConnectorConfig
 import io.ktor.server.engine.embeddedServer
-import io.ktor.utils.io.CancellationException
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
@@ -29,6 +28,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import kotlin.coroutines.cancellation.CancellationException
 import io.modelcontextprotocol.kotlin.sdk.types.Tool as SdkTool
 
 /**
