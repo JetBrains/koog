@@ -1,8 +1,10 @@
 package ai.koog.agents.example.codeagent.step05
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.agent.HistoryCompressionConfig
+import ai.koog.agents.ext.agent.singleRunStrategyWithHistoryCompression
+
 import ai.koog.agents.ext.tool.file.EditFileTool
 import ai.koog.agents.ext.tool.file.ListDirectoryTool
 import ai.koog.agents.ext.tool.file.ReadFileTool
@@ -38,7 +40,13 @@ val agent = AIAgent(
         You also have an intelligent find micro agent at your disposition, which can help you find code components and other constructs 
         more cheaply than you can do it yourself. Lean on it for any and all search operations. Do not use shell execution for find tasks.
     """.trimIndent(),
-    strategy = singleRunStrategy(),
+    strategy = singleRunStrategyWithHistoryCompression(
+        config = HistoryCompressionConfig(
+            isHistoryTooBig = CODE_AGENT_HISTORY_TOO_BIG,
+            compressionStrategy = CODE_AGENT_COMPRESSION,
+            retrievalModel = COMPRESSION_MODEL
+        )
+    ),
     maxIterations = 400
 ) {
     setupObservability(agentName = "main")
