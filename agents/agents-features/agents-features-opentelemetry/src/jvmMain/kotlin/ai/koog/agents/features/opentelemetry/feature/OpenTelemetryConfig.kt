@@ -7,11 +7,16 @@ import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.api.metrics.Meter
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.metrics.SdkMeterProvider
+import io.opentelemetry.sdk.metrics.export.MetricExporter
+import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader
 import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder
@@ -19,6 +24,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import io.opentelemetry.sdk.trace.samplers.Sampler
+import java.time.Duration
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Properties
@@ -55,6 +61,8 @@ public class OpenTelemetryConfig : FeatureConfig() {
     private val customSpanProcessorsCreator = mutableListOf<(SpanExporter) -> SpanProcessor>()
 
     private val customResourceAttributes = mutableMapOf<AttributeKey<*>, Any>()
+
+    private val customMetricExporters = mutableListOf<MetricExporter>()
 
     private var _sdk: OpenTelemetrySdk? = null
 
@@ -119,6 +127,23 @@ public class OpenTelemetryConfig : FeatureConfig() {
      */
     public val tracer: Tracer
         get() = sdk.getTracer(_instrumentationScopeName, _instrumentationScopeVersion)
+
+    /**
+     * The `Meter` can be utilized to create metric instruments such as counters, histograms, and gauges,
+     * which can then be used to track application-specific metrics.
+     */
+    public val meter: Meter
+        get() = sdk.getMeter(_instrumentationScopeName)
+
+    /**
+     * Adds a MetricExporter to the OpenTelemetry configuration.
+     * This exporter will be used to export metrics collected during the application's execution.
+     *
+     * @param exporter The MetricExporter instance to be added to the list of custom metric exporters.
+     */
+    public fun addMeterExporter(exporter: MetricExporter) {
+        customMetricExporters.add(exporter)
+    }
 
     /**
      * The name of the service associated with this OpenTelemetry configuration.
@@ -240,7 +265,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
         // Tracing
         val sampler = createSampler()
         val resource = createResources()
-        val exporters: List<SpanExporter> = createExporters()
+        val exporters: List<SpanExporter> = createSpanExporters()
 
         val traceProviderBuilder = SdkTracerProvider.builder()
             .setSampler(sampler)
@@ -250,8 +275,23 @@ public class OpenTelemetryConfig : FeatureConfig() {
             traceProviderBuilder.addProcessors(exporter)
         }
 
+        val metricProvider = SdkMeterProvider.builder()
+            .setResource(resource)
+
+        val metricExporters = createMetricExporters()
+
+        metricExporters.forEach { exporter ->
+            val reader = PeriodicMetricReader
+                .builder(exporter)
+                .setInterval(Duration.ofSeconds(1))
+                .build()
+
+            metricProvider.registerMetricReader(reader)
+        }
+
         val sdk = builder
             .setTracerProvider(traceProviderBuilder.build())
+            .setMeterProvider(metricProvider.build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .build()
 
@@ -285,7 +325,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
         return resource
     }
 
-    private fun createExporters(): List<SpanExporter> = buildList {
+    private fun createSpanExporters(): List<SpanExporter> = buildList {
         if (customSpanExporters.isEmpty()) {
             logger.debug { "No custom span exporters configured. Use log span exporter by default." }
             add(LoggingSpanExporter.create())
@@ -293,6 +333,18 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
         customSpanExporters.forEach { exporter ->
             logger.debug { "Adding span exporter: ${exporter::class.simpleName}" }
+            add(exporter)
+        }
+    }
+
+    private fun createMetricExporters(): List<MetricExporter> = buildList {
+        if (customMetricExporters.isEmpty()) {
+            logger.debug { "No custom metric exporters configured. Use log metric exporter by default." }
+            add(LoggingMetricExporter.create())
+        }
+
+        customMetricExporters.forEach { exporter ->
+            logger.debug { "Adding metric exporter: ${exporter::class.simpleName}" }
             add(exporter)
         }
     }

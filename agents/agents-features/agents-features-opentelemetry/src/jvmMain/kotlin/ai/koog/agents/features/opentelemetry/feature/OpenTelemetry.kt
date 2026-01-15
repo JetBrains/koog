@@ -37,6 +37,9 @@ import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils
 import kotlin.reflect.KType
 
 /**
@@ -257,6 +260,37 @@ public class OpenTelemetry {
         ) {
             val spanAdapter = config.spanAdapter
             val tracer = config.tracer
+
+            val toolCallsCounter = config.meter
+                .counterBuilder("koog.agent.tool_call.count")
+                .setDescription("Tool calls count")
+                .setUnit("unit")
+                .build()
+
+            val inputTokensCounter = config.meter
+                .counterBuilder("koog.agent.input_token.usage")
+                .setDescription("Input token count")
+                .setUnit("token")
+                .build()
+
+            val outputTokensCounter = config.meter
+                .counterBuilder("koog.agent.output_token.usage")
+                .setDescription("Output token count")
+                .setUnit("token")
+                .build()
+
+            val totalTokensCounter = config.meter
+                .counterBuilder("gen_ai.client.token.usage")
+                .setDescription("Total token count")
+                .setUnit("token")
+                .build()
+
+            val toolCoolDurationHistogram = config.meter
+                .histogramBuilder("koog.agent.tool_call.duration")
+                .setDescription("Tool call duration")
+                .setUnit("s")
+                .setExplicitBucketBoundariesAdvice(ExplicitBucketHistogramUtils.DEFAULT_HISTOGRAM_BUCKET_BOUNDARIES)
+                .build()
 
             //region Agent
 
@@ -577,6 +611,18 @@ public class OpenTelemetry {
                     span = inferenceSpan,
                     path = patchedExecutionInfo
                 )
+
+                eventContext.responses.lastOrNull()?.let { message ->
+                    message.metaInfo.inputTokensCount?.let { inputTokensCount ->
+                        inputTokensCounter.add(inputTokensCount.toLong())
+                    }
+                    message.metaInfo.outputTokensCount?.let { outputTokensCount ->
+                        outputTokensCounter.add(outputTokensCount.toLong())
+                    }
+                    message.metaInfo.totalTokensCount?.let { totalTokensCount ->
+                        totalTokensCounter.add(totalTokensCount.toLong())
+                    }
+                }
             }
 
             //endregion LLM Call
@@ -606,6 +652,13 @@ public class OpenTelemetry {
 
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, patchedExecutionInfo)
+
+                toolCallsCounter.add(
+                    1,
+                    Attributes.of(
+                        AttributeKey.stringKey("tool_name"), eventContext.toolName,
+                    )
+                )
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
@@ -640,6 +693,11 @@ public class OpenTelemetry {
                 spanCollector.removeSpan(
                     span = executeToolSpan,
                     path = patchedExecutionInfo
+                )
+
+                toolCoolDurationHistogram.record(
+                    1.0,
+                    Attributes.of(AttributeKey.stringKey("tool_name"), eventContext.toolName)
                 )
             }
 
