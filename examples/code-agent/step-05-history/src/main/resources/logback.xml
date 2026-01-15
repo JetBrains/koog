@@ -18,9 +18,7 @@
         </encoder>
     </appender>
 
-    <logger name="code-agent-events" level="INFO" />
-
-    <root level="ERROR">
+    <root level="ALL">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
