@@ -1,5 +1,5 @@
 [versions]
-acp = "0.3.0"
+acp = "0.13.1"
 agp = "8.12.3"
 annotations = "26.0.2-1"
 assertj = "3.27.6"

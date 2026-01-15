@@ -18,10 +18,9 @@ import com.agentclientprotocol.agent.AgentSupport
 import com.agentclientprotocol.client.Client
 import com.agentclientprotocol.client.ClientInfo
 import com.agentclientprotocol.client.ClientSession
-import com.agentclientprotocol.client.ClientSupport
 import com.agentclientprotocol.common.ClientSessionOperations
 import com.agentclientprotocol.common.Event
-import com.agentclientprotocol.common.SessionParameters
+import com.agentclientprotocol.common.SessionCreationParameters
 import com.agentclientprotocol.model.AcpMethod
 import com.agentclientprotocol.model.AgentCapabilities
 import com.agentclientprotocol.model.AuthMethod
@@ -67,7 +66,7 @@ data class AcpClientSetup(
     val client: Client,
     val session: ClientSession?,
     val agentSupport: TestKoogAgentSupport,
-    val clientSupport: TestClientSupport,
+    val clientOperations: TestClientSessionOperations,
     val agentInfo: AgentInfo,
     val cleanup: () -> Unit
 )
@@ -138,8 +137,8 @@ suspend fun setupAcpClient(
     agentProtocol.start()
 
     val clientProtocol = Protocol(protocolScope, clientTransport)
-    val clientSupport = TestClientSupport()
-    val client = Client(clientProtocol, clientSupport)
+    val client = Client(clientProtocol)
+    val testClientSessionOperations = TestClientSessionOperations()
     clientProtocol.start()
 
     val agentInfo = client.initialize(ClientInfo())
@@ -157,13 +156,13 @@ suspend fun setupAcpClient(
 
     val session = if (createSession) {
         client.newSession(
-            SessionParameters(java.nio.file.Paths.get("").toAbsolutePath().toString(), emptyList())
-        )
+            SessionCreationParameters(java.nio.file.Paths.get("").toAbsolutePath().toString(), emptyList())
+        ) { _, _ -> testClientSessionOperations }
     } else {
         null
     }
 
-    return AcpClientSetup(client, session, support, clientSupport, agentInfo) {
+    return AcpClientSetup(client, session, support, testClientSessionOperations, agentInfo) {
         agentTransport.close()
         clientTransport.close()
         clientToAgent.sink().close()
@@ -277,7 +276,7 @@ class TestKoogAgentSupport(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun createSession(sessionParameters: SessionParameters): AgentSession {
+    override suspend fun createSession(sessionParameters: SessionCreationParameters): AgentSession {
         if (authMethods.isNotEmpty() && !authenticated) {
             throw IllegalStateException("Authentication required")
         }
@@ -297,7 +296,7 @@ class TestKoogAgentSupport(
 
     override suspend fun loadSession(
         sessionId: SessionId,
-        sessionParameters: SessionParameters,
+        sessionParameters: SessionCreationParameters,
     ): AgentSession {
         if (authMethods.isNotEmpty() && !authenticated) {
             throw IllegalStateException("Authentication required")
@@ -306,17 +305,6 @@ class TestKoogAgentSupport(
             throw UnsupportedOperationException("Session loading is not supported")
         }
         return sessions[sessionId] ?: throw IllegalArgumentException("Session $sessionId not found")
-    }
-}
-
-class TestClientSupport : ClientSupport {
-    val lastOperations = mutableListOf<TestClientSessionOperations>()
-
-    override suspend fun createClientSession(
-        session: ClientSession,
-        _sessionResponseMeta: JsonElement?
-    ): ClientSessionOperations {
-        return TestClientSessionOperations().also { lastOperations.add(it) }
     }
 }
 
