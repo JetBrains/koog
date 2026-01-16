@@ -1,22 +1,37 @@
 package ai.koog.agents.features.opentelemetry.integration
 
+import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockEventBodyField
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.mock.MockSpan
+import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.span.SpanType
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.context.Context
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-class UtilsTest {
+class GenAIAgentSpanUtilsTest {
 
     //region bodyFieldsToCustomAttribute
 
     @Test
     fun `test bodyFieldsToCustomAttribute convert matching body fields into attributes`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList(),
+        )
 
         val bodyFieldId = EventBodyFields.Id("id-body-field")
         val bodyFieldContent = EventBodyFields.Content("content-body-field")
@@ -33,17 +48,16 @@ class UtilsTest {
             CustomAttribute("new.${field.key}", "new.${field.value}")
         }
 
-        val expectedAttributes = listOf(
+        val actualAttributes = span.attributes
+        val expectedAttributes: List<Attribute> = listOf(
             CustomAttribute("new.${bodyFieldContent.key}", "new.${bodyFieldContent.value}"),
         )
-
-        val actualAttributes = span.attributes
 
         assertEquals(expectedAttributes.size, actualAttributes.size)
         assertContentEquals(expectedAttributes, actualAttributes)
 
-        val expectedEvents = listOf(originalEvent)
         val actualEvents = span.events
+        val expectedEvents = listOf(originalEvent)
 
         assertEquals(expectedEvents.size, actualEvents.size)
         assertContentEquals(expectedEvents, actualEvents)
@@ -57,7 +71,17 @@ class UtilsTest {
 
     @Test
     fun `test bodyFieldsToCustomAttribute does nothing when there are no matching fields`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val mockEventBody1 = MockEventBodyField("mock-event-body-field-key-1", "mock-event-body-field-value-1")
         val mockEventBody2 = MockEventBodyField("mock-event-body-field-key-2", 42)
@@ -98,7 +122,17 @@ class UtilsTest {
 
     @Test
     fun `test replaceBodyFields processes each matching field and removes them from event`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val bodyFieldId = EventBodyFields.Id("id-body-field")
         val bodyFieldContent = EventBodyFields.Content("content-body-field")
@@ -138,7 +172,17 @@ class UtilsTest {
 
     @Test
     fun `test replaceBodyFields replace multiple fields`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val bodyFieldContent = EventBodyFields.Content("content-body-field")
         val mockBodyField1 = MockEventBodyField("mock-body-field-key-1", "mock-body-field-value-1")
@@ -179,7 +223,17 @@ class UtilsTest {
 
     @Test
     fun `replaceBodyFields does nothing when there are no matching fields`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val mockBodyField1 = MockEventBodyField("mock-body-field-key-1", "mock-body-field-value-1")
         val mockBodyField2 = MockEventBodyField("mock-body-field-key-2", "mock-body-field-value-2")
@@ -219,7 +273,17 @@ class UtilsTest {
 
     @Test
     fun `test replace attributes when span has no attribute`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         span.replaceAttributes<CustomAttribute> { _ ->
             CustomAttribute("newKey", "newValue")
@@ -230,7 +294,17 @@ class UtilsTest {
 
     @Test
     fun `test replace attributes when multiple attributes of different types exist`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val customAttribute = CustomAttribute("customAttributeKey", "customAttributeValue")
         val mockAttribute = MockAttribute("mockAttributeKey", 123)
@@ -251,7 +325,17 @@ class UtilsTest {
 
     @Test
     fun `test replace attributes when span has no attributes of expected type`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val originalAttribute = MockAttribute("mockAttributeKey", "mockAttributeValue")
         span.addAttribute(originalAttribute)
@@ -269,7 +353,17 @@ class UtilsTest {
 
     @Test
     fun `test replace single attribute when span has one attribute`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val originalAttribute = CustomAttribute("customAttributeKey", "customAttributeValue")
         span.addAttribute(originalAttribute)
@@ -289,12 +383,22 @@ class UtilsTest {
 
     @Test
     fun `test replace single attribute when more than one attribute exist`() {
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = emptyList(),
+            events = emptyList()
+        )
 
         val customAttribute1 = CustomAttribute("customAttributeKey1", "customAttributeValue1")
         val customAttribute2 = CustomAttribute("customAttributeKey2", "customAttributeValue2")
-        val actualAttributes = listOf(customAttribute1, customAttribute2)
-        span.addAttributes(actualAttributes)
+        val attributesToAdd = listOf(customAttribute1, customAttribute2)
+        span.addAttributes(attributesToAdd)
 
         val newCustomAttribute = CustomAttribute("newCustomAttributeKey", "newCustomAttributeValue")
         val newMockAttribute = MockAttribute("newMockAttributeKey", "newMockAttributeValue")

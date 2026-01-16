@@ -1,8 +1,8 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.ext.tool.file.filter.GlobPattern
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.rag.base.files.filter.GlobPattern
+import ai.koog.rag.base.files.model.FileSystemEntry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
@@ -210,8 +210,8 @@ class ListDirectoryUtilJvmTest {
         assertEquals("root", entry.name)
         val singleChild = assertNotNull(entry.entries).single() as FileSystemEntry.Folder
         assertEquals("single", singleChild.name)
-        assertNotNull(singleChild.entries)
-        assertTrue(singleChild.entries.isEmpty())
+        val entries = assertNotNull(singleChild.entries)
+        assertTrue(entries.isEmpty())
     }
 
     @Test

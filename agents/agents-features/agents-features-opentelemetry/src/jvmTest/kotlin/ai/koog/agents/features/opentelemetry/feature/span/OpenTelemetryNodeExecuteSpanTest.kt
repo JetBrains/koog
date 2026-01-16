@@ -34,6 +34,8 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
+            userPrompt = userInput,
+            verbose = true,
         )
 
         val runId = collectedTestData.lastRunId
@@ -41,9 +43,6 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val actualSpans = collectedTestData.filterNodeExecutionSpans()
         assertTrue(actualSpans.isNotEmpty(), "Node spans should be created during agent execution")
-
-        val actualNodeEventIds = collectedTestData.collectedNodeIds
-        assertTrue(actualNodeEventIds.isNotEmpty(), "Node event ids should be collected during agent execution")
 
         val expectedSpans = listOf(
             mapOf(
@@ -53,6 +52,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -64,6 +64,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to nodeName,
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$nodeOutput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(nodeName),
                     ),
                     "events" to emptyMap()
                 )
@@ -75,6 +76,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to FINISH_NODE_PREFIX,
                         "koog.node.output" to "\"$result\"",
                         "koog.node.input" to "\"$result\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -98,6 +100,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
+            userPrompt = userInput,
             verbose = false,
         )
 
@@ -105,9 +108,6 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val actualSpans = collectedTestData.filterNodeExecutionSpans()
         assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
-
-        val actualNodeEventIds = collectedTestData.collectedNodeIds
-        assertTrue(actualNodeEventIds.isNotEmpty(), "Node event ids should be collected during agent execution")
 
         val expectedSpans = listOf(
             mapOf(
@@ -117,6 +117,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -128,6 +129,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to nodeName,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(nodeName),
                     ),
                     "events" to emptyMap()
                 )
@@ -139,6 +141,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to FINISH_NODE_PREFIX,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -178,6 +181,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
             userPrompt = userInput,
+            verbose = true,
         )
 
         val runId = collectedTestData.lastRunId
@@ -194,6 +198,14 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
 
+        // Extract event IDs in the order they appear in sorted spans
+        val startNodeEventId = collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX)
+        val node1EventId = collectedTestData.singleNodeEventIdByNodeId(node1Name)
+        val node2EventId = collectedTestData.singleNodeEventIdByNodeId(node2Name)
+        val node3EventId = collectedTestData.singleNodeEventIdByNodeId(node3Name)
+        val parallelNodeEventId = collectedTestData.singleNodeEventIdByNodeId(nodeParallelName)
+        val finishNodeEventId = collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX)
+
         val expectedSpans = listOf(
             mapOf(
                 "node $START_NODE_PREFIX" to mapOf(
@@ -202,6 +214,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to startNodeEventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -213,6 +226,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to node1Name,
                         "koog.node.output" to "\"$node1Output\"",
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to node1EventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -224,6 +238,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to node2Name,
                         "koog.node.output" to "\"$node2Output\"",
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to node2EventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -235,6 +250,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to node3Name,
                         "koog.node.output" to "\"$node3Output\"",
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to node3EventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -246,6 +262,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to nodeParallelName,
                         "koog.node.output" to "\"$node2Output\"",
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to parallelNodeEventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -257,6 +274,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to FINISH_NODE_PREFIX,
                         "koog.node.output" to "\"$result\"",
                         "koog.node.input" to "\"$result\"",
+                        "koog.event.id" to finishNodeEventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -271,10 +289,11 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
         val userInput = USER_PROMPT_PARIS
         val nodeWithErrorName = "node-with-error"
         val testErrorMessage = "Test error"
+        val error = IllegalStateException(testErrorMessage)
 
         val strategy = strategy("test-strategy") {
             val nodeWithError by node<String, String>(nodeWithErrorName) {
-                throw IllegalStateException(testErrorMessage)
+                throw error
             }
 
             nodeStart then nodeWithError then nodeFinish
@@ -286,7 +305,8 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
             runAgentWithStrategy(
                 userPrompt = userInput,
                 strategy = strategy,
-                collectedTestData = collectedTestData
+                collectedTestData = collectedTestData,
+                verbose = true,
             )
         }
 
@@ -304,6 +324,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -314,6 +335,8 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.conversation.id" to runId,
                         "koog.node.id" to nodeWithErrorName,
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(nodeWithErrorName),
+                        "error.type" to error::class.java.canonicalName,
                     ),
                     "events" to emptyMap()
                 )

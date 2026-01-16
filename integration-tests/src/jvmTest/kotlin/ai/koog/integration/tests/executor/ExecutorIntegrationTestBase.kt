@@ -1132,10 +1132,6 @@ abstract class ExecutorIntegrationTestBase {
             model.provider !== LLMProvider.OpenRouter,
             "KG-626 Error from OpenRouter on a streaming with a tool call"
         )
-        assumeTrue(
-            model.provider !== LLMProvider.Bedrock,
-            "KG-627 Error from Bedrock executor on a streaming with a tool call"
-        )
 
         val executor = getExecutor(model)
 

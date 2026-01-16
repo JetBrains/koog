@@ -36,6 +36,7 @@ android {
         sourceCompatibility = JavaVersion.toVersion(javaVersion)
         targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
+    packaging.resources.excludes.add("META-INF/**")
 }
 
 kotlin {

@@ -30,12 +30,18 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
             nodeStart then subgraph then nodeFinish
         }
 
-        val collectedTestData = runAgentWithStrategy(strategy = strategy, userPrompt = userInput)
+        val collectedTestData = runAgentWithStrategy(
+            strategy = strategy,
+            userPrompt = userInput,
+            verbose = true
+        )
 
         val runId = collectedTestData.lastRunId
 
         val actualSubgraphSpans = collectedTestData.filterSubgraphExecutionSpans()
         assertTrue(actualSubgraphSpans.isNotEmpty(), "Subgraph spans should be created during agent execution")
+
+        val subgraphEventId = collectedTestData.singleSubgraphEventIdBySubgraphId(subgraphName)
 
         val expectedSubgraphSpans = listOf(
             mapOf(
@@ -45,6 +51,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.subgraph.id" to subgraphName,
                         "koog.subgraph.output" to "\"$subgraphNodeOutput\"",
                         "koog.subgraph.input" to "\"$userInput\"",
+                        "koog.event.id" to subgraphEventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -64,6 +71,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -75,6 +83,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to "$START_NODE_PREFIX$subgraphName",
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId("$START_NODE_PREFIX$subgraphName"),
                     ),
                     "events" to emptyMap()
                 )
@@ -86,6 +95,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to subgraphNodeName,
                         "koog.node.output" to "\"$subgraphNodeOutput\"",
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(subgraphNodeName),
                     ),
                     "events" to emptyMap()
                 )
@@ -97,6 +107,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to "$FINISH_NODE_PREFIX$subgraphName",
                         "koog.node.output" to "\"$subgraphNodeOutput\"",
                         "koog.node.input" to "\"$subgraphNodeOutput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId("$FINISH_NODE_PREFIX$subgraphName"),
                     ),
                     "events" to emptyMap()
                 )
@@ -108,6 +119,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to FINISH_NODE_PREFIX,
                         "koog.node.output" to "\"$subgraphNodeOutput\"",
                         "koog.node.input" to "\"$subgraphNodeOutput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -144,6 +156,8 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
         val actualSubgraphSpans = collectedTestData.filterSubgraphExecutionSpans()
         assertTrue(actualSubgraphSpans.isNotEmpty(), "Subgraph spans should be created during agent execution")
 
+        val subgraphEventId = collectedTestData.singleSubgraphEventIdBySubgraphId(subgraphName)
+
         val expectedSubgraphSpans = listOf(
             mapOf(
                 "subgraph $subgraphName" to mapOf(
@@ -152,6 +166,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.subgraph.id" to subgraphName,
                         "koog.subgraph.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.subgraph.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to subgraphEventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -171,6 +186,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -182,6 +198,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to "$START_NODE_PREFIX$subgraphName",
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId("$START_NODE_PREFIX$subgraphName"),
                     ),
                     "events" to emptyMap()
                 )
@@ -193,6 +210,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to subgraphNodeName,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(subgraphNodeName),
                     ),
                     "events" to emptyMap()
                 )
@@ -204,6 +222,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to "$FINISH_NODE_PREFIX$subgraphName",
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId("$FINISH_NODE_PREFIX$subgraphName"),
                     ),
                     "events" to emptyMap()
                 )
@@ -215,6 +234,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to FINISH_NODE_PREFIX,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -245,12 +265,14 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
             nodeStart then subgraph then nodeBlank then nodeFinish
         }
 
-        val collectedTestData = runAgentWithStrategy(strategy = strategy, userPrompt = userInput)
+        val collectedTestData = runAgentWithStrategy(strategy = strategy, userPrompt = userInput, verbose = true)
 
         val runId = collectedTestData.lastRunId
 
         val actualSubgraphSpans = collectedTestData.filterSubgraphExecutionSpans()
         assertTrue(actualSubgraphSpans.isNotEmpty(), "Subgraph Spans should be created during agent execution")
+
+        val subgraphEventId = collectedTestData.singleSubgraphEventIdBySubgraphId(subgraphName)
 
         val expectedSubgraphSpans = listOf(
             mapOf(
@@ -260,6 +282,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.subgraph.id" to subgraphName,
                         "koog.subgraph.output" to "\"$subgraphNodeOutput\"",
                         "koog.subgraph.input" to "\"$userInput\"",
+                        "koog.event.id" to subgraphEventId,
                     ),
                     "events" to emptyMap()
                 )
@@ -279,6 +302,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.output" to "\"$userInput\"",
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
@@ -290,6 +314,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to "$START_NODE_PREFIX$subgraphName",
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId("$START_NODE_PREFIX$subgraphName"),
                     ),
                     "events" to emptyMap()
                 )
@@ -301,6 +326,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to subgraphNodeName,
                         "koog.node.output" to "\"$subgraphNodeOutput\"",
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(subgraphNodeName),
                     ),
                     "events" to emptyMap()
                 )
@@ -312,6 +338,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to "$FINISH_NODE_PREFIX$subgraphName",
                         "koog.node.output" to "\"$subgraphNodeOutput\"",
                         "koog.node.input" to "\"$subgraphNodeOutput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId("$FINISH_NODE_PREFIX$subgraphName"),
                     ),
                     "events" to emptyMap()
                 )
@@ -323,6 +350,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to rootNodeName,
                         "koog.node.output" to "\"$rootNodeOutput\"",
                         "koog.node.input" to "\"$subgraphNodeOutput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(rootNodeName),
                     ),
                     "events" to emptyMap()
                 )
@@ -334,6 +362,7 @@ class OpenTelemetrySubgraphTest : OpenTelemetryTestBase() {
                         "koog.node.id" to FINISH_NODE_PREFIX,
                         "koog.node.output" to "\"$rootNodeOutput\"",
                         "koog.node.input" to "\"$rootNodeOutput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
