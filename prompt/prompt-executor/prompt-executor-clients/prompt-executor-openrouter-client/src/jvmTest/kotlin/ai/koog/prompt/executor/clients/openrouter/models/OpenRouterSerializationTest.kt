@@ -398,6 +398,7 @@ class OpenRouterSerializationTest {
                             "content": null,
                             "tool_calls": [
                                 {
+                                    "index": 0,
                                     "id": "call_xyz789",
                                     "type": "function",
                                     "function": {

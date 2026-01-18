@@ -1217,13 +1217,8 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(
-            model.provider !== LLMProvider.OpenRouter,
-            "KG-626 Error from OpenRouter on a streaming with a tool call"
-        )
 
         val executor = getExecutor(model)
-
         val params = when (model.provider) {
             LLMProvider.OpenAI ->
                 if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
