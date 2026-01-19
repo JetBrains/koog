@@ -16,7 +16,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.putJsonArray
 
 /**
- * The class describe Attributes related to a Spans in GenAI system.
+ * The class describe Attributes in GenAI system.
  *
  * The list of supported attributes according to Open Telemetry Semantic Convention
  * (https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/)
@@ -48,8 +48,10 @@ import kotlinx.serialization.json.putJsonArray
  * - gen_ai.tool.call.id (recommended)
  * - gen_ai.tool.description (recommended)
  * - gen_ai.tool.name (recommended)
+ * - gen_ai.token.type (required)
+ * - gen_ai.tool.status (custom)
  */
-internal object SpanAttributes {
+internal object GenAIAttributes {
 
     // gen_ai.operation
     sealed interface Operation : GenAIAttribute {
@@ -275,21 +277,27 @@ internal object SpanAttributes {
 
         sealed interface FinishReasonType {
             val id: String
+
             object ContentFilter : FinishReasonType {
                 override val id = "content_filter"
             }
+
             object Error : FinishReasonType {
                 override val id = "error"
             }
+
             object Length : FinishReasonType {
                 override val id = "length"
             }
+
             object Stop : FinishReasonType {
                 override val id = "stop"
             }
+
             object ToolCalls : FinishReasonType {
                 override val id = "tool_calls"
             }
+
             data class Custom(override val id: String) : FinishReasonType
         }
 
@@ -303,6 +311,23 @@ internal object SpanAttributes {
         data class Model(private val model: LLModel) : Response {
             override val key: String = super.key.concatKey("model")
             override val value: String = model.id
+        }
+    }
+
+    // gen_ai.token
+    sealed interface Token : GenAIAttribute {
+        override val key: String
+            get() = super.key.concatKey("token")
+
+        // gen_ai.token.type
+        data class Type(private val type: TokenType) : Usage {
+            override val key: String = super.key.concatKey("type")
+            override val value: String = type.str
+        }
+
+        enum class TokenType(val str: String) {
+            INPUT("input"),
+            OUTPUT("output")
         }
     }
 
@@ -357,6 +382,19 @@ internal object SpanAttributes {
             data class Result(private val result: JsonElement) : Call {
                 override val key: String = super.key.concatKey("result")
                 override val value: HiddenString = HiddenString(result.toString())
+            }
+
+            // gen_ai.tool.status
+            // Note: Non-semantic attribute
+            data class Status(private val status: StatusType) : Call {
+                override val key: String = super.key.concatKey("status")
+                override val value: String = status.str
+            }
+
+            enum class StatusType(val str: String) {
+                SUCCESS("success"),
+                ERROR("error"),
+                VALIDATION_FAILED("validation_failed")
             }
         }
 

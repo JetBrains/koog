@@ -3,7 +3,7 @@ package ai.koog.agents.features.opentelemetry.span
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -58,44 +58,44 @@ internal fun startInferenceSpan(
         parentSpan = parentSpan,
         id = id,
         kind = SpanKind.CLIENT,
-        name = "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}",
+        name = "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}",
     )
         // gen_ai.operation.name
-        .addAttribute(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CHAT))
+        .addAttribute(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.CHAT))
         // gen_ai.provider.name
-        .addAttribute(SpanAttributes.Provider.Name(provider))
+        .addAttribute(GenAIAttributes.Provider.Name(provider))
         // gen_ai.conversation.id
-        .addAttribute(SpanAttributes.Conversation.Id(runId))
+        .addAttribute(GenAIAttributes.Conversation.Id(runId))
         // gen_ai.output.type
         .addAttribute(
-            SpanAttributes.Output.Type(
+            GenAIAttributes.Output.Type(
                 type = if (llmParams.schema != null) {
-                    SpanAttributes.Output.OutputType.JSON
+                    GenAIAttributes.Output.OutputType.JSON
                 } else {
-                    SpanAttributes.Output.OutputType.TEXT
+                    GenAIAttributes.Output.OutputType.TEXT
                 }
             )
         )
 
     // gen_ai.request.choice.count
     llmParams.numberOfChoices?.let { number ->
-        builder.addAttribute(SpanAttributes.Request.Choice.Count(number))
+        builder.addAttribute(GenAIAttributes.Request.Choice.Count(number))
     }
     // gen_ai.request.model
-    builder.addAttribute(SpanAttributes.Request.Model(model))
+    builder.addAttribute(GenAIAttributes.Request.Model(model))
     // gen_ai.request.seed - Ignore. Not supported in Koog
     // server.port - Ignore. Not supported in Koog
     // gen_ai.request.frequency_penalty - Ignore. Not supported in Koog
     // gen_ai.request.max_tokens
     llmParams.maxTokens?.let {
-        builder.addAttribute(SpanAttributes.Request.MaxTokens(it))
+        builder.addAttribute(GenAIAttributes.Request.MaxTokens(it))
     }
 
     // gen_ai.request.presence_penalty - Ignore. Not supported in Koog
     // gen_ai.request.stop_sequences - Ignore. Not supported in Koog
     // gen_ai.request.temperature
     llmParams.temperature?.let {
-        builder.addAttribute(SpanAttributes.Request.Temperature(it))
+        builder.addAttribute(GenAIAttributes.Request.Temperature(it))
     }
 
     // gen_ai.request.top_k - Ignore. Not supported in Koog
@@ -103,18 +103,18 @@ internal fun startInferenceSpan(
     // server.address - Ignore. Not supported in Koog
     // gen_ai.input.messages
     if (messages.isNotEmpty()) {
-        builder.addAttribute(SpanAttributes.Input.Messages(messages))
+        builder.addAttribute(GenAIAttributes.Input.Messages(messages))
     }
 
     // gen_ai.system_instructions
     val systemMessages = messages.filterIsInstance<Message.System>()
     if (systemMessages.isNotEmpty()) {
-        builder.addAttribute(SpanAttributes.SystemInstructions(systemMessages))
+        builder.addAttribute(GenAIAttributes.SystemInstructions(systemMessages))
     }
 
     // gen_ai.tool.definitions
     if (tools.isNotEmpty()) {
-        builder.addAttribute(SpanAttributes.Tool.Definitions(tools))
+        builder.addAttribute(GenAIAttributes.Tool.Definitions(tools))
     }
 
     builder.addAttribute(KoogAttributes.Koog.Event.Id(id))
@@ -156,25 +156,25 @@ internal fun endInferenceSpan(
     // gen_ai.response.finish_reasons - Ignore. Not supported in Koog
     // gen_ai.response.id - Ignore. Not supported in Koog
     // gen_ai.response.model
-    span.addAttribute(SpanAttributes.Response.Model(model))
+    span.addAttribute(GenAIAttributes.Response.Model(model))
 
     // gen_ai.usage.input_tokens
     span.addAttribute(
-        SpanAttributes.Usage.InputTokens(
+        GenAIAttributes.Usage.InputTokens(
             messages.filterIsInstance<Message.Response>().sumOf { message -> message.metaInfo.inputTokensCount ?: 0 }
         )
     )
 
     // gen_ai.usage.output_tokens
     span.addAttribute(
-        SpanAttributes.Usage.OutputTokens(
+        GenAIAttributes.Usage.OutputTokens(
             messages.filterIsInstance<Message.Response>().sumOf { message -> message.metaInfo.outputTokensCount ?: 0 }
         )
     )
 
     // gen_ai.output.messages
     if (messages.isNotEmpty()) {
-        span.addAttribute(SpanAttributes.Output.Messages(messages))
+        span.addAttribute(GenAIAttributes.Output.Messages(messages))
     }
 
     span.end(error.toSpanEndStatus(), verbose)

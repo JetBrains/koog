@@ -1,7 +1,7 @@
 package ai.koog.agents.features.opentelemetry.integration.langfuse
 
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.integration.TraceStructureTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.prompt.llm.LLModel
@@ -65,14 +65,14 @@ class LangfuseTraceStructureTest :
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,
             "gen_ai.tool.definitions" to toolDefinitions,
-            "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.ToolCalls.id),
+            "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls.id),
             "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
             "gen_ai.prompt.0.content" to systemPrompt,
             "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
             "gen_ai.prompt.1.content" to userPrompt,
             "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
             "gen_ai.completion.0.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.completion.0.finish_reason" to SpanAttributes.Response.FinishReasonType.ToolCalls.id,
+            "gen_ai.completion.0.finish_reason" to GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
         )
     }
 
@@ -132,7 +132,7 @@ class LangfuseTraceStructureTest :
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,
             "gen_ai.tool.definitions" to toolDefinitions,
-            "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.Stop.id),
+            "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.Stop.id),
             "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
             "gen_ai.prompt.0.content" to systemPrompt,
             "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
@@ -186,7 +186,7 @@ class LangfuseTraceStructureTest :
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,
             "gen_ai.tool.definitions" to toolDefinitions,
-            "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.ToolCalls.id),
+            "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls.id),
 
             "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
             "gen_ai.prompt.0.content" to systemPrompt,
@@ -194,7 +194,7 @@ class LangfuseTraceStructureTest :
             "gen_ai.prompt.1.content" to userPrompt,
             "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
             "gen_ai.completion.0.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.completion.0.finish_reason" to SpanAttributes.Response.FinishReasonType.ToolCalls.id,
+            "gen_ai.completion.0.finish_reason" to GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
         )
     }
 
@@ -255,7 +255,7 @@ class LangfuseTraceStructureTest :
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,
             "gen_ai.tool.definitions" to toolDefinitions,
-            "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.Stop.id),
+            "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.Stop.id),
 
             "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
             "gen_ai.prompt.0.content" to systemPrompt,

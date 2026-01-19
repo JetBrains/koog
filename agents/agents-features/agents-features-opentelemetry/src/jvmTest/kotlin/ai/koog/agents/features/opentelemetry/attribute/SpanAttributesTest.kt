@@ -15,7 +15,7 @@ class SpanAttributesTest {
     @Test
     fun `test tool call arguments with empty object value`() {
         val arguments = JsonObject(emptyMap())
-        val actualAttribute = SpanAttributes.Tool.Call.Arguments(arguments)
+        val actualAttribute = GenAIAttributes.Tool.Call.Arguments(arguments)
         assertEquals("gen_ai.tool.call.arguments", actualAttribute.key)
         assertEquals(arguments.toString(), actualAttribute.value.value)
     }
@@ -28,7 +28,7 @@ class SpanAttributesTest {
                 "key2" to JsonPrimitive("value2")
             )
         )
-        val actualAttribute = SpanAttributes.Tool.Call.Arguments(arguments)
+        val actualAttribute = GenAIAttributes.Tool.Call.Arguments(arguments)
         assertEquals("gen_ai.tool.call.arguments", actualAttribute.key)
         assertEquals(arguments.toString(), actualAttribute.value.value)
     }
@@ -40,7 +40,7 @@ class SpanAttributesTest {
                 "argument" to JsonPrimitive("sensitive user input")
             )
         )
-        val actualAttribute = SpanAttributes.Tool.Call.Arguments(arguments)
+        val actualAttribute = GenAIAttributes.Tool.Call.Arguments(arguments)
 
         assertEquals("gen_ai.tool.call.arguments", actualAttribute.key)
         assertEquals("HIDDEN:non-empty", actualAttribute.value.toString())
@@ -50,7 +50,7 @@ class SpanAttributesTest {
     @Test
     fun `test tool result with empty string value`() {
         val result = JsonObject(emptyMap())
-        val actualAttribute = SpanAttributes.Tool.Call.Result(result)
+        val actualAttribute = GenAIAttributes.Tool.Call.Result(result)
         assertEquals("gen_ai.tool.call.result", actualAttribute.key)
         assertEquals(result.toString(), actualAttribute.value.value)
     }
@@ -63,7 +63,7 @@ class SpanAttributesTest {
                 "key2" to JsonPrimitive("value2")
             )
         )
-        val actualAttribute = SpanAttributes.Tool.Call.Result(result)
+        val actualAttribute = GenAIAttributes.Tool.Call.Result(result)
         assertEquals("gen_ai.tool.call.result", actualAttribute.key)
         assertEquals(result.toString(), actualAttribute.value.value)
     }
@@ -75,7 +75,7 @@ class SpanAttributesTest {
                 "output" to JsonPrimitive("sensitive tool output")
             )
         )
-        val actualAttribute = SpanAttributes.Tool.Call.Result(result)
+        val actualAttribute = GenAIAttributes.Tool.Call.Result(result)
 
         assertEquals("gen_ai.tool.call.result", actualAttribute.key)
         assertEquals("HIDDEN:non-empty", actualAttribute.value.toString())
@@ -84,21 +84,21 @@ class SpanAttributesTest {
 
     @Test
     fun `test tool call id attribute`() {
-        val attribute = SpanAttributes.Tool.Call.Id("call-123")
+        val attribute = GenAIAttributes.Tool.Call.Id("call-123")
         assertEquals("gen_ai.tool.call.id", attribute.key)
         assertEquals("call-123", attribute.value)
     }
 
     @Test
     fun `test tool name attribute`() {
-        val attribute = SpanAttributes.Tool.Name("search")
+        val attribute = GenAIAttributes.Tool.Name("search")
         assertEquals("gen_ai.tool.name", attribute.key)
         assertEquals("search", attribute.value)
     }
 
     @Test
     fun `test tool description attribute`() {
-        val attribute = SpanAttributes.Tool.Description("Performs web search")
+        val attribute = GenAIAttributes.Tool.Description("Performs web search")
         assertEquals("gen_ai.tool.description", attribute.key)
         assertEquals("Performs web search", attribute.value)
     }
@@ -109,21 +109,21 @@ class SpanAttributesTest {
 
     @Test
     fun `test agent id attribute`() {
-        val idAttribute = SpanAttributes.Agent.Id("test-agent")
+        val idAttribute = GenAIAttributes.Agent.Id("test-agent")
         assertEquals("gen_ai.agent.id", idAttribute.key)
         assertEquals("test-agent", idAttribute.value)
     }
 
     @Test
     fun `test agent name attribute`() {
-        val nameAttribute = SpanAttributes.Agent.Name("Test Agent")
+        val nameAttribute = GenAIAttributes.Agent.Name("Test Agent")
         assertEquals("gen_ai.agent.name", nameAttribute.key)
         assertEquals("Test Agent", nameAttribute.value)
     }
 
     @Test
     fun `test agent description attributes`() {
-        val descriptionAttribute = SpanAttributes.Agent.Description("This is a test agent")
+        val descriptionAttribute = GenAIAttributes.Agent.Description("This is a test agent")
         assertEquals("gen_ai.agent.description", descriptionAttribute.key)
         assertEquals("This is a test agent", descriptionAttribute.value)
     }
@@ -134,7 +134,7 @@ class SpanAttributesTest {
 
     @Test
     fun `test conversation id attribute`() {
-        val conversationAttribute = SpanAttributes.Conversation.Id("conversation-id")
+        val conversationAttribute = GenAIAttributes.Conversation.Id("conversation-id")
         assertEquals("gen_ai.conversation.id", conversationAttribute.key)
         assertEquals("conversation-id", conversationAttribute.value)
     }
@@ -145,7 +145,7 @@ class SpanAttributesTest {
 
     @Test
     fun `test data source id attribute`() {
-        val dataSourceAttribute = SpanAttributes.DataSource.Id("data-source-id")
+        val dataSourceAttribute = GenAIAttributes.DataSource.Id("data-source-id")
         assertEquals("gen_ai.data_source.id", dataSourceAttribute.key)
         assertEquals("data-source-id", dataSourceAttribute.value)
     }
@@ -156,21 +156,21 @@ class SpanAttributesTest {
 
     @Test
     fun `test operation name chat attribute`() {
-        val attribute = SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CHAT)
+        val attribute = GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.CHAT)
         assertEquals("gen_ai.operation.name", attribute.key)
         assertEquals("chat", attribute.value)
     }
 
     @Test
     fun `test operation name execute tool attribute`() {
-        val attribute = SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL)
+        val attribute = GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL)
         assertEquals("gen_ai.operation.name", attribute.key)
         assertEquals("execute_tool", attribute.value)
     }
 
     @Test
     fun `test operation name generate content attribute`() {
-        val attribute = SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.GENERATE_CONTENT)
+        val attribute = GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.GENERATE_CONTENT)
         assertEquals("gen_ai.operation.name", attribute.key)
         assertEquals("generate_content", attribute.value)
     }
@@ -181,21 +181,21 @@ class SpanAttributesTest {
 
     @Test
     fun `test output type text attribute`() {
-        val attribute = SpanAttributes.Output.Type(SpanAttributes.Output.OutputType.TEXT)
+        val attribute = GenAIAttributes.Output.Type(GenAIAttributes.Output.OutputType.TEXT)
         assertEquals("gen_ai.output.type", attribute.key)
         assertEquals("text", attribute.value)
     }
 
     @Test
     fun `test output type json attribute`() {
-        val attribute = SpanAttributes.Output.Type(SpanAttributes.Output.OutputType.JSON)
+        val attribute = GenAIAttributes.Output.Type(GenAIAttributes.Output.OutputType.JSON)
         assertEquals("gen_ai.output.type", attribute.key)
         assertEquals("json", attribute.value)
     }
 
     @Test
     fun `test output type image attribute`() {
-        val attribute = SpanAttributes.Output.Type(SpanAttributes.Output.OutputType.IMAGE)
+        val attribute = GenAIAttributes.Output.Type(GenAIAttributes.Output.OutputType.IMAGE)
         assertEquals("gen_ai.output.type", attribute.key)
         assertEquals("image", attribute.value)
     }
@@ -206,7 +206,7 @@ class SpanAttributesTest {
 
     @Test
     fun `test request choice count attribute`() {
-        val attribute = SpanAttributes.Request.Choice.Count(3)
+        val attribute = GenAIAttributes.Request.Choice.Count(3)
         assertEquals("gen_ai.request.choice.count", attribute.key)
         assertEquals(3, attribute.value)
     }
@@ -214,35 +214,35 @@ class SpanAttributesTest {
     @Test
     fun `test request model attribute`() {
         val model = LLModel(MockLLMProvider(), "gpt-4o", listOf(LLMCapability.Completion), 8192, 4096)
-        val attribute = SpanAttributes.Request.Model(model)
+        val attribute = GenAIAttributes.Request.Model(model)
         assertEquals("gen_ai.request.model", attribute.key)
         assertEquals("gpt-4o", attribute.value)
     }
 
     @Test
     fun `test request seed attribute`() {
-        val attribute = SpanAttributes.Request.Seed(42)
+        val attribute = GenAIAttributes.Request.Seed(42)
         assertEquals("gen_ai.request.seed", attribute.key)
         assertEquals(42, attribute.value)
     }
 
     @Test
     fun `test request frequency penalty attribute`() {
-        val attribute = SpanAttributes.Request.FrequencyPenalty(0.25)
+        val attribute = GenAIAttributes.Request.FrequencyPenalty(0.25)
         assertEquals("gen_ai.request.frequency_penalty", attribute.key)
         assertEquals(0.25, attribute.value)
     }
 
     @Test
     fun `test request max tokens attribute`() {
-        val attribute = SpanAttributes.Request.MaxTokens(1024)
+        val attribute = GenAIAttributes.Request.MaxTokens(1024)
         assertEquals("gen_ai.request.max_tokens", attribute.key)
         assertEquals(1024, attribute.value)
     }
 
     @Test
     fun `test request presence penalty attribute`() {
-        val attribute = SpanAttributes.Request.PresencePenalty(0.75)
+        val attribute = GenAIAttributes.Request.PresencePenalty(0.75)
         assertEquals("gen_ai.request.presence_penalty", attribute.key)
         assertEquals(0.75, attribute.value)
     }
@@ -250,21 +250,21 @@ class SpanAttributesTest {
     @Test
     fun `test request stop sequences attribute`() {
         val stops = listOf("END", "STOP")
-        val attribute = SpanAttributes.Request.StopSequences(stops)
+        val attribute = GenAIAttributes.Request.StopSequences(stops)
         assertEquals("gen_ai.request.stop_sequences", attribute.key)
         assertEquals(stops, attribute.value)
     }
 
     @Test
     fun `test request temperature attribute`() {
-        val attribute = SpanAttributes.Request.Temperature(0.8)
+        val attribute = GenAIAttributes.Request.Temperature(0.8)
         assertEquals("gen_ai.request.temperature", attribute.key)
         assertEquals(0.8, attribute.value)
     }
 
     @Test
     fun `test request top_p attribute`() {
-        val attribute = SpanAttributes.Request.TopP(0.9)
+        val attribute = GenAIAttributes.Request.TopP(0.9)
         assertEquals("gen_ai.request.top_p", attribute.key)
         assertEquals(0.9, attribute.value)
     }
@@ -276,17 +276,17 @@ class SpanAttributesTest {
     @Test
     fun `test response finish reasons attribute`() {
         val reasons = listOf(
-            SpanAttributes.Response.FinishReasonType.Stop,
-            SpanAttributes.Response.FinishReasonType.Custom("custom-reason"),
+            GenAIAttributes.Response.FinishReasonType.Stop,
+            GenAIAttributes.Response.FinishReasonType.Custom("custom-reason"),
         )
-        val attribute = SpanAttributes.Response.FinishReasons(reasons)
+        val attribute = GenAIAttributes.Response.FinishReasons(reasons)
         assertEquals("gen_ai.response.finish_reasons", attribute.key)
         assertEquals(listOf("stop", "custom-reason"), attribute.value)
     }
 
     @Test
     fun `test response id attribute`() {
-        val attribute = SpanAttributes.Response.Id("resp-001")
+        val attribute = GenAIAttributes.Response.Id("resp-001")
         assertEquals("gen_ai.response.id", attribute.key)
         assertEquals("resp-001", attribute.value)
     }
@@ -294,7 +294,7 @@ class SpanAttributesTest {
     @Test
     fun `test response model attribute`() {
         val model = LLModel(MockLLMProvider(), "gemini-1.5-pro", emptyList(), 32768)
-        val attribute = SpanAttributes.Response.Model(model)
+        val attribute = GenAIAttributes.Response.Model(model)
         assertEquals("gen_ai.response.model", attribute.key)
         assertEquals("gemini-1.5-pro", attribute.value)
     }
@@ -305,14 +305,14 @@ class SpanAttributesTest {
 
     @Test
     fun `test usage input tokens attribute`() {
-        val attribute = SpanAttributes.Usage.InputTokens(123)
+        val attribute = GenAIAttributes.Usage.InputTokens(123)
         assertEquals("gen_ai.usage.input_tokens", attribute.key)
         assertEquals(123, attribute.value)
     }
 
     @Test
     fun `test usage output tokens attribute`() {
-        val attribute = SpanAttributes.Usage.OutputTokens(456)
+        val attribute = GenAIAttributes.Usage.OutputTokens(456)
         assertEquals("gen_ai.usage.output_tokens", attribute.key)
         assertEquals(456, attribute.value)
     }

@@ -2,7 +2,7 @@ package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
@@ -36,7 +36,7 @@ internal fun startNodeExecuteSpan(
         kind = SpanKind.INTERNAL,
         name = "node $nodeId",
     )
-        .addAttribute(SpanAttributes.Conversation.Id(runId))
+        .addAttribute(GenAIAttributes.Conversation.Id(runId))
         .addAttribute(KoogAttributes.Koog.Node.Id(nodeId))
 
     nodeInput?.let { input ->

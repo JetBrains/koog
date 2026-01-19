@@ -3,7 +3,7 @@ package ai.koog.agents.features.opentelemetry.span
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
@@ -40,29 +40,29 @@ internal fun startExecuteToolSpan(
         parentSpan = parentSpan,
         id = id,
         kind = SpanKind.INTERNAL,
-        name = "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} $toolName",
+        name = "${GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} $toolName",
     )
         // gen_ai.operation.name
-        .addAttribute(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+        .addAttribute(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
 
     // gen_ai.tool.call.id
     toolCallId?.let { callId ->
-        builder.addAttribute(SpanAttributes.Tool.Call.Id(id = callId))
+        builder.addAttribute(GenAIAttributes.Tool.Call.Id(id = callId))
     }
 
     // gen_ai.tool.description
     toolDescription?.let { description ->
-        builder.addAttribute(SpanAttributes.Tool.Description(description = description))
+        builder.addAttribute(GenAIAttributes.Tool.Description(description = description))
     }
 
     // gen_ai.tool.name
-    builder.addAttribute(SpanAttributes.Tool.Name(name = toolName))
+    builder.addAttribute(GenAIAttributes.Tool.Name(name = toolName))
 
     // gen_ai.tool.type
     //   Ignore. Not supported in Koog
 
     // gen_ai.tool.call.arguments
-    builder.addAttribute(SpanAttributes.Tool.Call.Arguments(toolArgs))
+    builder.addAttribute(GenAIAttributes.Tool.Call.Arguments(toolArgs))
 
     builder.addAttribute(KoogAttributes.Koog.Event.Id(id))
 
@@ -96,7 +96,7 @@ internal fun endExecuteToolSpan(
 
     // gen_ai.tool.call.result
     toolResult?.let { result ->
-        span.addAttribute(SpanAttributes.Tool.Call.Result(result))
+        span.addAttribute(GenAIAttributes.Tool.Call.Result(result))
     }
 
     span.end(error.toSpanEndStatus(), verbose)

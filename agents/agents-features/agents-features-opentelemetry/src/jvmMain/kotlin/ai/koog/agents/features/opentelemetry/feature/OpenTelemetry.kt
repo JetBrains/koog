@@ -11,13 +11,19 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
+import ai.koog.agents.features.opentelemetry.extension.put
+import ai.koog.agents.features.opentelemetry.metric.ToolCallStorage
+import ai.koog.agents.features.opentelemetry.metric.createTokenCounter
+import ai.koog.agents.features.opentelemetry.metric.createToolCallCounter
+import ai.koog.agents.features.opentelemetry.metric.createToolCallDurationHistogram
+import ai.koog.agents.features.opentelemetry.metric.getDurationSec
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
 import ai.koog.agents.features.opentelemetry.span.SpanType
@@ -37,9 +43,7 @@ import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
-import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils
 import kotlin.reflect.KType
 
 /**
@@ -260,37 +264,13 @@ public class OpenTelemetry {
         ) {
             val spanAdapter = config.spanAdapter
             val tracer = config.tracer
+            val meter = config.meter
 
-            val toolCallsCounter = config.meter
-                .counterBuilder("koog.agent.tool_call.count")
-                .setDescription("Tool calls count")
-                .setUnit("unit")
-                .build()
+            val toolCallsCounter = createToolCallCounter(meter)
+            val tokensCounter = createTokenCounter(meter)
 
-            val inputTokensCounter = config.meter
-                .counterBuilder("koog.agent.input_token.usage")
-                .setDescription("Input token count")
-                .setUnit("token")
-                .build()
-
-            val outputTokensCounter = config.meter
-                .counterBuilder("koog.agent.output_token.usage")
-                .setDescription("Output token count")
-                .setUnit("token")
-                .build()
-
-            val totalTokensCounter = config.meter
-                .counterBuilder("gen_ai.client.token.usage")
-                .setDescription("Total token count")
-                .setUnit("token")
-                .build()
-
-            val toolCoolDurationHistogram = config.meter
-                .histogramBuilder("koog.agent.tool_call.duration")
-                .setDescription("Tool call duration")
-                .setUnit("s")
-                .setExplicitBucketBoundariesAdvice(ExplicitBucketHistogramUtils.DEFAULT_HISTOGRAM_BUCKET_BOUNDARIES)
-                .build()
+            val toolCallStorage = ToolCallStorage()
+            val toolCallDurationHistogram = createToolCallDurationHistogram(meter)
 
             //region Agent
 
@@ -298,8 +278,9 @@ public class OpenTelemetry {
                 logger.debug { "Execute OpenTelemetry before agent started handler" }
 
                 val messages = eventContext.agent.agentConfig.prompt.messages.toList()
-                val tools = (eventContext.agent as? GraphAIAgent<*, *>)?.toolRegistry?.tools?.map { it.descriptor }?.toList()
-                    ?: emptyList()
+                val tools =
+                    (eventContext.agent as? GraphAIAgent<*, *>)?.toolRegistry?.tools?.map { it.descriptor }?.toList()
+                        ?: emptyList()
 
                 // Create CreateAgentSpan
                 val createAgentSpan = startCreateAgentSpan(
@@ -382,8 +363,8 @@ public class OpenTelemetry {
                 ) ?: return@intercept
 
                 invokeAgentSpan.addAttribute(
-                    attribute = SpanAttributes.Response.FinishReasons(
-                        listOf(SpanAttributes.Response.FinishReasonType.Error)
+                    attribute = GenAIAttributes.Response.FinishReasons(
+                        listOf(GenAIAttributes.Response.FinishReasonType.Error)
                     )
                 )
 
@@ -588,11 +569,11 @@ public class OpenTelemetry {
                 eventContext.responses.lastOrNull()?.let { message ->
                     val finishReasonsAttribute = when (message) {
                         is Message.Assistant, is Message.Reasoning -> {
-                            SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.Stop))
+                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.Stop))
                         }
 
                         is Message.Tool.Call -> {
-                            SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.ToolCalls))
+                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls))
                         }
                     }
 
@@ -614,13 +595,27 @@ public class OpenTelemetry {
 
                 eventContext.responses.lastOrNull()?.let { message ->
                     message.metaInfo.inputTokensCount?.let { inputTokensCount ->
-                        inputTokensCounter.add(inputTokensCount.toLong())
+                        tokensCounter.add(
+                            inputTokensCount.toLong(),
+                            Attributes.builder()
+                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
+                                .put(GenAIAttributes.Provider.Name(provider))
+                                .put(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT))
+                                .put(GenAIAttributes.Response.Model(eventContext.model))
+                                .build()
+                        )
                     }
                     message.metaInfo.outputTokensCount?.let { outputTokensCount ->
-                        outputTokensCounter.add(outputTokensCount.toLong())
-                    }
-                    message.metaInfo.totalTokensCount?.let { totalTokensCount ->
-                        totalTokensCounter.add(totalTokensCount.toLong())
+                        tokensCounter.add(
+                            outputTokensCount.toLong(),
+                            Attributes.builder()
+                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
+                                .put(GenAIAttributes.Provider.Name(provider))
+                                .put(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT))
+                                .put(GenAIAttributes.Response.Model(eventContext.model))
+                                .build()
+
+                        )
                     }
                 }
             }
@@ -653,12 +648,7 @@ public class OpenTelemetry {
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, patchedExecutionInfo)
 
-                toolCallsCounter.add(
-                    1,
-                    Attributes.of(
-                        AttributeKey.stringKey("tool_name"), eventContext.toolName,
-                    )
-                )
+                toolCallStorage.addToolCall(eventContext.eventId, eventContext.toolName)
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
@@ -678,7 +668,7 @@ public class OpenTelemetry {
                 eventContext.toolDescription?.let { toolDescription ->
                     executeToolSpan.addAttribute(
                         // gen_ai.tool.description
-                        attribute = SpanAttributes.Tool.Description(description = toolDescription)
+                        attribute = GenAIAttributes.Tool.Description(description = toolDescription)
                     )
                 }
 
@@ -695,9 +685,27 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                toolCoolDurationHistogram.record(
-                    1.0,
-                    Attributes.of(AttributeKey.stringKey("tool_name"), eventContext.toolName)
+                val completedToolCall = toolCallStorage.endToolCallAndReturn(eventContext.eventId)
+
+                completedToolCall?.let { toolCall ->
+                    toolCall.getDurationSec()?.let { sec ->
+                        toolCallDurationHistogram.record(
+                            sec,
+                            Attributes.builder()
+                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+                                .put(GenAIAttributes.Tool.Name(eventContext.toolName))
+                                .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.SUCCESS))
+                                .build()
+                        )
+                    }
+                }
+
+                toolCallsCounter.add(
+                    1, Attributes.builder()
+                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+                        .put(GenAIAttributes.Tool.Name(eventContext.toolName))
+                        .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.SUCCESS))
+                        .build()
                 )
             }
 
@@ -718,7 +726,7 @@ public class OpenTelemetry {
                 eventContext.toolDescription?.let { toolDescription ->
                     executeToolSpan.addAttribute(
                         // gen_ai.tool.description
-                        attribute = SpanAttributes.Tool.Description(description = toolDescription)
+                        attribute = GenAIAttributes.Tool.Description(description = toolDescription)
                     )
                 }
 
@@ -739,6 +747,28 @@ public class OpenTelemetry {
                     span = executeToolSpan,
                     path = patchedExecutionInfo
                 )
+
+                val failedToolCall = toolCallStorage.endToolCallAndReturn(eventContext.eventId)
+
+                failedToolCall?.let { toolCall ->
+                    toolCall.getDurationSec()?.let { sec ->
+                        toolCallDurationHistogram.record(
+                            sec, Attributes.builder()
+                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+                                .put(GenAIAttributes.Tool.Name(eventContext.toolName))
+                                .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.ERROR))
+                                .build()
+                        )
+                    }
+                }
+
+                toolCallsCounter.add(
+                    1, Attributes.builder()
+                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+                        .put(GenAIAttributes.Tool.Name(eventContext.toolName))
+                        .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.ERROR))
+                        .build()
+                )
             }
 
             pipeline.interceptToolValidationFailed(this) intercept@{ eventContext ->
@@ -758,7 +788,7 @@ public class OpenTelemetry {
                 eventContext.toolDescription?.let { toolDescription ->
                     executeToolSpan.addAttribute(
                         // gen_ai.tool.description
-                        attribute = SpanAttributes.Tool.Description(description = toolDescription)
+                        attribute = GenAIAttributes.Tool.Description(description = toolDescription)
                     )
                 }
 
@@ -777,6 +807,28 @@ public class OpenTelemetry {
                 spanCollector.removeSpan(
                     span = executeToolSpan,
                     path = patchedExecutionInfo
+                )
+
+                val failedToolCall = toolCallStorage.endToolCallAndReturn(eventContext.eventId)
+
+                failedToolCall?.let { toolCall ->
+                    toolCall.getDurationSec()?.let { sec ->
+                        toolCallDurationHistogram.record(
+                            sec, Attributes.builder()
+                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+                                .put(GenAIAttributes.Tool.Name(eventContext.toolName))
+                                .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.VALIDATION_FAILED))
+                                .build()
+                        )
+                    }
+                }
+
+                toolCallsCounter.add(
+                    1, Attributes.builder()
+                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+                        .put(GenAIAttributes.Tool.Name(eventContext.toolName))
+                        .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.VALIDATION_FAILED))
+                        .build()
                 )
             }
 

@@ -2,7 +2,7 @@ package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -42,17 +42,17 @@ internal fun startCreateAgentSpan(
         parentSpan = parentSpan,
         id = id,
         kind = SpanKind.CLIENT,
-        name = "${SpanAttributes.Operation.OperationNameType.CREATE_AGENT.id} $agentId",
+        name = "${GenAIAttributes.Operation.OperationNameType.CREATE_AGENT.id} $agentId",
     )
         // gen_ai.operation.name
-        .addAttribute(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CREATE_AGENT))
+        .addAttribute(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.CREATE_AGENT))
         // gen_ai.provider.name
-        .addAttribute(SpanAttributes.Provider.Name(model.provider))
+        .addAttribute(GenAIAttributes.Provider.Name(model.provider))
         // gen_ai.request.model
-        .addAttribute(SpanAttributes.Request.Model(model))
+        .addAttribute(GenAIAttributes.Request.Model(model))
         // gen_ai.agent.description - Ignore. Not supported in Koog
         // gen_ai.agent.id
-        .addAttribute(SpanAttributes.Agent.Id(agentId))
+        .addAttribute(GenAIAttributes.Agent.Id(agentId))
 
     // gen_ai.agent.name - Ignore. Not supported in Koog
     // server.port - Ignore. Not supported in Koog
@@ -60,7 +60,7 @@ internal fun startCreateAgentSpan(
     // gen_ai.system_instructions
     val systemMessages = messages.filterIsInstance<Message.System>()
     if (systemMessages.isNotEmpty()) {
-        builder.addAttribute(SpanAttributes.SystemInstructions(systemMessages))
+        builder.addAttribute(GenAIAttributes.SystemInstructions(systemMessages))
     }
 
     builder.addAttribute(KoogAttributes.Koog.Event.Id(id))
