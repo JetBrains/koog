@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
@@ -93,8 +94,16 @@ public class DeepSeekLLMClient(
         val deepSeekParams = params.toDeepSeekParams()
         val responseFormat = createResponseFormat(params.schema, model)
 
+        val preparedMessages = if (params.schema != null) {
+            // Add a message having the word `JSON` explicitly
+            // it is required by the deepseek api for structured output
+            messages + OpenAIMessage.Assistant(Content.Text("Respond with JSON"))
+        } else {
+            messages
+        }
+
         val request = DeepSeekChatCompletionRequest(
-            messages = messages,
+            messages = preparedMessages,
             model = model.id,
             frequencyPenalty = deepSeekParams.frequencyPenalty,
             logprobs = deepSeekParams.logprobs,
