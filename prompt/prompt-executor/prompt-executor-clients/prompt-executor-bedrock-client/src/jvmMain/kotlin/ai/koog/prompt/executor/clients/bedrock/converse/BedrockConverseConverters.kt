@@ -286,7 +286,8 @@ internal object BedrockConverseConverters {
                 ContentBlock.Document(
                     DocumentBlock {
                         this.format = DocumentFormat.fromValue(part.format)
-                        this.name = part.fileName
+                        // Converse API requires no extension in file names
+                        this.name = part.fileName?.substringBefore('.')
 
                         this.source = when (val content = part.content) {
                             is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
@@ -296,7 +297,8 @@ internal object BedrockConverseConverters {
                                 DocumentSource.S3Location(content.toS3Location())
 
                             is AttachmentContent.PlainText ->
-                                DocumentSource.Text(content.text)
+                                // Even though DocumentSource.Text exists, Converse API requires bytes or s3 uri here
+                                DocumentSource.Bytes(content.text.encodeToByteArray())
                         }
                     }
                 )
@@ -378,10 +380,12 @@ internal object BedrockConverseConverters {
                         throw IllegalArgumentException("Unsupported document source type from Bedrock Converse API: $source")
                 }
 
+                val format = block.value.format.value
+
                 ContentPart.File(
                     content = content,
-                    fileName = block.value.name,
-                    format = block.value.format.value,
+                    fileName = "${block.value.name}.$format",
+                    format = format,
                     mimeType = "" // Bedrock Converse API doesn't have mime type
                 )
             }
