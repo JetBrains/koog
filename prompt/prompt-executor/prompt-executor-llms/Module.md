@@ -8,8 +8,11 @@ This module provides implementations of the `PromptExecutor` interface for execu
 
 - `SingleLLMPromptExecutor`: Executes prompts using a single LLM client
 - `MultiLLMPromptExecutor`: Executes prompts across multiple LLM providers with fallback capabilities
+- `MultiModelLLMPromptExecutor`*: Executes prompts across multiple LLM models with model-specific client routing and fallback strategy
 
 These executors handle both standard and streaming execution of prompts, delegating the actual LLM interaction to the provided LLM clients.
+
+*Info: `MultiModelLLMPromptExecutor` solves a specific problem with Azure AI Services where the model parameter is ignored and the actual model is determined by the deployment in the base-uri. New model with Azure AI provider requires a new deployment and client, so to switch models you need to switch deployments. This executor allows you to map models to specific clients (deployments) and route requests accordingly.
 
 ### Using in your project
 
@@ -33,6 +36,17 @@ val anthropicClient = AnthropicClient(apiKey = "your-anthropic-key")
 val multiExecutor = MultiLLMPromptExecutor(
     LLMProvider.OPENAI to openAIClient,
     LLMProvider.ANTHROPIC to anthropicClient
+)
+
+val multiModelExecutor = MultiModelLLMPromptExecutor(
+    llmClients = mapOf(
+        OpenAIModels.Chat.GPT4o to gpt4Client,
+        OpenAIModels.CostOptimized.GPT4oMini to gpt4oMiniClient,
+    ),
+    fallback = MultiModelLLMPromptExecutor.FallbackPromptExecutorSettings(
+        fallbackModel = OpenAIModels.Chat.GPT4o,
+        fallbackClient = gpt4Client
+    )
 )
 
 // Execute a prompt
