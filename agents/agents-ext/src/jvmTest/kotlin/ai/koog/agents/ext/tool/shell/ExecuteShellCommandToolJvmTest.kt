@@ -71,7 +71,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("grep ^a fruits.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: grep ^a fruits.txt
             apple
             apricot
             avocado
@@ -91,7 +90,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("findstr /B a fruits.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: findstr /B a fruits.txt
             apple
             apricot
             avocado
@@ -113,7 +111,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("find . -name '*.txt' -type f | sort", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: find . -name '*.txt' -type f | sort
             ./config.txt
             ./report.txt
             Exit code: 0
@@ -134,7 +131,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("dir /b *.txt | sort", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: dir /b *.txt | sort
             config.txt
             report.txt
             Exit code: 0
@@ -152,8 +148,7 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("find /c /v \"\" file.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: find /c /v "" file.txt
-            
+
             ---------- FILE.TXT: 4
             Exit code: 0
         """.trimIndent()
@@ -173,7 +168,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("find . -type f | sort", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: find . -type f | sort
             ./README.md
             ./src/main/App.kt
             ./src/main/Utils.kt
@@ -197,7 +191,6 @@ class ExecuteShellCommandToolJvmTest {
         val tempDirStr = tempDir.toAbsolutePath().toString()
 
         val expected = """
-            Command: dir /s /b /o:n
             $tempDirStr\README.md
             $tempDirStr\src
             $tempDirStr\src\main
@@ -218,7 +211,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("mkdir newdir", workingDirectory = testDir.toString())
 
         val expected = """
-            Command: mkdir newdir
             (no output)
             Exit code: 0
         """.trimIndent()
@@ -236,7 +228,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("grep nonexistent /nonexistent/file.txt")
 
         val expected = """
-            Command: grep nonexistent /nonexistent/file.txt
             grep: /nonexistent/file.txt: No such file or directory
             Exit code: 2
         """.trimIndent()
@@ -251,7 +242,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("type C:\\nonexistent\\file.txt")
 
         val expected = """
-            Command: type C:\nonexistent\file.txt
             The system cannot find the path specified.
             Exit code: 1
         """.trimIndent()
@@ -268,7 +258,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("cat file1.txt file2.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: cat file1.txt file2.txt
             Hello from file1
             cat: file2.txt: No such file or directory
             Exit code: 1
@@ -286,12 +275,11 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("type file1.txt file2.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: type file1.txt file2.txt
             Hello from file1
-            
+
             file1.txt
-            
-            
+
+
             The system cannot find the file specified.
             Error occurred while processing: file2.txt.
             Exit code: 1
@@ -310,7 +298,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("rm important-file.txt",)
 
         val expected = """
-            Command: rm important-file.txt
             Command execution denied with user response: No
         """.trimIndent()
 
@@ -326,7 +313,6 @@ class ExecuteShellCommandToolJvmTest {
         val result = tool.executeShellCommand("rm important-file.txt")
 
         val expected = """
-            Command: rm important-file.txt
             Command execution denied with user response: Cannot delete important files
         """.trimIndent()
 
@@ -352,7 +338,6 @@ class ExecuteShellCommandToolJvmTest {
         }
 
         val partialExpected = """
-        Command: echo beforeSleep && sleep 10 && echo afterSleep
         beforeSleep
         """.trimIndent()
 
@@ -388,7 +373,6 @@ class ExecuteShellCommandToolJvmTest {
         }
 
         val partialExpected = """
-        Command: powershell -Command "'beforeSleep'; Start-Sleep -Seconds 10; 'afterSleep'"
         """.trimIndent()
 
         val output = tool.encodeResultToString(result)
