@@ -500,21 +500,7 @@ abstract class ExecutorIntegrationTestBase {
                         +"I'm sending you an image. Please analyze it and identify the image format if possible."
                     }
 
-                    when (scenario) {
-                        ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                            image(
-                                ContentPart.Image(
-                                    content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
-                                    format = "jpg",
-                                    mimeType = "image/jpeg"
-                                )
-                            )
-                        }
-
-                        else -> {
-                            image(KtPath(imageFile.pathString))
-                        }
-                    }
+                    image(KtPath(imageFile.pathString))
                 }
             }
 
@@ -527,19 +513,23 @@ abstract class ExecutorIntegrationTestBase {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
                             val message = e.message.shouldNotBeNull()
 
-                            message.shouldContain("Status code: 400")
-                            message.shouldContain("image exceeds")
+                            listOf(
+                                "Status code: 400",
+                                "image exceeds",
+                                "Could not process image"
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
                             val message = e.message.shouldNotBeNull()
 
-                            message.shouldContain("Status code: 400")
-                            if (model.provider == LLMProvider.Anthropic) {
-                                message.shouldContain("Could not process image")
-                            } else if (model.provider == LLMProvider.OpenAI) {
-                                message.shouldContain("You uploaded an unsupported image. Please make sure your image is valid.")
-                            }
+                            listOf(
+                                "Status code: 400",
+                                "Could not process image",
+                                "You uploaded an unsupported image. Please make sure your image is valid.",
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         else -> {

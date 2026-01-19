@@ -742,17 +742,20 @@ public object BedrockModels : LLModelDefinitions {
     }
 }
 
+// TODO remove, has no effect now
 /**
  * Multimodality is currently not supported by Bedrock client.
  * This is a helper function to copy existing model definitions while removing multimodal capabilities.
  */
 private fun LLModel.withoutMultimodalCapabilities(): LLModel {
     return copy(
+        /*
         capabilities = capabilities.filter {
             it !is LLMCapability.Vision &&
                 it !is LLMCapability.Audio &&
                 it !is LLMCapability.Document
         }
+         */
     )
 }
 
