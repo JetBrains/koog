@@ -1,4 +1,4 @@
-rootProject.name = "step-04-basic-agent"
+rootProject.name = "step-04-add-sub-agent"
 
 pluginManagement {
     repositories {

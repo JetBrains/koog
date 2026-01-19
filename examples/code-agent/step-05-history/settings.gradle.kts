@@ -1,4 +1,4 @@
-rootProject.name = "step-05-basic-agent"
+rootProject.name = "step-05-history"
 
 pluginManagement {
     repositories {
