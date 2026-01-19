@@ -63,8 +63,5 @@ val CODE_AGENT_COMPRESSION = RetrieveFactsFromHistory(
         "pending-tasks-and-issues",
         "What are the immediate next steps planned or required? Are there any unresolved questions, issues, decisions to be made, or blockers encountered?",
         FactType.MULTIPLE
-    ),
-    Concept("modified-files-exact-trail",
-        "List EVERY file that was read, created, modified, or deleted with EXACT file paths. For files that were modified, what specific changes were made?",
-        FactType.MULTIPLE)
+    )
 )

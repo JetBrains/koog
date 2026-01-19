@@ -12,14 +12,21 @@ import ai.koog.agents.ext.tool.shell.ExecuteShellCommandTool
 import ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
 import ai.koog.agents.ext.tool.shell.PrintShellCommandConfirmationHandler
 import ai.koog.agents.ext.tool.shell.ShellCommandConfirmation
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.rag.base.files.JVMFileSystemProvider
 
-val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
+val multiExecutor = MultiLLMPromptExecutor(
+    LLMProvider.Anthropic to AnthropicLLMClient(System.getenv("ANTHROPIC_API_KEY")),
+    LLMProvider.OpenAI to OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
+)
+
 val agent = AIAgent(
-    promptExecutor = executor,
-    llmModel = OpenAIModels.Chat.GPT5Codex,
+    promptExecutor = multiExecutor,
+    llmModel = AnthropicModels.Sonnet_4_5,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
@@ -73,6 +80,6 @@ suspend fun main(args: Array<String>) {
         val result = agent.run(input)
         println(result)
     } finally {
-        executor.close()
+        multiExecutor.close()
     }
 }
