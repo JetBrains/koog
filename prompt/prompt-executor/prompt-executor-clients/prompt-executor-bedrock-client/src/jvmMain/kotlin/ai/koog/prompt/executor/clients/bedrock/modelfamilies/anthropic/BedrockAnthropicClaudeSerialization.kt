@@ -46,7 +46,7 @@ internal object BedrockAnthropicClaudeSerialization {
             when (msg) {
                 is Message.User -> {
                     require(!msg.hasAttachments()) {
-                        "Amazon Bedrock Anthropic requests currently supports text-only user messages"
+                        "Amazon Bedrock requests to Anthropic models via InvokeModel currently support text-only user messages"
                     }
                     if (msg.content.isNotEmpty()) {
                         messages.add(

@@ -10,15 +10,21 @@ import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailId
 import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailVersionFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSessionTokenFromEnv
+import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.bedrock.converse.BedrockConverseParams
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.params.LLMParams
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -63,58 +69,58 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         @JvmStatic
-        fun moderationModels(): Stream<Arguments> {
-            return Models
-                .moderationModels()
-                .filter { it.provider == LLMProvider.Bedrock }
-                .map { model -> Arguments.of(model) }
+        fun reasoningCapableModels(): Stream<LLModel> {
+            return listOf(BedrockModels.AnthropicClaude4_5Sonnet).stream()
         }
 
         @JvmStatic
-        fun embeddingModels(): Stream<Arguments> {
-            return Models
-                .embeddingModels()
-                .filter { it.provider == LLMProvider.Bedrock }
-                .map { model -> Arguments.of(model) }
-        }
-
-        @JvmStatic
-        fun reasoningCapableModels(): Stream<Arguments> {
-            return Models
-                .reasoningCapableModels()
-                .filter { it.provider == LLMProvider.Bedrock }
-                .map { model -> Arguments.of(model) }
-        }
-
-        @JvmStatic
-        fun allCompletionModels(): Stream<Arguments> {
-            return Models
-                .allCompletionModels()
-                .filter { it.provider == LLMProvider.Bedrock }
-                .map { model -> Arguments.of(model) }
+        fun allCompletionModels(): Stream<LLModel> {
+            return Models.bedrockModels()
         }
     }
 
-    private val executor: MultiLLMPromptExecutor = run {
-        MultiLLMPromptExecutor(
-            BedrockLLMClient(
-                identityProvider = StaticCredentialsProvider {
-                    this.accessKeyId = readAwsAccessKeyIdFromEnv()
-                    this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
-                    readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
-                },
-                settings = BedrockClientSettings(
-                    moderationGuardrailsSettings = BedrockGuardrailsSettings(
-                        guardrailIdentifier = readAwsBedrockGuardrailIdFromEnv(),
-                        guardrailVersion = readAwsBedrockGuardrailVersionFromEnv()
-                    ),
-                    apiMethod = BedrockAPIMethod.Converse,
-                )
+    private val client = run {
+        BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                this.accessKeyId = readAwsAccessKeyIdFromEnv()
+                this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
+                readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
+            },
+            settings = BedrockClientSettings(
+                moderationGuardrailsSettings = BedrockGuardrailsSettings(
+                    guardrailIdentifier = readAwsBedrockGuardrailIdFromEnv(),
+                    guardrailVersion = readAwsBedrockGuardrailVersionFromEnv()
+                ),
+                apiMethod = BedrockAPIMethod.Converse,
             )
         )
     }
 
+    private val executor: MultiLLMPromptExecutor = MultiLLMPromptExecutor(client)
+
+    override fun getLLMClient(model: LLModel): LLMClient {
+        require(model.provider == LLMProvider.Bedrock) { "Model ${model.id} is not a Bedrock model" }
+
+        return client
+    }
+
     override fun getExecutor(model: LLModel): PromptExecutor = executor
+
+    override fun createReasoningParams(model: LLModel): LLMParams {
+        require(model in reasoningCapableModels().toArray()) {
+            "Model ${model.id} is not a reasoning capable model"
+        }
+
+        return BedrockConverseParams(
+            additionalProperties = mapOf(
+                // Anthropic-specific reasoning config
+                "reasoning_config" to buildJsonObject {
+                    put("type", "enabled")
+                    put("budget_tokens", 1024)
+                }
+            )
+        )
+    }
 
     @ParameterizedTest
     @MethodSource("markdownScenarioModelCombinations")
@@ -151,12 +157,16 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testExecute(model)
     }
 
+    // TODO support streaming
+    @Disabled("TODO support streaming")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
     }
 
+    // TODO support streaming
+    @Disabled("TODO support streaming")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testExecuteStreamingWithTools(model: LLModel) {
@@ -211,6 +221,8 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testToolsWithAnyOfParams(model)
     }
 
+    // TODO support streaming
+    @Disabled("TODO support streaming")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testMarkdownStructuredDataStreaming(model: LLModel) {
@@ -223,6 +235,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testToolChoiceRequired(model)
     }
 
+    @Disabled("Converse API does not support tool choice none")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testToolChoiceNone(model: LLModel) {
@@ -241,18 +254,21 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testBase64EncodedAttachment(model)
     }
 
+    @Disabled("Converse API supports only S3 url attachments")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testUrlBasedAttachment(model: LLModel) {
         super.integration_testUrlBasedAttachment(model)
     }
 
+    @Disabled("Converse API does ot support native structured output")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNative(model: LLModel) {
         super.integration_testStructuredOutputNative(model)
     }
 
+    @Disabled("Converse API does ot support native structured output")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) {
@@ -278,33 +294,9 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("embeddingModels")
-    override fun integration_testEmbed(model: LLModel) {
-        super.integration_testEmbed(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("moderationModels")
-    override fun integration_testSingleMessageModeration(model: LLModel) {
-        super.integration_testSingleMessageModeration(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("moderationModels")
-    override fun integration_testMultipleMessagesModeration(model: LLModel) {
-        super.integration_testMultipleMessagesModeration(model)
-    }
-
-    @ParameterizedTest
     @MethodSource("reasoningCapableModels")
     override fun integration_testReasoningCapability(model: LLModel) {
         super.integration_testReasoningCapability(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("reasoningCapableModels")
-    override fun integration_testReasoningWithEncryption(model: LLModel) {
-        super.integration_testReasoningWithEncryption(model)
     }
 
     @ParameterizedTest

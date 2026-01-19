@@ -41,7 +41,7 @@ internal object JsonDocumentConverters {
     }
 
     fun convertToDocument(obj: JsonObject): Document =
-        requireNotNull(convertToDocument(obj)) { "JsonObject can't convert to null Document" }
+        requireNotNull(convertToDocument(obj as JsonElement)) { "JsonObject can't convert to null Document" }
 
     fun convertToJsonElement(document: Document?): JsonElement = when (document) {
         null -> JsonNull

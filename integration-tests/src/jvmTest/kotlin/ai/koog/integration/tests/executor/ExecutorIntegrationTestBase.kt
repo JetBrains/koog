@@ -58,7 +58,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -90,7 +89,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
+import java.util.Base64
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
@@ -124,7 +123,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
 
-    private fun createReasoningParams(model: LLModel): LLMParams {
+    open fun createReasoningParams(model: LLModel): LLMParams {
         return when (model.provider) {
             is LLMProvider.Anthropic -> AnthropicParams(
                 thinking = AnthropicThinking.Enabled(budgetTokens = 1024)

@@ -62,7 +62,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.VisibleForTesting
-
 import kotlin.time.Duration.Companion.milliseconds
 /**
  * Configuration settings for connecting to the AWS Bedrock API.
