@@ -63,6 +63,7 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.VisibleForTesting
 import kotlin.time.Duration.Companion.milliseconds
+
 /**
  * Configuration settings for connecting to the AWS Bedrock API.
  *
@@ -474,7 +475,27 @@ public class BedrockLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
-        throw NotImplementedError("Converse API method is not yet supported")
+        val converseRequest = BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools)
+
+        return channelFlow {
+            withContext(Dispatchers.SuitableForIO) {
+                try {
+                    logger.debug { "Bedrock Converse Stream Request: ModelID: ${model.id}, Request: $converseRequest" }
+                    bedrockClient.converseStream(converseRequest) { response ->
+                        val stream = requireNotNull(response.stream) { "Got null stream in Converse Stream response" }
+                        stream.collect { send(it) }
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    throw LLMClientException(
+                        clientName = clientName,
+                        message = e.message,
+                        cause = e
+                    )
+                }
+            }
+        }.let { BedrockConverseConverters.transformConverseStreamChunks(it, clock) }
     }
 
     override suspend fun embed(text: String, model: LLModel): List<Double> {

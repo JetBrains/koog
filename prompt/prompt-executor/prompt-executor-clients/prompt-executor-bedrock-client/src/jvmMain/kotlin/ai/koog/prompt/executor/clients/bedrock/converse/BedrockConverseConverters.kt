@@ -11,23 +11,32 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import aws.sdk.kotlin.services.bedrockruntime.model.AnyToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.AutoToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlock
+import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDelta
+import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockStart
 import aws.sdk.kotlin.services.bedrockruntime.model.ConversationRole
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput
+import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentSource
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageSource
+import aws.sdk.kotlin.services.bedrockruntime.model.InferenceConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.PerformanceConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.PromptVariableValues
 import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningContentBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningTextBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.S3Location
 import aws.sdk.kotlin.services.bedrockruntime.model.SpecificToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.SystemContentBlock
+import aws.sdk.kotlin.services.bedrockruntime.model.ToolConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.ToolInputSchema
 import aws.sdk.kotlin.services.bedrockruntime.model.ToolResultBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ToolResultContentBlock
@@ -36,6 +45,9 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ToolUseBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.VideoBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.VideoFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.VideoSource
+import aws.smithy.kotlin.runtime.content.Document
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -48,17 +60,38 @@ import aws.sdk.kotlin.services.bedrockruntime.model.Tool as BedrockTool
 import aws.sdk.kotlin.services.bedrockruntime.model.ToolChoice as BedrockToolChoice
 
 internal object BedrockConverseConverters {
+    private val logger = KotlinLogging.logger {}
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         explicitNulls = false
     }
 
-    fun createConverseRequest(
+    /**
+     * Even though [ConverseRequest] and [ConverseStreamRequest] are structurally identical, they don't share a common
+     * parent class. This class extracts common request parameters to avoid excessive code duplication.
+     */
+    private class ConverseRequestParams(
+        val modelId: String,
+        val inferenceConfig: InferenceConfiguration,
+        val additionalModelRequestFields: Document?,
+        val performanceConfig: PerformanceConfiguration?,
+        val promptVariables: Map<String, PromptVariableValues>?,
+        val requestMetadata: Map<String, String>?,
+        val toolConfig: ToolConfiguration?,
+        val system: List<SystemContentBlock>,
+        val messages: List<BedrockMessage>,
+    )
+
+    /**
+     * Creates a common set of Converse API requests parameters.
+     */
+    private fun createConverseRequestParams(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): ConverseRequest {
+    ): ConverseRequestParams {
         val params = prompt.params.toBedrockConverseParams()
 
         val systemMessages = mutableListOf<SystemContentBlock>()
@@ -130,28 +163,21 @@ internal object BedrockConverseConverters {
             }
         }
 
-        // Construct the request
-        return ConverseRequest {
-            this.modelId = model.id
-
-            inferenceConfig {
+        return ConverseRequestParams(
+            modelId = model.id,
+            inferenceConfig = InferenceConfiguration {
                 this.maxTokens = params.maxTokens
                 this.temperature = params.temperature
                     ?.takeIf { model.supports(LLMCapability.Temperature) }
                     ?.toFloat()
-            }
-
-            this.additionalModelRequestFields = params.additionalProperties
-                ?.let { JsonDocumentConverters.convertToDocument(JsonObject(it)) }
-
-            this.performanceConfig = params.performanceConfig
-
-            this.promptVariables = params.promptVariables
-
-            this.requestMetadata = params.requestMetadata
-
-            if (tools.isNotEmpty()) {
-                toolConfig {
+            },
+            additionalModelRequestFields = params.additionalProperties
+                ?.let { JsonDocumentConverters.convertToDocument(JsonObject(it)) },
+            performanceConfig = params.performanceConfig,
+            promptVariables = params.promptVariables,
+            requestMetadata = params.requestMetadata,
+            toolConfig = if (tools.isNotEmpty()) {
+                ToolConfiguration {
                     this.toolChoice = when (val toolChoice = params.toolChoice) {
                         is LLMParams.ToolChoice.Named ->
                             BedrockToolChoice.Tool(
@@ -182,15 +208,63 @@ internal object BedrockConverseConverters {
 
                     this.tools = tools.map { it.toConverseTool() }
                 }
-            }
+            } else {
+                null
+            },
+            system = systemMessages,
+            messages = messages,
+        )
+    }
 
-            this.system = systemMessages
+    /**
+     * Creates regular [ConverseRequest].
+     */
+    fun createConverseRequest(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): ConverseRequest {
+        val params = createConverseRequestParams(prompt, model, tools)
 
-            this.messages = messages
+        @Suppress("DuplicatedCode") // AWS SDK requires duplication
+        return ConverseRequest {
+            this.modelId = params.modelId
+            this.inferenceConfig = params.inferenceConfig
+            this.additionalModelRequestFields = params.additionalModelRequestFields
+            this.performanceConfig = params.performanceConfig
+            this.promptVariables = params.promptVariables
+            this.toolConfig = params.toolConfig
+            this.system = params.system
+            this.messages = params.messages
         }
     }
 
-    @Suppress("DuplicatedCode")
+    /**
+     * Creates [ConverseStreamRequest] for streaming response.
+     */
+    fun createConverseStreamRequest(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): ConverseStreamRequest {
+        val params = createConverseRequestParams(prompt, model, tools)
+
+        @Suppress("DuplicatedCode") // AWS SDK requires duplication
+        return ConverseStreamRequest {
+            this.modelId = params.modelId
+            this.inferenceConfig = params.inferenceConfig
+            this.additionalModelRequestFields = params.additionalModelRequestFields
+            this.performanceConfig = params.performanceConfig
+            this.promptVariables = params.promptVariables
+            this.toolConfig = params.toolConfig
+            this.system = params.system
+            this.messages = params.messages
+        }
+    }
+
+    /**
+     * Converts [ConverseRequest] response.
+     */
     fun convertConverseResponse(
         response: ConverseResponse,
         clock: Clock,
@@ -261,6 +335,93 @@ internal object BedrockConverseConverters {
                     )
                 )
             )
+        }
+    }
+
+    /**
+     * Transforms [ConverseStreamRequest] response stream.
+     */
+    fun transformConverseStreamChunks(
+        chunkFlow: Flow<ConverseStreamOutput>,
+        clock: Clock = Clock.System,
+    ) = buildStreamFrameFlow {
+        var finishReason: String? = null
+
+        chunkFlow.collect { chunk ->
+            when (chunk) {
+                is ConverseStreamOutput.MessageStart -> {
+                    logger.debug { "Received start message from Converse" }
+                }
+
+                is ConverseStreamOutput.ContentBlockStart -> when (val start = chunk.value.start) {
+                    is ContentBlockStart.ToolUse -> {
+                        upsertToolCall(
+                            index = chunk.value.contentBlockIndex,
+                            id = start.value.toolUseId,
+                            name = start.value.name,
+                        )
+                    }
+
+                    null -> {
+                        // skip
+                    }
+
+                    ContentBlockStart.SdkUnknown -> {
+                        logger.warn { "Unknown Converse content block start type: ${start::class.simpleName}" }
+                    }
+                }
+
+                is ConverseStreamOutput.ContentBlockDelta -> when (val delta = chunk.value.delta) {
+                    is ContentBlockDelta.Text -> {
+                        emitAppend(delta.value)
+                    }
+
+                    is ContentBlockDelta.ToolUse -> {
+                        upsertToolCall(
+                            index = chunk.value.contentBlockIndex,
+                            args = delta.value.input
+                        )
+                    }
+
+                    is ContentBlockDelta.Citation, is ContentBlockDelta.ReasoningContent -> {
+                        logger.warn { "Unsupported Converse content block delta type: ${delta::class.simpleName}" }
+                    }
+
+                    null -> {
+                        logger.warn { "null content block delta in Converse chunk" }
+                    }
+
+                    ContentBlockDelta.SdkUnknown -> {
+                        logger.warn { "Unknown Converse content block delta type: ${delta::class.simpleName}" }
+                    }
+                }
+
+                is ConverseStreamOutput.ContentBlockStop -> {
+                    logger.debug { "Received content block stop from Converse" }
+                }
+
+                is ConverseStreamOutput.MessageStop -> {
+                    finishReason = chunk.value.stopReason.value
+                }
+
+                is ConverseStreamOutput.Metadata -> {
+                    val usage = chunk.value.usage
+
+                    emitEnd(
+                        finishReason = finishReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock = clock,
+                            totalTokensCount = usage?.totalTokens,
+                            inputTokensCount = usage?.inputTokens,
+                            outputTokensCount = usage?.outputTokens,
+                        )
+                    )
+                }
+
+                ConverseStreamOutput.SdkUnknown -> {
+                    logger.warn { "Unknown Converse chunk type: ${chunk::class.simpleName}" }
+                }
+            }
         }
     }
 
@@ -376,7 +537,7 @@ internal object BedrockConverseConverters {
                     is DocumentSource.Text ->
                         AttachmentContent.PlainText(source.value)
 
-                    null, is DocumentSource.Content, DocumentSource.SdkUnknown ->
+                    else ->
                         throw IllegalArgumentException("Unsupported document source type from Bedrock Converse API: $source")
                 }
 
@@ -398,7 +559,7 @@ internal object BedrockConverseConverters {
                     is ImageSource.S3Location ->
                         AttachmentContent.URL(source.value.uri)
 
-                    null, ImageSource.SdkUnknown ->
+                    else ->
                         throw IllegalArgumentException("Unsupported image source type from Bedrock Converse API: $source")
                 }
 
@@ -418,7 +579,7 @@ internal object BedrockConverseConverters {
                     is VideoSource.S3Location ->
                         AttachmentContent.URL(source.value.uri)
 
-                    null, VideoSource.SdkUnknown ->
+                    else ->
                         throw IllegalArgumentException("Unsupported video source type from Bedrock Converse API: $source")
                 }
 

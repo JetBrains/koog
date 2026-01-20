@@ -157,16 +157,12 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testExecute(model)
     }
 
-    // TODO support streaming
-    @Disabled("TODO support streaming")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
     }
 
-    // TODO support streaming
-    @Disabled("TODO support streaming")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testExecuteStreamingWithTools(model: LLModel) {
@@ -221,8 +217,6 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testToolsWithAnyOfParams(model)
     }
 
-    // TODO support streaming
-    @Disabled("TODO support streaming")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testMarkdownStructuredDataStreaming(model: LLModel) {
