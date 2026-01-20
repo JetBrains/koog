@@ -572,7 +572,7 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `execute throws LLMClientException for model without Completion capability`() = runTest {
+    fun `execute throws IllegalArgumentException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
@@ -590,7 +590,7 @@ class BedrockLLMClientTest {
         val prompt = Prompt.build("test") {
             user("Some input")
         }
-        assertFailsWith<LLMClientException> {
+        assertFailsWith<IllegalArgumentException> {
             client.execute(prompt, noCompletionModel, emptyList())
         }
     }
@@ -634,7 +634,7 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `executeStreaming throws LLMClientException for model without Completion capability`() = runTest {
+    fun `executeStreaming throws IllegalArgumentException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
@@ -652,7 +652,7 @@ class BedrockLLMClientTest {
         val prompt = Prompt.build("test") {
             user("Some input")
         }
-        assertFailsWith<LLMClientException> {
+        assertFailsWith<IllegalArgumentException> {
             client.executeStreaming(prompt, noCompletionModel, emptyList()).toList()
         }
     }
