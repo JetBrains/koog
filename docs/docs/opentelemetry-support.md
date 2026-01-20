@@ -102,6 +102,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 
 const val apiKey = ""
@@ -123,7 +124,7 @@ install(OpenTelemetry) {
 
     // Add the Logging exporter
     addSpanExporter(LoggingSpanExporter.create())
-    
+
     // Add the Metric exporter
     addMeterExporter(LoggingMetricExporter.create())
 }
@@ -219,6 +220,7 @@ import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.sdk.trace.samplers.Sampler
 
@@ -241,7 +243,7 @@ install(OpenTelemetry) {
 
     // Add the Logging exporter
     addSpanExporter(LoggingSpanExporter.create())
-    
+
     // Add the Metric exporter
     addMeterExporter(LoggingMetricExporter.create())
 
@@ -428,9 +430,10 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
     - Recommended explicit bucket boundaries (seconds): 0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12,
       10.24, 20.48, 40.96, 81.92
     - Key attributes:
-        - `gen_ai.operation.name` (required) — `EXECUTE_TOOL`
-        - `gen_ai.tool.name` (recommended)
-        - `gen_ai.tool.call.status` (custom) — `SUCCESS`, `ERROR`, or `VALIDATION_FAILED`
+        - `gen_ai.operation.name` (required)
+        - `gen_ai.tool.name` (recommended, if `gen_ai.operation.name` is `EXECUTE_TOOL`)
+        - `gen_ai.tool.call.status` (custom, if `gen_ai.operation.name` is `EXECUTE_TOOL`) — `SUCCESS`, `ERROR`, or
+          `VALIDATION_FAILED`
     - Spec: see OpenTelemetry semantic
       conventions, [gen_ai.client.operation.duration](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/#metric-gen_aiclientoperationduration)
 
@@ -525,6 +528,7 @@ import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
+import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter
 import java.util.concurrent.TimeUnit
 
 const val apiKey = ""
@@ -582,6 +586,7 @@ import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
+import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
 
 const val apiKey = ""
 
@@ -741,6 +746,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
+import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
 import kotlinx.coroutines.runBlocking
 
 const val openAIApiKey = "open-ai-api-key"
