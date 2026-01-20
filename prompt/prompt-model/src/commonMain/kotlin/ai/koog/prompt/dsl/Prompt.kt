@@ -183,7 +183,7 @@ public data class Prompt @JvmOverloads constructor(
          * @param params The original instance of [LLMParams] to which the updates are applied.
          * @return A new instance of [LLMParams] with updated values.
          */
-        public fun applyToParams(params: LLMParams): LLMParams = params.copy(
+        internal fun applyToParams(params: LLMParams): LLMParams = params.copy(
             temperature = temperature,
             speculation = speculation,
             schema = schema,
