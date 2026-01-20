@@ -19,7 +19,7 @@ import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.extension.put
-import ai.koog.agents.features.opentelemetry.metric.ToolCallStorage
+import ai.koog.agents.features.opentelemetry.metric.EventCallStorage
 import ai.koog.agents.features.opentelemetry.metric.createTokenCounter
 import ai.koog.agents.features.opentelemetry.metric.createToolCallCounter
 import ai.koog.agents.features.opentelemetry.metric.createToolCallDurationHistogram
@@ -269,7 +269,7 @@ public class OpenTelemetry {
             val toolCallsCounter = createToolCallCounter(meter)
             val tokensCounter = createTokenCounter(meter)
 
-            val toolCallStorage = ToolCallStorage()
+            val eventCallStorage = EventCallStorage()
             val toolCallDurationHistogram = createToolCallDurationHistogram(meter)
 
             //region Agent
@@ -526,6 +526,9 @@ public class OpenTelemetry {
                     span = inferenceSpan,
                     path = patchedExecutionInfo
                 )
+
+                // Store llm call
+                eventCallStorage.addEventCall(eventContext.eventId, eventContext.model.provider.display)
             }
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
@@ -618,6 +621,19 @@ public class OpenTelemetry {
                         )
                     }
                 }
+
+                eventCallStorage.endEventCallAndReturn(eventContext.eventId)?.let { toolCall ->
+                    toolCall.getDurationSec()?.let { sec ->
+                        toolCallDurationHistogram.record(
+                            sec,
+                            Attributes.builder()
+                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
+                                .put(GenAIAttributes.Provider.Name(provider))
+                                .put(GenAIAttributes.Response.Model(eventContext.model))
+                                .build()
+                        )
+                    }
+                }
             }
 
             //endregion LLM Call
@@ -648,7 +664,7 @@ public class OpenTelemetry {
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, patchedExecutionInfo)
 
-                toolCallStorage.addToolCall(eventContext.eventId, eventContext.toolName)
+                eventCallStorage.addEventCall(eventContext.eventId, eventContext.toolName)
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
@@ -685,7 +701,7 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                val completedToolCall = toolCallStorage.endToolCallAndReturn(eventContext.eventId)
+                val completedToolCall = eventCallStorage.endEventCallAndReturn(eventContext.eventId)
 
                 completedToolCall?.let { toolCall ->
                     toolCall.getDurationSec()?.let { sec ->
@@ -749,7 +765,7 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                val failedToolCall = toolCallStorage.endToolCallAndReturn(eventContext.eventId)
+                val failedToolCall = eventCallStorage.endEventCallAndReturn(eventContext.eventId)
 
                 failedToolCall?.let { toolCall ->
                     toolCall.getDurationSec()?.let { sec ->
@@ -812,7 +828,7 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                val failedToolCall = toolCallStorage.endToolCallAndReturn(eventContext.eventId)
+                val failedToolCall = eventCallStorage.endEventCallAndReturn(eventContext.eventId)
 
                 failedToolCall?.let { toolCall ->
                     toolCall.getDurationSec()?.let { sec ->

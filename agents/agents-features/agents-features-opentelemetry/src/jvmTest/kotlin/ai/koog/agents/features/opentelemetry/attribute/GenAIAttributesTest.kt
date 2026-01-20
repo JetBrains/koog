@@ -319,7 +319,6 @@ class GenAIAttributesTest {
 
     //endregion Token
 
-
     //region Usage
 
     @Test
