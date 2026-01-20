@@ -5,12 +5,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
 import kotlin.math.pow
 
-
 internal data class ToolCall(val name: String, val timeStarted: Long, val timeEnded: Long?)
 
-
 internal fun ToolCall.getDurationSec(): Double? = timeEnded?.minus(timeStarted)?.div((10.0.pow(6)))
-
 
 internal class ToolCallStorage {
     private val storage = mutableMapOf<String, ToolCall>()

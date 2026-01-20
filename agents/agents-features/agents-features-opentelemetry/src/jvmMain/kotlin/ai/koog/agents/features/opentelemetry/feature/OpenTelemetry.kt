@@ -701,7 +701,8 @@ public class OpenTelemetry {
                 }
 
                 toolCallsCounter.add(
-                    1, Attributes.builder()
+                    1,
+                    Attributes.builder()
                         .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
                         .put(GenAIAttributes.Tool.Name(eventContext.toolName))
                         .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.SUCCESS))
@@ -753,7 +754,8 @@ public class OpenTelemetry {
                 failedToolCall?.let { toolCall ->
                     toolCall.getDurationSec()?.let { sec ->
                         toolCallDurationHistogram.record(
-                            sec, Attributes.builder()
+                            sec,
+                            Attributes.builder()
                                 .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
                                 .put(GenAIAttributes.Tool.Name(eventContext.toolName))
                                 .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.ERROR))
@@ -763,7 +765,8 @@ public class OpenTelemetry {
                 }
 
                 toolCallsCounter.add(
-                    1, Attributes.builder()
+                    1,
+                    Attributes.builder()
                         .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
                         .put(GenAIAttributes.Tool.Name(eventContext.toolName))
                         .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.ERROR))
@@ -814,7 +817,8 @@ public class OpenTelemetry {
                 failedToolCall?.let { toolCall ->
                     toolCall.getDurationSec()?.let { sec ->
                         toolCallDurationHistogram.record(
-                            sec, Attributes.builder()
+                            sec,
+                            Attributes.builder()
                                 .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
                                 .put(GenAIAttributes.Tool.Name(eventContext.toolName))
                                 .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.VALIDATION_FAILED))
@@ -824,7 +828,8 @@ public class OpenTelemetry {
                 }
 
                 toolCallsCounter.add(
-                    1, Attributes.builder()
+                    1,
+                    Attributes.builder()
                         .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
                         .put(GenAIAttributes.Tool.Name(eventContext.toolName))
                         .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.VALIDATION_FAILED))

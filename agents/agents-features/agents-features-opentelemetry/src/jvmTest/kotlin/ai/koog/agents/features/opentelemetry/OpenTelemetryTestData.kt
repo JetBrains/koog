@@ -1,8 +1,8 @@
 package ai.koog.agents.features.opentelemetry
 
-import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType
+import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.sdk.trace.data.SpanData
 

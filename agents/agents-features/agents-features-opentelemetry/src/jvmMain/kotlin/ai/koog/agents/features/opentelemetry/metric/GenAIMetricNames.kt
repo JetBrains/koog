@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.metric
 
-
 internal object GenAIMetricNames {
     sealed interface Client : GenAIMetricName {
         override val name: String

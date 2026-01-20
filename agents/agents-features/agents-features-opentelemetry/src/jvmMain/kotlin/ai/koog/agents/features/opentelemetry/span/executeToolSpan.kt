@@ -2,8 +2,8 @@ package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
-import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
+import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
