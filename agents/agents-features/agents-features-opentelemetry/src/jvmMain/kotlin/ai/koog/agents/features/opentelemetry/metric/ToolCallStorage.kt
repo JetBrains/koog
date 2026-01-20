@@ -17,16 +17,17 @@ internal class ToolCallStorage {
         private val logger = KotlinLogging.logger { }
     }
 
-    internal fun addToolCall(id: String, name: String) {
+    internal fun addToolCall(id: String, name: String): ToolCall? {
         val currentTimestamp = System.currentTimeMillis()
 
         lock.write {
             if (storage.containsKey(id)) {
                 logger.warn { "Tool call with id $id already exists, however is should not" }
-                return
+                return null
             }
 
             storage.put(id, ToolCall(name, currentTimestamp, null))
+            return storage[id]
         }
     }
 
@@ -42,9 +43,9 @@ internal class ToolCallStorage {
                 return null
             }
 
-            storage[id] = unfinishedToolCall.copy(timeEnded = currentTimestamp)
+            storage.remove(id)
 
-            return storage[id]
+            return unfinishedToolCall.copy(timeEnded = currentTimestamp)
         }
     }
 }

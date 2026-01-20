@@ -320,7 +320,7 @@ internal object GenAIAttributes {
             get() = super.key.concatKey("token")
 
         // gen_ai.token.type
-        data class Type(private val type: TokenType) : Usage {
+        data class Type(private val type: TokenType) : Token {
             override val key: String = super.key.concatKey("type")
             override val value: String = type.str
         }

@@ -8,7 +8,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class SpanAttributesTest {
+class GenAIAttributesTest {
 
     //region Tool
 
@@ -87,6 +87,13 @@ class SpanAttributesTest {
         val attribute = GenAIAttributes.Tool.Call.Id("call-123")
         assertEquals("gen_ai.tool.call.id", attribute.key)
         assertEquals("call-123", attribute.value)
+    }
+
+    @Test
+    fun `test status attribute`() {
+        val attribute = GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.SUCCESS)
+        assertEquals("gen_ai.tool.call.status", attribute.key)
+        assertEquals("success", attribute.value)
     }
 
     @Test
@@ -300,6 +307,18 @@ class SpanAttributesTest {
     }
 
     //endregion Response
+
+    //region Token
+
+    @Test
+    fun `test token type attribute`() {
+        val attribute = GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT)
+        assertEquals("gen_ai.token.type", attribute.key)
+        assertEquals("input", attribute.value)
+    }
+
+    //endregion Token
+
 
     //region Usage
 
