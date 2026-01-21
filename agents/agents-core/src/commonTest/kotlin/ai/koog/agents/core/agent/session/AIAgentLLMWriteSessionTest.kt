@@ -395,7 +395,10 @@ class AIAgentLLMWriteSessionTest {
     }
 
     @Test
-    // This behavior is not supported yet.
+    // This behavior is not supported for non-list responses from "requestLLM..." methods
+    // The test was passing due to a bug in the requestLLMOnlyCallingTools implementation
+    // See KG-663
+    // TODO(): remove the test after deprecating non-list responses from LLM
     @Ignore
     fun testRequestLLMOnlyCallingToolsWithThinking() = runTest {
         val thinkingContent = "<thinking>Checking file...</thinking>"
