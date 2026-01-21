@@ -18,6 +18,8 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ConverseRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.CountTokensRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.CountTokensResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.GetAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.GetAsyncInvokeResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailAction
@@ -299,6 +301,9 @@ class BedrockLLMClientTest {
             ): T =
                 throw UnsupportedOperationException("converseStream not implemented in mock client")
 
+            override suspend fun countTokens(input: CountTokensRequest): CountTokensResponse =
+                throw UnsupportedOperationException("countTokens not implemented in mock client")
+
             override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
                 throw UnsupportedOperationException("getAsyncInvoke not implemented in mock client")
 
@@ -526,6 +531,9 @@ class BedrockLLMClientTest {
 
             override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse =
                 throw UnsupportedOperationException("startAsyncInvoke not implemented in mock client")
+
+            override suspend fun countTokens(input: CountTokensRequest): CountTokensResponse =
+                throw UnsupportedOperationException("countTokens not implemented in mock client")
 
             override fun close() {
                 print("closing")

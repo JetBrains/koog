@@ -366,6 +366,10 @@ internal object BedrockConverseConverters {
                         // skip
                     }
 
+                    is ContentBlockStart.Image, is ContentBlockStart.ToolResult -> {
+                        logger.warn { "Unsupported Converse content block start type: ${start::class.simpleName}" }
+                    }
+
                     ContentBlockStart.SdkUnknown -> {
                         logger.warn { "Unknown Converse content block start type: ${start::class.simpleName}" }
                     }
@@ -384,6 +388,10 @@ internal object BedrockConverseConverters {
                     }
 
                     is ContentBlockDelta.Citation, is ContentBlockDelta.ReasoningContent -> {
+                        logger.warn { "Unsupported Converse content block delta type: ${delta::class.simpleName}" }
+                    }
+
+                    is ContentBlockDelta.Image, is ContentBlockDelta.ToolResult -> {
                         logger.warn { "Unsupported Converse content block delta type: ${delta::class.simpleName}" }
                     }
 
