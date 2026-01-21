@@ -95,31 +95,33 @@ public open class AIAgentLLMSession(
         return executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
     }
 
-    private fun preparePromptWithToolChoice(toolChoice: LLMParams.ToolChoice) =
-        prompt.withUpdatedParams {
-            this.toolChoice = toolChoice
-        }
-
     public open override suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
-        // We use the multiple-response method to ensure we capture all context (e.g. thinking)
-        // even though we only return the specific tool call.
-        val promptWithOnlyCallingTools = preparePromptWithToolChoice(LLMParams.ToolChoice.Required)
+        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
+            toolChoice = LLMParams.ToolChoice.Required
+        }
         val responses = executeMultiple(promptWithOnlyCallingTools, tools)
+
+        // some models might fail to produce a tool call
+        // it's better to not fail here and allow the user to handle that
         return responses.firstOrNull { it is Message.Tool.Call }
-            ?: responses.first { it !is Message.Reasoning }
+            ?: responses.first { it is Message.Assistant }
     }
 
     public open override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         validateSession()
-        val promptWithOnlyCallingTools = preparePromptWithToolChoice(LLMParams.ToolChoice.Required)
+        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
+            toolChoice = LLMParams.ToolChoice.Required
+        }
         return executeMultiple(promptWithOnlyCallingTools, tools)
     }
 
     public open override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
-        val promptWithForcingOneTool = preparePromptWithToolChoice(LLMParams.ToolChoice.Named(tool.name))
+        val promptWithForcingOneTool = prompt.withUpdatedParams {
+            toolChoice = LLMParams.ToolChoice.Named(tool.name)
+        }
         return executeSingle(promptWithForcingOneTool, tools)
     }
 
