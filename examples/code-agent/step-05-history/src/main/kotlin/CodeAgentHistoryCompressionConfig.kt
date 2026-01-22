@@ -16,7 +16,7 @@ val CODE_AGENT_HISTORY_TOO_BIG: (Prompt) -> Boolean = { prompt ->
  * Extracts key facts from conversation history.
  * LLM answers these questions, and the answers become the compressed history.
  */
-val CODE_AGENT_COMPRESSION = RetrieveFactsFromHistory(
+val CODE_AGENT_COMPRESSION_STRATEGY = RetrieveFactsFromHistory(
     Concept(
         "project-structure",
         "What is the structure of this project?",

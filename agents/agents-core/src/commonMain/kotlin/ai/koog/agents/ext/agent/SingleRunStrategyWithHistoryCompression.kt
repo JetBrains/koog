@@ -18,6 +18,7 @@ import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 
 /**
@@ -27,10 +28,12 @@ import ai.koog.prompt.message.Message
  *   when the message count or token size exceeds a threshold
  * @property compressionStrategy [HistoryCompressionStrategy] implementation that defines
  *   how to compress the conversation history
+ * @property retrievalModel Optional [LLModel] to use for compression (defaults to agent's model)
  */
 public data class HistoryCompressionConfig(
     val isHistoryTooBig: (Prompt) -> Boolean,
-    val compressionStrategy: HistoryCompressionStrategy
+    val compressionStrategy: HistoryCompressionStrategy,
+    val retrievalModel: LLModel? = null
 )
 
 /**
@@ -40,8 +43,8 @@ public data class HistoryCompressionConfig(
  * if the conversation history becomes too large (based on [HistoryCompressionConfig.isHistoryTooBig]),
  * it compresses the message list to essential facts before continuing.
  *
- * @param config specifies when to trigger compression (size threshold) and how to compress
- *   (fact extraction strategy)
+ * @param config specifies when to trigger compression (size threshold), how to compress
+ *   (fact extraction strategy), and optionally which model to use for compression
  * @param runMode how tools are executed: [ToolCalls.SINGLE_RUN_SEQUENTIAL] (one tool per LLM call),
  *   [ToolCalls.SEQUENTIAL] (multiple tools per call, executed sequentially), or [ToolCalls.PARALLEL]
  *   (multiple tools per call, executed concurrently)
@@ -64,7 +67,10 @@ private fun singleRunWithHistoryCompressionParallelAbility(
     val nodeCallLLM by nodeLLMRequestMultiple()
     val nodeExecuteTool by nodeExecuteMultipleTools(parallelTools = parallelTools)
     val nodeSendToolResult by nodeLLMSendMultipleToolResults()
-    val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>(strategy = config.compressionStrategy)
+    val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>(
+        strategy = config.compressionStrategy,
+        retrievalModel = config.retrievalModel
+    )
     val nodeSendCompressedHistory by node<List<ReceivedToolResult>, List<Message.Response>> {
         llm.writeSession {
             requestLLMMultiple()
@@ -104,7 +110,10 @@ private fun singleRunWithHistoryCompressionModeStrategy(config: HistoryCompressi
     val nodeCallLLM by nodeLLMRequest()
     val nodeExecuteTool by nodeExecuteTool()
     val nodeSendToolResult by nodeLLMSendToolResult()
-    val compressHistory by nodeLLMCompressHistory<ReceivedToolResult>(strategy = config.compressionStrategy)
+    val compressHistory by nodeLLMCompressHistory<ReceivedToolResult>(
+        strategy = config.compressionStrategy,
+        retrievalModel = config.retrievalModel
+    )
     val nodeSendCompressedHistory by node<ReceivedToolResult, Message.Response> {
         llm.writeSession {
             requestLLM()
