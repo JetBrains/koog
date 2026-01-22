@@ -12,6 +12,7 @@ import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
@@ -49,7 +50,8 @@ fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
                 moderationGuardrailsSettings = BedrockGuardrailsSettings(
                     guardrailIdentifier = readAwsBedrockGuardrailIdFromEnv(),
                     guardrailVersion = readAwsBedrockGuardrailVersionFromEnv()
-                )
+                ),
+                apiMethod = BedrockAPIMethod.InvokeModel,
             )
         )
 
