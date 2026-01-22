@@ -3,9 +3,9 @@ package ai.koog.prompt.structure.json
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.Structure
+import ai.koog.prompt.structure.StructuredOutputPrompts
 import ai.koog.prompt.structure.json.generator.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
-import ai.koog.prompt.structure.structure
 import ai.koog.prompt.text.TextContentBuilderBase
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.ClassDiscriminatorMode
@@ -88,24 +88,7 @@ public class JsonStructure<TStruct>(
                     +json.encodeToString(schema.schema)
                     br()
 
-                    if (examples.isNotEmpty()) {
-                        h4("EXAMPLES")
-
-                        if (examples.size == 1) {
-                            +"Here is an example of a valid response:"
-                        } else {
-                            +"Here are some examples of valid responses:"
-                        }
-
-                        examples.forEach { example ->
-                            codeblock(
-                                code = ai.koog.prompt.text.text {
-                                    structure(this@with, example)
-                                },
-                                language = "json"
-                            )
-                        }
-                    }
+                    StructuredOutputPrompts.examplesPrompt(this, structuredData)
 
                     h2("RESULT")
                     +"Provide ONLY the resulting JSON, WITHOUT ANY free text comments, backticks, or other symbols."

@@ -77,7 +77,14 @@ public data class StructuredRequestConfig<T>(
 
             // Rely on built-in model capabilities to provide structured response.
             is StructuredRequest.Native -> {
-                prompt.withUpdatedParams { schema = mode.structure.schema }
+                prompt(prompt) {
+                    // If examples are supplied, append them
+                    if (mode.structure.examples.isNotEmpty()) {
+                        user {
+                            StructuredOutputPrompts.examplesPrompt(this, mode.structure)
+                        }
+                    }
+                }.withUpdatedParams { schema = mode.structure.schema }
             }
         }
     }
