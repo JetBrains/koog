@@ -1,0 +1,40 @@
+{
+  "id": "real-flow",
+  "version": "1.0.0",
+  "description": "Real flow for testing purposes.",
+  "defaultModel": "openai/gpt4o",
+  "agents": [
+    {
+      "name": "koog-lines-counter",
+      "type": "task",
+      "params": {
+        "task": "Count number of files in koog project 'agents-protocol' module. You can only call tools. Get it by calling intellij tools."
+      }
+    },
+    {
+      "name": "open-jetbrains-site",
+      "type": "task",
+      "params": {
+        "task": "Open jetbrains.com in browser. You can only call tools. Make it by calling oplaywrite tools."
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "intellij-mcp",
+      "type": "mcp",
+      "parameters": {
+        "transport": "sse",
+        "url": "http://localhost:64342/sse"
+      }
+    },
+    {
+      "name": "playwrite",
+      "type": "mcp",
+      "parameters": {
+        "transport": "sse",
+        "url": "http://localhost:8931/sse"
+      }
+    }
+  ]
+}

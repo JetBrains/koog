@@ -11,6 +11,7 @@ plugins {
 val excluded = setOf(
     ":agents:agents-test",
     ":agents:agents-ext",
+    ":agents:agents-protocol-cli", // CLI application, not a publishable library
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
     ":agents:agents-mcp-server",
     ":integration-tests",
@@ -52,6 +53,7 @@ val included = setOf(
     ":agents:agents-mcp",
     ":agents:agents-mcp-metadata",
     ":agents:agents-planner",
+    ":agents:agents-protocol",
     ":agents:agents-tools",
     ":agents:agents-utils",
     ":embeddings:embeddings-base",

@@ -1,0 +1,83 @@
+{
+  "id": "parallel-merge-scoring-flow",
+  "version": "1.0",
+  "description": "Flow demonstrating parallel agent execution with merge condition based on scoring (selecting highest score).",
+  "defaultModel": "openai/gpt4o",
+  "agents": [
+    {
+      "name": "input_processor",
+      "type": "task",
+      "prompt": {
+        "system": "You process input for evaluation."
+      },
+      "params": {
+        "task": "Prepare the input for parallel evaluation."
+      }
+    },
+    {
+      "name": "parallel_evaluators",
+      "type": "parallel",
+      "params": {
+        "agents": ["evaluator_a", "evaluator_b", "evaluator_c"],
+        "merge": {
+          "variable": "results.2.output",
+          "operation": "more",
+          "value": {
+            "type": "int",
+            "data": 85
+          }
+        }
+      }
+    },
+    {
+      "name": "evaluator_a",
+      "type": "task",
+      "prompt": {
+        "system": "You evaluate using method A."
+      },
+      "params": {
+        "task": "Evaluate the input using method A and return a score between 0-100."
+      }
+    },
+    {
+      "name": "evaluator_b",
+      "type": "task",
+      "prompt": {
+        "system": "You evaluate using method B."
+      },
+      "params": {
+        "task": "Evaluate the input using method B and return a score between 0-100."
+      }
+    },
+    {
+      "name": "evaluator_c",
+      "type": "task",
+      "prompt": {
+        "system": "You evaluate using method C."
+      },
+      "params": {
+        "task": "Evaluate the input using method C and return a score between 0-100."
+      }
+    },
+    {
+      "name": "decision_maker",
+      "type": "task",
+      "prompt": {
+        "system": "You make final decisions based on evaluation scores."
+      },
+      "params": {
+        "task": "Make a final decision based on the selected evaluation score."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "input_processor",
+      "to": "parallel_evaluators"
+    },
+    {
+      "from": "parallel_evaluators",
+      "to": "decision_maker"
+    }
+  ]
+}

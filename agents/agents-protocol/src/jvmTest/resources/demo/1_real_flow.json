@@ -1,0 +1,28 @@
+{
+  "id": "real-flow",
+  "version": "1.0.0",
+  "description": "Real flow for testing purposes.",
+  "defaultModel": "anthropic/sonnet_4",
+  "agents": [
+    {
+      "name": "generator",
+      "type": "task",
+      "prompt": {
+        "system": "You are a task generator agent. You can generate random numbers from 0 to 100"
+      },
+      "params": {
+        "task": "Generate two random numbers between 0 and 100. Output them as a string separated with whitespace."
+      }
+    },
+    {
+      "name": "calculator",
+      "type": "task",
+      "prompt": {
+        "system": "You are a calculator agent. You can perform a sum operation."
+      },
+      "params": {
+        "task": "Calculate the sum of two numbers separated by whitespace. Output the result as a string."
+      }
+    }
+  ]
+}

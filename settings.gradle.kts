@@ -11,7 +11,6 @@ pluginManagement {
 
 include(":agents:agents-core")
 include(":agents:agents-ext")
-include(":agents:agents-planner")
 
 include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")
@@ -28,6 +27,9 @@ include(":agents:agents-features:agents-features-a2a-client")
 include(":agents:agents-mcp")
 include(":agents:agents-mcp-metadata")
 include(":agents:agents-mcp-server")
+include(":agents:agents-planner")
+include(":agents:agents-protocol")
+include(":agents:agents-protocol-cli")
 include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")

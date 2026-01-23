@@ -1,0 +1,3 @@
+MODELS:
+    anthropic/sonnet_4
+    openai/gpt4o

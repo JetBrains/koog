@@ -1,0 +1,83 @@
+{
+  "id": "parallel-merge-flow",
+  "version": "1.0",
+  "description": "Flow demonstrating parallel agent execution with merge condition to select the best result.",
+  "defaultModel": "openai/gpt4o",
+  "agents": [
+    {
+      "name": "question_router",
+      "type": "task",
+      "prompt": {
+        "system": "You route questions to appropriate agents."
+      },
+      "params": {
+        "task": "Analyze the question and prepare it for parallel processing."
+      }
+    },
+    {
+      "name": "parallel_solvers",
+      "type": "parallel",
+      "params": {
+        "agents": ["simple_solver", "detailed_solver", "creative_solver"],
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "best answer"
+          }
+        }
+      }
+    },
+    {
+      "name": "simple_solver",
+      "type": "task",
+      "prompt": {
+        "system": "You provide simple, concise answers."
+      },
+      "params": {
+        "task": "Provide a simple answer to the question. Return exactly 'best answer' if the question is simple."
+      }
+    },
+    {
+      "name": "detailed_solver",
+      "type": "task",
+      "prompt": {
+        "system": "You provide detailed, comprehensive answers."
+      },
+      "params": {
+        "task": "Provide a detailed answer to the question. Return exactly 'best answer' if the question requires depth."
+      }
+    },
+    {
+      "name": "creative_solver",
+      "type": "task",
+      "prompt": {
+        "system": "You provide creative, innovative answers."
+      },
+      "params": {
+        "task": "Provide a creative answer to the question. Return exactly 'best answer' if the question needs creativity."
+      }
+    },
+    {
+      "name": "result_formatter",
+      "type": "task",
+      "prompt": {
+        "system": "You format final results."
+      },
+      "params": {
+        "task": "Format the selected answer into a final response."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "question_router",
+      "to": "parallel_solvers"
+    },
+    {
+      "from": "parallel_solvers",
+      "to": "result_formatter"
+    }
+  ]
+}
