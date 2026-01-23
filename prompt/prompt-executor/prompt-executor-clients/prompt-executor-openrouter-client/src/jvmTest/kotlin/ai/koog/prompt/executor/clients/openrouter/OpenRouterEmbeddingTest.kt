@@ -36,7 +36,6 @@ class OpenRouterEmbeddingTest {
         // Qwen
         OpenRouterModels.Embeddings.Qwen3Embedding8B,
         OpenRouterModels.Embeddings.Qwen3Embedding4B,
-        OpenRouterModels.Embeddings.Qwen3Embedding06B,
         // BAAI
         OpenRouterModels.Embeddings.BaaiGbeBaseEnV15,
         OpenRouterModels.Embeddings.BaaiBgeLargeEnV15,
@@ -126,8 +125,8 @@ class OpenRouterEmbeddingTest {
     }
 
     @Test
-    fun `all 22 embedding models are defined`() {
-        allEmbeddingModels shouldHaveSize 22
+    fun `all 21 embedding models are defined`() {
+        allEmbeddingModels shouldHaveSize 21
     }
 
     @Test
@@ -180,7 +179,6 @@ class OpenRouterEmbeddingTest {
     fun `Qwen embedding model IDs are correct`() {
         OpenRouterModels.Embeddings.Qwen3Embedding8B.id shouldBe "qwen/qwen3-embedding-8b"
         OpenRouterModels.Embeddings.Qwen3Embedding4B.id shouldBe "qwen/qwen3-embedding-4b"
-        OpenRouterModels.Embeddings.Qwen3Embedding06B.id shouldBe "qwen/qwen3-embedding-0.6b"
     }
 
     @Test

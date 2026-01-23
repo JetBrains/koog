@@ -735,14 +735,6 @@ public object OpenRouterModels : LLModelDefinitions {
             contextLength = 32_768
         )
 
-        @JvmField
-        public val Qwen3Embedding06B: LLModel = LLModel(
-            provider = LLMProvider.OpenRouter,
-            id = "qwen/qwen3-embedding-0.6b",
-            capabilities = listOf(LLMCapability.Embed),
-            contextLength = 8_192
-        )
-
         // BAAI Models
         @JvmField
         public val BaaiGbeBaseEnV15: LLModel = LLModel(
