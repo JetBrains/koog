@@ -1,0 +1,35 @@
+{
+  "id": "random-numbers-flow-real",
+  "version": "1.0",
+  "defaultModel": "anthropic/sonnet_4",
+  "agents": [
+    {
+      "name": "get_numbers",
+      "type": "task",
+      "prompt": {
+        "system": "You are a numbers generator agent."
+      },
+      "params": {
+        "task": "Generate two random numbers between 1 and 100. Output them with a space between them.",
+        "toolNames": []
+      }
+    },
+    {
+      "name": "calculator",
+      "type": "task",
+      "prompt": {
+        "system": "You are a calculator agent that performs math operations.\n\nRequirements:\n- Input is a string with space-separated integers (e.g., \"12 34\").\n- Compute the sum of all numbers.\n- You MUST return the result via the provided tool call `finalize_task_result`.\n- Do NOT output plain text. Always call the tool with arguments in JSON as {\"type\": \"InputString\", \"data\": \"<sum>\"}."
+      },
+      "params": {
+        "task": "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces.",
+        "toolNames": []
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "get_numbers",
+      "to": "calculator"
+    }
+  ]
+}
