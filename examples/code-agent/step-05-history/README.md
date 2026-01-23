@@ -5,12 +5,14 @@ A code agent with history compression that handles long-running tasks without hi
 ## Prerequisites
 
 - Java 17+
-- OpenAI API key
+- Anthropic API key (main agent)
+- OpenAI API key (for history compression and find sub-agent)
 - (Optional) Langfuse credentials for observability
 
 ## Setup
 
 ```bash
+export ANTHROPIC_API_KEY=your_anthropic_key
 export OPENAI_API_KEY=your_openai_key
 ```
 
