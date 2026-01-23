@@ -664,4 +664,87 @@ public object OpenRouterModels : LLModelDefinitions {
         require(model.provider == LLMProvider.OpenRouter) { "Model provider must be OpenRouter" }
         customModels.add(model)
     }
+
+    public object Embeddings {
+
+        @JvmField
+        public val OpenAITextEmbedding3Small: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "openai/text-embedding-3-small",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 8_191
+        )
+
+        @JvmField
+        public val OpenAITextEmbedding3Large: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "openai/text-embedding-3-large",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 8_191
+        )
+
+        @JvmField
+        public val OpenAITextEmbeddingAda002: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "openai/text-embedding-ada-002",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 8_191
+        )
+
+        @JvmField
+        public val CohereEmbedEnglishV3: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "cohere/embed-english-v3.0",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512
+        )
+
+        @JvmField
+        public val CohereEmbedMultilingualV3: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "cohere/embed-multilingual-v3.0",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512
+        )
+
+        @JvmField
+        public val Voyage2: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "voyage/voyage-2",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 4_000
+        )
+
+        @JvmField
+        public val VoyageCode2: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "voyage/voyage-code-2",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 16_000
+        )
+
+        @JvmField
+        public val VoyageLarge2: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "voyage/voyage-large-2",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 16_000
+        )
+
+        @JvmField
+        public val GoogleTextEmbedding004: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "google/text-embedding-004",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 2_048
+        )
+
+        @JvmField
+        public val MistralEmbed: LLModel = LLModel(
+            provider = LLMProvider.OpenRouter,
+            id = "mistralai/mistral-embed",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 8_192
+        )
+    }
 }
