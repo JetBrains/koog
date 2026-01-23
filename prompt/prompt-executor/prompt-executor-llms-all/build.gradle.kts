@@ -31,6 +31,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

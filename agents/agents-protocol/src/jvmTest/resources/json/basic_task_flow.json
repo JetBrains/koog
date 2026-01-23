@@ -1,0 +1,35 @@
+{
+  "id": "basic-task-flow",
+  "version": "1.0",
+  "description": "Simple two-agent sequential flow demonstrating basic task execution and agent chaining.",
+  "defaultModel": "anthropic/sonnet_4",
+  "agents": [
+    {
+      "name": "number_generator",
+      "type": "task",
+      "prompt": {
+        "system": "You generate random numbers."
+      },
+      "params": {
+        "task": "Generate two random integers between 1 and 100, separated by a space."
+      }
+    },
+    {
+      "name": "calculator",
+      "type": "task",
+      "model": "openai/gpt4o",
+      "prompt": {
+        "system": "You perform mathematical calculations."
+      },
+      "params": {
+        "task": "Sum all numbers in the input (numbers are space-separated)."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "number_generator",
+      "to": "calculator"
+    }
+  ]
+}
