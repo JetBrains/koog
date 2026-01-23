@@ -130,7 +130,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config") as RetryConfig
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config") as RetryConfig
                 assertEquals(defaultRetryConfig.maxAttempts, config.maxAttempts)
                 assertEquals(defaultRetryConfig.initialDelay, config.initialDelay)
                 assertEquals(defaultRetryConfig.maxDelay, config.maxDelay)
@@ -170,7 +170,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config") as RetryConfig
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config") as RetryConfig
                 assertEquals(maxAttempts, config.maxAttempts)
                 assertEquals(initialDelay.seconds, config.initialDelay)
                 assertEquals(maxDelay.seconds, config.maxDelay)
@@ -232,7 +232,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config") as RetryConfig
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config") as RetryConfig
                 assertEquals(maxAttempts, config.maxAttempts)
                 assertEquals(initialDelay.seconds, config.initialDelay)
                 assertEquals(defaultRetryConfig.maxDelay, config.maxDelay)
@@ -279,7 +279,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config")
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config")
                 assertInstanceOf<RetryConfig>(config)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
@@ -359,7 +359,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config")
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config")
                 assertInstanceOf<RetryConfig>(config)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
@@ -423,7 +423,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config")
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config")
                 assertInstanceOf<RetryConfig>(config)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
@@ -483,7 +483,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config")
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config")
                 assertInstanceOf<RetryConfig>(config)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
@@ -543,7 +543,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config")
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config")
                 assertInstanceOf<RetryConfig>(config)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
@@ -583,7 +583,7 @@ class KoogAutoConfigurationTest {
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
-                val config = getPrivateFieldValue(retryingClient, "config")
+                val config = getPrivateFieldValue(retryingClient, "ai/koog/config")
                 assertInstanceOf<RetryConfig>(config)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")

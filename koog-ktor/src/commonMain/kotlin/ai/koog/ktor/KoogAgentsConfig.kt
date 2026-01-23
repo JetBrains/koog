@@ -343,7 +343,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          * By default, it uses a [Prompt] instance with the ID "agent" and includes a system
          * message that provides context to the language model by describing its role as a helpful assistant.
          */
-        internal var prompt: Prompt = koogPrompt("agent") {
+        internal var prompt: Prompt = koogPrompt("ai/koog/agent") {
             system("You are a helpful assistant")
         }
 
@@ -399,7 +399,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          */
         @PromptDSL
         public fun prompt(
-            name: String = "agent",
+            name: String = "ai/koog/agent",
             llmParams: LLMParams = LLMParams(),
             clock: Clock = Clock.System,
             build: PromptBuilder.() -> Unit
