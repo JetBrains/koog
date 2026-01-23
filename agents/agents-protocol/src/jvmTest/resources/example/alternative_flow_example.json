@@ -1,0 +1,77 @@
+{
+  "id": "verify-transform-flow",
+  "version": "1.0",
+  "defaultModel": "openai/gpt4o",
+
+  "agents": [
+    {
+      "name": "agent1",
+      "type": "task",
+      "prompt": {
+        "system": "Agent 1"
+      },
+      "params": {
+        "task": "Agent 1 task"
+      }
+    },
+    {
+      "name": "agent2",
+      "type": "task",
+      "prompt": {
+        "system": "Agent 2"
+      },
+      "params": {
+        "task": "Agent 2 task"
+      }
+    },
+    {
+      "name": "agent3",
+      "type": "task",
+      "prompt": {
+        "system": "Agent 3"
+      },
+      "params": {
+        "task": "Agent 3 task"
+      }
+    },
+    {
+      "name": "agent4",
+      "type": "task",
+      "prompt": {
+        "system": "Agent 4"
+      },
+      "params": {
+        "task": "Agent 4 task"
+      }
+    },
+    {
+      "name": "agent5",
+      "type": "task",
+      "prompt": {
+        "system": "Agent 5"
+      },
+      "params": {
+        "task": "Agent 5 task"
+      }
+    }
+  ],
+
+  "flow": {
+    "steps": [
+      {
+        "sequence": ["agent1", "agent2"]
+      },
+      {
+        "until": ["agent2", "agent3"],
+        "condition": {
+          "variable": "output.success",
+          "operator": "equals",
+          "value": true
+        }
+      },
+      {
+        "parallel": ["agent4", "agent5"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "id": "react-flow",
+  "version": "1.0",
+  "description": "ReAct agent flow demonstrating reasoning and acting pattern for problem solving.",
+  "defaultModel": "openai/gpt4o",
+  "agents": [
+    {
+      "name": "preprocessor",
+      "type": "task",
+      "prompt": {
+        "system": "You prepare and structure the problem statement."
+      },
+      "params": {
+        "task": "Take the input and clarify what needs to be solved."
+      }
+    },
+    {
+      "name": "react_problem_solver",
+      "type": "react",
+      "prompt": {
+        "system": "You are a methodical problem solver. Think step by step before acting."
+      },
+      "params": {
+        "task": "Solve the problem using available tools. Reason about each step before taking action.",
+        "reasoningInterval": 1
+      }
+    },
+    {
+      "name": "summarizer",
+      "type": "task",
+      "prompt": {
+        "system": "You summarize the solution clearly."
+      },
+      "params": {
+        "task": "Provide a clear summary of the solution."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "preprocessor",
+      "to": "react_problem_solver"
+    },
+    {
+      "from": "react_problem_solver",
+      "to": "summarizer"
+    }
+  ]
+}

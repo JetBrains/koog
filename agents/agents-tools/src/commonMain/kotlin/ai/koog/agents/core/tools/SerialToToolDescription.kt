@@ -149,12 +149,14 @@ public fun SerialDescriptor.asToolDescriptor(
         StructureKind.OBJECT,
         SerialKind.CONTEXTUAL,
         PolymorphicKind.OPEN,
-        StructureKind.MAP -> ToolDescriptor(
-            name = toolName,
-            description = description,
-            requiredParameters = emptyList(),
-            optionalParameters = emptyList()
-        )
+        StructureKind.MAP -> {
+            ToolDescriptor(
+                name = toolName,
+                description = description,
+                requiredParameters = emptyList(),
+                optionalParameters = emptyList()
+            )
+        }
     }
 }
 
@@ -241,13 +243,15 @@ private fun SerialDescriptor.toToolParameterType(): ToolParameterType = when (ki
     StructureKind.OBJECT,
     SerialKind.CONTEXTUAL,
     PolymorphicKind.OPEN,
-    StructureKind.MAP -> ToolParameterType.Object(
-        emptyList(),
-        emptyList(),
-        true,
-        ToolParameterType.String
+    StructureKind.MAP -> {
+        ToolParameterType.Object(
+            emptyList(),
+            emptyList(),
+            true,
+            ToolParameterType.String
 
-    )
+        )
+    }
 }
 
 private fun ToolParameterType.asValueTool(name: String, description: String, valueDescription: String? = null) =
