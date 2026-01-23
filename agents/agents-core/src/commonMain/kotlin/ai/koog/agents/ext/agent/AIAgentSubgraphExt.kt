@@ -119,7 +119,9 @@ internal inline fun <reified Output> identityTool(): Tool<Output, Output> = obje
     name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
     description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
 ) {
-    override suspend fun execute(args: Output): Output = args
+    override suspend fun execute(args: Output): Output {
+        return args
+    }
 }
 
 /**
