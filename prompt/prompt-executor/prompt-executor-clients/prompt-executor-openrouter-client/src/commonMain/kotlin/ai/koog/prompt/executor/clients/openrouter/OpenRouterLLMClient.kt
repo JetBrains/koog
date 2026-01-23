@@ -38,12 +38,14 @@ import kotlin.jvm.JvmOverloads
  * @property baseUrl The base URL of the OpenRouter API. Default is "https://openrouter.ai/api/v1".
  * @property chatCompletionsPath The path of the OpenRouter Chat Completions API. Default is "api/v1/chat/completions".
  * @property modelsPath The path of the OpenRouter Models API. Default is "api/v1/models".
+ * @property embeddingsPath The path of the OpenRouter Embeddings API. Default is "api/v1/embeddings".
  * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
  */
 public class OpenRouterClientSettings(
     baseUrl: String = "https://openrouter.ai",
     chatCompletionsPath: String = "api/v1/chat/completions",
     public val modelsPath: String = "api/v1/models",
+    public val embeddingsPath: String = "api/v1/embeddings",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
 ) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
