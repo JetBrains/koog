@@ -1,8 +1,10 @@
 package ai.koog.http.client.java
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +14,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.jetbrains.annotations.ApiStatus.Experimental
 import java.net.URI
+import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -30,7 +33,7 @@ import kotlin.reflect.KClass
  */
 @Experimental
 public class JavaKoogHttpClient internal constructor(
-    private val clientName: String,
+    override val clientName: String,
     private val logger: KLogger,
     private val httpClient: HttpClient,
     private val json: Json
@@ -52,19 +55,40 @@ public class JavaKoogHttpClient internal constructor(
                 return json.decodeFromString(serializer, responseBody) as R
             }
         }
-        val errorBody = response.body()
-        val errorMessage = "Error from $clientName API: ${response.statusCode()}\nBody:\n$errorBody"
+        throw KoogHttpClientException(
+            clientName = clientName,
+            statusCode = response.statusCode(),
+            errorBody = response.body(),
+        )
+    }
 
-        logger.error { errorMessage }
-        error(errorMessage)
+    /**
+     * Appends query parameters to the given URL path.
+     *
+     * @param path The base URL path to which the query parameters will be added.
+     * @param parameters A map of query parameters to be added to the URL. The keys and values will be URL-encoded.
+     * @return The URL path with the appended query parameters, or the original `path` if `parameters` is null or empty.
+     */
+    private fun buildUri(path: String, parameters: Map<String, String>?): URI {
+        val fullPath = if (!parameters.isNullOrEmpty()) {
+            val query = parameters.entries.joinToString("&") { (key, value) ->
+                "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
+            }
+            "$path?$query"
+        } else {
+            path
+        }
+
+        return URI.create(fullPath)
     }
 
     override suspend fun <R : Any> get(
         path: String,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val httpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(path))
+            .uri(buildUri(path, parameters))
             .GET()
             .build()
 
@@ -77,12 +101,13 @@ public class JavaKoogHttpClient internal constructor(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(path))
+            .uri(buildUri(path, parameters))
             .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
             .header("Content-Type", requestBody.contentType)
             .build()
@@ -98,12 +123,13 @@ public class JavaKoogHttpClient internal constructor(
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String>
     ): Flow<O> = callbackFlow {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(path))
+            .uri(buildUri(path, parameters))
             .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
             .header("Content-Type", requestBody.contentType)
             .header("Accept", "text/event-stream")
@@ -115,9 +141,12 @@ public class JavaKoogHttpClient internal constructor(
             val response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofLines())
 
             if (response.statusCode() !in 200..299) {
-                val errorMessage = "Error from $clientName API: ${response.statusCode()}"
-                logger.error { errorMessage }
-                close(IllegalStateException(errorMessage))
+                close(
+                    KoogHttpClientException(
+                        clientName = clientName,
+                        statusCode = response.statusCode(),
+                    )
+                )
                 return@callbackFlow
             }
 
@@ -142,17 +171,31 @@ public class JavaKoogHttpClient internal constructor(
                             .let(processStreamingChunk)
                             ?.let { trySend(it) }
                     }
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    logger.error(e) { "Error processing SSE event from $clientName: ${e.message}" }
-                    close(e)
+                    close(
+                        KoogHttpClientException(
+                            clientName = clientName,
+                            message = "Error processing SSE event: ${e.message}",
+                            cause = e
+                        )
+                    )
                 }
             }
 
             logger.debug { "SSE connection closed for $clientName" }
             close()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error(e) { "Exception during streaming from $clientName" }
-            close(e)
+            close(
+                KoogHttpClientException(
+                    clientName = clientName,
+                    message = "Exception during streaming: ${e.message}",
+                    cause = e
+                )
+            )
         }
 
         awaitClose {
@@ -175,6 +218,8 @@ public class JavaKoogHttpClient internal constructor(
             RequestBody(body = json.encodeToString(serializer, request), contentType = "application/json")
         }
     }
+
+    override fun close() {}
 }
 
 /**

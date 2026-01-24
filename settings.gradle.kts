@@ -11,7 +11,9 @@ pluginManagement {
 
 include(":agents:agents-core")
 include(":agents:agents-ext")
+include(":agents:agents-planner")
 
+include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-opentelemetry")
@@ -58,6 +60,7 @@ include(":prompt:prompt-executor:prompt-executor-model")
 include(":prompt:prompt-llm")
 include(":prompt:prompt-markdown")
 include(":prompt:prompt-model")
+include(":prompt:prompt-processor")
 include(":prompt:prompt-structure")
 include(":prompt:prompt-tokenizer")
 include(":prompt:prompt-xml")

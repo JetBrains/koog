@@ -1,6 +1,6 @@
 # Delivery support AI agent for E-commerce app. Koog + Spring Boot + Kotlin
 
-> Disclaimer: this README file was generated with Junie.
+> Disclaimer: this README file was generated with Junie and can be partially inconsistent.
 
 A sample Kotlin Spring Boot application demonstrating how to build an interactive customer-support AI agent using Koog framework.
 The service exposes simple REST endpoints to launch an AI agent that can assist with order-related questions, track state and checkpoints, 

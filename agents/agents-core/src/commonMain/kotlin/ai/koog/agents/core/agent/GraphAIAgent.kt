@@ -7,16 +7,18 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.utils.io.Closeable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType
@@ -59,21 +61,13 @@ public open class GraphAIAgent<Input, Output>(
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
     logger = logger,
     id = id,
-), Closeable {
+) {
 
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
-
-    private val environment = GenericAgentEnvironment(
-        agentId = this.id,
-        strategyId = strategy.name,
-        logger = logger,
-        toolRegistry = toolRegistry,
-        pipeline = pipeline
-    )
+    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(agentConfig, clock)
 
     /**
      * The context for adding and configuring features in a Kotlin AI Agent instance.
@@ -101,44 +95,91 @@ public open class GraphAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentGraphContextBase {
+    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentGraphContextBase {
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
-        // Environment (initially equal to the current agent), transformed by some features
-        //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
-        val preparedEnvironment =
-            pipeline.onAgentEnvironmentTransforming(
-                strategy = strategy,
-                agent = this,
-                baseEnvironment = environment
-            )
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
+        val initialEnvironment = prepareAgentEnvironment(eventId = eventId, executionInfo = executionInfo)
 
-        return AIAgentGraphContext(
-            environment = preparedEnvironment,
+        // Initial
+        val initialLLMContext = AIAgentLLMContext(
+            tools = toolRegistry.tools.map { it.descriptor },
+            toolRegistry = toolRegistry,
+            prompt = agentConfig.prompt,
+            model = agentConfig.model,
+            responseProcessor = agentConfig.responseProcessor,
+            promptExecutor = promptExecutor,
+            environment = initialEnvironment,
+            config = agentConfig,
+            clock = clock
+        )
+
+        val agentContext = AIAgentGraphContext(
+            environment = initialEnvironment,
             agentId = id,
             agentInput = agentInput,
             agentInputType = inputType,
             config = agentConfig,
-            llm = AIAgentLLMContext(
-                tools = toolRegistry.tools.map { it.descriptor },
-                toolRegistry = toolRegistry,
-                prompt = agentConfig.prompt,
-                model = agentConfig.model,
-                promptExecutor = PromptExecutorProxy(
-                    executor = promptExecutor,
-                    pipeline = pipeline,
-                    runId = runId
-                ),
-                environment = preparedEnvironment,
-                config = agentConfig,
-                clock = clock
-            ),
+            llm = initialLLMContext,
             stateManager = stateManager,
             storage = storage,
             runId = runId,
             strategyName = strategy.name,
             pipeline = pipeline,
+            executionInfo = executionInfo,
+            parentContext = null,
         )
+
+        val contextualEnvironment = ContextualAgentEnvironment(
+            environment = initialEnvironment,
+            context = agentContext,
+        )
+
+        val contextualPromptExecutor = ContextualPromptExecutor(
+            executor = promptExecutor,
+            context = agentContext,
+        )
+
+        val updatedLLMContext = agentContext.llm.copy(
+            environment = contextualEnvironment,
+            promptExecutor = contextualPromptExecutor,
+        )
+
+        agentContext.replace(agentContext.copy(
+            executionInfo = executionInfo,
+            llm = updatedLLMContext,
+            environment = contextualEnvironment,
+        ))
+
+        return agentContext
+    }
+
+    /**
+     * Prepares the environment for the AI agent by initializing a base environment
+     * and applying any registered environment transformations defined in the pipeline.
+     *
+     * Environment (initially equal to the current agent), transformed by some features
+     * (ex: testing feature transforms it into a MockEnvironment with mocked tools
+     *
+     * @return An instance of `AIAgentEnvironment` that represents the finalized environment
+     *         for the AI agent after applying all transformations.
+     */
+    private suspend fun prepareAgentEnvironment(eventId: String, executionInfo: AgentExecutionInfo): AIAgentEnvironment {
+        // Create a base environment implementation
+        val environment = GenericAgentEnvironment(
+            agentId = id,
+            logger = logger,
+            toolRegistry = toolRegistry,
+        )
+
+        val preparedEnvironment = pipeline.onAgentEnvironmentTransforming(
+            eventId = eventId,
+            executionInfo = executionInfo,
+            agent = this,
+            baseEnvironment = environment,
+        )
+
+        return preparedEnvironment
     }
 }

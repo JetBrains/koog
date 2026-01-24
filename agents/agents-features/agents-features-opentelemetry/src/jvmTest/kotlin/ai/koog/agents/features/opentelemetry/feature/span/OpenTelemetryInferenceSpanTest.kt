@@ -1,34 +1,31 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.utils.SerializationUtils
-import ai.koog.agents.features.opentelemetry.OpenTelemetrySpanAsserts.assertSpans
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.MockToolCallResponse
-import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_PARIS
-import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT
-import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.TEMPERATURE
-import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
-import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assistantMessage
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getMessagesString
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getSystemInstructionsString
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getToolDefinitionsString
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithSingleLLMCallStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithSingleToolCallStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.toolCallMessage
+import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
-import ai.koog.agents.features.opentelemetry.span.sha256base64
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import kotlinx.coroutines.test.runTest
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -36,47 +33,67 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
     @Test
     fun `test inference spans are collected`() = runTest {
-        val userInput = USER_PROMPT_PARIS
-        val mockLLMResponse = MOCK_LLM_RESPONSE_PARIS
+        val userInput = OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
+        val mockLLMResponse = OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_PARIS
 
         val collectedTestData = runAgentWithSingleLLMCallStrategy(
             userPrompt = userInput,
-            mockLLMResponse = mockLLMResponse
+            mockLLMResponse = mockLLMResponse,
+            verbose = true
         )
 
         val runId = collectedTestData.lastRunId
-        val result = collectedTestData.result
 
         val actualSpans = collectedTestData.filterInferenceSpans()
-        assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
+        assertTrue(actualSpans.isNotEmpty(), "Inference spans should be created during agent execution")
+
+        val actualLLMCallEventIds = collectedTestData.filterInferenceEventIds()
+        assertTrue(actualLLMCallEventIds.isNotEmpty(), "LLM Call event ids should be collected during agent execution")
+
+        val expectedInputMessages = listOf(
+            Message.System(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+        )
+
+        val expectedOutputMessages = listOf(
+            assistantMessage(mockLLMResponse)
+        )
 
         val expectedSpans = listOf(
             mapOf(
-                // TODO: Replace sha256base64() with unique event id for the LLM Call event
-                "llm.${userInput.sha256base64()}" to mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
-                        "gen_ai.system" to defaultModel.provider.id,
+                        "gen_ai.provider.name" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
                         "gen_ai.conversation.id" to runId,
-                        "gen_ai.request.temperature" to TEMPERATURE,
-                        "gen_ai.request.model" to defaultModel.id,
+                        "gen_ai.output.type" to "text",
+                        "gen_ai.request.model" to OpenTelemetryTestAPI.Parameter.defaultModel.id,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to getMessagesString(expectedInputMessages),
+                        "system_instructions" to getSystemInstructionsString(listOf(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT)),
+                        "koog.event.id" to actualLLMCallEventIds.first(),
+                        "gen_ai.response.model" to OpenTelemetryTestAPI.Parameter.defaultModel.id,
+                        "gen_ai.usage.input_tokens" to 0L,
+                        "gen_ai.usage.output_tokens" to 0L,
+                        "gen_ai.output.messages" to getMessagesString(expectedOutputMessages),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
                     ),
                     "events" to mapOf(
                         "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to defaultModel.provider.id,
+                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
                             "role" to Message.Role.System.name.lowercase(),
-                            "content" to SYSTEM_PROMPT,
+                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
                         ),
                         "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to defaultModel.provider.id,
+                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
                             "role" to Message.Role.User.name.lowercase(),
                             "content" to userInput,
                         ),
                         "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to defaultModel.provider.id,
+                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
                             "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to result,
+                            "content" to mockLLMResponse,
                         )
                     )
                 )
@@ -88,7 +105,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
     @Test
     fun `test inference spans with tool calls collect events`() = runTest {
-        val userInput = USER_PROMPT_PARIS
+        val userInput = OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
         val toolCallId = "tool-call-id"
         val location = "Paris"
 
@@ -99,37 +116,109 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             toolCallId = toolCallId,
         )
 
-        val mockLLMResponse = MOCK_LLM_RESPONSE_PARIS
+        val mockLLMResponse = OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_PARIS
 
         val collectedTestData = runAgentWithSingleToolCallStrategy(
             userPrompt = userInput,
             mockToolCallResponse = mockToolCallResponse,
-            mockLLMResponse = mockLLMResponse
+            mockLLMResponse = mockLLMResponse,
+            verbose = true
         )
 
         val runId = collectedTestData.lastRunId
-        val model = defaultModel
+        val model = OpenTelemetryTestAPI.Parameter.defaultModel
 
         val actualSpans = collectedTestData.filterInferenceSpans()
-        assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
+        assertTrue(actualSpans.isNotEmpty(), "Inference spans should be created during agent execution")
+
+        val actualLLMCallEventIds = collectedTestData.filterInferenceEventIds()
+        assertTrue(actualLLMCallEventIds.isNotEmpty(), "LLM event IDs should be collected during agent execution")
+
+        val expectedInputMessages1 = listOf(
+            Message.System(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+        )
+
+        val expectedOutputMessages1 = listOf(
+            toolCallMessage(toolCallId, TestGetWeatherTool.name, """{"location":"$location"}""")
+        )
+
+        val expectedInputMessages2 = listOf(
+            Message.System(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+            toolCallMessage(toolCallId, TestGetWeatherTool.name, """{"location":"$location"}"""),
+            Message.Tool.Result(toolCallId, TestGetWeatherTool.name, mockToolCallResponse.toolResult, RequestMetaInfo(testClock.now())),
+        )
+
+        val expectedOutputMessages2 = listOf(
+            assistantMessage(mockLLMResponse)
+        )
 
         val expectedSpans = listOf(
             mapOf(
-                // TODO: Replace sha256base64() with unique event id for the LLM Call event
-                "llm.${mockToolCallResponse.toolResult.sha256base64()}" to mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
-                        "gen_ai.system" to model.provider.id,
+                        "gen_ai.provider.name" to model.provider.id,
                         "gen_ai.conversation.id" to runId,
-                        "gen_ai.request.temperature" to TEMPERATURE,
+                        "gen_ai.output.type" to "text",
                         "gen_ai.request.model" to model.id,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to getMessagesString(expectedInputMessages1),
+                        "system_instructions" to getSystemInstructionsString(listOf(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT)),
+                        "gen_ai.tool.definitions" to getToolDefinitionsString(listOf(TestGetWeatherTool.descriptor)),
+                        "koog.event.id" to actualLLMCallEventIds[0],
+                        "gen_ai.response.model" to model.id,
+                        "gen_ai.usage.input_tokens" to 0L,
+                        "gen_ai.usage.output_tokens" to 0L,
+                        "gen_ai.output.messages" to getMessagesString(expectedOutputMessages1),
+                        "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id)
+                    ),
+                    "events" to mapOf(
+                        "gen_ai.system.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.System.name.lowercase(),
+                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
+                        ),
+                        "gen_ai.user.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.User.name.lowercase(),
+                            "content" to userInput,
+                        ),
+                        "gen_ai.choice" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.Tool.name.lowercase(),
+                            "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"$location\"}"},"id":"$toolCallId","type":"function"}]""",
+                            "index" to 0L,
+                            "finish_reason" to FinishReasonType.ToolCalls.id,
+                        )
+                    )
+                )
+            ),
+            mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.operation.name" to OperationNameType.CHAT.id,
+                        "gen_ai.provider.name" to model.provider.id,
+                        "gen_ai.conversation.id" to runId,
+                        "gen_ai.output.type" to "text",
+                        "gen_ai.request.model" to model.id,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to getMessagesString(expectedInputMessages2),
+                        "system_instructions" to getSystemInstructionsString(listOf(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT)),
+                        "gen_ai.tool.definitions" to getToolDefinitionsString(listOf(TestGetWeatherTool.descriptor)),
+                        "koog.event.id" to actualLLMCallEventIds[1],
+                        "gen_ai.response.model" to model.id,
+                        "gen_ai.usage.input_tokens" to 0L,
+                        "gen_ai.usage.output_tokens" to 0L,
+                        "gen_ai.output.messages" to getMessagesString(expectedOutputMessages2),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
                     ),
                     "events" to mapOf(
                         "gen_ai.system.message" to mapOf(
                             "gen_ai.system" to model.provider.id,
                             "role" to Message.Role.System.name.lowercase(),
-                            "content" to SYSTEM_PROMPT,
+                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
                         ),
                         "gen_ai.user.message" to mapOf(
                             "gen_ai.system" to model.provider.id,
@@ -156,38 +245,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                     )
                 ),
             ),
-            mapOf(
-                // TODO: Replace sha256base64() with unique event id for the LLM Call event
-                "llm.${userInput.sha256base64()}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.operation.name" to OperationNameType.CHAT.id,
-                        "gen_ai.system" to model.provider.id,
-                        "gen_ai.conversation.id" to runId,
-                        "gen_ai.request.temperature" to TEMPERATURE,
-                        "gen_ai.request.model" to model.id,
-                        "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to SYSTEM_PROMPT,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to userInput,
-                        ),
-                        "gen_ai.choice" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"$location\"}"},"id":"$toolCallId","type":"function"}]""",
-                            "index" to 0L,
-                            "finish_reason" to FinishReasonType.ToolCalls.id,
-                        )
-                    )
-                )
-            )
         )
 
         assertSpans(expectedSpans, actualSpans)
@@ -195,7 +252,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
     @Test
     fun `test inference spans with verbose logging disabled`() = runTest {
-        val userInput = USER_PROMPT_PARIS
+        val userInput = OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
         val toolCallId = "tool-call-id"
         val location = "Paris"
 
@@ -206,7 +263,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             toolCallId = toolCallId,
         )
 
-        val mockLLMResponse = MOCK_LLM_RESPONSE_PARIS
+        val mockLLMResponse = OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_PARIS
 
         val collectedTestData = runAgentWithSingleToolCallStrategy(
             userPrompt = userInput,
@@ -216,21 +273,72 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         )
 
         val runId = collectedTestData.lastRunId
-        val model = defaultModel
+        val model = OpenTelemetryTestAPI.Parameter.defaultModel
 
         val actualSpans = collectedTestData.filterInferenceSpans()
-        assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
+        assertTrue(actualSpans.isNotEmpty(), "Inference spans should be created during agent execution")
+
+        val actualLLMCallEventIds = collectedTestData.filterInferenceEventIds()
+        assertTrue(actualLLMCallEventIds.isNotEmpty(), "LLM event IDs should be collected during agent execution")
 
         val expectedSpans = listOf(
             mapOf(
-                // TODO: Replace sha256base64() with unique event id for the LLM Call event
-                "llm.${mockToolCallResponse.toolResult.sha256base64()}" to mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.operation.name" to OperationNameType.CHAT.id,
-                        "gen_ai.system" to model.provider.id,
+                        "gen_ai.provider.name" to model.provider.id,
                         "gen_ai.conversation.id" to runId,
-                        "gen_ai.request.temperature" to TEMPERATURE,
+                        "gen_ai.output.type" to "text",
                         "gen_ai.request.model" to model.id,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "system_instructions" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "gen_ai.tool.definitions" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to actualLLMCallEventIds[0],
+                        "gen_ai.response.model" to model.id,
+                        "gen_ai.usage.input_tokens" to 0L,
+                        "gen_ai.usage.output_tokens" to 0L,
+                        "gen_ai.output.messages" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id)
+                    ),
+                    "events" to mapOf(
+                        "gen_ai.system.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.System.name.lowercase(),
+                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        ),
+                        "gen_ai.user.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.User.name.lowercase(),
+                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        ),
+                        "gen_ai.choice" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.Tool.name.lowercase(),
+                            "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
+                            "index" to 0L,
+                            "finish_reason" to FinishReasonType.ToolCalls.id,
+                        )
+                    )
+                )
+            ),
+            mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.operation.name" to OperationNameType.CHAT.id,
+                        "gen_ai.provider.name" to model.provider.id,
+                        "gen_ai.conversation.id" to runId,
+                        "gen_ai.output.type" to "text",
+                        "gen_ai.request.model" to model.id,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "system_instructions" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "gen_ai.tool.definitions" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to actualLLMCallEventIds[1],
+                        "gen_ai.response.model" to model.id,
+                        "gen_ai.usage.input_tokens" to 0L,
+                        "gen_ai.usage.output_tokens" to 0L,
+                        "gen_ai.output.messages" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
                     ),
                     "events" to mapOf(
@@ -264,38 +372,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                     )
                 ),
             ),
-            mapOf(
-                // TODO: Replace sha256base64() with unique event id for the LLM Call event
-                "llm.${userInput.sha256base64()}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.operation.name" to OperationNameType.CHAT.id,
-                        "gen_ai.system" to model.provider.id,
-                        "gen_ai.conversation.id" to runId,
-                        "gen_ai.request.temperature" to TEMPERATURE,
-                        "gen_ai.request.model" to model.id,
-                        "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                        ),
-                        "gen_ai.choice" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
-                            "index" to 0L,
-                            "finish_reason" to FinishReasonType.ToolCalls.id,
-                        )
-                    )
-                )
-            )
         )
 
         assertSpans(expectedSpans, actualSpans)
@@ -311,9 +387,10 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         val subgraphName = "test-subgraph"
         val subgraphLLMCallNodeName = "test-subgraph-llm-call"
         val subgraphLLMResponse = "LLM Response (subgraph)"
+        val model = OpenTelemetryTestAPI.Parameter.defaultModel
 
         val strategy = strategy<String, String>("test-strategy") {
-            val nodeSubgraph by subgraph<String, String>(subgraphName) {
+            val subgraph by subgraph<String, String>(subgraphName) {
                 val nodeSubgraphLLMCall by nodeLLMRequest(subgraphLLMCallNodeName)
 
                 edge(nodeStart forwardTo nodeSubgraphLLMCall)
@@ -322,8 +399,8 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
 
             val nodeLLMCall by nodeLLMRequest(rootNodeCallLLMName)
 
-            edge(nodeStart forwardTo nodeSubgraph)
-            edge(nodeSubgraph forwardTo nodeLLMCall)
+            edge(nodeStart forwardTo subgraph)
+            edge(subgraph forwardTo nodeLLMCall)
             edge(nodeLLMCall forwardTo nodeFinish onAssistantMessage { true })
         }
 
@@ -332,124 +409,128 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             mockLLMAnswer(rootLLMResponse) onRequestEquals subgraphLLMResponse
         }
 
-        val collectedTestData = runAgentWithStrategy(strategy = strategy, userPrompt = userInput, executor = executor)
+        val collectedTestData = runAgentWithStrategy(
+            strategy = strategy,
+            userPrompt = userInput,
+            executor = executor,
+            verbose = true
+        )
 
         val runId = collectedTestData.lastRunId
 
-        val actualSpans = collectedTestData.filterNodeExecutionSpans()
-        assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
+        val actualSpans = collectedTestData.filterInferenceSpans()
+        assertTrue(actualSpans.isNotEmpty(), "Inference spans should be created during agent execution")
 
-        @OptIn(InternalAgentsApi::class)
-        val serializedRootAssistantResponse = SerializationUtils.encodeDataToStringOrDefault(
-            data = Message.Assistant(
-                content = rootLLMResponse,
-                metaInfo = ResponseMetaInfo(
-                    timestamp = testClock.now()
-                )
-            ),
-            dataType = typeOf<Message>()
+        val actualLLMCallEventIds = collectedTestData.filterInferenceEventIds()
+        assertTrue(actualLLMCallEventIds.isNotEmpty(), "LLM event IDs should be collected during agent execution")
+
+        val expectedInputMessages1 = listOf(
+            Message.System(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
         )
 
-        @OptIn(InternalAgentsApi::class)
-        val serializedSubgraphAssistantResponse = SerializationUtils.encodeDataToStringOrDefault(
-            data = Message.Assistant(
-                content = subgraphLLMResponse,
-                metaInfo = ResponseMetaInfo(
-                    timestamp = testClock.now()
-                )
-            ),
-            dataType = typeOf<Message>()
+        val expectedOutputMessages1 = listOf(
+            assistantMessage(subgraphLLMResponse)
+        )
+
+        val expectedInputMessages2 = listOf(
+            Message.System(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+            assistantMessage(subgraphLLMResponse),
+            Message.User(subgraphLLMResponse, RequestMetaInfo(testClock.now())),
+        )
+
+        val expectedOutputMessages2 = listOf(
+            assistantMessage(rootLLMResponse)
         )
 
         val expectedSpans = listOf(
             mapOf(
-                "node.__finish__.${collectedTestData.singleNodeIdByName("__finish__")}" to mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
+                        "gen_ai.operation.name" to OperationNameType.CHAT.id,
+                        "gen_ai.provider.name" to model.provider.id,
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__finish__",
-                        "koog.node.output" to "\"$rootLLMResponse\"",
-                        "koog.node.input" to "\"$rootLLMResponse\"",
+                        "gen_ai.output.type" to "text",
+                        "gen_ai.request.model" to model.id,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to getMessagesString(expectedInputMessages1),
+                        "system_instructions" to getSystemInstructionsString(listOf(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT)),
+                        "koog.event.id" to actualLLMCallEventIds[0],
+                        "gen_ai.response.model" to model.id,
+                        "gen_ai.usage.input_tokens" to 0L,
+                        "gen_ai.usage.output_tokens" to 0L,
+                        "gen_ai.output.messages" to getMessagesString(expectedOutputMessages1),
+                        "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
                     ),
-                    "events" to emptyMap()
+                    "events" to mapOf(
+                        "gen_ai.system.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.System.name.lowercase(),
+                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
+                        ),
+                        "gen_ai.user.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.User.name.lowercase(),
+                            "content" to userInput,
+                        ),
+                        "gen_ai.assistant.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.Assistant.name.lowercase(),
+                            "content" to subgraphLLMResponse,
+                        )
+                    )
                 )
             ),
             mapOf(
-                "node.$rootNodeCallLLMName.${collectedTestData.singleNodeIdByName(rootNodeCallLLMName)}" to mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
+                        "gen_ai.operation.name" to OperationNameType.CHAT.id,
+                        "gen_ai.provider.name" to model.provider.id,
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to rootNodeCallLLMName,
-                        "koog.node.output" to serializedRootAssistantResponse,
-                        "koog.node.input" to "\"$subgraphLLMResponse\"",
+                        "gen_ai.output.type" to "text",
+                        "gen_ai.request.model" to model.id,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to getMessagesString(expectedInputMessages2),
+                        "system_instructions" to getSystemInstructionsString(listOf(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT)),
+                        "koog.event.id" to actualLLMCallEventIds[1],
+                        "gen_ai.response.model" to model.id,
+                        "gen_ai.usage.input_tokens" to 0L,
+                        "gen_ai.usage.output_tokens" to 0L,
+                        "gen_ai.output.messages" to getMessagesString(expectedOutputMessages2),
+                        "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
                     ),
-                    "events" to emptyMap()
+                    "events" to mapOf(
+                        "gen_ai.system.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.System.name.lowercase(),
+                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
+                        ),
+                        "gen_ai.user.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.User.name.lowercase(),
+                            "content" to subgraphLLMResponse,
+                        ),
+                        "gen_ai.assistant.message" to mapOf(
+                            "gen_ai.system" to model.provider.id,
+                            "role" to Message.Role.Assistant.name.lowercase(),
+                            "content" to rootLLMResponse,
+                        )
+                    )
                 )
             ),
-            mapOf(
-                "node.$subgraphName.${collectedTestData.singleNodeIdByName(subgraphName)}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to subgraphName,
-                        "koog.node.output" to "\"$subgraphLLMResponse\"",
-                        "koog.node.input" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.__finish__$subgraphName.${collectedTestData.singleNodeIdByName("__finish__$subgraphName")}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__finish__$subgraphName",
-                        "koog.node.output" to "\"$subgraphLLMResponse\"",
-                        "koog.node.input" to "\"$subgraphLLMResponse\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.$subgraphLLMCallNodeName.${collectedTestData.singleNodeIdByName(subgraphLLMCallNodeName)}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to subgraphLLMCallNodeName,
-                        "koog.node.output" to serializedSubgraphAssistantResponse,
-                        "koog.node.input" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.__start__$subgraphName.${collectedTestData.singleNodeIdByName("__start__$subgraphName")}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__start__$subgraphName",
-                        "koog.node.input" to "\"$userInput\"",
-                        "koog.node.output" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.__start__.${collectedTestData.singleNodeIdByName("__start__")}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__start__",
-                        "koog.node.input" to "\"$userInput\"",
-                        "koog.node.output" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            )
         )
 
         assertSpans(expectedSpans, actualSpans)
     }
 
     @Test
-    fun `test inference span contains tokes data`() = runTest {
-        val userInput = USER_PROMPT_PARIS
-        val mockLLMResponse = MOCK_LLM_RESPONSE_PARIS
-        val model = defaultModel
-        val temperature = TEMPERATURE
+    fun `test inference span contains tokens data`() = runTest {
+        val userInput = OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
+        val mockLLMResponse = OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_PARIS
+        val model = OpenTelemetryTestAPI.Parameter.defaultModel
         val maxTokens = 100
 
         val nodeLLMCallName = "test-llm-call-node"
@@ -472,43 +553,62 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             executor = mockExecutor,
             model = model,
             maxTokens = maxTokens,
+            verbose = true
         )
 
         val runId = collectedTestData.lastRunId
-        val result = collectedTestData.result
 
         val actualSpans = collectedTestData.filterInferenceSpans()
-        assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
+        assertTrue(actualSpans.isNotEmpty(), "Inference spans should be created during agent execution")
+
+        val actualLLMCallEventIds = collectedTestData.filterInferenceEventIds()
+        assertTrue(actualLLMCallEventIds.isNotEmpty(), "LLM event IDs should be collected during agent execution")
+
+        val expectedInputMessages = listOf(
+            Message.System(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+            Message.User(userInput, RequestMetaInfo(testClock.now())),
+        )
+
+        val expectedOutputMessages = listOf(
+            assistantMessage(mockLLMResponse)
+        )
 
         val expectedSpans = listOf(
             mapOf(
-                // TODO: Replace sha256base64() with unique event id for the LLM Call event
-                "llm.${userInput.sha256base64()}" to mapOf(
+                "${OperationNameType.CHAT.id} ${OpenTelemetryTestAPI.Parameter.defaultModel.id}" to mapOf(
                     "attributes" to mapOf(
-                        "gen_ai.system" to model.provider.id,
+                        "gen_ai.operation.name" to OperationNameType.CHAT.id,
+                        "gen_ai.provider.name" to model.provider.id,
+                        "gen_ai.conversation.id" to runId,
+                        "gen_ai.output.type" to "text",
                         "gen_ai.request.model" to model.id,
                         "gen_ai.request.max_tokens" to maxTokens.toLong(),
-                        "gen_ai.conversation.id" to runId,
-                        "gen_ai.operation.name" to "chat",
-                        "gen_ai.request.temperature" to temperature,
+                        "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                        "gen_ai.input.messages" to getMessagesString(expectedInputMessages),
+                        "system_instructions" to getSystemInstructionsString(listOf(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT)),
+                        "koog.event.id" to actualLLMCallEventIds.first(),
+                        "gen_ai.response.model" to model.id,
+                        "gen_ai.usage.input_tokens" to tokenizer.countTokens(text = userInput).toLong(),
+                        "gen_ai.usage.output_tokens" to tokenizer.countTokens(text = mockLLMResponse).toLong(),
+                        "gen_ai.output.messages" to getMessagesString(expectedOutputMessages),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
-                        "gen_ai.usage.output_tokens" to tokenizer.countTokens(text = mockLLMResponse).toLong()
                     ),
                     "events" to mapOf(
                         "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to defaultModel.provider.id,
+                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
                             "role" to Message.Role.System.name.lowercase(),
-                            "content" to SYSTEM_PROMPT,
+                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
                         ),
                         "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to defaultModel.provider.id,
+                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
                             "role" to Message.Role.User.name.lowercase(),
                             "content" to userInput,
                         ),
                         "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to defaultModel.provider.id,
+                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
                             "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to result,
+                            "content" to mockLLMResponse,
                         )
                     )
                 )

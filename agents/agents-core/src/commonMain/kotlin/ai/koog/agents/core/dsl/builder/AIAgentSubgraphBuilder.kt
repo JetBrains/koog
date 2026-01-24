@@ -12,10 +12,12 @@ import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -86,6 +88,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Creates a subgraph with a specified tool selection strategy.
      * @param name Optional subgraph name
      * @param toolSelectionStrategy Strategy for tool selection
+     * @param llmModel Initial LLM model used in this subgraph
+     * @param llmParams Initial LLM prompt parameters used in this subgraph
+     * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
      * @param define Subgraph definition function
      */
     public inline fun <reified Input, reified Output> subgraph(
@@ -93,6 +98,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
+        responseProcessor: ResponseProcessor? = null,
         define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
     ): AIAgentSubgraphDelegate<Input, Output> {
         return AIAgentSubgraphBuilder<Input, Output>(
@@ -101,7 +107,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
             outputType = typeOf<Output>(),
             toolSelectionStrategy = toolSelectionStrategy,
             llmModel = llmModel,
-            llmParams = llmParams
+            llmParams = llmParams,
+            responseProcessor = responseProcessor,
         ).also { it.define() }.build()
     }
 
@@ -109,6 +116,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Creates a subgraph with specified tools.
      * @param name Optional subgraph name
      * @param tools List of tools available to the subgraph
+     * @param llmModel Initial LLM model used in this subgraph
+     * @param llmParams Initial LLM prompt parameters used in this subgraph
+     * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
      * @param define Subgraph definition function
      */
     public inline fun <reified Input, reified Output> subgraph(
@@ -116,9 +126,17 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         tools: List<Tool<*, *>>,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
+        responseProcessor: ResponseProcessor? = null,
         define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
     ): AIAgentSubgraphDelegate<Input, Output> {
-        return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), llmModel, llmParams, define)
+        return subgraph(
+            name = name,
+            toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
+            llmModel = llmModel,
+            llmParams = llmParams,
+            responseProcessor = responseProcessor,
+            define = define
+        )
     }
 
     /**
@@ -212,7 +230,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     private fun getNodePath(node: AIAgentNodeBase<*, *>, parentPath: String): String {
-        return "$parentPath:${node.id}"
+        return "$parentPath${DEFAULT_AGENT_PATH_SEPARATOR}${node.id}"
     }
 
     internal fun buildSubgraphMetadata(
@@ -231,12 +249,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         }
 
         // Validate that all nodes have unique names within the subgraph
-        val names = subgraphNodes.keys.map { it.split(":").last() }
-        val uniqueNames = names.toSet().size == names.size
+        val names = subgraphNodes.keys
 
         return SubgraphMetadata(
             nodesMap = subgraphNodes,
-            uniqueNames = uniqueNames
+            uniqueNames = names.toSet().size == names.size
         )
     }
 
@@ -283,6 +300,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
  * @property name Optional name of the subgraph for identification.
  * @property toolSelectionStrategy The strategy that defines how tools are selected and used
  * within the subgraph.
+ * @param llmModel Initial LLM model used in this subgraph
+ * @param llmParams Initial LLM prompt parameters used in this subgraph
+ * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
  */
 public class AIAgentSubgraphBuilder<Input, Output>(
     public val name: String? = null,
@@ -291,6 +311,7 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?,
+    private val responseProcessor: ResponseProcessor? = null,
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
     override val nodeStart: StartNode<Input> = StartNode(subgraphName = name, type = inputType)
@@ -301,7 +322,7 @@ public class AIAgentSubgraphBuilder<Input, Output>(
             "FinishSubgraphNode can't be reached from the StartNode of the agent's graph. Please, review how it was defined."
         }
 
-        return AIAgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy, llmModel, llmParams)
+        return AIAgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy, llmModel, llmParams, responseProcessor)
     }
 }
 
@@ -322,6 +343,9 @@ public class AIAgentSubgraphBuilder<Input, Output>(
  * and produces the final output of the subgraph.
  * @property toolSelectionStrategy The strategy for selecting the set of tools available
  * to the subgraph during its execution.
+ * @property llmModel Initial LLM model used in this subgraph
+ * @property llmParams Initial LLM prompt parameters used in this subgraph
+ * @property responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
  */
 public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
@@ -329,7 +353,8 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     public val nodeFinish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
-    private val llmParams: LLMParams?
+    private val llmParams: LLMParams?,
+    private val responseProcessor: ResponseProcessor? = null,
 ) {
     private var subgraph: AIAgentSubgraph<Input, Output>? = null
 
@@ -355,6 +380,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,
+                responseProcessor = responseProcessor,
             )
         }
 

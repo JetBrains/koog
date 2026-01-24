@@ -8,7 +8,15 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 kotlin {
+    jvmToolchain(17)
+
     sourceSets {
         commonMain {
             dependencies {
@@ -17,6 +25,7 @@ kotlin {
                 api(project(":utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-llm"))
+                api(project(":prompt:prompt-processor"))
                 api(project(":prompt:prompt-structure"))
 
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
@@ -44,8 +53,9 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation("org.jetbrains.lincheck:lincheck:3.3.2")
+                implementation("org.jetbrains.lincheck:lincheck:3.4")
                 implementation(libs.ktor.client.cio)
+                implementation(project(":integration-tests"))
             }
         }
     }

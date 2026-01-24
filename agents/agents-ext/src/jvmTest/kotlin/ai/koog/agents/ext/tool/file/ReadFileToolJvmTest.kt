@@ -87,7 +87,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -113,7 +113,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -130,7 +130,7 @@ class ReadFileToolJvmTest {
             c
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -145,7 +145,7 @@ class ReadFileToolJvmTest {
             b: 2
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -159,7 +159,7 @@ class ReadFileToolJvmTest {
             print('hi')
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -173,7 +173,7 @@ class ReadFileToolJvmTest {
             Write-Host 'hello'
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -187,7 +187,7 @@ class ReadFileToolJvmTest {
             task hello { }
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -201,7 +201,7 @@ class ReadFileToolJvmTest {
             echo hello
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -232,7 +232,7 @@ class ReadFileToolJvmTest {
             fun c() = 3
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -245,7 +245,7 @@ class ReadFileToolJvmTest {
             ```markdown
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -302,5 +302,22 @@ class ReadFileToolJvmTest {
         assertThrows<ToolException.ValidationFailure> {
             runBlocking { readFile(f, startLine = 0, endLine = -2) }
         }
+    }
+
+    @Test
+    fun `includes warning when endLine exceeds file length`() = runBlocking {
+        val f = createTestFile("short.txt", "line1\nline2\nline3")
+
+        val result = readFile(f, startLine = 0, endLine = 200)
+
+        val expected = """
+            Warning: endLine=200 exceeds file length (3 lines). Clamped to available lines 0-3.
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"}
+            Content:
+            line1
+            line2
+            line3
+        """.trimIndent()
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 }

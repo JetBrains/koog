@@ -20,8 +20,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -199,13 +197,7 @@ class DeepSeekLLMClientTest {
         }
         val http = HttpClient(engine) {}
         val client = DeepSeekLLMClient(apiKey = key, baseClient = http, clock = FixedClock)
-        val schemaJson = buildJsonObject {
-            put(
-                "type",
-                "object"
-            )
-            putJsonObject("properties") { putJsonObject("name") { put("type", "string") } }
-        }
+        val schemaJson = buildJsonObject { }
 
         val schema = LLMParams.Schema.JSON.Basic("Person", schemaJson)
 
@@ -221,7 +213,7 @@ class DeepSeekLLMClientTest {
         assertEquals(1, responses.size, "Response should have one choice")
         assertNotNull(capturedBody, "Captured body should not be null")
         assertTrue(capturedBody.contains("\"response_format\""), "Response body should contain response_format")
-        assertTrue(capturedBody.contains("\"json_schema\""), "Response body should contain json_schema")
+        assertTrue(capturedBody.contains("\"json_object\""), "Response body should contain json_schema")
         assertTrue(
             responses.first().content.contains("{\"name\":\"Alice\"}"),
             "Response should contain JSON string [{\"name\":\"Alice\"}]"

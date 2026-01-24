@@ -17,17 +17,19 @@ public object SerializationUtils {
 
     private val json = Json {
         prettyPrint = true
+        allowStructuredMapKeys = true
     }
 
     private val logger = KotlinLogging.logger { }
 
     /**
      * Serializes the given data to a string using the specified data type.
-     * If serialization fails, falls back to [data.toString()].
+     * If serialization fails, it falls back to [data.toString()].
      *
      * @param data The object to be serialized.
      * @param dataType The type of the object used to find the appropriate serializer.
      * @param default A lambda function that returns a fallback string if serialization fails.
+     *
      * @return A [String] representing the serialized data, or the result of [data.toString()] if serialization fails.
      */
     @InternalAgentsApi
@@ -47,13 +49,14 @@ public object SerializationUtils {
      *
      * @param data The object to be serialized.
      * @param dataType The type of the object used to find the appropriate serializer.
+     *
      * @return A [String] representing the serialized data, or null if serialization fails.
      */
     @InternalAgentsApi
     public fun encodeDataToStringOrNull(data: Any?, dataType: KType, json: Json? = null): String? =
         try {
             encodeDataToString(data, dataType, json)
-        } catch (e: SerializationException) {
+        } catch (e: IllegalArgumentException) {
             logger.debug { "Failed to serialize data to string: ${e.message}" }
             null
         }
@@ -64,8 +67,10 @@ public object SerializationUtils {
      *
      * @param data The object to be serialized.
      * @param dataType The type of the object used to find the appropriate serializer.
+     *
      * @return A [String] representing the serialized data.
-     * @throws SerializationException if serialization fails or no serializer is found for the data type.
+     * @throws [SerializationException] if serialization fails or no serializer is found for the data type.
+     * @throws [IllegalArgumentException] if no serializer is found for the specified data type.
      */
     @InternalAgentsApi
     public fun encodeDataToString(data: Any?, dataType: KType, json: Json? = null): String {
@@ -100,13 +105,14 @@ public object SerializationUtils {
      *
      * @param data The object to be serialized.
      * @param dataType The type of the object used to find the appropriate serializer.
+     *
      * @return A [JsonElement] representing the serialized data, or null if serialization fails.
      */
     @InternalAgentsApi
     public fun encodeDataToJsonElementOrNull(data: Any?, dataType: KType, json: Json? = null): JsonElement? =
         try {
             encodeDataToJsonElement(data, dataType, json)
-        } catch (e: SerializationException) {
+        } catch (e: IllegalArgumentException) {
             logger.debug { "Failed to serialize data to json element: ${e.message}" }
             null
         }
@@ -117,8 +123,10 @@ public object SerializationUtils {
      *
      * @param data The object to be serialized.
      * @param dataType The type of the object used to find the appropriate serializer.
+     *
      * @return A [JsonElement] representing the serialized data.
-     * @throws SerializationException if serialization fails or no serializer is found for the data type.
+     * @throws [SerializationException] if serialization fails or no serializer is found for the data type.
+     * @throws [IllegalArgumentException] if no serializer is found for the specified data type.
      */
     @InternalAgentsApi
     public fun encodeDataToJsonElement(data: Any?, dataType: KType, json: Json? = null): JsonElement {

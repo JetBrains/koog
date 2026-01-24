@@ -123,6 +123,7 @@ public abstract class JsonSchemaGenerator {
     protected abstract fun processObject(context: GenerationContext): JsonObject
     protected abstract fun processPolymorphic(context: GenerationContext): JsonObject
     protected abstract fun processClassDiscriminator(context: GenerationContext): JsonObject
+    protected abstract fun processJsonElement(context: GenerationContext): JsonObject
 }
 
 /**

@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -34,7 +35,9 @@ class LLMAsJudgeNodeTest {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    val CRITIC_TASK = "Find all numbers produced by LLM and check that they are not divided by 3"
+    companion object {
+        const val CRITIC_TASK = "Find all numbers produced by LLM and check that they are not divided by 3"
+    }
 
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
     @Test
@@ -60,16 +63,21 @@ class LLMAsJudgeNodeTest {
 
         val initialModel = OllamaModels.Meta.LLAMA_3_2
 
+        val agentConfig = AIAgentConfig(prompt = prompt("id") {}, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10)
+
         val mockLLM = AIAgentLLMContext(
             tools = emptyList(),
             toolRegistry = ToolRegistry {},
             prompt = initialPrompt,
             model = initialModel,
+            responseProcessor = null,
             promptExecutor = mockPromptExecutor,
             environment = mockEnv,
-            config = AIAgentConfig(prompt = prompt("id") {}, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10),
+            config = agentConfig,
             clock = testClock
         )
+
+        val executionInfo = AgentExecutionInfo(null, "test")
 
         val context = AIAgentGraphContext(
             environment = mockEnv,
@@ -82,7 +90,9 @@ class LLMAsJudgeNodeTest {
             storage = mockk(),
             runId = "run-1",
             strategyName = "test-strategy",
-            pipeline = AIAgentGraphPipeline(),
+            pipeline = AIAgentGraphPipeline(agentConfig),
+            executionInfo = executionInfo,
+            parentContext = null
         )
 
         val subgraphContext = object : AIAgentSubgraphBuilderBase<String, String>() {
@@ -97,7 +107,7 @@ class LLMAsJudgeNodeTest {
             task = CRITIC_TASK
         )
 
-        coEvery { mockPromptExecutor.execute(any(), any(), any()) } returns listOf(
+        coEvery { mockPromptExecutor.execute(any(), any()) } returns listOf(
             Message.Assistant(
                 content = Json.encodeToString(
                     CriticResultFromLLM.serializer(),
@@ -148,8 +158,7 @@ class LLMAsJudgeNodeTest {
                 },
                 model = match {
                     it == anotherModel
-                },
-                tools = any()
+                }
             )
         }
 

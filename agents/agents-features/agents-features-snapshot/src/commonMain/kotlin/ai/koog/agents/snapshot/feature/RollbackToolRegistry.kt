@@ -1,6 +1,7 @@
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.tools.Tool
+import kotlin.jvm.JvmStatic
 
 /**
  * A registry for managing and retrieving rollback tools associated with specific tools.
@@ -9,7 +10,7 @@ import ai.koog.agents.core.tools.Tool
  *
  * This class is immutable from an external perspective, ensuring thread safety.
  */
-public class RollbackToolRegistry private constructor(rollbackToolsMap: Map<Tool<*, *>, Tool<*, *>> = emptyMap()) {
+public class RollbackToolRegistry internal constructor(rollbackToolsMap: Map<Tool<*, *>, Tool<*, *>> = emptyMap()) {
 
     /**
      * A mutable map that stores the association between tools and their corresponding rollback tools.
@@ -68,54 +69,24 @@ public class RollbackToolRegistry private constructor(rollbackToolsMap: Map<Tool
     }
 
     /**
-     * A builder class responsible for creating a RollbackToolRegistry while managing associations
-     * between tools and their corresponding rollback tools.
-     */
-    public class Builder internal constructor() {
-        /**
-         * A map that associates tools with their corresponding rollback tools.
-         *
-         * This map is used to maintain the relationship between a tool and its designated rollback tool,
-         * allowing for rollback actions to be registered and performed as needed. The keys represent tools,
-         * while the associated values represent the rollback tools for each respective key.
-         */
-        private val rollbackToolsMap = mutableMapOf<Tool<*, *>, Tool<*, *>>()
-
-        /**
-         * Registers a rollback relationship between the provided tool and its corresponding rollback tool.
-         * Ensures that the tool is not already defined in the rollback tools map.
-         *
-         * @param tool The primary tool to register.
-         * @param rollbackTool The tool that acts as the rollback counterpart to the provided tool.
-         * @throws IllegalArgumentException If the tool is already defined in the rollbackToolsMap.
-         */
-        public fun <TArgs> registerRollback(tool: Tool<TArgs, *>, rollbackTool: Tool<TArgs, *>) {
-            require(tool.name !in rollbackToolsMap.map { it.key.name }) { "Tool \"${tool.name}\" is already defined" }
-            rollbackToolsMap[tool] = rollbackTool
-        }
-
-        /**
-         * Builds and returns an instance of [RollbackToolRegistry] initialized with the registered rollback tools.
-         *
-         * @return A [RollbackToolRegistry] instance containing the registered tools and their corresponding rollback tools.
-         */
-        internal fun build(): RollbackToolRegistry {
-            return RollbackToolRegistry(rollbackToolsMap)
-        }
-    }
-
-    /**
      * Companion object for the RollbackToolRegistry class.
      * Provides utility methods and predefined registry instances.
      */
     public companion object {
+        /**
+         * Returns a [RollbackToolRegistryBuilder] for [ai.koog.agents.snapshot.feature.RollbackToolRegistry]
+         * */
+        @JvmStatic
+        public fun builder(): RollbackToolRegistryBuilder = RollbackToolRegistryBuilder()
+
         /**
          * Invokes the builder pattern to create and configure an instance of [RollbackToolRegistry].
          *
          * @param init A lambda function used to configure the [Builder] object.
          * @return A fully built instance of [RollbackToolRegistry] configured using the [init] lambda.
          */
-        public operator fun invoke(init: Builder.() -> Unit): RollbackToolRegistry = Builder().apply(init).build()
+        public operator fun invoke(init: RollbackToolRegistryBuilder.() -> Unit): RollbackToolRegistry =
+            RollbackToolRegistryBuilder().apply(init).build()
 
         /**
          * Represents an empty instance of the [RollbackToolRegistry].

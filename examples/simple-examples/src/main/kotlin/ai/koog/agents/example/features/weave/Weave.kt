@@ -32,7 +32,7 @@ fun main() = runBlocking {
 
         val agent = AIAgent(
             promptExecutor = executor,
-            llmModel = OpenAIModels.Reasoning.O4Mini,
+            llmModel = OpenAIModels.Chat.O4Mini,
             systemPrompt = "You are a code assistant. Provide concise code examples."
         ) {
             install(OpenTelemetry) {

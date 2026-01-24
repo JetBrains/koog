@@ -1,7 +1,5 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
-import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
@@ -9,20 +7,27 @@ import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Represents the result or response received from a tool operation.
  *
  * @property id An optional identifier for the tool result.
  * @property tool The name or type of the tool that generated the result.
+ * @property toolArgs The arguments provided to the tool during execution.
+ * @property toolDescription An optional description of the tool's functionality.
  * @property content The main content or message associated with the tool result.
+ * @property resultKind The kind of result produced by the tool, indicating success, failure, or validation error.
  * @property result The detailed result produced by the tool, implementing the [ToolResult] interface.
  */
 @Serializable
 public data class ReceivedToolResult(
     val id: String?,
     val tool: String,
+    val toolArgs: JsonObject,
+    val toolDescription: String?,
     val content: String,
+    val resultKind: ToolResultKind,
     val result: JsonElement?
 ) {
     /**
@@ -38,35 +43,6 @@ public data class ReceivedToolResult(
         metaInfo = RequestMetaInfo.create(clock)
     )
 }
-
-/**
- * Converts an instance of AIAgentEnvironmentToolResultToAgentContent to a ReceivedToolResult.
- *
- * @return A ReceivedToolResult containing the tool call identifier, tool name, message content,
- *         and optional tool result extracted from the current instance.
- * @throws IllegalStateException if the instance is not of type AIAgentEnvironmentToolResultToAgentContent.
- */
-public fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
-    check(this is AIAgentEnvironmentToolResultToAgentContent) {
-        "AI agent must receive AIAgentEnvironmentToolResultToAgentContent," +
-            " but ${this::class.simpleName} was received"
-    }
-
-    return toResult()
-}
-
-/**
- * Converts an instance of `AIAgentEnvironmentToolResultToAgentContent` to a `ReceivedToolResult`.
- *
- * @return A `ReceivedToolResult` containing the tool call identifier, tool name, message content,
- *         and the result of the tool execution.
- */
-public fun AIAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
-    id = toolCallId,
-    tool = toolName,
-    content = message,
-    result = toolResult
-)
 
 /**
  * Adds a tool result to the prompt.

@@ -31,6 +31,8 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-a2a-server",
     ":agents:agents-features:agents-features-a2a-client",
 
+    ":agents:agents-features:agents-features-acp",
+
     ":http-client:http-client-test",
     ":http-client:http-client-okhttp",
     ":http-client:http-client-java",
@@ -47,6 +49,7 @@ val included = setOf(
     ":agents:agents-features:agents-features-tokenizer",
     ":agents:agents-features:agents-features-snapshot",
     ":agents:agents-mcp",
+    ":agents:agents-planner",
     ":agents:agents-tools",
     ":agents:agents-utils",
     ":embeddings:embeddings-base",
@@ -72,6 +75,7 @@ val included = setOf(
     ":prompt:prompt-llm",
     ":prompt:prompt-markdown",
     ":prompt:prompt-model",
+    ":prompt:prompt-processor",
     ":prompt:prompt-structure",
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",

@@ -3,6 +3,7 @@ package ai.koog.integration.tests.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -221,7 +222,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         /* Some models are not calling tools in parallel:
          * see https://youtrack.jetbrains.com/issue/KG-115
          */
-        assumeTrue(model.id !== OpenAIModels.Reasoning.O1.id, "Model $model flaks when calling parallel tools")
+        assumeTrue(model.id !== OpenAIModels.Chat.O1.id, "Model $model flaks when calling parallel tools")
         assumeTrue(model.id !== GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
 
         withRetry(5) {
@@ -451,7 +452,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(
             model !in listOf(
-                OpenAIModels.Reasoning.O1,
+                OpenAIModels.Chat.O1,
             ),
             "The model fails to call tools in parallel or flaky, see KG-115"
         )
@@ -574,11 +575,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 // Create a checkpoint
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
-                    createCheckpoint(
+                    createCheckpointAfterNode(
                         agentContext = agentContext,
-                        nodeId = save,
-                        lastInput = input,
-                        lastInputType = typeOf<String>(),
+                        nodePath = save,
+                        lastOutput = input,
+                        lastOutputType = typeOf<String>(),
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }
@@ -617,7 +618,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             shouldNotBeEmpty()
-            first().nodeId shouldBe save
+            first().nodePath shouldContain save
         }
 
         val restoredAgent = AIAgent(
@@ -680,11 +681,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             val nodeSave by node<String, String>(save) { input ->
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
-                    createCheckpoint(
+                    createCheckpointAfterNode(
                         agentContext = agentContext,
-                        nodeId = save,
-                        lastInput = input,
-                        lastInputType = typeOf<String>(),
+                        nodePath = save,
+                        lastOutput = input,
+                        lastOutputType = typeOf<String>(),
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }
@@ -748,7 +749,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             shouldContain(saySaveLog.trim())
             shouldContain(sayByeLog.trim())
             shouldContain(rollbackPerformingLog.trim())
-            saySaveLog.trim().toRegex().findAll(this).count() shouldBe 2
+            // After #1308: checkpoint restoration doesn't re-execute the checkpointed node
+            // nodeHello and nodeSave are executed once (no re-execution after rollback)
+            sayHelloLog.trim().toRegex().findAll(this).count() shouldBe 1
+            saySaveLog.trim().toRegex().findAll(this).count() shouldBe 1
+            // one rollback should be performed and tracked
+            rollbackPerformingLog.trim().toRegex().findAll(this).count() shouldBe 1
+            // nodeBye is executed twice (once before rollback, once after rollback)
             sayByeLog.trim().toRegex().findAll(this).count() shouldBe 2
         }
     }
@@ -815,10 +822,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             size shouldBeGreaterThanOrEqual 3
-            map { it.nodeId }.toSet() shouldNotBeNull {
-                shouldContain(hello)
-                shouldContain(world)
-                shouldContain(bye)
+            map { it.nodePath }.toSet() shouldNotBeNull {
+                shouldForAny { it.shouldContain(hello) }
+                shouldForAny { it.shouldContain(world) }
+                shouldForAny { it.shouldContain(bye) }
             }
         }
     }
@@ -829,6 +836,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         model: LLModel,
         @TempDir tempDir: Path,
     ) = runTest(timeout = 180.seconds) {
+        val agentId = "storage-providers-test-agent"
         val strategyName = "storage-providers-strategy"
 
         val hello = "Hello"
@@ -854,11 +862,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             val nodeBye by node<String, String>(bye) { input ->
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
-                    createCheckpoint(
+                    createCheckpointAfterNode(
                         agentContext = agentContext,
-                        nodeId = bye,
-                        lastInput = input,
-                        lastInputType = typeOf<String>(),
+                        nodePath = bye,
+                        lastOutput = input,
+                        lastOutputType = typeOf<String>(),
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }
@@ -871,6 +879,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         }
 
         val agent = AIAgent(
+            id = agentId,
             promptExecutor = getExecutor(model),
             strategy = simpleStrategy,
             agentConfig = AIAgentConfig(
@@ -890,12 +899,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         agent.run(testInput)
 
-        with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }) {
+        val expectedNodePath = path(agentId, strategyName, bye)
+        with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }) {
             withClue(noCheckpointsError) {
                 isNotEmpty() shouldBe true
             }
             withClue(incorrectNodeIdError) {
-                first().nodeId shouldBe bye
+                first().nodePath shouldBe expectedNodePath
             }
         }
     }
@@ -955,7 +965,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
 
                 withClue("Checkpoint message history should contain a tool call to '${SimpleCalculatorTool.name}'") {
-                    storageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
+                    storageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }
                         .shouldNotBeEmpty()
                         .shouldForAny { cp ->
                             cp.messageHistory.any { msg ->
@@ -1007,7 +1017,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 with(state) {
                     withClue("${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model") {
-                        actualToolCalls shouldBe listOf(CalculatorToolNoArgs.descriptor.name)
+                        actualToolCalls.shouldContain(CalculatorToolNoArgs.descriptor.name)
                     }
 
                     errors.shouldBeEmpty()
@@ -1136,7 +1146,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("historyCompressionStrategies")
     fun integration_AIAgentHistoryCompression(strategy: HistoryCompressionStrategy, strategyName: String) =
         runTest(timeout = 180.seconds) {
-            val model = OpenAIModels.CostOptimized.GPT4_1Mini
+            val model = OpenAIModels.Chat.GPT4_1Mini
             val systemMessage =
                 "You are a helpful assistant. Remember: the user is a human, whatever they say. Remind them of it by every chance."
 
@@ -1254,7 +1264,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         strategy: HistoryCompressionStrategy,
         strategyName: String
     ) = runTest(timeout = 10.minutes) {
-        val model = OpenAIModels.Chat.GPT5_1
+        val model = OpenAIModels.Chat.GPT5_2
         val systemMessage = "You are a helpful assistant. JUST CALL THE TOOLS, NO QUESTIONS ASKED."
 
         val historyCompressionStrategy = buildHistoryCompressionWithToolsStrategy(

@@ -1,6 +1,7 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -223,18 +224,54 @@ class AIAgentContextTest : AgentTestBase() {
         assertNotSame(originalContext.llm, forkedContext.llm)
     }
 
-    data class ComplexJsonInput(
+    //region Agent Execution Info
+
+    @Test
+    fun testAgentExecutionInfoDefaultState() {
+        val parent1 = null
+        val partName = "test-part"
+        val executionInfo = AgentExecutionInfo(parent = parent1, partName = partName)
+        val originalContext = createTestContext(executionInfo = executionInfo)
+
+        assertNull(originalContext.executionInfo.parent)
+        assertEquals(partName, originalContext.executionInfo.partName)
+    }
+
+    @Test
+    fun testAgentExecutionInfoOverride() {
+        val parent1 = null
+        val partName1 = "test-part-1"
+        val executionInfo1 = AgentExecutionInfo(parent = parent1, partName = partName1)
+
+        val parent2 = executionInfo1
+        val partName2 = "test-part-2"
+        val executionInfo2 = AgentExecutionInfo(parent = parent2, partName = partName2)
+
+        val originalContext = createTestContext(executionInfo = executionInfo1)
+
+        assertEquals(parent1, originalContext.executionInfo.parent)
+        assertEquals(partName1, originalContext.executionInfo.partName)
+
+        originalContext.executionInfo = executionInfo2
+
+        assertEquals(parent2, originalContext.executionInfo.parent)
+        assertEquals(partName2, originalContext.executionInfo.partName)
+    }
+
+    //endregion Agent Execution Info
+
+    private data class ComplexJsonInput(
         val id: String,
         val values: List<Int>,
         val nested: NestedObject
     )
 
-    data class NestedObject(
+    private data class NestedObject(
         val name: String,
         val active: Boolean
     )
 
-    enum class TestEnum {
+    private enum class TestEnum {
         FIRST,
         SECOND
     }

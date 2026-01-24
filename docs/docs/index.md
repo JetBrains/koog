@@ -43,13 +43,19 @@ You can customize agent capabilities with a modular feature system and deploy yo
 
     Create and run agents that handle complex workflows with custom strategies
 
+-   :material-state-machine:{ .lg .middle } [**Planner agents**](planner-agents.md)
+
+    ---
+
+    Create and run agents that iteratively build and execute plans
+
 </div>
 
 ## Core functionality
 
 <div class="grid cards" markdown>
 
--   :material-chat-processing-outline:{ .lg .middle } [**Prompts**](prompt-api.md)
+-   :material-chat-processing-outline:{ .lg .middle } [**Prompts**](prompts/index.md)
 
     ---
 

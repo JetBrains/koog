@@ -76,7 +76,7 @@ class ToolSchemaExecutorIntegrationTest {
                     ),
                     "Invalid 'tools[0].function.name': empty string. Expected a string with minimum length 1, but got an empty string instead."
                 ),
-                // Todo uncomment when KG-185 is fixed
+                // Uncomment when KG-185 is fixed
                 /*Arguments.of(
                     ToolDescriptor(
                         name = "test_tool",
@@ -154,7 +154,7 @@ class ToolSchemaExecutorIntegrationTest {
                 shouldNotBeEmpty()
                 with(Json.decodeFromString<FileOperation>(joinToString("\n") { it.content })) {
                     filePath shouldBe "hello.txt"
-                    content shouldBe "Hello, World!"
+                    content.trim() shouldBe "Hello, World!"
                 }
             }
         }

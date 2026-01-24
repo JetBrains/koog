@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequest
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequestSerializer
@@ -19,6 +20,7 @@ import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResul
 import ai.koog.prompt.executor.clients.mistralai.models.MistralModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
@@ -34,6 +36,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 
 /**
@@ -64,13 +67,15 @@ public open class MistralAILLMClient(
     apiKey: String,
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    clock: Clock = Clock.System
+    clock: Clock = Clock.System,
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
     apiKey = apiKey,
     settings = settings,
     baseClient = baseClient,
     clock = clock,
-    logger = staticLogger
+    logger = staticLogger,
+    toolsConverter = toolsConverter,
 ),
     LLMEmbeddingProvider {
 
@@ -182,16 +187,27 @@ public open class MistralAILLMClient(
 
         val request = MistralAIEmbeddingRequest(model = model.id, input = text)
 
-        val mistralAIResponse = httpClient.post(
-            path = settings.embeddingsPath,
-            request = request,
-            requestBodyType = MistralAIEmbeddingRequest::class,
-            responseType = MistralAIEmbeddingResponse::class
-        )
+        val mistralAIResponse = try {
+            httpClient.post(
+                path = settings.embeddingsPath,
+                request = request,
+                requestBodyType = MistralAIEmbeddingRequest::class,
+                responseType = MistralAIEmbeddingResponse::class
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
 
         return mistralAIResponse.data.firstOrNull()?.embedding ?: run {
-            logger.error { "Empty data in MistralAI embedding response" }
-            error("Empty data in MistralAI embedding response")
+            val exception = LLMClientException(clientName, "Empty data in MistralAI embedding response")
+            logger.error(exception) { exception.message }
+            throw exception
         }
     }
 
@@ -237,16 +253,27 @@ public open class MistralAILLMClient(
 
         val request = MistralAIModerationRequest(model = model.id, input = input)
 
-        val response = httpClient.post(
-            path = settings.moderationPath,
-            request = request,
-            requestBodyType = MistralAIModerationRequest::class,
-            responseType = MistralAIModerationResponse::class
-        )
+        val response = try {
+            httpClient.post(
+                path = settings.moderationPath,
+                request = request,
+                requestBodyType = MistralAIModerationRequest::class,
+                responseType = MistralAIModerationResponse::class
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
 
         val result = response.results.firstOrNull() ?: run {
-            logger.error { "Empty results in MistralAI moderation response" }
-            error("Empty results in MistralAI moderation response")
+            val exception = LLMClientException(clientName, "Empty results in MistralAI moderation response")
+            logger.error(exception) { exception.message }
+            throw exception
         }
 
         return result.toModerationResult()

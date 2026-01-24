@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.extension
 
+import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
 import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
@@ -11,6 +12,17 @@ import io.opentelemetry.api.trace.StatusCode
 internal fun Span.setSpanStatus(endStatus: SpanEndStatus? = null) {
     val statusCode = endStatus?.code ?: StatusCode.OK
     val statusDescription = endStatus?.description ?: ""
+    this.setStatus(statusCode, statusDescription)
+}
+
+internal fun Span.setSpanStatus(error: Throwable? = null) {
+    if (error == null) {
+        this.setStatus(StatusCode.OK)
+        return
+    }
+
+    val statusCode = StatusCode.ERROR
+    val statusDescription = error.message
     this.setStatus(statusCode, statusDescription)
 }
 
@@ -37,3 +49,17 @@ internal fun Span.setEvents(events: List<GenAIAgentEvent>, verbose: Boolean) {
         addEvent(event.name, attributes.toSdkAttributes(verbose))
     }
 }
+
+internal fun Throwable?.toSpanEndStatus(): SpanEndStatus =
+    if (this == null) {
+        SpanEndStatus(code = StatusCode.OK)
+    } else {
+        SpanEndStatus(code = StatusCode.ERROR, description = this.message)
+    }
+
+internal fun AIAgentError?.toSpanEndStatus(): SpanEndStatus =
+    if (this == null) {
+        SpanEndStatus(code = StatusCode.OK)
+    } else {
+        SpanEndStatus(code = StatusCode.ERROR, description = this.message)
+    }

@@ -4,8 +4,6 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.ext.tool.file.patch.FilePatch
 import ai.koog.agents.ext.tool.file.patch.PatchApplyResult
@@ -17,7 +15,6 @@ import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -30,7 +27,11 @@ import kotlinx.serialization.Serializable
  */
 public class EditFileTool<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>
-) : Tool<EditFileTool.Args, EditFileTool.Result>() {
+) : Tool<EditFileTool.Args, EditFileTool.Result>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Result.serializer(),
+    descriptor = descriptor
+) {
 
     /**
      * Arguments required to perform a single edit operation on a file.
@@ -48,32 +49,11 @@ public class EditFileTool<Path>(
 
     /**
      * Result of applying the edit patch to the target file.
-     *
-     * @property applied True when the patch was successfully applied and written.
      */
     @Serializable
     public data class Result(
-        private val patchApplyResult: PatchApplyResult
-    ) : ToolResult.TextSerializable() {
-        @Serializable
-        val applied: Boolean = patchApplyResult.isSuccess()
-
-        override fun textForLLM(): String = markdown {
-            if (patchApplyResult.isSuccess()) {
-                line {
-                    bold("Successfully").text(" edited file (patch applied)")
-                }
-            } else {
-                line {
-                    text("File was ")
-                        .bold("not")
-                        .text(" modified (patch application failed: ${patchApplyResult.reason})")
-                }
-            }
-        }
-
-        override fun toString(): String = textForLLM()
-    }
+        val patchApplyResult: PatchApplyResult
+    )
 
     /**
      * Descriptor for the edit file tool.
@@ -225,16 +205,6 @@ public class EditFileTool<Path>(
         )
     }
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer<Result>()
-
-    override val name: String = EditFileTool.toolName
-
-    override val description: String = EditFileTool.toolDescription
-
-    override val descriptor: ToolDescriptor = EditFileTool.descriptor
-
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
         if (fs.exists(path)) {
@@ -255,5 +225,21 @@ public class EditFileTool<Path>(
             logger.info { "Patch was NOT applied because of: ${patchApplyResult.reason}" }
         }
         return Result(patchApplyResult)
+    }
+
+    override fun encodeResultToString(result: Result): String = with(result) {
+        markdown {
+            if (patchApplyResult.isSuccess()) {
+                line {
+                    bold("Successfully").text(" edited file (patch applied)")
+                }
+            } else {
+                line {
+                    text("File was ")
+                        .bold("not")
+                        .text(" modified (patch application failed: ${patchApplyResult.reason})")
+                }
+            }
+        }
     }
 }

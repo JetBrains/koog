@@ -3,7 +3,7 @@ package ai.koog.prompt.executor.ollama.client
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
+import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,7 +62,7 @@ class JSONSchemaFunctionConverterTest {
             ),
         )
 
-        val generatedSchema = json.encodeToString(toolDescriptor.toJSONSchema())
+        val generatedSchema = json.encodeToString(OllamaToolDescriptorSchemaGenerator().generate(toolDescriptor))
 
         val expectedSchema = """
         {
@@ -132,7 +132,7 @@ class JSONSchemaFunctionConverterTest {
             )
         )
 
-        val generatedSchema = json.encodeToString(toolDescriptor.toJSONSchema())
+        val generatedSchema = json.encodeToString(OllamaToolDescriptorSchemaGenerator().generate(toolDescriptor))
 
         val expectedSchema = """
         {
@@ -173,7 +173,7 @@ class JSONSchemaFunctionConverterTest {
             )
         )
 
-        val generatedSchema = json.encodeToString(toolDescriptor.toJSONSchema())
+        val generatedSchema = json.encodeToString(OllamaToolDescriptorSchemaGenerator().generate(toolDescriptor))
 
         val expectedSchema = """
         {

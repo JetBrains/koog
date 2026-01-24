@@ -3,12 +3,12 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
-import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
+import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.exception.AIAgentStuckInTheNodeException
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
@@ -16,6 +16,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -23,11 +24,9 @@ import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
@@ -42,6 +41,7 @@ import kotlin.uuid.Uuid
  * @param toolSelectionStrategy Strategy determining which tools should be available during this subgraph's execution.
  * @param llmModel Optional [LLModel] override for the subgraph execution.
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
+ * @param responseProcessor Optional [ResponseProcessor] override for the subgraph execution.
  */
 public open class AIAgentSubgraph<TInput, TOutput>(
     override val name: String,
@@ -50,6 +50,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
+    private val responseProcessor: ResponseProcessor? = null,
 ) : AIAgentNodeBase<TInput, TOutput>(), ExecutionPointNode {
     override val inputType: KType = start.inputType
     override val outputType: KType = finish.outputType
@@ -157,51 +158,57 @@ public open class AIAgentSubgraph<TInput, TOutput>(
      */
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class, ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
-        withContext(NodeInfoContextElement(Uuid.random().toString(), getNodeInfoElement()?.id, name, input, inputType)) {
+        context.with { executionInfo, eventId ->
             val newTools = selectTools(context)
 
             // Copy inner context with new tools, model and LLM params.
-            val innerContext = with(context) {
-                copy(
-                    llm = llm.copy(
-                        tools = newTools,
-                        model = llmModel ?: llm.model,
-                        prompt = llm.prompt.copy(params = llmParams ?: llm.prompt.params)
-                    )
-                )
-            }
+            val initialLLMContext = context.llm
 
-            runIfNonRootContext(context) {
-                pipeline.onSubgraphExecutionStarting(this@AIAgentSubgraph, innerContext, input, inputType)
+            context.replace(
+                context.copy(
+                    llm = context.llm.copy(
+                        tools = newTools,
+                        model = llmModel ?: context.llm.model,
+                        prompt = context.llm.prompt.copy(params = llmParams ?: context.llm.prompt.params),
+                        responseProcessor = responseProcessor ?: context.llm.responseProcessor,
+                    ),
+                ),
+            )
+
+            runIfNotStrategy(context) {
+                pipeline.onSubgraphExecutionStarting(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType)
             }
 
             // Execute the subgraph with an inner context and get the result and updated prompt.
             val result = try {
-                executeWithInnerContext(innerContext, input)
+                executeWithInnerContext(context, input)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 logger.error(e) { "Exception during executing subgraph '$name': ${e.message}" }
-                runIfNonRootContext(context) {
-                    pipeline.onSubgraphExecutionFailed(this@AIAgentSubgraph, context, input, inputType, e)
+                runIfNotStrategy(context) {
+                    pipeline.onSubgraphExecutionFailed(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, e)
                 }
                 throw e
             }
 
-            // Restore original LLM params on the new prompt.
-            val newPrompt = innerContext.llm.readSession {
-                prompt.copy(params = context.llm.prompt.params)
-            }
-            context.llm.writeSession { prompt = newPrompt }
+            // Restore original LLM context with updated message history.
+            context.replace(
+                context.copy(
+                    llm = initialLLMContext.copy(
+                        prompt = context.llm.prompt.copy(params = initialLLMContext.prompt.params)
+                    ),
+                ),
+            )
 
-            val innerForcedData = innerContext.getAgentContextData()
+            val innerForcedData = context.getAgentContextData()
 
             if (innerForcedData != null) {
                 context.store(innerForcedData)
             }
 
-            runIfNonRootContext(context) {
-                pipeline.onSubgraphExecutionCompleted(this@AIAgentSubgraph, innerContext, input, inputType, result, outputType)
+            runIfNotStrategy(context) {
+                pipeline.onSubgraphExecutionCompleted(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, result, outputType)
             }
 
             result
@@ -209,7 +216,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
-        logger.info { formatLog(context, "Executing subgraph '$name'") }
+        logger.debug { formatLog(context, "Executing subgraph '$name'") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
@@ -279,14 +286,53 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     }
 
     /**
-     * Executes the specified action within a non-root context of the agent's graph structure.
-     * This method ensures that the action is only executed if the provided context has a parent context,
-     * effectively skipping execution for root contexts.
+     * Executes the specified action for a case when executing a subgraph logic and not
+     * specifically for strategy.
+     *
+     * Strategy is a special case of subgraph execution. Strategy execution wraps the subgraph [execute] method
+     * with its specific implementation. This method ensures that the action we run is only
+     * executed the current subgraph is not a strategy.
+     *
+     * The method is used for reporting subgraph-only agent events in the [ai.koog.agents.core.feature.pipeline.AIAgentPipeline]
      */
     @OptIn(InternalAgentsApi::class)
-    private suspend fun runIfNonRootContext(context: AIAgentGraphContextBase, action: suspend AIAgentGraphContextBase.() -> Unit) {
-        if (context.parentContext == null) return
+    private inline fun runIfNotStrategy(
+        context: AIAgentGraphContextBase,
+        action: AIAgentGraphContextBase.() -> Unit
+    ) {
+        // Check the agent execution path to recognize a strategy.
+        // Ignore the strategy as it is handled separately in the [AIAgentGraphStrategy] class.
+        // Strategy execution path: Agent | Run | Strategy
+        val isStrategy = id == context.strategyName
+
+        if (isStrategy) {
+            return
+        }
+
         action(context)
+    }
+
+    /**
+     * Use this special wrapper to execute a block of code with a modified execution context for cases when
+     * performing a direct subgraph execution.
+     *
+     * Strategy is a special case of subgraph execution. Strategy execution wraps the subgraph [execute] method
+     * with its specific implementation. This method ensures that the action we run is only
+     * executed the current subgraph is not a strategy.
+     */
+    @OptIn(InternalAgentsApi::class)
+    private inline fun <T> AIAgentContext.with(
+        block: (executionInfo: AgentExecutionInfo, eventId: String) -> T
+    ): T {
+        // Check the agent execution path to recognize a strategy.
+        // Ignore the strategy as it is handled separately in the [AIAgentGraphStrategy] class.
+        // Strategy execution path: Agent | Run | Strategy
+        val isStrategy = id == strategyName
+        return if (isStrategy) {
+            this.with(this.executionInfo, block)
+        } else {
+            this.with(id, block)
+        }
     }
 
     private fun formatLog(context: AIAgentContext, message: String): String =

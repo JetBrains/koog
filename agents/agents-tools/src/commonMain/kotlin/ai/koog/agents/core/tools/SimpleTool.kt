@@ -8,23 +8,15 @@ import kotlinx.serialization.builtins.serializer
  *
  * @param TArgs The type of arguments the tool accepts.
  */
-public abstract class SimpleTool<TArgs> : Tool<TArgs, String>() {
+public abstract class SimpleTool<TArgs>(
+    argsSerializer: KSerializer<TArgs>,
+    name: String,
+    description: String,
+) : Tool<TArgs, String>(
+    argsSerializer = argsSerializer,
+    resultSerializer = String.serializer(),
+    name = name,
+    description = description,
+) {
     override fun encodeResultToString(result: String): String = result
-
-    /**
-     * Deprecated in favor of `String`.
-     */
-    @Deprecated("Please use the `encodeResultToString(result: String): String` API instead")
-    public fun encodeResultToString(result: ToolResult.Text): String = result.text
-    override val resultSerializer: KSerializer<String> = String.serializer()
-
-    final override suspend fun execute(args: TArgs): String = doExecute(args)
-
-    /**
-     * Executes the tool's main functionality using the provided arguments and produces a textual result.
-     *
-     * @param args The arguments of type [TArgs] required to perform the execution.
-     * @return A string representing the result of the execution.
-     */
-    public abstract suspend fun doExecute(args: TArgs): String
 }

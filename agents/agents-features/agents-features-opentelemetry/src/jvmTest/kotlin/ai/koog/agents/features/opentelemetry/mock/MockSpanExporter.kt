@@ -1,8 +1,13 @@
 package ai.koog.agents.features.opentelemetry.mock
 
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.sdk.common.CompletableResultCode
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SpanExporter
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * A mock span exporter that captures spans created by the OpenTelemetry feature.
@@ -12,30 +17,43 @@ import io.opentelemetry.sdk.trace.export.SpanExporter
  */
 internal class MockSpanExporter : SpanExporter {
 
+    companion object {
+        private val createAgentSpanOperationAttribute =
+            SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CREATE_AGENT)
+    }
+
     private val _collectedSpans = mutableListOf<SpanData>()
 
     val collectedSpans: List<SpanData>
         get() = _collectedSpans
 
-    private val _runIds = mutableListOf<String>()
-
     val runIds: List<String>
-        get() = _runIds
+        get() {
+            return collectedSpans.mapNotNull { span ->
+                span.attributes[AttributeKey.stringKey("gen_ai.conversation.id")]
+            }.distinct()
+        }
 
     val lastRunId: String
-        get() = _runIds.last()
+        get() = runIds.last()
+
+    private val _isCollected: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    val isCollected: StateFlow<Boolean>
+        get() = _isCollected.asStateFlow()
 
     override fun export(spans: MutableCollection<SpanData>): CompletableResultCode {
         spans.forEach { span ->
-            _collectedSpans.add(0, span)
-        }
+            _collectedSpans.add(span)
 
-        // Workaround to get runId Uuid from the span name
-        val runSpan = spans.find { it.name.startsWith("run.", true) }
-        if (runSpan != null) {
-            val runId = runSpan.name.removePrefix("run.")
-            if (!_runIds.contains(runId)) {
-                _runIds.add(runId)
+            val isCreateAgentSpan = span.attributes.asMap().any { (key, value) ->
+                // Note! This code will wait until the first CreateAgentSpan is collected.
+                //  If the test verifies multiple CreateAgentSpans, this check will give an unexpected result.
+                key.key == createAgentSpanOperationAttribute.key && value == createAgentSpanOperationAttribute.value
+            }
+
+            if (isCreateAgentSpan) {
+                _isCollected.value = true
             }
         }
 

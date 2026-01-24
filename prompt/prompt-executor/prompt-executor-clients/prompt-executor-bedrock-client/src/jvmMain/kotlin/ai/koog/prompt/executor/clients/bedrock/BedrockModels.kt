@@ -145,7 +145,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_3.withoutMultimodalCapabilities(),
+        AnthropicModels.Opus_3,
         "anthropic.claude-3-opus-20240229-v1:0",
     ).effectiveModel
 
@@ -162,14 +162,12 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude4Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4.withoutMultimodalCapabilities(),
+        AnthropicModels.Opus_4,
         "anthropic.claude-opus-4-20250514-v1:0",
     ).effectiveModel
 
     /**
-     * Claude 4.1 Opus - Anthropic's most capable model
-     *
-     * This model sets new standards in:
+     * Claude 4.1 Opus sets new standards in:
      * - Complex reasoning and advanced coding
      * - Autonomous management of complex, multi-step tasks
      * - Extended thinking for deeper reasoning
@@ -179,8 +177,20 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude41Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4_1.withoutMultimodalCapabilities(),
+        AnthropicModels.Opus_4_1,
         "anthropic.claude-opus-4-1-20250805-v1:0",
+    ).effectiveModel
+
+    /**
+     * Claude 4.5 Opus - Anthropic's intelligent, efficient, and the best model in the world for coding, agents,
+     * and computer use.
+     * It’s also meaningfully better at everyday tasks like deep research and working with slides and spreadsheets.
+     * Opus 4.5 is a step forward in what AI systems can do, and a preview of larger changes to how work gets done.
+     *
+     */
+    public val AnthropicClaude45Opus: LLModel = BedrockModel(
+        AnthropicModels.Opus_4_5,
+        "anthropic.claude-opus-4-5-20251101-v1:0",
     ).effectiveModel
 
     /**
@@ -196,7 +206,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Precise instruction following
      */
     public val AnthropicClaude4Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4.withoutMultimodalCapabilities(),
+        AnthropicModels.Sonnet_4,
         "anthropic.claude-sonnet-4-20250514-v1:0",
     ).effectiveModel
 
@@ -212,7 +222,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Optimized for both quality and efficiency
      */
     public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Sonnet_4_5,
         "anthropic.claude-sonnet-4-5-20250929-v1:0",
     ).effectiveModel
 
@@ -225,7 +235,7 @@ public object BedrockModels : LLModelDefinitions {
      * and high-volume user experiences.
      */
     public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_4_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Haiku_4_5,
         "anthropic.claude-haiku-4-5-20251001-v1:0",
     ).effectiveModel
 
@@ -261,7 +271,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Multimodal understanding with vision
      */
     public val AnthropicClaude35SonnetV2: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_3_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Sonnet_3_5,
         "anthropic.claude-3-5-sonnet-20241022-v2:0",
     ).effectiveModel
 
@@ -278,7 +288,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Processing large volumes of data
      */
     public val AnthropicClaude35Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Haiku_3_5,
         "anthropic.claude-3-5-haiku-20241022-v1:0",
     ).effectiveModel
 
@@ -293,7 +303,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3.withoutMultimodalCapabilities(),
+        AnthropicModels.Haiku_3,
         "anthropic.claude-3-haiku-20240307-v1:0",
     ).effectiveModel
 
@@ -652,7 +662,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "meta.llama3-3-70b-instruct-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = standardCapabilities + toolCapabilities,
             contextLength = 128_000,
         ),
     ).effectiveModel
@@ -730,20 +740,6 @@ public object BedrockModels : LLModelDefinitions {
             inferenceProfilePrefix = null
         ).effectiveModel
     }
-}
-
-/**
- * Multimodality is currently not supported by Bedrock client.
- * This is a helper function to copy existing model definitions while removing multimodal capabilities.
- */
-private fun LLModel.withoutMultimodalCapabilities(): LLModel {
-    return copy(
-        capabilities = capabilities.filter {
-            it !is LLMCapability.Vision &&
-                it !is LLMCapability.Audio &&
-                it !is LLMCapability.Document
-        }
-    )
 }
 
 /**

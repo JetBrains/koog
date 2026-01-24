@@ -28,15 +28,11 @@ object MediaTestUtils {
             }
 
             MediaTestScenarios.ImageTestScenario.LARGE_IMAGE -> {
-                testResourcesDir.resolve("large.jpg")
+                testResourcesDir.resolve("large.jpeg")
             }
 
             MediaTestScenarios.ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                testResourcesDir.resolve("large_5.jpg")
-            }
-
-            MediaTestScenarios.ImageTestScenario.SMALL_IMAGE -> {
-                testResourcesDir.resolve("small.png")
+                testResourcesDir.resolve("large_5.jpeg")
             }
         }
     }

@@ -25,8 +25,8 @@ kotlin {
             dependencies {
                 api(project.dependencies.platform(libs.opentelemetry.bom))
                 api(libs.opentelemetry.sdk)
-                implementation(libs.opentelemetry.exporter.otlp)
-                implementation(libs.opentelemetry.exporter.logging)
+                api(libs.opentelemetry.exporter.otlp)
+                api(libs.opentelemetry.exporter.logging)
             }
 
             resources.srcDir(layout.buildDirectory.dir("generated/resources"))

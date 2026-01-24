@@ -43,28 +43,76 @@ The documentation is built using [MkDocs](https://www.mkdocs.org/) with the Mate
 
 The documentation is available at [https://docs.koog.ai/](https://docs.koog.ai/).
 
-### Docs Code Snippets Verification
+### Content Reuse
 
-To ensure code snippets in documentation are compilable and up-to-date with the latest framework version, the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) library is used.
+The Koog documentation sources include content that is reused in multiple places in published documentation. For
+example, in the **Provider-specific parameters** section in `llm-parameters.md`, each table row for each provider is a
+reusable content snippet that looks similar to the following one: 
 
-Knit provides a Gradle plugin that extracts specially annotated Kotlin code snippets from Markdown files and generates Kotlin source files.
+```text
+--8<--
+llm-parameters-snippets.md:heading
+llm-parameters-snippets.md:topP
+llm-parameters-snippets.md:topK
+llm-parameters-snippets.md:thinkingConfig
+--8<--
+```
 
-#### How to fix docs?
+To create or update reusable content, follow the steps below:
 
-1. Run `:docs:knitAssemble` task to clean old knit-generated files, extract fresh code snippets to **/src/main/kotlin**, and assemble the docs project:
+1. Create a new Markdown file in the `docs/snippets` directory. For updates to existing files, navigate to the file
+that includes the content snippet you want to update.
+2. Add or edit the content snippet. A snippet that includes a block of content has the following structure:
+    ```text
+    # --8<-- [start:snippetName]
+    Snippet content. Can also include **Markdown formatting**.
+    # --8<-- [end:snippetName]
+    ```
+
+   > [!NOTE]
+   > As this type of content is usually reused in multiple places, note that updates to existing snippets will be
+   > reflected in all places where they are used. Before making updates, ensure that the changes are appropriate for
+   > all uses of the snippet.
+       
+3. Reference the content snippet in the documentation source file where you want to use it:
+    ```text
+    --8<--
+    snippet-file-name.md:snippetName
+    snippet-file-name.md:otherSnippetName
+    --8<--
+    ```
+   
+    When including a single snippet, you can also use the single-line syntax:
+
+    ```text
+    --8<-- "snippet-file-name.md:snippetName"
+    ```
+
+The content reuse feature is powered by the `pymdownx.snippets` extension, which is enabled and configured in
+`mkdocs.yml` under `plugins`. For more information, see the extension [documentation](https://facelessuser.github.io/pymdown-extensions/extensions/snippets/).
+
+### Docs Code Samples Verification
+
+To ensure code samples in documentation are compilable and up-to-date with the latest framework version, the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) library is used.
+
+Knit provides a Gradle plugin that extracts specially annotated Kotlin code samples from Markdown files and generates Kotlin source files.
+
+#### How to fix code samples in the docs?
+
+1. Run `:docs:knitAssemble` task to clean old knit-generated files, extract fresh code samples to **/src/main/kotlin**, and assemble the docs project:
     ```
     ./gradlew :docs:knitAssemble
     ```
 2. Navigate to the file with the compilation error `example-[md-file-name]-[index].kt`.
 3. Fix the error in this file.
-4. Navigate to the code snippet in Markdown `md-file-name.md` by searching `<!--- KNIT example-[md-file-name]-[index].kt` -->`.
-5. Update the code snippet to reflect the changes in ***.kt** file:
+4. Navigate to the code sample in Markdown `md-file-name.md` by searching `<!--- KNIT example-[md-file-name]-[index].kt` -->`.
+5. Update the code sample to reflect the changes in ***.kt** file:
    * Update dependencies (usually they are provided in the `<!--- INCLUDE -->` section).
    * Edit code (do not forget about tabulation when you just copy and paste from the ***.kt** file).
 
-#### How to annotate docs?
+#### How to annotate code samples in the docs?
 
-To annotate new Kotlin code snippets in Markdown and make them compilable:
+To annotate new Kotlin code samples in Markdown and make them compilable:
 
 1. Put an example annotation comment (`<!--- KNIT example-[md-file-name]-01.kt -->`) after every code block. 
 You do not need to put correct indexes, just set the `01` for each example,
@@ -101,10 +149,10 @@ use the include comment `<!--- INCLUDE ... -->` for prefix, and the suffix comme
         <!--- KNIT example-[md-file-name]-01.kt -->
     ```
 
-For more information, follow the examples in the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) repository or refer to already annotated code snippets in the documentation.
+For more information, follow the examples in the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) repository or refer to already annotated code samples in the documentation.
 
 > [!NOTE]
-> If your documentation contains instructions with code snippets,
+> If your documentation contains instructions with code samples,
 > use manual numbering (for example, `1) 2) 3)`) instead of Markdown built-in numbered lists.
 > This ensures compatibility with the KNIT tool, as KNIT annotations must remain unindented (starting at column 0) and cannot be nested within numbered Markdown lists.
 >

@@ -1,7 +1,10 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
@@ -35,7 +38,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * ```
  * handleEvents {
  *     onToolCallStarting { eventContext ->
- *         println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
+ *         println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
  *     }
  *
  *     onAgentCompleted { eventContext ->
@@ -201,7 +204,7 @@ public class EventHandler {
  * handleEvents {
  *     // Log when tools are called
  *     onToolCallStarting { eventContext ->
- *         println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
+ *         println("Tool called: ${eventContext.toolName} with args: ${eventContext.toolArgs}")
  *     }
  *
  *     // Handle errors

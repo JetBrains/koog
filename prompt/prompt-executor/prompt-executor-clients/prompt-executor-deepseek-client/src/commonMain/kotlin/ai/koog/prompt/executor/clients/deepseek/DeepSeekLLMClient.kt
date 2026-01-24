@@ -11,7 +11,10 @@ import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStr
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.llm.LLMProvider
@@ -22,6 +25,7 @@ import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmOverloads
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -46,17 +50,19 @@ public class DeepSeekClientSettings(
  * defaults to "https://api.deepseek.com" and 900s
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
-public class DeepSeekLLMClient(
+public class DeepSeekLLMClient @JvmOverloads constructor(
     apiKey: String,
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    clock: Clock = Clock.System
+    clock: Clock = Clock.System,
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
-    apiKey,
-    settings,
-    baseClient,
-    clock,
-    staticLogger
+    apiKey = apiKey,
+    settings = settings,
+    baseClient = baseClient,
+    clock = clock,
+    logger = staticLogger,
+    toolsConverter = toolsConverter
 ) {
 
     private companion object {
@@ -89,8 +95,16 @@ public class DeepSeekLLMClient(
         val deepSeekParams = params.toDeepSeekParams()
         val responseFormat = createResponseFormat(params.schema, model)
 
+        val preparedMessages = if (params.schema != null) {
+            // Add a message having the word `JSON` explicitly
+            // it is required by the deepseek api for structured output
+            messages + OpenAIMessage.Assistant(Content.Text("Respond with JSON"))
+        } else {
+            messages
+        }
+
         val request = DeepSeekChatCompletionRequest(
-            messages = messages,
+            messages = preparedMessages,
             model = model.id,
             frequencyPenalty = deepSeekParams.frequencyPenalty,
             logprobs = deepSeekParams.logprobs,
@@ -140,11 +154,28 @@ public class DeepSeekLLMClient(
         }
     }
 
+    override fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
+        return schema?.let {
+            require(it.capability in model.capabilities) {
+                "Model ${model.id} does not support structured output schema ${it.name}"
+            }
+            when (it) {
+                is LLMParams.Schema.JSON -> OpenAIResponseFormat.JsonObject()
+            }
+        }
+    }
+
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by DeepSeek API" }
         throw UnsupportedOperationException("Moderation is not supported by DeepSeek API.")
     }
 
+    /**
+     * Fetches a list of available model identifiers from the DeepSeek service.
+     * https://api-docs.deepseek.com/api/list-models
+     *
+     * @return A list of string identifiers representing the available models.
+     */
     public override suspend fun models(): List<String> {
         logger.debug { "Fetching available models from DeepSeek" }
 

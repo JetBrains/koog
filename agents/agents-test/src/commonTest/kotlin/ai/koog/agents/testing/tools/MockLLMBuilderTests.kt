@@ -6,7 +6,6 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
 import kotlin.test.Test
@@ -18,15 +17,14 @@ import kotlin.test.assertTrue
 class MockLLMBuilderTests {
 
     // Sample tool for testing
-    private object TestTool : Tool<TestTool.Args, String>() {
+    private object TestTool : Tool<TestTool.Args, String>(
+        argsSerializer = serializer<Args>(),
+        resultSerializer = serializer<String>(),
+        name = "test_tool",
+        description = "A test tool for testing"
+    ) {
         @Serializable
         data class Args(val input: String)
-
-        override val argsSerializer: KSerializer<Args> = serializer()
-        override val resultSerializer: KSerializer<String> = serializer()
-
-        override val name: String = "test_tool"
-        override val description: String = "A test tool for testing"
 
         override suspend fun execute(args: Args): String =
             "Executed with: ${args.input}"

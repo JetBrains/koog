@@ -100,6 +100,11 @@ Features in the Koog ecosystem consume standardized Feature Events emitted by ag
   - NodeExecutionCompletedEvent
   - NodeExecutionFailedEvent
 
+- Subgraph execution events:
+  - SubgraphExecutionStartingEvent
+  - SubgraphExecutionCompletedEvent
+  - SubgraphExecutionFailedEvent
+
 - LLM call events:
   - LLMCallStartingEvent
   - LLMCallCompletedEvent
@@ -111,9 +116,9 @@ Features in the Koog ecosystem consume standardized Feature Events emitted by ag
   - LLMStreamingCompletedEvent
 
 - Tool execution events:
-  - ToolExecutionStartingEvent
+  - ToolCallStartingEvent
   - ToolValidationFailedEvent
-  - ToolExecutionFailedEvent
-  - ToolExecutionCompletedEvent
+  - ToolCallFailedEvent
+  - ToolCallCompletedEvent
 
 These events are emitted by the agents-core runtime and consumed by features such as Tracing, Debugger, and EventHandler to enable logging, tracing, monitoring, and remote inspection.

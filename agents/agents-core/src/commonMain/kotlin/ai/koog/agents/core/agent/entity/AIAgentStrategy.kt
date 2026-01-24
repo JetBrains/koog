@@ -1,3 +1,5 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -14,7 +16,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
  * @param TOutput The type of output data that the strategy will generate.
  * @param TContext The type of context in which the strategy is executed, extending [AIAgentContext].
  */
-public interface AIAgentStrategy<TInput, TOutput, TContext : AIAgentContext> {
+public expect interface AIAgentStrategy<TInput, TOutput, TContext : AIAgentContext> {
     /**
      * The name of the AI agent strategy.
      *

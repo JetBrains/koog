@@ -1,177 +1,161 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
-import ai.koog.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
-import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
-import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
-import ai.koog.agents.core.model.message.AgentToolCallToEnvironmentContent
-import ai.koog.agents.core.model.message.AgentToolCallsToEnvironmentMessage
-import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMessage
-import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
+import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KLogger
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.supervisorScope
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlin.coroutines.cancellation.CancellationException
 
-internal class GenericAgentEnvironment(
+/**
+ * Represents base agent environment with generic abstractions.
+ */
+public class GenericAgentEnvironment(
     private val agentId: String,
-    private val strategyId: String,
     private val logger: KLogger,
     private val toolRegistry: ToolRegistry,
-    private val pipeline: AIAgentPipeline
 ) : AIAgentEnvironment {
 
-    override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-        val agentRunInfo = getAgentRunInfoElementOrThrow()
+    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
         logger.info {
-            formatLog(
-                agentRunInfo.agentId,
-                agentRunInfo.runId,
-                "Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]"
-            )
+            formatLog("Executing tool (name: ${toolCall.tool}, args: ${toolCall.contentJsonResult.getOrElse { "Failed to parse tool arguments: ${it.message}" }})")
         }
 
-        val message = AgentToolCallsToEnvironmentMessage(
-            runId = agentRunInfo.runId,
-            content = toolCalls.map { call ->
-                AgentToolCallToEnvironmentContent(
-                    agentId = agentId,
-                    runId = agentRunInfo.runId,
-                    toolCallId = call.id,
-                    toolName = call.tool,
-                    toolArgs = call.contentJson
-                )
-            }
-        )
+        val environmentToolResult = processToolCall(toolCall)
 
-        val results = processToolCallMultiple(message).mapToToolResult()
         logger.debug {
-            "Received results from tools call (" +
-                "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
-                "results: [${results.joinToString(", ") { it.resultString() }}])"
+            formatLog("Received tool result (\ntool: ${toolCall.tool},\nresult: ${environmentToolResult.result},\ncontent: ${environmentToolResult.content}\n)")
         }
 
-        return results
+        return environmentToolResult
     }
 
-    private fun ReceivedToolResult.resultString(): String =
-        toolRegistry.tools.firstOrNull { it.name == tool }?.encodeResultToStringUnsafe(result) ?: "null"
-
     override suspend fun reportProblem(exception: Throwable) {
-        val agentRunInfo = getAgentRunInfoElementOrThrow()
-
         logger.error(exception) {
-            formatLog(agentRunInfo.agentId, agentRunInfo.runId, "Reporting problem: ${exception.message}")
+            formatLog("Agent report a problem: ${exception.message}")
         }
         throw exception
     }
 
-    private fun toolResult(
-        toolCallId: String?,
-        toolName: String,
-        agentId: String,
-        message: String,
-        result: JsonElement?
-    ): EnvironmentToolResultToAgentContent = AIAgentEnvironmentToolResultToAgentContent(
-        toolCallId = toolCallId,
-        toolName = toolName,
-        agentId = agentId,
-        message = message,
-        toolResult = result
-    )
-
     @OptIn(InternalAgentToolsApi::class)
-    private suspend fun processToolCall(
-        content: AgentToolCallToEnvironmentContent
-    ): EnvironmentToolResultToAgentContent {
+    private suspend fun processToolCall(toolCall: Message.Tool.Call): ReceivedToolResult {
         logger.debug { "Handling tool call sent by server..." }
-        val tool = toolRegistry.getToolOrNull(content.toolName)
-            ?: run {
-                logger.error { "Tool \"${content.toolName}\" not found." }
-                return toolResult(
-                    message = "Tool \"${content.toolName}\" not found. Use one of the available tools.",
-                    toolCallId = content.toolCallId,
-                    toolName = content.toolName,
-                    agentId = agentId,
-                    result = null
-                )
-            }
-        val toolArgs = try {
-            tool.decodeArgs(content.toolArgs)
+
+        // Tool
+        val id = toolCall.id
+        val toolName = toolCall.tool
+        val toolArgsJson = try {
+            toolCall.contentJson
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error(e) { "Tool \"${tool.name}\" failed to parse arguments: ${content.toolArgs}" }
-            return toolResult(
-                message = "Tool \"${tool.name}\" failed to parse arguments because of ${e.message}!",
-                toolCallId = content.toolCallId,
-                toolName = content.toolName,
-                agentId = agentId,
-                result = null
+            return ReceivedToolResult(
+                id = id,
+                tool = toolName,
+                toolArgs = JsonObject(emptyMap()),
+                toolDescription = null,
+                content = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
+                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                result = null,
             )
         }
 
-        pipeline.onToolCallStarting(content.runId, content.toolCallId, tool, toolArgs)
+        val tool = toolRegistry.getToolOrNull(toolName)
+            ?: run {
+                logger.error { formatLog("Tool with name '$toolName' not found in the tool registry.") }
+                return ReceivedToolResult(
+                    id = id,
+                    tool = toolName,
+                    toolArgs = toolArgsJson,
+                    toolDescription = null,
+                    content = "Tool with name '$toolName' not found in the tool registry. Use one of the available tools.",
+                    resultKind = ToolResultKind.Failure(null),
+                    result = null,
+                )
+            }
+
+        val toolDescription = tool.descriptor.description
+
+        // Tool Args
+        val toolArgs = try {
+            tool.decodeArgs(toolArgsJson)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error(e) { formatLog("Tool with name '$toolName' failed to parse arguments: $toolArgsJson") }
+            return ReceivedToolResult(
+                id = id,
+                tool = toolName,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
+                content = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
+                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                result = null,
+            )
+        }
 
         val toolResult = try {
             @Suppress("UNCHECKED_CAST")
             (tool as Tool<Any?, Any?>).execute(toolArgs)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: ToolException) {
-            pipeline.onToolValidationFailed(content.runId, content.toolCallId, tool, toolArgs, e.message)
-
-            return toolResult(
-                message = e.message,
-                toolCallId = content.toolCallId,
-                toolName = content.toolName,
-                agentId = strategyId,
-                result = null
+            return ReceivedToolResult(
+                id = id,
+                tool = toolName,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
+                content = e.message,
+                resultKind = ToolResultKind.ValidationError(e.toAgentError()),
+                result = null,
             )
         } catch (e: Exception) {
-            logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
+            logger.error(e) { "Tool with name '$toolName' failed to execute with arguments: $toolArgs" }
 
-            pipeline.onToolCallFailed(content.runId, content.toolCallId, tool, toolArgs, e)
-
-            return toolResult(
-                message = "Tool \"${tool.name}\" failed to execute because of ${e.message}!",
-                toolCallId = content.toolCallId,
-                toolName = content.toolName,
-                agentId = strategyId,
+            return ReceivedToolResult(
+                id = id,
+                tool = toolName,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
+                content = "Tool with name '$toolName' failed to execute due to the error: ${e.message}!",
+                resultKind = ToolResultKind.Failure(e.toAgentError()),
                 result = null
             )
         }
 
-        pipeline.onToolCallCompleted(content.runId, content.toolCallId, tool, toolArgs, toolResult)
+        logger.trace { "Completed execution of the tool '$toolName' with result: $toolResult" }
 
-        logger.trace { "Completed execution of ${content.toolName} with result: $toolResult" }
-
-        return toolResult(
-            toolCallId = content.toolCallId,
-            toolName = content.toolName,
-            agentId = strategyId,
-            message = tool.encodeResultToStringUnsafe(toolResult),
-            result = tool.encodeResult(toolResult)
-        )
-    }
-
-    private suspend fun processToolCallMultiple(
-        message: AgentToolCallsToEnvironmentMessage
-    ): EnvironmentToolResultMultipleToAgentMessage {
-        val results = supervisorScope {
-            message.content
-                .map { call -> async { processToolCall(call) } }
-                .awaitAll()
+        val (content, result) = try {
+            tool.encodeResultToStringUnsafe(toolResult) to tool.encodeResult(toolResult)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error(e) { "Tool with name '$toolName' failed to encode result: $toolResult" }
+            return ReceivedToolResult(
+                id = id,
+                tool = toolName,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
+                content = "Tool with name '$toolName' failed to serialize result due to the error: ${e.message}!",
+                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                result = null
+            )
         }
 
-        return EnvironmentToolResultMultipleToAgentMessage(
-            runId = message.runId,
-            content = results
+        return ReceivedToolResult(
+            id = id,
+            tool = toolName,
+            toolArgs = toolArgsJson,
+            toolDescription = toolDescription,
+            content = content,
+            resultKind = ToolResultKind.Success,
+            result = result
         )
     }
 
-    private fun formatLog(agentId: String, runId: String, message: String): String =
-        "[agent id: $agentId, run id: $runId] $message"
+    private fun formatLog(message: String): String =
+        "(agent id: $agentId) $message"
 }

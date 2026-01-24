@@ -1,5 +1,6 @@
 package ai.koog.prompt.dsl
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -27,6 +28,7 @@ import kotlinx.datetime.Clock
  * @property clock The clock used for timestamps of messages
  */
 @PromptDSL
+@JavaAPI
 public class PromptBuilder internal constructor(
     private val id: String,
     private val params: LLMParams = LLMParams(),
@@ -56,7 +58,8 @@ public class PromptBuilder internal constructor(
      *
      * @param content The content of the system message
      */
-    public fun system(content: String) {
+    @JavaAPI
+    public fun system(content: String): PromptBuilder = apply {
         messages.add(Message.System(content, RequestMetaInfo.create(clock)))
     }
 
@@ -75,7 +78,8 @@ public class PromptBuilder internal constructor(
      *
      * @param init The initialization block for the TextContentBuilder
      */
-    public fun system(init: TextContentBuilder.() -> Unit) {
+    @JavaAPI
+    public fun system(init: TextContentBuilder.() -> Unit): PromptBuilder = apply {
         system(TextContentBuilder().apply(init).build())
     }
 
@@ -87,7 +91,8 @@ public class PromptBuilder internal constructor(
      *
      * @param parts Parts of the user message
      */
-    public fun user(parts: List<ContentPart>) {
+    @JavaAPI
+    public fun user(parts: List<ContentPart>): PromptBuilder = apply {
         messages.add(Message.User(parts, RequestMetaInfo.create(clock)))
     }
 
@@ -99,7 +104,8 @@ public class PromptBuilder internal constructor(
      *
      * @param content Content of the user message
      */
-    public fun user(content: String) {
+    @JavaAPI
+    public fun user(content: String): PromptBuilder = apply {
         messages.add(Message.User(content, RequestMetaInfo.create(clock)))
     }
 
@@ -112,8 +118,9 @@ public class PromptBuilder internal constructor(
      * @param content Content of the user message
      * @param block Lambda to configure attachments using [ContentPartsBuilder]
      */
+    @JavaAPI
     @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
-    public fun user(content: String, block: ContentPartsBuilder.() -> Unit) {
+    public fun user(content: String, block: ContentPartsBuilder.() -> Unit): PromptBuilder = apply {
         user(content, ContentPartsBuilder().apply(block).build())
     }
 
@@ -126,8 +133,9 @@ public class PromptBuilder internal constructor(
      * @param content Content of the user message
      * @param attachments Attachments to be added to the message
      */
+    @JavaAPI
     @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
-    public fun user(content: String, attachments: List<ContentPart> = emptyList()) {
+    public fun user(content: String, attachments: List<ContentPart> = emptyList()): PromptBuilder = apply {
         user(listOf(ContentPart.Text(content)) + attachments)
     }
 
@@ -148,7 +156,8 @@ public class PromptBuilder internal constructor(
      *
      * @param block Lambda to configure attachments using [ContentPartsBuilder]
      */
-    public fun user(block: ContentPartsBuilder.() -> Unit) {
+    @JavaAPI
+    public fun user(block: ContentPartsBuilder.() -> Unit): PromptBuilder = apply {
         user(ContentPartsBuilder().apply(block).build())
     }
 
@@ -164,7 +173,8 @@ public class PromptBuilder internal constructor(
      *
      * @param content The content of the assistant message
      */
-    public fun assistant(content: String) {
+    @JavaAPI
+    public fun assistant(content: String): PromptBuilder = apply {
         messages.add(Message.Assistant(content, finishReason = null, metaInfo = ResponseMetaInfo.create(clock)))
     }
 
@@ -183,7 +193,8 @@ public class PromptBuilder internal constructor(
      *
      * @param init The initialization block for the TextContentBuilder
      */
-    public fun assistant(init: TextContentBuilder.() -> Unit) {
+    @JavaAPI
+    public fun assistant(init: TextContentBuilder.() -> Unit): PromptBuilder = apply {
         assistant(TextContentBuilder().apply(init).build())
     }
 
@@ -199,7 +210,8 @@ public class PromptBuilder internal constructor(
      *
      * @param message The message to add
      */
-    public fun message(message: Message) {
+    @JavaAPI
+    public fun message(message: Message): PromptBuilder = apply {
         messages.add(message)
     }
 
@@ -218,7 +230,8 @@ public class PromptBuilder internal constructor(
      *
      * @param messages The list of messages to add
      */
-    public fun messages(messages: List<Message>) {
+    @JavaAPI
+    public fun messages(messages: List<Message>): PromptBuilder = apply {
         this.messages.addAll(messages)
     }
 
@@ -227,6 +240,7 @@ public class PromptBuilder internal constructor(
      *
      * This class provides methods for adding tool calls and tool results.
      */
+    @JavaAPI
     @PromptDSL
     public inner class ToolMessageBuilder(public val clock: Clock) {
         /**
@@ -236,7 +250,8 @@ public class PromptBuilder internal constructor(
          *
          * @param call The tool call message to add
          */
-        public fun call(call: Message.Tool.Call) {
+        @JavaAPI
+        public fun call(call: Message.Tool.Call): ToolMessageBuilder = apply {
             this@PromptBuilder.messages.add(call)
         }
 
@@ -250,7 +265,8 @@ public class PromptBuilder internal constructor(
          * @param tool The name of the tool being called.
          * @param content The content or payload of the tool call.
          */
-        public fun call(id: String?, tool: String, content: String) {
+        @JavaAPI
+        public fun call(id: String?, tool: String, content: String): ToolMessageBuilder = apply {
             call(Message.Tool.Call(id, tool, content, ResponseMetaInfo.create(clock)))
         }
 
@@ -259,14 +275,40 @@ public class PromptBuilder internal constructor(
          *
          * Tool results represent the output from executing a tool.
          *
+         * This method ensures that the corresponding tool call message exists in the prompt
+         * before adding the result. If the tool call is missing, it will be synthesized and
+         * added to maintain proper conversation flow.
+         *
+         * Problematic cases could potentially occur, when:
+         * 1. LLM providers concatenate tool names/args and normalize/split them, producing
+         *    synthesized calls that were not part of the original prompt history
+         * 2. Tool calls with null IDs get processed separately
+         * 3. Parallel tool execution results arrive before calls are recorded in prompt
+         *
          * @param result The tool result message to add
          */
-        public fun result(result: Message.Tool.Result) {
-            this@PromptBuilder.messages
+        @JavaAPI
+        public fun result(result: Message.Tool.Result): ToolMessageBuilder = apply {
+            val existingCallIndex = this@PromptBuilder.messages
                 .indexOfLast { it is Message.Tool.Call && it.id == result.id }
-                .takeIf { it != -1 }
-                ?.let { index -> this@PromptBuilder.messages.add(index + 1, result) }
-                ?: throw IllegalStateException("Failed to add tool result: no call message with id ${result.id}")
+
+            if (existingCallIndex != -1) {
+                // Normal case: a corresponding tool call exists, so we just add its result after it
+                this@PromptBuilder.messages.add(existingCallIndex + 1, result)
+            } else {
+                // Missing tool call case: synthesize the call message and ensure all originating tool-call messages exist in the prompt before adding results
+                if (result.id != null) {
+                    val synthesizedCall = Message.Tool.Call(
+                        id = result.id,
+                        tool = result.tool,
+                        content = "Synthesized call for result",
+                        metaInfo = ResponseMetaInfo.create(clock)
+                    )
+                    this@PromptBuilder.messages.add(synthesizedCall)
+                }
+                // Add the result message at the end after a synthetic tool call
+                this@PromptBuilder.messages.add(result)
+            }
         }
 
         /**
@@ -279,8 +321,54 @@ public class PromptBuilder internal constructor(
          * @param tool The name of the tool that provided the result.
          * @param content The content or payload of the tool result.
          */
-        public fun result(id: String?, tool: String, content: String) {
+        @JavaAPI
+        public fun result(id: String?, tool: String, content: String): ToolMessageBuilder = apply {
             result(Message.Tool.Result(id, tool, content, RequestMetaInfo.create(clock)))
+        }
+    }
+
+    /**
+     * A builder class for constructing tool result messages and appending them to a `PromptBuilder`.
+     *
+     * @param clock Provides the current time, allowing for temporal operations.
+     * @param call A lambda for configuring the `ToolMessageBuilder` instance.
+     * @param promptBuilder The parent builder to which tool result messages are added.
+     */
+    @JavaAPI
+    public class ToolResultMessageBuilder(
+        private val clock: Clock,
+        private val call: ToolMessageBuilder.() -> Unit,
+        private val promptBuilder: PromptBuilder
+    ) {
+        /**
+         * Adds a tool result to the prompt builder by invoking the provided tool call
+         * and applying the given tool result.
+         *
+         * @param result the tool result to be added to the prompt builder
+         * @return the updated prompt builder after applying the tool result
+         */
+        @JavaAPI
+        public fun toolResult(result: Message.Tool.Result): PromptBuilder = promptBuilder.apply {
+            tool {
+                call()
+                result(result)
+            }
+        }
+
+        /**
+         * Appends a tool result to the promptBuilder.
+         *
+         * @param id The identifier of the tool result, or null if there is no specific identifier.
+         * @param tool The name of the tool associated with the result.
+         * @param content The content or output of the tool.
+         * @return The updated PromptBuilder instance.
+         */
+        @JavaAPI
+        public fun toolResult(id: String?, tool: String, content: String): PromptBuilder = promptBuilder.apply {
+            tool {
+                call()
+                result(id, tool, content)
+            }
         }
     }
 
@@ -299,14 +387,41 @@ public class PromptBuilder internal constructor(
      *
      * @param init The initialization block for the ToolMessageBuilder
      */
-    public fun tool(init: ToolMessageBuilder.() -> Unit) {
+    @JavaAPI
+    public fun tool(init: ToolMessageBuilder.() -> Unit): PromptBuilder = apply {
         tool.init()
     }
+
+    /**
+     * Creates a ToolResultMessageBuilder initialized with the provided tool call.
+     *
+     * @param call The tool call message to be included in the builder.
+     * @return A new instance of ToolResultMessageBuilder configured with the specified tool call.
+     */
+    @JavaAPI
+    public fun toolCall(call: Message.Tool.Call): ToolResultMessageBuilder =
+        ToolResultMessageBuilder(clock, { call(call) }, this)
+
+    /**
+     * Adds a tool call message and initializes a `ToolResultMessageBuilder`.
+     *
+     * This method creates a tool call message using the provided parameters and
+     * sets up the builder for further configuration of tool result messages.
+     *
+     * @param id A unique identifier for the tool call message. It can be null.
+     * @param tool The name of the tool to be invoked.
+     * @param content The content or payload associated with the tool call.
+     * @return A `ToolResultMessageBuilder` for adding tool result messages.
+     */
+    @JavaAPI
+    public fun toolCall(id: String?, tool: String, content: String): ToolResultMessageBuilder =
+        ToolResultMessageBuilder(clock, { call(id, tool, content) }, this)
 
     /**
      * Builds and returns a Prompt object from the current state of the builder.
      *
      * @return A new Prompt object
      */
-    internal fun build(): Prompt = Prompt(messages.toList(), id, params)
+    @JavaAPI
+    public fun build(): Prompt = Prompt(messages.toList(), id, params)
 }

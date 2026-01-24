@@ -249,7 +249,7 @@ val structuredResponse = promptExecutor.executeStructured<WeatherForecast>(
             )
         },
         // Define the main model that will execute the request
-        model = OpenAIModels.CostOptimized.GPT4oMini,
+        model = OpenAIModels.Chat.GPT4oMini,
         // Optional: provide examples to help the model understand the format
         examples = exampleForecasts,
         // Optional: provide a fixing parser for error correction
@@ -265,7 +265,7 @@ The `executeStructured` method takes the following arguments:
 
 | Name           | Data type              | Required | Default       | Description                                                                                                     |
 |----------------|------------------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------|
-| `prompt`       | Prompt                 | Yes      |               | The prompt to execute. For more information, see [Prompt API](prompt-api.md).                                   |
+| `prompt`       | Prompt                 | Yes      |               | The prompt to execute. For more information, see [Prompts](prompts/index.md).                                   |
 | `model`        | LLModel                | Yes      |               | The main model to execute the prompt.                                                                           |
 | `examples`     | List<T>                | No       | `emptyList()` | Optional list of examples to help the model understand the expected format.                                     |
 | `fixingParser` | StructureFixingParser? | No       | `null`        | Optional parser that handles malformed responses by using an auxiliary LLM to intelligently fix parsing errors. |
@@ -574,7 +574,7 @@ val structuredResponse = promptExecutor.executeStructured(
         system("You are a weather forecasting assistant.")
         user("What is the weather forecast for Amsterdam?")
     },
-    model = OpenAIModels.CostOptimized.GPT4oMini,
+    model = OpenAIModels.Chat.GPT4oMini,
     config = StructuredRequestConfig(
         byProvider = mapOf(
             LLMProvider.OpenAI to StructuredRequest.Native(openAiStructure),

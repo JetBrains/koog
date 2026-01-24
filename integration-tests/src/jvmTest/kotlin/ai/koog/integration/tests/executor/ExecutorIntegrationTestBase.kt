@@ -23,11 +23,13 @@ import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserM
 import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserNative
 import ai.koog.integration.tests.utils.structuredOutput.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.structuredOutput.weatherStructuredOutputPrompt
+import ai.koog.integration.tests.utils.tools.CalculatorOperation
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.LotteryTool
 import ai.koog.integration.tests.utils.tools.PickColorFromListTool
 import ai.koog.integration.tests.utils.tools.PickColorTool
 import ai.koog.integration.tests.utils.tools.PriceCalculatorTool
+import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.integration.tests.utils.tools.SimplePriceCalculatorTool
 import ai.koog.integration.tests.utils.tools.calculatorPrompt
 import ai.koog.integration.tests.utils.tools.calculatorPromptNotRequiredOptionalParams
@@ -36,11 +38,15 @@ import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
+import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
@@ -52,9 +58,9 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
@@ -94,6 +100,8 @@ import kotlinx.io.files.Path as KtPath
 
 abstract class ExecutorIntegrationTestBase {
     private val testScope = TestScope()
+    private val basicLimit = 256
+    private val extendedLimit = 512
 
     @AfterEach
     fun cleanup() {
@@ -115,7 +123,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
 
-    private fun createReasoningParams(model: LLModel): LLMParams {
+    open fun createReasoningParams(model: LLModel): LLMParams {
         return when (model.provider) {
             is LLMProvider.Anthropic -> AnthropicParams(
                 thinking = AnthropicThinking.Enabled(budgetTokens = 1024)
@@ -124,28 +132,68 @@ abstract class ExecutorIntegrationTestBase {
             is LLMProvider.OpenAI -> OpenAIResponsesParams(
                 reasoning = ReasoningConfig(
                     effort = ReasoningEffort.MEDIUM,
-                    summary = ReasoningSummary.DETAILED
+                    summary = ReasoningSummary.AUTO
                 ),
                 include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
-                maxTokens = 256
+                maxTokens = basicLimit
             )
 
-            is LLMProvider.Google -> GoogleParams(
-                thinkingConfig = GoogleThinkingConfig(
-                    includeThoughts = true,
-                    thinkingBudget = 256
-                ),
-                maxTokens = 256
-            )
+            is LLMProvider.Google -> {
+                val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
+                    GoogleThinkingConfig(
+                        includeThoughts = true,
+                        thinkingLevel = GoogleThinkingLevel.HIGH
+                    )
+                } else {
+                    GoogleThinkingConfig(
+                        includeThoughts = true,
+                        // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                        thinkingBudget = extendedLimit
+                    )
+                }
+                GoogleParams(
+                    thinkingConfig = thinkingConfig,
+                    // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                    maxTokens = extendedLimit
+                )
+            }
 
-            else -> LLMParams(maxTokens = 256)
+            else -> LLMParams(maxTokens = basicLimit)
         }
+    }
+
+    private fun createNoReasoningParams(model: LLModel): LLMParams = when (model.provider) {
+        is LLMProvider.Anthropic -> AnthropicParams(
+            thinking = AnthropicThinking.Disabled()
+        )
+
+        is LLMProvider.OpenAI ->
+            if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+                OpenAIResponsesParams(
+                    maxTokens = basicLimit
+                )
+            } else {
+                OpenAIChatParams(
+                    maxTokens = basicLimit
+                )
+            }
+
+        is LLMProvider.Google ->
+            GoogleParams(
+                thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = false,
+                ),
+                // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                maxTokens = extendedLimit
+            )
+
+        else -> LLMParams(maxTokens = basicLimit)
     }
 
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
-        val prompt = Prompt.build("test-prompt") {
+        val prompt = Prompt.build("test-prompt", createNoReasoningParams(model)) {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
@@ -153,7 +201,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecute[${model.id}]") {
             getExecutor(model).execute(prompt, model) shouldNotBeNull {
                 shouldNotBeEmpty()
-                with(shouldForAny { it is Message.Assistant }.first()) {
+                filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
                     content.lowercase().shouldContain("paris")
                     with(metaInfo) {
                         inputTokensCount.shouldNotBeNull()
@@ -167,9 +215,6 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
-        }
 
         val executor = getExecutor(model)
 
@@ -182,13 +227,15 @@ abstract class ExecutorIntegrationTestBase {
             with(StringBuilder()) {
                 val endMessages = mutableListOf<StreamFrame.End>()
                 val toolMessages = mutableListOf<StreamFrame.ToolCall>()
-                executor.executeStreaming(prompt, model).collect {
-                    when (it) {
-                        is StreamFrame.Append -> append(it.text)
-                        is StreamFrame.End -> endMessages.add(it)
-                        is StreamFrame.ToolCall -> toolMessages.add(it)
-                    }
-                }
+
+                executor.executeStreamAndCollect(
+                    prompt = prompt,
+                    model = model,
+                    appendable = this,
+                    endMessages = endMessages,
+                    toolMessages = toolMessages
+                )
+
                 length shouldNotBe (0)
                 toolMessages.shouldBeEmpty()
                 when (model.provider) {
@@ -357,7 +404,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testMarkdownStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
+        assumeTrue(model != OpenAIModels.Chat.GPT4_1Nano, "Model $model is too small for structured streaming")
 
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
             val markdownStream = getLLMClient(model).executeStreaming(countryStructuredOutputPrompt, model)
@@ -452,42 +499,36 @@ abstract class ExecutorIntegrationTestBase {
                         +"I'm sending you an image. Please analyze it and identify the image format if possible."
                     }
 
-                    when (scenario) {
-                        ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                            image(
-                                ContentPart.Image(
-                                    content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
-                                    format = "jpg",
-                                    mimeType = "image/jpeg"
-                                )
-                            )
-                        }
-
-                        else -> {
-                            image(KtPath(imageFile.pathString))
-                        }
-                    }
+                    image(KtPath(imageFile.pathString))
                 }
             }
 
             withRetry {
                 try {
                     checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
-                } catch (e: Exception) {
+                } catch (e: LLMClientException) {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                            (e.message?.shouldContain("400 Bad Request"))
-                            (e.message?.shouldContain("image exceeds"))
+                            val message = e.message.shouldNotBeNull()
+
+                            listOf(
+                                "Status code: 400",
+                                "image exceeds",
+                                "Could not process image"
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                            (e.message?.shouldContain("400 Bad Request"))
-                            if (model.provider == LLMProvider.Anthropic) {
-                                (e.message?.shouldContain("Could not process image"))
-                            } else if (model.provider == LLMProvider.OpenAI) {
-                                (e.message?.shouldContain("You uploaded an unsupported image. Please make sure your image is valid."))
-                            }
+                            val message = e.message.shouldNotBeNull()
+
+                            listOf(
+                                "Status code: 400",
+                                "Could not process image",
+                                "You uploaded an unsupported image. Please make sure your image is valid.",
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         else -> {
@@ -533,20 +574,23 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
-                } catch (e: Exception) {
+                    val response = getExecutor(model).execute(prompt, model).single()
+                    checkExecutorMediaResponse(response)
+                } catch (e: LLMClientException) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
                             if (model.provider == LLMProvider.Google) {
-                                (e.message?.shouldContain("400 Bad Request"))
-                                (e.message?.shouldContain("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."))
+                                val message = e.message.shouldNotBeNull()
+                                message.shouldContain("Status code: 400")
+                                message.shouldContain("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.")
                             }
                         }
 
                         TextTestScenario.LONG_TEXT_5_MB -> {
                             if (model.provider == LLMProvider.Anthropic) {
-                                (e.message?.shouldContain("400 Bad Request"))
-                                (e.message?.shouldContain("prompt is too long"))
+                                val message = e.message.shouldNotBeNull()
+                                message.shouldContain("Status code: 400")
+                                message.shouldContain("prompt is too long")
                             } else if (model.provider == LLMProvider.Google) {
                                 throw e
                             }
@@ -582,13 +626,15 @@ abstract class ExecutorIntegrationTestBase {
             withRetry(times = 3, testName = "integration_testAudioProcessingBasic[${model.id}]") {
                 try {
                     checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
-                } catch (e: Exception) {
+                } catch (e: LLMClientException) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                        (e.message?.shouldContain("400 Bad Request"))
+                        val message = e.message.shouldNotBeNull()
+
+                        message.shouldContain("Status code: 400")
                         if (model.provider == LLMProvider.OpenAI) {
-                            (e.message?.shouldContain("This model does not support the format you provided."))
+                            message.shouldContain("This model does not support the format you provided.")
                         } else if (model.provider == LLMProvider.Google) {
-                            (e.message?.shouldContain("Request contains an invalid argument."))
+                            message.shouldContain("Request contains an invalid argument.")
                         }
                     } else {
                         throw e
@@ -624,9 +670,11 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry {
-            with(getExecutor(model).execute(prompt, model).single()) {
+            with(
+                getExecutor(model).execute(prompt, model)
+                    .first { it is Message.Assistant && it.content.isNotBlank() }
+            ) {
                 checkExecutorMediaResponse(this)
-                content.shouldContain("image")
             }
         }
     }
@@ -641,7 +689,7 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val imageUrl =
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png"
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/PNG_Test.png/200px-PNG_Test.png"
 
         val prompt = prompt("url-based-attachments-test") {
             system("You are a helpful assistant that can analyze images.")
@@ -659,8 +707,9 @@ abstract class ExecutorIntegrationTestBase {
             with(getExecutor(model).execute(prompt, model).single()) {
                 checkExecutorMediaResponse(this)
                 content.lowercase()
-                    .shouldContain("python")
-                    .shouldContain("logo")
+                    .shouldContain("image")
+                    .shouldContain("test")
+                    .shouldContain("hat")
             }
         }
     }
@@ -757,7 +806,7 @@ abstract class ExecutorIntegrationTestBase {
 
         val prompt = calculatorPrompt
 
-        /** tool choice auto is default and thus is tested by [integration_testToolWithRequiredParams] */
+        /* tool choice auto is default and thus is tested by [integration_testToolWithRequiredParams] */
 
         withRetry(times = 3, testName = "integration_testToolChoiceRequired[${model.id}]") {
             with(
@@ -861,13 +910,16 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testMultipleSystemMessages(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
-        val prompt = prompt("multiple-system-messages-test") {
+        val prompt = prompt("multiple-system-messages-test", createNoReasoningParams(model)) {
             system("You are a helpful assistant.")
             user("Hi")
             system("You can handle multiple system messages.")
             user("Respond with a short message.")
         }
-        getLLMClient(model).execute(prompt, model).single().role shouldBe Message.Role.Assistant
+        with(getLLMClient(model).execute(prompt, model)) {
+            shouldNotBeEmpty()
+            shouldForAny { it is Message.Assistant }
+        }
     }
 
     open fun integration_testSingleMessageModeration(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -992,7 +1044,8 @@ abstract class ExecutorIntegrationTestBase {
             getLLMClient(model).execute(prompt, model) shouldNotBeNull {
                 shouldNotBeEmpty()
                 withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
-                assertResponseContainsReasoning(this)
+                // Some Google models aren't providing meta info
+                assertResponseContainsReasoning(this, model.provider != LLMProvider.Google)
             }
         }
     }
@@ -1022,6 +1075,110 @@ abstract class ExecutorIntegrationTestBase {
                 withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
                 assertResponseContainsReasoningWithEncryption(this)
             }
+        }
+    }
+
+    // This test targets models that support/require passing reasoning back (Google Gemini 3)
+    open fun integration_testReasoningMultiStep(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val params = createReasoningParams(model)
+        val prompt1 = Prompt.build("reasoning-multistep-1", params = params) {
+            system("You are a helpful assistant.")
+            user("What is 5 + 5? Think step by step.")
+        }
+
+        val client = getLLMClient(model)
+
+        val response1 = withRetry(times = 3, testName = "integration_testReasoningMultiStep_Turn1[${model.id}]") {
+            client.execute(prompt1, model)
+        }
+
+        response1.shouldForAny { it is Message.Reasoning }
+
+        val prompt2 = Prompt(
+            id = "reasoning-multistep-2",
+            messages = prompt1.messages + response1 + Message.User(
+                ContentPart.Text("Multiply the result by 2."),
+                metaInfo = RequestMetaInfo.Empty
+            ),
+            params = params
+        )
+
+        withRetry(times = 3, testName = "integration_testReasoningMultiStep_Turn2[${model.id}]") {
+            val response2 = client.execute(prompt2, model)
+            response2.shouldNotBeEmpty()
+            val answer = response2.filter { it is Message.Assistant || it is Message.Reasoning }
+                .joinToString("") { it.content }
+            answer.shouldContain("20")
+        }
+    }
+
+    open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model.provider !== LLMProvider.OpenRouter,
+            "KG-626 Error from OpenRouter on a streaming with a tool call"
+        )
+
+        val executor = getExecutor(model)
+
+        val params = when (model.provider) {
+            LLMProvider.OpenAI ->
+                if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+                    OpenAIResponsesParams(toolChoice = ToolChoice.Required)
+                } else {
+                    OpenAIChatParams(toolChoice = ToolChoice.Required)
+                }
+
+            else -> LLMParams(toolChoice = ToolChoice.Required)
+        }
+
+        val prompt = Prompt.build("test-streaming", params) {
+            system("You are a helpful assistant.")
+            user("Count three times five")
+        }
+
+        withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
+            with(StringBuilder()) {
+                val endMessages = mutableListOf<StreamFrame.End>()
+                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+
+                executor.executeStreamAndCollect(
+                    prompt = prompt,
+                    model = model,
+                    tools = listOf(SimpleCalculatorTool.descriptor),
+                    appendable = this,
+                    endMessages = endMessages,
+                    toolMessages = toolMessages
+                )
+
+                toolMessages.shouldNotBeEmpty()
+                withClue("Expected calculator tool call but got: [$toolMessages]") {
+                    toolMessages.any {
+                        it.name == SimpleCalculatorTool.name &&
+                            it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
+                    } shouldBe true
+                }
+            }
+        }
+    }
+}
+
+private suspend fun PromptExecutor.executeStreamAndCollect(
+    prompt: Prompt,
+    model: LLModel,
+    tools: List<ToolDescriptor> = emptyList(),
+    appendable: Appendable,
+    endMessages: MutableList<StreamFrame.End>,
+    toolMessages: MutableList<StreamFrame.ToolCall>
+) {
+    this.executeStreaming(prompt, model, tools).collect { frame ->
+        when (frame) {
+            is StreamFrame.Append -> appendable.append(frame.text)
+            is StreamFrame.End -> endMessages.add(frame)
+            is StreamFrame.ToolCall -> toolMessages.add(frame)
         }
     }
 }

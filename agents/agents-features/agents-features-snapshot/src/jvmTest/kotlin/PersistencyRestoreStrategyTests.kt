@@ -26,7 +26,7 @@ class PersistenceRestoreStrategyTests {
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
             createdAt = Clock.System.now(),
-            nodeId = "Node2",
+            nodePath = "$agentId/restore-strategy/Node2",
             lastInput = JsonPrimitive("input-for-node2"),
             messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(Clock.System.now()))),
             version = 0L

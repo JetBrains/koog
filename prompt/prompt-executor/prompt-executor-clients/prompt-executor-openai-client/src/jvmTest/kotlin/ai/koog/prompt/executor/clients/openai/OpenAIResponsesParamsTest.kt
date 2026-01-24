@@ -7,43 +7,44 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.clients.openai.models.Truncation
 import ai.koog.prompt.params.LLMParams
+import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class OpenAIResponsesParamsTest {
 
     @ParameterizedTest
     @ValueSource(doubles = [0.1, 1.0])
     fun `OpenAIResponsesParams topP bounds`(value: Double) {
-        assertNotNull(OpenAIResponsesParams(topP = value))
+        OpenAIResponsesParams(topP = value).shouldNotBeNull()
     }
 
     @ParameterizedTest
     @ValueSource(doubles = [-0.1, 1.1])
     fun `OpenAIResponsesParams invalid topP`(value: Double) {
-        assertThrows<IllegalArgumentException>("Responses: topP must be in (0.0, 1.0]") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(topP = value)
-        }
+        }.message shouldBe "topP must be in (0.0, 1.0], but was $value"
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(booleans = [false])
     fun `OpenAIResponsesParams topLogprobs requires logprobs=true`(logprobsValue: Boolean?) {
-        assertThrows<IllegalArgumentException>("Responses: `topLogprobs` requires `logprobs=true`.") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(
                 logprobs = logprobsValue,
                 topLogprobs = 1
             )
-        }
+        }.message shouldBe "`topLogprobs` requires `logprobs=true`."
     }
 
     @ParameterizedTest
@@ -56,12 +57,12 @@ class OpenAIResponsesParamsTest {
     @ParameterizedTest
     @ValueSource(ints = [-1, 21])
     fun `OpenAIResponsesParams invalid topLogprobs values when logprobs=true`(value: Int) {
-        assertThrows<IllegalArgumentException>("Responses: `topLogprobs` must be in [0, 20]") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(
                 logprobs = true,
                 topLogprobs = value
             )
-        }
+        }.message shouldBe "`topLogprobs` must be in [0, 20], but was $value"
     }
 
     @Test
@@ -74,53 +75,58 @@ class OpenAIResponsesParamsTest {
             user = "user-id",
         )
 
-        val resp = base.toOpenAIResponsesParams()
-
-        assertEquals(base.temperature, resp.temperature)
-        assertEquals(base.maxTokens, resp.maxTokens)
-        assertEquals(base.numberOfChoices, resp.numberOfChoices)
-        assertEquals(base.speculation, resp.speculation)
-        assertEquals(base.user, resp.user)
-        assertEquals(base.additionalProperties, resp.additionalProperties)
+        base.toOpenAIResponsesParams().shouldNotBeNull {
+            assertSoftly {
+                temperature shouldBe base.temperature
+                maxTokens shouldBe base.maxTokens
+                numberOfChoices shouldBe base.numberOfChoices
+                speculation shouldBe base.speculation
+                user shouldBe base.user
+                additionalProperties shouldBe base.additionalProperties
+            }
+        }
     }
 
     @Test
     fun `temperature and topP are mutually exclusive in Responses`() {
-        assertThrows<IllegalArgumentException>("Responses: temperature and topP are mutually exclusive") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(
                 temperature = 0.5,
                 topP = 0.5
             )
-        }
+        }.message shouldBe "temperature and topP are mutually exclusive"
     }
 
     @Test
     fun `non-blank identifiers validated`() {
-        assertThrows<IllegalArgumentException>("Responses: promptCacheKey must be non-blank") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(
                 promptCacheKey = " "
             )
-        }
-        assertThrows<IllegalArgumentException>("Responses: safetyIdentifier must be non-blank") {
+        }.message shouldBe "promptCacheKey must be non-blank"
+
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(
                 safetyIdentifier = ""
             )
-        }
+        }.message shouldBe "safetyIdentifier must be non-blank"
+
         OpenAIChatParams(promptCacheKey = "key", safetyIdentifier = "sid")
     }
 
     @Test
     fun `responses include and maxToolCalls validations`() {
-        assertThrows<IllegalArgumentException>("Responses: include must not be empty when provided.") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(
                 include = emptyList()
             )
-        }
-        assertThrows<IllegalArgumentException>("Responses: maxToolCalls must be >= 0") {
+        }.message shouldBe "include must not be empty when provided."
+
+        shouldThrow<IllegalArgumentException> {
             OpenAIResponsesParams(
                 maxToolCalls = -1
             )
-        }
+        }.message shouldBe "maxToolCalls must be >= 0"
     }
 
     @Test

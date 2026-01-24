@@ -146,7 +146,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             val calledTools = mutableListOf<String>()
             val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
                 onToolCallStarting { eventContext ->
-                    calledTools.add(eventContext.tool.name)
+                    calledTools.add(eventContext.toolName)
                 }
             }
 
@@ -220,7 +220,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                         }
                         onToolCallStarting { eventContext ->
                             println(
-                                "Calling tool ${eventContext.tool.name} with arguments ${
+                                "Calling tool ${eventContext.toolName} with arguments ${
                                     eventContext.toolArgs.toString().lines().first().take(100)
                                 }"
                             )
@@ -279,7 +279,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCallStarting { eventContext ->
                 println(
-                    "Calling tool ${eventContext.tool.name} with arguments ${
+                    "Calling tool ${eventContext.toolName} with arguments ${
                         eventContext.toolArgs.toString().lines().first().take(100)
                     }"
                 )

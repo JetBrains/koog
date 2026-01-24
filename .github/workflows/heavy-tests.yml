@@ -10,6 +10,11 @@ name: Heavy Tests
 on:
   workflow_dispatch:  # Manual trigger
   push:
+    paths-ignore:
+      - examples/**
+      - docs/**
+      - inspections/**
+      - "*.md"
     branches: [ main, develop ]
 
 env:
@@ -126,14 +131,14 @@ jobs:
 
       - name: Collect reports
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: reports-${{ matrix.os }}-${{ matrix.artifact-name }}
           path: |
             **/build/reports/
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         if: ${{ !cancelled() }} # always run even if the previous step fails
         with:
           report_paths: '**/test-results/**/TEST-*.xml'

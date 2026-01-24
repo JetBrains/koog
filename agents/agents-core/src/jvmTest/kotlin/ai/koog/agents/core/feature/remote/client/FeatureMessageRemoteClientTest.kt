@@ -387,7 +387,7 @@ class FeatureMessageRemoteClientTest {
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
 
-        val testClientMessage = TestFeatureEventMessage("test client message")
+        val testClientMessage = TestFeatureEventMessage(testMessage = "test client message")
 
         val serverJob = launch {
             FeatureMessageRemoteServer(connectionConfig = serverConfig).use { server ->

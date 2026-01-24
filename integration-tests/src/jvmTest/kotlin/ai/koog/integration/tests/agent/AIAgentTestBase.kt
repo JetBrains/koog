@@ -157,8 +157,8 @@ open class AIAgentTestBase {
                 }
 
                 onToolCallStarting { eventContext ->
-                    actualToolCalls.add(eventContext.tool.name)
-                    toolExecutionCounter.add(eventContext.tool.name)
+                    actualToolCalls.add(eventContext.toolName)
+                    toolExecutionCounter.add(eventContext.toolName)
                 }
             }
 
@@ -345,7 +345,7 @@ open class AIAgentTestBase {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5_1, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5_2, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(EventHandler, eventHandlerConfig)

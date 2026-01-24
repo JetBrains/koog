@@ -2,19 +2,16 @@ package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
-import ai.koog.agents.ext.tool.file.model.buildFileSystemEntry
 import ai.koog.agents.ext.tool.file.render.entry
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.rag.base.files.model.buildFileSystemEntry
 import ai.koog.rag.base.files.writeText
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -25,7 +22,20 @@ import kotlinx.serialization.Serializable
  * @property fs read/write filesystem provider for accessing and modifying files
  */
 public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Path>) :
-    Tool<WriteFileTool.Args, WriteFileTool.Result>() {
+    Tool<WriteFileTool.Args, WriteFileTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "__write_file__",
+        description = """
+            Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
+
+            Use this to:
+            - Create new text files with content
+            - Replace entire content of existing files
+
+            Returns file metadata (name, extension, path, hidden, size, contentType).
+        """.trimIndent()
+    ) {
 
     /**
      * Specifies which file to write and what text content to put into it.
@@ -51,35 +61,7 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
      * @property file the written file entry containing metadata
      */
     @Serializable
-    public data class Result(val file: FileSystemEntry.File) : ToolResult.TextSerializable() {
-        /**
-         * Converts the result to a confirmation message with file metadata.
-         *
-         * Renders the writing confirmation in the following format:
-         * - "Written" confirmation message
-         * - File path with metadata in parentheses (size, line count if available, "hidden" if the file is hidden)
-         *
-         * @return formatted text representation after writing the file
-         */
-        override fun textForLLM(): String = text {
-            +"Written"
-            entry(file)
-        }
-    }
-
-    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val name: String = "__write_file__"
-    override val description: String = """
-        Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
-        
-        Use this to:
-        - Create new text files with content
-        - Replace entire content of existing files
-        
-        Returns file metadata (name, extension, path, hidden, size, contentType).
-    """.trimIndent()
+    public data class Result(val file: FileSystemEntry.File)
 
     /**
      * Writes text content to the filesystem at the specified absolute path.
@@ -108,5 +90,12 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
 
         val fileEntry = buildFileSystemEntry(fs, path, metadata) as FileSystemEntry.File
         return Result(fileEntry)
+    }
+
+    override fun encodeResultToString(result: Result): String = with(result) {
+        text {
+            +"Written"
+            entry(file)
+        }
     }
 }

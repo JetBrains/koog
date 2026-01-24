@@ -11,6 +11,7 @@ import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -80,7 +81,8 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return Stream.of(
                 LLMProvider.OpenAI,
                 LLMProvider.MistralAI,
-                LLMProvider.OpenRouter
+                LLMProvider.OpenRouter,
+                LLMProvider.Google,
             ).map { provider -> Arguments.of(provider) }
         }
 
@@ -104,6 +106,12 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("allCompletionModels")
     override fun integration_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
+    override fun integration_testExecuteStreamingWithTools(model: LLModel) {
+        super.integration_testExecuteStreamingWithTools(model)
     }
 
     @ParameterizedTest
@@ -191,6 +199,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         scenario: MarkdownTestScenario,
         model: LLModel
     ) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testMarkdownProcessingBasic(scenario, model)
     }
 
@@ -203,6 +216,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("textScenarioModelCombinations", "bedrockTextScenarioModelCombinations")
     override fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testTextProcessingBasic(scenario, model)
     }
 
@@ -218,6 +236,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testBase64EncodedAttachment(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testBase64EncodedAttachment(model)
     }
 
@@ -227,6 +250,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testUrlBasedAttachment(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testUrlBasedAttachment(model)
     }
 
@@ -298,5 +326,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("reasoningCapableModels")
     override fun integration_testReasoningWithEncryption(model: LLModel) {
         super.integration_testReasoningWithEncryption(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningCapableModels")
+    override fun integration_testReasoningMultiStep(model: LLModel) {
+        super.integration_testReasoningMultiStep(model)
     }
 }

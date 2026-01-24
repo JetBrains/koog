@@ -10,6 +10,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -66,7 +67,7 @@ internal object BedrockAmazonNovaSerialization {
                             toolUse = NovaToolUse(
                                 toolUseId = msg.id ?: Uuid.random().toString(),
                                 name = msg.tool,
-                                input = msg.contentJson,
+                                input = msg.contentJsonResult.getOrElse { JsonObject(emptyMap()) },
                             )
                         )
                     )

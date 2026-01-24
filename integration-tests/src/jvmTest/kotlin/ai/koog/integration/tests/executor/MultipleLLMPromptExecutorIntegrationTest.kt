@@ -9,7 +9,9 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -115,6 +117,12 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
+    override fun integration_testExecuteStreamingWithTools(model: LLModel) {
+        super.integration_testExecuteStreamingWithTools(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
     override fun integration_testToolWithRequiredParams(model: LLModel) {
         super.integration_testToolWithRequiredParams(model)
     }
@@ -188,12 +196,22 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testBase64EncodedAttachment(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testBase64EncodedAttachment(model)
     }
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testUrlBasedAttachment(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testUrlBasedAttachment(model)
     }
 
@@ -255,5 +273,11 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("reasoningCapableModels")
     override fun integration_testReasoningWithEncryption(model: LLModel) {
         super.integration_testReasoningWithEncryption(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningCapableModels")
+    override fun integration_testReasoningMultiStep(model: LLModel) {
+        super.integration_testReasoningMultiStep(model)
     }
 }

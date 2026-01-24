@@ -19,21 +19,19 @@ data class Book(
     val description: String
 )
 
-class BookTool() : SimpleTool<Book>() {
+class BookTool() : SimpleTool<Book>(
+    argsSerializer = Book.serializer(),
+    name = "book",
+    description = "A tool to parse book information from markdown"
+) {
     companion object {
         const val NAME = "book"
     }
 
-    override val name: String = "book"
-    override val description: String = "A tool to parse book information from markdown"
-
-    override suspend fun doExecute(args: Book): String {
+    override suspend fun execute(args: Book): String {
         println("${args.bookName} by ${args.author}:\n ${args.description}")
         return "Done"
     }
-
-    override val argsSerializer: KSerializer<Book>
-        get() = Book.serializer()
 }
 
 /**

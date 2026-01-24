@@ -10,13 +10,15 @@ import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.EngineConnectorConfig
 import io.ktor.server.engine.embeddedServer
-import io.modelcontextprotocol.kotlin.sdk.CallToolResult
-import io.modelcontextprotocol.kotlin.sdk.Implementation
-import io.modelcontextprotocol.kotlin.sdk.ServerCapabilities
-import io.modelcontextprotocol.kotlin.sdk.TextContent
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
+import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.JsonObject
@@ -26,10 +28,12 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import io.modelcontextprotocol.kotlin.sdk.Tool as SdkTool
+import kotlin.coroutines.cancellation.CancellationException
+import io.modelcontextprotocol.kotlin.sdk.types.Tool as SdkTool
 
 /**
- * Starts a new MCP server with the passed [tools] that listens to and writes to the specified [port] on the passed [host].
+ * Starts a new MCP server with the passed [tools] that listens to and writes
+ * to the specified [port] on the passed [host].
  * A port can be obtained from the returned list of [EngineConnectorConfig].
  */
 public suspend fun startSseMcpServer(
@@ -40,7 +44,8 @@ public suspend fun startSseMcpServer(
 ): Server = doStartSseMcpServer(factory, port, host, tools, true).first
 
 /**
- * Starts a new MCP server with the passed [tools] that listens to and writes to the allocated port on the passed [host].
+ * Starts a new MCP server with the passed [tools] that listens to and writes
+ * to the allocated port on the passed [host].
  * A port can be obtained from the returned list of [EngineConnectorConfig].
  */
 public suspend fun startSseMcpServer(
@@ -119,7 +124,16 @@ public fun Server.addTool(
     tool: Tool<*, *>,
 ) {
     addTool(tool.descriptor.asSdkTool()) { request ->
-        val args = tool.decodeArgs(request.arguments)
+        val args = try {
+            tool.decodeArgs(request.arguments ?: EmptyJsonObject)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return@addTool CallToolResult(
+                content = listOf(TextContent("Failed to parse arguments for tool '${tool.name}': ${e.message}")),
+                isError = true,
+            )
+        }
         val result = tool.executeUnsafe(args)
 
         CallToolResult(
@@ -132,7 +146,7 @@ private fun ToolDescriptor.asSdkTool(): SdkTool {
     return SdkTool(
         name = name,
         description = description,
-        inputSchema = SdkTool.Input(
+        inputSchema = ToolSchema(
             properties = buildJsonObject {
                 (requiredParameters + optionalParameters).forEach { param ->
                     put(param.name, param.toJsonSchema())
@@ -155,10 +169,15 @@ private fun ToolParameterDescriptor.toJsonSchema(): JsonObject = buildJsonObject
 private fun JsonObjectBuilder.fillJsonSchema(type: ToolParameterType) {
     when (type) {
         ToolParameterType.Boolean -> put("type", "boolean")
+
         ToolParameterType.Float -> put("type", "number")
+
         ToolParameterType.Integer -> put("type", "integer")
+
         ToolParameterType.String -> put("type", "string")
+
         ToolParameterType.Null -> put("type", "null")
+
         is ToolParameterType.Enum -> {
             put("type", "string")
             putJsonArray("enum") {

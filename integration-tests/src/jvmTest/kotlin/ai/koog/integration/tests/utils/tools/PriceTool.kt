@@ -36,22 +36,12 @@ object DoubleOrStringSerializer : KSerializer<Double> {
 /**
  * Use to test tool with anyOf arguments
  */
-object PriceCalculatorTool : Tool<PriceCalculatorTool.Args, Double>() {
-    @Serializable
-    data class Args(
-        val tokens: Int,
-        @Serializable(with = DoubleOrStringSerializer::class) @SerialName("price_per_token") val pricePerToken: Double,
-        val discount: Double? = null
-    )
-
-    override val name: String = "price_calculator"
-    override val description: String = "A tool for calculating the price for LLM tokens"
-    override val argsSerializer = Args.serializer()
-    override val resultSerializer: KSerializer<Double> = Double.serializer()
-
-    override val descriptor = ToolDescriptor(
-        name = name,
-        description = description,
+object PriceCalculatorTool : Tool<PriceCalculatorTool.Args, Double>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Double.serializer(),
+    descriptor = ToolDescriptor(
+        name = "price_calculator",
+        description = "A tool for calculating the price for LLM tokens",
         requiredParameters = listOf(
             ToolParameterDescriptor(
                 name = "tokens",
@@ -85,6 +75,13 @@ object PriceCalculatorTool : Tool<PriceCalculatorTool.Args, Double>() {
             )
         ),
     )
+) {
+    @Serializable
+    data class Args(
+        val tokens: Int,
+        @Serializable(with = DoubleOrStringSerializer::class) @SerialName("price_per_token") val pricePerToken: Double,
+        val discount: Double? = null
+    )
 
     override suspend fun execute(args: Args): Double {
         return args.tokens * args.pricePerToken * (args.discount ?: 1.0)
@@ -109,22 +106,12 @@ object DoubleOrNullSerializer : KSerializer<Double?> {
 /**
  * Use to test tool with nullable arguments
  */
-object SimplePriceCalculatorTool : Tool<SimplePriceCalculatorTool.Args, Double>() {
-    @Serializable
-    data class Args(
-        val tokens: Int,
-        @Serializable(with = DoubleOrStringSerializer::class) @SerialName("price_per_token") val pricePerToken: Double,
-        @Serializable(with = DoubleOrNullSerializer::class) val discount: Double?,
-    )
-
-    override val name: String = "price_calculator"
-    override val description: String = "A tool for calculating the price for LLM tokens"
-    override val argsSerializer = Args.serializer()
-    override val resultSerializer: KSerializer<Double> = Double.serializer()
-
-    override val descriptor = ToolDescriptor(
-        name = name,
-        description = description,
+object SimplePriceCalculatorTool : Tool<SimplePriceCalculatorTool.Args, Double>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Double.serializer(),
+    descriptor = ToolDescriptor(
+        name = "price_calculator",
+        description = "A tool for calculating the price for LLM tokens",
         requiredParameters = listOf(
             ToolParameterDescriptor(
                 name = "tokens",
@@ -155,6 +142,13 @@ object SimplePriceCalculatorTool : Tool<SimplePriceCalculatorTool.Args, Double>(
                 )
             ),
         )
+    )
+) {
+    @Serializable
+    data class Args(
+        val tokens: Int,
+        @Serializable(with = DoubleOrStringSerializer::class) @SerialName("price_per_token") val pricePerToken: Double,
+        @Serializable(with = DoubleOrNullSerializer::class) val discount: Double?,
     )
 
     override suspend fun execute(args: Args): Double {

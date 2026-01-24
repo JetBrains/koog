@@ -1,8 +1,6 @@
 package ai.koog.prompt.executor.ollama.client.dto
 
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
@@ -61,10 +59,13 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
 }
 
 private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageDTO {
+    val text = StringBuilder()
     val images = buildList {
         parts.forEach { part ->
             when (part) {
-                is ContentPart.Text -> {}
+                is ContentPart.Text -> {
+                    text.append(part.text)
+                }
                 is ContentPart.Image -> {
                     require(LLMCapability.Vision.Image in model.capabilities) {
                         "Model ${model.id} doesn't support images"
@@ -78,6 +79,20 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
                     add(image)
                 }
 
+                is ContentPart.File -> {
+                    val fileContent = when (val actualContent = part.content) {
+                        is AttachmentContent.PlainText -> {
+                            actualContent.text
+                        }
+
+                        is AttachmentContent.Binary -> actualContent.asBase64()
+
+                        else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                    }
+
+                    text.append("\n\n$fileContent")
+                }
+
                 else -> throw IllegalArgumentException("Unsupported attachment type: $part")
             }
         }
@@ -85,24 +100,8 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
 
     return OllamaChatMessageDTO(
         role = "user",
-        content = content,
+        content = text.toString(),
         images = images.takeIf { it.isNotEmpty() }
-    )
-}
-
-/**
- * Converts a ToolDescriptor to an Ollama Tool object.
- */
-internal fun ToolDescriptor.toOllamaTool(): OllamaToolDTO {
-    val jsonSchema = this.toJSONSchema()
-
-    return OllamaToolDTO(
-        type = "function",
-        function = OllamaToolDTO.Definition(
-            name = this.name,
-            description = this.description,
-            parameters = jsonSchema
-        )
     )
 }
 

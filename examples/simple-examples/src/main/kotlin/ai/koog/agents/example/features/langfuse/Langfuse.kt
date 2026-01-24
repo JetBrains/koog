@@ -25,7 +25,7 @@ suspend fun main() {
     simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
         val agent = AIAgent(
             promptExecutor = executor,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             systemPrompt = "You are a code assistant. Provide concise code examples."
         ) {
             install(OpenTelemetry) {

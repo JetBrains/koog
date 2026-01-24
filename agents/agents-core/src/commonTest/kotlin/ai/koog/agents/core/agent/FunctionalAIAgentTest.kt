@@ -2,19 +2,13 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.extension.asAssistantMessage
-import ai.koog.agents.core.dsl.extension.containsToolCalls
-import ai.koog.agents.core.dsl.extension.executeMultipleTools
-import ai.koog.agents.core.dsl.extension.extractToolCalls
-import ai.koog.agents.core.dsl.extension.requestLLMMultiple
-import ai.koog.agents.core.dsl.extension.sendMultipleToolResults
+import ai.koog.agents.core.feature.TestFeature
+import ai.koog.agents.core.feature.mock.TestFeatureMessageProcessor
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
-import ai.koog.agents.ext.agent.subtask
-import ai.koog.agents.ext.agent.subtaskWithVerification
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -22,11 +16,11 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 class FunctionalAIAgentTest {
@@ -152,7 +146,9 @@ class FunctionalAIAgentTest {
             }
         ) {
             install(EventHandler) {
-                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext ->
+                    actualToolCalls += eventContext.toolArgs.toString()
+                }
             }
         }
 
@@ -269,28 +265,28 @@ class FunctionalAIAgentTest {
     data class SimpleOut(val value: String)
 
     object QATools {
-        object TestEngine : SimpleTool<Spacecraft>() {
-            override val argsSerializer: KSerializer<Spacecraft> = Spacecraft.serializer()
-
-            override val description: String = "Performs testing of the spacecraft engine."
-
-            override suspend fun doExecute(args: Spacecraft): String = "Engine is good"
+        object TestEngine : SimpleTool<Spacecraft>(
+            argsSerializer = Spacecraft.serializer(),
+            name = "test_engine",
+            description = "Performs testing of the spacecraft engine."
+        ) {
+            override suspend fun execute(args: Spacecraft): String = "Engine is good"
         }
 
-        object TestBody : SimpleTool<Spacecraft>() {
-            override val argsSerializer: KSerializer<Spacecraft> = Spacecraft.serializer()
-
-            override val description: String = "Performs testing of the spacecraft bofy."
-
-            override suspend fun doExecute(args: Spacecraft): String = "Body is good"
+        object TestBody : SimpleTool<Spacecraft>(
+            argsSerializer = Spacecraft.serializer(),
+            name = "test_body",
+            description = "Performs testing of the spacecraft bofy."
+        ) {
+            override suspend fun execute(args: Spacecraft): String = "Body is good"
         }
 
-        object TestBuild : SimpleTool<Spacecraft>() {
-            override val argsSerializer: KSerializer<Spacecraft> = Spacecraft.serializer()
-
-            override val description: String = "Tests how spacecraft is built."
-
-            override suspend fun doExecute(args: Spacecraft): String =
+        object TestBuild : SimpleTool<Spacecraft>(
+            argsSerializer = Spacecraft.serializer(),
+            name = "test_build",
+            description = "Tests how spacecraft is built."
+        ) {
+            override suspend fun execute(args: Spacecraft): String =
                 "Spacecraft is built badly... Engine is too big for the body"
         }
 
@@ -299,65 +295,81 @@ class FunctionalAIAgentTest {
 
     // Define sample tools for subtasks, similar in spirit to QATools so tool lists are not empty
     object ArchitectureTools {
-        object AnalyzeRequirements : SimpleTool<String>() {
-            override val argsSerializer: KSerializer<String> = String.serializer()
-            override val description: String = "Analyzes high-level mission requirements."
-            override suspend fun doExecute(args: String): String = "Requirements analyzed: $args"
+        object AnalyzeRequirements : SimpleTool<String>(
+            argsSerializer = String.serializer(),
+            name = "analyze_requirements",
+            description = "Analyzes high-level mission requirements."
+        ) {
+            override suspend fun execute(args: String): String = "Requirements analyzed: $args"
         }
 
-        object DraftArchitecture : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Drafts an initial spacecraft architecture proposal."
-            override suspend fun doExecute(args: Architecture): String = "Drafted architecture: ${'$'}{args.name}"
+        object DraftArchitecture : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "draft_architecture",
+            description = "Drafts an initial spacecraft architecture proposal."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Drafted architecture: ${'$'}{args.name}"
         }
 
         val tools: List<Tool<*, *>> = listOf(AnalyzeRequirements, DraftArchitecture)
     }
 
     object BuildEngineTools {
-        object EstimateThrust : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Estimates required thrust for the given architecture."
-            override suspend fun doExecute(args: Architecture): String = "Estimated thrust for ${'$'}{args.name}"
+        object EstimateThrust : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "estimate_thrust",
+            description = "Estimates required thrust for the given architecture."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Estimated thrust for ${'$'}{args.name}"
         }
 
-        object SelectFuelType : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Selects suitable fuel type based on mission profile and constraints."
-            override suspend fun doExecute(args: Architecture): String = "Fuel selected for ${'$'}{args.name}"
+        object SelectFuelType : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "select_fuel_type",
+            description = "Selects suitable fuel type based on mission profile and constraints."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Fuel selected for ${'$'}{args.name}"
         }
 
         val tools: List<Tool<*, *>> = listOf(EstimateThrust, SelectFuelType)
     }
 
     object BuildBodyTools {
-        object ComputeMassBudget : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Computes mass budget for the spacecraft body."
-            override suspend fun doExecute(args: Architecture): String = "Mass budget computed for ${'$'}{args.name}"
+        object ComputeMassBudget : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "compute_mass_budget",
+            description = "Computes mass budget for the spacecraft body."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Mass budget computed for ${'$'}{args.name}"
         }
 
-        object ChooseMaterial : SimpleTool<Architecture>() {
-            override val argsSerializer: KSerializer<Architecture> = Architecture.serializer()
-            override val description: String = "Chooses hull material given constraints."
-            override suspend fun doExecute(args: Architecture): String = "Material chosen for ${'$'}{args.name}"
+        object ChooseMaterial : SimpleTool<Architecture>(
+            argsSerializer = Architecture.serializer(),
+            name = "choose_material",
+            description = "Chooses hull material given constraints."
+        ) {
+            override suspend fun execute(args: Architecture): String = "Material chosen for ${'$'}{args.name}"
         }
 
         val tools: List<Tool<*, *>> = listOf(ComputeMassBudget, ChooseMaterial)
     }
 
     object AssemblyTools {
-        object CheckInterfaces : SimpleTool<Assembly>() {
-            override val argsSerializer: KSerializer<Assembly> = Assembly.serializer()
-            override val description: String = "Checks mechanical, power, and data interfaces between components."
-            override suspend fun doExecute(args: Assembly): String =
+        object CheckInterfaces : SimpleTool<Assembly>(
+            argsSerializer = Assembly.serializer(),
+            name = "check_interfaces",
+            description = "Checks mechanical, power, and data interfaces between components."
+        ) {
+            override suspend fun execute(args: Assembly): String =
                 "Interfaces check passed for engine ${'$'}{args.engine.name} and body ${'$'}{args.body.name}"
         }
 
-        object ComputeDryMass : SimpleTool<Assembly>() {
-            override val argsSerializer: KSerializer<Assembly> = Assembly.serializer()
-            override val description: String = "Computes total dry mass of the assembly."
-            override suspend fun doExecute(args: Assembly): String = "Dry mass: ${'$'}{args.totalDryMassKg} kg"
+        object ComputeDryMass : SimpleTool<Assembly>(
+            argsSerializer = Assembly.serializer(),
+            name = "compute_dry_mass",
+            description = "Computes total dry mass of the assembly."
+        ) {
+            override suspend fun execute(args: Assembly): String = "Dry mass: ${'$'}{args.totalDryMassKg} kg"
         }
 
         val tools: List<Tool<*, *>> = listOf(CheckInterfaces, ComputeDryMass)
@@ -477,22 +489,21 @@ class FunctionalAIAgentTest {
                         additionalInfo = qaReport?.bodyReport?.feedbackIfIncorrect
                     )
 
+                    val assembly = Assembly(engine, body)
                     product = subtask<Assembly, Spacecraft>(
-                        input = Assembly(engine, body),
+                        taskDescription = "Assemble the product: $assembly",
+                        input = assembly,
                         tools = AssemblyTools.tools,
                         llmModel = OllamaModels.Meta.LLAMA_4,
                         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
-                    ) {
-                        "Assemble the product: $it"
-                    }
+                    )
 
                     qaReport = subtask<Spacecraft, FullQAReport>(
+                        taskDescription = "Verify the product is built correctly",
                         input = product,
                         tools = QATools.tools,
                         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
-                    ) {
-                        "Verify the product is built correctly: $it"
-                    }
+                    )
 
                     if (qaReport.isCorrect) break
                 }
@@ -521,40 +532,37 @@ class FunctionalAIAgentTest {
         architecture: Architecture,
         additionalInfo: String? = null
     ): Body = subtask<Architecture, Body>(
+        taskDescription = "Create the body for the given architecture: $architecture" +
+            (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         input = architecture,
         tools = BuildBodyTools.tools,
         llmModel = GoogleModels.Gemini2_0Flash,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
-    ) {
-        "Create the body for the given architecture: $it" +
-            (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: "")
-    }
+    )
 
     private suspend fun AIAgentFunctionalContext.buildEngine(
         architecture: Architecture,
         additionalInfo: String? = null
     ): Engine = subtask<Architecture, Engine>(
+        taskDescription = "Create the engine for the given architecture: $architecture" +
+            (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         input = architecture,
         tools = BuildEngineTools.tools,
         llmModel = AnthropicModels.Sonnet_4_5,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
-    ) {
-        "Create the engine for the given architecture: $it" +
-            (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: "")
-    }
+    )
 
     private suspend fun AIAgentFunctionalContext.designArchitecture(
         input: String,
         additionalInfo: String? = null
     ): Architecture = subtask<String, Architecture>(
+        taskDescription = "Create the architecture for the following machinery: $input" +
+            (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         input = input,
         tools = ArchitectureTools.tools,
         llmModel = OpenAIModels.Chat.GPT5,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
-    ) {
-        "Create the architecture for the following machinery: $input" +
-            (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: "")
-    }
+    )
 
     @Test
     fun `subtask_default_sequential_finish_only`() = runTest {
@@ -576,12 +584,11 @@ class FunctionalAIAgentTest {
             toolRegistry = ToolRegistry.EMPTY,
             strategy = functionalStrategy<String, SimpleOut> { input ->
                 subtask<String, SimpleOut>(
+                    taskDescription = "Do simple subtask: $input",
                     input = input,
                     tools = null, // no extra tools
                     runMode = ToolCalls.SEQUENTIAL
-                ) {
-                    "Do simple subtask: $it"
-                }
+                )
             },
             systemPrompt = "You are helpful"
         ) {
@@ -625,12 +632,11 @@ class FunctionalAIAgentTest {
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
                 subtask<String, SimpleOut>(
+                    taskDescription = "Compose task with tool: $input",
                     input = input,
                     tools = listOf(DummyTool),
                     runMode = ToolCalls.SEQUENTIAL
-                ) {
-                    "Compose task with tool: $it"
-                }
+                )
             },
             toolRegistry = testToolRegistry
         ) {
@@ -644,7 +650,7 @@ class FunctionalAIAgentTest {
         // Only the normal tool goes through environment, finish tool is internal
         assertEquals(1, actualToolCalls.size)
         // Verify that DummyTool has been called once with Unit args
-        assertEquals("kotlin.Unit", actualToolCalls.first())
+        assertEquals("{}", actualToolCalls.first())
     }
 
     @Test
@@ -666,12 +672,11 @@ class FunctionalAIAgentTest {
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
                 subtask<String, SimpleOut>(
+                    taskDescription = "Parallel subtask: $input",
                     input = input,
                     tools = null,
                     runMode = ToolCalls.PARALLEL
-                ) {
-                    "Parallel subtask: $it"
-                }
+                )
             }
         ) {
             install(EventHandler) {
@@ -703,12 +708,11 @@ class FunctionalAIAgentTest {
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
                 subtask<String, SimpleOut>(
+                    taskDescription = "Single-run subtask: $input",
                     input = input,
                     tools = null,
                     runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
-                ) {
-                    "Single-run subtask: $it"
-                }
+                )
             }
         ) {
             install(EventHandler) {
@@ -741,11 +745,10 @@ class FunctionalAIAgentTest {
             toolRegistry = ToolRegistry.EMPTY,
             strategy = functionalStrategy<String, ai.koog.agents.ext.agent.CriticResult<String>> { input ->
                 subtaskWithVerification(
+                    taskDescription = "Judge this: $input",
                     input = input,
                     runMode = ToolCalls.SEQUENTIAL
-                ) {
-                    "Judge this: $it"
-                }
+                )
             },
             systemPrompt = "You are helpful"
         ) {
@@ -759,5 +762,30 @@ class FunctionalAIAgentTest {
         assertEquals("OK", result.feedback)
         assertEquals("case-A", result.input)
         assertEquals(0, actualToolCalls.size)
+    }
+
+    @Test
+    fun testFunctionalAgentFeatureProcessorsClosedAfterRun() = runTest {
+        val model = OllamaModels.Meta.LLAMA_3_2
+        val strategy = functionalStrategy<String, String> { it }
+
+        val testFeatureMessageProcessor = TestFeatureMessageProcessor()
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor { },
+            llmModel = model,
+            strategy = strategy,
+            systemPrompt = "You are helpful"
+        ) {
+            install(TestFeature) {
+                addMessageProcessor(testFeatureMessageProcessor)
+            }
+        }
+
+        agent.run("Test input")
+        assertFalse(
+            testFeatureMessageProcessor.isOpen.value,
+            "Feature processors should be closed after run"
+        )
     }
 }

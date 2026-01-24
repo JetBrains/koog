@@ -1,15 +1,12 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
-import ai.koog.agents.core.agent.context.element.getNodeInfoElement
+import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -156,9 +153,9 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
     @InternalAgentsApi
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
-        withContext(NodeInfoContextElement(Uuid.random().toString(), getNodeInfoElement()?.id, name, input, inputType)) {
+        context.with(id) { executionInfo, eventId ->
             logger.debug { "Start executing node (name: $name)" }
-            context.pipeline.onNodeExecutionStarting(this@AIAgentNode, context, input, inputType)
+            context.pipeline.onNodeExecutionStarting(eventId, executionInfo, this@AIAgentNode, context, input, inputType)
 
             val output =
                 try {
@@ -169,11 +166,11 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
                     throw e
                 } catch (e: Exception) {
                     logger.error(e) { "Error executing node (name: $name): ${e.message}" }
-                    context.pipeline.onNodeExecutionFailed(this@AIAgentNode, context, input, inputType, e)
+                    context.pipeline.onNodeExecutionFailed(eventId, executionInfo, this@AIAgentNode, context, input, inputType, e)
                     throw e
                 }
 
-            context.pipeline.onNodeExecutionCompleted(this@AIAgentNode, context, input, inputType, output, outputType)
+            context.pipeline.onNodeExecutionCompleted(eventId, executionInfo, this@AIAgentNode, context, input, inputType, output, outputType)
             output
         }
 }

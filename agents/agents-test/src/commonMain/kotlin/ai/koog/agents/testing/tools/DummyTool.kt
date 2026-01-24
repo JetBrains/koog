@@ -2,14 +2,17 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
  * Simple tool implementation for testing purposes.
  * This tool accepts a placeholder parameter and returns a constant result.
  */
-public class DummyTool : SimpleTool<DummyTool.Args>() {
+public class DummyTool : SimpleTool<DummyTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "dummy",
+    description = "Dummy tool for testing"
+) {
 
     /**
      * A constant value representing the default result returned by the DummyTool.
@@ -27,10 +30,5 @@ public class DummyTool : SimpleTool<DummyTool.Args>() {
         val dummy: String = ""
     )
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val name: String = "dummy"
-    override val description: String = "Dummy tool for testing"
-
-    override suspend fun doExecute(args: Args): String = result
+    override suspend fun execute(args: Args): String = result
 }

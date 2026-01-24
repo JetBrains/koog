@@ -39,7 +39,8 @@ class MockWebServer {
         val path: String,
         val responseBody: String,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
-        val contentType: ContentType = ContentType.Text.Plain
+        val contentType: ContentType = ContentType.Text.Plain,
+        val expectedParameters: Map<String, String> = emptyMap()
     )
 
     /**
@@ -49,7 +50,8 @@ class MockWebServer {
         val path: String,
         val responseBody: String,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
-        val contentType: ContentType = ContentType.Text.Plain
+        val contentType: ContentType = ContentType.Text.Plain,
+        val expectedParameters: Map<String, String> = emptyMap()
     )
 
     /**
@@ -82,7 +84,19 @@ class MockWebServer {
                 // Configure regular GET endpoints
                 getEndpoints.forEach { config ->
                     get(config.path) {
-                        call.request.queryParameters
+                        val actualParameters = call.request.queryParameters
+
+                        // Validate expected parameters if specified
+                        config.expectedParameters.forEach { (key, expectedValue) ->
+                            val actualValue = actualParameters[key]
+                            if (actualValue != expectedValue) {
+                                call.respondText(
+                                    text = "Parameter mismatch: expected $key=$expectedValue, got $key=$actualValue",
+                                    status = HttpStatusCode.BadRequest
+                                )
+                                return@get
+                            }
+                        }
 
                         call.respondText(
                             text = config.responseBody,
@@ -96,6 +110,19 @@ class MockWebServer {
                 postEndpoints.forEach { config ->
                     post(config.path) {
                         call.receiveText()
+                        val actualParameters = call.request.queryParameters
+
+                        // Validate expected parameters if specified
+                        config.expectedParameters.forEach { (key, expectedValue) ->
+                            val actualValue = actualParameters[key]
+                            if (actualValue != expectedValue) {
+                                call.respondText(
+                                    text = "Parameter mismatch: expected $key=$expectedValue, got $key=$actualValue",
+                                    status = HttpStatusCode.BadRequest
+                                )
+                                return@post
+                            }
+                        }
 
                         call.respondText(
                             text = config.responseBody,
@@ -149,7 +176,7 @@ class MockWebServer {
      */
     fun url(path: String = ""): String {
         require(port > 0) { "Server is not started" }
-        return "http://localhost:$port$path"
+        return "http://127.0.0.1:$port$path"
     }
 
     /**

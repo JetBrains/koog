@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.GraphAIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -16,13 +15,13 @@ import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_AGENT_ID
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_PROMPT_ID
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.TEMPERATURE
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -30,16 +29,29 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.utils.io.use
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 internal object OpenTelemetryTestAPI {
 
     internal val testClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
+
+    private val spansCollectionTimeout = 5.seconds
 
     internal object Parameter {
         internal const val DEFAULT_AGENT_ID = "test-agent-id"
@@ -72,10 +84,10 @@ internal object OpenTelemetryTestAPI {
         verbose: Boolean = true,
     ): OpenTelemetryTestData {
         val strategy = strategy("test-single-llm-strategy") {
-            val nodeSendInput by nodeLLMRequest("test-llm-call")
+            val nodeCallLLM by nodeLLMRequest("test-llm-call")
 
-            edge(nodeStart forwardTo nodeSendInput)
-            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeStart forwardTo nodeCallLLM)
+            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
         }
 
         val executor = getMockExecutor(clock = testClock) {
@@ -97,13 +109,13 @@ internal object OpenTelemetryTestAPI {
         verbose: Boolean = true,
     ): OpenTelemetryTestData {
         val strategy = strategy("test-tool-calls-strategy") {
-            val nodeSendInput by nodeLLMRequest("test-llm-call")
+            val nodeCallLLM by nodeLLMRequest("test-llm-call")
             val nodeExecuteTool by nodeExecuteTool("test-tool-call")
             val nodeSendToolResult by nodeLLMSendToolResult("test-node-llm-send-tool-result")
 
-            edge(nodeStart forwardTo nodeSendInput)
-            edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeStart forwardTo nodeCallLLM)
+            edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
             edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
@@ -152,7 +164,6 @@ internal object OpenTelemetryTestAPI {
 
         return MockSpanExporter().use { mockExporter ->
             collectedTestData.collectedSpans = mockExporter.collectedSpans
-            collectedTestData.runIds = mockExporter.runIds
 
             val agentResult = createAgent(
                 agentId = agentId,
@@ -160,6 +171,7 @@ internal object OpenTelemetryTestAPI {
                 executor = executor,
                 promptId = promptId,
                 toolRegistry = toolRegistry,
+                userPrompt = userPrompt,
                 systemPrompt = SYSTEM_PROMPT,
                 model = model,
                 temperature = TEMPERATURE,
@@ -169,15 +181,30 @@ internal object OpenTelemetryTestAPI {
                     addSpanExporter(mockExporter)
                     setVerbose(verbose)
                 }
-
-                installNodeIdsCollector().also { collectedTestData.collectedNodeIds = it }
             }.use { agent ->
                 agent.run(userPrompt ?: USER_PROMPT_PARIS)
             }
 
+            waitSpansCollected(mockExporter)
+
             collectedTestData.result = agentResult
             collectedTestData
         }
+    }
+
+    /**
+     * Waits for spans to be collected within a specified timeout period.
+     *
+     * Note! Use default dispatcher because the [kotlinx.coroutines.test.runTest] wrapper override thread scheduler
+     *       and [withTimeoutOrNull] does not wait for a specified timeout.
+     */
+    private suspend fun waitSpansCollected(mockExporter: MockSpanExporter) = withContext(Dispatchers.Default) {
+        val isSpanDataCollected = withTimeoutOrNull(spansCollectionTimeout) {
+            // Wait until all spans are collected
+            mockExporter.isCollected.first { it }
+        } != null
+
+        assertTrue(isSpanDataCollected, "Spans were not collected within the timeout: $spansCollectionTimeout")
     }
 
     //endregion Agents With Strategies
@@ -256,25 +283,38 @@ internal object OpenTelemetryTestAPI {
 
     //endregion Agents
 
-    //region Features
+    //region Messages
 
-    internal fun GraphAIAgent.FeatureContext.installNodeIdsCollector(): List<NodeInfo> {
-        val nodesInfo = mutableListOf<NodeInfo>()
-        install(EventHandler.Feature) {
-            onNodeExecutionStarting { eventContext ->
-                getNodeInfoElement()?.id?.let { nodeId ->
-                    nodesInfo.add(NodeInfo(nodeName = eventContext.node.name, nodeId = nodeId))
-                }
-            }
+    fun toolCallMessage(id: String, name: String, content: String) =
+        Message.Tool.Call(id, name, content, ResponseMetaInfo(timestamp = testClock.now()))
 
-            onSubgraphExecutionStarting { eventContext ->
-                getNodeInfoElement()?.id?.let { nodeId ->
-                    nodesInfo.add(NodeInfo(nodeName = eventContext.subgraph.name, nodeId = nodeId))
-                }
-            }
+    fun assistantMessage(content: String, finishReason: String? = null) =
+        Message.Assistant(content, ResponseMetaInfo(timestamp = testClock.now()), finishReason = finishReason)
+
+    //endregion Messages
+
+    //region Attributes
+
+    fun getSystemInstructionsString(messages: List<String>): String {
+        val jsonObjects = messages.map { message ->
+            JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("text"),
+                    "content" to JsonPrimitive(message)
+                )
+            )
         }
-        return nodesInfo
+
+        return JsonArray(jsonObjects).toString()
     }
 
-    //endregion Features
+    fun getMessagesString(messages: List<Message>): String {
+        return SpanAttributes.Input.Messages(messages).value.value
+    }
+
+    fun getToolDefinitionsString(toolDescriptors: List<ai.koog.agents.core.tools.ToolDescriptor>): String {
+        return SpanAttributes.Tool.Definitions(toolDescriptors).value.value
+    }
+
+    //endregion Attributes
 }

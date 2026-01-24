@@ -3,6 +3,7 @@ package ai.koog.agents.features.tracing.writer
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.writer.FeatureMessageFileWriter
 import kotlinx.io.Sink
+import kotlin.jvm.JvmOverloads
 
 /**
  * A message processor that writes trace events to a file.
@@ -42,7 +43,7 @@ import kotlinx.io.Sink
  * @param sinkOpener Returns a [Sink] for writing to the file, this class manages its lifecycle.
  * @param format Optional custom formatter for trace events
  */
-public class TraceFeatureMessageFileWriter<Path>(
+public class TraceFeatureMessageFileWriter<Path> @JvmOverloads constructor(
     targetPath: Path,
     sinkOpener: (Path) -> Sink,
     private val format: ((FeatureMessage) -> String)? = null,

@@ -6,6 +6,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 /**
@@ -70,6 +71,22 @@ class MockSpan() : Span {
         return this
     }
 
+    override fun addEvent(name: String?): Span? {
+        return super.addEvent(name)
+    }
+
+    override fun addEvent(name: String?, attributes: Attributes?, timestamp: Instant?): Span? {
+        return super.addEvent(name, attributes, timestamp)
+    }
+
+    override fun addEvent(name: String?, timestamp: Instant?): Span? {
+        return super.addEvent(name, timestamp)
+    }
+
+    override fun addEvent(name: String?, timestamp: Long, unit: TimeUnit?): Span? {
+        return super.addEvent(name, timestamp, unit)
+    }
+
     override fun setStatus(statusCode: StatusCode, description: String): Span {
         status = statusCode
         statusDescription = description
@@ -88,7 +105,7 @@ class MockSpan() : Span {
         isEnded = true
     }
 
-    override fun getSpanContext(): SpanContext = throw UnsupportedOperationException("Not implemented in test")
+    override fun getSpanContext(): SpanContext = SpanContext.getInvalid()
 
     override fun isRecording(): Boolean = isStarted && !isEnded
 

@@ -30,11 +30,17 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
 
     return when (providerName) {
         "openai" -> openAI(parts, identifier)
+
         "anthropic" -> anthropic(parts, identifier)
+
         "google" -> google(parts, identifier)
+
         "mistral" -> mistral(parts, identifier)
+
         "openrouter" -> openrouter(parts, identifier)
+
         "deepseek" -> deepSeek(parts, identifier)
+
         "ollama" -> ollama(parts, identifier)
 
         else -> {
@@ -212,22 +218,19 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt5" to OpenAIModels.Chat.GPT5,
         "gpt5mini" to OpenAIModels.Chat.GPT5Mini,
         "gpt5nano" to OpenAIModels.Chat.GPT5Nano,
+        "o4mini" to OpenAIModels.Chat.O4Mini,
+        "o3mini" to OpenAIModels.Chat.O3Mini,
+        "o3" to OpenAIModels.Chat.O3,
+        "o1" to OpenAIModels.Chat.O1,
         "gpt5codex" to OpenAIModels.Chat.GPT5Codex,
         "gpt5_1" to OpenAIModels.Chat.GPT5_1,
-    ),
-    "reasoning" to mapOf(
-        "o4mini" to OpenAIModels.Reasoning.O4Mini,
-        "o3mini" to OpenAIModels.Reasoning.O3Mini,
-        "o3" to OpenAIModels.Reasoning.O3,
-        "o1" to OpenAIModels.Reasoning.O1,
-        "gpt5pro" to OpenAIModels.Reasoning.GPT5Pro
-    ),
-    "costoptimized" to mapOf(
-        "o4mini" to OpenAIModels.CostOptimized.O4Mini,
-        "gpt4_1nano" to OpenAIModels.CostOptimized.GPT4_1Nano,
-        "gpt4_1mini" to OpenAIModels.CostOptimized.GPT4_1Mini,
-        "gpt4omini" to OpenAIModels.CostOptimized.GPT4oMini,
-        "o3mini" to OpenAIModels.CostOptimized.O3Mini
+        "gpt5pro" to OpenAIModels.Chat.GPT5Pro,
+        "gpt5_1codex" to OpenAIModels.Chat.GPT5_1Codex,
+        "gpt5_2" to OpenAIModels.Chat.GPT5_2,
+        "gpt5_2pro" to OpenAIModels.Chat.GPT5_2Pro,
+        "gpt4_1nano" to OpenAIModels.Chat.GPT4_1Nano,
+        "gpt4_1mini" to OpenAIModels.Chat.GPT4_1Mini,
+        "gpt4omini" to OpenAIModels.Chat.GPT4oMini,
     ),
     "audio" to mapOf(
         "gpt4ominiaudio" to OpenAIModels.Audio.GPT4oMiniAudio,
@@ -247,6 +250,7 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
     "opus_3" to AnthropicModels.Opus_3,
     "opus_4" to AnthropicModels.Opus_4,
     "opus_4_1" to AnthropicModels.Opus_4_1,
+    "opus_4_5" to AnthropicModels.Opus_4_5,
     "haiku_3" to AnthropicModels.Haiku_3,
     "haiku_3_5" to AnthropicModels.Haiku_3_5,
     "haiku_4_5" to AnthropicModels.Haiku_4_5,
@@ -264,6 +268,8 @@ private val GOOGLE_MODELS_MAP = mapOf(
     "gemini2_5pro" to GoogleModels.Gemini2_5Pro,
     "gemini2_5flash" to GoogleModels.Gemini2_5Flash,
     "gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
+    "gemini3propreview" to GoogleModels.Gemini3_Pro_Preview,
+    "gemini_embedding001" to GoogleModels.Embeddings.GeminiEmbedding001,
 )
 
 private val MISTRAL_MODELS_MAP = mapOf(
@@ -291,14 +297,16 @@ private val OPENROUTER_MODELS_MAP = mapOf(
     "claude35sonnet" to OpenRouterModels.Claude3_5Sonnet,
     "claude4sonnet" to OpenRouterModels.Claude4Sonnet,
     "claude41opus" to OpenRouterModels.Claude4_1Opus,
+    "gpt35turbo" to OpenRouterModels.GPT35Turbo,
     "gpt4" to OpenRouterModels.GPT4,
+    "gpt4turbo" to OpenRouterModels.GPT4Turbo,
     "gpt4o" to OpenRouterModels.GPT4o,
+    "gptoss120b" to OpenRouterModels.GPT_OSS_120b,
     "gpt5" to OpenRouterModels.GPT5,
     "gpt5mini" to OpenRouterModels.GPT5Mini,
     "gpt5nano" to OpenRouterModels.GPT5Nano,
-    "gptoss120b" to OpenRouterModels.GPT_OSS_120b,
-    "gpt4turbo" to OpenRouterModels.GPT4Turbo,
-    "gpt35turbo" to OpenRouterModels.GPT35Turbo
+    "gpt52" to OpenRouterModels.GPT5_2,
+    "gpt52pro" to OpenRouterModels.GPT5_2Pro,
 )
 
 private val DEEPSEEK_MODELS_MAP = mapOf(

@@ -6,7 +6,6 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 
@@ -28,27 +27,22 @@ data class SimpleCalculatorArgs(
     val b: Int
 )
 
-@Serializable
-object CalculatorToolNoArgs : SimpleTool<Unit>() {
-    override val argsSerializer = Unit.serializer()
-
-    override val name: String = "calculator"
-    override val description: String =
-        "A simple calculator that performs basic calculations. No parameters needed."
-
-    override suspend fun doExecute(args: Unit): String {
+object CalculatorToolNoArgs : SimpleTool<Unit>(
+    argsSerializer = Unit.serializer(),
+    name = "calculator",
+    description = "A simple calculator that performs basic calculations. No parameters needed."
+) {
+    override suspend fun execute(args: Unit): String {
         return "The result of 123 + 456 is 579"
     }
 }
 
-object SimpleCalculatorTool : SimpleTool<SimpleCalculatorArgs>() {
-    override val argsSerializer = SimpleCalculatorArgs.serializer()
-
-    override val name: String = "calculator"
-    override val description: String =
-        "A simple calculator that can add, subtract, multiply, and divide two integers."
-
-    override suspend fun doExecute(args: SimpleCalculatorArgs): String {
+object SimpleCalculatorTool : SimpleTool<SimpleCalculatorArgs>(
+    argsSerializer = SimpleCalculatorArgs.serializer(),
+    name = "calculator",
+    description = "A simple calculator that can add, subtract, multiply, and divide two integers."
+) {
+    override suspend fun execute(args: SimpleCalculatorArgs): String {
         return when (args.operation) {
             CalculatorOperation.ADD -> (args.a + args.b).toString()
             CalculatorOperation.SUBTRACT -> (args.a - args.b).toString()
@@ -64,14 +58,12 @@ object SimpleCalculatorTool : SimpleTool<SimpleCalculatorArgs>() {
     }
 }
 
-object CalculatorTool : Tool<SimpleCalculatorArgs, Int>() {
-    override val argsSerializer = SimpleCalculatorArgs.serializer()
-    override val resultSerializer: KSerializer<Int> = Int.serializer()
-
-    override val name: String = "calculator"
-    override val description: String =
-        "A simple calculator that can add, subtract, multiply, and divide two integers."
-
+object CalculatorTool : Tool<SimpleCalculatorArgs, Int>(
+    argsSerializer = SimpleCalculatorArgs.serializer(),
+    resultSerializer = Int.serializer(),
+    name = "calculator",
+    description = "A simple calculator that can add, subtract, multiply, and divide two integers."
+) {
     override suspend fun execute(args: SimpleCalculatorArgs): Int = when (args.operation) {
         CalculatorOperation.ADD -> args.a + args.b
         CalculatorOperation.SUBTRACT -> args.a - args.b
@@ -86,13 +78,12 @@ data class CalculateSumArgs(
     val amounts: List<Double>
 )
 
-object CalculateSumTool : SimpleTool<CalculateSumArgs>() {
-    override val argsSerializer = CalculateSumArgs.serializer()
-
-    override val name: String = "calculate_sum"
-    override val description: String = "Calculate the sum of a list of amounts"
-
-    override suspend fun doExecute(args: CalculateSumArgs): String {
+object CalculateSumTool : SimpleTool<CalculateSumArgs>(
+    argsSerializer = CalculateSumArgs.serializer(),
+    name = "calculate_sum",
+    description = "Calculate the sum of a list of amounts"
+) {
+    override suspend fun execute(args: CalculateSumArgs): String {
         val sum = args.amounts.sum()
         return sum.toString()
     }

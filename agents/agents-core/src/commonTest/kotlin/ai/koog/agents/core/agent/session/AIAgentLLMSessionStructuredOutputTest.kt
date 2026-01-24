@@ -1,8 +1,11 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.AgentTestBase
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -48,7 +51,8 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt,
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),
@@ -101,7 +105,8 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt,
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),
@@ -171,7 +176,8 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt,
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),

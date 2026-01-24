@@ -20,10 +20,11 @@ dependencies {
     implementation(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
     implementation(project(":a2a:a2a-transport:a2a-transport-core-jsonrpc"))
     implementation(project(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http"))
+    implementation(project(":agents:agents-features:agents-features-acp"))
     implementation(project(":agents:agents-test"))
     implementation(project(":koog-agents"))
-    implementation(libs.opentelemetry.exporter.logging)
-    implementation(libs.opentelemetry.exporter.otlp)
+    api(libs.opentelemetry.exporter.logging)
+    api(libs.opentelemetry.exporter.otlp)
 }
 
 dokka {

@@ -33,7 +33,7 @@ suspend fun main() {
         val agent = openAiAgent(toolRegistry, executor) {
             handleEvents {
                 onToolCallStarting { context ->
-                    println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
+                    println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
                 }
                 onLLMStreamingFrameReceived { context ->
                     (context.streamFrame as? StreamFrame.Append)?.let { frame ->
@@ -72,7 +72,7 @@ private fun openAiAgent(
 ) = AIAgent(
     promptExecutor = executor,
     strategy = streamingWithToolsStrategy(),
-    llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
     temperature = 0.0,
     toolRegistry = toolRegistry,

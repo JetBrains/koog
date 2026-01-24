@@ -21,7 +21,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.callSuspendBy
 import kotlin.reflect.full.instanceParameter
 
-private const val nonSerializableParameterPrefix = "__##nonSerializableParameter##__"
+private const val NON_SERIALIZABLE_PARAMETER_PREFIX = "__##nonSerializableParameter##__"
 
 /**
  * A tool implementation that wraps a Kotlin callable (function, method, etc.).
@@ -38,10 +38,14 @@ private const val nonSerializableParameterPrefix = "__##nonSerializableParameter
 public class ToolFromCallable(
     private val callable: KCallable<*>,
     private val thisRef: Any? = null,
-    override val descriptor: ToolDescriptor,
+    descriptor: ToolDescriptor,
     override val json: Json = ToolJson,
-    override val resultSerializer: KSerializer<Any?>,
-) : Tool<ToolFromCallable.VarArgs, Any?>() {
+    resultSerializer: KSerializer<Any?>,
+) : Tool<ToolFromCallable.VarArgs, Any?>(
+    argsSerializer = VarArgsSerializer(callable),
+    resultSerializer = resultSerializer,
+    descriptor = descriptor,
+) {
 
     /**
      * Represents a data structure to hold arguments conforming to the Args interface.
@@ -55,7 +59,8 @@ public class ToolFromCallable(
          * where each pair consists of a parameter name and its associated value.
          * Parameters without names are excluded from the resulting list.
          *
-         * @return a list of pairs containing parameter names and their values. If a parameter has no name, it is ignored.
+         * @return a list of pairs containing parameter names and their values.
+         * If a parameter has no name, it is ignored.
          */
         public fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) ->
             parameter.name?.let {
@@ -79,16 +84,12 @@ public class ToolFromCallable(
                 }
 
                 KParameter.Kind.INSTANCE -> {
-                    if (thisRef ==
-                        null
-                    ) {
-                        throw IllegalArgumentException("Instance parameter is null for a non-static callable")
+                    requireNotNull(thisRef) {
+                        "Instance parameter is null for a non-static callable"
                     }
                 }
 
-                KParameter.Kind.EXTENSION_RECEIVER -> {
-                    throw IllegalArgumentException("Extension functions are not allowed")
-                }
+                else -> throw IllegalArgumentException("${parameter.kind} parameters are not allowed")
             }
         }
         serializerOrNull(callable.returnType)
@@ -106,12 +107,6 @@ public class ToolFromCallable(
         return callable.callSuspendBy(argsMap)
     }
 
-    override val argsSerializer: KSerializer<VarArgs>
-        get() = VarArgsSerializer(callable)
-
-    override val name: String = descriptor.name
-    override val description: String = descriptor.description
-
     /**
      * A serializer for the `VarArgs` class, enabling Kotlin serialization for arguments provided dynamically
      * to a callable function (`KCallable`). This serializer facilitates encoding and decoding of arguments
@@ -125,8 +120,8 @@ public class ToolFromCallable(
         override val descriptor: SerialDescriptor
             get() = buildClassSerialDescriptor(" ai.koog.agents.core.tools.reflect.ToolFromCallable.VarArgs") {
                 for ((i, parameter) in kCallable.parameters.withIndex()) {
-                    val missingParameterName =
-                        "$nonSerializableParameterPrefix#$i" // `this` parameter or other non-serializable, keep name as missing
+                    // `this` parameter or other non-serializable, keep name as missing
+                    val missingParameterName = "$NON_SERIALIZABLE_PARAMETER_PREFIX#$i"
                     val name = parameter.name ?: missingParameterName
                     val parameterSerializer = serializerOrNull(parameter.type) ?: NothingSerializer()
                     element(

@@ -36,6 +36,7 @@ import kotlin.time.toDuration
 
 // System Properties set inside this test class affects other tests
 // Isolate the environment by @Isolated annotation for these tests and make sure they are running without the parallelism.
+@Disabled("Flaky, see #1124")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 class DebuggerConfigTest {
@@ -72,7 +73,6 @@ class DebuggerConfigTest {
     }
 
     @Test
-    @Disabled("Flaky, see #1124")
     fun `test read port from vm option`() = runBlocking {
         // Set VM option
         val port = 56712

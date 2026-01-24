@@ -5,11 +5,12 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import io.modelcontextprotocol.kotlin.sdk.CallToolResult
-import io.modelcontextprotocol.kotlin.sdk.EmptyJsonObject
-import io.modelcontextprotocol.kotlin.sdk.Implementation
-import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.kotest.assertions.json.shouldEqualJson
 import io.modelcontextprotocol.kotlin.sdk.client.Client
+import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
@@ -28,8 +29,8 @@ import kotlin.time.Duration.Companion.seconds
 @Execution(ExecutionMode.SAME_THREAD)
 class McpToolTest {
     companion object {
-        private const val testPort = 3001
-        private val testServer = TestMcpServer(testPort)
+        private const val TEST_PORT = 3001
+        private val testServer = TestMcpServer(TEST_PORT)
 
         @BeforeAll
         @JvmStatic
@@ -48,7 +49,7 @@ class McpToolTest {
         val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
                 McpToolRegistryProvider.fromTransport(
-                    transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$testPort"),
+                    transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$TEST_PORT"),
                     name = "test-client",
                     version = "0.1.0"
                 )
@@ -105,7 +106,7 @@ class McpToolTest {
                 }
             }
 
-            val content = result?.content?.first() as TextContent
+            val content = result.content.single() as TextContent
             assertEquals("Hello, Test!", content.text)
 
             val argsWithTitle = buildJsonObject {
@@ -118,15 +119,11 @@ class McpToolTest {
                 }
             }
 
-            val contentWithTitle = resultWithTitle?.content?.first() as TextContent
+            val contentWithTitle = resultWithTitle.content.single() as TextContent
             assertEquals("Hello, Mr. Test!", contentWithTitle.text)
 
             val encodedResult = greetingTool.encodeResultToString(result)
-            assertEquals(
-                //language=Json
-                expected = """{"content":[{"text":"Hello, Test!","type":"text"}],"isError":false}""",
-                actual = encodedResult
-            )
+            encodedResult shouldEqualJson """{"content":[{"text":"Hello, Test!","type":"text"}]}"""
         }
     }
 
@@ -141,14 +138,10 @@ class McpToolTest {
                     emptyTool.execute(args)
                 }
             }
-            assertEquals(emptyList(), result?.content.orEmpty())
+            assertEquals(emptyList(), result.content.orEmpty())
 
             val encodedResult = emptyTool.encodeResultToString(result)
-            assertEquals(
-                //language=Json
-                expected = """{"content":[],"isError":false}""",
-                actual = encodedResult
-            )
+            encodedResult shouldEqualJson """{"content":[]}"""
         }
     }
 
@@ -167,11 +160,7 @@ class McpToolTest {
         )
         val encodedResult = mcpTool.encodeResultToString(result)
 
-        assertEquals(
-            //language=Json
-            expected = """{"content":[{"text":"Hello world","type":"text"}],"isError":false}""",
-            actual = encodedResult
-        )
+        encodedResult shouldEqualJson """{"content":[{"text":"Hello world","type":"text"}]}"""
     }
 
     @Test

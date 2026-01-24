@@ -170,7 +170,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
     config: StructuredRequestConfig<T>,
 ): Result<StructuredResponse<T>> {
     val updatedPrompt = config.updatePrompt(model, prompt)
-    val response = this.execute(prompt = updatedPrompt, model = model).single()
+    val response = this.execute(prompt = updatedPrompt, model = model).filterNot { it is Message.Reasoning }.single()
 
     return runCatching {
         require(response is Message.Assistant) { "Response for structured output must be an assistant message, got ${response::class.simpleName} instead" }

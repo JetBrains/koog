@@ -21,12 +21,12 @@ enum class Colors {
 /**
  * Use to test tool with empty arguments
  */
-object PickColorTool : Tool<Unit, Colors>() {
-    override val name = "pick_color"
-    override val description = "Picks a random color"
-    override val argsSerializer = Unit.serializer()
-    override val resultSerializer = Colors.serializer()
-
+object PickColorTool : Tool<Unit, Colors>(
+    argsSerializer = Unit.serializer(),
+    resultSerializer = Colors.serializer(),
+    name = "pick_color",
+    description = "Picks a random color"
+) {
     override suspend fun execute(args: Unit): Colors {
         return Colors.entries.toTypedArray().random()
     }
@@ -35,12 +35,12 @@ object PickColorTool : Tool<Unit, Colors>() {
 /**
  * Use to test tool with a list of enum arguments
  */
-object PickColorFromListTool : Tool<List<Colors>, Colors>() {
-    override val name = "pick_color"
-    override val description = "Picks a random color from a given list of colors"
-    override val argsSerializer = ListSerializer(Colors.serializer())
-    override val resultSerializer = Colors.serializer()
-
+object PickColorFromListTool : Tool<List<Colors>, Colors>(
+    argsSerializer = ListSerializer(Colors.serializer()),
+    resultSerializer = Colors.serializer(),
+    name = "pick_color",
+    description = "Picks a random color from a given list of colors"
+) {
     override suspend fun execute(args: List<Colors>): Colors {
         return args.random()
     }
@@ -49,12 +49,12 @@ object PickColorFromListTool : Tool<List<Colors>, Colors>() {
 /**
  * Use to test tool with enum arguments
  */
-object PaintTool : Tool<Colors, Unit>() {
-    override val name = "paint"
-    override val description = "Paints the picture with selected color"
-    override val argsSerializer = Colors.serializer()
-    override val resultSerializer = Unit.serializer()
-
+object PaintTool : Tool<Colors, Unit>(
+    argsSerializer = Colors.serializer(),
+    resultSerializer = Unit.serializer(),
+    name = "paint",
+    description = "Paints the picture with selected color"
+) {
     override suspend fun execute(args: Colors) {
         println("Painting with color: $args")
     }

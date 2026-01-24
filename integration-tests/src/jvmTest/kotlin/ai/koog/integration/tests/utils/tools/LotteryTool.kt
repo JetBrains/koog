@@ -7,18 +7,13 @@ import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 
-object LotteryTool : Tool<List<List<Int>>, List<Int>>() {
-    override val name = "lottery_picker"
-    override val description =
-        "A tool that by lottery tickets (list of 5 number from 1 to 100) picks the ids of winning tickets. " +
-            "Winning ticket is the ticket which contains a winning number."
-
-    override val argsSerializer = ListSerializer(ListSerializer(Int.serializer()))
-    override val resultSerializer = ListSerializer(Int.serializer())
-
-    override val descriptor = ToolDescriptor(
-        name = name,
-        description = description,
+object LotteryTool : Tool<List<List<Int>>, List<Int>>(
+    argsSerializer = ListSerializer(ListSerializer(Int.serializer())),
+    resultSerializer = ListSerializer(Int.serializer()),
+    descriptor = ToolDescriptor(
+        name = "lottery_picker",
+        description = "A tool that by lottery tickets (list of 5 number from 1 to 100) picks the ids of winning tickets. " +
+            "Winning ticket is the ticket which contains a winning number.",
         requiredParameters = listOf(
             ToolParameterDescriptor(
                 name = "numbers",
@@ -27,7 +22,7 @@ object LotteryTool : Tool<List<List<Int>>, List<Int>>() {
             )
         )
     )
-
+) {
     override suspend fun execute(args: List<List<Int>>): List<Int> {
         val winnerValue = (1..100).random()
         return args.mapIndexedNotNull { index, values ->

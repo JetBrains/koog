@@ -1,5 +1,7 @@
 package ai.koog.prompt.llm
 
+import kotlin.jvm.JvmField
+
 /**
  * Represents a collection of predefined Large Language Models (LLM) categorized by makers.
  * Each maker contains specific models with configurations such as unique identifiers and capabilities.
@@ -25,6 +27,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/llama3-groq-tool-use">
          */
+        @JvmField
         public val LLAMA_3_GROK_TOOL_USE_8B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "llama3-groq-tool-use:8b",
@@ -50,6 +53,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/llama3-groq-tool-use">
          */
+        @JvmField
         public val LLAMA_3_GROK_TOOL_USE_70B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "llama3-groq-tool-use:70b",
@@ -82,6 +86,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/llama3.2">
          */
+        @JvmField
         public val LLAMA_3_2_3B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "llama3.2:3b",
@@ -105,6 +110,7 @@ public object OllamaModels {
          * LLAMA 3.2 is designed to support these specified features, enabling developers to utilize the model for tasks
          * that require dynamic behavior adjustments, schema adherence, and tool-based interactions.
          */
+        @JvmField
         public val LLAMA_3_2: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "llama3.2:latest",
@@ -124,6 +130,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/llama4">
          */
+        @JvmField
         public val LLAMA_4_SCOUT: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "llama4:latest",
@@ -143,6 +150,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/llama4">
          */
+        @JvmField
         public val LLAMA_4: LLModel = LLAMA_4_SCOUT
 
         /**
@@ -153,6 +161,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/llama-guard3">
          */
+        @JvmField
         public val LLAMA_GUARD_3: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "llama-guard3:latest",
@@ -182,6 +191,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/qwen2.5">
          */
+        @JvmField
         public val QWEN_2_5_05B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "qwen2.5:0.5b",
@@ -205,6 +215,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/qwen3">
          */
+        @JvmField
         public val QWEN_3_06B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "qwen3:0.6b",
@@ -228,6 +239,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/qwq">
          */
+        @JvmField
         public val QWQ_32B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "qwq:32b",
@@ -253,6 +265,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/qwq">
          */
+        @JvmField
         public val QWQ: LLModel = QWQ_32B
 
         /**
@@ -267,6 +280,7 @@ public object OllamaModels {
          *
          * <a href="https://ollama.com/library/qwen2.5-coder">
          */
+        @JvmField
         public val QWEN_CODER_2_5_32B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "qwen2.5-coder:32b",
@@ -299,6 +313,7 @@ public object OllamaModels {
          *
          * @see <a href="https://ollama.com/library/granite3.2-vision">
          */
+        @JvmField
         public val GRANITE_3_2_VISION: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "granite3.2-vision",

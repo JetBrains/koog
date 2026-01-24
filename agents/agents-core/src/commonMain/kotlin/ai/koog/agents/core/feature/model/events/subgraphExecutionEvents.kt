@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.model.events
 
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -12,6 +13,8 @@ import kotlinx.serialization.json.JsonElement
  * such as the unique run identifier, the name of the subgraph, and the input data
  * provided to the subgraph.
  *
+ * @property eventId A unique identifier for the event or a group of events;
+ * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property runId Unique identifier for the subgraph run;
  * @property subgraphName The name of the subgraph being executed;
  * @property input The input data provided to the subgraph;
@@ -19,15 +22,44 @@ import kotlinx.serialization.json.JsonElement
  */
 @Serializable
 public data class SubgraphExecutionStartingEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val subgraphName: String,
     val input: JsonElement?,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * @deprecated Use constructor with [executionInfo] parameter
+     */
+    @Deprecated(
+        message = "Use constructor with executionInfo parameter",
+        replaceWith = ReplaceWith("SubgraphExecutionStartingEvent(executionInfo, runId, subgraphName, input, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        subgraphName: String,
+        input: JsonElement?,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(
+        eventId = SubgraphExecutionStartingEvent::class.simpleName.toString(),
+        executionInfo = AgentExecutionInfo(
+            parent = null,
+            partName = SubgraphExecutionStartingEvent::class.simpleName.toString(),
+        ),
+        runId = runId,
+        subgraphName = subgraphName,
+        input = input,
+        timestamp = timestamp
+    )
+}
 
 /**
  * Represents an event triggered when the execution of a specific subgraph completes.
  *
+ * @property eventId A unique identifier for the event or a group of events;
+ * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property runId Unique identifier for the subgraph run;
  * @property subgraphName The name of the subgraph being executed;
  * @property input The input data provided to the subgraph;
@@ -36,16 +68,47 @@ public data class SubgraphExecutionStartingEvent(
  */
 @Serializable
 public data class SubgraphExecutionCompletedEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val subgraphName: String,
     val input: JsonElement?,
     val output: JsonElement?,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * @deprecated Use constructor with [executionInfo] parameter
+     */
+    @Deprecated(
+        message = "Use constructor with executionInfo parameter",
+        replaceWith = ReplaceWith("SubgraphExecutionCompletedEvent(executionInfo, runId, subgraphName, input, output, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        subgraphName: String,
+        input: JsonElement?,
+        output: JsonElement?,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(
+        eventId = SubgraphExecutionCompletedEvent::class.simpleName.toString(),
+        executionInfo = AgentExecutionInfo(
+            parent = null,
+            partName = SubgraphExecutionCompletedEvent::class.simpleName.toString(),
+        ),
+        runId = runId,
+        subgraphName = subgraphName,
+        input = input,
+        output = output,
+        timestamp = timestamp
+    )
+}
 
 /**
  * Represents an event triggered when the execution of a specific subgraph fails.
  *
+ * @property eventId A unique identifier for the event or a group of events;
+ * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property runId Unique identifier for the subgraph run;
  * @property subgraphName The name of the subgraph being executed;
  * @property input The input data provided to the subgraph;
@@ -54,9 +117,38 @@ public data class SubgraphExecutionCompletedEvent(
  */
 @Serializable
 public data class SubgraphExecutionFailedEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val subgraphName: String,
     val input: JsonElement?,
     val error: AIAgentError,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * @deprecated Use constructor with [executionInfo] parameter
+     */
+    @Deprecated(
+        message = "Use constructor with executionInfo parameter",
+        replaceWith = ReplaceWith("SubgraphExecutionFailedEvent(executionInfo, runId, subgraphName, input, error, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        subgraphName: String,
+        input: JsonElement?,
+        error: AIAgentError,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(
+        eventId = SubgraphExecutionFailedEvent::class.simpleName.toString(),
+        executionInfo = AgentExecutionInfo(
+            parent = null,
+            partName = SubgraphExecutionFailedEvent::class.simpleName.toString(),
+        ),
+        runId = runId,
+        subgraphName = subgraphName,
+        input = input,
+        error = error,
+        timestamp = timestamp
+    )
+}

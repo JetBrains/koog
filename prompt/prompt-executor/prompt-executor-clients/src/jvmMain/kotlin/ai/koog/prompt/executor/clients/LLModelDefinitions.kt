@@ -18,7 +18,9 @@ public fun allModelsIn(obj: Any): List<LLModel> {
     val immediateModels = (obj::class.memberProperties + obj::class::memberExtensionProperties)
         .filter { it.visibility == KVisibility.PUBLIC }
         .filter { it.returnType == LLModel::class.createType() }
-        .map { it.getter.call(obj) as LLModel }
+        .map {
+            it.getter.call() as LLModel
+        }
 
     val nestedModels = obj::class.nestedClasses
         .mapNotNull { it.objectInstance }

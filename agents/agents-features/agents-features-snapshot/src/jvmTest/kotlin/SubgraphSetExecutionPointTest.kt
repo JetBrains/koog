@@ -1,5 +1,6 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.Persistence
@@ -28,7 +29,7 @@ class SubgraphSetExecutionPointTest {
     fun test_singleSubgraph_teleportForward() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createSimpleTeleportSubgraphStrategy("Node2"),
+            strategy = createSimpleTeleportSubgraphStrategy(path = path("teleport-test", "Node2")),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -52,7 +53,7 @@ class SubgraphSetExecutionPointTest {
     fun test_singleSubgraph_teleportBackwards() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createSimpleTeleportSubgraphStrategy("Node1"),
+            strategy = createSimpleTeleportSubgraphStrategy(path = path("teleport-test", "Node1")),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -132,7 +133,7 @@ class SubgraphSetExecutionPointTest {
     fun test_innerSubgraphs_teleportToOuterSubgraphForward() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createSimpleTeleportSubgraphWithInnerSubgraph("sgNode2"),
+            strategy = simpleTeleportSubgraphWithInnerSubgraph("sgNode2"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -159,7 +160,7 @@ class SubgraphSetExecutionPointTest {
     fun test_innerSubgraphs_teleportToOuterSubgraphBackwards() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createSimpleTeleportSubgraphWithInnerSubgraph("sgNode1"),
+            strategy = simpleTeleportSubgraphWithInnerSubgraph("sgNode1"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {

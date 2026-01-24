@@ -3,7 +3,6 @@ package ai.koog.prompt.executor.clients.anthropic.models
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
@@ -123,7 +122,8 @@ public sealed interface AnthropicMessage {
 @Serializable
 public data class SystemAnthropicMessage(
     val text: String,
-    @EncodeDefault(ALWAYS) val type: String = "text"
+    @EncodeDefault
+    val type: String = "text"
 )
 
 /**
@@ -322,6 +322,7 @@ public class AnthropicMCPServerURLDefinition(
     /**
      * The type of mcp server definition, which is always set to "url".
      */
+    @EncodeDefault
     public val type: String = "url"
 }
 
@@ -411,6 +412,7 @@ public data class AnthropicTool(
  *
  * @property properties A JSON object representing the properties within this schema.
  * @property required A list of property names that are mandatory within this schema.
+ * @property type The type of the schema, always set to "object".
  */
 @InternalLLMClientApi
 @Serializable
@@ -421,6 +423,7 @@ public data class AnthropicToolSchema(
     /**
      * The type of the schema. Always returns "object" for Anthropic tool schemas.
      */
+    @EncodeDefault
     val type: String = "object"
 }
 
@@ -471,8 +474,10 @@ public data class AnthropicUsage(
  *
  * This data class encapsulates the structure of a streamed response,
  * including its type, any delta updates to the content, and the complete message data when applicable.
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
  *
  * @property type The type of the response (e.g., "content_block_start", "content_block_delta", "message_delta").
+ * Delta type is string because of https://docs.claude.com/en/docs/build-with-claude/streaming#other-events
  * @property index The index of the content block in streaming responses. Present in content block events.
  * @property contentBlock The content block data for "content_block_start" events, containing tool use information.
  * @property delta An optional incremental update to the message content, represented as [AnthropicStreamDelta].
@@ -497,8 +502,10 @@ public data class AnthropicStreamResponse(
  *
  * This class encapsulates information regarding the type of update, optional textual content,
  * and optional tool usage data.
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
  *
  * @property type The type of the update provided by Anthropic.
+ * Delta type is string because of https://docs.claude.com/en/docs/build-with-claude/streaming#other-events
  * @property text Optional text content associated with the delta update.
  * @property partialJson Optional partial JSON content for tool use streaming.
  * @property stopReason Optional reason why the generation process was stopped, if applicable.
@@ -511,8 +518,39 @@ public data class AnthropicStreamDelta(
     val text: String? = null,
     val partialJson: String? = null,
     val stopReason: String? = null,
+    val thinking: String? = null,
     val toolUse: AnthropicContent.ToolUse? = null
 )
+
+/**
+ * Represents the different types of stream events that can occur in the Anthropic streaming protocol.
+ * The events are serialized to specific names for compatibility during serialization and deserialization.
+ *
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
+ */
+public enum class AnthropicStreamEventType(public val value: String) {
+    CONTENT_BLOCK_START("content_block_start"),
+    CONTENT_BLOCK_DELTA("content_block_delta"),
+    CONTENT_BLOCK_STOP("content_block_stop"),
+    MESSAGE_START("message_start"),
+    MESSAGE_DELTA("message_delta"),
+    MESSAGE_STOP("message_stop"),
+    ERROR("error"),
+    PING("ping"),
+}
+
+/**
+ * Represents the different types of delta updates that can be streamed in the Anthropic system.
+ *
+ * This enum is used to identify the specific nature of the incremental change
+ * being transmitted during a streaming operation.
+ *
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
+ */
+public enum class AnthropicStreamDeltaContentType(public val value: String) {
+    TEXT_DELTA("text_delta"),
+    INPUT_JSON_DELTA("input_json_delta"),
+}
 
 /**
  * Represents an error that occurred during Anthropic streaming response processing.

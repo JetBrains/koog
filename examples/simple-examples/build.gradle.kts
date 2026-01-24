@@ -25,7 +25,8 @@ dependencies {
     implementation("ai.koog:a2a-transport-server-jsonrpc-http")
     //noinspection UseTomlInstead
     implementation("ai.koog:a2a-transport-client-jsonrpc-http")
-
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-acp")
     //noinspection UseTomlInstead
     testImplementation("ai.koog:agents-test")
 
@@ -118,6 +119,7 @@ registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.s
 registerRunExampleTask("runExampleWebSearchAgent", "ai.koog.agents.example.websearch.WebSearchAgentKt")
 registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.streaming.StreamingAgentWithToolsKt")
 
+registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.GrouperAgentKt")
 /*
  A2A examples
 */
@@ -129,3 +131,9 @@ registerRunExampleTask("runExampleSimpleJokeAgentClient", "ai.koog.agents.exampl
 // Advanced joke generation
 registerRunExampleTask("runExampleAdvancedJokeAgentServer", "ai.koog.agents.example.a2a.advancedjoke.ServerKt")
 registerRunExampleTask("runExampleAdvancedJokeAgentClient", "ai.koog.agents.example.a2a.advancedjoke.ClientKt")
+
+
+/*
+ ACP examples
+*/
+registerRunExampleTask("runExampleAcpApp", "ai.koog.agents.example.acp.KoogAcpAppKt")

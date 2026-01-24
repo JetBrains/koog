@@ -58,6 +58,7 @@ class RetrieveFactsFromHistoryTest {
                 assistant("Hi there")
             },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
@@ -101,6 +102,7 @@ class RetrieveFactsFromHistoryTest {
                 assistant("Hi there")
             },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
@@ -141,6 +143,7 @@ class RetrieveFactsFromHistoryTest {
                 assistant("Hi there")
             },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
@@ -181,6 +184,7 @@ class RetrieveFactsFromHistoryTest {
                 assistant("Hi there")
             },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
@@ -231,6 +235,7 @@ class RetrieveFactsFromHistoryTest {
             tools = emptyList(),
             prompt = originalPrompt,
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),

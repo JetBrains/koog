@@ -343,7 +343,7 @@ To use Koog, you need to include all necessary dependencies in your build config
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
-    import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
     import kotlinx.coroutines.runBlocking
     -->
@@ -359,7 +359,7 @@ To use Koog, you need to include all necessary dependencies in your build config
         // Create an agent
         val agent = AIAgent(
             // Create a prompt executor using the LLM client
-            promptExecutor = SingleLLMPromptExecutor(deepSeekClient),
+            promptExecutor = MultiLLMPromptExecutor(deepSeekClient),
             // Provide a model
             llmModel = DeepSeekModels.DeepSeekChat
         )

@@ -153,7 +153,7 @@ fun GraphAIAgent.FeatureContext.installStreamingApi() {
 ```kotlin
 handleEvents {
     onToolCallStarting { context ->
-        println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
+        println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
     }
     onLLMStreamingFrameReceived { context ->
         (context.streamFrame as? StreamFrame.Append)?.let { frame ->
@@ -388,20 +388,18 @@ data class Book(
    val description: String
 )
 
-class BookTool(): SimpleTool<Book>() {
-    
+class BookTool(): SimpleTool<Book>(
+    argsSerializer = Book.serializer(),
+    name = NAME,
+    description = "A tool to parse book information from Markdown"
+) {
+
     companion object { const val NAME = "book" }
 
-    override suspend fun doExecute(args: Book): String {
+    override suspend fun execute(args: Book): String {
         println("${args.title} by ${args.author}:\n ${args.description}")
         return "Done"
     }
-
-    override val argsSerializer: KSerializer<Book>
-        get() = Book.serializer()
-
-    override val name: String = NAME
-    override val description: String = "A tool to parse book information from Markdown"
 }
 ```
 <!--- KNIT example-streaming-api-08.kt -->
@@ -414,6 +412,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
 import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
 import ai.koog.agents.example.exampleStreamingApi08.BookTool
+import ai.koog.agents.core.agent.session.callToolRaw
 
 -->
 ```kotlin

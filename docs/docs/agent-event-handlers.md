@@ -48,7 +48,7 @@ val agent = AIAgent(
 handleEvents {
     // Handle tool calls
     onToolCallStarting { eventContext ->
-        println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
+        println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
     }
     // Handle event triggered when the agent completes its execution
     onAgentCompleted { eventContext ->
@@ -79,7 +79,7 @@ val agent = AIAgent(
     handleEvents {
         // Handle tool calls
         onToolCallStarting { eventContext ->
-            println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
+            println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
         }
         // Handle event triggered when the agent completes its execution
         onAgentCompleted { eventContext ->

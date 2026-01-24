@@ -8,7 +8,7 @@ package ai.koog.agents.core.feature.message
  */
 public interface FeatureMessage {
 
-    /**
+    /**n
      * Represents the time, in milliseconds, when the feature message or event was created or occurred.
      *
      * The timestamp is used to track the exact time of the message's creation or event's occurrence,

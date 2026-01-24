@@ -19,6 +19,7 @@ import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -30,6 +31,9 @@ import ai.koog.agents.features.tracing.mock.createAgent
 import ai.koog.agents.features.tracing.mock.systemMessage
 import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.features.tracing.mock.userMessage
+import ai.koog.agents.testing.agent.agentExecutionInfo
+import ai.koog.agents.testing.feature.message.singleEvent
+import ai.koog.agents.testing.feature.message.singleNodeEvent
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
@@ -114,15 +118,18 @@ class TraceFeatureMessageTestWriterTest {
 
     @Test
     fun `test nonexistent tool call`() = runBlocking {
+        val toolCallId = "0"
+        val toolName = "there is no tool with this name"
+        val rawToolArgs = "{}"
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
                 nodeStart forwardTo callTool transformed { _ ->
                     Message.Tool.Call(
-                        id = "0",
-                        tool = "there is no tool with this name",
-                        content = "{}",
-                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+                        id = toolCallId,
+                        tool = toolName,
+                        content = rawToolArgs,
+                        metaInfo = ResponseMetaInfo(timestamp = testClock.now())
                     )
                 }
             )
@@ -146,7 +153,7 @@ class TraceFeatureMessageTestWriterTest {
 
         // Verify the result contains the error message about the tool not being found
         assertEquals(
-            "Tool \"there is no tool with this name\" not found. Use one of the available tools.",
+            "Tool with name '$toolName' not found in the tool registry. Use one of the available tools.",
             result
         )
     }
@@ -271,10 +278,11 @@ class TraceFeatureMessageTestWriterTest {
         val agentId = "test-agent-id"
         val nodeWithErrorName = "node-with-error"
         val testErrorMessage = "Test error"
+        val strategyName = "test-strategy"
 
         var expectedStackTrace = ""
 
-        val strategy = strategy("test-strategy") {
+        val strategy = strategy(strategyName) {
             val nodeWithError by node<String, String>(nodeWithErrorName) {
                 // Get expected stack trace before throwing exception
                 try {
@@ -303,8 +311,12 @@ class TraceFeatureMessageTestWriterTest {
 
                 val actualEvents = writer.messages.filterIsInstance<NodeExecutionFailedEvent>().toList()
 
+                val actualNodeWithErrorEvent = writer.messages.singleNodeEvent(nodeWithErrorName)
+
                 val expectedEvents = listOf(
                     NodeExecutionFailedEvent(
+                        eventId = actualNodeWithErrorEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeWithErrorName),
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
                         input = @OptIn(InternalAgentsApi::class)
@@ -325,15 +337,18 @@ class TraceFeatureMessageTestWriterTest {
 
     @Test
     fun `test llm streaming events success`() = runBlocking {
+        val agentId = "test-agent-id"
+        val strategyName = "tracing-streaming-success"
         val userPrompt = "Test user request"
         val systemPrompt = "Test system prompt"
         val assistantPrompt = "Test assistant prompt"
         val promptId = "Test prompt id"
+        val nodeLLMRequestStreamingName = "stream-and-collect"
 
         val model = OpenAIModels.Chat.GPT4o
 
-        val strategy = strategy<String, String>("tracing-streaming-success") {
-            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+        val strategy = strategy<String, String>(strategyName) {
+            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>(nodeLLMRequestStreamingName)
 
             edge(nodeStart forwardTo streamAndCollect)
             edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
@@ -349,7 +364,7 @@ class TraceFeatureMessageTestWriterTest {
 
         TestFeatureMessageWriter().use { writer ->
             createAgent(
-                agentId = "test-agent-id",
+                agentId = agentId,
                 strategy = strategy,
                 promptExecutor = testExecutor,
                 systemPrompt = systemPrompt,
@@ -363,13 +378,13 @@ class TraceFeatureMessageTestWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                agent.run("")
+                agent.run(userPrompt)
 
                 val actualEvents = writer.messages.filter { event ->
                     event is LLMStreamingStartingEvent ||
                         event is LLMStreamingFrameReceivedEvent ||
-                        event is LLMStreamingFailedEvent ||
-                        event is LLMStreamingCompletedEvent
+                        event is LLMStreamingCompletedEvent ||
+                        event is LLMStreamingFailedEvent
                 }
 
                 val expectedPrompt = Prompt(
@@ -381,31 +396,31 @@ class TraceFeatureMessageTestWriterTest {
                     id = promptId
                 )
 
-                val callIds = actualEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
-                assertEquals(
-                    1,
-                    callIds.size,
-                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
-                )
+                val actualStreamingStartingEvent = writer.messages.singleEvent<LLMStreamingStartingEvent>()
 
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
                         runId = writer.runId,
-                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingFrameReceivedEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
                         runId = writer.runId,
-                        callId = callIds[0],
+                        prompt = expectedPrompt,
+                        model = model.toModelInfo(),
                         frame = StreamFrame.Append(testLLMResponse),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
                         runId = writer.runId,
-                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
@@ -421,14 +436,17 @@ class TraceFeatureMessageTestWriterTest {
 
     @Test
     fun `test llm streaming events failure`() = runBlocking {
+        val agentId = "test-agent-id"
         val userPrompt = "Call the dummy tool with argument: test"
         val systemPrompt = "Test system prompt"
         val assistantPrompt = "Test assistant prompt"
         val promptId = "Test prompt id"
+        val strategyName = "tracing-streaming-failure"
+        val nodeStreamingFailedName = "test-node-streaming-failed"
         val model = OpenAIModels.Chat.GPT4o
 
-        val strategy = strategy<String, String>("tracing-streaming-failure") {
-            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+        val strategy = strategy<String, String>(strategyName) {
+            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>(nodeStreamingFailedName)
 
             edge(nodeStart forwardTo streamAndCollect)
             edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
@@ -443,13 +461,13 @@ class TraceFeatureMessageTestWriterTest {
             override suspend fun execute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): List<Message.Response> = emptyList()
 
             override fun executeStreaming(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow {
                 val testException = IllegalStateException(testStreamingErrorMessage)
                 testStreamingStackTrace = testException.stackTraceToString()
@@ -469,6 +487,7 @@ class TraceFeatureMessageTestWriterTest {
         TestFeatureMessageWriter().use { writer ->
 
             createAgent(
+                agentId = agentId,
                 systemPrompt = systemPrompt,
                 userPrompt = userPrompt,
                 assistantPrompt = assistantPrompt,
@@ -497,38 +516,36 @@ class TraceFeatureMessageTestWriterTest {
                     id = promptId
                 )
 
-                val actualEvents = writer.messages.filter { event ->
-                    event is LLMStreamingStartingEvent ||
-                        event is LLMStreamingFrameReceivedEvent ||
-                        event is LLMStreamingFailedEvent ||
-                        event is LLMStreamingCompletedEvent
-                }
+                val actualEvents = writer.messages.filterIsInstance<LLMStreamingStartingEvent>() +
+                    writer.messages.filterIsInstance<LLMStreamingFrameReceivedEvent>() +
+                    writer.messages.filterIsInstance<LLMStreamingFailedEvent>() +
+                    writer.messages.filterIsInstance<LLMStreamingCompletedEvent>()
 
-                val callIds = actualEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
-                assertEquals(
-                    1,
-                    callIds.size,
-                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
-                )
+                val actualStreamingStartingEvent = writer.messages.singleEvent<LLMStreamingStartingEvent>()
 
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeStreamingFailedName),
                         runId = writer.runId,
-                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingFailedEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeStreamingFailedName),
                         runId = writer.runId,
-                        callId = callIds[0],
+                        prompt = expectedPrompt,
+                        model = model.toModelInfo(),
                         error = AIAgentError(testStreamingErrorMessage, testStreamingStackTrace),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeStreamingFailedName),
                         runId = writer.runId,
-                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
@@ -544,22 +561,22 @@ class TraceFeatureMessageTestWriterTest {
 
     @Test
     fun `test subgraph execution events success`() = runBlocking {
+        val agentId = "test-agent-id"
         val strategyName = "test-strategy"
         val subgraphName = "test-subgraph"
-        val subgraphNodeName = "test-subgraph-node"
         val subgraphOutput = "test-subgraph-output"
         val inputRequest = "Test input"
 
         val strategy = strategy<String, String>(strategyName) {
             val subgraph by subgraph<String, String>(subgraphName) {
-                val subgraphNode by node<String, String>(subgraphNodeName) { subgraphOutput }
-                nodeStart then subgraphNode then nodeFinish
+                edge(nodeStart forwardTo nodeFinish transformed { subgraphOutput })
             }
             nodeStart then subgraph then nodeFinish
         }
 
         TestFeatureMessageWriter().use { writer ->
             val agentOutput = createAgent(
+                agentId = agentId,
                 strategy = strategy,
             ) {
                 install(Tracing) {
@@ -574,6 +591,8 @@ class TraceFeatureMessageTestWriterTest {
                     event is SubgraphExecutionCompletedEvent ||
                     event is SubgraphExecutionFailedEvent
             }
+
+            val actualSubgraphStartingEvent = writer.messages.singleEvent<SubgraphExecutionStartingEvent>()
 
             val runIdFromEvents = (actualEvents.first() as SubgraphExecutionStartingEvent).runId
 
@@ -591,12 +610,16 @@ class TraceFeatureMessageTestWriterTest {
 
             val expectedEvents = listOf(
                 SubgraphExecutionStartingEvent(
+                    eventId = actualSubgraphStartingEvent.eventId,
+                    executionInfo = agentExecutionInfo(agentId, strategyName, subgraphName),
                     runId = runIdFromEvents,
                     subgraphName = subgraphName,
                     input = expectedInput,
                     timestamp = testClock.now().toEpochMilliseconds()
                 ),
                 SubgraphExecutionCompletedEvent(
+                    eventId = actualSubgraphStartingEvent.eventId,
+                    executionInfo = agentExecutionInfo(agentId, strategyName, subgraphName),
                     runId = runIdFromEvents,
                     subgraphName = subgraphName,
                     input = expectedInput,
@@ -612,6 +635,7 @@ class TraceFeatureMessageTestWriterTest {
 
     @Test
     fun `test subgraph execution events failure`() = runBlocking {
+        val agentId = "test-agent-id"
         val strategyName = "test-strategy"
         val subgraphName = "test-subgraph"
         val subgraphErrorNodeName = "test-subgraph-error-node"
@@ -629,10 +653,11 @@ class TraceFeatureMessageTestWriterTest {
         }
 
         TestFeatureMessageWriter().use { writer ->
-            var expectedStackTrace = ""
-            var expectedCause = ""
+            var expectedStackTrace: String = ""
+            var expectedCause: String? = null
 
             val agentThrowable = createAgent(
+                agentId = agentId,
                 strategy = strategy,
             ) {
                 install(Tracing) {
@@ -644,7 +669,7 @@ class TraceFeatureMessageTestWriterTest {
                         agent.run(inputRequest)
                     } catch (t: Throwable) {
                         expectedStackTrace = t.stackTraceToString()
-                        expectedCause = t.cause?.stackTraceToString() ?: ""
+                        expectedCause = t.cause?.stackTraceToString()
                         throw t
                     }
                 }
@@ -659,6 +684,8 @@ class TraceFeatureMessageTestWriterTest {
                     event is SubgraphExecutionFailedEvent
             }
 
+            val actualSubgraphStartingEvent = writer.messages.singleEvent<SubgraphExecutionStartingEvent>()
+
             val runIdFromEvents = (actualEvents.first() as SubgraphExecutionStartingEvent).runId
 
             val expectedInput = @OptIn(InternalAgentsApi::class)
@@ -669,12 +696,16 @@ class TraceFeatureMessageTestWriterTest {
 
             val expectedEvents = listOf(
                 SubgraphExecutionStartingEvent(
+                    eventId = actualSubgraphStartingEvent.eventId,
+                    executionInfo = agentExecutionInfo(agentId, strategyName, subgraphName),
                     runId = runIdFromEvents,
                     subgraphName = subgraphName,
                     input = expectedInput,
                     timestamp = testClock.now().toEpochMilliseconds()
                 ),
                 SubgraphExecutionFailedEvent(
+                    eventId = actualSubgraphStartingEvent.eventId,
+                    executionInfo = agentExecutionInfo(agentId, strategyName, subgraphName),
                     runId = runIdFromEvents,
                     subgraphName = subgraphName,
                     input = expectedInput,

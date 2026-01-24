@@ -2,6 +2,7 @@ package ai.koog.agents.features.tracing.writer
 
 import ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
+import kotlin.jvm.JvmOverloads
 
 /**
  * A message processor that sends trace events to a remote server.
@@ -37,5 +38,5 @@ import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
  * @param connectionConfig Optional configuration for the remote server connection.
  *                         If null, default connection settings will be used.
  */
-public class TraceFeatureMessageRemoteWriter(connectionConfig: ServerConnectionConfig? = null) :
+public class TraceFeatureMessageRemoteWriter @JvmOverloads constructor(connectionConfig: ServerConnectionConfig? = null) :
     FeatureMessageRemoteWriter(connectionConfig)

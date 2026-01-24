@@ -7,7 +7,9 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.bedrock.converse.BedrockConverseConverters
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.BedrockAI21JambaSerialization
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.JambaRequest
@@ -47,16 +49,20 @@ import aws.smithy.kotlin.runtime.identity.IdentityProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import org.jetbrains.annotations.VisibleForTesting
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Configuration settings for connecting to the AWS Bedrock API.
@@ -64,18 +70,46 @@ import kotlinx.serialization.json.Json
  * @property region The AWS region where Bedrock service is hosted.
  * @property timeoutConfig Configuration for connection timeouts.
  * @property endpointUrl Optional custom endpoint URL for testing or private deployments.
+ * @property apiMethod The API method to use for interacting with Bedrock models that support messages, defaults to [BedrockAPIMethod.InvokeModel].
  * @property maxRetries Maximum number of retries for failed requests.
  * @property enableLogging Whether to enable detailed AWS SDK logging.
  * @property moderationGuardrailsSettings Optional settings of the AWS bedrock Guardrails (see [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) ) that would be used for the [LLMClient.moderate] request
+ * @property fallbackModelFamily Optional fallback model family to use for unsupported models. If not provided, unsupported models will throw an exception.
  */
 public class BedrockClientSettings(
-    internal val region: String = BedrockRegions.US_WEST_2.regionCode,
-    internal val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-    internal val endpointUrl: String? = null,
-    internal val maxRetries: Int = 3,
-    internal val enableLogging: Boolean = false,
-    internal val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null
+    public val region: String = BedrockRegions.US_WEST_2.regionCode,
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val endpointUrl: String? = null,
+    public val apiMethod: BedrockAPIMethod = BedrockAPIMethod.InvokeModel,
+    public val maxRetries: Int = 3,
+    public val enableLogging: Boolean = false,
+    public val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
+    public val fallbackModelFamily: BedrockModelFamilies? = null
 )
+
+/**
+ * Defines Bedrock API methods to interact with the models that support messages.
+ */
+public sealed interface BedrockAPIMethod {
+    /**
+     * Defines `/model/{modelId}/invoke` API method.
+     * When using this method, request body is formatted manually and is specific to the invoked model.
+     *
+     * Consider using [Converse] if possible, since this is a newer method aiming to provide a consistent interface for all models.
+     *
+     * [AWS API docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html)
+     */
+    public object InvokeModel : BedrockAPIMethod
+
+    /**
+     * Defines `/model/{modelId}/converse` API method.
+     * Provides a consistent interface that works with all models that support messages.
+     * Supports custom inference parameters for models that require it.
+     *
+     * [AWS API docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html)
+     */
+    public object Converse : BedrockAPIMethod
+}
 
 /**
  * Represents the settings configuration for Bedrock guardrails.
@@ -86,21 +120,26 @@ public class BedrockClientSettings(
  * @property guardrailVersion The version of the guardrail configuration.
  */
 public class BedrockGuardrailsSettings(
-    internal val guardrailIdentifier: String,
-    internal val guardrailVersion: String,
+    public val guardrailIdentifier: String,
+    public val guardrailVersion: String,
 )
 
 /**
  * Creates a new Bedrock LLM client configured with the specified AWS credentials and settings.
  *
  * @param bedrockClient The runtime client for interacting with Bedrock, highly configurable
- * @param clock A clock used for time-based operations
+ * @param apiMethod The API method to use for interacting with Bedrock models that support messages, defaults to [BedrockAPIMethod.InvokeModel].
  * @param moderationGuardrailsSettings Optional settings of the AWS bedrock Guardrails (see [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) ) that would be used for the [LLMClient.moderate] request
+ * @param fallbackModelFamily Optional fallback model family to use for unsupported models. If not provided, unsupported models will throw an exception.
+ * @param clock A clock used for time-based operations
  * @return A configured [LLMClient] instance for Bedrock
  */
-public class BedrockLLMClient(
-    private val bedrockClient: BedrockRuntimeClient,
+public class BedrockLLMClient @JvmOverloads constructor(
+    @VisibleForTesting
+    internal val bedrockClient: BedrockRuntimeClient,
+    private val apiMethod: BedrockAPIMethod = BedrockAPIMethod.InvokeModel,
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
+    private val fallbackModelFamily: BedrockModelFamilies? = null,
     private val clock: Clock = Clock.System,
 ) : LLMClient, LLMEmbeddingProvider {
 
@@ -124,8 +163,13 @@ public class BedrockLLMClient(
             this.region = settings.region
             when (identityProvider) {
                 is CredentialsProvider -> this.credentialsProvider = identityProvider
+
                 is BearerTokenProvider -> this.bearerTokenProvider = identityProvider
-                else -> throw IllegalArgumentException("identityProvider must be either CredentialsProvider or BearerTokenProvider")
+
+                else -> throw LLMClientException(
+                    clientName,
+                    "identityProvider must be either CredentialsProvider or BearerTokenProvider"
+                )
             }
             // Configure a custom endpoint if provided
             settings.endpointUrl?.let { url ->
@@ -135,8 +179,20 @@ public class BedrockLLMClient(
             this.retryStrategy = StandardRetryStrategy {
                 maxAttempts = settings.maxRetries
             }
+
+            val timeoutConfig = settings.timeoutConfig
+
+            this.callTimeout = timeoutConfig.requestTimeoutMillis.milliseconds
+
+            this.httpClient {
+                connectTimeout = timeoutConfig.connectTimeoutMillis.milliseconds
+                socketReadTimeout = timeoutConfig.socketTimeoutMillis.milliseconds
+                socketWriteTimeout = timeoutConfig.socketTimeoutMillis.milliseconds
+            }
         },
         moderationGuardrailsSettings = settings.moderationGuardrailsSettings,
+        fallbackModelFamily = settings.fallbackModelFamily,
+        apiMethod = settings.apiMethod,
         clock = clock
     )
 
@@ -147,24 +203,34 @@ public class BedrockLLMClient(
         encodeDefaults = true
     }
 
+    @VisibleForTesting
     internal fun getBedrockModelFamily(model: LLModel): BedrockModelFamilies {
         require(model.provider == LLMProvider.Bedrock) { "Model ${model.id} is not a Bedrock model" }
+
         return when {
             model.id.contains("anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
+
             model.id.contains("amazon.nova") -> BedrockModelFamilies.AmazonNova
+
             model.id.contains("ai21.jamba") -> BedrockModelFamilies.AI21Jamba
+
             model.id.contains("meta.llama") -> BedrockModelFamilies.Meta
+
             model.id.contains("amazon.titan") -> BedrockModelFamilies.TitanEmbedding
+
             model.id.contains("cohere.embed") -> BedrockModelFamilies.Cohere
-            else -> throw IllegalArgumentException("Model ${model.id} is not a supported Bedrock model")
+
+            else -> {
+                if (fallbackModelFamily != null) {
+                    logger.warn { "Model ${model.id} is not a supported Bedrock model, using fallback: ${fallbackModelFamily.display}" }
+                    fallbackModelFamily
+                } else {
+                    throw LLMClientException(clientName, "Model ${model.id} is not a supported Bedrock model")
+                }
+            }
         }
     }
 
-    /**
-     * Provides the current language learning model provider utilized by this client.
-     *
-     * @return the [LLMProvider] instance, specifically `LLMProvider.Bedrock` for this client.
-     */
     override fun llmProvider(): LLMProvider = LLMProvider.Bedrock
 
     override suspend fun execute(
@@ -173,12 +239,28 @@ public class BedrockLLMClient(
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
         logger.debug { "Executing prompt for model: ${model.id}" }
-        val modelFamily = getBedrockModelFamily(model)
+
         model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
         // Check tool support
         if (tools.isNotEmpty() && !model.capabilities.contains(LLMCapability.Tools)) {
-            throw IllegalArgumentException("Model ${model.id} does not support tools")
+            throw LLMClientException(clientName, "Model ${model.id} does not support tools")
         }
+
+        return when (apiMethod) {
+            is BedrockAPIMethod.InvokeModel -> doExecuteInvokeModel(prompt, model, tools)
+            is BedrockAPIMethod.Converse -> doExecuteConverse(prompt, model, tools)
+        }
+    }
+
+    /**
+     * Executes prompt using [BedrockAPIMethod.InvokeModel].
+     */
+    private suspend fun doExecuteInvokeModel(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<Message.Response> {
+        val modelFamily = getBedrockModelFamily(model)
         val requestBody = createRequestBody(prompt, model, tools)
         val invokeRequest = InvokeModelRequest {
             this.modelId = model.id
@@ -188,35 +270,79 @@ public class BedrockLLMClient(
         }
         logger.debug { "Bedrock InvokeModel Request: ModelID: ${model.id}, Body: $requestBody" }
         return withContext(Dispatchers.SuitableForIO) {
-            val response = bedrockClient.invokeModel(invokeRequest)
-            val responseBodyString = response.body.decodeToString()
-            logger.debug { "Bedrock InvokeModel Response: $responseBodyString" }
-            if (responseBodyString.isBlank()) {
-                logger.error { "Received null or empty body from Bedrock model ${model.id}" }
-                error("Received null or empty body from Bedrock model ${model.id}")
+            try {
+                val response = bedrockClient.invokeModel(invokeRequest)
+                val responseBodyString = response.body.decodeToString()
+                logger.debug { "Bedrock InvokeModel Response: $responseBodyString" }
+                if (responseBodyString.isBlank()) {
+                    val exception =
+                        LLMClientException(clientName, "Received null or empty body from Bedrock model ${model.id}")
+                    logger.error(exception) { exception.message }
+                    throw exception
+                }
+                return@withContext when (modelFamily) {
+                    is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaResponse(
+                        responseBodyString,
+                        clock
+                    )
+
+                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaResponse(
+                        responseBodyString,
+                        clock
+                    )
+
+                    is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicResponse(
+                        responseBodyString,
+                        clock
+                    )
+
+                    is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaResponse(
+                        responseBodyString,
+                        clock
+                    )
+
+                    is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere -> throw LLMClientException(
+                        clientName,
+                        "Model family ${modelFamily.display} does not support chat completions; use embed() API instead."
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw LLMClientException(
+                    clientName = clientName,
+                    message = e.message,
+                    cause = e
+                )
             }
-            return@withContext when (modelFamily) {
-                is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaResponse(
-                    responseBodyString,
-                    clock
-                )
+        }
+    }
 
-                is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaResponse(
-                    responseBodyString,
-                    clock
-                )
+    /**
+     * Executes prompt using [BedrockAPIMethod.Converse].
+     */
+    private suspend fun doExecuteConverse(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<Message.Response> {
+        val converseRequest = BedrockConverseConverters.createConverseRequest(prompt, model, tools)
 
-                is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicResponse(
-                    responseBodyString,
-                    clock
-                )
+        return withContext(Dispatchers.SuitableForIO) {
+            try {
+                logger.debug { "Bedrock Converse Request: ModelID: ${model.id}, Request: $converseRequest" }
+                val response = bedrockClient.converse(converseRequest)
+                logger.debug { "Bedrock Converse Response: $response" }
 
-                is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaResponse(
-                    responseBodyString,
-                    clock
+                BedrockConverseConverters.convertConverseResponse(response, clock)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw LLMClientException(
+                    clientName = clientName,
+                    message = e.message,
+                    cause = e
                 )
-
-                is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere -> error("Model family ${modelFamily.display} does not support chat completions; use embed() API instead.")
             }
         }
     }
@@ -228,8 +354,29 @@ public class BedrockLLMClient(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt for model: ${model.id}" }
-        val modelFamily = getBedrockModelFamily(model)
+
         model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
+        // Check tool support
+        if (tools.isNotEmpty() && !model.capabilities.contains(LLMCapability.Tools)) {
+            throw LLMClientException(clientName, "Model ${model.id} does not support tools")
+        }
+
+        return when (apiMethod) {
+            is BedrockAPIMethod.InvokeModel -> doExecuteStreamingInvokeModel(prompt, model, tools)
+            is BedrockAPIMethod.Converse -> doExecuteStreamingConverse(prompt, model, tools)
+        }
+    }
+
+    /**
+     * Executes prompt using [BedrockAPIMethod.InvokeModel] in streaming mode.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    private fun doExecuteStreamingInvokeModel(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
+        val modelFamily = getBedrockModelFamily(model)
         val requestBody = createRequestBody(prompt, model, tools)
         val streamRequest = InvokeModelWithResponseStreamRequest {
             this.modelId = model.id
@@ -257,42 +404,103 @@ public class BedrockLLMClient(
                         }
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                logger.error(e) { "Error in Bedrock streaming for model ${model.id}" }
-                close(e)
+                val exception = LLMClientException(
+                    clientName = clientName,
+                    message = "Error in Bedrock streaming for model ${model.id}",
+                    cause = e
+                )
+                logger.error(exception) { exception.message }
+                close(exception)
             }
-        }.map { chunkJsonString ->
+        }.filterNot {
+            it.isBlank()
+        }.run {
+            when (modelFamily) {
+                is BedrockModelFamilies.AI21Jamba -> genericProcessStream(
+                    this,
+                    BedrockAI21JambaSerialization::parseJambaStreamChunk
+                )
+
+                is BedrockModelFamilies.AmazonNova -> genericProcessStream(
+                    this,
+                    BedrockAmazonNovaSerialization::parseNovaStreamChunk
+                )
+
+                is BedrockModelFamilies.Meta -> genericProcessStream(
+                    this,
+                    BedrockMetaLlamaSerialization::parseLlamaStreamChunk
+                )
+
+                is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.transformAnthropicStreamChunks(
+                    chunkJsonStringFlow = this,
+                    clock = clock,
+                )
+
+                is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere ->
+                    throw LLMClientException(
+                        clientName,
+                        "Embedding models do not support streaming chat completions. Use embed() instead."
+                    )
+            }
+        }
+    }
+
+    /**
+     * Processes a flow of JSON strings into StreamFrames using the provided processor function.
+     * Handles exceptions by logging and re-throwing them.
+     */
+    private fun genericProcessStream(
+        chunkJsonStringFlow: Flow<String>,
+        processor: (String) -> List<StreamFrame>
+    ): Flow<StreamFrame> =
+        chunkJsonStringFlow.map { chunkJsonString ->
             try {
-                if (chunkJsonString.isBlank()) return@map emptyList()
-                when (modelFamily) {
-                    is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaStreamChunk(
-                        chunkJsonString
-                    )
-
-                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaStreamChunk(
-                        chunkJsonString
-                    )
-
-                    is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(
-                        chunkJsonString
-                    )
-
-                    is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
-                    is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere -> error("Embedding models do not support streaming chat completions. Use embed() instead.")
-                }
+                processor(chunkJsonString)
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to parse Bedrock stream chunk: $chunkJsonString" }
                 throw e
             }
         }.transform { frames ->
-            frames.forEach {
-                emit(it)
-            }
+            frames.forEach { emit(it) }
         }
+
+    /**
+     * Executes prompt using [BedrockAPIMethod.Converse] in streaming mode.
+     */
+    private fun doExecuteStreamingConverse(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
+        val converseRequest = BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools)
+
+        return channelFlow {
+            withContext(Dispatchers.SuitableForIO) {
+                try {
+                    logger.debug { "Bedrock Converse Stream Request: ModelID: ${model.id}, Request: $converseRequest" }
+                    bedrockClient.converseStream(converseRequest) { response ->
+                        val stream = requireNotNull(response.stream) { "Got null stream in Converse Stream response" }
+                        stream.collect { send(it) }
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    throw LLMClientException(
+                        clientName = clientName,
+                        message = e.message,
+                        cause = e
+                    )
+                }
+            }
+        }.let { BedrockConverseConverters.transformConverseStreamChunks(it, clock) }
     }
 
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         model.requireCapability(LLMCapability.Embed)
+
         logger.debug { "Embedding text with model: ${model.id}" }
         val modelFamily = getBedrockModelFamily(model)
         val requestBody = createEmbeddingRequestBody(text, model)
@@ -321,7 +529,10 @@ public class BedrockLLMClient(
                             BedrockAmazonTitanEmbeddingSerialization.extractV2Embedding(titanV2Response)
                         }
 
-                        else -> error("Unknown Amazon Titan embedding model ID: ${model.id}")
+                        else -> throw LLMClientException(
+                            clientName,
+                            "Unknown Amazon Titan embedding model ID: ${model.id}"
+                        )
                     }
                 }
 
@@ -330,7 +541,10 @@ public class BedrockLLMClient(
                     BedrockCohereSerialization.extractEmbeddings(cohereResponse).first()
                 }
 
-                else -> error("Model family: ${modelFamily.display} does not support embeddings; use execute() or executeStreaming() for completion models.")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Model family: ${modelFamily.display} does not support embeddings; use execute() or executeStreaming() for completion models."
+                )
             }
         }
     }
@@ -364,7 +578,8 @@ public class BedrockLLMClient(
             )
 
             is BedrockModelFamilies.TitanEmbedding,
-            is BedrockModelFamilies.Cohere -> error(
+            is BedrockModelFamilies.Cohere -> throw LLMClientException(
+                clientName,
                 "createRequestBody() should not be used with embedding models. Use createEmbeddingRequestBody() instead for Bedrock embedding models."
             )
         }
@@ -380,7 +595,7 @@ public class BedrockLLMClient(
                     "amazon.titan-embed-text-v2:0" ->
                         BedrockAmazonTitanEmbeddingSerialization.createV2Request(text)
 
-                    else -> error("Unknown Amazon Titan embedding model ID: ${model.id}")
+                    else -> throw LLMClientException(clientName, "Unknown Amazon Titan embedding model ID: ${model.id}")
                 }
             }
 
@@ -388,7 +603,8 @@ public class BedrockLLMClient(
                 BedrockCohereSerialization.createV3TextRequest(listOf(text))
             }
 
-            else -> error(
+            else -> throw LLMClientException(
+                clientName,
                 "Model family: ${modelFamily.display} does not support embeddings; use execute() or executeStreaming() for completion models."
             )
         }
@@ -431,7 +647,8 @@ public class BedrockLLMClient(
         model: LLModel
     ): ModerationResult {
         if (moderationGuardrailsSettings == null) {
-            throw IllegalArgumentException(
+            throw LLMClientException(
+                clientName,
                 "Moderation Guardrails settings are not provided to the Bedrock client. " +
                     "Please provide them to the BedrockClientSettings when creating the Bedrock client. " +
                     "See https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html for more information."
@@ -553,11 +770,15 @@ public class BedrockLLMClient(
                                     }
                                     source = when (val imageContent = part.content) {
                                         is AttachmentContent.Binary.Base64 -> Bytes(imageContent.asBytes())
+
                                         is AttachmentContent.Binary.Bytes -> Bytes(imageContent.data)
+
                                         is AttachmentContent.PlainText ->
                                             Bytes(imageContent.text.encodeToByteArray())
+
                                         else -> {
-                                            throw IllegalArgumentException(
+                                            throw LLMClientException(
+                                                clientName,
                                                 "Unsupported image content type: ${imageContent::class.simpleName}. " +
                                                     "Bedrock Guardrails only supports Binary.Base64, Binary.Bytes, or PlainText content."
                                             )
@@ -568,7 +789,10 @@ public class BedrockLLMClient(
                         }
 
                         else -> {
-                            throw IllegalArgumentException("Unsupported attachment type: ${part::class.simpleName}")
+                            throw LLMClientException(
+                                clientName,
+                                "Unsupported attachment type: ${part::class.simpleName}"
+                            )
                         }
                     }
 

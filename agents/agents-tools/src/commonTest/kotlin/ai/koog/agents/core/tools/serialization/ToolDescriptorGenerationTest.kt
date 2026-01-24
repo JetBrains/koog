@@ -58,14 +58,12 @@ data class ComplexNestedToolArgs(
     val profile: UserProfile
 )
 
-object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>() {
-    override val argsSerializer = ComplexNestedToolArgs.serializer()
-
-    override val name = "complex_nested_tool"
-
-    override val description = "A tool that processes user profiles with complex nested structures."
-
-    override suspend fun doExecute(args: ComplexNestedToolArgs): String {
+object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>(
+    argsSerializer = ComplexNestedToolArgs.serializer(),
+    name = "complex_nested_tool",
+    description = "A tool that processes user profiles with complex nested structures.",
+) {
+    override suspend fun execute(args: ComplexNestedToolArgs): String {
         return ""
     }
 }

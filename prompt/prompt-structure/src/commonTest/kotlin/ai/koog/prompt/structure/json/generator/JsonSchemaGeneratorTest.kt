@@ -5,6 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
@@ -160,6 +161,20 @@ class JsonSchemaGeneratorTest {
     @SerialName("RecursiveTestClass")
     data class RecursiveTestClass(
         val recursiveProperty: RecursiveTestClass?
+    )
+
+    @Serializable
+    @SerialName("EventData")
+    data class EventData(
+        @property:LLMDescription("Any valid JSON value.")
+        val value: JsonElement
+    )
+
+    @Serializable
+    @SerialName("NullableEventData")
+    data class NullableEventData(
+        @property:LLMDescription("Any valid JSON value, or null.")
+        val value: JsonElement? = null
     )
 
     @Test
@@ -804,5 +819,67 @@ class JsonSchemaGeneratorTest {
         assertFailsWith<IllegalStateException> {
             basicGenerator.generate(json, "RecursiveTestClass", serializer<RecursiveTestClass>(), emptyMap())
         }
+    }
+
+    @Test
+    fun testStandardSchemaWithJsonElementProperty() {
+        val result = standardGenerator.generate(json, "EventData", serializer<EventData>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+
+        val expectedSchema = """
+            {
+              "${"$"}id": "EventData",
+              "${"$"}defs": {
+                "EventData": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "description": "Any valid JSON value."
+                    }
+                  },
+                  "required": [
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "${"$"}ref": "#/${"$"}defs/EventData"
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testStandardSchemaWithNullableJsonElementProperty() {
+        val result = standardGenerator.generate(json, "NullableEventData", serializer<NullableEventData>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+
+        val expectedSchema = """
+            {
+              "${"$"}id": "NullableEventData",
+              "${"$"}defs": {
+                "NullableEventData": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "oneOf": [
+                        {},
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Any valid JSON value, or null."
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              },
+              "${"$"}ref": "#/${"$"}defs/NullableEventData"
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
     }
 }

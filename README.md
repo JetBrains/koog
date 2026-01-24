@@ -3,18 +3,22 @@
 [![Kotlin Alpha](https://kotl.in/badges/alpha.svg)](https://kotlinlang.org/docs/components-stability.html)
 [![Maven Central](https://img.shields.io/maven-central/v/ai.koog/koog-agents)](https://search.maven.org/artifact/ai.koog/koog-agents)
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://github.com/JetBrains#jetbrains-on-github)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.1-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![CI status](https://img.shields.io/github/checks-status/JetBrains/koog/main)](https://github.com/JetBrains/koog/actions?query=branch%3Amain)
 [![GitHub license](https://img.shields.io/github/license/JetBrains/koog)](LICENSE.txt)
-[![API Docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
-[![API](https://img.shields.io/badge/API-Docs-blue)](https://api.koog.ai/)
-[![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
 
 Build status:
 
 [![Checks](https://github.com/JetBrains/koog/actions/workflows/checks.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/checks.yml?query=branch%3Adevelop)
 [![Heavy Tests](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml?query=branch%3Adevelop)
 [![Ollama Tests](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml?query=branch%3Adevelop)
+
+Useful links:
+
+* [Documentation](https://docs.koog.ai/)
+* [API reference](https://api.koog.ai/)
+* [Slack channel](https://docs.koog.ai/koog-slack-channel/)
+* [Issue tracker](https://youtrack.jetbrains.com/issues/KG)
 
 ## Overview
 
@@ -32,6 +36,7 @@ Key features of Koog include:
 - **LLM switching and seamless history adaptation**: Switch to a different LLM at any point without losing the existing conversation history, or reroute between multiple LLM providers.
 - **Integration with JVM and Kotlin applications**: Build AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
 - **Model Context Protocol integration**: Use Model Context Protocol (MCP) tools in AI agents.
+- **Agent Client Protocol integration**: Build ACP-compliant agents that can communicate with standardized client applications using the Agent Client Protocol (ACP).
 - **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, ranked document storage, and shared agent memory.
 - **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
@@ -61,7 +66,7 @@ fun main() = runBlocking {
    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
    val agent = AIAgent(
-      executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
+      promptExecutor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
       systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
       llmModel = OpenAIModels.Chat.GPT4o
    )
@@ -88,7 +93,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 
     ```
     dependencies {
-        implementation("ai.koog:koog-agents:0.5.2")
+        implementation("ai.koog:koog-agents:0.6.0")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -98,7 +103,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 
     ```
     dependencies {
-        implementation 'ai.koog:koog-agents:0.5.2'
+        implementation 'ai.koog:koog-agents:0.6.0'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -110,7 +115,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
-        <version>0.5.2</version>
+        <version>0.6.0</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.
@@ -125,10 +130,9 @@ Koog is licensed under the [Apache 2.0 License](LICENSE.txt).
 
 ## Support
 
-Please feel free to ask any questions in our official Slack
-channel ([link](https://kotlinlang.slack.com/messages/koog-agentic-framework/)) and to
+Please feel free to ask any questions in our [official Slack
+channel](https://docs.koog.ai/koog-slack-channel/) and to
 use [Koog official YouTrack project](https://youtrack.jetbrains.com/issues/KG)
 for filing feature requests and bug reports.
-
 
 

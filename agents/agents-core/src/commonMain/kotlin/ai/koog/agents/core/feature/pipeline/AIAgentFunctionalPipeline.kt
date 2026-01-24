@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.pipeline
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import kotlinx.datetime.Clock
@@ -13,8 +14,10 @@ import kotlinx.datetime.Clock
  *
  * @property clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentFunctionalPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
-
+public class AIAgentFunctionalPipeline(
+    agentConfig: AIAgentConfig,
+    clock: Clock = Clock.System
+) : AIAgentPipeline(agentConfig, clock) {
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *
@@ -33,6 +36,6 @@ public class AIAgentFunctionalPipeline(clock: Clock = Clock.System) : AIAgentPip
             pipeline = this,
         )
 
-        registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)
+        super.install(feature.key, featureConfig, featureImpl)
     }
 }

@@ -2,6 +2,7 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -51,13 +52,13 @@ public class MockEnvironment(
      * Executes a list of tool calls and returns their results.
      *
      * This method processes each tool call individually by:
-     * 1. First checking if there are any mocked responses for the tool call
-     * 2. If no mocks are found, executing the actual tool implementation
+     * 1. First, checking if there are any mocked responses for the tool call
+     * 2. If no mocks are found, execute the actual tool implementation
      *
      * @param toolCalls The list of tool calls to execute
      * @return A list of [ReceivedToolResult] objects containing the results of the tool calls
      */
-    override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
+    public override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
         return toolCalls.map {
             executeTool(it)
         }
@@ -71,34 +72,40 @@ public class MockEnvironment(
      * 2. If a matching mock is found, use it to generate the result
      * 3. Otherwise, retrieve the actual tool from the registry and execute it
      *
-     * @param functionCall The tool call to execute
+     * @param toolCall The tool call to execute
      * @return A [ReceivedToolResult] containing the result of the tool call
      */
-    private suspend fun executeTool(functionCall: Message.Tool.Call): ReceivedToolResult {
+    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
         if (promptExecutor is MockLLMExecutor) {
             promptExecutor.toolActions
-                .find { it.satisfies(functionCall) }
-                ?.invokeAndSerialize(functionCall)
+                .find { it.satisfies(toolCall) }
+                ?.invokeAndSerialize(toolCall)
                 ?.let { (result, content) ->
-                    val tool: Tool<*, *> = toolRegistry.getTool(functionCall.tool)
+                    val tool: Tool<*, *> = toolRegistry.getTool(toolCall.tool)
                     return ReceivedToolResult(
-                        id = functionCall.id,
-                        tool = functionCall.tool,
+                        id = toolCall.id,
+                        tool = toolCall.tool,
+                        toolArgs = toolCall.contentJson,
+                        toolDescription = tool.descriptor.description,
                         content = content,
+                        resultKind = ToolResultKind.Success,
                         result = tool.encodeResultUnsafe(result)
                     )
                 }
         }
 
-        val tool = toolRegistry.getTool(functionCall.tool)
+        val tool = toolRegistry.getTool(toolCall.tool)
 
-        val args = tool.decodeArgs(functionCall.contentJson)
+        val args = tool.decodeArgs(toolCall.contentJson)
         val result = tool.executeUnsafe(args)
 
         return ReceivedToolResult(
-            id = functionCall.id,
-            tool = functionCall.tool,
+            id = toolCall.id,
+            tool = toolCall.tool,
+            toolArgs = toolCall.contentJson,
+            toolDescription = tool.descriptor.description,
             content = tool.encodeResultToStringUnsafe(result),
+            resultKind = ToolResultKind.Success,
             result = tool.encodeResultUnsafe(result)
         )
     }
@@ -109,7 +116,7 @@ public class MockEnvironment(
      * In a testing environment, this behavior makes exceptions visible to the test framework,
      * allowing tests to catch and verify expected exceptions.
      *
-     * @param exception The exception to report
+     * @param exception The exception to the report
      * @throws Throwable The same exception that was passed in
      */
     override suspend fun reportProblem(exception: Throwable) {

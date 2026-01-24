@@ -2,6 +2,7 @@ package ai.koog.embeddings.local
 
 import ai.koog.embeddings.base.Vector
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
@@ -14,6 +15,7 @@ class LLMEmbedderTest {
     val modelsList = listOf(
         OpenAIModels.Embeddings.TextEmbedding3Small,
         OllamaEmbeddingModels.NOMIC_EMBED_TEXT,
+        GoogleModels.Embeddings.GeminiEmbedding001,
     )
 
     @Test

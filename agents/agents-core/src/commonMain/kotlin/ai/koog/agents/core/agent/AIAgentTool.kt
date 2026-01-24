@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.asToolDescriptor
 import kotlinx.serialization.KSerializer
@@ -76,7 +75,7 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
  * @property outputSerializer A serializer for converting the output type to/from JSON.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  */
-public class AIAgentTool<Input, Output>(
+public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) constructor(
     private val agentService: AIAgentService<Input, Output, *>,
     private val agentName: String,
     private val agentDescription: String,
@@ -84,7 +83,11 @@ public class AIAgentTool<Input, Output>(
     private val inputSerializer: KSerializer<Input>,
     private val outputSerializer: KSerializer<Output>,
     private val parentAgentId: String? = null
-) : Tool<Input, AgentToolResult<Output>>() {
+) : Tool<Input, AgentToolResult<Output>>(
+    argsSerializer = inputSerializer,
+    resultSerializer = AgentToolResult.serializer(outputSerializer),
+    descriptor = inputSerializer.descriptor.asToolDescriptor(agentName, agentDescription, inputDescription)
+) {
     @OptIn(ExperimentalAtomicApi::class)
     private val toolCallNumber: AtomicInt = AtomicInt(0)
 
@@ -104,16 +107,6 @@ public class AIAgentTool<Input, Output>(
         val errorMessage: String? = null,
         val result: Output? = null
     )
-
-    override val argsSerializer: KSerializer<Input> = inputSerializer
-    override val resultSerializer: KSerializer<AgentToolResult<Output>> = AgentToolResult.serializer(outputSerializer)
-
-    override val name: String = agentName
-    override val description: String = agentDescription
-
-    @OptIn(InternalAgentToolsApi::class)
-    override val descriptor: ToolDescriptor =
-        inputSerializer.descriptor.asToolDescriptor(name, description, inputDescription)
 
     @OptIn(InternalAgentToolsApi::class)
     override suspend fun execute(args: Input): AgentToolResult<Output> {

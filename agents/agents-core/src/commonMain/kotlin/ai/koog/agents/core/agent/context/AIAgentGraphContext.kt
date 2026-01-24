@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
@@ -29,6 +30,7 @@ import kotlin.reflect.KType
  * and handling complex dependencies between graph nodes.
  */
 public interface AIAgentGraphContextBase : AIAgentContext {
+
     override val pipeline: AIAgentGraphPipeline
 
     /**
@@ -60,6 +62,8 @@ public interface AIAgentGraphContextBase : AIAgentContext {
         runId: String = this.runId,
         strategyName: String = this.strategyName,
         pipeline: AIAgentGraphPipeline = this.pipeline,
+        executionInfo: AgentExecutionInfo = this.executionInfo,
+        parentContext: AIAgentGraphContextBase? = this,
     ): AIAgentGraphContextBase {
         val clone = AIAgentGraphContext(
             environment = environment,
@@ -73,7 +77,8 @@ public interface AIAgentGraphContextBase : AIAgentContext {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
-            parentContext = this
+            executionInfo = executionInfo,
+            parentContext = parentContext,
         )
 
         return clone
@@ -115,7 +120,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
  */
 @OptIn(InternalAgentsApi::class)
 public class AIAgentGraphContext(
-    override val environment: AIAgentEnvironment,
+    environment: AIAgentEnvironment,
     override val agentId: String,
     override val agentInputType: KType,
     override val agentInput: Any?,
@@ -126,9 +131,11 @@ public class AIAgentGraphContext(
     override val runId: String,
     override val strategyName: String,
     override val pipeline: AIAgentGraphPipeline,
-    override val parentContext: AIAgentGraphContextBase? = null
+    executionInfo: AgentExecutionInfo,
+    override val parentContext: AIAgentGraphContextBase?,
 ) : AIAgentGraphContextBase {
-    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
+
+    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage, environment, executionInfo)
 
     override val llm: AIAgentLLMContext
         get() = mutableAIAgentContext.llm
@@ -139,6 +146,15 @@ public class AIAgentGraphContext(
     override val stateManager: AIAgentStateManager
         get() = mutableAIAgentContext.stateManager
 
+    override val environment: AIAgentEnvironment
+        get() = mutableAIAgentContext.environment
+
+    override var executionInfo: AgentExecutionInfo
+        get() = mutableAIAgentContext.executionInfo
+        set(value) {
+            mutableAIAgentContext.executionInfo = value
+        }
+
     /**
      * Mutable wrapper for AI agent context properties.
      */
@@ -146,6 +162,8 @@ public class AIAgentGraphContext(
         var llm: AIAgentLLMContext,
         var stateManager: AIAgentStateManager,
         var storage: AIAgentStorage,
+        var environment: AIAgentEnvironment,
+        var executionInfo: AgentExecutionInfo
     ) {
         private val rwLock = RWLock()
 
@@ -155,21 +173,30 @@ public class AIAgentGraphContext(
          */
         suspend fun copy(): MutableAIAgentContext {
             return rwLock.withReadLock {
-                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy())
+                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy(), environment, executionInfo.copy())
             }
         }
 
         /**
-         * Replaces the current contxt with the provided context.
+         * Replaces the current context with the provided context.
+         *
          * @param llm The LLM context to replace the current context with.
          * @param stateManager The state manager to replace the current context with.
          * @param storage The storage to replace the current context with.
          */
-        suspend fun replace(llm: AIAgentLLMContext?, stateManager: AIAgentStateManager?, storage: AIAgentStorage?) {
+        suspend fun replace(
+            llm: AIAgentLLMContext?,
+            stateManager: AIAgentStateManager?,
+            storage: AIAgentStorage?,
+            environment: AIAgentEnvironment?,
+            executionInfo: AgentExecutionInfo?,
+        ) {
             rwLock.withWriteLock {
-                llm?.let { this.llm = llm }
-                stateManager?.let { this.stateManager = stateManager }
-                storage?.let { this.storage = storage }
+                llm?.let { this.llm = it }
+                stateManager?.let { this.stateManager = it }
+                storage?.let { this.storage = it }
+                environment?.let { this.environment = it }
+                executionInfo?.let { this.executionInfo = it }
             }
         }
     }
@@ -211,13 +238,16 @@ public class AIAgentGraphContext(
         llm = this.llm.copy(),
         storage = this.storage.copy(),
         stateManager = this.stateManager.copy(),
+        executionInfo = this.executionInfo.copy(),
     )
 
     override suspend fun replace(context: AIAgentContext) {
         mutableAIAgentContext.replace(
             context.llm,
             context.stateManager,
-            context.storage
+            context.storage,
+            context.environment,
+            context.executionInfo,
         )
     }
 }

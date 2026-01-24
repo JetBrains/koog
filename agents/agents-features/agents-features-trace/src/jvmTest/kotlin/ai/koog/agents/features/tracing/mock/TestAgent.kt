@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.prompt
@@ -17,6 +18,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 internal val testClock: Clock = object : Clock {
     override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
@@ -73,13 +75,22 @@ fun toolCallMessage(toolName: String, content: String): Message.Tool.Call =
         metaInfo = ResponseMetaInfo.create(testClock)
     )
 
-fun receivedToolResult(toolCallId: String?, toolName: String, content: String, result: JsonElement): ReceivedToolResult =
-    ReceivedToolResult(
-        id = toolCallId,
-        tool = toolName,
-        content = content,
-        result = result
-    )
+fun receivedToolResult(
+    toolCallId: String?,
+    toolName: String,
+    toolArgs: JsonObject,
+    toolDescription: String,
+    content: String,
+    result: JsonElement
+): ReceivedToolResult = ReceivedToolResult(
+    id = toolCallId,
+    tool = toolName,
+    toolArgs = toolArgs,
+    toolDescription = toolDescription,
+    content = content,
+    resultKind = ToolResultKind.Success,
+    result = result
+)
 
 /**
  * Creates an AI agent with the specified configuration, strategy, and optional prompts.

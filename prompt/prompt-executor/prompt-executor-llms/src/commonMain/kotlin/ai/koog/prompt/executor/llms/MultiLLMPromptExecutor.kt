@@ -12,6 +12,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmOverloads
 
 /**
  * MultiLLMPromptExecutor is a class responsible for executing prompts
@@ -23,7 +24,7 @@ import kotlinx.coroutines.flow.Flow
  * @param llmClients A map containing LLM providers associated with their respective [LLMClient]s.
  * @param fallback Optional settings to configure the fallback mechanism in case a specific provider is not directly available.
  */
-public open class MultiLLMPromptExecutor(
+public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     private val llmClients: Map<LLMProvider, LLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
 ) : PromptExecutor {
@@ -62,7 +63,8 @@ public open class MultiLLMPromptExecutor(
      * @param llmClients Variable number of pairs, where each pair consists of an `LLMProvider` representing
      *                   the provider and a `LLMClient` for communication with that provider.
      */
-    public constructor(
+    @JvmOverloads
+    public constructor (
         vararg llmClients: Pair<LLMProvider, LLMClient>,
         fallback: FallbackPromptExecutorSettings? = null
     ) : this(llmClients = mapOf(*llmClients), fallback = fallback)
@@ -73,7 +75,8 @@ public open class MultiLLMPromptExecutor(
      *
      * @param llmClients Vararg parameter of `LLMClient` instances used to construct the executor.
      */
-    public constructor(vararg llmClients: LLMClient) : this(
+    @JvmOverloads
+    public constructor (vararg llmClients: LLMClient) : this(
         llmClients.map {
             it.llmProvider() to it
         }.associateBy({ it.first }, { it.second })

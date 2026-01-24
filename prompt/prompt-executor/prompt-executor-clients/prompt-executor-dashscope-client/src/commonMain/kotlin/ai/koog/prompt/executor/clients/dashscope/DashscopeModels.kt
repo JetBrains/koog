@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.jvm.JvmField
 
 /**
  * Dashscope LLM models enumeration.
@@ -14,6 +15,7 @@ public object DashscopeModels : LLModelDefinitions {
      * Best suited for simple tasks requiring quick responses.
      * Offers basic completion and tool usage capabilities.
      */
+    @JvmField
     public val QWEN_FLASH: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
         id = "qwen-flash",
@@ -31,6 +33,7 @@ public object DashscopeModels : LLModelDefinitions {
      * Multimodal, low-latency Omni model supporting text, image, video, and audio I/O.
      * Suitable for audio/video chat, visual recognition, and multilingual speech interactions.
      */
+    @JvmField
     public val QWEN3_OMNI_FLASH: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
         id = "qwen3-omni-flash",
@@ -53,6 +56,7 @@ public object DashscopeModels : LLModelDefinitions {
      * Provides good balance between performance, cost, and capabilities.
      * Part of Qwen3 series.
      */
+    @JvmField
     public val QWEN_PLUS: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
         id = "qwen-plus",
@@ -76,6 +80,7 @@ public object DashscopeModels : LLModelDefinitions {
      * Suitable for medium-complexity tasks requiring reasoning and tool usage.
      * Automatically points to the newest version of qwen-plus.
      */
+    @JvmField
     public val QWEN_PLUS_LATEST: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
         id = "qwen-plus-latest",
@@ -97,6 +102,7 @@ public object DashscopeModels : LLModelDefinitions {
      * Code-specialized model (Qwen3-Coder) with strong Coding Agent abilities.
      * Suitable for complex coding tasks, tool use, and environment interaction; retains general abilities.
      */
+    @JvmField
     public val QWEN3_CODER_PLUS: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
         id = "qwen3-coder-plus",
@@ -118,6 +124,7 @@ public object DashscopeModels : LLModelDefinitions {
      * High-performance code model optimized for fast responses (Qwen3-Coder Flash).
      * Best for quick coding tasks and tool calling with low latency.
      */
+    @JvmField
     public val QWEN3_CODER_FLASH: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
         id = "qwen3-coder-flash",
@@ -136,6 +143,7 @@ public object DashscopeModels : LLModelDefinitions {
      * Best suited for complex, multi-step tasks requiring advanced reasoning.
      * Offers extended context window and maximum output capacity.
      */
+    @JvmField
     public val QWEN3_MAX: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
         id = "qwen3-max",

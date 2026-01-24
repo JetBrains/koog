@@ -1,8 +1,8 @@
-# Code Agent - Step 01: Minimal Agent
+# Code Agent - Step 02: Add Execution Tool
 
 > Code from the blog post: [Building AI Agents in Kotlin – Part 2: A Deeper Dive Into Tools]()
 
-A minimal code agent with three tools that can navigate codebases and make targeted changes.
+Extends the minimal agent with command execution capabilities, allowing the agent to run tests, build projects, and execute other shell commands.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ export OPENAI_API_KEY=your_openai_key
 
 Navigate to this example:
 ```
-cd examples/code-agent/step-01-minimal-agent
+cd examples/code-agent/step-02-add-execution-tool
 ```
 
 Run the agent on any project:

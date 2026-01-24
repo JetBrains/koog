@@ -1,6 +1,7 @@
 package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
@@ -11,23 +12,23 @@ import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
-import io.ktor.client.request.headers
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.util.reflect.TypeInfo
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.ApiStatus.Experimental
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
 
@@ -38,17 +39,17 @@ import kotlin.reflect.KClass
  * This client provides enhanced logging, flexible request and response handling, and supports
  * configurability for underlying Ktor HttpClient instances.
  *
+ * @constructor Creates a KtorHttpClient instance with an optional base Ktor HttpClient and configuration block.
+
  * @property clientName The name of the client, used for logging and traceability.
  * @property logger A logging instance of type KLogger for recording client-related events and errors.
- * @constructor Creates a KtorHttpClient instance with an optional base Ktor HttpClient and configuration block.
- *
  * @param baseClient The base Ktor HttpClient instance to be used. Default is a newly created instance.
  * @param configurer A lambda function to configure the base Ktor HttpClient instance.
  * The configuration is applied using the Ktor `HttpClient.config` method.
  */
 @Experimental
 public class KtorKoogHttpClient internal constructor(
-    private val clientName: String,
+    override val clientName: String,
     private val logger: KLogger,
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit
@@ -75,18 +76,23 @@ public class KtorKoogHttpClient internal constructor(
                 return response.body(TypeInfo(responseType))
             }
         }
-        val errorBody = response.bodyAsText()
-        val errorMessage = "Error from $clientName API: ${response.status}\nBody:\n$errorBody"
-
-        logger.error { errorMessage }
-        error(errorMessage)
+        throw KoogHttpClientException(
+            clientName = clientName,
+            statusCode = response.status.value,
+            errorBody = response.bodyAsText(),
+        )
     }
 
     override suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
-        val response = ktorClient.get(path)
+        val response = ktorClient.get(path) {
+            parameters.forEach { (key, value) ->
+                parameter(key, value)
+            }
+        }
         processResponse(response, responseType)
     }
 
@@ -94,7 +100,8 @@ public class KtorKoogHttpClient internal constructor(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val response = ktorClient.post(path) {
             if (requestBodyType == String::class) {
@@ -102,6 +109,9 @@ public class KtorKoogHttpClient internal constructor(
                 setBody(request as String)
             } else {
                 setBody(request, TypeInfo(requestBodyType))
+            }
+            parameters.forEach { (key, value) ->
+                parameter(key, value)
             }
         }
 
@@ -114,14 +124,20 @@ public class KtorKoogHttpClient internal constructor(
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String>,
     ): Flow<O> = flow {
+        logger.debug { "Opening sse connection for $clientName" }
+
         @Suppress("TooGenericExceptionCaught")
         try {
             ktorClient.sse(
                 urlString = path,
                 request = {
                     method = HttpMethod.Post
+                    parameters.forEach { (key, value) ->
+                        parameter(key, value)
+                    }
                     accept(ContentType.Text.EventStream)
                     headers {
                         append(HttpHeaders.CacheControl, "no-cache")
@@ -145,19 +161,33 @@ public class KtorKoogHttpClient internal constructor(
                 }
             }
         } catch (e: SSEClientException) {
-            e.response?.let { response ->
-                val body = response.readRawBytes().decodeToString()
-                val errorMessage = "Error from $clientName API: ${response.status}: ${e.message}\nBody:\n$body"
-
-                logger.error(e) { errorMessage }
-                error(errorMessage)
+            val errorBody = try {
+                e.response?.bodyAsText()
+            } catch (ignored: Exception) {
+                logger.debug(ignored) { "Unable to read SSE error response body (may already be consumed)" }
+                null
             }
+            throw KoogHttpClientException(
+                clientName = clientName,
+                statusCode = e.response?.status?.value,
+                errorBody = errorBody,
+                message = e.message,
+                cause = e
+            )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            logger.error(e) { "Exception during streaming from $clientName" }
-            throw e
+            throw KoogHttpClientException(
+                clientName = clientName,
+                message = "Exception during streaming: ${e.message}",
+                cause = e,
+            )
         }
+    }
+
+    override fun close() {
+        logger.debug { "Closing $clientName" }
+        ktorClient.close()
     }
 }
 
@@ -180,5 +210,5 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     clientName: String,
     logger: KLogger,
     baseClient: HttpClient = HttpClient(),
-    configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit
+    configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}
 ): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)
