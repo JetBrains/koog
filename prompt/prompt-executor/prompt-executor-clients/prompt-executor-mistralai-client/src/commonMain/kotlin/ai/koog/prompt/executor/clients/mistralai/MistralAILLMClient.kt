@@ -32,11 +32,14 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 
 /**
@@ -153,23 +156,39 @@ public open class MistralAILLMClient(
     override fun decodeResponse(data: String): MistralAIChatCompletionResponse =
         json.decodeFromString(data)
 
-    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: MistralAIChatCompletionStreamResponse) {
-        chunk.choices.firstOrNull()?.let { choice ->
-            choice.delta.content?.let { emitAppend(it) }
-            choice.delta.toolCalls?.forEach { toolCall ->
-                val index = toolCall.index
-                val id = toolCall.id
-                val name = toolCall.function?.name
-                val arguments = toolCall.function?.arguments
-                upsertToolCall(index, id, name, arguments)
+    override fun processStreamingResponse(
+        response: Flow<MistralAIChatCompletionStreamResponse>
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
+        var finishReason: String? = null
+        var metaInfo: ResponseMetaInfo? = null
+
+        response.collect { chunk ->
+            chunk.choices.firstOrNull()?.let { choice ->
+                choice.delta.content?.let { emitAppend(it) }
+
+                choice.delta.toolCalls?.forEach { toolCall ->
+                    val index = toolCall.index
+                    val id = toolCall.id
+                    val name = toolCall.function?.name
+                    val arguments = toolCall.function?.arguments
+                    upsertToolCall(index, id, name, arguments)
+                }
+
+                choice.finishReason?.let { finishReason = it }
             }
-            val usageInfo = OpenAIUsage(
-                promptTokens = chunk.usage?.promptTokens,
-                completionTokens = chunk.usage?.completionTokens,
-                totalTokens = chunk.usage?.totalTokens,
-            )
-            choice.finishReason?.let { emitEnd(it, createMetaInfo(usageInfo)) }
+
+            chunk.usage?.let { usage ->
+                metaInfo = createMetaInfo(
+                    OpenAIUsage(
+                        promptTokens = usage.promptTokens,
+                        completionTokens = usage.completionTokens,
+                        totalTokens = usage.totalTokens,
+                    )
+                )
+            }
         }
+
+        emitEnd(finishReason, metaInfo)
     }
 
     /**

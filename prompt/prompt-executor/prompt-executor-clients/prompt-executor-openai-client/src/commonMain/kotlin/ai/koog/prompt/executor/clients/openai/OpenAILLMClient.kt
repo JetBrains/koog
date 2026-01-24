@@ -19,6 +19,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIModalities
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.models.InputContent
@@ -50,7 +51,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -145,6 +146,11 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         }
 
         val responseFormat = createResponseFormat(chatParams.schema, model)
+        val streamOptions = if (stream) {
+            OpenAIStreamOptions(includeUsage = true)
+        } else {
+            null
+        }
 
         val request = OpenAIChatCompletionRequest(
             messages = messages,
@@ -167,6 +173,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             stop = chatParams.stop,
             store = chatParams.store,
             stream = stream,
+            streamOptions = streamOptions,
             temperature = chatParams.temperature,
             toolChoice = toolChoice,
             tools = tools,
@@ -256,18 +263,31 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     override fun decodeResponse(data: String): OpenAIChatCompletionResponse =
         json.decodeFromString(data)
 
-    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse) {
-        chunk.choices.firstOrNull()?.let { choice ->
-            choice.delta.content?.let { emitAppend(it) }
-            choice.delta.toolCalls?.forEach { openAIToolCall ->
-                val index = openAIToolCall.index
-                val id = openAIToolCall.id
-                val functionName = openAIToolCall.function?.name
-                val functionArgs = openAIToolCall.function?.arguments
-                upsertToolCall(index, id, functionName, functionArgs)
+    override fun processStreamingResponse(
+        response: Flow<OpenAIChatCompletionStreamResponse>
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
+        var finishReason: String? = null
+        var metaInfo: ResponseMetaInfo? = null
+
+        response.collect { chunk ->
+            chunk.choices.firstOrNull()?.let { choice ->
+                choice.delta.content?.let { emitAppend(it) }
+
+                choice.delta.toolCalls?.forEach { openAIToolCall ->
+                    val index = openAIToolCall.index
+                    val id = openAIToolCall.id
+                    val functionName = openAIToolCall.function?.name
+                    val functionArgs = openAIToolCall.function?.arguments
+                    upsertToolCall(index, id, functionName, functionArgs)
+                }
+
+                choice.finishReason?.let { finishReason = it }
             }
-            choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
+
+            chunk.usage?.let { metaInfo = createMetaInfo(it) }
         }
+
+        emitEnd(finishReason, metaInfo)
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {

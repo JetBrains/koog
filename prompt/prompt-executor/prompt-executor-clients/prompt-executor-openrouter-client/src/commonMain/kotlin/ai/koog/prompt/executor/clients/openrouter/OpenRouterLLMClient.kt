@@ -21,10 +21,13 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterModelsRespons
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlin.jvm.JvmOverloads
 
@@ -152,17 +155,30 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
     override fun decodeResponse(data: String): OpenRouterChatCompletionResponse =
         json.decodeFromString(data)
 
-    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse) {
-        chunk.choices.firstOrNull()?.let { choice ->
-            choice.delta.content?.let { emitAppend(it) }
-            choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
-                val id = openAIToolCall.id
-                val name = openAIToolCall.function.name
-                val arguments = openAIToolCall.function.arguments
-                upsertToolCall(index, id, name, arguments)
+    override fun processStreamingResponse(
+        response: Flow<OpenRouterChatCompletionStreamResponse>
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
+        var finishReason: String? = null
+        var metaInfo: ResponseMetaInfo? = null
+
+        response.collect { chunk ->
+            chunk.choices.firstOrNull()?.let { choice ->
+                choice.delta.content?.let { emitAppend(it) }
+
+                choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
+                    val id = openAIToolCall.id
+                    val name = openAIToolCall.function.name
+                    val arguments = openAIToolCall.function.arguments
+                    upsertToolCall(index, id, name, arguments)
+                }
+
+                choice.finishReason?.let { finishReason = it }
             }
-            choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
+
+            chunk.usage?.let { metaInfo = createMetaInfo(chunk.usage) }
         }
+
+        emitEnd(finishReason, metaInfo)
     }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
