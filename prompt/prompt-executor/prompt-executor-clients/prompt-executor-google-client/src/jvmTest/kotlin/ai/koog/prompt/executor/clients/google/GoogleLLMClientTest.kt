@@ -517,7 +517,7 @@ class GoogleLLMClientTest {
 
         request.contents shouldHaveSize 3
         val thoughtContent = request.contents[1]
-        thoughtContent.role shouldBe "model"
+        thoughtContent.role shouldBe "assistant"
         thoughtContent.parts!!.single().shouldBeInstanceOf<GooglePart.Text>()
         val textPart = thoughtContent.parts!!.single() as GooglePart.Text
         textPart.text shouldBe "Previous thought"

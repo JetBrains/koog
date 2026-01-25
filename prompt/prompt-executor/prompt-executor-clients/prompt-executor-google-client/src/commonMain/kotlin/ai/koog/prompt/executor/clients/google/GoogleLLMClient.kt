@@ -359,7 +359,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     if (message.content != "") {
                         contents.add(
                             GoogleContent(
-                                role = "model",
+                                role = "assistant",
                                 parts = listOf(
                                     GooglePart.Text(
                                         text = message.content,
