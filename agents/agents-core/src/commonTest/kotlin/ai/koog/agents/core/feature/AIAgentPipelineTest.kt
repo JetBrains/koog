@@ -6,8 +6,10 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -15,6 +17,9 @@ import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentClosing
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentCompleted
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentExecutionFailed
@@ -32,12 +37,14 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallCompl
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallFailed
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallStarting
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolValidationFailed
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.Message.Role
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
@@ -847,6 +854,153 @@ class AIAgentPipelineTest {
     }
 
     //endregion Execution Info
+
+    @Test
+    @JsName("testTwoHandlersRegisteredForSameFeatureAndEventAreBothCalled")
+    fun `test two handlers registered for same feature and event are both called`() = runTest {
+        val agentId = "test-agent-id"
+        val agentInput = "Test input"
+        val agentOutput = "Done"
+
+        val strategyName = "test-strategy"
+
+        val strategy = strategy<String, String>(strategyName) {
+            edge(nodeStart forwardTo nodeFinish transformed { agentOutput })
+        }
+
+        val actualEvents = mutableListOf<String>()
+        val multipleHandlers = object : AIAgentGraphFeature<FeatureConfig, Unit> {
+            override val key: AIAgentStorageKey<Unit> = createStorageKey("multiple-handlers-feature")
+            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+            override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
+                pipeline.interceptAgentStarting(this) { event ->
+                    actualEvents += "Handler 1: ${event.eventType::class.simpleName}"
+                }
+                pipeline.interceptAgentStarting(this) { event ->
+                    actualEvents += "Handler 2: ${event.eventType::class.simpleName}"
+                }
+            }
+        }
+
+        createAgent(id = agentId, strategy = strategy) {
+            install(multipleHandlers)
+        }.use { agent ->
+            agent.run(agentInput)
+        }
+
+        val expectedEvents = listOf(
+            "Handler 1: ${AgentStarting::class.simpleName}",
+            "Handler 2: ${AgentStarting::class.simpleName}"
+        )
+        assertContentEquals(expectedEvents, actualEvents, "Both handlers should have been called with expected events")
+    }
+
+    @Test
+    @JsName("testTwoEnvironmentTransformHandlersReceiveCorrectEnvironmentInstances")
+    fun `test two environment transform handlers receive correct environment instances`() = runTest {
+        val agentId = "test-agent-id"
+        val agentInput = "Test input"
+        val agentOutput = "Done"
+
+        val strategyName = "test-strategy"
+
+        val strategy = strategy<String, String>(strategyName) {
+            edge(nodeStart forwardTo nodeFinish transformed { agentOutput })
+        }
+
+        val actualEnvironments = mutableListOf<AIAgentEnvironment>()
+
+        data class WrapperEnvironment(val name: String, val delegate: AIAgentEnvironment) : AIAgentEnvironment {
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return delegate.executeTool(toolCall)
+            }
+
+            override suspend fun reportProblem(exception: Throwable) {
+                delegate.reportProblem(exception)
+            }
+        }
+
+        val environmentTransformFeature = object : AIAgentGraphFeature<FeatureConfig, Unit> {
+            override val key: AIAgentStorageKey<Unit> = createStorageKey("env-transform-feature")
+            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+            override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
+                pipeline.interceptEnvironmentCreated(this) { _, environment ->
+                    val updatedEnvironment = WrapperEnvironment("Modified environment 1", environment)
+                    actualEnvironments += updatedEnvironment
+                    updatedEnvironment
+                }
+
+                pipeline.interceptEnvironmentCreated(this) { _, environment ->
+                    val updatedEnvironment = WrapperEnvironment("Modified environment 2", environment)
+                    actualEnvironments += updatedEnvironment
+                    updatedEnvironment
+                }
+            }
+        }
+
+        createAgent(id = agentId, strategy = strategy) {
+            install(environmentTransformFeature)
+        }.use { agent ->
+            agent.run(agentInput)
+        }
+
+        val expectedEnvironmentNames = listOf(
+            "Modified environment 1",
+            "Modified environment 2"
+        )
+        val actualEnvironmentNames = actualEnvironments.mapNotNull { env -> (env as? WrapperEnvironment)?.name }
+        assertContentEquals(
+            expectedEnvironmentNames,
+            actualEnvironmentNames,
+            "Each handler should receive the correct environment instance"
+        )
+    }
+
+    @Test
+    @JsName("testHandlersAreCalledInFeatureInstallationOrder")
+    fun `test handlers are called in feature installation order`() = runTest {
+        val agentId = "test-agent-id"
+        val agentInput = "Test input"
+        val agentOutput = "Done"
+
+        val strategyName = "test-strategy"
+
+        val strategy = strategy<String, String>(strategyName) {
+            edge(nodeStart forwardTo nodeFinish transformed { agentOutput })
+        }
+
+        val actualEvents = mutableListOf<String>()
+
+        fun createFeature(name: String) = object : AIAgentGraphFeature<FeatureConfig, Unit> {
+            override val key: AIAgentStorageKey<Unit> = createStorageKey("$name-feature")
+            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+            override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
+                pipeline.interceptAgentStarting(this) { _ ->
+                    actualEvents += name
+                }
+            }
+        }
+
+        createAgent(id = agentId, strategy = strategy) {
+            install(createFeature("Feature Handler 1"))
+            install(createFeature("Feature Handler 2"))
+            install(createFeature("Feature Handler 3"))
+        }.use { agent ->
+            agent.run(agentInput)
+        }
+
+        val expectedEvents = listOf(
+            "Feature Handler 1",
+            "Feature Handler 2",
+            "Feature Handler 3"
+        )
+
+        assertContentEquals(
+            expectedEvents,
+            actualEvents,
+            "Handlers should be called in feature installation order"
+        )
+    }
 
     //region Private Methods
 

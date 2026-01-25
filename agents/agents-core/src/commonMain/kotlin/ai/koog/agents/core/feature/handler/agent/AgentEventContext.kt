@@ -93,14 +93,16 @@ public data class AgentClosingContext(
 /**
  * Provides a context for executing transformations and operations within an AI agent's environment.
  *
+ * @property eventId unique identifier for an event or a group of events
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property agent The AI agent being managed or operated upon in the context.
+ * @property config The configuration settings for the AI agent.
  */
 public class AgentEnvironmentTransformingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     public val agent: GraphAIAgent<*, *>,
-    public val config: AIAgentConfig
+    public val config: AIAgentConfig,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentEnvironmentTransforming
 }

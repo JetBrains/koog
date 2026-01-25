@@ -937,8 +937,8 @@ public class Testing {
             pipeline: AIAgentGraphPipeline,
         ): Testing {
             val testing = Testing()
-            pipeline.interceptEnvironmentCreated(this) { agentEnvironment ->
-                MockEnvironment(agent.toolRegistry, agent.promptExecutor, agentEnvironment)
+            pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
+                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, environment)
             }
 
             if (config.enableGraphTesting) {

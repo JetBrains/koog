@@ -54,8 +54,8 @@ public actual abstract class AIAgentPipeline actual constructor(
         feature: AIAgentFeature<*, *>,
         transform: TransformInterceptor<AgentEnvironmentTransformingContext, AIAgentEnvironment>
     ) {
-        interceptEnvironmentCreated(feature) { environment ->
-            transform.transform(this, environment)
+        interceptEnvironmentCreated(feature) { ctx, environment ->
+            transform.transform(ctx, environment)
         }
     }
 

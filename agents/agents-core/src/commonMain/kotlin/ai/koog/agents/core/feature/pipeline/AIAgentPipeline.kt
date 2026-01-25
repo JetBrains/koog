@@ -13,7 +13,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext
@@ -125,6 +124,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param agent The agent instance for which the execution has started
      * @param context The context of the agent execution, providing access to the agent environment and context features
      */
+    // TODO: SD -- make this methods internal
     @OptIn(InternalAgentsApi::class)
     public override suspend fun <TInput, TOutput> onAgentStarting(
         eventId: String,
@@ -497,7 +497,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * This method registers a transformer function that will be called when an agent environment
      * is being created, allowing the feature to customize the environment based on the agent context.
      *
-     * @param transform A function that transforms the environment, with access to the agent creation context
+     * @param handle A function that transforms the environment, with access to the agent creation context
      *
      * Example:
      * ```
@@ -511,7 +511,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      */
     public override fun interceptEnvironmentCreated(
         feature: AIAgentFeature<*, *>,
-        transform: suspend AgentEnvironmentTransformingContext.(AIAgentEnvironment) -> AIAgentEnvironment
+        handle: suspend (AgentEnvironmentTransformingContext, AIAgentEnvironment) -> AIAgentEnvironment
     )
 
     /**
@@ -1013,50 +1013,13 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
 
     //endregion Deprecated Interceptors
 
-    /**
-     * Creates a conditional handler for the given AI agent feature. The handler will process the
-     * provided context based on specific conditions defined in the feature.
-     *
-     * @param feature The AI agent feature that defines the conditions for processing the context.
-     * @param handle A suspendable function that executes the handling logic for the provided context.
-     * @return A suspendable function that takes a context of type TContext and applies the defined handling logic conditionally.
-     */
-
     //region public and Internal Methods
-    @InternalAgentsApi
-    public override fun <TContext : AgentLifecycleEventContext> createConditionalHandler(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (TContext) -> Unit
-    ): suspend (TContext) -> Unit
-
-    /**
-     * Creates a conditional handler that processes the given feature within an agent environment.
-     *
-     * @param feature The AI agent feature to be handled. It defines the specific conditions
-     * and operations associated with the agent's behavior or environment.
-     * @param handle A suspendable function that transforms the agent's environment based
-     * on the provided conditions. It is invoked within the context of an agent environment.
-     * @return A suspendable function that applies the transformation logic to the agent
-     * environment in the context of the given feature.
-     */
-    @InternalAgentsApi
-    public override fun createConditionalHandler(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend AgentEnvironmentTransformingContext.(AIAgentEnvironment) -> AIAgentEnvironment
-    ): suspend (AgentEnvironmentTransformingContext, AIAgentEnvironment) -> AIAgentEnvironment
-
-    /**
-     * Determines if the given feature configuration is accepted based on the provided event context.
-     *
-     * @param eventContext The context of the agent lifecycle event to be evaluated.
-     * @return True if the feature configuration is accepted; otherwise, false.
-     */
-    public override fun FeatureConfig.isAccepted(eventContext: AgentLifecycleEventContext): Boolean
 
     @InternalAgentsApi
     public override suspend fun prepareFeatures()
 
     @InternalAgentsApi
     public override suspend fun closeAllFeaturesMessageProcessors()
+
     //endregion public and Internal Methods
 }
