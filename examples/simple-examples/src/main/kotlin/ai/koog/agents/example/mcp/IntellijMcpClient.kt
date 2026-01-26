@@ -32,9 +32,7 @@ fun main() {
     try {
         runBlocking {
             // Create the ToolRegistry with tools from the MCP server
-            val toolRegistry = McpToolRegistryProvider.fromTransport(
-                transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:64342/sse")
-            )
+            val toolRegistry = McpToolRegistryProvider.fromSseUrl("http://localhost:64342/sse")
 
             toolRegistry.tools.forEach {
                 println(it.name)

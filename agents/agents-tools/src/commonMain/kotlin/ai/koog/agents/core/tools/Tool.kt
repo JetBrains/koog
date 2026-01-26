@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlin.reflect.KClass
 
 /**
  * Base class representing a tool that can be invoked by the LLM.
@@ -24,6 +25,7 @@ public abstract class Tool<TArgs, TResult>(
     public val argsSerializer: KSerializer<TArgs>,
     public val resultSerializer: KSerializer<TResult>,
     public val descriptor: ToolDescriptor,
+    private val meta: Map<KClass<*>, Any> = emptyMap(),
 ) {
     /**
      * The name of the tool from the [descriptor]
@@ -216,6 +218,12 @@ public abstract class Tool<TArgs, TResult>(
             "encodeResultToStringUnsafe argument must be castable to TResult",
         ) { encodeResultToString(it) }
     }
+
+    /**
+     * Retrieves a meta value from the tool's metadata map.
+     */
+    @Suppress("UNCHECKED_CAST")
+    public fun <T : Any> getMeta(clazz: KClass<T>): T? = meta[clazz] as? T
 
     /**
      * Utility method to perform unsafe cast while providing a more descriptive error message.

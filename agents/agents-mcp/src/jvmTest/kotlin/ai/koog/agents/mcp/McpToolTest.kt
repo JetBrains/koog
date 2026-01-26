@@ -1,5 +1,8 @@
 package ai.koog.agents.mcp
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.handler.tool.McpServerMeta
+import ai.koog.agents.core.feature.handler.tool.McpTransportType
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -10,6 +13,7 @@ import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.LATEST_PROTOCOL_VERSION
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -27,6 +31,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Execution(ExecutionMode.SAME_THREAD)
+@OptIn(InternalAgentsApi::class)
 class McpToolTest {
     companion object {
         private const val TEST_PORT = 3001
@@ -156,6 +161,7 @@ class McpToolTest {
         )
         val mcpTool = McpTool(
             mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
+            serverInfo = McpServerMeta(null, null, null, null, LATEST_PROTOCOL_VERSION, McpTransportType.Tcp, null),
             descriptor = toolDescriptor,
         )
         val encodedResult = mcpTool.encodeResultToString(result)
@@ -174,6 +180,7 @@ class McpToolTest {
         )
         val mcpTool = McpTool(
             mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
+            serverInfo = McpServerMeta(null, null, null, null, LATEST_PROTOCOL_VERSION, McpTransportType.Tcp, null),
             descriptor = toolDescriptor,
         )
         val encodedResult = mcpTool.encodeResultToString(result)

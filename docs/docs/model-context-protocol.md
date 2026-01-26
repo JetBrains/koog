@@ -89,6 +89,7 @@ Once you have the MCP connection, you can create a tool registry with tools from
 * Using the provided transport mechanism for communication. For example:
 
 <!--- INCLUDE
+import ai.koog.agents.core.feature.handler.tool.McpServerInfo
 import ai.koog.agents.example.exampleModelContextProtocol01.transport
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import kotlinx.coroutines.runBlocking
@@ -104,6 +105,7 @@ fun main() {
 // Create a tool registry with tools from the MCP server
 val toolRegistry = McpToolRegistryProvider.fromTransport(
     transport = transport,
+    serverInfo = McpServerInfo(url = "http://localhost:8931", command = "path/to/mcp/server"),
     name = "my-client",
     version = "1.0.0"
 )
@@ -112,12 +114,13 @@ val toolRegistry = McpToolRegistryProvider.fromTransport(
 
 * Using an MCP client connected to the MCP server. For example:
 <!--- INCLUDE
+import ai.koog.agents.core.feature.handler.tool.McpServerInfo
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.coroutines.runBlocking
 
-val existingMcpClient =  Client(clientInfo = Implementation(name = "mcpClient", version = "dev"))
+val existingMcpClient = Client(clientInfo = Implementation(name = "mcpClient", version = "dev"))
 
 fun main() {
     runBlocking {
@@ -129,7 +132,8 @@ fun main() {
 ```kotlin
 // Create a tool registry from an existing MCP client
 val toolRegistry = McpToolRegistryProvider.fromClient(
-    mcpClient = existingMcpClient
+    mcpClient = existingMcpClient,
+    serverInfo = McpServerInfo(url = "http://localhost:8931")
 )
 ```
 <!--- KNIT example-model-context-protocol-04.kt -->
@@ -140,6 +144,7 @@ To use MCP tools with your Koog agent, you need to register the tool registry wi
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.feature.handler.tool.McpServerInfo
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -154,6 +159,7 @@ fun main() {
     runBlocking {
         val toolRegistry = McpToolRegistryProvider.fromClient(
             mcpClient = existingMcpClient
+            serverInfo = McpServerInfo(url = "http://localhost:8931")
         )
 -->
 <!--- SUFFIX
@@ -315,9 +321,7 @@ val process = ProcessBuilder(
 ).start()
 
 // Create the ToolRegistry with tools from the MCP server
-val toolRegistry = McpToolRegistryProvider.fromTransport(
-    transport = McpToolRegistryProvider.defaultStdioTransport(process)
-)
+val toolRegistry = McpToolRegistryProvider.fromProcess(process = process)
 
 // Create and run the agent
 val agent = AIAgent(
@@ -357,9 +361,7 @@ val process = ProcessBuilder(
 ).start()
 
 // Create the ToolRegistry with tools from the MCP server
-val toolRegistry = McpToolRegistryProvider.fromTransport(
-    transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:8931")
-)
+val toolRegistry = McpToolRegistryProvider.fromSseUrl("http://localhost:8931")
 
 // Create and run the agent
 val agent = AIAgent(

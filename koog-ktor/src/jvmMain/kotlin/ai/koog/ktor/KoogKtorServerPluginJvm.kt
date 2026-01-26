@@ -1,12 +1,15 @@
 package ai.koog.ktor
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.handler.tool.McpServerInfo
 import ai.koog.agents.mcp.DefaultMcpToolDescriptorParser
 import ai.koog.agents.mcp.McpToolDescriptorParser
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_NAME
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_VERSION
-import ai.koog.agents.mcp.defaultStdioTransport
+import ai.koog.agents.mcp.fromProcess
 import io.modelcontextprotocol.kotlin.sdk.client.Client
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -17,6 +20,7 @@ import kotlinx.coroutines.sync.withLock
  *
  * @param agentConfig Configuration for the Koog agent server, which includes tool registry details.
  */
+@OptIn(InternalAgentsApi::class)
 public class McpToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfig) {
     private val mutex = Mutex()
 
@@ -43,11 +47,10 @@ public class McpToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
         version: String = DEFAULT_MCP_CLIENT_VERSION,
     ) {
         agentConfig.scope.launch {
-            val transport = McpToolRegistryProvider.fromTransport(
-                transport = McpToolRegistryProvider.defaultStdioTransport(process),
-                mcpToolParser = mcpToolParser,
-                name = name,
-                version = version,
+            val transport = McpToolRegistryProvider.fromProcess(
+                process = process,
+                clientInfo = Implementation(name, version),
+                mcpToolParser = mcpToolParser
             )
             mutex.withLock { agentConfig.toolRegistry += transport }
         }
@@ -72,11 +75,10 @@ public class McpToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
         version: String = DEFAULT_MCP_CLIENT_VERSION,
     ) {
         agentConfig.scope.launch {
-            val transport = McpToolRegistryProvider.fromTransport(
-                transport = McpToolRegistryProvider.defaultSseTransport(url),
-                mcpToolParser = mcpToolParser,
-                name = name,
-                version = version,
+            val transport = McpToolRegistryProvider.fromSseUrl(
+                sseUrl = url,
+                clientInfo = Implementation(name, version),
+                mcpToolParser = mcpToolParser
             )
             mutex.withLock { agentConfig.toolRegistry += transport }
         }
@@ -97,7 +99,7 @@ public class McpToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser
     ) {
         agentConfig.scope.launch {
-            val fromClient = McpToolRegistryProvider.fromClient(mcpClient, mcpToolParser)
+            val fromClient = McpToolRegistryProvider.fromClient(mcpClient, McpServerInfo(), mcpToolParser)
             mutex.withLock { agentConfig.toolRegistry += fromClient }
         }
     }
