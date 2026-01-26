@@ -46,6 +46,11 @@ public class OpenTelemetryConfig : FeatureConfig() {
         private val osVersion = System.getProperty("os.version")
 
         private val osArch = System.getProperty("os.arch")
+
+        /**
+         * The default interval for metric reading, which can be overridden when adding a custom exporter.
+         */
+        val DEFAULT_METER_INTERVAL: Duration = Duration.ofSeconds(1)
     }
 
     private val productProperties = run {
@@ -135,14 +140,17 @@ public class OpenTelemetryConfig : FeatureConfig() {
     public val meter: Meter
         get() = sdk.getMeter(_instrumentationScopeName)
 
+    private var meterInterval: Duration
+
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
-     * This exporter will be used to export metrics collected during the application's execution.
+     * This exporter will be useds to export metrics collected during the application's execution.
      *
      * @param exporter The MetricExporter instance to be added to the list of custom metric exporters.
      */
-    public fun addMeterExporter(exporter: MetricExporter) {
+    public fun addMeterExporter(exporter: MetricExporter, meterInterval: Duration = DEFAULT_METER_INTERVAL) {
         customMetricExporters.add(exporter)
+        this.meterInterval = meterInterval
     }
 
     /**
@@ -283,7 +291,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
         metricExporters.forEach { exporter ->
             val reader = PeriodicMetricReader
                 .builder(exporter)
-                .setInterval(Duration.ofSeconds(1))
+                .setInterval(meterInterval)
                 .build()
 
             metricProvider.registerMetricReader(reader)

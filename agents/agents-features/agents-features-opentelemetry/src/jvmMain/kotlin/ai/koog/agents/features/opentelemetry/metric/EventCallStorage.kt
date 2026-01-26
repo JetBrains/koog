@@ -3,49 +3,57 @@ package ai.koog.agents.features.opentelemetry.metric
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
-import kotlin.math.pow
 
-internal data class EventCall(val name: String, val timeStarted: Long, val timeEnded: Long?)
 
-internal fun EventCall.getDurationSec(): Double? = timeEnded?.minus(timeStarted)?.div((10.0.pow(6)))
-
-internal class EventCallStorage {
-    private val storage = mutableMapOf<String, EventCall>()
+internal class MetricEventStorage {
+    private val storage = mutableMapOf<String, MetricEvent>()
     private val lock = ReentrantReadWriteLock()
 
     companion object {
         private val logger = KotlinLogging.logger { }
     }
 
-    internal fun addEventCall(id: String, name: String): EventCall? {
-        val currentTimestamp = System.currentTimeMillis()
+    internal fun startEvent(metricEvent: MetricEvent): Boolean {
+        val id = metricEvent.id
 
         lock.write {
             if (storage.containsKey(id)) {
-                logger.warn { "Tool call with id $id already exists, however is should not" }
-                return null
+                logger.warn { "Metric event with id $id already exists, it could not be added to the storage" }
+                return false
             }
 
-            storage.put(id, EventCall(name, currentTimestamp, null))
-            return storage[id]
+            storage[id] = metricEvent
+            return true
         }
     }
 
-    internal fun endEventCallAndReturn(id: String): EventCall? {
-        val currentTimestamp = System.currentTimeMillis()
-
+    private fun getPairedEvent(eventId: String): MetricEvent? {
         lock.write {
-            val unfinishedEventCall = storage[id]
+            val metricEvent = storage[eventId]
 
-            if (unfinishedEventCall == null) {
-                logger.warn { "Tool call with id $id does not exist" }
+            if (metricEvent == null) {
+                logger.warn { "Metric Event with id=$eventId does not exist" }
 
                 return null
             }
 
-            storage.remove(id)
-
-            return unfinishedEventCall.copy(timeEnded = currentTimestamp)
+            storage.remove(eventId)
+            return metricEvent
         }
     }
+
+    private fun <T : MetricEvent> finishEvent(closingEvent: MetricEvent): T? {
+        getPairedEvent(closingEvent.id)?.let { it as? T }?.let {
+            return it
+        }
+
+        logger.warn { "Paired Event with id=${closingEvent.id} is not found" }
+        return null
+    }
+
+    internal fun finishEvent(closingEvent: LLMCallEnded): Pair<LLMCallStarted, LLMCallEnded>? =
+        finishEvent<LLMCallStarted>(closingEvent)?.let { it to closingEvent }
+
+    internal fun finishEvent(closingEvent: ToolCallEnded): Pair<ToolCallStarted, ToolCallEnded>? =
+        finishEvent<ToolCallStarted>(closingEvent)?.let { it to closingEvent }
 }

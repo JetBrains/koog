@@ -18,12 +18,12 @@ import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
-import ai.koog.agents.features.opentelemetry.extension.put
-import ai.koog.agents.features.opentelemetry.metric.EventCallStorage
-import ai.koog.agents.features.opentelemetry.metric.createTokenCounter
-import ai.koog.agents.features.opentelemetry.metric.createToolCallCounter
-import ai.koog.agents.features.opentelemetry.metric.createToolCallDurationHistogram
-import ai.koog.agents.features.opentelemetry.metric.getDurationSec
+import ai.koog.agents.features.opentelemetry.metric.LLMCallEnded
+import ai.koog.agents.features.opentelemetry.metric.LLMCallStarted
+import ai.koog.agents.features.opentelemetry.metric.MetricCollector
+import ai.koog.agents.features.opentelemetry.metric.ToolCallEnded
+import ai.koog.agents.features.opentelemetry.metric.ToolCallStarted
+import ai.koog.agents.features.opentelemetry.metric.ToolCallStatus
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
 import ai.koog.agents.features.opentelemetry.span.SpanType
@@ -266,11 +266,7 @@ public class OpenTelemetry {
             val tracer = config.tracer
             val meter = config.meter
 
-            val toolCallsCounter = createToolCallCounter(meter)
-            val tokensCounter = createTokenCounter(meter)
-
-            val eventCallStorage = EventCallStorage()
-            val toolCallDurationHistogram = createToolCallDurationHistogram(meter)
+            val metricCollector = MetricCollector(meter)
 
             //region Agent
 
@@ -527,8 +523,14 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                // Store llm call
-                eventCallStorage.addEventCall(eventContext.eventId, eventContext.model.provider.display)
+                metricCollector.recordEvent(
+                    LLMCallStarted(
+                        id = eventContext.eventId,
+                        timestamp = System.currentTimeMillis(),
+                        model = eventContext.model,
+                        modelProvider = eventContext.model.provider
+                    )
+                )
             }
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
@@ -596,44 +598,16 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                eventContext.responses.lastOrNull()?.let { message ->
-                    message.metaInfo.inputTokensCount?.let { inputTokensCount ->
-                        tokensCounter.add(
-                            inputTokensCount.toLong(),
-                            Attributes.builder()
-                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
-                                .put(GenAIAttributes.Provider.Name(provider))
-                                .put(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT))
-                                .put(GenAIAttributes.Response.Model(eventContext.model))
-                                .build()
-                        )
-                    }
-                    message.metaInfo.outputTokensCount?.let { outputTokensCount ->
-                        tokensCounter.add(
-                            outputTokensCount.toLong(),
-                            Attributes.builder()
-                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
-                                .put(GenAIAttributes.Provider.Name(provider))
-                                .put(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT))
-                                .put(GenAIAttributes.Response.Model(eventContext.model))
-                                .build()
-
-                        )
-                    }
-                }
-
-                eventCallStorage.endEventCallAndReturn(eventContext.eventId)?.let { toolCall ->
-                    toolCall.getDurationSec()?.let { sec ->
-                        toolCallDurationHistogram.record(
-                            sec,
-                            Attributes.builder()
-                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
-                                .put(GenAIAttributes.Provider.Name(provider))
-                                .put(GenAIAttributes.Response.Model(eventContext.model))
-                                .build()
-                        )
-                    }
-                }
+                metricCollector.recordEvent(
+                    LLMCallEnded(
+                        id = eventContext.eventId,
+                        timestamp = System.currentTimeMillis(),
+                        model = eventContext.model,
+                        modelProvider = eventContext.model.provider,
+                        inputTokenSpend = eventContext.responses.lastOrNull()?.metaInfo?.inputTokensCount?.toLong(),
+                        outputTokenSpend = eventContext.responses.lastOrNull()?.metaInfo?.outputTokensCount?.toLong()
+                    )
+                )
             }
 
             //endregion LLM Call
@@ -664,7 +638,13 @@ public class OpenTelemetry {
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, patchedExecutionInfo)
 
-                eventCallStorage.addEventCall(eventContext.eventId, eventContext.toolName)
+                metricCollector.recordEvent(
+                    ToolCallStarted(
+                        id = eventContext.eventId,
+                        timestamp = System.currentTimeMillis(),
+                        toolName = eventContext.toolName
+                    )
+                )
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
@@ -701,28 +681,13 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                val completedToolCall = eventCallStorage.endEventCallAndReturn(eventContext.eventId)
-
-                completedToolCall?.let { toolCall ->
-                    toolCall.getDurationSec()?.let { sec ->
-                        toolCallDurationHistogram.record(
-                            sec,
-                            Attributes.builder()
-                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                                .put(GenAIAttributes.Tool.Name(eventContext.toolName))
-                                .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.SUCCESS))
-                                .build()
-                        )
-                    }
-                }
-
-                toolCallsCounter.add(
-                    1,
-                    Attributes.builder()
-                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                        .put(GenAIAttributes.Tool.Name(eventContext.toolName))
-                        .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.SUCCESS))
-                        .build()
+                metricCollector.recordEvent(
+                    ToolCallEnded(
+                        id = eventContext.eventId,
+                        timestamp = System.currentTimeMillis(),
+                        toolName = eventContext.toolName,
+                        status = ToolCallStatus.SUCCESS
+                    )
                 )
             }
 
@@ -765,28 +730,13 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                val failedToolCall = eventCallStorage.endEventCallAndReturn(eventContext.eventId)
-
-                failedToolCall?.let { toolCall ->
-                    toolCall.getDurationSec()?.let { sec ->
-                        toolCallDurationHistogram.record(
-                            sec,
-                            Attributes.builder()
-                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                                .put(GenAIAttributes.Tool.Name(eventContext.toolName))
-                                .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.ERROR))
-                                .build()
-                        )
-                    }
-                }
-
-                toolCallsCounter.add(
-                    1,
-                    Attributes.builder()
-                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                        .put(GenAIAttributes.Tool.Name(eventContext.toolName))
-                        .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.ERROR))
-                        .build()
+                metricCollector.recordEvent(
+                    ToolCallEnded(
+                        id = eventContext.eventId,
+                        timestamp = System.currentTimeMillis(),
+                        toolName = eventContext.toolName,
+                        status = ToolCallStatus.FAILED
+                    )
                 )
             }
 
@@ -828,28 +778,13 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                val failedToolCall = eventCallStorage.endEventCallAndReturn(eventContext.eventId)
-
-                failedToolCall?.let { toolCall ->
-                    toolCall.getDurationSec()?.let { sec ->
-                        toolCallDurationHistogram.record(
-                            sec,
-                            Attributes.builder()
-                                .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                                .put(GenAIAttributes.Tool.Name(eventContext.toolName))
-                                .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.VALIDATION_FAILED))
-                                .build()
-                        )
-                    }
-                }
-
-                toolCallsCounter.add(
-                    1,
-                    Attributes.builder()
-                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                        .put(GenAIAttributes.Tool.Name(eventContext.toolName))
-                        .put(GenAIAttributes.Tool.Call.Status(GenAIAttributes.Tool.Call.StatusType.VALIDATION_FAILED))
-                        .build()
+                metricCollector.recordEvent(
+                    ToolCallEnded(
+                        id = eventContext.eventId,
+                        timestamp = System.currentTimeMillis(),
+                        toolName = eventContext.toolName,
+                        status = ToolCallStatus.VALIDATION_FAILED
+                    )
                 )
             }
 
