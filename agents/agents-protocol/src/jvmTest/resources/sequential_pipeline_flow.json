@@ -1,0 +1,66 @@
+{
+  "id": "sequential-pipeline-flow",
+  "version": "1.0",
+  "description": "Demonstrates a simple sequential pipeline without conditions - each agent processes and passes to the next in order.",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "data_collector",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You collect and structure data from raw input."
+      },
+      "params": {
+        "task": "Extract and structure the key information from the input."
+      }
+    },
+    {
+      "name": "data_enricher",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You enrich data with additional context and information."
+      },
+      "params": {
+        "task": "Add relevant context and additional information to the structured data."
+      }
+    },
+    {
+      "name": "data_formatter",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You format data into the final output format."
+      },
+      "params": {
+        "task": "Format the enriched data into a clean, readable output format."
+      }
+    },
+    {
+      "name": "quality_checker",
+      "type": "verify",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You verify that the final output meets quality standards."
+      },
+      "params": {
+        "task": "Check if the formatted output is complete and well-structured."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "data_collector",
+      "to": "data_enricher"
+    },
+    {
+      "from": "data_enricher",
+      "to": "data_formatter"
+    },
+    {
+      "from": "data_formatter",
+      "to": "quality_checker"
+    }
+  ]
+}

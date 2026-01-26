@@ -1,0 +1,29 @@
+{
+  "id": "greeting-flow-with-mcp-tool",
+  "version": "1.0",
+  "defaultModel": "openai/gpt-4o",
+  "tools": [
+    {
+      "name": "test-mcp-tools",
+      "type": "mcp",
+      "parameters": {
+        "transport": "sse",
+        "url": "http://localhost:3002"
+      }
+    }
+  ],
+  "agents": [
+    {
+      "name": "greeter",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a greeter agent that uses tools to greet users."
+      },
+      "params": {
+        "task": "Use the greeting tool to greet the user named 'TestUser'.",
+        "toolNames": ["greeting"]
+      }
+    }
+  ]
+}

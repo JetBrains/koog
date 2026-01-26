@@ -1,0 +1,61 @@
+{
+  "id": "multi-condition-routing-flow",
+  "version": "1.0",
+  "description": "Demonstrates complex routing with multiple condition types (boolean AND, OR, NOT operations) for content moderation workflow.",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "content_analyzer",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You analyze content for various properties."
+      },
+      "params": {
+        "task": "Analyze the input content and return a boolean indicating if it's appropriate (true) or not (false)."
+      }
+    },
+    {
+      "name": "safe_content_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You process safe, approved content."
+      },
+      "params": {
+        "task": "Process and format the approved content for publication."
+      }
+    },
+    {
+      "name": "unsafe_content_handler",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You handle content that needs review."
+      },
+      "params": {
+        "task": "Flag this content for manual review and provide reasoning."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "content_analyzer",
+      "to": "safe_content_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "equals",
+        "value": true
+      }
+    },
+    {
+      "from": "content_analyzer",
+      "to": "unsafe_content_handler",
+      "condition": {
+        "variable": "input.data",
+        "operation": "not",
+        "value": true
+      }
+    }
+  ]
+}

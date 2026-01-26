@@ -1,0 +1,81 @@
+{
+  "id": "string-comparison-flow",
+  "version": "1.0",
+  "description": "Demonstrates string comparison conditions for language detection and routing to appropriate translators.",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "language_detector",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You detect the language of input text. Return the ISO 639-1 language code (e.g., 'en', 'es', 'fr', 'de')."
+      },
+      "params": {
+        "task": "Detect the language of the input text and return only the two-letter language code."
+      }
+    },
+    {
+      "name": "english_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You process English text."
+      },
+      "params": {
+        "task": "Process this English text: check grammar and improve clarity."
+      }
+    },
+    {
+      "name": "spanish_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You process Spanish text."
+      },
+      "params": {
+        "task": "Procesa este texto en español: revisa la gramática y mejora la claridad."
+      }
+    },
+    {
+      "name": "other_language_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You handle texts in languages other than English and Spanish."
+      },
+      "params": {
+        "task": "Translate this text to English first, then process it."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "language_detector",
+      "to": "english_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "equals",
+        "value": "en"
+      }
+    },
+    {
+      "from": "language_detector",
+      "to": "spanish_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "equals",
+        "value": "es"
+      }
+    },
+    {
+      "from": "language_detector",
+      "to": "other_language_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "not_equals",
+        "value": "en"
+      }
+    }
+  ]
+}

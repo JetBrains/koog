@@ -1,0 +1,80 @@
+{
+  "id": "verify-transform-flow",
+  "version": "1.0",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "task_agent",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a task execution agent."
+      },
+      "params": {
+        "task": "Generate a simple greeting message."
+      }
+    },
+    {
+      "name": "verify_agent",
+      "type": "verify",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a verification agent that checks if the task was completed correctly."
+      },
+      "params": {
+        "task": "Verify that the input contains a valid greeting message."
+      }
+    },
+    {
+      "name": "transform_feedback",
+      "type": "transform",
+      "runtime": "koog",
+      "params": {
+        "transformations": [
+          {
+            "value": "input.feedback"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fix_agent",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a fix agent that corrects issues based on feedback."
+      },
+      "params": {
+        "task": "Fix the issue based on the provided feedback."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "task_agent",
+      "to": "verify_agent"
+    },
+    {
+      "from": "verify_agent",
+      "to": "__finish__",
+      "condition": {
+        "variable": "input.success",
+        "operation": "equals",
+        "value": true
+      }
+    },
+    {
+      "from": "verify_agent",
+      "to": "transform_feedback",
+      "condition": {
+        "variable": "input.success",
+        "operation": "equals",
+        "value": false
+      }
+    },
+    {
+      "from": "transform_feedback",
+      "to": "fix_agent"
+    }
+  ]
+}

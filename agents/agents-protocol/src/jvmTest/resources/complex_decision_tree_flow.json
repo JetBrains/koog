@@ -1,0 +1,203 @@
+{
+  "id": "complex-decision-tree-flow",
+  "version": "1.0",
+  "description": "Demonstrates a complex decision tree with multiple branching points and different condition types for a document processing workflow.",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "document_classifier",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You classify documents by type. Return: 'invoice', 'contract', 'report', or 'other'."
+      },
+      "params": {
+        "task": "Classify the document type based on its content and structure."
+      }
+    },
+    {
+      "name": "invoice_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You process invoices and extract financial information."
+      },
+      "params": {
+        "task": "Extract invoice number, date, amount, and vendor information."
+      }
+    },
+    {
+      "name": "invoice_validator",
+      "type": "verify",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You validate that invoice data is complete and correct."
+      },
+      "params": {
+        "task": "Verify all required invoice fields are present and valid."
+      }
+    },
+    {
+      "name": "contract_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You process contracts and extract key terms."
+      },
+      "params": {
+        "task": "Extract parties, dates, terms, and obligations from the contract."
+      }
+    },
+    {
+      "name": "contract_risk_analyzer",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You analyze contracts for potential risks."
+      },
+      "params": {
+        "task": "Analyze the contract for potential legal or financial risks."
+      }
+    },
+    {
+      "name": "report_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You process reports and create summaries."
+      },
+      "params": {
+        "task": "Create an executive summary of the report."
+      }
+    },
+    {
+      "name": "generic_processor",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You handle documents that don't fit standard categories."
+      },
+      "params": {
+        "task": "Process this document and extract any relevant information."
+      }
+    },
+    {
+      "name": "extract_validation_result",
+      "type": "transform",
+      "runtime": "koog",
+      "params": {
+        "transformations": [
+          {
+            "value": "input.success"
+          }
+        ]
+      }
+    },
+    {
+      "name": "invoice_corrector",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You correct issues in invoice data."
+      },
+      "params": {
+        "task": "Review and correct the invoice data based on validation feedback."
+      }
+    },
+    {
+      "name": "final_archiver",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You archive processed documents."
+      },
+      "params": {
+        "task": "Archive the processed document with appropriate metadata."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "document_classifier",
+      "to": "invoice_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "equals",
+        "value": "invoice"
+      }
+    },
+    {
+      "from": "document_classifier",
+      "to": "contract_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "equals",
+        "value": "contract"
+      }
+    },
+    {
+      "from": "document_classifier",
+      "to": "report_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "equals",
+        "value": "report"
+      }
+    },
+    {
+      "from": "document_classifier",
+      "to": "generic_processor",
+      "condition": {
+        "variable": "input.data",
+        "operation": "equals",
+        "value": "other"
+      }
+    },
+    {
+      "from": "invoice_processor",
+      "to": "invoice_validator"
+    },
+    {
+      "from": "invoice_validator",
+      "to": "final_archiver",
+      "condition": {
+        "variable": "input.success",
+        "operation": "equals",
+        "value": true
+      }
+    },
+    {
+      "from": "invoice_validator",
+      "to": "extract_validation_result",
+      "condition": {
+        "variable": "input.success",
+        "operation": "equals",
+        "value": false
+      }
+    },
+    {
+      "from": "extract_validation_result",
+      "to": "invoice_corrector"
+    },
+    {
+      "from": "invoice_corrector",
+      "to": "invoice_validator"
+    },
+    {
+      "from": "contract_processor",
+      "to": "contract_risk_analyzer"
+    },
+    {
+      "from": "contract_risk_analyzer",
+      "to": "final_archiver"
+    },
+    {
+      "from": "report_processor",
+      "to": "final_archiver"
+    },
+    {
+      "from": "generic_processor",
+      "to": "final_archiver"
+    }
+  ]
+}

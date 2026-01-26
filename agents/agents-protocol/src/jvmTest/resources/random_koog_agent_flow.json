@@ -1,0 +1,36 @@
+{
+  "id": "random-numbers-flow",
+  "version": "1.0",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "get_numbers",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a numbers generator agent."
+      },
+      "params": {
+        "task": "Generate two random numbers between 1 and 100. Output them with a space between them."
+      }
+    },
+    {
+      "name": "calculator",
+      "type": "task",
+      "model": "openai/gpt-4o-mini",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are an calculator agent that can perform math operations."
+      },
+      "params": {
+        "task": "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "get_numbers",
+      "to": "calculator"
+    }
+  ]
+}

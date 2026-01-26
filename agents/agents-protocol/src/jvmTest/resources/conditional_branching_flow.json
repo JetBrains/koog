@@ -1,0 +1,81 @@
+{
+  "id": "conditional-branching-flow",
+  "version": "1.0",
+  "description": "Demonstrates conditional branching based on numeric comparison. Analyzes a score and routes to different feedback agents based on the value.",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "score_analyzer",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a score analyzer. Parse the input and extract the numeric score."
+      },
+      "params": {
+        "task": "Extract the numeric score from the input and return it as an integer."
+      }
+    },
+    {
+      "name": "high_score_feedback",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You provide feedback for high scores."
+      },
+      "params": {
+        "task": "Congratulate the user on their excellent performance!"
+      }
+    },
+    {
+      "name": "medium_score_feedback",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You provide feedback for average scores."
+      },
+      "params": {
+        "task": "Encourage the user to keep improving!"
+      }
+    },
+    {
+      "name": "low_score_feedback",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You provide feedback for low scores."
+      },
+      "params": {
+        "task": "Provide constructive feedback and encouragement to do better."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "score_analyzer",
+      "to": "high_score_feedback",
+      "condition": {
+        "variable": "input.data",
+        "operation": "more_or_equal",
+        "value": 80
+      }
+    },
+    {
+      "from": "score_analyzer",
+      "to": "medium_score_feedback",
+      "condition": {
+        "variable": "input.data",
+        "operation": "more_or_equal",
+        "value": 50
+      }
+    },
+    {
+      "from": "score_analyzer",
+      "to": "low_score_feedback",
+      "condition": {
+        "variable": "input.data",
+        "operation": "less",
+        "value": 50
+      }
+    }
+  ]
+}

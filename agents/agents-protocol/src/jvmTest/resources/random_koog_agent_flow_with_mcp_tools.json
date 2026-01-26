@@ -1,0 +1,55 @@
+{
+  "id": "random-numbers-flow-with-mcp-tools",
+  "version": "1.0",
+  "defaultModel": "openai/gpt-4o",
+  "tools": [
+    {
+      "name": "playwright-tools",
+      "type": "mcp",
+      "parameters": {
+        "transport": "sse",
+        "url": "http://localhost:8931/sse"
+      }
+    },
+    {
+      "name": "github-tools",
+      "type": "mcp",
+      "parameters": {
+        "transport": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"]
+      }
+    }
+  ],
+  "agents": [
+    {
+      "name": "get_numbers",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a numbers generator agent."
+      },
+      "params": {
+        "task": "Generate two random numbers between 1 and 100. Output them with a space between them."
+      }
+    },
+    {
+      "name": "calculator",
+      "type": "task",
+      "model": "openai/gpt-4o-mini",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are an calculator agent that can perform math operations."
+      },
+      "params": {
+        "task": "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "get_numbers",
+      "to": "calculator"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "id": "retry-loop-flow",
+  "version": "1.0",
+  "description": "Demonstrates a retry loop pattern with verify-fix-retry cycle. Continues until verification succeeds or manual intervention is needed.",
+  "defaultModel": "openai/gpt-4o",
+  "agents": [
+    {
+      "name": "initial_generator",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You generate code based on specifications."
+      },
+      "params": {
+        "task": "Generate a simple Python function based on the input requirements."
+      }
+    },
+    {
+      "name": "code_verifier",
+      "type": "verify",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You verify that code meets quality standards and has no obvious errors."
+      },
+      "params": {
+        "task": "Check if the code is syntactically correct and follows best practices. Return success=true if valid, success=false with detailed feedback otherwise."
+      }
+    },
+    {
+      "name": "extract_feedback",
+      "type": "transform",
+      "runtime": "koog",
+      "params": {
+        "transformations": [
+          {
+            "value": "input.feedback"
+          }
+        ]
+      }
+    },
+    {
+      "name": "code_fixer",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You fix code based on verification feedback."
+      },
+      "params": {
+        "task": "Fix the code based on this feedback: use the input string as guidance."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "initial_generator",
+      "to": "code_verifier"
+    },
+    {
+      "from": "code_verifier",
+      "to": "__finish__",
+      "condition": {
+        "variable": "input.success",
+        "operation": "equals",
+        "value": true
+      }
+    },
+    {
+      "from": "code_verifier",
+      "to": "extract_feedback",
+      "condition": {
+        "variable": "input.success",
+        "operation": "equals",
+        "value": false
+      }
+    },
+    {
+      "from": "extract_feedback",
+      "to": "code_fixer"
+    },
+    {
+      "from": "code_fixer",
+      "to": "code_verifier"
+    }
+  ]
+}
