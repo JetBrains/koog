@@ -1,7 +1,6 @@
 package ai.koog.agents.core.tools
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.tools.ToolRegistry.Builder
 import kotlin.jvm.JvmStatic
 
 /**
@@ -187,6 +186,7 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
 
         /**
          * A constant representing an empty registry with no tools.
+         * TODO(KG-676): ToolRegistry is mutable but stored as an immutable object.
          */
         public val EMPTY: ToolRegistry = ToolRegistry(emptyList())
     }
