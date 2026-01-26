@@ -77,6 +77,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
@@ -241,7 +242,18 @@ abstract class ExecutorIntegrationTestBase {
                 toolMessages.shouldBeEmpty()
                 when (model.provider) {
                     is LLMProvider.Ollama -> endMessages.size shouldBe 0
-                    else -> endMessages.size shouldBe 1
+
+                    else -> {
+                        endMessages.size shouldBe 1
+                        endMessages.first() should { end ->
+                            end.metaInfo should { meta ->
+                                withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
+                                    listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
+                                        .shouldForAny { it != null }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 toString() shouldNotBeNull {
