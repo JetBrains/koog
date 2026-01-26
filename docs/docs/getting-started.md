@@ -206,6 +206,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 
     The example below creates and runs a simple AI agent using the [`GPT-4o`](https://platform.openai.com/docs/models/gpt-4o) model.
 
+    <!--- CLEAR -->
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
