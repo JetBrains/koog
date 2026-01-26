@@ -67,6 +67,17 @@ fun ComposeApp() = AppTheme {
                         }
                     )
                 }
+
+                entry<NavRoute.AgentDemoRoute.ChatScreen> {
+                    AgentDemoScreen(
+                        viewModel = koin.get {
+                            parametersOf(
+                                appNavigation,
+                                "chat",
+                            )
+                        }
+                    )
+                }
             }
         )
     }
@@ -93,5 +104,8 @@ sealed interface NavRoute : NavKey {
 
         @Serializable
         data object WeatherScreen : AgentDemoRoute
+
+        @Serializable
+        data object ChatScreen : AgentDemoRoute
     }
 }

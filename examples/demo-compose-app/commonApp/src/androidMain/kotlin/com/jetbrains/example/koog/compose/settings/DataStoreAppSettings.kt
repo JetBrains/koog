@@ -36,6 +36,7 @@ internal class DataStoreAppSettings(prefPathProvider: PrefPathProvider) : AppSet
                 SelectedOption.Anthropic.title -> SelectedOption.Anthropic
                 SelectedOption.Gemini.title -> SelectedOption.Gemini
                 SelectedOption.Ollama.title -> SelectedOption.Ollama
+                SelectedOption.Local.title -> SelectedOption.Local
                 else -> SelectedOption.OpenAI
             }
         )

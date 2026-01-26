@@ -54,6 +54,7 @@ private fun SettingsScreenContent(
         SelectedOption.Anthropic,
         SelectedOption.Gemini,
         SelectedOption.Ollama,
+        SelectedOption.Local
     )
 
     Scaffold(
@@ -130,6 +131,7 @@ private fun SettingsScreenContent(
                 is SelectedOption.Anthropic -> uiState.anthropicToken to "Anthropic Token"
                 is SelectedOption.Gemini -> uiState.geminiToken to "Gemini Token"
                 is SelectedOption.Ollama -> uiState.ollamaUrl to "Ollama URL"
+                is SelectedOption.Local -> "" to "Local"
             }
 
             OutlinedTextField(

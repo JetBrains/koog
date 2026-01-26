@@ -75,6 +75,7 @@ class SettingsViewModel(
             is SelectedOption.Anthropic -> state.copy(anthropicToken = credential.trim())
             is SelectedOption.Gemini -> state.copy(geminiToken = credential.trim())
             is SelectedOption.Ollama -> state.copy(ollamaUrl = credential.trim())
+            is SelectedOption.Local -> state
         }
     }
 

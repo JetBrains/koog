@@ -13,6 +13,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import androidx.compose.runtime.Composable
 import com.jetbrains.example.koog.compose.agents.calculator.CalculatorAgentProvider
+import com.jetbrains.example.koog.compose.agents.chat.ChatAgentProvider
 import com.jetbrains.example.koog.compose.agents.common.AgentProvider
 import com.jetbrains.example.koog.compose.agents.weather.WeatherAgentProvider
 import com.jetbrains.example.koog.compose.screens.agentdemo.AgentDemoViewModel
@@ -29,7 +30,7 @@ import org.koin.dsl.module
 
 @OptIn(KoinExperimentalAPI::class)
 @Composable
-fun KoinApp() = KoinMultiplatformApplication(
+fun KoinApp(client: LLMClient? = null, model: LLModel? = null) = KoinMultiplatformApplication(
     config = KoinConfiguration {
         modules(
             appPlatformModule,
@@ -77,11 +78,19 @@ fun KoinApp() = KoinMultiplatformApplication(
                                 require(geminiToken.isNotEmpty()) { "Gemini token is not configured." }
                                 Pair(GoogleLLMClient(geminiToken), GoogleModels.Gemini2_5FlashLite)
                             }
+
+                            SelectedOption.Local -> {
+                                requireNotNull(client) { "Local client is not configured." }
+                                requireNotNull(model) { "Local model is not configured." }
+                                Pair(client, model)
+                            }
                         }
                     }
                 }
                 single<AgentProvider>(named("calculator")) { CalculatorAgentProvider(provideLLMClient = get()) }
                 single<AgentProvider>(named("weather")) { WeatherAgentProvider(provideLLMClient = get()) }
+                single<AgentProvider>(named("chat")) { ChatAgentProvider(provideLLMClient = get()) }
+
                 factory { params ->
                     StartViewModel(
                         navigationCallback = params[0],

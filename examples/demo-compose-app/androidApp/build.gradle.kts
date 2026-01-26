@@ -45,5 +45,8 @@ kotlin {
 
 dependencies {
     implementation(project(":commonApp"))
+    implementation(libs.koog.agents)
+    implementation(libs.localagents)
+    implementation(libs.genai)
     implementation(libs.androidx.activityCompose)
 }
