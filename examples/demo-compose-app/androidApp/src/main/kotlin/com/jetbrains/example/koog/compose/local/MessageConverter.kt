@@ -8,7 +8,7 @@ import com.google.ai.edge.litertlm.Content
 import kotlinx.datetime.Clock
 
 fun convertLitertToKoogMessage(message: LitertMessage, clock: Clock): Message {
-    val parts = message.contents.map {
+    val parts = message.contents.contents.map {
         when (it) {
             is Content.Text -> ContentPart.Text(it.text)
             else -> TODO("Not yet supported")
