@@ -14,13 +14,14 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.llm.LLModel
 import com.jetbrains.example.koog.compose.agents.common.AgentProvider
+import com.jetbrains.example.koog.compose.agents.common.ExitTool
 
 /**
  * Factory for creating chat agents
  */
 internal class ChatAgentProvider(private val provideLLMClient: suspend () -> Pair<LLMClient, LLModel>) : AgentProvider {
-    override val title: String = "Calculator"
-    override val description: String = "Hi, I'm a calculator agent, I can do math"
+    override val title: String = "Chat"
+    override val description: String = "Hi, I'm a chat agent, I can do chat with you"
 
     override suspend fun provideAgent(
         onToolCallEvent: suspend (String) -> Unit,
@@ -53,7 +54,6 @@ internal class ChatAgentProvider(private val provideLLMClient: suspend () -> Pai
             )
 
             edge(nodeAssistantMessage forwardTo nodeRequestLLM)
-
         }
 
         // Create agent config with proper prompt

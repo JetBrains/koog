@@ -26,7 +26,7 @@ object AndroidLocalModels : LLModelDefinitions {
          */
         val Gemma: LLModel = LLModel(
             provider = AndroidLocalLLMProvider,
-            id = "Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048",
+            id = "Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task",
             contextLength = 2048,
             capabilities = listOf(
                 LLMCapability.Completion
@@ -38,7 +38,7 @@ object AndroidLocalModels : LLModelDefinitions {
          */
         val Hammer: LLModel = LLModel(
             provider = AndroidLocalLLMProvider,
-            id = "Hammer2.1-1.5b_multi-prefill-seq_q8_ekv4096",
+            id = "Hammer2.1-1.5b_multi-prefill-seq_q8_ekv4096.task",
             contextLength = 2048,
             capabilities = listOf(
                 LLMCapability.Tools,
@@ -51,7 +51,7 @@ object AndroidLocalModels : LLModelDefinitions {
          */
         val Llama: LLModel = LLModel(
             provider = AndroidLocalLLMProvider,
-            id = "Llama-3.2-1B-Instruct_multi-prefill-seq_q8_ekv1280",
+            id = "Llama-3.2-1B-Instruct_multi-prefill-seq_q8_ekv1280.task",
             contextLength = 2048,
             capabilities = listOf(
                 LLMCapability.Tools,
@@ -64,7 +64,7 @@ object AndroidLocalModels : LLModelDefinitions {
          */
         val Qwen: LLModel = LLModel(
             provider = AndroidLocalLLMProvider,
-            id = "Qwen2.5-1.5B-Instruct_seq128_q8_ekv4096",
+            id = "Qwen2.5-1.5B-Instruct_seq128_q8_ekv4096.task",
             contextLength = 2048,
             capabilities = listOf(
                 LLMCapability.Tools,
