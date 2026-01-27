@@ -6,6 +6,17 @@ plugins {
 
 val javaVersion = libs.versions.javaVersion.get().toInt()
 
+repositories {
+    mavenCentral()
+    google {
+        content {
+            includeGroupByRegex("com\\.android.*")
+            includeGroupByRegex("com\\.google.*")
+            includeGroupByRegex("androidx.*")
+        }
+    }
+}
+
 android {
     namespace = "com.jetbrains.example.koog.compose"
     compileSdk = 36
@@ -46,7 +57,6 @@ kotlin {
 dependencies {
     implementation(project(":commonApp"))
     implementation(libs.koog.agents)
-    implementation(libs.localagents)
-    implementation(libs.genai)
+    implementation(libs.android.litertlm)
     implementation(libs.androidx.activityCompose)
 }

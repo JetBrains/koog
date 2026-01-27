@@ -4,8 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.jetbrains.example.koog.compose.local.AndroidLLocalLLMClient
-import com.jetbrains.example.koog.compose.local.AndroidLocalModels
+import com.jetbrains.example.koog.compose.local.AndroidLocalLLMClient
+import com.jetbrains.example.koog.compose.local.AndroidLocalLLMClientConfig
+import com.jetbrains.example.koog.compose.local.Gemma
+import com.jetbrains.example.koog.compose.local.Gemma3
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,11 +15,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KoinApp(
-                client = AndroidLLocalLLMClient(
-                    this,
-                    "/data/local/tmp/llm"
+                client = AndroidLocalLLMClient(
+                    AndroidLocalLLMClientConfig()
                 ),
-                model = AndroidLocalModels.Chat.Gemma
+                model = Gemma3
             )
         }
     }
