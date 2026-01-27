@@ -56,11 +56,13 @@ open class AndroidLLocalLLMClient(
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-//        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
-//            "Model ${model.id} does not support tools"
-//        }
+        if (tools.isNotEmpty()) {
+            require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+                "Model ${model.id} does not support tools"
+            }
+        }
 
-        val modelPath = modelsPath + "/${model.id}.task"
+        val modelPath = modelsPath + "/${model.id}"
         val taskOptions = LlmInference.LlmInferenceOptions.builder()
             .setModelPath(modelPath)
             .setMaxTokens(settings.maxTokens)
