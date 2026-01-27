@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     implementation(platform(libs.kotlin.bom))
+    implementation(libs.mcp.server)
+    implementation(libs.mcp.client)
 
     /*
      Koog dependencies from composite build.
@@ -13,6 +15,8 @@ dependencies {
      */
     //noinspection UseTomlInstead
     implementation("ai.koog:koog-agents")
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-mcp-server")
     //noinspection UseTomlInstead
     implementation("ai.koog:koog-ktor")
     //noinspection UseTomlInstead
@@ -137,3 +141,8 @@ registerRunExampleTask("runExampleAdvancedJokeAgentClient", "ai.koog.agents.exam
  ACP examples
 */
 registerRunExampleTask("runExampleAcpApp", "ai.koog.agents.example.acp.KoogAcpAppKt")
+
+/*
+ Langfuse examples
+*/
+registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.langfuse.LangfuseKt")

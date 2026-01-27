@@ -8,6 +8,7 @@ logback = "1.5.13"
 mockk = "1.13.8"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
+mcp = "0.8.1"
 
 [libraries]
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
@@ -23,6 +24,8 @@ opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-expo
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
+mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
+mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
