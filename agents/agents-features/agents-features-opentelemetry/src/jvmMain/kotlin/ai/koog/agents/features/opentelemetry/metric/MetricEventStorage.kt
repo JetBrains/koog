@@ -42,7 +42,7 @@ internal class MetricEventStorage {
         }
     }
 
-    private fun <T : MetricEvent> finishEvent(closingEvent: MetricEvent): T? {
+    private fun <T : MetricEvent> endEvent(closingEvent: MetricEvent): T? {
         getPairedEvent(closingEvent.id)?.let { it as? T }?.let {
             return it
         }
@@ -51,9 +51,9 @@ internal class MetricEventStorage {
         return null
     }
 
-    internal fun finishEvent(closingEvent: LLMCallEnded): Pair<LLMCallStarted, LLMCallEnded>? =
-        finishEvent<LLMCallStarted>(closingEvent)?.let { it to closingEvent }
+    internal fun endEvent(closingEvent: LLMCallEnded): Pair<LLMCallStarted, LLMCallEnded>? =
+        endEvent<LLMCallStarted>(closingEvent)?.let { it to closingEvent }
 
-    internal fun finishEvent(closingEvent: ToolCallEnded): Pair<ToolCallStarted, ToolCallEnded>? =
-        finishEvent<ToolCallStarted>(closingEvent)?.let { it to closingEvent }
+    internal fun endEvent(closingEvent: ToolCallEnded): Pair<ToolCallStarted, ToolCallEnded>? =
+        endEvent<ToolCallStarted>(closingEvent)?.let { it to closingEvent }
 }
