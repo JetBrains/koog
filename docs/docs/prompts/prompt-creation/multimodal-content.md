@@ -127,6 +127,7 @@ Implementations of the AttachmentContent interface define the type and source of
 
 In addition to providing different types of attachments in separate prompts or messages, you can also provide multiple and mixed types of attachments in a single `user()` message:
 
+<!--- CLEAR -->
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
 import kotlinx.io.files.Path
