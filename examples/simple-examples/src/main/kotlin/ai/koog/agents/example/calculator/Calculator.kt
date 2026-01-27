@@ -16,6 +16,7 @@ import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
+import java.time.Duration
 
 suspend fun main() {
     val logger = LoggerFactory.getLogger("Calculator")
@@ -73,8 +74,8 @@ suspend fun main() {
                     OtlpGrpcMetricExporter.builder()
                         .setEndpoint("http://localhost:17011")
                         .setTimeout(1, TimeUnit.SECONDS)
-                        .build()
-//                    LoggingMetricExporter.create()
+                        .build(),
+                    Duration.ofSeconds(1)
                 )
                 addSpanExporter(
                     OtlpGrpcSpanExporter.builder()

@@ -36,21 +36,5 @@ internal object GenAIMetricNames {
                     get() = "s"
             }
         }
-
-        sealed interface Tool : Client {
-            override val name: String
-                get() = super.name.concatKey("tool")
-
-            object Count : Tool {
-                override val name: String
-                    get() = super.name.concatKey("count")
-
-                override val description: String
-                    get() = "Tool calls count"
-
-                override val unit: String
-                    get() = "tool call"
-            }
-        }
     }
 }

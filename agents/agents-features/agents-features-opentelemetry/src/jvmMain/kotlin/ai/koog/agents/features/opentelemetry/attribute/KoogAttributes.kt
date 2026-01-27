@@ -73,5 +73,28 @@ internal object KoogAttributes {
                 override val value: HiddenString = HiddenString(output)
             }
         }
+
+        sealed interface Tool : Koog {
+            override val key: String
+                get() = super.key.concatKey("tool")
+
+
+            sealed interface Call : Tool {
+                override val key: String
+                    get() = super.key.concatKey("call")
+
+                // koog.tool.call.status
+                data class Status(private val status: StatusType) : Call {
+                    override val key: String = super.key.concatKey("status")
+                    override val value: String = status.str
+                }
+
+                enum class StatusType(val str: String) {
+                    SUCCESS("success"),
+                    ERROR("error"),
+                    VALIDATION_FAILED("validation_failed")
+                }
+            }
+        }
     }
 }

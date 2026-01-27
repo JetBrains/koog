@@ -49,7 +49,6 @@ import kotlinx.serialization.json.putJsonArray
  * - gen_ai.tool.description (recommended)
  * - gen_ai.tool.name (recommended)
  * - gen_ai.token.type (required)
- * - gen_ai.tool.status (custom)
  */
 internal object GenAIAttributes {
 
@@ -382,19 +381,6 @@ internal object GenAIAttributes {
             data class Result(private val result: JsonElement) : Call {
                 override val key: String = super.key.concatKey("result")
                 override val value: HiddenString = HiddenString(result.toString())
-            }
-
-            // gen_ai.tool.status
-            // Note: Non-semantic attribute
-            data class Status(private val status: StatusType) : Call {
-                override val key: String = super.key.concatKey("status")
-                override val value: String = status.str
-            }
-
-            enum class StatusType(val str: String) {
-                SUCCESS("success"),
-                ERROR("error"),
-                VALIDATION_FAILED("validation_failed")
             }
         }
 
