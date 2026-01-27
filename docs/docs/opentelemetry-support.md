@@ -153,11 +153,12 @@ Adds a span exporter to send telemetry data to external systems. Takes the follo
 
 #### addMeterExporter
 
-Adds a metric exporter to send runtime metrics to external systems. Takes the following argument:
+Adds a metric exporter to send runtime metrics to external systems. Takes the following arguments:
 
-| Name       | Data type        | Required | Default value | Description                                                                       |
-|------------|------------------|----------|---------------|-----------------------------------------------------------------------------------|
-| `exporter` | `MetricExporter` | Yes      |               | The `MetricExporter` instance to be added to the list of custom metric exporters. |
+| Name            | Data type        | Required | Default value            | Description                                                                       |
+|-----------------|------------------|----------|--------------------------|-----------------------------------------------------------------------------------|
+| `exporter`      | `MetricExporter` | Yes      |                          | The `MetricExporter` instance to be added to the list of custom metric exporters. |
+| `meterInterval` | `Duration`       | No       | `Duration.ofSeconds(1)`  | The interval for processing metrics.                                              |
 
 #### addSpanProcessor
 
@@ -223,6 +224,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.sdk.trace.samplers.Sampler
+import java.time.Duration
 
 const val apiKey = ""
 
@@ -245,7 +247,10 @@ install(OpenTelemetry) {
     addSpanExporter(LoggingSpanExporter.create())
 
     // Add the Metric exporter
-    addMeterExporter(LoggingMetricExporter.create())
+    addMeterExporter(
+        exporter = LoggingMetricExporter.create(),
+        meterInterval = Duration.ofSeconds(30)
+    )
 
     // Set the sampler 
     setSampler(Sampler.traceIdRatioBased(0.5))
@@ -450,6 +455,7 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
 !!! note
 Metrics are reported via the OpenTelemetry `Meter` created for your service. If no metric exporters are configured,
 Koog uses a console `LoggingMetricExporter` by default (with a 1-second `PeriodicMetricReader` interval).
+You can customize the metric reading interval when adding a custom exporter using the `meterInterval` parameter.
 
 ## Exporters
 
