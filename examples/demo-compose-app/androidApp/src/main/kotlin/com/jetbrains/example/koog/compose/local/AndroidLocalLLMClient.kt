@@ -11,6 +11,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Content
+import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
@@ -18,7 +19,6 @@ import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.ToolParam
 import kotlinx.datetime.Clock
 import kotlin.time.ExperimentalTime
-import com.google.ai.edge.litertlm.Message as LitertMessage
 
 data class AndroidLocalLLMClientConfig(
     val modelsPath: String = "/data/local/tmp/llm",
@@ -49,13 +49,13 @@ class AndroidLocalLLMClient(private val config: AndroidLocalLLMClientConfig) : L
         val conversation = engine.createConversation(conversationConfig)
 
         val response = conversation.sendMessage(
-            LitertMessage.of("What is 10.3 + 10.21? CALL TOOL!!!")
+            Contents.of(listOf(Content.Text("What is 10.3 + 10.21? CALL TOOL!!!"))),
         )
 
         conversation.close()
         engine.close()
 
-        return response.contents.mapNotNull { content ->
+        return response.contents.contents.mapNotNull { content ->
             when (content) {
                 is Content.Text -> Message.Assistant(
                     content = content.text,

@@ -9,6 +9,17 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
+repositories {
+    mavenCentral()
+    google {
+        content {
+            includeGroupByRegex("com\\.android.*")
+            includeGroupByRegex("com\\.google.*")
+            includeGroupByRegex("androidx.*")
+        }
+    }
+}
+
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 }
