@@ -167,8 +167,10 @@ object JavaInteropUtils {
     }
 
     @JvmStatic
-    fun getHistory(context: AIAgentFunctionalContext): List<Message> = runBlocking {
-        context.getHistory()
+    fun getHistory(context: AIAgentFunctionalContext): List<Message> = try {
+        runBlocking { context.getHistory() }
+    } catch (e: Exception) {
+        throw RuntimeException("Failed to retrieve history", e)
     }
 
     @JvmStatic
