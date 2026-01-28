@@ -6,7 +6,6 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.Models;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -23,14 +22,11 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
-    public void integration_BuilderBasicUsageAndTemperature(LLModel model) {
+    public void integration_BuilderBasicUsage(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        MultiLLMPromptExecutor executor = createExecutor(model);
-
-        // Test basic builder usage
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(executor)
+            .promptExecutor(createExecutor(model))
             .llmModel(model)
             .systemPrompt("You are a helpful assistant.")
             .build();
@@ -42,20 +38,25 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
         assertNotNull(result);
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Paris"));
+    }
 
-        // Test builder with temperature setting
-        AIAgent<String, String> agentWithTemp = AIAgent.builder()
-            .promptExecutor(executor)
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    public void integration_BuilderWithTemperature(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
             .llmModel(model)
             .systemPrompt("You are a helpful assistant.")
             .temperature(0.5)
             .build();
 
-        String tempResult = runBlocking(continuation -> agentWithTemp.run("Say hello", continuation));
+        String result = runBlocking(continuation -> agent.run("Say hello", continuation));
 
-        assertNotNull(tempResult);
-        assertFalse(tempResult.isEmpty());
-        assertTrue(tempResult.toLowerCase().contains("hello") || tempResult.toLowerCase().contains("hi"));
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.toLowerCase().contains("hello") || result.toLowerCase().contains("hi"));
     }
 
     @ParameterizedTest
