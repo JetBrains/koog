@@ -849,7 +849,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val systemMessage = "You are a helpful assistant."
         val testInput = "Start the test"
 
-        "No checkpoints were created"
         val incorrectNodeIdError = "Checkpoint has incorrect node ID"
 
         val fileStorageProvider = JVMFilePersistenceStorageProvider(tempDir)
@@ -902,6 +901,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val expectedNodePath = path(agentId, strategyName, bye)
         with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }) {
             withClue(incorrectNodeIdError) {
+                shouldNotBeEmpty()
                 first().nodePath shouldBe expectedNodePath
             }
         }
