@@ -23,6 +23,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import java.util.function.Function
 
 /**
  *
@@ -139,13 +140,13 @@ object JavaInteropUtils {
     @JvmStatic
     fun <T> llmWriteSession(
         context: AIAgentFunctionalContext,
-        action: java.util.function.Function<AIAgentLLMWriteSession, T>
+        action: Function<AIAgentLLMWriteSession, T>
     ): T = context.llm.writeSession(action)
 
     @JvmStatic
     fun <T> llmReadSession(
         context: AIAgentFunctionalContext,
-        action: java.util.function.Function<AIAgentLLMReadSession, T>
+        action: Function<AIAgentLLMReadSession, T>
     ): T = context.llm.readSession(action)
 
     @JvmStatic

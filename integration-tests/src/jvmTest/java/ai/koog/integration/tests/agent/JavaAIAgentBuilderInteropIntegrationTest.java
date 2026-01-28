@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration tests for AIAgent builder with basic configuration, tools, and event handlers.
  */
-public class JavaAIAgentBuilderIntegrationTest extends KoogJavaTestBase {
+public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
 
     private final List<AutoCloseable> resourcesToClose = new ArrayList<>();
 
