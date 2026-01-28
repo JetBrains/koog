@@ -181,6 +181,8 @@ object JavaInteropUtils {
     }
 
     class CalculatorTools : ToolSet {
+        private val toolRegistry by lazy { createToolRegistry(this) }
+
         @ai.koog.agents.core.tools.annotations.Tool
         @LLMDescription(description = "Adds two numbers together")
         fun add(
@@ -195,13 +197,11 @@ object JavaInteropUtils {
             @LLMDescription(description = "Second number") b: Int
         ): Int = a * b
 
-        fun getAddTool(): Tool<*, *> {
-            return createToolRegistry(this).tools.first { it.name == "add" }
-        }
+        fun getAddTool(): Tool<*, *> =
+            toolRegistry.tools.first { it.name == "add" }
 
-        fun getMultiplyTool(): Tool<*, *> {
-            return createToolRegistry(this).tools.first { it.name == "multiply" }
-        }
+        fun getMultiplyTool(): Tool<*, *> =
+            toolRegistry.tools.first { it.name == "multiply" }
     }
 
     class TransactionTools : ToolSet {
