@@ -81,7 +81,7 @@ public data class StructuredRequestConfig<T>(
                     // If examples are supplied, append them
                     if (mode.structure.examples.isNotEmpty()) {
                         user {
-                            StructuredOutputPrompts.examplesPrompt(this, mode.structure)
+                            mode.structure.examples(this)
                         }
                     }
                 }.withUpdatedParams { schema = mode.structure.schema }
