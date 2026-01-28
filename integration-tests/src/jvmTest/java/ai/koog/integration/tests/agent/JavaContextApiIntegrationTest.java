@@ -6,11 +6,9 @@ import ai.koog.agents.core.tools.Tool;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.Models;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import kotlinx.serialization.Serializable;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -18,26 +16,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ai.koog.integration.tests.utils.LLMClientsKt.getLLMClientForProvider;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
-
-    private final List<AutoCloseable> resourcesToClose = new ArrayList<>();
-
-    @AfterEach
-    public void cleanup() throws Exception {
-        for (AutoCloseable resource : resourcesToClose) {
-            resource.close();
-        }
-        resourcesToClose.clear();
-    }
-
-    private MultiLLMPromptExecutor createExecutor(LLModel model) {
-        var client = getLLMClientForProvider(model.getProvider());
-        resourcesToClose.add((AutoCloseable) client);
-        return new MultiLLMPromptExecutor(client);
-    }
 
     @Serializable
     public static class CalculationResult {

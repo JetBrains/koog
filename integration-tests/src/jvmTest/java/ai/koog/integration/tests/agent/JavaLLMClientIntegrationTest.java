@@ -11,10 +11,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,16 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for LLM clients (OpenAI, Anthropic, MultiLLMPromptExecutor).
  */
 public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
-
-    private final List<AutoCloseable> resourcesToClose = new ArrayList<>();
-
-    @AfterEach
-    public void cleanup() throws Exception {
-        for (AutoCloseable resource : resourcesToClose) {
-            resource.close();
-        }
-        resourcesToClose.clear();
-    }
 
     private void assertValidResponse(List<Message.Response> responses) {
         assertNotNull(responses);

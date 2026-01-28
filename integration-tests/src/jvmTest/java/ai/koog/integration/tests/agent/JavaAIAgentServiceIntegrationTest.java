@@ -7,17 +7,11 @@ import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.Models;
-import ai.koog.integration.tests.utils.TestCredentials;
-import ai.koog.prompt.executor.clients.LLMClient;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
-import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,29 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for AIAgentService (multi-agent management).
  */
 public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
-
-    private final List<AutoCloseable> resourcesToClose = new ArrayList<>();
-
-    @AfterEach
-    public void cleanup() throws Exception {
-        for (AutoCloseable resource : resourcesToClose) {
-            resource.close();
-        }
-        resourcesToClose.clear();
-    }
-
-    private MultiLLMPromptExecutor createExecutor(LLModel model) {
-        LLMClient client;
-        if (model.getProvider() == LLMProvider.OpenAI.INSTANCE) {
-            client = JavaInteropUtils.createOpenAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
-        } else if (model.getProvider() == LLMProvider.Anthropic.INSTANCE) {
-            client = JavaInteropUtils.createAnthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
-        } else {
-            throw new IllegalArgumentException("Unsupported provider: " + model.getProvider());
-        }
-        resourcesToClose.add((AutoCloseable) client);
-        return new MultiLLMPromptExecutor(client);
-    }
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
