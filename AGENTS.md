@@ -109,6 +109,7 @@ Features have unique storage keys and can intercept agent lifecycle events.
 The framework provides comprehensive testing utilities in `agents-test` module:
 
 ### LLM Response Mocking
+
 ```kotlin
 val mockLLMApi = getMockExecutor(toolRegistry, eventHandler) {
     mockLLMAnswer("Hello!") onRequestContains "Hello"
@@ -118,6 +119,7 @@ val mockLLMApi = getMockExecutor(toolRegistry, eventHandler) {
 ```
 
 ### Tool Behavior Mocking
+
 ```kotlin
 // Simple return value
 mockTool(PositiveToneTool) alwaysReturns "The text has a positive tone."
@@ -129,25 +131,26 @@ mockTool(NegativeToneTool) alwaysTells {
 }
 
 // Conditional responses
-mockTool(SearchTool) returns SearchTool.Result("Found") onArgumentsMatching { 
-    args.query.contains("important") 
+mockTool(SearchTool) returns SearchTool.Result("Found") onArgumentsMatching {
+    args.query.contains("important")
 }
 ```
 
 ### Graph Structure Testing
+
 ```kotlin
 AIAgent(...) {
     withTesting()
-    
+
     testGraph("test") {
         val firstSubgraph = assertSubgraphByName<String, String>("first")
         val secondSubgraph = assertSubgraphByName<String, String>("second")
-        
+
         assertEdges {
             startNode() alwaysGoesTo firstSubgraph
             firstSubgraph alwaysGoesTo secondSubgraph
         }
-        
+
         verifySubgraph(firstSubgraph) {
             val askLLM = assertNodeByName<String, Message.Response>("callLLM")
             assertNodes {
@@ -163,24 +166,27 @@ For comprehensive testing examples, see `agents/agents-test/TESTING.md`.
 ## Security
 
 ### API Key Management
+
 - **NEVER** commit API keys or secrets to the repository
 - Use environment variables for all sensitive configuration
 - Store test API keys in a local environment only
 - Required environment variables for integration tests:
-  - `ANTHROPIC_API_TEST_KEY`
-  - `GEMINI_API_TEST_KEY` 
-  - `MISTRAL_AI_API_TEST_KEY`
-  - `OLLAMA_IMAGE_URL`
-  - `OPEN_AI_API_TEST_KEY`
-  - `OPEN_ROUTER_API_TEST_KEY`
+    - `ANTHROPIC_API_TEST_KEY`
+    - `GEMINI_API_TEST_KEY`
+    - `MISTRAL_AI_API_TEST_KEY`
+    - `OLLAMA_IMAGE_URL`
+    - `OPEN_AI_API_TEST_KEY`
+    - `OPEN_ROUTER_API_TEST_KEY`
 
 ### Tool Execution Safety
+
 - Tools execute within controlled `AIAgentEnvironment` contexts
 - Direct tool calls are prevented outside agent execution
 - Use type-safe tool arguments to prevent injection attacks
 - Validate all external inputs in tool implementations
 
 ### Dependency Security
+
 - Regularly update dependencies using Gradle version catalogs
 - Use specific version ranges to avoid supply chain attacks
 - Review dependencies for known vulnerabilities
@@ -189,7 +195,9 @@ For comprehensive testing examples, see `agents/agents-test/TESTING.md`.
 ## Configuration
 
 ### Environment Setup
+
 Set environment variables for integration testing (never commit API keys):
+
 ```bash
 # Export in your shell or IDE run configuration
 export ANTHROPIC_API_TEST_KEY=your_key_here
@@ -204,11 +212,13 @@ export OPEN_ROUTER_API_TEST_KEY=your_key_here
 ```
 
 ### Gradle Configuration
+
 - Uses version catalogs (`gradle/libs.versions.toml`) for dependency management
 - Multiplatform configuration in `build.gradle.kts`
 - Test configuration supports both JVM and JS targets
 
 ### Development Environment Requirements
+
 - **JDK**: 17+ (OpenJDK recommended)
 - **IDE**: IntelliJ IDEA with Kotlin Multiplatform plugin
 - **Optional**: Docker for Ollama local testing
@@ -216,12 +226,14 @@ export OPEN_ROUTER_API_TEST_KEY=your_key_here
 ## Development Workflow
 
 ### Branch Strategy
+
 - **develop**: All development (features and bug fixes)
-- **main**: Released versions only  
+- **main**: Released versions only
 - Base all PRs against `develop` branch
 - Use descriptive branch names: `feature/agent-memory`, `fix/tool-registry-bug`
 
 ### Code Quality
+
 - **ALWAYS** run `./gradlew build` before submitting PRs
 - Ensure all tests pass on JVM, JS, WASM targets
 - Follow established patterns in existing code
@@ -229,6 +241,7 @@ export OPEN_ROUTER_API_TEST_KEY=your_key_here
 - Update documentation for API changes
 
 ### Commit Guidelines
+
 - Use conventional commit format: `feat:`, `fix:`, `docs:`, `test:`
 - Include issue references where applicable
 - Keep commits focused and atomic

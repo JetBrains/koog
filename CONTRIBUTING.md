@@ -45,7 +45,7 @@ This project includes some helpful guidelines to make AI coding assistants work 
 
 ### Agent Guidelines
 
-You'll find an [AGENT.md](AGENT.md) file in the repository root.
+You'll find an [AGENTS.md](AGENTS.md) file in the repository root.
 Think of it as a cheat sheet for AI assistants that explains:
 
 - **How the project works** — the overall architecture and main concepts
@@ -53,11 +53,11 @@ Think of it as a cheat sheet for AI assistants that explains:
 - **Testing patterns** — our approach to mocks and test structure
 - **Code conventions** — the style we follow and why
 
-### How to use `AGENT.md`
+### How to use `AGENTS.md`
 
 When you're pairing with an AI assistant on this project:
 
-1. Share the `AGENT.md` file with your code agent of choice (Junie, Claude Code, Cursor, Copilot, etc.)
+1. Share the `AGENTS.md` file with your code agent of choice (Junie, Claude Code, Cursor, Copilot, etc.)
 2. The AI will understand our project structure and conventions better
 3. You can even use it as a starting point to create custom configs for specific agents
 
