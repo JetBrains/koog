@@ -2,9 +2,12 @@ package ai.koog.agents.features.opentelemetry.extension
 
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
+import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
 import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
+import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanEndStatus
+import ai.koog.http.client.KoogHttpClientException
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
 import io.opentelemetry.api.trace.StatusCode
@@ -63,3 +66,22 @@ internal fun AIAgentError?.toSpanEndStatus(): SpanEndStatus =
     } else {
         SpanEndStatus(code = StatusCode.ERROR, description = this.message)
     }
+
+/**
+ * We want to add an actual error type as an error attribute.
+ */
+internal fun GenAIAgentSpan.addCommonErrorAttributes(error: Throwable?) {
+    error?.let {
+        addAttribute(CommonAttributes.Error.Type(it.extractActualErrorType()))
+    }
+}
+
+private fun Throwable.extractActualErrorType(): String {
+    val cause = this.cause
+    return when {
+        this is KoogHttpClientException -> "KoogHttpClientException-$clientName-httpCode=$statusCode"
+        cause is KoogHttpClientException -> "KoogHttpClientException-${cause.clientName}-httpCode=${cause.statusCode}"
+        cause != null -> "${this.javaClass.simpleName}-${cause.javaClass.typeName}"
+        else -> this.javaClass.typeName
+    }
+}

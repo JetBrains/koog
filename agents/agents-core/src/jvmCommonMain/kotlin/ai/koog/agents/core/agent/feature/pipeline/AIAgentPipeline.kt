@@ -14,6 +14,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingCon
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
@@ -255,6 +256,32 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallCompletedContext>
     ) {
         interceptLLMCallCompleted(feature) { ctx ->
+            config.submitToMainDispatcher {
+                handle.intercept(ctx)
+            }
+        }
+    }
+
+    /**
+     * Intercepts a failed call to the Language Learning Model (LLM) within a specific AI agent feature
+     * and delegates the handling of the failure context to the provided interceptor.
+     *
+     * JVM-friendly overload that accepts an async interceptor.
+     *
+     * Example (Java):
+     * pipeline.interceptLLMCallFailed(feature, eventContext -> {
+     *     // Process failure
+     *     return java.util.concurrent.CompletableFuture.completedFuture(null);
+     * });
+     */
+    @JavaAPI
+    @InternalAgentsApi
+    @JvmName("interceptLLMCallFailed")
+    public fun javaApiInterceptLLMCallFailed(
+        feature: AIAgentFeature<*, *>,
+        handle: Interceptor<LLMCallFailedContext>
+    ) {
+        interceptLLMCallFailed(feature) { ctx ->
             config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }

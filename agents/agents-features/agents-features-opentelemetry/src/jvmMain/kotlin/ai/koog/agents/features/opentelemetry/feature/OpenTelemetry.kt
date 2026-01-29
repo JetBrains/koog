@@ -14,14 +14,17 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasons
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
+import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
+import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.mcp.McpMethod
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
@@ -155,6 +158,11 @@ public class OpenTelemetry {
 
             pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry node execution failed handler" }
+
+                // Stop all unfinished spans, except InvokeAgentSpan and AgentCreateSpan
+                endUnfinishedSpans(spanCollector, config.isVerbose, eventContext.throwable) { span ->
+                    span.type == SpanType.INFERENCE
+                }
 
                 // Find existing span (Node Execute Span)
                 val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
@@ -376,7 +384,7 @@ public class OpenTelemetry {
                 metricCollector.flushPendingAsErrors(eventContext.throwable)
 
                 // Stop all unfinished spans, except InvokeAgentSpan and AgentCreateSpan
-                endUnfinishedSpans(spanCollector, config.isVerbose) { span ->
+                endUnfinishedSpans(spanCollector, config.isVerbose, eventContext.throwable) { span ->
                     span.type != SpanType.CREATE_AGENT &&
                         span.type != SpanType.INVOKE_AGENT &&
                         span.id != eventContext.eventId
@@ -671,6 +679,35 @@ public class OpenTelemetry {
                 }
             }
 
+            pipeline.interceptLLMCallFailed(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry LLM call failure handler" }
+
+                // Find the current span (Inference Span)
+                val patchedExecutionInfo = eventContext.executionInfo
+                    .appendRunId(eventContext.runId)
+                    .appendId(eventContext.eventId)
+
+                val inferenceSpan = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.INFERENCE
+                ) ?: return@intercept
+
+                inferenceSpan.addAttribute(FinishReasons(listOf(FinishReasonType.Error)))
+                spanAdapter?.onBeforeSpanFinished(inferenceSpan)
+                endInferenceSpan(
+                    span = inferenceSpan,
+                    messages = emptyList(),
+                    model = eventContext.model,
+                    verbose = config.isVerbose,
+                    error = eventContext.error
+                )
+                spanCollector.removeSpan(
+                    span = inferenceSpan,
+                    path = patchedExecutionInfo
+                )
+            }
+
             //endregion LLM Call
 
             //region Tool Call
@@ -914,13 +951,15 @@ public class OpenTelemetry {
         internal fun endUnfinishedSpans(
             spanCollector: SpanCollector,
             verbose: Boolean = false,
+            error: Throwable? = null,
             filter: ((GenAIAgentSpan) -> Boolean)? = null
         ) {
             val spansToEnd = spanCollector.getActiveSpans(filter)
 
             spansToEnd.forEach { spanNode ->
                 try {
-                    spanNode.span.end(verbose = verbose)
+                    spanNode.span.addCommonErrorAttributes(error)
+                    spanNode.span.end(verbose = verbose, spanEndStatus = error.toSpanEndStatus())
                     spanCollector.removeSpan(spanNode.span, spanNode.path)
                 } catch (e: Exception) {
                     logger.warn(e) {

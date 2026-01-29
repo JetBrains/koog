@@ -19,6 +19,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingCon
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
@@ -292,6 +293,28 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         responses: List<Message.Response>,
         moderationResponse: ModerationResult?,
         context: AIAgentContext
+    )
+
+    /**
+     * Notifies all registered LLM handlers if a validation error occurs during a language model call.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the LLM call event
+     * @param runId Identifier for the current run.
+     * @param prompt The prompt that was sent to the language model
+     * @param model The language model instance that processed the request
+     * @param tools The list of tool descriptors that were available for the LLM call
+     * @param error The error that occurred during the LLM call
+     */
+    public override suspend fun onLLMCallFailed(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext,
+        error: Throwable
     )
 
     //endregion Trigger LLM Call Handlers
@@ -669,6 +692,24 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     public override fun interceptLLMCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallCompletedContext) -> Unit
+    )
+
+    /**
+     * Intercepts errors during LLM calls.
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle The handler that processes LLM call errors.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptLLMCallFailed(feature) { eventContext ->
+     *   // Handle the error here
+     * }
+     * ```
+     */
+    override fun interceptLLMCallFailed(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallFailedContext) -> Unit
     )
 
     /**

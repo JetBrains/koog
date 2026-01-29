@@ -55,22 +55,27 @@ public class ContextualPromptExecutor(
             prompt
         }
 
-        val responses = executor.execute(effectivePrompt, model, tools)
+        try {
+            val responses = executor.execute(effectivePrompt, model, tools)
 
-        logger.trace { "Finished LLM call (event id: $eventId) with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
-        context.pipeline.onLLMCallCompleted(
-            eventId,
-            context.executionInfo,
-            context.runId,
-            effectivePrompt,
-            model,
-            tools,
-            responses,
-            null,
-            context
-        )
+            logger.trace { "Finished LLM call (event id: $eventId) with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
+            context.pipeline.onLLMCallCompleted(
+                eventId,
+                context.executionInfo,
+                context.runId,
+                effectivePrompt,
+                model,
+                tools,
+                responses,
+                null,
+                context
+            )
 
-        return responses
+            return responses
+        } catch (e: Throwable) {
+            context.pipeline.onLLMCallFailed(eventId, context.executionInfo, context.runId, prompt, model, tools, context, e)
+            throw e
+        }
     }
 
     /**
