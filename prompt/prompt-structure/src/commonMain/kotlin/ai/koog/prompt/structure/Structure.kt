@@ -1,6 +1,7 @@
 package ai.koog.prompt.structure
 
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.text.TextContentBuilderBase
 
 /**
  * Represents a generic structure for handling data with a specific schema.
@@ -34,4 +35,12 @@ public abstract class Structure<TStruct, TSchema : LLMParams.Schema>(
      * @return A string representing the pretty-printed version of the input structured data.
      */
     public abstract fun pretty(value: TStruct): String
+
+    /**
+     * Defines formatted examples using the provided [TextContentBuilderBase].
+     *
+     * @param builder The [TextContentBuilderBase] instance for constructing textual content.
+     * @return The modified [TextContentBuilderBase] containing formatted examples.
+     */
+    public abstract fun examples(builder: TextContentBuilderBase<*>): TextContentBuilderBase<*>
 }
