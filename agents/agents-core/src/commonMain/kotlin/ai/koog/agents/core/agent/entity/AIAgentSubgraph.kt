@@ -258,7 +258,9 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
             // find the suitable edge to move to the next node, get the transformed output
             val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput)
-                ?: // In we are in the finish node, we need to exit, otherwise we stuck in the node
+
+            // In we are in the finish node, we need to exit, otherwise we stuck in the node
+            if (resolvedEdge == null) {
                 if (currentNode == finish) {
                     currentInput = nodeOutput
                     break
@@ -266,6 +268,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                     logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
                     throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
                 }
+            }
 
             currentNode = resolvedEdge.edge.toNode
             currentInput = resolvedEdge.output
