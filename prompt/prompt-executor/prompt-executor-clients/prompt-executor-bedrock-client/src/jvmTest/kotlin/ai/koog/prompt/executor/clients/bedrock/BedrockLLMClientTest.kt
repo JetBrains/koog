@@ -717,6 +717,14 @@ class BedrockLLMClientTest {
             contextLength = 512
         )
         assertEquals(BedrockModelFamilies.Cohere, client.getBedrockModelFamily(cohereModel))
+
+        val kimiModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "moonshot.kimi-k2-thinking",
+            capabilities = listOf(LLMCapability.Completion, LLMCapability.Tools),
+            contextLength = 256_000
+        )
+        assertEquals(BedrockModelFamilies.MoonshotKimi, client.getBedrockModelFamily(kimiModel))
     }
 
     @Test
@@ -885,5 +893,80 @@ class BedrockLLMClientTest {
         assertEquals("https://custom.endpoint.com", settings.endpointUrl)
         assertEquals(5, settings.maxRetries)
         assertEquals(true, settings.enableLogging)
+    }
+
+    @Test
+    fun `MoonshotKimiK2Thinking model has correct properties`() {
+        val model = BedrockModels.MoonshotKimiK2Thinking
+
+        assertEquals("moonshot.kimi-k2-thinking", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(256_000, model.contextLength)
+        assertTrue(model.capabilities.contains(LLMCapability.Completion))
+        assertTrue(model.capabilities.contains(LLMCapability.Tools))
+        assertTrue(model.capabilities.contains(LLMCapability.Temperature))
+    }
+
+    @Test
+    fun `Kimi K2 Thinking model requires Converse API for execute`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello, Kimi!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.execute(prompt, BedrockModels.MoonshotKimiK2Thinking, emptyList())
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+        assertTrue(exception.message!!.contains("BedrockAPIMethod.Converse"))
+    }
+
+    @Test
+    fun `Kimi K2 Thinking model requires Converse API for executeStreaming`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello, Kimi!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.executeStreaming(prompt, BedrockModels.MoonshotKimiK2Thinking, emptyList()).toList()
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+        assertTrue(exception.message!!.contains("BedrockAPIMethod.Converse"))
+    }
+
+    @Test
+    fun `MoonshotKimiK2Thinking model has no inference profile prefix`() {
+        val model = BedrockModels.MoonshotKimiK2Thinking
+
+        // The model should NOT have any inference profile prefix
+        assertFalse(model.id.startsWith("us."))
+        assertFalse(model.id.startsWith("eu."))
+        assertFalse(model.id.startsWith("global."))
+        assertEquals("moonshot.kimi-k2-thinking", model.id)
     }
 }

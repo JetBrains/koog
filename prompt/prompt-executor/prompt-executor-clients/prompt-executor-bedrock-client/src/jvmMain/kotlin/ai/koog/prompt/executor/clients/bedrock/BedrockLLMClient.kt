@@ -216,6 +216,8 @@ public class BedrockLLMClient @JvmOverloads constructor(
 
             model.id.contains("cohere.embed") -> BedrockModelFamilies.Cohere
 
+            model.id.contains("moonshot.kimi") -> BedrockModelFamilies.MoonshotKimi
+
             else -> {
                 if (fallbackModelFamily != null) {
                     logger.warn { "Model ${model.id} is not a supported Bedrock model, using fallback: ${fallbackModelFamily.display}" }
@@ -290,6 +292,12 @@ public class BedrockLLMClient @JvmOverloads constructor(
                     is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaResponse(
                         responseBodyString,
                         clock
+                    )
+
+                    is BedrockModelFamilies.MoonshotKimi -> throw LLMClientException(
+                        clientName,
+                        "Model family ${modelFamily.display} requires the Bedrock Converse API. " +
+                            "Please configure BedrockClientSettings with apiMethod = BedrockAPIMethod.Converse"
                     )
 
                     is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere -> throw LLMClientException(
@@ -425,6 +433,12 @@ public class BedrockLLMClient @JvmOverloads constructor(
                     clock = clock,
                 )
 
+                is BedrockModelFamilies.MoonshotKimi -> throw LLMClientException(
+                    clientName,
+                    "Model family ${modelFamily.display} requires the Bedrock Converse API. " +
+                        "Please configure BedrockClientSettings with apiMethod = BedrockAPIMethod.Converse"
+                )
+
                 is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere ->
                     throw LLMClientException(
                         clientName,
@@ -556,6 +570,12 @@ public class BedrockLLMClient @JvmOverloads constructor(
             is BedrockModelFamilies.Meta -> json.encodeToString(
                 LlamaRequest.serializer(),
                 BedrockMetaLlamaSerialization.createLlamaRequest(prompt, model)
+            )
+
+            is BedrockModelFamilies.MoonshotKimi -> throw LLMClientException(
+                clientName,
+                "Model family ${getBedrockModelFamily(model).display} requires the Bedrock Converse API. " +
+                    "Please configure BedrockClientSettings with apiMethod = BedrockAPIMethod.Converse"
             )
 
             is BedrockModelFamilies.TitanEmbedding,

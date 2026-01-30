@@ -534,6 +534,36 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Moonshot Kimi K2 Thinking - Advanced reasoning model with extended thinking capabilities
+     *
+     * Kimi K2 Thinking is a sparse Mixture-of-Experts model with one trillion total parameters,
+     * with only 32 billion parameters activating per inference.
+     *
+     * Features:
+     * - 256K context window
+     * - Deep reasoning with interleaved chain-of-thought
+     * - Robust tool calling (supports 200-300 sequential tool calls)
+     * - Native INT4 quantization for 2x speed-up
+     * - Strong performance on research-heavy, multistep workflows
+     * - Enhanced Chinese language reasoning capabilities
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     * When using this model, ensure you configure BedrockClientSettings with BedrockAPIMethod.Converse.
+     *
+     * @see <a href="https://moonshotai.github.io/Kimi-K2/">
+     * @see <a href="https://huggingface.co/moonshotai/Kimi-K2-Thinking">
+     */
+    public val MoonshotKimiK2Thinking: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "moonshot.kimi-k2-thinking",
+            capabilities = standardCapabilities + toolCapabilities,
+            contextLength = 256_000,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
      * Embedding models available through the AWS Bedrock API.
      *
      * **Note:** Multimodality (image, audio, video) embeddings are currently not supported by the Bedrock client.
