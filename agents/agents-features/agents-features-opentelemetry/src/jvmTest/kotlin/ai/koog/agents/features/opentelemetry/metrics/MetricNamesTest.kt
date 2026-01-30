@@ -1,13 +1,14 @@
 package ai.koog.agents.features.opentelemetry.metrics
 
 import ai.koog.agents.features.opentelemetry.metric.GenAIMetricNames
+import ai.koog.agents.features.opentelemetry.metric.KoogMetricNames
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MetricNamesTest {
     @Test
     fun `test tool call count metric`() {
-        val metric = GenAIMetricNames.Client.Tool.Count
+        val metric = KoogMetricNames.Tool.Count
         assertEquals("gen_ai.client.tool.count", metric.name)
         assertEquals("tool call", metric.unit)
     }
