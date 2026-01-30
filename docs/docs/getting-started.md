@@ -79,9 +79,15 @@ To use Koog, you need to include all necessary dependencies in your build config
 
 ??? tip "Nightly builds"
 
-    Nightly builds from the `develop` branch are available via the [JetBrains Grazie Maven](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public) repository.
-    To use these builds, add the repository to your build configuration: `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public` and put the nightly version of your choice.
-    You can [browse available nightly versions](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/ai/koog/koog-agents/) using the version pattern `[next-major-version]-develop-[date]-[time]`.
+    Nightly builds from the develop branch are published to the [JetBrains Grazie Maven](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public) repository.
+    
+    To use a nightly build, add the following repository to your build configuration:
+    `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public`.
+    
+    Then update your Koog dependency to the desired nightly version. Nightly versions follow the pattern
+    `[next-major-version]-develop-[date]-[time]`.
+    
+    You can browse the available nightly builds [here](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/ai/koog/koog-agents/).
 
 ## Set an API key
 
