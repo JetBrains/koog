@@ -77,71 +77,11 @@ To use Koog, you need to include all necessary dependencies in your build config
     you need to include the additional dependencies in your build configuration.
     For the exact dependencies, refer to the relevant pages in the Koog documentation.
 
-### Koog nightly builds
-Koog provides nightly builds from the `develop` branch in [JetBrains Grazie Maven](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public) repository.
-You can [browse](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/ai/koog/koog-agents/) all available nightly versions by the pattern `[next major version]-develop-[date]-[time]`.
+??? tip "Nightly builds"
 
-!!! note
-    Replace `NIGHTLY_VERSION` with the nightly version you want to use.
-
-=== "Gradle (Kotlin DSL)"
-
-    1. Add the dependency to the `build.gradle.kts` file.
-    
-        ```kotlin
-        dependencies {
-            implementation("ai.koog:koog-agents:NIGHTLY_VERSION")
-        }
-        ```
-    2. Make sure that you have `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public` in the list of repositories.
-    
-        ```kotlin
-        repositories {
-            mavenCentral()
-            maven(url = "https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public")
-        }
-        ```
-
-=== "Gradle (Groovy)"
-
-    1. Add the dependency to the `build.gradle` file.
-    
-        ```groovy
-        dependencies {
-            implementation 'ai.koog:koog-agents:NIGHTLY_VERSION'
-        }
-        ```
-    2. Make sure that you have `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public` in the list of repositories.
-        ```groovy
-        repositories {
-            mavenCentral()
-            maven {
-                url "https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public"
-            }
-        }
-        ```
-
-=== "Maven"
-
-    1. Add the dependency to the `pom.xml` file.
-    
-        ```xml
-        <dependency>
-            <groupId>ai.koog</groupId>
-            <artifactId>koog-agents</artifactId>
-            <version>NIGHTLY_VERSION</version>
-        </dependency>
-        ```
-    2. Make sure that you have `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public` in the list of repositories.
-
-        ```xml
-         <repositories>
-            <repository>
-                <id>maven</id>
-                <url>https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public</url>
-            </repository>
-        </repositories>
-        ```
+    Nightly builds from the `develop` branch are available via the [JetBrains Grazie Maven](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public) repository.
+    To use these builds, add the repository to your build configuration: `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public` and put the nightly version of your choice.
+    You can [browse available nightly versions](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/ai/koog/koog-agents/) using the version pattern `[next-major-version]-develop-[date]-[time]`.
 
 ## Set an API key
 
