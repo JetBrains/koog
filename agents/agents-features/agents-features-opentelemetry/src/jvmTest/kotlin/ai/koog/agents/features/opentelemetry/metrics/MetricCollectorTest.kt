@@ -1,13 +1,9 @@
 package ai.koog.agents.features.opentelemetry.metrics
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Token.TokenType
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.Koog.Tool.Call.StatusType
-import ai.koog.agents.features.opentelemetry.feature.Metric
-import ai.koog.agents.features.opentelemetry.feature.MetricRecord
-import ai.koog.agents.features.opentelemetry.feature.TestMeter
 import ai.koog.agents.features.opentelemetry.metric.LLMCallEnded
 import ai.koog.agents.features.opentelemetry.metric.LLMCallStarted
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
@@ -18,7 +14,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import io.opentelemetry.api.common.Attributes
-import kotlin.math.pow
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertContentEquals
@@ -27,7 +22,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 
-class EventCallStorageTest {
+class MetricCollectorTest {
     companion object {
         val tokenCountMetricName = "gen_ai.client.token.usage"
         val toolCallCountMetricName = "koog.tool.count"
@@ -141,196 +136,142 @@ class EventCallStorageTest {
 
         // Token Count Metric
         // Check values of the token count metric
+        val tokenCountRecords = meter.getRecordsByCounterName(tokenCountMetricName)
+
         assertContentEquals(
-            getMetricByMetricName(meter.counterValues, tokenCountMetricName).map { it.value },
-            listOf(0, inputTokenSpend, outputTokenSpend)
+            listOf(0, inputTokenSpend, outputTokenSpend),
+            tokenCountRecords.map { it.value }
         )
 
-        val inputTokenCount = getMetricByMetricName(meter.counterValues, tokenCountMetricName).getOrNull(1)
-        val outputTokenCount = getMetricByMetricName(meter.counterValues, tokenCountMetricName).getOrNull(2)
-
         // Check values' attributes of the input count metric
-        assertAttributesOfTokenCountMetric(inputTokenCount?.attributes, model, model.provider, TokenType.INPUT)
-        assertAttributesOfTokenCountMetric(outputTokenCount?.attributes, model, model.provider, TokenType.OUTPUT)
+        val inputTokenAttributes = tokenCountRecords.getOrNull(1)?.attributes
+        assertLlmModelAttributes(inputTokenAttributes, model, model.provider)
+        assertLlmModelTokenAttribute(inputTokenAttributes, TokenType.INPUT)
+
+        val outputTokenAttributes = tokenCountRecords.getOrNull(2)?.attributes
+        assertLlmModelAttributes(outputTokenAttributes, model, model.provider)
+        assertLlmModelTokenAttribute(outputTokenAttributes, TokenType.OUTPUT)
 
 
         // Operation Duration Metric
         // Check values of the operation duration metric
         assertContentEquals(
-            listOf((timestampEnd - timestampStart).toDouble().div(10.0.pow(6))),
-            getMetricByMetricName(meter.histogramValues, operationDurationMetricName).map { it.value }
+            listOf((timestampEnd - timestampStart).toSec()),
+            meter.getRecordsByHistogramName(operationDurationMetricName).map { it.value }
         )
 
-        val operationDurationMetric =
-            getMetricByMetricName(meter.histogramValues, operationDurationMetricName).getOrNull(0)
+        val operationDurationAttributes =
+            meter.getRecordsByHistogramName(operationDurationMetricName).getOrNull(0)?.attributes
 
         // Check values' attributes of the operation duration metric
-        assertAttributesOfOperationDurationMetric(operationDurationMetric?.attributes, model, model.provider)
+        assertLlmModelAttributes(operationDurationAttributes, model, model.provider)
     }
 
-    private fun assertAttributesOfTokenCountMetric(
+    private fun assertLlmModelTokenAttribute(
         attributes: Attributes?,
-        model: LLModel,
-        modelProvider: LLMProvider,
         tokenType: TokenType
     ) {
         assertNotNull(attributes)
-        assertTrue {
-            containsAttribute(
-                attributes,
-                GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)
-            )
-        }
-        assertTrue {
-            containsAttribute(
-                attributes,
-                GenAIAttributes.Provider.Name(modelProvider)
-            )
-        }
-        assertTrue {
-            containsAttribute(
-                attributes,
-                GenAIAttributes.Token.Type(tokenType)
-            )
-        }
-        assertTrue {
-            containsAttribute(
-                attributes,
-                GenAIAttributes.Response.Model(model)
-            )
-        }
+        assertTrue { attributes.contains(GenAIAttributes.Token.Type(tokenType)) }
     }
 
-    private fun assertAttributesOfOperationDurationMetric(
+    private fun assertLlmModelAttributes(
         attributes: Attributes?,
         model: LLModel,
         modelProvider: LLMProvider
     ) {
         assertNotNull(attributes)
         assertTrue {
-            containsAttribute(
-                attributes,
+            attributes.contains(
                 GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)
             )
         }
-        assertTrue {
-            containsAttribute(
-                attributes,
-                GenAIAttributes.Provider.Name(modelProvider)
-            )
-        }
-        assertTrue {
-            containsAttribute(
-                attributes,
-                GenAIAttributes.Response.Model(model)
-            )
-        }
+        assertTrue { attributes.contains(GenAIAttributes.Provider.Name(modelProvider)) }
+        assertTrue { attributes.contains(GenAIAttributes.Response.Model(model)) }
     }
 
     @Test
     fun `test metric collector to process tool call`() {
-        val meter = TestMeter()
-        val metricCollector = MetricCollector(meter)
+        val cases = listOf(
+            ToolCallStatus.SUCCESS to StatusType.SUCCESS,
+            ToolCallStatus.FAILED to StatusType.ERROR,
+            ToolCallStatus.VALIDATION_FAILED to StatusType.VALIDATION_FAILED
+        )
 
-        val eventId = "event-id"
-        val timestampStart = 100L
-        val timestampEnd = 101L
-        val toolCallName = "test-tool"
+        cases.forEach { (status, expectedStatus) ->
+            val meter = TestMeter()
+            val metricCollector = MetricCollector(meter)
 
-        metricCollector.recordEvent(
-            ToolCallStarted(
-                id = eventId,
-                timestamp = timestampStart,
-                toolName = toolCallName,
+            val eventId = "event-id"
+            val timestampStart = 100L
+            val timestampEnd = 101L
+            val toolCallName = "test-tool"
+
+            metricCollector.recordEvent(
+                ToolCallStarted(
+                    id = eventId,
+                    timestamp = timestampStart,
+                    toolName = toolCallName,
+                )
             )
-        )
 
-        assertEquals(countersAmount, meter.counterValues.size)
-        assertEquals(0, meter.histogramValues.size)
+            assertEquals(countersAmount, meter.counterValues.size)
+            assertEquals(0, meter.histogramValues.size)
 
-        metricCollector.recordEvent(
-            ToolCallEnded(
-                id = eventId,
-                timestamp = timestampEnd,
-                toolName = toolCallName,
-                status = ToolCallStatus.SUCCESS
+            metricCollector.recordEvent(
+                ToolCallEnded(
+                    id = eventId,
+                    timestamp = timestampEnd,
+                    toolName = toolCallName,
+                    status = status
+                )
             )
-        )
 
-        assertEquals(countersAmount + 1, meter.counterValues.size)
-        assertEquals(histogramsAmount, meter.buildHistogram.size)
-
-
-        // Tool Call Count Metric
-        // Check values of the Tool Call Count Metric
-        assertContentEquals(
-            getMetricByMetricName(meter.counterValues, toolCallCountMetricName).map { it.value },
-            listOf(0, 1)
-        )
-
-        val toolCallCountMetric = getMetricByMetricName(meter.counterValues, toolCallCountMetricName).getOrNull(1)
-
-        // Check values' attributes of the input count metric
-        assertAttributesOfToolCallCountMetric(toolCallCountMetric?.attributes, toolCallName, StatusType.SUCCESS)
+            assertEquals(countersAmount + 1, meter.counterValues.size)
+            assertEquals(histogramsAmount, meter.buildHistogram.size)
 
 
-        // Operation Duration Metric
-        // Check values of the operation duration metric
-        assertContentEquals(
-            listOf((timestampEnd - timestampStart).toDouble().div(10.0.pow(6))),
-            getMetricByMetricName(
-                meter.histogramValues, operationDurationMetricName
-            ).map { it.value }
-        )
+            // Tool Call Count Metric
+            // Check values of the Tool Call Count Metric
+            assertContentEquals(
+                meter.getRecordsByCounterName(toolCallCountMetricName).map { it.value },
+                listOf(0, 1)
+            )
 
-        val operationDurationMetric =
-            getMetricByMetricName(meter.histogramValues, operationDurationMetricName).getOrNull(0)
+            val toolCallCountAttributes =
+                meter.getRecordsByCounterName(toolCallCountMetricName).getOrNull(1)?.attributes
 
-        // Check values' attributes of the operation duration metric
-        assertAttributesOfToolCallCountMetric(operationDurationMetric?.attributes, toolCallName, StatusType.SUCCESS)
+            // Check values' attributes of the input count metric
+            assertToolCallAttributes(toolCallCountAttributes, toolCallName, expectedStatus)
+
+
+            // Operation Duration Metric
+            // Check values of the operation duration metric
+            assertContentEquals(
+                listOf((timestampEnd - timestampStart).toSec()),
+                meter.getRecordsByHistogramName(operationDurationMetricName).map { it.value }
+            )
+
+            val operationDurationMetric =
+                meter.getRecordsByHistogramName(operationDurationMetricName).getOrNull(0)
+
+            // Check values' attributes of the operation duration metric
+            assertToolCallAttributes(operationDurationMetric?.attributes, toolCallName, expectedStatus)
+        }
     }
 
-    private fun assertAttributesOfToolCallCountMetric(
+    private fun assertToolCallAttributes(
         attributes: Attributes?,
         toolCallName: String,
         status: StatusType,
     ) {
         assertNotNull(attributes)
         assertTrue {
-            containsAttribute(
-                attributes,
+            attributes.contains(
                 GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL)
             )
         }
-        assertTrue {
-            containsAttribute(
-                attributes,
-                GenAIAttributes.Tool.Name(toolCallName)
-            )
-        }
-        assertTrue {
-            containsAttribute(
-                attributes,
-                KoogAttributes.Koog.Tool.Call.Status(status)
-            )
-        }
+        assertTrue { attributes.contains(GenAIAttributes.Tool.Name(toolCallName)) }
+        assertTrue { attributes.contains(KoogAttributes.Koog.Tool.Call.Status(status)) }
     }
-
-
-    private fun containsAttribute(attributes: Attributes?, searchableAttribute: Attribute): Boolean {
-        var isFound = false
-
-        if (attributes == null) return false
-
-        attributes.forEach { attrKey, attrValue ->
-            if (searchableAttribute.key == attrKey.toString() && searchableAttribute.value == attrValue) {
-                isFound = true
-            }
-        }
-
-        return isFound
-    }
-
-    private fun <T> getMetricByMetricName(list: List<MetricRecord<T>>, metricName: String) =
-        list.filter { it.metric.name == metricName }
 }

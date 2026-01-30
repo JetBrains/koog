@@ -1,4 +1,4 @@
-package ai.koog.agents.features.opentelemetry.feature
+package ai.koog.agents.features.opentelemetry.metrics
 
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.DoubleCounterBuilder
@@ -131,4 +131,12 @@ internal class TestMeter : Meter {
     override fun gaugeBuilder(name: String?): DoubleGaugeBuilder? {
         TODO("Not yet implemented")
     }
+}
+
+internal fun TestMeter.getRecordsByCounterName(name: String): List<MetricRecord<Long>> {
+    return this.counterValues.filter { it.metric.name == name }
+}
+
+internal fun TestMeter.getRecordsByHistogramName(name: String): List<MetricRecord<Double>> {
+    return this.histogramValues.filter { it.metric.name == name }
 }
