@@ -106,8 +106,8 @@ public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
     public void integration_AIAgentServiceWithCustomToolRegistry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
-        ToolRegistry serviceToolRegistry = JavaUtils.createToolRegistry(calculator);
+        CalculatorTools calculator = new CalculatorTools();
+        ToolRegistry serviceToolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         GraphAIAgentService<String, String> service = AIAgentService.builder()
             .promptExecutor(createExecutor(model))
@@ -174,9 +174,9 @@ public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((context, input) -> {
                 String inputStr = (input instanceof String) ? (String) input : String.valueOf(input);
-                Message.Response response = JavaUtils.requestLLM(context, inputStr, true);
+                Message.Response response = context.requestLLM(inputStr, true);
                 if (response instanceof Message.Assistant) {
-                    return JavaUtils.getAssistantContent((Message.Assistant) response);
+                    return response.getContent();
                 }
                 return "Unexpected response type";
             })

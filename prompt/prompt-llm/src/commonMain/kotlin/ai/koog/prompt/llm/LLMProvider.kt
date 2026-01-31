@@ -1,6 +1,8 @@
 package ai.koog.prompt.llm
 
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * Represents a sealed hierarchy for defining Large Language Model (LLM) providers.
@@ -14,6 +16,118 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 public abstract class LLMProvider(public val id: String, public val display: String) {
+    /**
+     * Companion object for the `LLMProvider` class, providing predefined instances of large language model providers.
+     *
+     * The companion object acts as a container for multiple constant providers,
+     * allowing standardized access to specific implementations of LLM providers.
+     */
+    public companion object {
+        /**
+         * Represents the OpenAI provider instance of the Large Language Model (LLM).
+         *
+         * This constant identifies the provider as OpenAI and is used to distinguish
+         * between different LLM providers within the system.
+         */
+        @JvmField
+        public val OpenAI: LLMProvider = LLMProvider.OpenAI
+
+        /**
+         * Represents the Anthropic Large Language Model (LLM) provider.
+         *
+         * This value is used to identify and work with the Anthropic LLM implementation
+         * within the system. Anthropic is one of the predefined providers for managing
+         * Large Language Models and their associated operations.
+         */
+        @JvmField
+        public val Anthropic: LLMProvider = LLMProvider.Anthropic
+
+        /**
+         * Represents the Google provider for Large Language Models (LLMs).
+         *
+         * This constant is used as a predefined identifier within the [LLMProvider] class
+         * to specify that the associated LLM is provided by Google. It is commonly used
+         * to differentiate between various LLM providers when configuring or selecting
+         * an LLM instance.
+         */
+        @JvmField
+        public val Google: LLMProvider = LLMProvider.Google
+
+        /**
+         * Represents the Meta large language model (LLM) provider.
+         *
+         * This value is a predefined instance of [LLMProvider] specifically for the Meta provider.
+         * It can be used to configure or interact with Meta-based language models.
+         */
+        @JvmField
+        public val Meta: LLMProvider = LLMProvider.Meta
+
+        /**
+         * Represents the Alibaba Large Language Model (LLM) provider.
+         *
+         * This constant is part of the available LLM providers within the system
+         * and is used to signify the selection or identification of the Alibaba LLM
+         * within model configurations or operations.
+         */
+        @JvmField
+        public val Alibaba: LLMProvider = LLMProvider.Alibaba
+
+        /**
+         * Represents the OpenRouter provider for large language models (LLMs).
+         * This constant is part of the available LLM providers within the [LLMProvider] enumeration.
+         */
+        @JvmField
+        public val OpenRouter: LLMProvider = LLMProvider.OpenRouter
+
+        /**
+         * Represents the Ollama provider for a Large Language Model (LLM).
+         *
+         * This constant is a predefined instance of [LLMProvider] representing the Ollama provider.
+         * It can be used to specify or identify the provider associated with an LLM instance.
+         */
+        @JvmField
+        public val Ollama: LLMProvider = LLMProvider.Ollama
+
+        /**
+         * Represents the Bedrock provider for Large Language Models (LLMs).
+         *
+         * This constant is part of the [LLMProvider] enumeration and is used to specify the Bedrock
+         * LLM service. It can be utilized to identify or configure functionality specific to the Bedrock provider.
+         */
+        @JvmField
+        public val Bedrock: LLMProvider = LLMProvider.Bedrock
+
+        /**
+         * Represents the DeepSeek LLM provider, a predefined member of the [LLMProvider] class.
+         *
+         * DeepSeek is a specific implementation or configuration of a large language model (LLM),
+         * designed to handle advanced queries with precision and extended capabilities. It can be
+         * used to identify, execute, or assist in tasks requiring substantial context understanding.
+         */
+        @JvmField
+        public val DeepSeek: LLMProvider = LLMProvider.DeepSeek
+
+        /**
+         * Represents the MistralAI Large Language Model (LLM) provider.
+         *
+         * This constant identifies the MistralAI LLM provider, which can be used to configure and interact with
+         * instances of MistralAI language models in the system.
+         */
+        @JvmField
+        public val MistralAI: LLMProvider = LLMProvider.MistralAI
+
+        /**
+         * Represents the Cohere provider for large language models (LLMs).
+         *
+         * This variable defines an instance of the [LLMProvider] specific to the Cohere platform,
+         * which supports capabilities such as natural language processing, text generation, and
+         * other advanced AI tasks. It is primarily used in configurations and interactions
+         * where the Cohere LLM provider is required.
+         */
+        @JvmField
+        public val Cohere: LLMProvider = LLMProvider.Cohere
+    }
+
     /**
      * Represents a specialized implementation of the `LLMProvider` class corresponding to the Google provider.
      *

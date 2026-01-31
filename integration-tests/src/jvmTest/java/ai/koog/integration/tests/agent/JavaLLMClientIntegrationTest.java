@@ -1,7 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaUtils;
+import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,52 +28,73 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
         assertNotNull(responses);
         assertFalse(responses.isEmpty());
         assertInstanceOf(Message.Assistant.class, responses.get(0));
-        String content = JavaUtils.getAssistantContent((Message.Assistant) responses.get(0));
+        String content = responses.get(0).getContent();
         assertFalse(content.isEmpty());
     }
 
     @Test
     public void integration_OpenAILLMClient() {
-        OpenAILLMClient client = JavaUtils.createOpenAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+        OpenAILLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
         resourcesToClose.add((AutoCloseable) client);
 
-        assertEquals(LLMProvider.OpenAI.INSTANCE, client.llmProvider());
+        assertEquals(LLMProvider.OpenAI, client.llmProvider());
 
-        Prompt prompt = JavaUtils.buildSimplePrompt("test-openai", "You are a helpful assistant.", "Say 'Hello from OpenAI'");
-        List<Message.Response> responses = JavaUtils.executeClientBlocking(client, prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+        Prompt prompt = Prompt.builder("test-openai")
+            .system("You are a helpful assistant.")
+            .user("Say 'Hello from OpenAI'")
+            .build();
+
+        List<Message.Response> responses = JavaInteropUtils.executeClientBlocking(client, prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
 
         assertValidResponse(responses);
     }
 
     @Test
     public void integration_AnthropicLLMClient() {
-        AnthropicLLMClient client = JavaUtils.createAnthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+        AnthropicLLMClient client = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
         resourcesToClose.add((AutoCloseable) client);
 
-        assertEquals(LLMProvider.Anthropic.INSTANCE, client.llmProvider());
+        assertEquals(LLMProvider.Anthropic, client.llmProvider());
 
-        Prompt prompt = JavaUtils.buildSimplePrompt("test-anthropic", "You are a helpful assistant.", "Say 'Hello from Anthropic'");
-        List<Message.Response> responses = JavaUtils.executeClientBlocking(client, prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
+        Prompt prompt = Prompt.builder("test-anthropic")
+            .system("You are a helpful assistant.")
+            .user("Say 'Hello from Anthropic'")
+            .build();
+
+        List<Message.Response> responses = JavaInteropUtils.executeClientBlocking(client, prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
 
         assertValidResponse(responses);
     }
 
     @Test
     public void integration_MultiLLMPromptExecutor() {
-        OpenAILLMClient openAIClient = JavaUtils.createOpenAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
-        AnthropicLLMClient anthropicClient = JavaUtils.createAnthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+        OpenAILLMClient openAIClient = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+        AnthropicLLMClient anthropicClient = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
 
         resourcesToClose.add((AutoCloseable) openAIClient);
         resourcesToClose.add((AutoCloseable) anthropicClient);
 
-        MultiLLMPromptExecutor executor = JavaUtils.createMultiLLMPromptExecutor(openAIClient, anthropicClient);
+        MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(
+            Map.of(
+                LLMProvider.OpenAI, openAIClient,
+                LLMProvider.Anthropic, anthropicClient
+            )
+        );
 
-        Prompt openAIPrompt = JavaUtils.buildSimplePrompt("test-multi-openai", "You are a helpful assistant.", "Say 'OpenAI response'");
-        List<Message.Response> openAIResponses = JavaUtils.executeExecutorBlocking(executor, openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+        Prompt openAIPrompt = Prompt.builder("test-multi-openai")
+            .system("You are a helpful assistant.")
+            .user("Say 'OpenAI response'")
+            .build();
+
+        List<Message.Response> openAIResponses = JavaInteropUtils.executeExecutorBlocking(executor, openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
         assertValidResponse(openAIResponses);
 
-        Prompt anthropicPrompt = JavaUtils.buildSimplePrompt("test-multi-anthropic", "You are a helpful assistant.", "Say 'Anthropic response'");
-        List<Message.Response> anthropicResponses = JavaUtils.executeExecutorBlocking(executor, anthropicPrompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
+        Prompt anthropicPrompt = Prompt.builder("test-multi-anthropic")
+            .system("You are a helpful assistant.")
+            .user("Say 'Anthropic response'")
+            .build();
+
+        List<Message.Response> anthropicResponses = JavaInteropUtils.executeExecutorBlocking(executor, anthropicPrompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
         assertValidResponse(anthropicResponses);
     }
 }

@@ -1,11 +1,12 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaUtils;
+import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
@@ -25,7 +26,7 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
 
     private String getAssistantContentOrDefault(Message.Response response, String defaultValue) {
         if (response instanceof Message.Assistant) {
-            return JavaUtils.getAssistantContent((Message.Assistant) response);
+            return response.getContent();
         }
         return defaultValue;
     }
@@ -36,26 +37,25 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
         Models.assumeAvailable(model.getProvider());
 
         // Test simple functional strategy with retry logic
-        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
-            JavaUtils.createAgentBuilder()
-                .promptExecutor(createExecutor(model))
-                .llmModel(model)
-                .systemPrompt("You are a helpful assistant.")
-                .functionalStrategy((context, input) -> {
-                    for (int i = 0; i < 3; i++) {
-                        String result = getAssistantContentOrDefault(
-                            JavaUtils.requestLLM(context, input, true),
-                            ""
-                        );
-                        if (!result.isEmpty()) {
-                            return result;
-                        }
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant.")
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                for (int i = 0; i < 3; i++) {
+                    String result = getAssistantContentOrDefault(
+                        context.requestLLM(input, true),
+                        ""
+                    );
+                    if (!result.isEmpty()) {
+                        return result;
                     }
-                    return "Failed after retries";
-                })
-        );
+                }
+                return "Failed after retries";
+            })
+            .build();
 
-        String result = JavaUtils.runAgentBlocking(agent, "Say hello");
+        String result = agent.run("Say hello");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -67,26 +67,24 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_MultiStepFunctionalStrategy(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
-            JavaUtils.createAgentBuilder()
-                .promptExecutor(createExecutor(model))
-                .llmModel(model)
-                .systemPrompt("You are a helpful assistant.")
-                .functionalStrategy((context, input) -> {
-                    Message.Response response1 = JavaUtils.requestLLM(context, "First step: " + input, true);
-                    String step1Result = getAssistantContentOrDefault(response1, "");
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant.")
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                Message.Response response1 = context.requestLLM("First step: " + input, true);
+                String step1Result = getAssistantContentOrDefault(response1, "");
 
-                    Message.Response response2 = JavaUtils.requestLLM(
-                        context,
-                        "Second step, previous result was: " + step1Result,
-                        true
-                    );
+                Message.Response response2 = context.requestLLM(
+                    "Second step, previous result was: " + step1Result,
+                    true
+                );
 
-                    return getAssistantContentOrDefault(response2, "Unexpected response type");
-                })
-        );
+                return getAssistantContentOrDefault(response2, "Unexpected response type");
+            })
+            .build();
 
-        String result = JavaUtils.runAgentBlocking(agent, "Count to 3");
+        String result = agent.run("Count to 3");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -97,39 +95,37 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_FunctionalStrategyWithManualToolHandling(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
+        CalculatorTools calculator = new CalculatorTools();
+        ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
-        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
-            JavaUtils.createAgentBuilder()
-                .promptExecutor(createExecutor(model))
-                .llmModel(model)
-                .systemPrompt("You are a calculator. Use the add tool to perform calculations.")
-                .toolRegistry(toolRegistry)
-                .functionalStrategy((context, input) -> {
-                    Message.Response currentResponse = JavaUtils.requestLLM(
-                        context,
-                        "Calculate: " + input + ". You MUST use the add tool.",
-                        true
-                    );
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a calculator. Use the add tool to perform calculations.")
+            .toolRegistry(toolRegistry)
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                Message.Response currentResponse = context.requestLLM(
+                    "Calculate: " + input + ". You MUST use the add tool.",
+                    true
+                );
 
-                    int maxIterations = 5;
-                    for (int i = 0; i < maxIterations && currentResponse instanceof Message.Tool.Call; i++) {
-                        Message.Tool.Call toolCall = (Message.Tool.Call) currentResponse;
-                        ReceivedToolResult toolResult = JavaUtils.executeTool(context, toolCall);
-                        currentResponse = JavaUtils.sendToolResult(context, toolResult);
-                    }
+                int maxIterations = 5;
+                for (int i = 0; i < maxIterations && currentResponse instanceof Message.Tool.Call; i++) {
+                    Message.Tool.Call toolCall = (Message.Tool.Call) currentResponse;
+                    ReceivedToolResult toolResult = context.executeTool(toolCall);
+                    currentResponse = context.sendToolResult(toolResult);
+                }
 
-                    if (currentResponse instanceof Message.Assistant) {
-                        return JavaUtils.getAssistantContent((Message.Assistant) currentResponse);
-                    } else if (currentResponse instanceof Message.Tool.Call) {
-                        return "Max iterations reached, last tool: " + JavaUtils.getToolName((Message.Tool.Call) currentResponse);
-                    }
-                    return "Unexpected response type";
-                })
-        );
+                if (currentResponse instanceof Message.Assistant) {
+                    return currentResponse.getContent();
+                } else if (currentResponse instanceof Message.Tool.Call) {
+                    return "Max iterations reached, last tool: " + ((Message.Tool.Call) currentResponse).getTool();
+                }
+                return "Unexpected response type";
+            })
+            .build();
 
-        String result = JavaUtils.runAgentBlocking(agent, "10 + 5");
+        String result = agent.run("10 + 5");
 
         assertNotNull(result);
         assertFalse(result.isBlank());
@@ -143,34 +139,31 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
 
         MultiLLMPromptExecutor executor = createExecutor(model);
 
-        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
+        CalculatorTools calculator = new CalculatorTools();
 
         List<Tool<?, ?>> calculatorTools = List.of(
-            calculator.getAddTool(),
-            calculator.getMultiplyTool()
+            calculator.getTool("add"),
+            calculator.getTool("multiply")
         );
 
-        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
-            JavaUtils.createAgentBuilder()
-                .promptExecutor(executor)
-                .llmModel(model)
-                .systemPrompt("You are a helpful assistant that coordinates calculations.")
-                .toolRegistry(JavaUtils.createToolRegistry(calculator))
-                .functionalStrategy((context, input) -> {
-                    String subtaskResult = JavaUtils.runSubtask(
-                        context,
-                        "Calculate: " + input,
-                        input,
-                        String.class,
-                        calculatorTools,
-                        model
-                    );
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(executor)
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant that coordinates calculations.")
+            .toolRegistry(ToolRegistry.builder().tools(calculator).build())
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                String subtaskResult = context.subtask("Calculate: " + input)
+                    .withInput(input)
+                    .withOutput(String.class)
+                    .withTools(calculatorTools)
+                    .useLLM(model)
+                    .run();
 
-                    return "Calculation result: " + subtaskResult;
-                })
-        );
+                return "Calculation result: " + subtaskResult;
+            })
+            .build();
 
-        String result = JavaUtils.runAgentBlocking(agent, "What is 5 + 3?");
+        String result = agent.run("What is 5 + 3?");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -181,27 +174,25 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_CustomStrategyWithValidation(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
-            JavaUtils.createAgentBuilder()
-                .promptExecutor(createExecutor(model))
-                .llmModel(model)
-                .systemPrompt("You are a helpful assistant that generates JSON.")
-                .functionalStrategy((context, input) -> {
-                    Message.Response response = JavaUtils.requestLLM(
-                        context,
-                        "Generate a JSON object with 'status' field set to 'success'",
-                        true
-                    );
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant that generates JSON.")
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                Message.Response response = context.requestLLM(
+                    "Generate a JSON object with 'status' field set to 'success'",
+                    true
+                );
 
-                    String content = getAssistantContentOrDefault(response, "Unexpected response type");
-                    if (content.contains("status") && content.contains("success")) {
-                        return content;
-                    }
-                    return "Validation failed: response doesn't contain expected fields";
-                })
-        );
+                String content = getAssistantContentOrDefault(response, "Unexpected response type");
+                if (content.contains("status") && content.contains("success")) {
+                    return content;
+                }
+                return "Validation failed: response doesn't contain expected fields";
+            })
+            .build();
 
-        String result = JavaUtils.runAgentBlocking(agent, "Generate status JSON");
+        String result = agent.run("Generate status JSON");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());

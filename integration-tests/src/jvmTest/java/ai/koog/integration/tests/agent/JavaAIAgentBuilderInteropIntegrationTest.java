@@ -64,8 +64,8 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
     public void integration_BuilderWithToolRegistry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
+        CalculatorTools calculator = new CalculatorTools();
+        ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
@@ -90,8 +90,8 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
         AtomicBoolean agentCompleted = new AtomicBoolean(false);
         AtomicInteger llmCallsCount = new AtomicInteger(0);
 
-        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
+        CalculatorTools calculator = new CalculatorTools();
+        ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
@@ -120,8 +120,8 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
     public void integration_BuilderWithMaxIterations(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
+        CalculatorTools calculator = new CalculatorTools();
+        ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
