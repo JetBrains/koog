@@ -78,7 +78,6 @@ internal object KoogAttributes {
             override val key: String
                 get() = super.key.concatKey("tool")
 
-
             sealed interface Call : Tool {
                 override val key: String
                     get() = super.key.concatKey("call")

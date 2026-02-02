@@ -15,7 +15,6 @@ internal data class LLMCallStarted(
     val modelProvider: LLMProvider
 ) : MetricEvent
 
-
 internal data class LLMCallEnded(
     override val id: String,
     override val timestamp: Long,
@@ -25,13 +24,11 @@ internal data class LLMCallEnded(
     val outputTokenSpend: Long?
 ) : MetricEvent
 
-
 internal data class ToolCallStarted(
     override val id: String,
     override val timestamp: Long,
     val toolName: String
 ) : MetricEvent
-
 
 internal enum class ToolCallStatus {
     SUCCESS,

@@ -101,4 +101,3 @@ internal class MetricCollector(meter: Meter) {
             )
         }
 }
-

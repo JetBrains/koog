@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
 
-
 internal class MetricEventStorage {
     private val storage = mutableMapOf<String, MetricEvent>()
     private val lock = ReentrantReadWriteLock()

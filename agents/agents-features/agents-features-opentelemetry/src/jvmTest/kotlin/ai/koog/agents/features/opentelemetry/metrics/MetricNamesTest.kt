@@ -9,7 +9,7 @@ class MetricNamesTest {
     @Test
     fun `test tool call count metric`() {
         val metric = KoogMetricNames.Tool.Count
-        assertEquals("gen_ai.client.tool.count", metric.name)
+        assertEquals("koog.tool.count", metric.name)
         assertEquals("tool call", metric.unit)
     }
 

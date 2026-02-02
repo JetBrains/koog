@@ -21,7 +21,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-
 class MetricCollectorTest {
     companion object {
         val tokenCountMetricName = "gen_ai.client.token.usage"
@@ -94,7 +93,6 @@ class MetricCollectorTest {
         )
     }
 
-
     @Test
     fun `test metric collector to process LLM Call`() {
         val meter = TestMeter()
@@ -133,7 +131,6 @@ class MetricCollectorTest {
         assertEquals(countersAmount + 2, meter.counterValues.size)
         assertEquals(histogramsAmount, meter.buildHistogram.size)
 
-
         // Token Count Metric
         // Check values of the token count metric
         val tokenCountRecords = meter.getRecordsByCounterName(tokenCountMetricName)
@@ -151,7 +148,6 @@ class MetricCollectorTest {
         val outputTokenAttributes = tokenCountRecords.getOrNull(2)?.attributes
         assertLlmModelAttributes(outputTokenAttributes, model, model.provider)
         assertLlmModelTokenAttribute(outputTokenAttributes, TokenType.OUTPUT)
-
 
         // Operation Duration Metric
         // Check values of the operation duration metric
@@ -230,7 +226,6 @@ class MetricCollectorTest {
             assertEquals(countersAmount + 1, meter.counterValues.size)
             assertEquals(histogramsAmount, meter.buildHistogram.size)
 
-
             // Tool Call Count Metric
             // Check values of the Tool Call Count Metric
             assertContentEquals(
@@ -243,7 +238,6 @@ class MetricCollectorTest {
 
             // Check values' attributes of the input count metric
             assertToolCallAttributes(toolCallCountAttributes, toolCallName, expectedStatus)
-
 
             // Operation Duration Metric
             // Check values of the operation duration metric
