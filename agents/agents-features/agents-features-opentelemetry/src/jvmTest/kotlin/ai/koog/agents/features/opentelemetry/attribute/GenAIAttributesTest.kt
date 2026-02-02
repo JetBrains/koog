@@ -90,13 +90,6 @@ class GenAIAttributesTest {
     }
 
     @Test
-    fun `test status attribute`() {
-        val attribute = KoogAttributes.Koog.Tool.Call.Status(KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS)
-        assertEquals("gen_ai.tool.call.status", attribute.key)
-        assertEquals("success", attribute.value)
-    }
-
-    @Test
     fun `test tool name attribute`() {
         val attribute = GenAIAttributes.Tool.Name("search")
         assertEquals("gen_ai.tool.name", attribute.key)

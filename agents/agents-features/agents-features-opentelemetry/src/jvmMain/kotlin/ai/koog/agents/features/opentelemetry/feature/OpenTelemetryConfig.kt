@@ -67,7 +67,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private val customResourceAttributes = mutableMapOf<AttributeKey<*>, Any>()
 
-    private val customMetricExporters = mutableListOf<MetricExporter>()
+    private val customMetricExporters = mutableListOf<Pair<MetricExporter, Duration>>()
 
     private var _sdk: OpenTelemetrySdk? = null
 
@@ -140,8 +140,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
     public val meter: Meter
         get() = sdk.getMeter(_instrumentationScopeName)
 
-    private var meterInterval: Duration
-
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
      * This exporter will be useds to export metrics collected during the application's execution.
@@ -149,8 +147,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * @param exporter The MetricExporter instance to be added to the list of custom metric exporters.
      */
     public fun addMeterExporter(exporter: MetricExporter, meterInterval: Duration = DEFAULT_METER_INTERVAL) {
-        customMetricExporters.add(exporter)
-        this.meterInterval = meterInterval
+        customMetricExporters.add(exporter to meterInterval)
     }
 
     /**
@@ -288,7 +285,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
         val metricExporters = createMetricExporters()
 
-        metricExporters.forEach { exporter ->
+        metricExporters.forEach { (exporter, meterInterval) ->
             val reader = PeriodicMetricReader
                 .builder(exporter)
                 .setInterval(meterInterval)
@@ -345,15 +342,15 @@ public class OpenTelemetryConfig : FeatureConfig() {
         }
     }
 
-    private fun createMetricExporters(): List<MetricExporter> = buildList {
+    private fun createMetricExporters(): List<Pair<MetricExporter, Duration>> = buildList {
         if (customMetricExporters.isEmpty()) {
             logger.debug { "No custom metric exporters configured. Use log metric exporter by default." }
-            add(LoggingMetricExporter.create())
+            add(LoggingMetricExporter.create() to DEFAULT_METER_INTERVAL)
         }
 
-        customMetricExporters.forEach { exporter ->
+        customMetricExporters.forEach { (exporter, interval) ->
             logger.debug { "Adding metric exporter: ${exporter::class.simpleName}" }
-            add(exporter)
+            add(exporter to interval)
         }
     }
 
