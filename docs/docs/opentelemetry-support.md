@@ -126,7 +126,7 @@ install(OpenTelemetry) {
     addSpanExporter(LoggingSpanExporter.create())
 
     // Add the Metric exporter
-    addMeterExporter(LoggingMetricExporter.create())
+    addMetricExporter(LoggingMetricExporter.create())
 }
 ```
 
@@ -151,7 +151,7 @@ Adds a span exporter to send telemetry data to external systems. Takes the follo
 |------------|----------------|----------|---------------|-------------------------------------------------------------------------------|
 | `exporter` | `SpanExporter` | Yes      |               | The `SpanExporter` instance to be added to the list of custom span exporters. |
 
-#### addMeterExporter
+#### addMetricExporter
 
 Adds a metric exporter to send runtime metrics to external systems. Takes the following arguments:
 
@@ -159,6 +159,15 @@ Adds a metric exporter to send runtime metrics to external systems. Takes the fo
 |-----------------|------------------|----------|--------------------------|-----------------------------------------------------------------------------------|
 | `exporter`      | `MetricExporter` | Yes      |                          | The `MetricExporter` instance to be added to the list of custom metric exporters. |
 | `meterInterval` | `Duration`       | No       | `Duration.ofSeconds(1)`  | The interval for processing metrics.                                              |
+
+#### addMetricFilter
+
+Adds a metric filter to the OpenTelemetry configuration. This filter is used to specify which attribute keys should be retained for a specific metric during telemetry data processing. Takes the following arguments:
+
+| Name           | Data type     | Required | Default value | Description                                                                         |
+|----------------|---------------|----------|---------------|-------------------------------------------------------------------------------------|
+| `metricName`   | `String`      | Yes      |               | The name of the metric to which the filter will be applied.                         |
+| `keysToRetain` | `Set<String>` | Yes      |               | A set of attribute keys that should be retained for the specified metric.           |
 
 #### addSpanProcessor
 
@@ -247,9 +256,15 @@ install(OpenTelemetry) {
     addSpanExporter(LoggingSpanExporter.create())
 
     // Add the Metric exporter
-    addMeterExporter(
+    addMetricExporter(
         exporter = LoggingMetricExporter.create(),
         meterInterval = Duration.ofSeconds(30)
+    )
+
+    // Add metric filter
+    addMetricFilter(
+        metricName = "gen_ai.client.token.usage",
+        keysToRetain = setOf("gen_ai.operation.name", "gen_ai.token.type")
     )
 
     // Set the sampler 
@@ -473,7 +488,7 @@ following argument:
 
 ### Metric exporters
 
-To export metrics, use the `addMeterExporter()` method when installing the OpenTelemetry feature. The method takes the
+To export metrics, use the `addMetricExporter()` method when installing the OpenTelemetry feature. The method takes the
 following argument:
 
 | Name       | Data type        | Required | Default | Description                                                                     |
@@ -564,7 +579,7 @@ install(OpenTelemetry) {
             .addHeader("Authorization", "Basic $AUTH_STRING")
             .build()
     )
-    addMeterExporter(
+    addMetricExporter(
         OtlpHttpMetricExporter.builder()
             // Set the maximum time to wait for the collector to process an exported batch of metrics 
             .setTimeout(30, TimeUnit.SECONDS)
@@ -615,7 +630,7 @@ install(OpenTelemetry) {
             .setEndpoint("http://localhost:4317")
             .build()
     )
-    addMeterExporter(
+    addMetricExporter(
         // Add OpenTelemetry gRPC exporter
         OtlpGrpcMetricExporter.builder()
             // Set the host and the port
@@ -779,7 +794,7 @@ fun main() {
                 )
 
                 // Send metrics to OpenTelemetry collector
-                addMeterExporter(
+                addMetricExporter(
                     OtlpGrpcMetricExporter.builder()
                         // Set the host and the port
                         .setEndpoint("http://localhost:4317")

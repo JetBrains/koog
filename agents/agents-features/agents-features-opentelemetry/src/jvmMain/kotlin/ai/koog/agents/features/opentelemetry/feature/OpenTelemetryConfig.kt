@@ -4,6 +4,7 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
+import ai.koog.agents.features.opentelemetry.metric.MetricFilter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -14,7 +15,9 @@ import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.metrics.InstrumentSelector
 import io.opentelemetry.sdk.metrics.SdkMeterProvider
+import io.opentelemetry.sdk.metrics.View
 import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader
 import io.opentelemetry.sdk.resources.Resource
@@ -140,14 +143,27 @@ public class OpenTelemetryConfig : FeatureConfig() {
     public val meter: Meter
         get() = sdk.getMeter(_instrumentationScopeName)
 
+    private val metricFilters = mutableListOf<MetricFilter>()
+
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
-     * This exporter will be useds to export metrics collected during the application's execution.
+     * This exporter will be used to export metrics collected during the application's execution.
      *
      * @param exporter The MetricExporter instance to be added to the list of custom metric exporters.
      */
-    public fun addMeterExporter(exporter: MetricExporter, meterInterval: Duration = DEFAULT_METER_INTERVAL) {
+    public fun addMetricExporter(exporter: MetricExporter, meterInterval: Duration = DEFAULT_METER_INTERVAL) {
         customMetricExporters.add(exporter to meterInterval)
+    }
+
+    /**
+     * Adds a metric filter to the OpenTelemetry configuration. This filter is used to specify
+     * which attribute keys should be retained for a specific metric during telemetry data processing.
+     *
+     * @param metricName The name of the metric to which the filter will be applied.
+     * @param keysToRetain A set of attribute keys that should be retained for the specified metric.
+     */
+    public fun addMetricFilter(metricName: String, keysToRetain: Set<String>) {
+        metricFilters.add(MetricFilter(metricName, keysToRetain))
     }
 
     /**
@@ -294,6 +310,15 @@ public class OpenTelemetryConfig : FeatureConfig() {
             metricProvider.registerMetricReader(reader)
         }
 
+        metricFilters.forEach { filter ->
+            val (instrumentSelector, view) = convertToInstrumentAndViewPair(
+                filter.metricName,
+                filter.attributesKeysToRetain
+            )
+
+            metricProvider.registerView(instrumentSelector, view)
+        }
+
         val sdk = builder
             .setTracerProvider(traceProviderBuilder.build())
             .setMeterProvider(metricProvider.build())
@@ -353,6 +378,10 @@ public class OpenTelemetryConfig : FeatureConfig() {
             add(exporter to interval)
         }
     }
+
+    private fun convertToInstrumentAndViewPair(metricName: String, keysToRetain: Set<String>) =
+        InstrumentSelector.builder().setName(metricName).build() to
+            View.builder().setAttributeFilter(keysToRetain).build()
 
     private fun SdkTracerProviderBuilder.addProcessors(exporter: SpanExporter) {
         if (customSpanProcessorsCreator.isEmpty()) {

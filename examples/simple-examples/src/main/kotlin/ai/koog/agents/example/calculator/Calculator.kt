@@ -70,12 +70,16 @@ suspend fun main() {
                 addResourceAttributes(
                     mapOf(AttributeKey.stringKey("service.instance.id") to "run-1")
                 )
-                addMeterExporter(
+                addMetricExporter(
                     OtlpGrpcMetricExporter.builder()
                         .setEndpoint("http://localhost:17011")
-                        .setTimeout(1, TimeUnit.SECONDS)
+                        .setTimeout(2, TimeUnit.SECONDS)
                         .build(),
                     Duration.ofSeconds(1)
+                )
+                addMetricFilter(
+                    "koog.tool.count",
+                    setOf("koog.tool.call.status")
                 )
                 addSpanExporter(
                     OtlpGrpcSpanExporter.builder()
