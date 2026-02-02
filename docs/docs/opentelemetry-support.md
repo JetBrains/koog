@@ -436,7 +436,7 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
     - Description: Total token count per operation and token type
     - When emitted: after an LLM call finishes; recorded separately for input and output tokens
     - Key attributes:
-        - `gen_ai.operation.name` (required)
+        - `gen_ai.operation.name` (required) - `TEXT_COMPLETION`
         - `gen_ai.provider.name` (required)
         - `gen_ai.response.model` (recommended)
         - `gen_ai.token.type` (recommended) — `INPUT` or `OUTPUT`
@@ -450,10 +450,13 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
     - Recommended explicit bucket boundaries (seconds): 0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12,
       10.24, 20.48, 40.96, 81.92
     - Key attributes:
-        - `gen_ai.operation.name` (required)
+        - `gen_ai.operation.name` (required) - `TEXT_COMPLETION` or `EXECUTE_TOOL`
         - `gen_ai.tool.name` (recommended, if `gen_ai.operation.name` is `EXECUTE_TOOL`)
         - `gen_ai.tool.call.status` (custom, if `gen_ai.operation.name` is `EXECUTE_TOOL`) — `SUCCESS`, `ERROR`, or
           `VALIDATION_FAILED`
+        - `gen_ai.provider.name` (recommended, if `gen_ai.operation.name` is `TEXT_COMPLETION`)
+        - `gen_ai.response.model` (recommended, if `gen_ai.operation.name` is `TEXT_COMPLETION`)
+        - `gen_ai.token.type` (recommended, if `gen_ai.operation.name` is `TEXT_COMPLETION`)
     - Spec: see OpenTelemetry semantic
       conventions, [gen_ai.client.operation.duration](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/#metric-gen_aiclientoperationduration)
 
