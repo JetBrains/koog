@@ -263,7 +263,6 @@ public class OpenTelemetry {
             spanAdapter: SpanAdapter?,
             tracer: Tracer
         ) {
-
             //region Agent
 
             pipeline.interceptAgentStarting(this) intercept@{ eventContext ->
