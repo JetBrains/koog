@@ -18,7 +18,6 @@ import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
-import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
 import ai.koog.agents.features.opentelemetry.span.SpanType
@@ -38,7 +37,6 @@ import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.opentelemetry.api.trace.Tracer
 import kotlin.reflect.KType
 
 /**
@@ -70,10 +68,9 @@ public class OpenTelemetry {
             val openTelemetry = OpenTelemetry()
             val spanCollector = SpanCollector()
             val spanAdapter = config.spanAdapter
-
             val tracer = config.tracer
 
-            installCommon(config, pipeline, spanCollector, spanAdapter, tracer)
+            installCommon(config, pipeline, spanCollector)
 
             //region Node
 
@@ -245,11 +242,8 @@ public class OpenTelemetry {
         ): OpenTelemetry {
             val openTelemetry = OpenTelemetry()
             val spanCollector = SpanCollector()
-            val spanAdapter = config.spanAdapter
 
-            val tracer = config.tracer
-
-            installCommon(config, pipeline, spanCollector, spanAdapter, tracer)
+            installCommon(config, pipeline, spanCollector)
 
             return openTelemetry
         }
@@ -260,9 +254,10 @@ public class OpenTelemetry {
             config: OpenTelemetryConfig,
             pipeline: AIAgentPipeline,
             spanCollector: SpanCollector,
-            spanAdapter: SpanAdapter?,
-            tracer: Tracer
         ) {
+            val spanAdapter = config.spanAdapter
+            val tracer = config.tracer
+
             //region Agent
 
             pipeline.interceptAgentStarting(this) intercept@{ eventContext ->

@@ -26,7 +26,6 @@ import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
@@ -478,20 +477,18 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 model = model,
                 temperature = temperature,
             ) {
-                install(OpenTelemetry) {
-                    addSpanExporter(mockExporter)
-                    setVerbose(true)
-                    openTelemetryConfigurator()
-                    addSpanAdapter(object : SpanAdapter() {
-                        override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
-                            span.addAttribute(CustomAttribute("custom.after.start", "value-start"))
-                        }
+                addSpanExporter(mockExporter)
+                setVerbose(true)
+                openTelemetryConfigurator()
+                addSpanAdapter(object : SpanAdapter() {
+                    override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
+                        span.addAttribute(CustomAttribute("custom.after.start", "value-start"))
+                    }
 
-                        override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
-                            span.addAttribute(CustomAttribute("custom.before.finish", 123))
-                        }
-                    })
-                }
+                    override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
+                        span.addAttribute(CustomAttribute("custom.before.finish", 123))
+                    }
+                })
             }
 
             agent.run(userPrompt)
@@ -944,11 +941,9 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             systemPrompt = systemPrompt,
             toolRegistry = toolRegistry,
         ) {
-            install(OpenTelemetry.Feature) {
-                spanExporter?.let { exporter -> addSpanExporter(exporter) }
-                setVerbose(verbose)
-                openTelemetryConfigurator()
-            }
+            spanExporter?.let { exporter -> addSpanExporter(exporter) }
+            setVerbose(verbose)
+            openTelemetryConfigurator()
         }.use { agent ->
             agent.run(userPrompt ?: "User prompt message")
         }
