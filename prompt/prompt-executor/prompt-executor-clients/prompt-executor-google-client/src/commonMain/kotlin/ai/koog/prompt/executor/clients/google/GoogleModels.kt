@@ -16,15 +16,15 @@ import kotlin.jvm.JvmField
  * Google Gemini models and their capabilities.
  * See https://ai.google.dev/gemini-api/docs for more information.
  *
- * | Name                        | Speed     | Price (per 1M tokens)        | Input                            | Output              |
- * |-----------------------------|-----------|------------------------------|----------------------------------|---------------------|
- * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini3_Pro_Preview]       | Slow      | $2.00-$4.00 / $12.00-$18.00  | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | Name                        | Speed     | Price (per 1M tokens)        | Input                                      | Output      |
+ * |-----------------------------|-----------|------------------------------|--------------------------------------------|-------------|
+ * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Document, Tools | Text, Tools |
+ * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Document, Tools | Text, Tools |
+ * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Document, Tools | Text, Tools |
+ * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Document, Tools | Text, Tools |
+ * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Document, Tools | Text, Tools |
+ * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Document, Tools | Text, Tools |
+ * | [Gemini3_Pro_Preview]       | Slow      | $2.00-$4.00 / $12.00-$18.00  | Audio, Image, Video, Text, Document, Tools | Text, Tools |
  *
  * @see <a href="modelcards.withgoogle.com/model-cards">
  */
@@ -50,7 +50,7 @@ public object GoogleModels : LLModelDefinitions {
      * Multimodal capabilities including vision (without tools)
      */
     private val multimodalCapabilities: List<LLMCapability> =
-        listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio)
+        listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio, LLMCapability.Document)
 
     /**
      * Native structured output capabilities

@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.list
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import io.ktor.client.HttpClient
@@ -13,6 +14,7 @@ import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 
@@ -55,6 +57,19 @@ class GoogleModelsTest {
                 expected = LLMProvider.Google,
                 actual = model.provider,
                 message = "Google model ${model.id} doesn't have Google provider but ${model.provider}."
+            )
+        }
+    }
+
+    @Test
+    fun `Google models have document capability`() {
+        val models = GoogleModels.list()
+
+        models.forEach { model ->
+            assertContains(
+                iterable = model.capabilities,
+                element = LLMCapability.Document,
+                message = "Google model ${model.id} doesn't have Document capability."
             )
         }
     }
