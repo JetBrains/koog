@@ -1,9 +1,10 @@
 @file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, ExperimentalUuidApi::class)
 
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -13,6 +14,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
+import kotlin.uuid.ExperimentalUuidApi
 
 public actual open class AIAgentLLMContext internal actual constructor(
     internal actual val delegate: AIAgentLLMContextImpl
@@ -32,4 +34,10 @@ public actual open class AIAgentLLMContext internal actual constructor(
             tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock
         )
     )
+
+    @OptIn(ExperimentalStdlibApi::class)
+    public actual override suspend fun <T> writeSession(
+        sessionId: String,
+        block: suspend AIAgentLLMWriteSession.(sessionId: String) -> T
+    ): T = delegate.writeSession(sessionId, block)
 }

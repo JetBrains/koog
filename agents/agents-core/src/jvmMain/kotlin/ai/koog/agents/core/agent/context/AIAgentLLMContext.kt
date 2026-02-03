@@ -1,5 +1,5 @@
 @file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, ExperimentalUuidApi::class)
 
 package ai.koog.agents.core.agent.context
 
@@ -19,6 +19,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 import java.util.function.Function
+import kotlin.uuid.ExperimentalUuidApi
 
 public actual open class AIAgentLLMContext internal actual constructor(
     internal actual val delegate: AIAgentLLMContextImpl
@@ -53,6 +54,12 @@ public actual open class AIAgentLLMContext internal actual constructor(
     ): AIAgentLLMContext =
         delegate.copy(tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
 
+    @OptIn(ExperimentalStdlibApi::class)
+    public actual override suspend fun <T> writeSession(
+        sessionId: String,
+        block: suspend AIAgentLLMWriteSession.(sessionId: String) -> T
+    ): T = delegate.writeSession(sessionId, block)
+
     /**
      * Executes a block of code within a write session for the AI Agent LLM context.
      *
@@ -66,7 +73,7 @@ public actual open class AIAgentLLMContext internal actual constructor(
      */
     @JavaAPI
     public fun <T> writeSession(block: Function<AIAgentLLMWriteSession, T>): T = config.runOnStrategyDispatcher {
-        writeSession {
+        writeSession { _ ->
             config.submitToMainDispatcher {
                 block.apply(this)
             }

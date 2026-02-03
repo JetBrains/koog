@@ -24,12 +24,14 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Timeout
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -101,6 +103,40 @@ class AIAgentLLMContextConcurrencyTest {
 
     @Test
     @Timeout(30)
+    fun testWithPromptRaceCondition() {
+        runBlocking {
+            val context = createTestLLMContext()
+            // Reset prompt to a known start state
+            context.withPrompt { prompt("0") {} }
+
+            val iterations = 100
+            val jobs = (1..iterations).map {
+                async(Dispatchers.Default) {
+                    // Simulate some work and update prompt
+                    context.withPrompt {
+                        // Append "." to the ID
+                        // We simulate a read-modify-write cycle here.
+                        // If multiple threads read the same 'id' and append '.', they overwrite each other.
+                        prompt(this.id + ".") {}
+                    }
+                }
+            }
+
+            jobs.awaitAll()
+
+            val finalId = context.prompt.id
+            // Expected length: 1 (initial "0") + 100 (dots) = 101.
+            // With ReadLock, many updates will be lost, so length < 101.
+            assertEquals(
+                1 + iterations,
+                finalId.length,
+                "Lost updates detected! Race condition in withPrompt."
+            )
+        }
+    }
+
+    @Test
+    @Timeout(30)
     fun testVerifyState() {
         runBlocking {
             val context = createTestLLMContext()
@@ -139,6 +175,202 @@ class AIAgentLLMContextConcurrencyTest {
 
             assertTrue(promptId.isNotEmpty(), "Prompt ID should not be empty")
             assertNotNull(toolName, "Tool name should not be null")
+        }
+    }
+
+    // ==================== Session Reentrancy Tests ====================
+
+    /**
+     * Verifies that nested writeSession calls with the same sessionId reuse the same session object.
+     * This is the core reentrancy behavior enabled by activeWriteSession tracking.
+     */
+    @Test
+    @Timeout(30)
+    fun testNestedWriteSessionReusesSession() {
+        runBlocking {
+            val context = createTestLLMContext()
+            var outerSessionId: Int? = null
+            var innerSessionId: Int? = null
+
+            context.writeSession { sessionId ->
+                outerSessionId = this.hashCode()
+
+                // Nested writeSession with same sessionId should reuse the same session
+                context.writeSession(sessionId) { _ ->
+                    innerSessionId = this.hashCode()
+                }
+            }
+
+            assertEquals(outerSessionId, innerSessionId, "Nested writeSession should reuse the same session object")
+        }
+    }
+
+    /**
+     * Verifies that state changes in outer session are visible in nested session (same sessionId).
+     */
+    @Test
+    @Timeout(30)
+    fun testNestedWriteSessionStateChangesAreVisible() {
+        runBlocking {
+            val context = createTestLLMContext()
+            val newModel = OllamaModels.Meta.LLAMA_4
+
+            context.writeSession { sessionId ->
+                // Change model in outer session
+                this.model = newModel
+
+                // Nested session with same sessionId should see the change
+                context.writeSession(sessionId) { _ ->
+                    assertEquals(
+                        newModel.id,
+                        this.model.id,
+                        "Nested session should see model change from outer session"
+                    )
+                }
+            }
+
+            // Verify the change persisted
+            context.readSession {
+                assertEquals(newModel.id, model.id, "Model change should persist after session")
+            }
+        }
+    }
+
+    /**
+     * Verifies that readSession inside writeSession sees uncommitted state.
+     * This works because activeWriteSession is set, allowing reads without acquiring read lock.
+     */
+    @Test
+    @Timeout(30)
+    fun testReadSessionInsideWriteSessionSeesUncommittedState() {
+        runBlocking {
+            val context = createTestLLMContext()
+            var readSessionExecuted = false
+
+            context.writeSession { _ ->
+                // Change something in write session
+                this.model = OllamaModels.Meta.LLAMA_4
+
+                // Read session inside write session should see the uncommitted change
+                context.readSession {
+                    readSessionExecuted = true
+                    assertEquals(
+                        OllamaModels.Meta.LLAMA_4.id,
+                        model.id,
+                        "Read session should see uncommitted model change"
+                    )
+                }
+            }
+
+            assertTrue(readSessionExecuted, "Read session inside write session should execute")
+        }
+    }
+
+    /**
+     * Verifies that writeSession inside readSession deadlocks (lock upgrade not supported).
+     * This is expected behavior documented in AIAgentLLMContextImpl.
+     */
+    @Test
+    @Timeout(30)
+    fun testWriteSessionInsideReadSessionDeadlocks() {
+        runBlocking {
+            val context = createTestLLMContext()
+
+            var writeExecuted = false
+            val result = withTimeoutOrNull(100) {
+                context.readSession {
+                    context.writeSession { _ ->
+                        writeExecuted = true
+                    }
+                }
+            }
+
+            // Result should be null (timeout) because of deadlock
+            assertEquals(null, result, "writeSession inside readSession should deadlock (timeout)")
+            assertEquals(false, writeExecuted, "writeSession should not have executed due to deadlock")
+        }
+    }
+
+    /**
+     * Verifies that concurrent write sessions from different coroutines are properly serialized.
+     */
+    @Test
+    @Timeout(30)
+    fun testConcurrentWriteSessionsAreSerialized() {
+        runBlocking {
+            val context = createTestLLMContext()
+            val results = CopyOnWriteArrayList<String>()
+
+            val job1 = async(Dispatchers.Default) {
+                context.writeSession { _ ->
+                    delay(10)
+                    this.prompt = prompt("coroutine-1") {}
+                    results.add("coroutine-1-start")
+                    delay(20)
+                    results.add("coroutine-1-end")
+                }
+            }
+
+            val job2 = async(Dispatchers.Default) {
+                delay(5) // Start slightly after job1
+                context.writeSession { _ ->
+                    results.add("coroutine-2-start")
+                    this.prompt = prompt("coroutine-2") {}
+                    results.add("coroutine-2-end")
+                }
+            }
+
+            job1.await()
+            job2.await()
+
+            // Due to write lock, coroutine-2 should wait for coroutine-1 to complete
+            assertEquals("coroutine-1-start", results[0])
+            assertEquals("coroutine-1-end", results[1])
+            assertEquals("coroutine-2-start", results[2])
+            assertEquals("coroutine-2-end", results[3])
+        }
+    }
+
+    /**
+     * Verifies that multiple read sessions can run concurrently.
+     */
+    @Test
+    @Timeout(30)
+    fun testMultipleReadSessionsRunConcurrently() {
+        runBlocking {
+            val context = createTestLLMContext()
+            val results = CopyOnWriteArrayList<String>()
+
+            val job1 = async(Dispatchers.Default) {
+                context.readSession {
+                    results.add("reader-1-start")
+                    delay(20)
+                    results.add("reader-1-end")
+                    prompt.id
+                }
+            }
+
+            val job2 = async(Dispatchers.Default) {
+                delay(5)
+                context.readSession {
+                    results.add("reader-2-start")
+                    delay(10)
+                    results.add("reader-2-end")
+                    prompt.id
+                }
+            }
+
+            job1.await()
+            job2.await()
+
+            // Multiple readers can run concurrently
+            // reader-2 should start before reader-1 ends
+            val reader1StartIndex = results.indexOf("reader-1-start")
+            val reader1EndIndex = results.indexOf("reader-1-end")
+            val reader2StartIndex = results.indexOf("reader-2-start")
+
+            assertTrue(reader2StartIndex > reader1StartIndex, "Reader 2 should start after reader 1")
+            assertTrue(reader2StartIndex < reader1EndIndex, "Reader 2 should start before reader 1 ends (concurrent)")
         }
     }
 
