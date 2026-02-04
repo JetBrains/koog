@@ -145,7 +145,7 @@ fun main() = runBlocking {
 ## Listing available models
 
 !!! note
-    Available for all LLM clients except `GoogleLLMClient`, `BedrockLLMClient`, and `OllamaClient`.
+    Available for all LLM clients except `AnthropicLLMClient`, `BedrockLLMClient`, and `OllamaClient`.
 
 To get a list of available model IDs supported by the LLM client, use the `models()` method:    
 
@@ -153,6 +153,7 @@ To get a list of available model IDs supported by the LLM client, use the `model
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 -->
 ```kotlin
@@ -160,8 +161,8 @@ fun main() = runBlocking {
     val apiKey = System.getenv("OPENAI_API_KEY")
     val client = OpenAILLMClient(apiKey)
 
-    val ids: List<String> = client.models()
-    ids.forEach { println(it) }
+    val models: List<LLModel> = client.models()
+    models.forEach { println(it.id) }
 }
 ```
 <!--- KNIT example-llm-clients-04.kt -->
