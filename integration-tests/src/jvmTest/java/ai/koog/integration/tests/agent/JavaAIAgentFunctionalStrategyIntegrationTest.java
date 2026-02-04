@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.config.AIAgentConfig;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.Tool;
@@ -8,6 +9,7 @@ import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.Models;
+import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
@@ -16,7 +18,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import static ai.koog.prompt.executor.llms.Executors.promptExecutor;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -133,7 +138,6 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
-    @Disabled("KG-669")
     public void integration_Subtask(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -147,9 +151,18 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
         );
 
         AIAgent<String, String> agent = AIAgent.builder()
+            .agentConfig(
+                AIAgentConfig.builder(model)
+                    .prompt(
+                        Prompt.builder("task")
+                            .system("You are a helpful assistant that coordinates calculations.")
+                            .build()
+                    )
+                    .strategyExecutorService(Executors.newFixedThreadPool(4))
+                    .llmRequestExecutorService(Executors.newFixedThreadPool(4))
+                    .build()
+            )
             .promptExecutor(executor)
-            .llmModel(model)
-            .systemPrompt("You are a helpful assistant that coordinates calculations.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 String subtaskResult = context.subtask("Calculate: " + input)

@@ -1,5 +1,6 @@
 package ai.koog.integration.tests.utils
 
+import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import io.kotest.inspectors.shouldForAny
@@ -23,7 +24,7 @@ object TestUtils {
             }
         )
         put("required", buildJsonArray { add(JsonPrimitive(propName)) })
-        if (provider !is LLMProvider.Google) {
+        if (provider !is GoogleLLMProvider) {
             // Google response_schema does not support additionalProperties at the root
             put("additionalProperties", JsonPrimitive(false))
         }

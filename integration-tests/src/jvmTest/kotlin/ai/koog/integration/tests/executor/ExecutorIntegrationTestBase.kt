@@ -54,9 +54,13 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.AnthropicLLMProvider
+import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.OllamaLLMProvider
+import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
@@ -126,11 +130,11 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun createReasoningParams(model: LLModel): LLMParams {
         return when (model.provider) {
-            is LLMProvider.Anthropic -> AnthropicParams(
+            is AnthropicLLMProvider -> AnthropicParams(
                 thinking = AnthropicThinking.Enabled(budgetTokens = 1024)
             )
 
-            is LLMProvider.OpenAI -> OpenAIResponsesParams(
+            is OpenAILLMProvider -> OpenAIResponsesParams(
                 reasoning = ReasoningConfig(
                     effort = ReasoningEffort.MEDIUM,
                     summary = ReasoningSummary.AUTO
@@ -139,7 +143,7 @@ abstract class ExecutorIntegrationTestBase {
                 maxTokens = basicLimit
             )
 
-            is LLMProvider.Google -> {
+            is GoogleLLMProvider -> {
                 val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
                     GoogleThinkingConfig(
                         includeThoughts = true,
@@ -164,11 +168,11 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     private fun createNoReasoningParams(model: LLModel): LLMParams = when (model.provider) {
-        is LLMProvider.Anthropic -> AnthropicParams(
+        is AnthropicLLMProvider -> AnthropicParams(
             thinking = AnthropicThinking.Disabled()
         )
 
-        is LLMProvider.OpenAI ->
+        is OpenAILLMProvider ->
             if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
                 OpenAIResponsesParams(
                     maxTokens = basicLimit
@@ -179,7 +183,7 @@ abstract class ExecutorIntegrationTestBase {
                 )
             }
 
-        is LLMProvider.Google ->
+        is GoogleLLMProvider ->
             GoogleParams(
                 thinkingConfig = GoogleThinkingConfig(
                     includeThoughts = false,
@@ -240,7 +244,7 @@ abstract class ExecutorIntegrationTestBase {
                 length shouldNotBe (0)
                 toolMessages.shouldBeEmpty()
                 when (model.provider) {
-                    is LLMProvider.Ollama -> endMessages.size shouldBe 0
+                    is OllamaLLMProvider -> endMessages.size shouldBe 0
 
                     else -> {
                         endMessages.size shouldBe 1

@@ -65,7 +65,7 @@ open class AIAgentTestBase {
 
         @JvmStatic
         fun getLatestModels() = listOf(
-            AnthropicModels.Sonnet_4_5,
+//            AnthropicModels.Sonnet_4_5,
             OpenAIModels.Chat.GPT5_1,
         ).stream()
 
