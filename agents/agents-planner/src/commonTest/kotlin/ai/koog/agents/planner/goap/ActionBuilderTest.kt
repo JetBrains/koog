@@ -19,7 +19,7 @@ class ActionBuilderTest {
             .description(DESCRIPTION)
             .precondition { true }
             .belief { it }
-            .executeAsync { _, state -> state }
+            .execute { _, state -> state }
             .build()
 
         action.name.shouldBeEqual(NAME)
@@ -35,7 +35,7 @@ class ActionBuilderTest {
                 .description(DESCRIPTION)
                 .precondition { true }
                 .belief { it }
-                .executeAsync { _, state -> state }
+                .execute { _, state -> state }
                 .build()
         }
     }
@@ -47,7 +47,7 @@ class ActionBuilderTest {
                 .name(NAME)
                 .description(DESCRIPTION)
                 .belief { it }
-                .executeAsync { _, state -> state }
+                .execute { _, state -> state }
                 .build()
         }
     }
@@ -59,7 +59,7 @@ class ActionBuilderTest {
                 .name(NAME)
                 .description(DESCRIPTION)
                 .precondition { true }
-                .executeAsync { _, state -> state }
+                .execute { _, state -> state }
                 .build()
         }
     }

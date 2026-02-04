@@ -32,7 +32,7 @@ public interface ActionBuilderApi<State> {
     /**
      * Sets the execute function for the action.
      */
-    public fun executeAsync(execute: Execute<State>): ActionBuilderApi<State>
+    public fun execute(execute: Execute<State>): ActionBuilderApi<State>
 
     /**
      * Builds the [Action].

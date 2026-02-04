@@ -14,7 +14,7 @@ public class ActionBuilderJavaTest {
             .description("test-description")
             .precondition(state -> true)
             .belief((state) -> "end")
-            .execute((context, state) -> "executed")
+            .executeSync((context, state) -> "executed")
             .build();
 
         assertEquals("test-action", action.getName());
@@ -27,7 +27,7 @@ public class ActionBuilderJavaTest {
             Action.<String>builder()
                 .precondition(state -> true)
                 .belief(state -> state)
-                .execute((context, state) -> state)
+                .executeSync((context, state) -> state)
                 .build();
         });
     }
@@ -38,7 +38,7 @@ public class ActionBuilderJavaTest {
             Action.<String>builder()
                 .name("test")
                 .belief(state -> state)
-                .execute((context, state) -> state)
+                .executeSync((context, state) -> state)
                 .build();
         });
     }
@@ -49,7 +49,7 @@ public class ActionBuilderJavaTest {
             Action.<String>builder()
                 .name("test")
                 .precondition(state -> true)
-                .execute((context, state) -> state)
+                .executeSync((context, state) -> state)
                 .build();
         });
     }

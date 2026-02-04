@@ -11,6 +11,6 @@ public expect class ActionBuilder<State>() : ActionBuilderApi<State> {
     public override fun precondition(precondition: Condition<State>): ActionBuilder<State>
     public override fun belief(belief: Belief<State>): ActionBuilder<State>
     public override fun cost(cost: Cost<State>): ActionBuilder<State>
-    public override fun executeAsync(execute: Execute<State>): ActionBuilder<State>
+    public override fun execute(execute: Execute<State>): ActionBuilder<State>
     public override fun build(): Action<State>
 }

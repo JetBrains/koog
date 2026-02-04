@@ -101,7 +101,7 @@ public class JavaPlannerAIAgentIntegrationTest {
             .name("formulate-problem")
             .precondition(state -> true)
             .belief(state -> "Problem: example problem")
-            .execute((context, state) -> context.llm().writeSession(session -> {
+            .executeSync((context, state) -> context.llm().writeSession(session -> {
                 session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Formulate problem: " + state + ". Answer with the problem formulation in the form \"Problem: ...\"").build());
                 return session.requestLLM().getContent();
             }))
@@ -111,7 +111,7 @@ public class JavaPlannerAIAgentIntegrationTest {
             .name("solve-problem")
             .precondition(state -> state.contains("Problem"))
             .belief(state -> "Solution: example solution")
-            .execute((context, state) -> context.llm().writeSession(session -> {
+            .executeSync((context, state) -> context.llm().writeSession(session -> {
                 session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Find solution. " + state + ". Answer with the solution in the form \"Solution: ...\"").build());
                 return session.requestLLM().getContent();
             }))

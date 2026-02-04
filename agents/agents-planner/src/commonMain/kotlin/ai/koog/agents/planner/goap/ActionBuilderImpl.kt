@@ -15,7 +15,7 @@ internal class ActionBuilderImpl<State> : ActionBuilderApi<State> {
 
     override fun belief(belief: Belief<State>): ActionBuilderImpl<State> = apply { this.belief = belief }
     override fun cost(cost: Cost<State>): ActionBuilderImpl<State> = apply { this.cost = cost }
-    override fun executeAsync(execute: Execute<State>): ActionBuilderImpl<State> = apply { this.execute = execute }
+    override fun execute(execute: Execute<State>): ActionBuilderImpl<State> = apply { this.execute = execute }
 
     override fun build(): Action<State> = Action(
         name = requireNotNull(name) { "Action name is required" },

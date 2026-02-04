@@ -18,8 +18,8 @@ public actual class ActionBuilder<State> : ActionBuilderApi<State> {
 
     public actual override fun belief(belief: Belief<State>): ActionBuilder<State> = apply { delegate.belief(belief) }
     public actual override fun cost(cost: Cost<State>): ActionBuilder<State> = apply { delegate.cost(cost) }
-    public actual override fun executeAsync(execute: Execute<State>): ActionBuilder<State> =
-        apply { delegate.executeAsync(execute) }
+    public actual override fun execute(execute: Execute<State>): ActionBuilder<State> =
+        apply { delegate.execute(execute) }
 
     public actual override fun build(): Action<State> = delegate.build()
 }
