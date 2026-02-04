@@ -20,22 +20,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Docs: https://github.com/amannn/action-semantic-pull-request?tab=readme-ov-file#configuration
+        # Remember to update CONTRIBUTING.md if you change these configs!
         with:
-          # TODO verify types
           types: |
             fix
             feat
             build
-            chore
             ci
             docs
             refactor
             test
-          # TODO verify scopes (for now took from top-level modules)
+            example
+          # top-level modules for now, might be refined later
           scopes: |
             a2a
             agents
-            docs
             embeddings
             http-client
             integration-tests
