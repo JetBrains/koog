@@ -8,7 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.Meter
 
-internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCallMapper?) {
+internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCallMapper? = null) {
     private val metricEventStorage = MetricEventStorage()
 
     private val toolCallsCounter = createToolCallCounter(meter)
@@ -78,11 +78,14 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
 
     private fun handleToolCallCompleted(metricEvent: ToolCallEnded) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
-            val toolCallName = if (toolCallMapper == null) metricEvent.toolName else
+            val toolCallName = if (toolCallMapper == null) {
+                metricEvent.toolName
+            } else {
                 when (metricEvent.toolName) {
                     in toolCallMapper.allowedToolCallNames -> metricEvent.toolName
                     else -> toolCallMapper.defaultToolCallName
                 }
+            }
 
             val status = when (metricEvent.status) {
                 ToolCallStatus.VALIDATION_FAILED -> KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
