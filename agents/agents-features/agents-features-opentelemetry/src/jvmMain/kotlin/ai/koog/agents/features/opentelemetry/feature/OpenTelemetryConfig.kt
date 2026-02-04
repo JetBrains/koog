@@ -5,6 +5,7 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.metric.MetricFilter
+import ai.koog.agents.features.opentelemetry.metric.ToolCallMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -54,6 +55,8 @@ public class OpenTelemetryConfig : FeatureConfig() {
          * The default interval for metric reading, which can be overridden when adding a custom exporter.
          */
         val DEFAULT_METER_INTERVAL: Duration = Duration.ofSeconds(1)
+
+        private const val DEFAULT_TOOL_CALL_NAME: String = "DEFAULT"
     }
 
     private val productProperties = run {
@@ -145,6 +148,8 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private val metricFilters = mutableListOf<MetricFilter>()
 
+    internal var toolCallMapper: ToolCallMapper? = null
+
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
      * This exporter will be used to export metrics collected during the application's execution.
@@ -164,6 +169,22 @@ public class OpenTelemetryConfig : FeatureConfig() {
      */
     public fun addMetricFilter(metricName: String, keysToRetain: Set<String>) {
         metricFilters.add(MetricFilter(metricName, keysToRetain))
+    }
+
+    /**
+     * Adds a mapping configuration for metric attributes based on allowed tool call names.
+     * This mapping determines which tool calls are permitted and defines a default value
+     * for metrics associated with those calls.
+     *
+     * @param allowedToolCallNames A set of tool call names that are allowed for this mapping configuration.
+     * @param defaultToolCallName The default metric name to use if no specific mapping is provided.
+     *                     If null, a predefined default metric name will be used.
+     */
+    public fun addToolCallNamesMapping(
+        allowedToolCallNames: Set<String>,
+        defaultToolCallName: String? = null,
+    ) {
+        toolCallMapper = ToolCallMapper(allowedToolCallNames, defaultToolCallName ?: DEFAULT_TOOL_CALL_NAME)
     }
 
     /**

@@ -72,8 +72,9 @@ public class OpenTelemetry {
 
             val tracer = config.tracer
             val meter = config.meter
+            val toolCallMapper = config.toolCallMapper
 
-            val metricCollector = MetricCollector(meter)
+            val metricCollector = MetricCollector(meter, toolCallMapper)
 
             //region Agent
 
