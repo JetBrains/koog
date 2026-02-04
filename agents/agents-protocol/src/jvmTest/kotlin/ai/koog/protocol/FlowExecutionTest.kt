@@ -4,6 +4,8 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.ext.agent.CriticResultFromLLM
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.protocol.agent.FlowAgentInput
@@ -16,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -32,7 +35,10 @@ class FlowExecutionTest : FlowTestBase() {
 
         private val logger = KotlinLogging.logger { }
 
-        private val finalizeTool = SubgraphWithTaskUtils.finishTool<FlowAgentInput>()
+        private val finalizeTaskTool = SubgraphWithTaskUtils.finishTool<FlowAgentInput>()
+
+        @OptIn(InternalAgentsApi::class)
+        private val finalizeVerifyTool = SubgraphWithTaskUtils.finishTool<CriticResultFromLLM>()
 
         /**
          * A mock tool that matches the MCP greeting tool's signature.
@@ -71,10 +77,10 @@ class FlowExecutionTest : FlowTestBase() {
 
         // Mock executor: the first agent returns "42 58", the second returns "100"
         val testExecutor = getMockExecutor {
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("42 58")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("42 58")) onCondition { request ->
                 request.contains(generateNumbersAgentTask)
             }
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("100")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("100")) onCondition { request ->
                 request.contains(calculatorAgentTask)
             }
         }
@@ -118,7 +124,7 @@ class FlowExecutionTest : FlowTestBase() {
 
             // After getting a tool result, finalize with the greeting
             mockLLMToolCall(
-                finalizeTool,
+                finalizeTaskTool,
                 FlowAgentInput.InputString("Hello, TestUser!")
             ) onCondition { request ->
                 request.contains("Hello, TestUser!")
@@ -285,12 +291,12 @@ class FlowExecutionTest : FlowTestBase() {
         )
 
         for (original in testCases) {
-            val json = kotlinx.serialization.json.Json.encodeToString(
+            val json = Json.encodeToString(
                 FlowAgentInput.serializer(),
                 original
             )
 
-            val deserialized = kotlinx.serialization.json.Json.decodeFromString(
+            val deserialized = Json.decodeFromString(
                 FlowAgentInput.serializer(),
                 json
             )
@@ -469,10 +475,6 @@ class FlowExecutionTest : FlowTestBase() {
         assertTrue(result.success)
     }
 
-    //endregion Sequential Pipeline Flow Tests
-
-    //region String Comparison Flow Tests
-
     @Test
     fun testStringComparisonFlow_english() = runTest {
         val jsonContent = readFlow("string_comparison_flow.json")
@@ -506,10 +508,6 @@ class FlowExecutionTest : FlowTestBase() {
         assertTrue(result.data.contains("English"))
     }
 
-    //endregion String Comparison Flow Tests
-
-    //region Multi-Condition Routing Flow Tests
-
     @Test
     fun testMultiConditionRoutingFlow_safeContent() = runTest {
         val jsonContent = readFlow("multi_condition_routing_flow.json")
@@ -542,10 +540,6 @@ class FlowExecutionTest : FlowTestBase() {
         assertIs<FlowAgentInput.InputString>(result)
         assertTrue(result.data.contains("approved") || result.data.contains("publication"))
     }
-
-    //endregion Multi-Condition Routing Flow Tests
-
-    //region Complex Decision Tree Flow Tests
 
     @Test
     fun testComplexDecisionTreeFlow_invoice() = runTest {
@@ -600,10 +594,6 @@ class FlowExecutionTest : FlowTestBase() {
         assertTrue(result.data.contains("archived") || result.data.contains("Document"))
     }
 
-    //endregion Complex Decision Tree Flow Tests
-
-    //region Verify Transform Flow Tests
-
     @Test
     fun testVerifyTransformFlow_successPath() = runTest {
         val jsonContent = readFlow("verify_transform_flow.json")
@@ -612,22 +602,20 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Task agent generates greeting
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Hello, World!")) onCondition { request ->
-                request.contains("task execution agent", ignoreCase = true) &&
-                    request.contains("generate", ignoreCase = true)
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Hello, World!")) onCondition { request ->
+                request.contains("generate", ignoreCase = true)
             }
 
             // Verify agent validates successfully
+            @OptIn(InternalAgentsApi::class)
             mockLLMToolCall(
-                finalizeTool,
-                FlowAgentInput.InputCritiqueResult(
-                    success = true,
-                    feedback = "Valid greeting",
-                    input = FlowAgentInput.InputString("Hello, World!")
+                finalizeVerifyTool,
+                CriticResultFromLLM(
+                    isCorrect = true,
+                    feedback = "Valid greeting"
                 )
             ) onCondition { request ->
-                request.contains("verification agent", ignoreCase = true) &&
-                    request.contains("verify", ignoreCase = true)
+                request.contains("verify", ignoreCase = true)
             }
         }
 
@@ -646,7 +634,7 @@ class FlowExecutionTest : FlowTestBase() {
         assertTrue(result.success)
     }
 
-    //endregion Verify Transform Flow Tests
+    //endregion Examples
 
     //region Private Methods
 
