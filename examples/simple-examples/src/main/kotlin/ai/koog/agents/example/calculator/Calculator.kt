@@ -77,9 +77,13 @@ suspend fun main() {
                         .build(),
                     Duration.ofSeconds(1)
                 )
-                addMetricFilter(
-                    "koog.tool.count",
-                    setOf("koog.tool.call.status")
+//                addMetricFilter(
+//                    "koog.tool.count",
+//                    setOf("koog.tool.call.status")
+//                )
+                addToolCallNamesMapping(
+                    setOf("plus", "minus", "multiply", "divide"),
+                    "Бррррррррр"
                 )
                 addSpanExporter(
                     OtlpGrpcSpanExporter.builder()

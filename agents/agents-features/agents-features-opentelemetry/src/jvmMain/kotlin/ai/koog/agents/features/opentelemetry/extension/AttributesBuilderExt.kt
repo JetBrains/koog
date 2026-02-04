@@ -9,3 +9,6 @@ internal fun AttributesBuilder.put(attribute: Attribute): AttributesBuilder {
 
     return this
 }
+
+// TODO: Написать тут AttributesBuilder.putMetricAttr(), куда внутри вынести логику проверки правил маппинга
+// И затем заиспользовать в Metric Collector

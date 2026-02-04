@@ -8,7 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.Meter
 
-internal class MetricCollector(meter: Meter) {
+internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCallMapper?) {
     private val metricEventStorage = MetricEventStorage()
 
     private val toolCallsCounter = createToolCallCounter(meter)
@@ -42,7 +42,9 @@ internal class MetricCollector(meter: Meter) {
                 tokensCounter.add(
                     inputTokens,
                     Attributes.builder()
-                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
+                        .put(
+                            GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)
+                        )
                         .put(GenAIAttributes.Provider.Name(metricEvent.modelProvider))
                         .put(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT))
                         .put(GenAIAttributes.Response.Model(metricEvent.model))
@@ -76,6 +78,12 @@ internal class MetricCollector(meter: Meter) {
 
     private fun handleToolCallCompleted(metricEvent: ToolCallEnded) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
+            val toolCallName = if (toolCallMapper == null) metricEvent.toolName else
+                when (metricEvent.toolName) {
+                    in toolCallMapper.allowedToolCallNames -> metricEvent.toolName
+                    else -> toolCallMapper.defaultToolCallName
+                }
+
             val status = when (metricEvent.status) {
                 ToolCallStatus.VALIDATION_FAILED -> KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
                 ToolCallStatus.SUCCESS -> KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
@@ -86,7 +94,7 @@ internal class MetricCollector(meter: Meter) {
                 startedEvent.getPositiveDurationSec(endedEvent),
                 Attributes.builder()
                     .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                    .put(GenAIAttributes.Tool.Name(metricEvent.toolName))
+                    .put(GenAIAttributes.Tool.Name(toolCallName))
                     .put(KoogAttributes.Koog.Tool.Call.Status(status))
                     .build()
             )
@@ -95,7 +103,7 @@ internal class MetricCollector(meter: Meter) {
                 1,
                 Attributes.builder()
                     .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                    .put(GenAIAttributes.Tool.Name(metricEvent.toolName))
+                    .put(GenAIAttributes.Tool.Name(toolCallName))
                     .put(KoogAttributes.Koog.Tool.Call.Status(status))
                     .build()
             )
