@@ -82,7 +82,7 @@ public class KoogFlow(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
             strategy = strategy,
-            toolRegistry = toolRegistry
+            toolRegistry = toolRegistry,
         )
     }
 

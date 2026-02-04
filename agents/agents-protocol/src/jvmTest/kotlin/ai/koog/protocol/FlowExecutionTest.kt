@@ -12,6 +12,9 @@ import ai.koog.protocol.agent.FlowAgentInput
 import ai.koog.protocol.flow.KoogFlow
 import ai.koog.protocol.mock.TestMcpServer
 import ai.koog.protocol.parser.FlowJsonConfigParser
+import ai.koog.protocol.transition.FlowTransition
+import ai.koog.protocol.transition.FlowTransitionCondition
+import ai.koog.protocol.flow.ConditionOperationKind
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -321,12 +324,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Score analyzer returns a high score
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputInt(95)) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputInt(95)) onCondition { request ->
                 request.contains("Extract the numeric score")
             }
 
             // High score feedback
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Excellent performance!")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Excellent performance!")) onCondition { request ->
                 request.contains("Congratulate the user")
             }
         }
@@ -354,12 +357,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Score analyzer returns a low score
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputInt(30)) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputInt(30)) onCondition { request ->
                 request.contains("Extract the numeric score")
             }
 
             // Low score feedback
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Constructive feedback provided")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Constructive feedback provided")) onCondition { request ->
                 request.contains("constructive feedback")
             }
         }
@@ -387,22 +390,20 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Initial generator produces code
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("def hello(): pass")) onCondition { request ->
-                request.contains("generate code", ignoreCase = true) &&
-                    request.contains("specifications", ignoreCase = true)
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("def hello(): pass")) onCondition { request ->
+                request.contains("generate", ignoreCase = true)
             }
 
             // Verifier succeeds immediately
+            @OptIn(InternalAgentsApi::class)
             mockLLMToolCall(
-                finalizeTool,
-                FlowAgentInput.InputCritiqueResult(
-                    success = true,
-                    feedback = "Code looks good!",
-                    input = FlowAgentInput.InputString("def hello(): pass")
+                finalizeVerifyTool,
+                CriticResultFromLLM(
+                    isCorrect = true,
+                    feedback = "Code looks good!"
                 )
             ) onCondition { request ->
-                request.contains("verify", ignoreCase = true) &&
-                    request.contains("quality standards", ignoreCase = true)
+                request.contains("verify", ignoreCase = true) || request.contains("check", ignoreCase = true)
             }
         }
 
@@ -429,34 +430,40 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Data collector
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Structured: name=John, age=30")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Structured: name=John, age=30")) onCondition { request ->
                 request.contains("collect", ignoreCase = true) &&
                     request.contains("structure data", ignoreCase = true)
             }
 
             // Data enricher
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Enriched: name=John, age=30, location=USA")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Enriched: name=John, age=30, location=USA")) onCondition { request ->
                 request.contains("enrich data", ignoreCase = true) &&
                     request.contains("additional context", ignoreCase = true)
             }
 
             // Data formatter
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Formatted: John (30) - USA")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Formatted: John (30) - USA")) onCondition { request ->
                 request.contains("format data", ignoreCase = true) &&
                     request.contains("final output", ignoreCase = true)
             }
 
             // Quality checker
+            @OptIn(InternalAgentsApi::class)
             mockLLMToolCall(
-                finalizeTool,
-                FlowAgentInput.InputCritiqueResult(
-                    success = true,
-                    feedback = "Output is complete",
-                    input = FlowAgentInput.InputString("Formatted: John (30) - USA")
+                finalizeVerifyTool,
+                CriticResultFromLLM(
+                    isCorrect = true,
+                    feedback = "Output is complete"
                 )
             ) onCondition { request ->
-                request.contains("verify", ignoreCase = true) &&
-                    request.contains("quality standards", ignoreCase = true)
+                request.contains("verify", ignoreCase = true) ||
+                    request.contains("check", ignoreCase = true)
+            }
+
+            // Fallback for any non-verify requests to ensure task agents always finalize
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("OK")) onCondition { request ->
+                !request.contains("verify", ignoreCase = true) &&
+                    !request.contains("check", ignoreCase = true)
             }
         }
 
@@ -483,12 +490,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Language detector detects English
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("en")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("en")) onCondition { request ->
                 request.contains("Detect the language", ignoreCase = true)
             }
 
             // English processor
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Processed English text")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Processed English text")) onCondition { request ->
                 request.contains("Process this English text", ignoreCase = true)
             }
         }
@@ -516,12 +523,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Content analyzer returns safe
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputBoolean(true)) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputBoolean(true)) onCondition { request ->
                 request.contains("Analyze the input content", ignoreCase = true)
             }
 
             // Safe content processor
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Content approved for publication")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Content approved for publication")) onCondition { request ->
                 request.contains("approved content", ignoreCase = true)
             }
         }
@@ -549,33 +556,30 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Document classifier identifies invoice
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("invoice")) onCondition { request ->
-                request.contains("classify documents", ignoreCase = true)
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("invoice")) onCondition { request ->
+                request.contains("Classify the document type", ignoreCase = true) || request.contains("classify", ignoreCase = true)
             }
 
             // Invoice processor
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Invoice data extracted")) onCondition { request ->
-                request.contains("process invoices", ignoreCase = true) &&
-                    request.contains("financial", ignoreCase = true)
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Invoice data extracted")) onCondition { request ->
+                request.contains("Extract invoice number", ignoreCase = true) || request.contains("process invoices", ignoreCase = true)
             }
 
             // Invoice validator succeeds
+            @OptIn(InternalAgentsApi::class)
             mockLLMToolCall(
-                finalizeTool,
-                FlowAgentInput.InputCritiqueResult(
-                    success = true,
-                    feedback = "All fields valid",
-                    input = FlowAgentInput.InputString("Invoice data extracted")
+                finalizeVerifyTool,
+                CriticResultFromLLM(
+                    isCorrect = true,
+                    feedback = "All fields valid"
                 )
             ) onCondition { request ->
-                request.contains("validate", ignoreCase = true) &&
-                    request.contains("invoice data", ignoreCase = true)
+                request.contains("validate", ignoreCase = true) || request.contains("Verify all required", ignoreCase = true)
             }
 
             // Final archiver
-            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Document archived")) onCondition { request ->
-                request.contains("archive", ignoreCase = true) &&
-                    request.contains("processed documents", ignoreCase = true)
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Document archived")) onCondition { request ->
+                request.contains("Archive the processed document", ignoreCase = true) || request.contains("archive", ignoreCase = true)
             }
         }
 
