@@ -56,11 +56,10 @@ The following scopes are supported:
 - `a2a`
 - `agents`
 - `embeddings`
-- `http-client`
 - `integration-tests`
 - `koog-agents`
 - `koog-ktor`
-- `koog-spring-boot-starter`
+- `spring-boot`
 - `prompt`
 - `rag`
 - `test-utils`
