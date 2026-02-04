@@ -9,14 +9,14 @@ import kotlin.test.assertSame
 class BedrockModelsTest {
 
     @Test
-    fun `BedrockModels models should have DashScope provider`() {
+    fun `BedrockModels models should have Bedrock provider`() {
         val models = BedrockModels.list()
 
         models.forEach { model ->
             assertSame(
-                expected = LLMProvider.Alibaba,
+                expected = LLMProvider.Bedrock,
                 actual = model.provider,
-                message = "DashScope model ${model.id} doesn't have DashScope provider but ${model.provider}."
+                message = "Bedrock model ${model.id} doesn't have Bedrock provider but ${model.provider}."
             )
         }
     }

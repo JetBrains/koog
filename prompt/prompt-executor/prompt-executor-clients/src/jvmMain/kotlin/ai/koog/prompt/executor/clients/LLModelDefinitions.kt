@@ -1,10 +1,12 @@
 package ai.koog.prompt.executor.clients
 
 import ai.koog.prompt.llm.LLModel
+import java.lang.reflect.Modifier
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.memberExtensionProperties
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.javaField
 
 /**
  * Retrieves all public properties of the specified object and nested objects that are of type `LLModel` and
@@ -15,11 +17,19 @@ import kotlin.reflect.full.memberProperties
  *   and its nested objects.
  */
 public fun allModelsIn(obj: Any): List<LLModel> {
-    val immediateModels = (obj::class.memberProperties + obj::class::memberExtensionProperties)
+    val immediateModels = (obj::class.memberProperties + obj::class.memberExtensionProperties)
         .filter { it.visibility == KVisibility.PUBLIC }
         .filter { it.returnType == LLModel::class.createType() }
         .map {
-            it.getter.call() as LLModel
+            // For @JvmField properties (public fields), access the field directly
+            // Otherwise use the getter with receiver object
+            val javaField = it.javaField
+            if (javaField != null && Modifier.isPublic(javaField.modifiers)) {
+                // For object singletons with @JvmField, fields are static, so pass null
+                javaField.get(null) as LLModel
+            } else {
+                it.getter.call(obj) as LLModel
+            }
         }
 
     val nestedModels = obj::class.nestedClasses
