@@ -169,6 +169,15 @@ Adds a metric filter to the OpenTelemetry configuration. This filter is used to 
 | `metricName`   | `String`      | Yes      |               | The name of the metric to which the filter will be applied.                         |
 | `keysToRetain` | `Set<String>` | Yes      |               | A set of attribute keys that should be retained for the specified metric.           |
 
+#### addToolCallNamesMapping
+
+Adds a mapping configuration for metric attributes based on allowed tool call names. This mapping determines which tool calls are permitted and defines a default value for metrics associated with those calls. Takes the following arguments:
+
+| Name                   | Data type     | Required | Default value | Description                                                                                                     |
+|------------------------|---------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------|
+| `allowedToolCallNames` | `Set<String>` | Yes      |               | A set of tool call names that are allowed.                                                                      |
+| `defaultToolCallName`  | `String?`     | No       | `null`        | The default name to use if the tool call name is not in the allow list. If null, a predefined default is used.  |
+
 #### addSpanProcessor
 
 Adds a span processor factory to process spans before they are exported. Takes the following argument:
@@ -265,6 +274,12 @@ install(OpenTelemetry) {
     addMetricFilter(
         metricName = "gen_ai.client.token.usage",
         keysToRetain = setOf("gen_ai.operation.name", "gen_ai.token.type")
+    )
+
+    // Add tool call names mapping
+    addToolCallNamesMapping(
+        allowedToolCallNames = setOf("calculator", "weather_api"),
+        defaultToolCallName = "hidden_tool"
     )
 
     // Set the sampler 
