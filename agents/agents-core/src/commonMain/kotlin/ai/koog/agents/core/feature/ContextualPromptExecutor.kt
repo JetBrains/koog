@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -47,6 +46,7 @@ public class ContextualPromptExecutor(
             logger.debug { "Executing LLM call with modified prompt (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
             context.llm.prompt
         } else {
+            logger.debug { "Executing LLM call (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
             prompt
         }
 
@@ -91,19 +91,32 @@ public class ContextualPromptExecutor(
 
         logger.debug { "Executing LLM streaming call (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
 
-        return executor.executeStreaming(prompt, model, tools)
-            .onStart {
-                logger.debug { "Starting LLM streaming call (event id: $eventId)" }
-                context.pipeline.onLLMStreamingStarting(
-                    eventId,
-                    context.executionInfo,
-                    context.runId,
-                    prompt,
-                    model,
-                    tools,
-                    context
-                )
+        return kotlinx.coroutines.flow.flow {
+            val promptBeforeInterceptors = context.llm.prompt // because onLLMStreamingStarting might change it
+
+            logger.debug { "Starting LLM streaming call (event id: $eventId)" }
+            context.pipeline.onLLMStreamingStarting(
+                eventId,
+                context.executionInfo,
+                context.runId,
+                prompt,
+                model,
+                tools,
+                context
+            )
+
+            val modifiedPrompt = if (context.llm.prompt !== promptBeforeInterceptors) {
+                logger.debug { "Executing LLM streaming call with modified prompt (event id: $eventId, prompt: ${context.llm.prompt}, tools: [${tools.joinToString { it.name }}])" }
+                context.llm.prompt
+            } else {
+                logger.debug { "Executing LLM streaming call (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
+                prompt
             }
+
+            executor.executeStreaming(modifiedPrompt, model, tools).collect { frame ->
+                emit(frame)
+            }
+        }
             .onEach { frame ->
                 logger.debug { "Received frame from LLM streaming call (event id: $eventId): $frame" }
                 context.pipeline.onLLMStreamingFrameReceived(
@@ -131,7 +144,7 @@ public class ContextualPromptExecutor(
             }
             .onCompletion { error ->
                 logger.debug(error) { "Finished LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingCompleted(
+                context.pipeline.onLLMStreamingCompleted( // It will be called even in case of error
                     eventId,
                     context.executionInfo,
                     context.runId,
@@ -143,7 +156,7 @@ public class ContextualPromptExecutor(
             }
     }
 
-    // TODO: Add Pipeline interceptors for this method
+    // TODO: Add Pipeline interceptors for this method. Without them features cannot modify prompts before calls to LLMs.
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
@@ -187,6 +200,8 @@ public class ContextualPromptExecutor(
             tools = emptyList(),
             context
         )
+
+        // TODO: save and compare promptBeforeInterceptors, because onLLMCallStarting can change the prompt
 
         val result = executor.moderate(prompt, model)
         logger.trace { "Finished moderation LLM request (event id: $eventId) with response: $result" }

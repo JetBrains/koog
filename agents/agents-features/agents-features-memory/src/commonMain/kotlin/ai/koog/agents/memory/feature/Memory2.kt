@@ -11,11 +11,14 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.rag.vector.database.EphemeralMemoryRecordRepository
 import ai.koog.rag.vector.database.MemoryRecord
 import ai.koog.rag.vector.database.MemoryRecordRepository
 import ai.koog.rag.vector.database.records
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Memory feature that incorporates persistent storage of memory records (documents) in vector databases.
@@ -42,6 +45,12 @@ public class Memory2(
     private val systemPromptTemplate: String = Config.DEFAULT_SYSTEM_PROMPT_TEMPLATE,
     private val userContextTemplate: String = Config.DEFAULT_USER_CONTEXT_TEMPLATE,
 ) {
+    /**
+     * Buffer to accumulate streaming frames by runId.
+     * Frames are accumulated during streaming and saved when streaming completes.
+     */
+    private val streamingFramesBuffer: MutableMap<String, MutableList<String>> = mutableMapOf()
+    private val streamingFramesBufferMutex = Mutex()
 
     /**
      * Configuration for the Memory2 feature.
@@ -189,7 +198,52 @@ public class Memory2(
                         .filter { it.role == Message.Role.Assistant }
                         .map { MemoryRecord(content = it.content) }
                     if (assistantMessagesAsMemoryRecords.isNotEmpty()) {
+                        // TODO: introduce configurable document chunking before saving to the repository
                         memory2Feature.memoryRecordRepository.add(assistantMessagesAsMemoryRecords)
+                    }
+                }
+            }
+
+            // Intercept before LLM streaming call to augment prompt with context from a repository
+            pipeline.interceptLLMStreamingStarting(this) { ctx ->
+                val augmentedPrompt = getAugmentedPromptOrNull(ctx.prompt, memory2Feature)
+                if (augmentedPrompt != null) {
+                    ctx.context.llm.prompt = augmentedPrompt
+                }
+            }
+
+            // Intercept a stream frame received from an LLM to accumulate in buffer
+            pipeline.interceptLLMStreamingFrameReceived(this) { ctx ->
+                val frame = ctx.streamFrame
+
+                if (memory2Feature.persistAssistantResponses && frame is StreamFrame.Append) {
+                    memory2Feature.streamingFramesBufferMutex.withLock {
+                        memory2Feature.streamingFramesBuffer
+                            .getOrPut(ctx.runId) { mutableListOf() }
+                            .add(frame.text)
+                    }
+                }
+            }
+
+            // Intercept streaming failure to clean up the buffer
+            pipeline.interceptLLMStreamingFailed(this) { ctx ->
+                if (memory2Feature.persistAssistantResponses) {
+                    memory2Feature.streamingFramesBufferMutex.withLock {
+                        memory2Feature.streamingFramesBuffer.remove(ctx.runId)
+                    }
+                }
+            }
+
+            // Intercept streaming completion to save all accumulated frames as memory records
+            pipeline.interceptLLMStreamingCompleted(this) { ctx ->
+                if (memory2Feature.persistAssistantResponses) {
+                    val frames = memory2Feature.streamingFramesBufferMutex.withLock {
+                        memory2Feature.streamingFramesBuffer.remove(ctx.runId)
+                    }
+                    if (!frames.isNullOrEmpty()) {
+                        val fullResponse = frames.joinToString("")
+                        // TODO: introduce configurable document chunking before saving to the repository
+                        memory2Feature.memoryRecordRepository.add(listOf(MemoryRecord(content = fullResponse)))
                     }
                 }
             }
