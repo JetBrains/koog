@@ -7,6 +7,12 @@ import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
 import ai.koog.protocol.flow.ConditionOperationKind
 import ai.koog.protocol.parser.FlowJsonConfigParser
 import ai.koog.protocol.tool.FlowTool
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import kotlin.io.path.Path
+import kotlin.io.path.extension
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -14,6 +20,49 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class FlowJsonParserTest : FlowTestBase() {
+
+    companion object {
+        @JvmStatic
+        fun getResourceJsonNames(): Array<String> {
+            val resourcePath = object {}.javaClass.getResource("/json")?.let { Path(it.path) }
+                ?: error("Could not find '/resource/json' directory")
+
+            val exampleJsonFiles = resourcePath.listDirectoryEntries()
+                .filter { entry -> entry.extension.equals("json", ignoreCase = true) }
+                .map { it.name }
+
+            return exampleJsonFiles.toTypedArray()
+        }
+    }
+
+    //region Examples Parsing
+
+    @ParameterizedTest
+    @MethodSource("getResourceJsonNames")
+    fun testAllFlowJsonFilesCanBeParsed(jsonFileName: String) {
+        val parser = FlowJsonConfigParser()
+
+        val jsonContent = readFlow(jsonFileName)
+        val flowConfig = parser.parse(jsonContent)
+
+        assertNotNull(flowConfig, "Failed to parse $jsonFileName")
+        assertTrue(flowConfig.agents.isNotEmpty(), "$jsonFileName should have agents")
+
+        // Verify all transitions reference valid agents
+        val agentNames = flowConfig.agents.map { it.name }.toSet()
+        flowConfig.transitions.forEach { transition ->
+            assertTrue(
+                agentNames.contains(transition.from),
+                "$jsonFileName: transition.from '${transition.from}' not found in agents"
+            )
+            assertTrue(
+                agentNames.contains(transition.to) || transition.to == "__finish__",
+                "$jsonFileName: transition.to '${transition.to}' not found in agents"
+            )
+        }
+    }
+
+    //endregion Examples Parsing
 
     //region Flow
 
@@ -243,17 +292,17 @@ class FlowJsonParserTest : FlowTestBase() {
         assertEquals("verify_agent", transition2.from)
         assertEquals("__finish__", transition2.to)
         assertNotNull(transition2.condition)
-        assertEquals("input.success", transition2.condition!!.variable)
-        assertEquals(ConditionOperationKind.EQUALS, transition2.condition!!.operation)
-        assertTrue(transition2.condition!!.value.isPrimitive)
+        assertEquals("input.success", transition2.condition.variable)
+        assertEquals(ConditionOperationKind.EQUALS, transition2.condition.operation)
+        assertTrue(transition2.condition.value.isPrimitive)
 
         // verify_agent -> transform_feedback (condition: success == false)
         val transition3 = flowConfig.transitions[2]
         assertEquals("verify_agent", transition3.from)
         assertEquals("transform_feedback", transition3.to)
         assertNotNull(transition3.condition)
-        assertEquals("input.success", transition3.condition!!.variable)
-        assertEquals(ConditionOperationKind.EQUALS, transition3.condition!!.operation)
+        assertEquals("input.success", transition3.condition.variable)
+        assertEquals(ConditionOperationKind.EQUALS, transition3.condition.operation)
 
         // transform_feedback -> fix_agent (unconditional)
         val transition4 = flowConfig.transitions[3]

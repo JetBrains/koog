@@ -25,10 +25,11 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation(libs.kotlinx.coroutines.test)
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
                 implementation(project(":utils"))
+                implementation(libs.junit.jupiter.params)
+                implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.mcp.server)
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.server.cio)

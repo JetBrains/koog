@@ -32,6 +32,8 @@ class FlowExecutionTest : FlowTestBase() {
 
         private val logger = KotlinLogging.logger { }
 
+        private val finalizeTool = SubgraphWithTaskUtils.finishTool<FlowAgentInput>()
+
         /**
          * A mock tool that matches the MCP greeting tool's signature.
          * This is used to tell the mock LLM to call the greeting tool with specific arguments.
@@ -66,9 +68,6 @@ class FlowExecutionTest : FlowTestBase() {
 
         val generateNumbersAgentTask = "Generate two random numbers between 1 and 100. Output them with a space between them."
         val calculatorAgentTask = "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces."
-
-        // Finalized tool for mocking with FlowAgentInput type
-        val finalizeTool = SubgraphWithTaskUtils.finishTool<FlowAgentInput>()
 
         // Mock executor: the first agent returns "42 58", the second returns "100"
         val testExecutor = getMockExecutor {
@@ -107,9 +106,6 @@ class FlowExecutionTest : FlowTestBase() {
         val taskInput = "Use the greeting tool to greet the user named 'TestUser'"
 
         assertEquals(1, flowConfig.tools.size, "Check tools were parsed from JSON")
-
-        // Finalized tool for mocking with FlowAgentInput type
-        val finalizeTool = SubgraphWithTaskUtils.finishTool<FlowAgentInput>()
 
         val testExecutor = getMockExecutor {
             // When asked to greet, call the greeting tool
@@ -178,7 +174,7 @@ class FlowExecutionTest : FlowTestBase() {
         assertEquals(original.success, deserialized.success)
         assertEquals(original.feedback, deserialized.feedback)
         assertIs<FlowAgentInput.InputString>(deserialized.input)
-        assertEquals("World", (deserialized.input as FlowAgentInput.InputString).data)
+        assertEquals("World", deserialized.input.data)
     }
 
     /**
@@ -217,7 +213,7 @@ class FlowExecutionTest : FlowTestBase() {
         assertEquals(true, nestedResult.success)
         assertEquals("Nested result", nestedResult.feedback)
         assertIs<FlowAgentInput.InputInt>(nestedResult.input)
-        assertEquals(42, (nestedResult.input as FlowAgentInput.InputInt).data)
+        assertEquals(42, nestedResult.input.data)
     }
 
     /**
@@ -261,10 +257,10 @@ class FlowExecutionTest : FlowTestBase() {
 
         // Verify conditions on transitions from verify_agent
         assertNotNull(verifyToFinish.condition, "verify_agent -> __finish__ should have a condition")
-        assertEquals("input.success", verifyToFinish.condition!!.variable)
+        assertEquals("input.success", verifyToFinish.condition.variable)
 
         assertNotNull(verifyToTransform.condition, "verify_agent -> transform_feedback should have a condition")
-        assertEquals("input.success", verifyToTransform.condition!!.variable)
+        assertEquals("input.success", verifyToTransform.condition.variable)
     }
 
     /**
@@ -272,7 +268,7 @@ class FlowExecutionTest : FlowTestBase() {
      */
     @Test
     fun testFlowAgentInput_allTypesSerialization() {
-        val testCases = listOf<FlowAgentInput>(
+        val testCases = listOf(
             FlowAgentInput.InputString("test string"),
             FlowAgentInput.InputInt(42),
             FlowAgentInput.InputDouble(3.14),
@@ -308,6 +304,349 @@ class FlowExecutionTest : FlowTestBase() {
     }
 
     //endregion Verify and Transform Tests
+
+    //region Examples
+
+    @Test
+    fun testConditionalBranchingFlow_highScore() = runTest {
+        val jsonContent = readFlow("conditional_branching_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Score analyzer returns a high score
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputInt(95)) onCondition { request ->
+                request.contains("Extract the numeric score")
+            }
+
+            // High score feedback
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Excellent performance!")) onCondition { request ->
+                request.contains("Congratulate the user")
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("Score: 95"))
+
+        assertIs<FlowAgentInput.InputString>(result)
+        assertTrue(result.data.contains("Excellent") || result.data.contains("performance"))
+    }
+
+    @Test
+    fun testConditionalBranchingFlow_lowScore() = runTest {
+        val jsonContent = readFlow("conditional_branching_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Score analyzer returns a low score
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputInt(30)) onCondition { request ->
+                request.contains("Extract the numeric score")
+            }
+
+            // Low score feedback
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Constructive feedback provided")) onCondition { request ->
+                request.contains("constructive feedback")
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("Score: 30"))
+
+        assertIs<FlowAgentInput.InputString>(result)
+        assertTrue(result.data.contains("feedback") || result.data.contains("Constructive"))
+    }
+
+    @Test
+    fun testRetryLoopFlow_successOnFirstTry() = runTest {
+        val jsonContent = readFlow("retry_loop_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Initial generator produces code
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("def hello(): pass")) onCondition { request ->
+                request.contains("generate code", ignoreCase = true) &&
+                    request.contains("specifications", ignoreCase = true)
+            }
+
+            // Verifier succeeds immediately
+            mockLLMToolCall(
+                finalizeTool,
+                FlowAgentInput.InputCritiqueResult(
+                    success = true,
+                    feedback = "Code looks good!",
+                    input = FlowAgentInput.InputString("def hello(): pass")
+                )
+            ) onCondition { request ->
+                request.contains("verify", ignoreCase = true) &&
+                    request.contains("quality standards", ignoreCase = true)
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("Create a hello function"))
+
+        assertIs<FlowAgentInput.InputCritiqueResult>(result)
+        assertTrue(result.success)
+    }
+
+    @Test
+    fun testSequentialPipelineFlow() = runTest {
+        val jsonContent = readFlow("sequential_pipeline_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Data collector
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Structured: name=John, age=30")) onCondition { request ->
+                request.contains("collect", ignoreCase = true) &&
+                    request.contains("structure data", ignoreCase = true)
+            }
+
+            // Data enricher
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Enriched: name=John, age=30, location=USA")) onCondition { request ->
+                request.contains("enrich data", ignoreCase = true) &&
+                    request.contains("additional context", ignoreCase = true)
+            }
+
+            // Data formatter
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Formatted: John (30) - USA")) onCondition { request ->
+                request.contains("format data", ignoreCase = true) &&
+                    request.contains("final output", ignoreCase = true)
+            }
+
+            // Quality checker
+            mockLLMToolCall(
+                finalizeTool,
+                FlowAgentInput.InputCritiqueResult(
+                    success = true,
+                    feedback = "Output is complete",
+                    input = FlowAgentInput.InputString("Formatted: John (30) - USA")
+                )
+            ) onCondition { request ->
+                request.contains("verify", ignoreCase = true) &&
+                    request.contains("quality standards", ignoreCase = true)
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("Raw data: John is 30"))
+
+        assertIs<FlowAgentInput.InputCritiqueResult>(result)
+        assertTrue(result.success)
+    }
+
+    //endregion Sequential Pipeline Flow Tests
+
+    //region String Comparison Flow Tests
+
+    @Test
+    fun testStringComparisonFlow_english() = runTest {
+        val jsonContent = readFlow("string_comparison_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Language detector detects English
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("en")) onCondition { request ->
+                request.contains("Detect the language", ignoreCase = true)
+            }
+
+            // English processor
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Processed English text")) onCondition { request ->
+                request.contains("Process this English text", ignoreCase = true)
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("Hello, how are you?"))
+
+        assertIs<FlowAgentInput.InputString>(result)
+        assertTrue(result.data.contains("English"))
+    }
+
+    //endregion String Comparison Flow Tests
+
+    //region Multi-Condition Routing Flow Tests
+
+    @Test
+    fun testMultiConditionRoutingFlow_safeContent() = runTest {
+        val jsonContent = readFlow("multi_condition_routing_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Content analyzer returns safe
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputBoolean(true)) onCondition { request ->
+                request.contains("Analyze the input content", ignoreCase = true)
+            }
+
+            // Safe content processor
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Content approved for publication")) onCondition { request ->
+                request.contains("approved content", ignoreCase = true)
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("This is safe content"))
+
+        assertIs<FlowAgentInput.InputString>(result)
+        assertTrue(result.data.contains("approved") || result.data.contains("publication"))
+    }
+
+    //endregion Multi-Condition Routing Flow Tests
+
+    //region Complex Decision Tree Flow Tests
+
+    @Test
+    fun testComplexDecisionTreeFlow_invoice() = runTest {
+        val jsonContent = readFlow("complex_decision_tree_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Document classifier identifies invoice
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("invoice")) onCondition { request ->
+                request.contains("classify documents", ignoreCase = true)
+            }
+
+            // Invoice processor
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Invoice data extracted")) onCondition { request ->
+                request.contains("process invoices", ignoreCase = true) &&
+                    request.contains("financial", ignoreCase = true)
+            }
+
+            // Invoice validator succeeds
+            mockLLMToolCall(
+                finalizeTool,
+                FlowAgentInput.InputCritiqueResult(
+                    success = true,
+                    feedback = "All fields valid",
+                    input = FlowAgentInput.InputString("Invoice data extracted")
+                )
+            ) onCondition { request ->
+                request.contains("validate", ignoreCase = true) &&
+                    request.contains("invoice data", ignoreCase = true)
+            }
+
+            // Final archiver
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Document archived")) onCondition { request ->
+                request.contains("archive", ignoreCase = true) &&
+                    request.contains("processed documents", ignoreCase = true)
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("Invoice #12345, Date: 2024-01-01, Amount: $100"))
+
+        assertIs<FlowAgentInput.InputString>(result)
+        assertTrue(result.data.contains("archived") || result.data.contains("Document"))
+    }
+
+    //endregion Complex Decision Tree Flow Tests
+
+    //region Verify Transform Flow Tests
+
+    @Test
+    fun testVerifyTransformFlow_successPath() = runTest {
+        val jsonContent = readFlow("verify_transform_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Task agent generates greeting
+            mockLLMToolCall(finalizeTool, FlowAgentInput.InputString("Hello, World!")) onCondition { request ->
+                request.contains("task execution agent", ignoreCase = true) &&
+                    request.contains("generate", ignoreCase = true)
+            }
+
+            // Verify agent validates successfully
+            mockLLMToolCall(
+                finalizeTool,
+                FlowAgentInput.InputCritiqueResult(
+                    success = true,
+                    feedback = "Valid greeting",
+                    input = FlowAgentInput.InputString("Hello, World!")
+                )
+            ) onCondition { request ->
+                request.contains("verification agent", ignoreCase = true) &&
+                    request.contains("verify", ignoreCase = true)
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("Create a greeting"))
+
+        assertIs<FlowAgentInput.InputCritiqueResult>(result)
+        assertTrue(result.success)
+    }
+
+    //endregion Verify Transform Flow Tests
 
     //region Private Methods
 

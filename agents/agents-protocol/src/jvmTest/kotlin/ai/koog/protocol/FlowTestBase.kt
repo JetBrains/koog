@@ -4,7 +4,7 @@ abstract class FlowTestBase {
 
     protected fun readFlow(name: String): String {
         val jsonContent = object {}.javaClass
-            .getResourceAsStream("/$name")
+            .getResourceAsStream(name.trimStart('/').let { "/json/$it" })
             ?.bufferedReader()
             ?.readText()
             ?: error("Could not read JSON file")

@@ -1,4 +1,7 @@
 {
+  "id": "simple-koog-agent-flow",
+  "version": "1.0.0",
+  "defaultModel": "openai/gpt-4o",
   "agents": [
     {
       "name": "generate",
@@ -42,7 +45,7 @@
       "input": {
         "transformations": [
           {
-            "input": "agent.verify.output.feedback",
+            "input": "input.feedback",
             "to": "string"
           }
         ]
@@ -51,18 +54,18 @@
   ],
   "transitions": [
     {
-      "from": "agent.generate",
-      "to": "agent.fix"
+      "from": "generate",
+      "to": "fix"
     },
     {
-      "from": "agent.fix",
-      "to": "agent.verify"
+      "from": "fix",
+      "to": "verify"
     },
     {
-      "from": "agent.verify",
-      "to": "__end__",
+      "from": "verify",
+      "to": "__finish__",
       "condition": {
-        "variable": "agent.verify.output.success",
+        "variable": "input.success",
         "operation": "equals",
         "value": true
       }

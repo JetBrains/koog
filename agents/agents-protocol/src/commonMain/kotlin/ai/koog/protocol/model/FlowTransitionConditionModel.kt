@@ -23,10 +23,9 @@ public data class FlowTransitionConditionModel(
     /**
      *
      */
-    public fun toFlowTransitionCondition(): FlowTransitionCondition? {
-        val operation = ConditionOperationKind.entries.find { op ->
-            op.id.equals(operation, ignoreCase = true)
-        } ?: return null
+    public fun toFlowTransitionCondition(): FlowTransitionCondition {
+        val operation = ConditionOperationKind.entries.find { it.id.equals(operation, ignoreCase = true) }
+            ?: error("Unsupported operation: $operation")
 
         return FlowTransitionCondition(
             variable,
