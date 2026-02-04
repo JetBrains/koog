@@ -9,7 +9,7 @@ import kotlin.test.assertSame
 class MistralAIModelsTest {
 
     @Test
-    fun `MistralAIModels models should have MistralAI provider`() {
+    fun `MistralAIModels should have MistralAI provider`() {
         val models = MistralAIModels.list()
 
         models.forEach { model ->
@@ -22,7 +22,7 @@ class MistralAIModelsTest {
     }
 
     @Test
-    fun `MistralAIModels models should return all declared models`() {
+    fun `MistralAIModels should return all declared models`() {
         val reflectionModels = MistralAIModels.list().map { it.id }
 
         val models = MistralAIModels.models.map { it.id }
