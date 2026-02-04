@@ -24,4 +24,5 @@ BREAKING:
 DEPRECATED:
 *
 
-closes #
+<!-- Include references to related issues below, e.g., closes #1, closes KG-1. Otherwise, delete it. -->
+closes
