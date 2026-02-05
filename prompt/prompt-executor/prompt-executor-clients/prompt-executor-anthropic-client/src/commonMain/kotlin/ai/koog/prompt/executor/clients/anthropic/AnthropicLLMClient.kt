@@ -13,6 +13,7 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicModelsResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamDeltaContentType
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamEventType
@@ -71,6 +72,7 @@ public class AnthropicClientSettings(
     public val baseUrl: String = "https://api.anthropic.com",
     public val apiVersion: String = "2023-06-01",
     public val messagesPath: String = "v1/messages",
+    public val modelsPath: String = "v1/models",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
@@ -631,6 +633,17 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 "AnyOf type is not supported"
             )
         }
+    }
+
+    public override suspend fun models(): List<String> {
+        logger.debug { "Fetching available models from Anthropic" }
+
+        val response = httpClient.get(
+            path = settings.modelsPath,
+            responseType = AnthropicModelsResponse::class
+        )
+
+        return response.data.map { it.id }
     }
 
     /**
