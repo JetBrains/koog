@@ -842,7 +842,7 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
 
         assumeTrue(model.provider != LLMProvider.Bedrock, "Bedrock API doesn't support 'none' tool choice.")
-        assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
         assumeTrue(
             model.provider != LLMProvider.MistralAI,
             "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix"
