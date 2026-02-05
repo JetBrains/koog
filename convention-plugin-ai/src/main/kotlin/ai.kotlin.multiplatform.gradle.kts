@@ -26,11 +26,11 @@ kotlin {
     // Tier 3
     val iosX64 = iosX64()
 
-    val xcf = XCFramework(project.name)
+    val xcf = XCFramework("Koog")
     listOf(iosSimulatorArm64, iosArm64, iosX64).forEach {
         it.binaries.framework {
-            baseName = project.name
-            binaryOption("bundleId", "ai.koog.${project.name}")
+            baseName = "Koog"
+            binaryOption("bundleId", "ai.koog")
             xcf.add(this)
         }
     }
