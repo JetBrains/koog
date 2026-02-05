@@ -178,6 +178,10 @@ Adds a mapping configuration for metric attributes based on allowed tool call na
 | `allowedToolCallNames` | `Set<String>` | Yes      |               | A set of tool call names that are allowed.                                                                      |
 | `defaultToolCallName`  | `String?`     | No       | `null`        | The default name to use if the tool call name is not in the allow list. If null, a predefined default is used.  |
 
+!!! note
+
+    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact the performance of your observability backend. You can use the `addToolCallNamesMapping` method to control this metric by limiting the allowed tool names and mapping others to a default value.
+
 #### addSpanProcessor
 
 Adds a span processor factory to process spans before they are exported. Takes the following argument:
@@ -484,6 +488,10 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
         - `gen_ai.operation.name` (required) — `EXECUTE_TOOL`
         - `gen_ai.tool.name` (recommended)
         - `gen_ai.tool.call.status` (custom) — `SUCCESS`, `ERROR`, or `VALIDATION_FAILED`
+
+!!! note
+
+    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact performance. You can use the `addToolCallNamesMapping` method to control this metric.
 
 !!! note
 Metrics are reported via the OpenTelemetry `Meter` created for your service. If no metric exporters are configured,
