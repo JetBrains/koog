@@ -95,41 +95,52 @@ val myNode by node<String, String> { input ->
 | `Trace` | `Demonstration<TInput, TOutput>` |
 | `Optimizer` | `StrategyOptimizer` interface |
 
-### Extended AIAgentNode
+### Extended AIAgentNode (IMPLEMENTED)
 
-Add optional optimization fields to the existing `AIAgentNode`:
+Added optional optimization fields to the existing `AIAgentNode`:
 
 ```kotlin
-public open class AIAgentNode<TInput, TOutput>(
+public open class AIAgentNode<TInput, TOutput> internal constructor(
     override val name: String,
     override val inputType: KType,
     override val outputType: KType,
     public val execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
-    // New optional optimization fields
+    // Optimization fields
     public val instruction: String? = null,
     public val demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),
-    public val description: String? = null,  // For MIPRO program description
+    public val description: String? = null,
 ) : AIAgentNodeBase<TInput, TOutput>() {
 
     /** Create a copy with updated optimization fields */
-    fun copy(
+    public fun copy(
         instruction: String? = this.instruction,
         demonstrations: List<Demonstration<TInput, TOutput>> = this.demonstrations,
         description: String? = this.description,
     ): AIAgentNode<TInput, TOutput> = AIAgentNode(
-        name, inputType, outputType, execute,
-        instruction, demonstrations, description
+        name = name,
+        inputType = inputType,
+        outputType = outputType,
+        execute = execute,
+        instruction = instruction,
+        demonstrations = demonstrations,
+        description = description,
     )
+    // ... existing execute logic unchanged
 }
 ```
 
-### Demonstration Type
+### Demonstration Type (IMPLEMENTED)
+
+Located at `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/Demonstration.kt`:
 
 ```kotlin
 /**
  * A typed input-output pair for few-shot learning.
+ *
+ * Demonstrations are used to provide examples to LLM nodes during prompt optimization.
+ * They can be manually created from labeled data or automatically generated via bootstrapping.
  */
-data class Demonstration<TInput, TOutput>(
+public data class Demonstration<TInput, TOutput>(
     val input: TInput,
     val output: TOutput,
     val isBootstrapped: Boolean = false,  // true if generated via bootstrap
@@ -272,18 +283,19 @@ fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.withOptimizedConfig(
 }
 ```
 
-### DSL Extensions
+### DSL Extensions (IMPLEMENTED)
 
-Extend Koog's existing `node` DSL to accept optimization parameters:
+Extended Koog's existing `node` DSL to accept optimization parameters:
 
 ```kotlin
-// Extended node builder with optimization fields
-inline fun <reified TInput, reified TOutput> AIAgentSubgraphBuilderBase<*, *>.node(
+// Extended node builder with optimization fields (in AIAgentSubgraphBuilderBase)
+public inline fun <reified Input, reified Output> node(
     name: String? = null,
     instruction: String? = null,
+    demonstrations: List<Demonstration<Input, Output>> = emptyList(),
     description: String? = null,
-    noinline execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
-): AIAgentNodeDelegate<TInput, TOutput>
+    noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
+): AIAgentNodeDelegate<Input, Output>
 
 // Usage - looks like normal Koog, just with extra parameters
 val myStrategy = strategy<String, Classification>("classifier") {
@@ -379,14 +391,15 @@ Three-step optimization pipeline:
 ```
 agents/agents-core/src/commonMain/kotlin/ai/koog/agents/
 ├── core/agent/entity/
-│   └── AIAgentNode.kt                  # MODIFY: Add instruction, demonstrations, description fields
+│   └── AIAgentNode.kt                  # DONE: Added instruction, demonstrations, description fields + copy()
 │
 ├── core/dsl/builder/
-│   └── AIAgentSubgraphBuilderBase.kt   # MODIFY: Extend node() builder with optimization params
+│   ├── AIAgentNodeDelegate.kt          # DONE: Added optimization fields, passes through to AIAgentNode
+│   └── AIAgentSubgraphBuilder.kt       # DONE: Extended node() builder with optimization params
 │
-└── optimization/                        # NEW MODULE (or could be agents-optimization/)
+└── optimization/                        # NEW PACKAGE
     ├── core/
-    │   ├── Demonstration.kt            # Typed input-output pair
+    │   ├── Demonstration.kt            # DONE: Typed input-output pair
     │   ├── OptimizationConfig.kt       # Coroutine context element for trial configs
     │   ├── StrategyOptimizer.kt        # Optimizer interface
     │   ├── Example.kt                  # Training data type
@@ -422,11 +435,20 @@ examples/
 
 ## Implementation Phases
 
-### Phase 1: Extend Koog Core Types
-- [ ] Modify `AIAgentNode` to add optional `instruction`, `demonstrations`, `description` fields
-- [ ] Add `copy()` method to `AIAgentNode` for creating variants
-- [ ] Extend `node()` DSL builder to accept optimization parameters
-- [ ] Create `Demonstration<TInput, TOutput>` data class
+### Phase 1: Extend Koog Core Types (COMPLETED)
+- [x] Modify `AIAgentNode` to add optional `instruction`, `demonstrations`, `description` fields
+- [x] Add `copy()` method to `AIAgentNode` for creating variants
+- [x] Extend `node()` DSL builder to accept optimization parameters
+- [x] Extend `AIAgentNodeDelegate` to pass through optimization fields
+- [x] Create `Demonstration<TInput, TOutput>` data class
+
+**Files changed:**
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/agent/entity/AIAgentNode.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/dsl/builder/AIAgentNodeDelegate.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilder.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/Demonstration.kt` (new)
+
+**Note:** The `AIAgentNodeDelegate.transform()` method throws `NotImplementedError` if the node has demonstrations, because the transformation is a suspend function that cannot be applied to demonstrations at delegate construction time.
 
 ### Phase 2: Optimization Infrastructure
 - [ ] Create `OptimizationConfig` coroutine context element
