@@ -1,5 +1,16 @@
 # Koog AI Agent Framework
 
+## Current Focus: MIPRO Integration
+
+The current goal in this repository is to integrate the MIPRO v2 prompt optimization algorithm with Koog's native abstractions (`strategy`, `node`, `subgraph`). See **[koog-mipro.md](./koog-mipro.md)** for the detailed design document.
+
+Related resources:
+- `koog-auto-agent-optimization/` - Symlinked repo with current MIPRO implementation
+- `koog-auto-agent-optimization/koog-abstractions.md` - Summary of Koog's core abstractions
+- `koog-auto-agent-optimization/CLAUDE.md` - Context for the MIPRO implementation
+
+---
+
 Koog is a Kotlin multiplatform framework for building AI agents with graph-based workflows.
 It supports JVM and JS targets and integrates with multiple LLM providers
 (OpenAI, Anthropic, Google, OpenRouter, Ollama) and Model Context Protocol (MCP).
