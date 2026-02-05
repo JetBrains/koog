@@ -14,8 +14,24 @@
         "task": "Generate two random numbers between 1 and 100. Output them with a space between them.",
         "toolNames": []
       }
+    },
+    {
+      "name": "calculator",
+      "type": "task",
+      "runtime": "koog",
+      "prompt": {
+        "system": "You are a calculator agent that performs math operations."
+      },
+      "params": {
+        "task": "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces.",
+        "toolNames": []
+      }
     }
   ],
   "transitions": [
+    {
+      "from": "get_numbers",
+      "to": "calculator"
+    }
   ]
 }

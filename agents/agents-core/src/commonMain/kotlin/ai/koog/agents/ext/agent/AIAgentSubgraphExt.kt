@@ -480,7 +480,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
             // Model must always call tools in the loop until it decides (via finish tool)
             // that the exit condition is reached
-            setToolChoiceAuto()
+            setToolChoiceRequired()
         }
 
         // Output task description

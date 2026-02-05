@@ -90,8 +90,29 @@ public class KoogFlow(
                     println("> Node: ${ctx.node.id}")
                 }
 
+                onToolCallStarting { ctx ->
+                    println(
+                        "> Tool start\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}"
+                    )
+                }
+
+                onToolCallCompleted { ctx ->
+                    println(
+                        "> Tool completed\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}"
+                    )
+                }
+
+                onLLMCallStarting { ctx ->
+                    println(
+                        "> LLM start\nRequest:${ctx.prompt.messages.lastOrNull()?.content}\n" +
+                            "tools: ${ctx.tools.joinToString("\n") { " - ${it.name }" } }"
+                    )
+                }
+
                 onLLMCallCompleted { ctx ->
-                    println("> LLM: ${ctx.responses.firstOrNull()?.content}")
+                    println(
+                        "> LLM complete\nResponses:${ctx.responses.joinToString("\n") { " - [${it.role.name}] ${it.content}" } } }"
+                    )
                 }
             }
         }
