@@ -7,7 +7,7 @@ import ai.koog.agents.features.opentelemetry.extension.getPositiveDurationSec
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.metrics.Meter
 
-internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCallMapper? = null) {
+internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCallMapper) {
     private val metricEventStorage = MetricEventStorage()
 
     private val toolCallsCounter = createToolCallCounter(meter)
@@ -75,14 +75,7 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
 
     private fun handleToolCallEnded(metricEvent: ToolCallEnded, isVerbose: Boolean) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
-            val toolCallName = if (toolCallMapper == null) {
-                metricEvent.toolName
-            } else {
-                when (metricEvent.toolName) {
-                    in toolCallMapper.allowedToolCallNames -> metricEvent.toolName
-                    else -> toolCallMapper.defaultToolCallName
-                }
-            }
+            val toolCallName = toolCallMapper.map(metricEvent.toolName)
 
             val status = when (metricEvent.status) {
                 ToolCallStatus.VALIDATION_FAILED -> KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED

@@ -155,32 +155,34 @@ Adds a span exporter to send telemetry data to external systems. Takes the follo
 
 Adds a metric exporter to send runtime metrics to external systems. Takes the following arguments:
 
-| Name            | Data type        | Required | Default value            | Description                                                                       |
-|-----------------|------------------|----------|--------------------------|-----------------------------------------------------------------------------------|
-| `exporter`      | `MetricExporter` | Yes      |                          | The `MetricExporter` instance to be added to the list of custom metric exporters. |
-| `meterInterval` | `Duration`       | No       | `Duration.ofSeconds(1)`  | The interval for processing metrics.                                              |
+| Name            | Data type        | Required | Default value           | Description                                                                       |
+|-----------------|------------------|----------|-------------------------|-----------------------------------------------------------------------------------|
+| `exporter`      | `MetricExporter` | Yes      |                         | The `MetricExporter` instance to be added to the list of custom metric exporters. |
+| `meterInterval` | `Duration`       | No       | `Duration.ofSeconds(1)` | The interval for processing metrics.                                              |
 
 #### addMetricFilter
 
-Adds a metric filter to the OpenTelemetry configuration. This filter is used to specify which attribute keys should be retained for a specific metric during telemetry data processing. Takes the following arguments:
+Adds a metric filter to the OpenTelemetry configuration. This filter is used to specify which attribute keys should be
+retained for a specific metric during telemetry data processing. Takes the following arguments:
 
-| Name           | Data type     | Required | Default value | Description                                                                         |
-|----------------|---------------|----------|---------------|-------------------------------------------------------------------------------------|
-| `metricName`   | `String`      | Yes      |               | The name of the metric to which the filter will be applied.                         |
-| `keysToRetain` | `Set<String>` | Yes      |               | A set of attribute keys that should be retained for the specified metric.           |
+| Name           | Data type     | Required | Default value | Description                                                               |
+|----------------|---------------|----------|---------------|---------------------------------------------------------------------------|
+| `metricName`   | `String`      | Yes      |               | The name of the metric to which the filter will be applied.               |
+| `keysToRetain` | `Set<String>` | Yes      |               | A set of attribute keys that should be retained for the specified metric. |
 
-#### addToolCallNamesMapping
+#### restrictToolNameCardinality
 
-Adds a mapping configuration for metric attributes based on allowed tool call names. This mapping determines which tool calls are permitted and defines a default value for metrics associated with those calls. Takes the following arguments:
+Adds a mapping configuration for metric attributes based on allowed tool call names, determining which tool calls are
+permitted and defining a default value for metrics associated with those calls.
 
-| Name                   | Data type     | Required | Default value | Description                                                                                                     |
-|------------------------|---------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------|
-| `allowedToolCallNames` | `Set<String>` | Yes      |               | A set of tool call names that are allowed.                                                                      |
-| `defaultToolCallName`  | `String?`     | No       | `null`        | The default name to use if the tool call name is not in the allow list. If null, a predefined default is used.  |
+| Name                   | Data type     | Required | Default value | Description                                                                                                    |
+|------------------------|---------------|----------|---------------|----------------------------------------------------------------------------------------------------------------|
+| `allowedToolCallNames` | `Set<String>` | Yes      |               | A set of tool call names that are allowed.                                                                     |
+| `defaultToolCallName`  | `String?`     | No       | `null`        | The default name to use if the tool call name is not in the allow list. If null, a predefined default is used. |
 
 !!! note
 
-    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact the performance of your observability backend. You can use the `addToolCallNamesMapping` method to control this metric by limiting the allowed tool names and mapping others to a default value.
+    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact the performance of your observability backend. You can use the `restrictToolNameCardinality` method to control this metric by limiting the allowed tool names and mapping others to a default value.
 
 #### addSpanProcessor
 
@@ -280,8 +282,8 @@ install(OpenTelemetry) {
         keysToRetain = setOf("gen_ai.operation.name", "gen_ai.token.type")
     )
 
-    // Add tool call names mapping
-    addToolCallNamesMapping(
+    // Add tool call names restriction
+    restrictToolNameCardinality(
         allowedToolCallNames = setOf("calculator", "weather_api"),
         defaultToolCallName = "hidden_tool"
     )
@@ -491,7 +493,7 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
 
 !!! note
 
-    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact performance. You can use the `addToolCallNamesMapping` method to control this metric.
+    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact performance. You can use the `restrictToolNameCardinality` method to control this metric.
 
 !!! note
 Metrics are reported via the OpenTelemetry `Meter` created for your service. If no metric exporters are configured,

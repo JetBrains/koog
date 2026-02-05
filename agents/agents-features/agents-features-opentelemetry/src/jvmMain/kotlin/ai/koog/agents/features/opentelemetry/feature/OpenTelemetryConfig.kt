@@ -4,6 +4,8 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
+import ai.koog.agents.features.opentelemetry.metric.ConfiguredToolCallMapper
+import ai.koog.agents.features.opentelemetry.metric.DefaultToolCallMapper
 import ai.koog.agents.features.opentelemetry.metric.MetricFilter
 import ai.koog.agents.features.opentelemetry.metric.ToolCallMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -56,7 +58,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
          */
         val DEFAULT_METER_INTERVAL: Duration = Duration.ofSeconds(1)
 
-        private const val DEFAULT_TOOL_CALL_NAME: String = "DEFAULT"
+        private const val DEFAULT_TOOL_CALL_NAME: String = "fallback"
     }
 
     private val productProperties = run {
@@ -148,7 +150,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private val metricFilters = mutableListOf<MetricFilter>()
 
-    internal var toolCallMapper: ToolCallMapper? = null
+    internal var toolCallMapper: ToolCallMapper = DefaultToolCallMapper()
 
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
@@ -172,19 +174,21 @@ public class OpenTelemetryConfig : FeatureConfig() {
     }
 
     /**
-     * Adds a mapping configuration for metric attributes based on allowed tool call names.
-     * This mapping determines which tool calls are permitted and defines a default value
-     * for metrics associated with those calls.
+     * Configures restrictions on tool names used in OpenTelemetry telemetry data.
+     * This method allows specifying a set of allowed tool names and optionally defining
+     * a default tool name to use when a tool name is not in the allowed list.
      *
-     * @param allowedToolCallNames A set of tool call names that are allowed for this mapping configuration.
-     * @param defaultToolCallName The default metric name to use if no specific mapping is provided.
-     *                     If null, a predefined default metric name will be used.
+     * @param allowedToolCallNames A set of tool names that are permitted for use. Any tool name
+     *                             not in this set will be replaced by the default tool name.
+     * @param defaultToolCallName  The default tool name to use for tool names not present
+     *                             in the set of allowed tool call names. If not specified,
+     *                             a predefined default value is used.
      */
-    public fun addToolCallNamesMapping(
+    public fun restrictToolNameCardinality(
         allowedToolCallNames: Set<String>,
         defaultToolCallName: String? = null,
     ) {
-        toolCallMapper = ToolCallMapper(allowedToolCallNames, defaultToolCallName ?: DEFAULT_TOOL_CALL_NAME)
+        toolCallMapper = ConfiguredToolCallMapper(allowedToolCallNames, defaultToolCallName ?: DEFAULT_TOOL_CALL_NAME)
     }
 
     /**
