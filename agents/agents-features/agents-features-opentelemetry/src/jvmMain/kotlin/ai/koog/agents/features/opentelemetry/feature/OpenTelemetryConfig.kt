@@ -4,10 +4,10 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
-import ai.koog.agents.features.opentelemetry.metric.ConfiguredToolCallMapper
-import ai.koog.agents.features.opentelemetry.metric.DefaultToolCallMapper
+import ai.koog.agents.features.opentelemetry.metric.AllowlistToolNameMapper
 import ai.koog.agents.features.opentelemetry.metric.MetricFilter
-import ai.koog.agents.features.opentelemetry.metric.ToolCallMapper
+import ai.koog.agents.features.opentelemetry.metric.NoopToolNameMapper
+import ai.koog.agents.features.opentelemetry.metric.ToolNameMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -58,7 +58,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
          */
         val DEFAULT_METER_INTERVAL: Duration = Duration.ofSeconds(1)
 
-        private const val DEFAULT_TOOL_CALL_NAME: String = "fallback"
+        private const val FALLBACK_TOOL_NAME: String = "filtered"
     }
 
     private val productProperties = run {
@@ -150,7 +150,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private val metricFilters = mutableListOf<MetricFilter>()
 
-    internal var toolCallMapper: ToolCallMapper = DefaultToolCallMapper()
+    internal var toolNameMapper: ToolNameMapper = NoopToolNameMapper()
 
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
@@ -174,21 +174,17 @@ public class OpenTelemetryConfig : FeatureConfig() {
     }
 
     /**
-     * Configures restrictions on tool names used in OpenTelemetry telemetry data.
-     * This method allows specifying a set of allowed tool names and optionally defining
-     * a default tool name to use when a tool name is not in the allowed list.
+     * Restricts tool names in the attributes' metric and sets the fallback tool name when a tool is not allowed.
+     * Helps to manage cardinality of the metric.
      *
-     * @param allowedToolCallNames A set of tool names that are permitted for use. Any tool name
-     *                             not in this set will be replaced by the default tool name.
-     * @param defaultToolCallName  The default tool name to use for tool names not present
-     *                             in the set of allowed tool call names. If not specified,
-     *                             a predefined default value is used.
+     * @param allowedToolNames A set of allowed tool names
+     * @param fallbackToolName The fallback / default tool name if not in the allowed set
      */
     public fun restrictToolNameCardinality(
-        allowedToolCallNames: Set<String>,
-        defaultToolCallName: String? = null,
+        allowedToolNames: Set<String>,
+        fallbackToolName: String = FALLBACK_TOOL_NAME,
     ) {
-        toolCallMapper = ConfiguredToolCallMapper(allowedToolCallNames, defaultToolCallName ?: DEFAULT_TOOL_CALL_NAME)
+        toolNameMapper = AllowlistToolNameMapper(allowedToolNames, fallbackToolName)
     }
 
     /**

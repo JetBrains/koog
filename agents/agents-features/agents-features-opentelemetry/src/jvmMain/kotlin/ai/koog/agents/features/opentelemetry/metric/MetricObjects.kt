@@ -2,18 +2,18 @@ package ai.koog.agents.features.opentelemetry.metric
 
 internal data class MetricFilter(val metricName: String, val attributesKeysToRetain: Set<String>)
 
-internal interface ToolCallMapper {
+internal interface ToolNameMapper {
     fun map(toolName: String): String
 }
 
-internal class ConfiguredToolCallMapper(
-    val allowedToolCallNames: Set<String>,
-    val defaultToolCallName: String,
-) : ToolCallMapper {
+internal class AllowlistToolNameMapper(
+    val allowedToolNames: Set<String>,
+    val fallbackToolName: String,
+) : ToolNameMapper {
     override fun map(toolName: String) =
-        if (toolName in allowedToolCallNames) toolName else defaultToolCallName
+        if (toolName in allowedToolNames) toolName else fallbackToolName
 }
 
-internal class DefaultToolCallMapper : ToolCallMapper {
+internal class NoopToolNameMapper : ToolNameMapper {
     override fun map(toolName: String) = toolName
 }
