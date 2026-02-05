@@ -2,10 +2,9 @@ package ai.koog.agents.features.opentelemetry.metric
 
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
 import ai.koog.agents.features.opentelemetry.extension.getPositiveDurationSec
-import ai.koog.agents.features.opentelemetry.extension.put
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.Meter
 
 internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCallMapper? = null) {
@@ -19,11 +18,11 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
         private val logger = KotlinLogging.logger { }
     }
 
-    internal fun recordEvent(metricEvent: MetricEvent) = when (metricEvent) {
+    internal fun recordEvent(metricEvent: MetricEvent, isVerbose: Boolean) = when (metricEvent) {
         is LLMCallStarted -> handleLlmCallStarted(metricEvent)
-        is LLMCallEnded -> handleLlmCallEnded(metricEvent)
+        is LLMCallEnded -> handleLlmCallEnded(metricEvent, isVerbose)
         is ToolCallStarted -> handleToolCallStarted(metricEvent)
-        is ToolCallEnded -> handleToolCallCompleted(metricEvent)
+        is ToolCallEnded -> handleToolCallEnded(metricEvent, isVerbose)
         else -> {
             logger.warn { "Unknown metric event type: ${metricEvent::class.simpleName}" }
         }
@@ -33,7 +32,7 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
         metricEventStorage.startEvent(metricEvent)
     }
 
-    private fun handleLlmCallEnded(metricEvent: LLMCallEnded) =
+    private fun handleLlmCallEnded(metricEvent: LLMCallEnded, isVerbose: Boolean) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
             val inputTokenSpend = endedEvent.inputTokenSpend
             val outputTokenSpend = endedEvent.outputTokenSpend
@@ -41,34 +40,32 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
             inputTokenSpend?.let { inputTokens ->
                 tokensCounter.add(
                     inputTokens,
-                    Attributes.builder()
-                        .put(
-                            GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)
-                        )
-                        .put(GenAIAttributes.Provider.Name(metricEvent.modelProvider))
-                        .put(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT))
-                        .put(GenAIAttributes.Response.Model(metricEvent.model))
-                        .build()
+                    listOf(
+                        GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
+                        GenAIAttributes.Provider.Name(metricEvent.modelProvider),
+                        GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT),
+                        GenAIAttributes.Response.Model(metricEvent.model)
+                    ).toSdkAttributes(isVerbose)
                 )
             }
             outputTokenSpend?.let { outputTokens ->
                 tokensCounter.add(
                     outputTokens,
-                    Attributes.builder()
-                        .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
-                        .put(GenAIAttributes.Provider.Name(metricEvent.modelProvider))
-                        .put(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT))
-                        .put(GenAIAttributes.Response.Model(metricEvent.model))
-                        .build()
+                    listOf(
+                        GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
+                        GenAIAttributes.Provider.Name(metricEvent.modelProvider),
+                        GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT),
+                        GenAIAttributes.Response.Model(metricEvent.model)
+                    ).toSdkAttributes(isVerbose)
                 )
             }
             operationDurationHistogram.record(
                 startedEvent.getPositiveDurationSec(endedEvent),
-                Attributes.builder()
-                    .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
-                    .put(GenAIAttributes.Provider.Name(metricEvent.modelProvider))
-                    .put(GenAIAttributes.Response.Model(metricEvent.model))
-                    .build()
+                listOf(
+                    GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
+                    GenAIAttributes.Provider.Name(metricEvent.modelProvider),
+                    GenAIAttributes.Response.Model(metricEvent.model)
+                ).toSdkAttributes(isVerbose)
             )
         }
 
@@ -76,7 +73,7 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
         metricEventStorage.startEvent(metricEvent)
     }
 
-    private fun handleToolCallCompleted(metricEvent: ToolCallEnded) =
+    private fun handleToolCallEnded(metricEvent: ToolCallEnded, isVerbose: Boolean) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
             val toolCallName = if (toolCallMapper == null) {
                 metricEvent.toolName
@@ -95,20 +92,20 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
 
             operationDurationHistogram.record(
                 startedEvent.getPositiveDurationSec(endedEvent),
-                Attributes.builder()
-                    .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                    .put(GenAIAttributes.Tool.Name(toolCallName))
-                    .put(KoogAttributes.Koog.Tool.Call.Status(status))
-                    .build()
+                listOf(
+                    GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
+                    GenAIAttributes.Tool.Name(toolCallName),
+                    KoogAttributes.Koog.Tool.Call.Status(status)
+                ).toSdkAttributes(isVerbose)
             )
 
             toolCallsCounter.add(
                 1,
-                Attributes.builder()
-                    .put(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
-                    .put(GenAIAttributes.Tool.Name(toolCallName))
-                    .put(KoogAttributes.Koog.Tool.Call.Status(status))
-                    .build()
+                listOf(
+                    GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
+                    GenAIAttributes.Tool.Name(toolCallName),
+                    KoogAttributes.Koog.Tool.Call.Status(status)
+                ).toSdkAttributes(isVerbose)
             )
         }
 }
