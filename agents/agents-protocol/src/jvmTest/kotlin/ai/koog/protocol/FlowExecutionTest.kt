@@ -9,15 +9,18 @@ import ai.koog.agents.ext.agent.CriticResultFromLLM
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.agents.task.FlowTaskAgentParameters
 import ai.koog.protocol.flow.KoogFlow
 import ai.koog.protocol.mock.TestMcpServer
 import ai.koog.protocol.parser.FlowJsonConfigParser
 import ai.koog.protocol.transition.FlowTransition
 import ai.koog.protocol.transition.FlowTransitionCondition
 import ai.koog.protocol.flow.ConditionOperationKind
+import ai.koog.protocol.flow.FlowUtil.getFirstAgent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.serializer
@@ -67,6 +70,44 @@ class FlowExecutionTest : FlowTestBase() {
                 throw UnsupportedOperationException("Mock tool should not be executed directly")
             }
         }
+    }
+
+    @Test
+    fun testRealAgent(): Unit = runBlocking {
+        val jsonContent = readFlow("random_koog_agent_flow.json")
+
+        val parser = FlowJsonConfigParser()
+        val config = parser.parse(jsonContent)
+
+        println("Parsed FlowConfig:")
+        println("  ID: ${config.id}")
+        println("  Version: ${config.version}")
+        println("  Agents: ${config.agents.size}")
+        config.agents.forEach { agent ->
+            println("    - ${agent.name} (${agent.type})")
+        }
+        println("  Transitions: ${config.transitions.size}")
+        config.transitions.forEach { transition ->
+            println("    - ${transition.from} -> ${transition.to}")
+        }
+
+        // Create a SimpleFlow from the config and run it
+        println("\nCreating a flow and running...")
+        val flow = KoogFlow(
+            id = config.id ?: "simple-flow",
+            agents = config.agents,
+            tools = config.tools,
+            transitions = config.transitions
+        )
+
+        val initialInput =
+            (getFirstAgent(agents = config.agents, transitions = config.transitions).parameters as? FlowTaskAgentParameters)?.
+            task?.let {
+                FlowAgentInput.InputString(it)
+            } ?: error("Could not find task input for first agent")
+
+        val result = flow.run(initialInput)
+        println("Flow execution result: $result")
     }
 
     @Test
