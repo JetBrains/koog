@@ -1,44 +1,35 @@
 package ai.koog.agents.features.opentelemetry.metric
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.write
+import java.util.concurrent.ConcurrentHashMap
 
 internal class MetricEventStorage {
-    private val storage = mutableMapOf<String, MetricEvent>()
-    private val lock = ReentrantReadWriteLock()
+    private val storage = ConcurrentHashMap<String, MetricEvent>()
 
     companion object {
         private val logger = KotlinLogging.logger { }
     }
 
     internal fun startEvent(metricEvent: MetricEvent): Boolean {
-        val id = metricEvent.id
+        val prevValue = storage.putIfAbsent(metricEvent.id, metricEvent)
+        if (prevValue == null) {
+            logger.warn { "Metric Event with id=${metricEvent.id} already exists" }
 
-        lock.write {
-            if (storage.containsKey(id)) {
-                logger.warn { "Metric event with id $id already exists, it could not be added to the storage" }
-                return false
-            }
-
-            storage[id] = metricEvent
-            return true
+            return false
         }
+
+        return true
     }
 
     private fun getPairedEvent(eventId: String): MetricEvent? {
-        lock.write {
-            val metricEvent = storage[eventId]
+        val prevValue = storage.remove(eventId)
+        if (prevValue == null) {
+            logger.warn { "Metric Event with id=$eventId does not exist" }
 
-            if (metricEvent == null) {
-                logger.warn { "Metric Event with id=$eventId does not exist" }
-
-                return null
-            }
-
-            storage.remove(eventId)
-            return metricEvent
+            return null
         }
+
+        return prevValue
     }
 
     private fun <T : MetricEvent> endEvent(closingEvent: MetricEvent): T? {
