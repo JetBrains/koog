@@ -16,7 +16,7 @@ import kotlin.reflect.jvm.javaField
  * @return A list of `LLModel` instances extracted from the public properties of the provided object
  *   and its nested objects.
  */
-public fun allModelsIn(obj: Any): List<LLModel> {
+internal fun allModelsIn(obj: Any): List<LLModel> {
     val immediateModels = (obj::class.memberProperties + obj::class.memberExtensionProperties)
         .filter { it.visibility == KVisibility.PUBLIC }
         .filter { it.returnType == LLModel::class.createType() }
@@ -49,6 +49,6 @@ public fun allModelsIn(obj: Any): List<LLModel> {
  *
  * @return A list of `LLModel` instances representing all models defined in this `LLModelDefinitions`.
  */
-public fun LLModelDefinitions.list(customModels: List<LLModel> = emptyList()): List<LLModel> {
+internal fun LLModelDefinitions.list(customModels: List<LLModel> = emptyList()): List<LLModel> {
     return allModelsIn(this) + customModels
 }
