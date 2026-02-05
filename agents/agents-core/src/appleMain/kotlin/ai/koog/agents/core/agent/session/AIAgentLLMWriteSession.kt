@@ -18,8 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlin.reflect.KClass
 
-@Suppress("DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
-public actual class AIAgentLLMWriteSession internal actual constructor(
+public actual class AIAgentLLMWriteSession internal constructor(
     @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl
 ) : AIAgentLLMWriteSessionAPI by delegate {
 

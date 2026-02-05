@@ -31,6 +31,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -452,5 +453,39 @@ class AIAgentLLMWriteSessionTest {
         val lastMessage = session.prompt.messages.last()
         assertIs<Message.Tool.Call>(lastMessage)
         assertContains(lastMessage.content, "first")
+    }
+
+    @Test
+    fun testRequestLLMForceOneToolUpdatesMessageHistoryCorrectly() = runTest {
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            // Simulate model returning multiple tool calls (parallel tool calling)
+            mockLLMMixedResponse(
+                toolCalls = listOf(
+                    testTool to TestTool.Args("tool"),
+                ),
+                responses = emptyList()
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val response = session.requestLLMForceOneTool(testTool)
+
+        // Should return the tool call
+        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
+        assertEquals("test-tool", response.tool)
+
+        // The tool call should be added to the history
+        val lastMessage = session.prompt.messages.last()
+        assertIs<Message.Tool.Call>(lastMessage)
+        assertContains(lastMessage.content, "tool")
+
+        assertNotEquals(
+            lastMessage,
+            session.prompt.messages.dropLast(1).last(),
+            "Tool call should not be added to the history twice"
+        )
     }
 }

@@ -30,8 +30,8 @@ public actual class AIAgentLLMReadSession actual constructor(
     prompt: Prompt,
     model: LLModel,
     responseProcessor: ResponseProcessor?,
-    config: AIAgentConfig,
-) : AIAgentLLMSession(executor, tools, prompt, model, responseProcessor, config) {
+    private val config: AIAgentConfig,
+) : AIAgentLLMSessionAPI by AIAgentLLMReadSessionImpl(executor, tools, prompt, model, responseProcessor, config) {
 
     /**
      * Executes multiple tasks or requests associated with the given `Prompt` and `ToolDescriptor` list.

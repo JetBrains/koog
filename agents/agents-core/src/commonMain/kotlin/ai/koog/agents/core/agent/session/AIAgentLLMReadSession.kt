@@ -3,7 +3,6 @@
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
@@ -40,42 +39,11 @@ public expect class AIAgentLLMReadSession internal constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-) : AIAgentLLMSession {
-    override val config: AIAgentConfig
+) : AIAgentLLMSessionAPI {
     override val prompt: Prompt
     override val tools: List<ToolDescriptor>
     override val model: LLModel
     override val responseProcessor: ResponseProcessor?
-
-    @InternalAgentsApi
-    override var isActive: Boolean
-
-    @InternalAgentsApi
-    override fun validateSession()
-
-    @InternalAgentsApi
-    override fun preparePrompt(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): Prompt
-
-    @InternalAgentsApi
-    override fun executeStreaming(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): Flow<StreamFrame>
-
-    @InternalAgentsApi
-    override suspend fun executeMultiple(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): List<Message.Response>
-
-    @InternalAgentsApi
-    override suspend fun executeSingle(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): Message.Response
 
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response>
     override suspend fun requestLLMWithoutTools(): Message.Response
@@ -100,4 +68,6 @@ public expect class AIAgentLLMReadSession internal constructor(
     ): StructuredResponse<T>
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice>
+
+    override fun close()
 }

@@ -1,10 +1,8 @@
-@file:OptIn(InternalAgentsApi::class)
 @file:Suppress("MissingKDocForPublicAPI")
 
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.ActiveProperty
@@ -28,51 +26,45 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 
 @OptIn(ExperimentalStdlibApi::class)
-public open class AIAgentLLMSession(
+internal class AIAgentLLMReadSessionImpl(
     private val executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     prompt: Prompt,
     model: LLModel,
     responseProcessor: ResponseProcessor?,
-    public open override val config: AIAgentConfig,
+    private val config: AIAgentConfig,
+    private var isActive: Boolean = true
 ) : AIAgentLLMSessionAPI {
-    public open override val prompt: Prompt by ActiveProperty(prompt) { isActive }
+    override val prompt: Prompt by ActiveProperty(prompt) { isActive }
 
-    public open override val tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
+    override val tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
 
-    public open override val model: LLModel by ActiveProperty(model) { isActive }
+    override val model: LLModel by ActiveProperty(model) { isActive }
 
-    public open override val responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
+    override val responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
 
-    public open override var isActive: Boolean = true
-
-    @InternalAgentsApi
-    public open override fun validateSession() {
+    private fun validateSession() {
         check(isActive) { "Cannot use session after it was closed" }
     }
 
-    @InternalAgentsApi
-    public open override fun preparePrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
+    private fun preparePrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
         return config.missingToolsConversionStrategy.convertPrompt(prompt, tools)
     }
 
-    @InternalAgentsApi
-    public open override fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame> {
+    private fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame> {
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeStreaming(preparedPrompt, model, tools)
     }
 
-    @InternalAgentsApi
-    public open override suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+    private suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeProcessed(preparedPrompt, model, tools, responseProcessor)
     }
 
-    @InternalAgentsApi
-    public open override suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =
+    private suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =
         executeMultiple(prompt, tools).first()
 
-    public open override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
+    override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
         validateSession()
 
         val promptWithDisabledTools = prompt
@@ -82,7 +74,7 @@ public open class AIAgentLLMSession(
         return executeMultiple(promptWithDisabledTools, emptyList())
     }
 
-    public open override suspend fun requestLLMWithoutTools(): Message.Response {
+    override suspend fun requestLLMWithoutTools(): Message.Response {
         validateSession()
         /*
             Not all LLM providers support a tool list when the tool choice is set to "none", so we are rewriting all tool messages to regular messages,
@@ -95,7 +87,7 @@ public open class AIAgentLLMSession(
         return executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
     }
 
-    public open override suspend fun requestLLMOnlyCallingTools(): Message.Response {
+    override suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Required
@@ -108,7 +100,7 @@ public open class AIAgentLLMSession(
             ?: responses.first { it is Message.Assistant }
     }
 
-    public open override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
+    override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Required
@@ -116,7 +108,7 @@ public open class AIAgentLLMSession(
         return executeMultiple(promptWithOnlyCallingTools, tools)
     }
 
-    public open override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
+    override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
         val promptWithForcingOneTool = prompt.withUpdatedParams {
@@ -125,32 +117,32 @@ public open class AIAgentLLMSession(
         return executeSingle(promptWithForcingOneTool, tools)
     }
 
-    public open override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
+    override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
         return requestLLMForceOneTool(tool.descriptor)
     }
 
-    public open override suspend fun requestLLM(): Message.Response {
+    override suspend fun requestLLM(): Message.Response {
         validateSession()
         return executeMultiple(prompt, tools).first { it !is Message.Reasoning }
     }
 
-    public open override suspend fun requestLLMStreaming(): Flow<StreamFrame> {
+    override suspend fun requestLLMStreaming(): Flow<StreamFrame> {
         validateSession()
         return executeStreaming(prompt, tools)
     }
 
-    public open override suspend fun requestModeration(moderatingModel: LLModel?): ModerationResult {
+    override suspend fun requestModeration(moderatingModel: LLModel?): ModerationResult {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, emptyList())
         return executor.moderate(preparedPrompt, moderatingModel ?: model)
     }
 
-    public open override suspend fun requestLLMMultiple(): List<Message.Response> {
+    override suspend fun requestLLMMultiple(): List<Message.Response> {
         validateSession()
         return executeMultiple(prompt, tools)
     }
 
-    public open override suspend fun <T> requestLLMStructured(
+    override suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
     ): Result<StructuredResponse<T>> {
         validateSession()
@@ -164,7 +156,7 @@ public open class AIAgentLLMSession(
         )
     }
 
-    public open override suspend fun <T> requestLLMStructured(
+    override suspend fun <T> requestLLMStructured(
         serializer: KSerializer<T>,
         examples: List<T>,
         fixingParser: StructureFixingParser?
@@ -193,7 +185,7 @@ public open class AIAgentLLMSession(
      *                     Defaults to null if no fixing parser is provided.
      * @return A [Result] containing a [StructuredResponse] of type [T], which includes the structured data or error details.
      */
-    public suspend inline fun <reified T> requestLLMStructured(
+    suspend inline fun <reified T> requestLLMStructured(
         examples: List<T> = emptyList(),
         fixingParser: StructureFixingParser? = null
     ): Result<StructuredResponse<T>> = requestLLMStructured(
@@ -202,18 +194,18 @@ public open class AIAgentLLMSession(
         fixingParser = fixingParser,
     )
 
-    public open override suspend fun <T> parseResponseToStructuredResponse(
+    override suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>
     ): StructuredResponse<T> = executor.parseResponseToStructuredResponse(response, config, model)
 
-    public open override suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
+    override suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeMultipleChoices(preparedPrompt, model, tools)
     }
 
-    final override fun close() {
+    override fun close() {
         isActive = false
     }
 }

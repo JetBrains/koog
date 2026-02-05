@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutorService
 import kotlin.reflect.KClass
 
 @Suppress("DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
-public actual class AIAgentLLMWriteSession internal actual constructor(
+public actual class AIAgentLLMWriteSession internal constructor(
     @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl
 ) : AIAgentLLMWriteSessionAPI by delegate {
 
@@ -50,50 +50,8 @@ public actual class AIAgentLLMWriteSession internal actual constructor(
         )
     )
 
-    /**
-     * Executes multiple tasks or requests associated with the given `Prompt` and `ToolDescriptor` list.
-     *
-     * This method allows parallel execution of provided tools based on the given prompt,
-     * utilizing an optional `ExecutorService` for concurrency management.
-     *
-     * @param prompt the prompt to be used for the task execution
-     * @param tools the list of tools to be executed in conjunction with the prompt
-     * @param executorService an optional executor service for managing parallel execution;
-     *        if null, the default dispatcher is used
-     * @return a list of `Message.Response` objects representing the results of the executed tasks
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun executeMultiple(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>,
-        executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runOnStrategyDispatcher(executorService) {
-        executeMultiple(prompt, tools)
-    }
-
-    /**
-     * Executes a single task or request associated with the given `Prompt` and `ToolDescriptor` list.
-     *
-     * This method processes the provided tools based on the given prompt, utilizing an optional
-     * `ExecutorService` for managing execution context or concurrency.
-     *
-     * @param prompt the prompt to be used for the task execution
-     * @param tools the list of tools to be executed in conjunction with the prompt
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return a `Message.Response` object representing the result of the executed task
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun executeSingle(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>,
-        executorService: ExecutorService? = null
-    ): Message.Response =
-        config.runOnStrategyDispatcher(executorService) {
-            executeSingle(prompt, tools)
-        }
+    private val config
+        get() = delegate.config
 
     /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.

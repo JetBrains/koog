@@ -36,54 +36,39 @@ import kotlin.reflect.KClass
  * LLM requests, managing tools, and customizing prompts dynamically within a specific
  * session context.
  *
- * @property environment The agent environment that provides the session with tool execution
- * and error handling capabilities.
- * @property toolRegistry The registry containing tools available for use within the session.
- * @property clock The clock used for message timestamps
+ * @param environment The environment in which the AI agent operates, providing context or resources.
+ * @param executor The `PromptExecutor` responsible for executing prompts and managing interactions.
+ * @param tools A list of tool descriptors that define the behavior and capabilities of the tools available to the session.
+ * @param toolRegistry The registry maintaining a collection of available tools for the session.
+ * @param prompt The initial prompt that sets the context or goal for the session.
+ * @param model The language model (`LLModel`) used by the session for generating responses and actions.
+ * @param responseProcessor An optional processor for handling and transforming model responses, or null if not required.
+ * @param config Configuration settings (`AIAgentConfig`) that define session-specific parameters and behavior.
+ * @param clock The clock used to track time-related operations within the session.
  */
 public expect class AIAgentLLMWriteSession internal constructor(
-    delegate: AIAgentLLMWriteSessionImpl
+    environment: AIAgentEnvironment,
+    executor: PromptExecutor,
+    tools: List<ToolDescriptor>,
+    toolRegistry: ToolRegistry,
+    prompt: Prompt,
+    model: LLModel,
+    responseProcessor: ResponseProcessor?,
+    config: AIAgentConfig,
+    clock: Clock
 ) : AIAgentLLMWriteSessionAPI {
-
-    /**
-     * Creates an instance of `AIAgentLLMWriteSession` with the provided dependencies and configuration.
-     *
-     * @param environment The environment in which the AI agent operates, providing context or resources.
-     * @param executor The `PromptExecutor` responsible for executing prompts and managing interactions.
-     * @param tools A list of tool descriptors that define the behavior and capabilities of the tools available to the session.
-     * @param toolRegistry The registry maintaining a collection of available tools for the session.
-     * @param prompt The initial prompt that sets the context or goal for the session.
-     * @param model The language model (`LLModel`) used by the session for generating responses and actions.
-     * @param responseProcessor An optional processor for handling and transforming model responses, or null if not required.
-     * @param config Configuration settings (`AIAgentConfig`) that define session-specific parameters and behavior.
-     * @param clock The clock used to track time-related operations within the session.
-     */
-    public constructor(
-        environment: AIAgentEnvironment,
-        executor: PromptExecutor,
-        tools: List<ToolDescriptor>,
-        toolRegistry: ToolRegistry,
-        prompt: Prompt,
-        model: LLModel,
-        responseProcessor: ResponseProcessor?,
-        config: AIAgentConfig,
-        clock: Clock
-    )
 
     @PublishedApi
     internal val delegate: AIAgentLLMWriteSessionImpl
 
     @get:JvmName("environment")
-    @InternalAgentsApi
     public override val environment: AIAgentEnvironment
 
     @get:JvmName("toolRegistry")
-    @InternalAgentsApi
     public override val toolRegistry: ToolRegistry
 
     @get:JvmName("clock")
     public override val clock: Clock
-    override val config: AIAgentConfig
 
     override var prompt: Prompt
 
@@ -91,41 +76,10 @@ public expect class AIAgentLLMWriteSession internal constructor(
 
     override var model: LLModel
 
-    @InternalAgentsApi
-    override var isActive: Boolean
-
     override var responseProcessor: ResponseProcessor?
-
-    @InternalAgentsApi
-    override fun validateSession()
-
-    @InternalAgentsApi
-    override fun preparePrompt(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): Prompt
-
-    @InternalAgentsApi
-    override fun executeStreaming(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): Flow<StreamFrame>
-
-    @InternalAgentsApi
-    override suspend fun executeMultiple(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): List<Message.Response>
-
-    @InternalAgentsApi
-    override suspend fun executeSingle(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): Message.Response
 
     public override fun <TArgs, TResult> findTool(tool: Tool<TArgs, TResult>): SafeTool<TArgs, TResult>
 
-    @Suppress("UNCHECKED_CAST")
     public override fun <TArgs, TResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult>
 
     public override fun appendPrompt(body: PromptBuilder.() -> Unit)
@@ -137,7 +91,7 @@ public expect class AIAgentLLMWriteSession internal constructor(
 
     public override fun changeModel(newModel: LLModel)
 
-    public override fun changeLLMParams(newParams: LLMParams): Unit
+    public override fun changeLLMParams(newParams: LLMParams)
 
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response>
 
@@ -190,9 +144,9 @@ public expect class AIAgentLLMWriteSession internal constructor(
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice>
 
-    final override fun close()
+    override fun close()
 
-    public open override suspend fun requestLLMStreaming(definition: StructureDefinition?): Flow<StreamFrame>
+    public override suspend fun requestLLMStreaming(definition: StructureDefinition?): Flow<StreamFrame>
 
     /**
      * Transforms a flow of arguments into a flow of results by asynchronously executing the given tool in parallel.

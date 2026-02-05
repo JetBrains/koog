@@ -1,5 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -26,12 +24,7 @@ import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 
 /**
- * An API of the [AIAgentLLMWriteSession]
- *
- * @property environment The agent environment that provides the session with tool execution
- * and error handling capabilities.
- * @property toolRegistry The registry containing tools available for use within the session.
- * @property clock The clock used for message timestamps
+ * API of the [AIAgentLLMWriteSession]
  */
 public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
     /**
@@ -116,7 +109,6 @@ public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
      * @return a SafeTool instance wrapping the found tool
      * @throws IllegalArgumentException if no tool of the specified class is found in the registry
      */
-    @Suppress("UNCHECKED_CAST")
     public fun <TArgs, TResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult>
 
     /**
@@ -159,7 +151,7 @@ public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
      *
      * @param newParams The new set of LLMParams to replace the existing parameters in the prompt.
      */
-    public fun changeLLMParams(newParams: LLMParams): Unit
+    public fun changeLLMParams(newParams: LLMParams)
 
     /**
      * Sends a request to the language model without utilizing any tools, returns multiple responses,
