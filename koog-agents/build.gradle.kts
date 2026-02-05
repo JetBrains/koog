@@ -1,4 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 group = rootProject.group
 version = rootProject.version
@@ -87,14 +89,22 @@ val included = setOf(
 )
 
 kotlin {
+    val projects = rootProject.subprojects
+        .filterNot { it.path in excluded }
+        .filter { it.buildFile.exists() }
+    val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
+
+    targets.withType<KotlinNativeTarget>().configureEach {
+        binaries.withType<Framework>().configureEach {
+            projectsPaths.forEach {
+                export(project(it))
+            }
+        }
+    }
+
     sourceSets {
         commonMain {
             dependencies {
-                val projects = rootProject.subprojects
-                    .filterNot { it.path in excluded }
-                    .filter { it.buildFile.exists() }
-
-                val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 
                 val obsoleteIncluded = included - projectsPaths
                 require(obsoleteIncluded.isEmpty()) {

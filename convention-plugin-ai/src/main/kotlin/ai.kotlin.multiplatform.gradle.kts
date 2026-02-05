@@ -4,6 +4,7 @@ import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import ai.koog.gradle.tests.configureTests
 import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     kotlin("multiplatform")
@@ -17,13 +18,22 @@ plugins {
 kotlin {
     // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
     // Tier 1
-    iosSimulatorArm64()
-    iosX64()
+    val iosSimulatorArm64 = iosSimulatorArm64()
+    val iosArm64 = iosArm64()
 
     // Tier 2
-    iosArm64()
 
     // Tier 3
+    val iosX64 = iosX64()
+
+    val xcf = XCFramework(project.name)
+    listOf(iosSimulatorArm64, iosArm64, iosX64).forEach {
+        it.binaries.framework {
+            baseName = project.name
+            binaryOption("bundleId", "ai.koog.${project.name}")
+            xcf.add(this)
+        }
+    }
 
     // Android
     androidTarget()
