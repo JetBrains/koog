@@ -111,7 +111,8 @@ class MetricCollectorTest {
                 timestamp = timestampStart,
                 model = model,
                 modelProvider = model.provider
-            )
+            ),
+            true
         )
 
         assertEquals(countersAmount, meter.counterValues.size)
@@ -125,7 +126,8 @@ class MetricCollectorTest {
                 modelProvider = model.provider,
                 inputTokenSpend = inputTokenSpend,
                 outputTokenSpend = outputTokenSpend
-            )
+            ),
+            true
         )
 
         assertEquals(countersAmount + 2, meter.counterValues.size)
@@ -208,7 +210,8 @@ class MetricCollectorTest {
                     id = eventId,
                     timestamp = timestampStart,
                     toolName = toolCallName,
-                )
+                ),
+                true
             )
 
             assertEquals(countersAmount, meter.counterValues.size)
@@ -220,7 +223,8 @@ class MetricCollectorTest {
                     timestamp = timestampEnd,
                     toolName = toolCallName,
                     status = status
-                )
+                ),
+                true
             )
 
             assertEquals(countersAmount + 1, meter.counterValues.size)
