@@ -10,11 +10,19 @@ dokka {
             footerMessage = "Copyright © 2000-2025 JetBrains s.r.o."
         }
 
-        sourceLink {
-            localDirectory = rootDir
-            remoteUrl("https://github.com/JetBrains/koog/tree/main")
-            remoteLineSuffix = "#L"
-        }
+            sourceLink {
+                localDirectory = rootDir
+                // Point to git tag for releases, develop branch for snapshots
+                val versionString = project.version.toString()
+                val sourceRef = if (versionString.contains("-")) {
+                    // most likely source ref is smth like 0.7.0-SNAPSHOT
+                    "develop"
+                } else {
+                    versionString
+                }
+                remoteUrl("https://github.com/JetBrains/koog/tree/$sourceRef")
+                remoteLineSuffix = "#L"
+            }
 
         externalDocumentationLinks.register("ktor-client") {
             url("https://api.ktor.io/ktor-client/")
