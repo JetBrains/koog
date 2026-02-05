@@ -14,7 +14,7 @@ The tool result is returned if the tool registry is provided to the agent.
 
 If your goal is to build a simple agent to experiment with, you can provide only a prompt executor and LLM when creating it.
 But if you want more flexibility and customization, you can pass optional parameters to configure the agent.
-To learn more about configuration options, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent/-a-i-agent.html).
+To learn more about configuration options, see [API reference](api:agents-core::ai.koog.agents.core.agent.AIAgent).
 
 ## Prerequisites
 

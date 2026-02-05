@@ -193,6 +193,29 @@ API reference documentation is generated using [Dokka](https://github.com/Kotlin
 
 The generated API documentation is deployed to [https://api.koog.ai/](https://api.koog.ai/).
 
+#### Links to API documentation
+
+Koog documentation also supports custom API reference link processing that lets you link to specific elements of the
+Dokka-generated API reference hosted at [api.koog.ai](https://api.koog.ai). This lets you use the element's FQDN to link
+to its API reference page, instead of having to manually provide the full link.
+
+To add an API reference link, use the following link format:
+
+```markdown
+[Link text](api:module-name::package-name.declaration)
+```
+
+Here is an example of an actual link to the `Tokenizer` interface:
+
+```markdown
+[Tokenizer](api:prompt-tokenizer::ai.koog.prompt.tokenizer.Tokenizer)
+```
+
+Once processed by mkdocs, the link should render as a regular link to the API reference page.
+
+!!! note
+The processor will only render links that already exist in the API reference. Links to locally generated Dokka API reference pages that are not yet available on [api.koog.ai](https://api.koog.ai) will not be processed.
+
 ## Prompts
 
 In the [prompt](./prompt) directory, prompting guidelines with extensions for popular modules are stored. These guidelines help users create effective prompts for different LLM models and use cases.

@@ -429,9 +429,9 @@ listOf(clientJob).joinAll()
 
 The Tracing feature follows a modular architecture with these key components:
 
-1. [Tracing](https://api.koog.ai/agents/agents-features/agents-features-trace/ai.koog.agents.features.tracing.feature/-tracing/index.html): the main feature class that intercepts events in the agent pipeline.
-2. [TraceFeatureConfig](https://api.koog.ai/agents/agents-features/agents-features-trace/ai.koog.agents.features.tracing.feature/-trace-feature-config/index.html): configuration class for customizing feature behavior.
+1. [Tracing](api:agents-features-trace::ai.koog.agents.features.tracing.feature.Tracing): the main feature class that intercepts events in the agent pipeline.
+2. [TraceFeatureConfig](api:agents-features-trace::ai.koog.agents.features.tracing.feature.TraceFeatureConfig): configuration class for customizing feature behavior.
 3. Message Processors: components that process and output trace events:
-    - [TraceFeatureMessageLogWriter](https://api.koog.ai/agents/agents-features/agents-features-trace/ai.koog.agents.features.tracing.writer/-trace-feature-message-log-writer/index.html): writes trace events to a logger.
-    - [TraceFeatureMessageFileWriter](https://api.koog.ai/agents/agents-features/agents-features-trace/ai.koog.agents.features.tracing.writer/-trace-feature-message-file-writer/index.html): writes trace events to a file.
-    - [TraceFeatureMessageRemoteWriter](https://api.koog.ai/agents/agents-features/agents-features-trace/ai.koog.agents.features.tracing.writer/-trace-feature-message-remote-writer/index.html): sends trace events to a remote server.
+    - [TraceFeatureMessageLogWriter](api:agents-features-trace::ai.koog.agents.features.tracing.writer.TraceFeatureMessageLogWriter): writes trace events to a logger.
+    - [TraceFeatureMessageFileWriter](api:agents-features-trace::ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter): writes trace events to a file.
+    - [TraceFeatureMessageRemoteWriter](api:agents-features-trace::ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriter): sends trace events to a remote server.

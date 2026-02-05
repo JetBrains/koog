@@ -50,7 +50,7 @@ The `+` operator adds text content to the user message along with the attachment
 
 ### Custom-configured attachments
 
-The [`ContentPart`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/index.html) interface
+The [`ContentPart`](api:prompt-model::ai.koog.prompt.message.ContentPart) interface
 lets you configure parameters for each attachment individually.
 
 All attachments implement the `ContentPart.Attachment` interface.
@@ -86,16 +86,16 @@ user {
 
 Koog provides the following specialized classes for each media type that implement the `ContentPart.Attachment` interface:
 
-- [`ContentPart.Image`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-image/index.html): image attachments, such as JPG or PNG files.
-- [`ContentPart.Audio`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-audio/index.html): audio attachments, such as MP3 or WAV files.
-- [`ContentPart.Video`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-video/index.html): video attachments, such as MP4 or AVI files.
-- [`ContentPart.File`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-file/index.html): file attachments, such as PDF or TXT files.
+- [`ContentPart.Image`](api:prompt-model::ai.koog.prompt.message.ContentPart.Image): image attachments, such as JPG or PNG files.
+- [`ContentPart.Audio`](api:prompt-model::ai.koog.prompt.message.ContentPart.Audio): audio attachments, such as MP3 or WAV files.
+- [`ContentPart.Video`](api:prompt-model::ai.koog.prompt.message.ContentPart.Video): video attachments, such as MP4 or AVI files.
+- [`ContentPart.File`](api:prompt-model::ai.koog.prompt.message.ContentPart.File): file attachments, such as PDF or TXT files.
 
 All `ContentPart.Attachment` types accept the following parameters:
 
 | Name       | Data type                                                                                                          | Required | Description                                                                                                                                                                                                                             |
 |------------|--------------------------------------------------------------------------------------------------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `content`  | [AttachmentContent](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/index.html) | Yes      | The source of the provided file content.                                                                                                                                                                                                |
+| `content`  | [AttachmentContent](api:prompt-model::ai.koog.prompt.message.AttachmentContent) | Yes      | The source of the provided file content.                                                                                                                                                                                                |
 | `format`   | String                                                                                                             | Yes      | The format of the provided file. For example, `png`.                                                                                                                                                                                    |
 | `mimeType` | String                                                                                                             | Only for `ContentPart.File`      | The MIME Type of the provided file.<br/>For `ContentPart.Image`, `ContentPart.Audio`, and `ContentPart.Video`, it defaults to `<type>/<format>` (for example, `image/png`).<br/>For `ContentPart.File`, it must be explicitly provided. |
 | `fileName` | String?                                                                                                            | No       | The name of the provided file including the extension. For example, `screenshot.png`.                                                                                                                                                   |
@@ -104,21 +104,21 @@ All `ContentPart.Attachment` types accept the following parameters:
 
 Implementations of the AttachmentContent interface define the type and source of content that is provided as input to the LLM:
 
-- [`AttachmentContent.URL`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-u-r-l/index.html) defines the URL of the provided content:
+- [`AttachmentContent.URL`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.URL) defines the URL of the provided content:
     ```kotlin
     AttachmentContent.URL("https://example.com/image.png")
     ```
-- [`AttachmentContent.Binary.Bytes`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html) defines the file content as a byte array:
+- [`AttachmentContent.Binary.Bytes`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a byte array:
     ```kotlin
     AttachmentContent.Binary.Bytes(byteArrayOf(/* ... */))
     ```
 
-- [`AttachmentContent.Binary.Base64`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html) defines the file content as a Base64-encoded string containing file data:
+- [`AttachmentContent.Binary.Base64`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a Base64-encoded string containing file data:
     ```kotlin
     AttachmentContent.Binary.Base64("iVBORw0KGgoAAAANS...")
     ```
 
-- [`AttachmentContent.PlainText`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-plain-text/index.html) defines the file content as plain text (for [`ContentPart.File`](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-content-part/-file/index.html) only):
+- [`AttachmentContent.PlainText`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.PlainText) defines the file content as plain text (for [`ContentPart.File`](api:prompt-model::ai.koog.prompt.message.ContentPart.File) only):
     ```kotlin
     AttachmentContent.PlainText("This is the file content.")
     ```
