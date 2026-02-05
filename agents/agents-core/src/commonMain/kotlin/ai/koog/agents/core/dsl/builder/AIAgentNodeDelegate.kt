@@ -3,6 +3,7 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.utils.Some
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
@@ -38,9 +39,11 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  * @param Output The type of output data the delegated node will produce.
  * @constructor Initializes the delegate with the provided node name and builder.
  * @param name The optional name of the node. If not provided, the name will be derived from the
- * @param instruction Optional instruction subject to prompt optimization. When non-null, the node is subject to
- *  * MIPRO-styleo ptimization.
- * property to which the delegate is applied.
+ *  property to which the delegate is applied.
+ * @param instruction Optional instruction subject to prompt optimization. When non-null, the node
+ *  is subject to MIPRO-style optimization.
+ * @param demonstrations Few-shot examples for prompt optimization.
+ * @param description Optional description of what this node does, used for MIPRO program description.
  */
 public open class AIAgentNodeDelegate<Input, Output>(
     public val name: String?,
@@ -48,6 +51,8 @@ public open class AIAgentNodeDelegate<Input, Output>(
     public val outputType: KType,
     public val execute: suspend AIAgentGraphContextBase.(Input) -> Output,
     public val instruction: String? = null,
+    public val demonstrations: List<Demonstration<Input, Output>> = emptyList(),
+    public val description: String? = null,
 ) {
     private var node: AIAgentNodeBase<Input, Output>? = null
 
@@ -68,6 +73,8 @@ public open class AIAgentNodeDelegate<Input, Output>(
                 outputType = outputType,
                 execute = execute,
                 instruction = instruction,
+                demonstrations = demonstrations,
+                description = description,
             )
         }
 
@@ -80,8 +87,19 @@ public open class AIAgentNodeDelegate<Input, Output>(
      * @param T The type of the transformed output.
      * @param transformation A function that transforms the original output to the new type.
      * @return A new AIAgentNodeDelegate with the transformed output type.
+     * @throws NotImplementedError if this node has demonstrations, since we cannot transform them
+     *  (the transformation is a suspend function and cannot be called at delegate construction time).
      */
     public inline fun <reified T> transform(noinline transformation: suspend (Output) -> T): AIAgentNodeDelegate<Input, T> {
+        // We cannot transform demonstrations because the transformation is a suspend function,
+        // which cannot be called outside a coroutine context (i.e., at delegate construction time).
+        if (demonstrations.isNotEmpty()) {
+            throw NotImplementedError(
+                "Cannot transform a node with demonstrations. " +
+                "The transformation function is suspend and cannot be applied to demonstrations at construction time."
+            )
+        }
+
         return AIAgentNodeDelegate(
             name = name,
             inputType = inputType,
@@ -91,6 +109,8 @@ public open class AIAgentNodeDelegate<Input, Output>(
                 transformation(result)
             },
             instruction = instruction,
+            demonstrations = emptyList(),
+            description = description,
         )
     }
 }
