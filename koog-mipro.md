@@ -400,19 +400,18 @@ agents/agents-core/src/commonMain/kotlin/ai/koog/agents/
 └── optimization/                        # NEW PACKAGE
     ├── core/
     │   ├── Demonstration.kt            # DONE: Typed input-output pair
-    │   ├── OptimizationConfig.kt       # Coroutine context element for trial configs
-    │   ├── StrategyOptimizer.kt        # Optimizer interface
-    │   ├── Example.kt                  # Training data type
-    │   └── Types.kt                    # Metric type alias
+    │   ├── OptimizationConfig.kt       # DONE: Coroutine context element for trial configs
+    │   ├── StrategyOptimizer.kt        # DONE: Optimizer interface + OptimizationResult
+    │   └── Example.kt                  # DONE: Training data type + Metric typealias + Metrics object
     │
     ├── features/
-    │   └── TraceCollectionFeature.kt   # Pipeline feature for capturing node I/O
+    │   └── TraceCollectionFeature.kt   # DONE: Pipeline feature for capturing node I/O
     │
     ├── dsl/
-    │   ├── OptimizationContextHelpers.kt  # getNodeInstruction(), getNodeDemonstrations()
-    │   └── DemonstrationFormatting.kt     # Helpers for demo -> prompt messages
+    │   ├── OptimizationContextHelpers.kt  # DONE: getNodeInstruction(), getNodeDemonstrations()
+    │   └── DemonstrationFormatting.kt     # TODO: Helpers for demo -> prompt messages
     │
-    ├── optimizers/
+    ├── optimizers/                        # TODO: Phase 3
     │   ├── LabeledFewShot.kt
     │   ├── BootstrapFewShot.kt
     │   └── mipro/
@@ -422,9 +421,9 @@ agents/agents-core/src/commonMain/kotlin/ai/koog/agents/
     │       └── ConfigurationSearch.kt
     │
     └── util/
-        ├── SchemaGeneration.kt         # Port from current impl if needed
-        ├── Evaluation.kt               # Metric evaluation helpers
-        └── StrategyUtils.kt            # withOptimizedConfig() and similar
+        ├── StrategyUtils.kt            # DONE: findOptimizableNodes(), validateOptimizationConfig(), etc.
+        ├── SchemaGeneration.kt         # TODO: Port from current impl if needed
+        └── Evaluation.kt               # TODO: Metric evaluation helpers
 
 examples/
 └── optimization/
@@ -450,13 +449,23 @@ examples/
 
 **Note:** The `AIAgentNodeDelegate.transform()` method throws `NotImplementedError` if the node has demonstrations, because the transformation is a suspend function that cannot be applied to demonstrations at delegate construction time.
 
-### Phase 2: Optimization Infrastructure
-- [ ] Create `OptimizationConfig` coroutine context element
-- [ ] Implement `TraceCollectionFeature` for capturing node I/O
-- [ ] Create context helper functions (`getNodeInstruction()`, `getNodeDemonstrations()`)
-- [ ] Create `StrategyOptimizer` interface
-- [ ] Implement `withOptimizedConfig()` for baking results into strategy
-- [ ] Create `Example` and `Metric` types
+### Phase 2: Optimization Infrastructure (COMPLETED)
+- [x] Create `OptimizationConfig` coroutine context element
+- [x] Implement `TraceCollectionFeature` for capturing node I/O
+- [x] Create context helper functions (`getNodeInstruction()`, `getNodeDemonstrations()`)
+- [x] Create `StrategyOptimizer` interface
+- [x] Create strategy utility functions (`findOptimizableNodes()`, `validateOptimizationConfig()`, etc.)
+- [x] Create `Example` and `Metric` types (with built-in metrics: exactMatch, contains, levenshtein)
+
+**Files added:**
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/OptimizationConfig.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/Example.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/StrategyOptimizer.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/dsl/OptimizationContextHelpers.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/features/TraceCollectionFeature.kt`
+- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/util/StrategyUtils.kt`
+
+**Note:** The `withOptimizedConfig()` full implementation is deferred. The primary mechanism for optimization is passing configs via coroutine context. Strategy utility functions provide the ability to inspect, validate, and extract configs from strategies.
 
 ### Phase 3: Port Optimizers
 - [ ] Port `LabeledFewShot` optimizer
