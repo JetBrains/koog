@@ -7,7 +7,7 @@ import ai.koog.agents.features.opentelemetry.extension.getPositiveDurationSec
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.metrics.Meter
 
-internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCallMapper) {
+internal class MetricCollector(meter: Meter, private val toolNameMapper: ToolNameMapper) {
     private val metricEventStorage = MetricEventStorage()
 
     private val toolCallsCounter = createToolCallCounter(meter)
@@ -75,7 +75,7 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
 
     private fun handleToolCallEnded(metricEvent: ToolCallEnded, isVerbose: Boolean) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
-            val toolCallName = toolCallMapper.map(metricEvent.toolName)
+            val toolName = toolNameMapper.map(metricEvent.toolName)
 
             val status = when (metricEvent.status) {
                 ToolCallStatus.VALIDATION_FAILED -> KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
@@ -87,7 +87,7 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
                 startedEvent.getPositiveDurationSec(endedEvent),
                 listOf(
                     GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
-                    GenAIAttributes.Tool.Name(toolCallName),
+                    GenAIAttributes.Tool.Name(toolName),
                     KoogAttributes.Koog.Tool.Call.Status(status)
                 ).toSdkAttributes(isVerbose)
             )
@@ -96,7 +96,7 @@ internal class MetricCollector(meter: Meter, private val toolCallMapper: ToolCal
                 1,
                 listOf(
                     GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
-                    GenAIAttributes.Tool.Name(toolCallName),
+                    GenAIAttributes.Tool.Name(toolName),
                     KoogAttributes.Koog.Tool.Call.Status(status)
                 ).toSdkAttributes(isVerbose)
             )

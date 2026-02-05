@@ -175,10 +175,10 @@ retained for a specific metric during telemetry data processing. Takes the follo
 Adds a mapping configuration for metric attributes based on allowed tool call names, determining which tool calls are
 permitted and defining a default value for metrics associated with those calls.
 
-| Name                   | Data type     | Required | Default value | Description                                                                                                    |
-|------------------------|---------------|----------|---------------|----------------------------------------------------------------------------------------------------------------|
-| `allowedToolCallNames` | `Set<String>` | Yes      |               | A set of tool call names that are allowed.                                                                     |
-| `defaultToolCallName`  | `String?`     | No       | `null`        | The default name to use if the tool call name is not in the allow list. If null, a predefined default is used. |
+| Name                | Data type     | Required | Default value | Description                                                        |
+|---------------------|---------------|----------|---------------|--------------------------------------------------------------------|
+| `allowedToolNames`  | `Set<String>` | Yes      |               | A set of allowed tool names.                                       |
+| `defaultToolName`   | `String?`     | No       | `null`        | The default name if the tool call name is not in the allow list.   |
 
 !!! note
 
@@ -284,8 +284,8 @@ install(OpenTelemetry) {
 
     // Add tool call names restriction
     restrictToolNameCardinality(
-        allowedToolCallNames = setOf("calculator", "weather_api"),
-        defaultToolCallName = "hidden_tool"
+        allowedToolNames = setOf("calculator", "weather_api"),
+        defaultToolName = "hidden_tool"
     )
 
     // Set the sampler 
