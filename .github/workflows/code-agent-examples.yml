@@ -21,16 +21,20 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      koog-src: ${{ steps.filter.outputs.koog-src }}
-      code-agent: ${{ steps.filter.outputs.code-agent }}
+      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
+      code-agent: ${{steps.filter.outputs.code-agent_any_changed }}
     steps:
       - uses: actions/checkout@v5
 
-      - uses: dorny/paths-filter@v3
+      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
         name: Check changed files
         id: filter
         with:
-          filters: .github/file-filters.yml
+          write_output_files: 'true'
+          files_yaml_from_source_file: .github/file-filters.yml
+
+      - run: .github/scripts/print_changed_files.sh
+        name: 'Print changed files'
 
   compilation:
     needs: changes

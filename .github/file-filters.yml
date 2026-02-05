@@ -1,4 +1,6 @@
-# This is used by the action https://github.com/dorny/paths-filter
+# This is used by the action https://github.com/tj-actions/changed-files
+# NOTE: Filter order is irrelevant (unlike .gitignore).
+# Positive filters are applied first, then negative filters.
 
 # Always include CI changes to all filters so that all CI changes are always tested
 ci-configs: &ci-configs
