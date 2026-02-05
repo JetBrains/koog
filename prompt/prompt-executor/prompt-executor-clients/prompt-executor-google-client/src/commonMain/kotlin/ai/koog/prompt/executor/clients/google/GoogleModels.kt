@@ -201,7 +201,7 @@ public object GoogleModels : LLModelDefinitions {
     /**
      * List of the supported models by the Google provider.
      */
-    override val models: List<LLModel> = listOf(
+    private val models: MutableList<LLModel> = mutableListOf(
         Gemini2_0Flash,
         Gemini2_0Flash001,
         Gemini2_0FlashLite,
@@ -212,4 +212,11 @@ public object GoogleModels : LLModelDefinitions {
         Gemini3_Pro_Preview,
         Embeddings.GeminiEmbedding001,
     )
+
+    override fun models(): List<LLModel> = models
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.DeepSeek) { "Model provider must be DeepSeek" }
+        models.add(model)
+    }
 }

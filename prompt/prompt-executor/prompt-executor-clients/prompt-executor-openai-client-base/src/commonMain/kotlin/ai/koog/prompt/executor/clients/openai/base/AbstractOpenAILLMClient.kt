@@ -487,7 +487,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
     protected open fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
         return schema?.let {
-            require(it.capability in model.capabilities) {
+            require(model.supports(it.capability)) {
                 "Model ${model.id} does not support structured output schema ${it.name}"
             }
             when (it) {

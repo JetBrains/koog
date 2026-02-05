@@ -312,7 +312,7 @@ public object AnthropicModels : LLModelDefinitions {
     /**
      * List of available anthropic models
      */
-    override val models: List<LLModel> = listOf(
+    private val models: MutableList<LLModel> = mutableListOf(
         Opus_3,
         Haiku_3,
         Sonnet_3_5,
@@ -325,6 +325,13 @@ public object AnthropicModels : LLModelDefinitions {
         Sonnet_4_5,
         Haiku_4_5
     )
+
+    override fun models(): List<LLModel> = models
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Anthropic) { "Model provider must be Anthropic" }
+        models.add(model)
+    }
 }
 
 internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(

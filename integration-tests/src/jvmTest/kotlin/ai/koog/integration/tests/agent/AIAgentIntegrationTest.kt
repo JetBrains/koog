@@ -217,7 +217,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         /* Some models are not calling tools in parallel:
          * see https://youtrack.jetbrains.com/issue/KG-115
@@ -317,7 +317,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry {
             tool(SimpleCalculatorTool)
@@ -353,7 +353,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("modelsWithVisionCapability")
     fun integration_AIAgentWithImageCapabilityTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+        assumeTrue(model.supports(LLMCapability.Vision.Image), "Model must support vision capability")
 
         val imageFile = testResourcesDir.resolve("test.png")
 
@@ -403,7 +403,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_RequestLLMWithoutTools(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val executor = getExecutor(model)
 
@@ -464,7 +464,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
@@ -911,7 +911,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     @Disabled("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
     fun integration_AIAgentCheckpointWithToolCalls(model: LLModel) = runTest(timeout = 180.seconds) {
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val storageProvider = InMemoryPersistenceStorageProvider()
         val registry = ToolRegistry {
@@ -977,7 +977,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @ParameterizedTest
     @MethodSource("allModels")
     fun integration_AIAgentWithToolsWithoutParams(model: LLModel) = runTest(timeout = 180.seconds) {
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val registry = ToolRegistry {
             tool(CalculatorToolNoArgs)

@@ -337,7 +337,7 @@ public class OllamaClient @JvmOverloads constructor(
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        if (!model.capabilities.contains(LLMCapability.Embed)) {
+        if (!model.supports(LLMCapability.Embed)) {
             throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
         }
 
@@ -390,7 +390,7 @@ public class OllamaClient @JvmOverloads constructor(
     }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-        if (!model.capabilities.contains(LLMCapability.Moderation)) {
+        if (!model.supports(LLMCapability.Moderation)) {
             throw LLMClientException(clientName, "Model ${model.id} does not support moderation")
         }
 

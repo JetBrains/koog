@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
@@ -194,12 +195,12 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
      */
     override suspend fun models(): List<LLModel> {
         logger.debug { "Fetching available models from OpenRouter" }
-        val response = httpClient.get(
+        val models = httpClient.get(
             path = settings.modelsPath,
             responseType = OpenRouterModelsResponse::class
         )
 
-        val modelsById = OpenRouterModels.models.associateBy { it.id }
-        return response.data.mapNotNull { modelsById[it.id] }
+        val modelsById = OpenRouterModels.modelsById()
+        return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
     }
 }

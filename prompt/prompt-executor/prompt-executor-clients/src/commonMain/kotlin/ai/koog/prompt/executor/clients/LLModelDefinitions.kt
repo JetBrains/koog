@@ -9,9 +9,21 @@ import ai.koog.prompt.llm.LLModel
  * contextual information about various LLMs.
  */
 public interface LLModelDefinitions {
+    /**
+     * Lists all models under this definition
+     */
+    public fun models(): List<LLModel>
 
     /**
-     * List all models under this definition
+     * Adds a custom model to this definition
+     * @param model The model to add
      */
-    public val models: List<LLModel>
+    public fun addCustomModel(model: LLModel)
+}
+
+/**
+ * Maps the model IDs to models under this definition
+ */
+public fun LLModelDefinitions.modelsById(): Map<String, LLModel> {
+    return models().associateBy { it.id }
 }

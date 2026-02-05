@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionReq
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionResponse
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekModelsResponse
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
@@ -172,7 +173,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
 
     override fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
         return schema?.let {
-            require(it.capability in model.capabilities) {
+            require(model.supports(it.capability)) {
                 "Model ${model.id} does not support structured output schema ${it.name}"
             }
             when (it) {
@@ -195,13 +196,13 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
     public override suspend fun models(): List<LLModel> {
         logger.debug { "Fetching available models from DeepSeek" }
 
-        val openAIResponse = httpClient.get(
+        val models = httpClient.get(
             path = settings.modelsPath,
             responseType = DeepSeekModelsResponse::class
         )
 
-        val modelsById = DeepSeekModels.models.associateBy { it.id }
+        val modelsById = DeepSeekModels.modelsById()
 
-        return openAIResponse.data.mapNotNull { modelsById[it.id] }
+        return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
     }
 }

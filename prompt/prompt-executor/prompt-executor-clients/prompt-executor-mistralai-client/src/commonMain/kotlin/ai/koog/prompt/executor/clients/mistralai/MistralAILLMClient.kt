@@ -18,6 +18,7 @@ import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationReque
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResponse
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResult
 import ai.koog.prompt.executor.clients.mistralai.models.MistralModelsResponse
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
@@ -306,14 +307,14 @@ public open class MistralAILLMClient(
      * @throws Exception if the HTTP request fails or the response cannot be processed.
      */
     override suspend fun models(): List<LLModel> {
-        val response = httpClient.get(
+        val models = httpClient.get(
             path = settings.modelsPath,
             responseType = MistralModelsResponse::class
         )
 
-        val models = MistralAIModels.models.associateBy { it.id }
+        val modelsById = MistralAIModels.modelsById()
 
-        return response.data.mapNotNull { models[it.id] }
+        return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
     }
 
     private fun MistralAIModerationResult.toModerationResult(): ModerationResult {

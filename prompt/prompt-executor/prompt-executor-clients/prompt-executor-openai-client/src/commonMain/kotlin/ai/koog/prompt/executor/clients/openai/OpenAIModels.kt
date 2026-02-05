@@ -830,7 +830,7 @@ public object OpenAIModels : LLModelDefinitions {
     /**
      * List of the supported models by the OpenAI provider.
      */
-    override val models: List<LLModel> = listOf(
+    private val models: MutableList<LLModel> = mutableListOf(
         // Chat Models - GPT-4 Series
         Chat.GPT4o,
         Chat.GPT4oMini,
@@ -874,4 +874,11 @@ public object OpenAIModels : LLModelDefinitions {
         // Moderation Models
         Moderation.Omni,
     )
+
+    override fun models(): List<LLModel> = models
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.OpenAI) { "Model provider must be OpenAI" }
+        models.add(model)
+    }
 }

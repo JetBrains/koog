@@ -70,5 +70,12 @@ public object DeepSeekModels : LLModelDefinitions {
     /**
      * List of the supported models by the DeepSeek provider.
      */
-    override val models: List<LLModel> = listOf(DeepSeekChat, DeepSeekReasoner)
+    private val models: MutableList<LLModel> = mutableListOf(DeepSeekChat, DeepSeekReasoner)
+
+    override fun models(): List<LLModel> = models
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.DeepSeek) { "Model provider must be Bedrock" }
+        models.add(model)
+    }
 }

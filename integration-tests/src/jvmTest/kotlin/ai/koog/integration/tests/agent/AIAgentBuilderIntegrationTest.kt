@@ -68,7 +68,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_BuilderWithToolRegistry(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
-        Assumptions.assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SimpleCalculatorTool)
@@ -102,7 +102,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_BuilderWithGraphStrategy(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
-        Assumptions.assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SimpleCalculatorTool)

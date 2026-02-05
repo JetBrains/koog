@@ -248,7 +248,7 @@ public object MistralAIModels : LLModelDefinitions {
     /**
      * List of the supported models by the Mistral AI provider.
      */
-    override val models: List<LLModel> = listOf(
+    private val models: MutableList<LLModel> = mutableListOf(
         Chat.MistralMedium31,
         Chat.MistralLarge21,
         Chat.MistralSmall2,
@@ -259,4 +259,11 @@ public object MistralAIModels : LLModelDefinitions {
         Embeddings.CodestralEmbed,
         Moderation.MistralModeration
     )
+
+    override fun models(): List<LLModel> = models
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.MistralAI) { "Model provider must be MistralAI" }
+        models.add(model)
+    }
 }

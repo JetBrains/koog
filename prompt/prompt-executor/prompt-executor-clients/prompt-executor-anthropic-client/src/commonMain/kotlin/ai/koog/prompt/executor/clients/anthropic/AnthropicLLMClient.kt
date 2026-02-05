@@ -141,10 +141,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.capabilities.contains(LLMCapability.Tools)) {
+        require(model.supports(LLMCapability.Tools)) {
             "Model ${model.id} does not support tools"
         }
 
@@ -174,7 +174,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model with tools: ${tools.map { it.name }}" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
 
@@ -452,7 +452,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                     is ContentPart.Text -> add(AnthropicContent.Text(part.text))
 
                     is ContentPart.Image -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                        require(model.supports(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support images"
                         }
 
@@ -469,7 +469,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                     }
 
                     is ContentPart.File -> {
-                        require(model.capabilities.contains(LLMCapability.Document)) {
+                        require(model.supports(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
