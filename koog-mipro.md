@@ -455,7 +455,7 @@ examples/
 - [x] Create context helper functions (`getNodeInstruction()`, `getNodeDemonstrations()`)
 - [x] Create `StrategyOptimizer` interface
 - [x] Create strategy utility functions (`findOptimizableNodes()`, `validateOptimizationConfig()`, etc.)
-- [x] Create `Example` and `Metric` types (with built-in metrics: exactMatch, contains, levenshtein)
+- [x] Create `Example` and `Metric` types
 
 **Files added:**
 - `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/OptimizationConfig.kt`

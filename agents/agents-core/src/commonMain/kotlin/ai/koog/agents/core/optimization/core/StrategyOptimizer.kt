@@ -36,19 +36,19 @@ public data class OptimizationResult(
  * ```kotlin
  * val optimizer = MIPROv2Optimizer(config)
  *
+ * // Define a metric
+ * val exactMatch: Metric = { expected, actual -> if (expected == actual) 1.0 else 0.0 }
+ *
  * // Optimize and get best configuration
  * val result = optimizer.optimize(
  *     strategy = myStrategy,
  *     trainset = trainingExamples,
  *     valset = validationExamples,
- *     metric = Metrics.exactMatchIgnoreCase
+ *     metric = exactMatch
  * )
  *
  * println("Best score: ${result.score}")
  * println("Iterations: ${result.iterations}")
- *
- * // Create a new strategy with optimized config baked in
- * val optimizedStrategy = myStrategy.withOptimizedConfig(result.config)
  * ```
  */
 public interface StrategyOptimizer {
@@ -73,7 +73,7 @@ public interface StrategyOptimizer {
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         trainset: Dataset,
         valset: Dataset? = null,
-        metric: Metric = Metrics.exactMatch,
+        metric: Metric,
     ): OptimizationResult
 }
 
