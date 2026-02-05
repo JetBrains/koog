@@ -70,17 +70,20 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
      *
      * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
+     * @param instruction Optional instruction text for prompt optimization. When set, the node can participate in MIPRO-style optimization.
      * @param execute A suspendable function that defines the node's execution logic.
      */
     public inline fun <reified Input, reified Output> node(
         name: String? = null,
+        instruction: String? = null,
         noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(
             name = name,
             inputType = typeOf<Input>(),
             outputType = typeOf<Output>(),
-            execute = execute
+            execute = execute,
+            instruction = instruction,
         )
     }
 

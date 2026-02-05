@@ -38,13 +38,16 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  * @param Output The type of output data the delegated node will produce.
  * @constructor Initializes the delegate with the provided node name and builder.
  * @param name The optional name of the node. If not provided, the name will be derived from the
+ * @param instruction Optional instruction subject to prompt optimization. When non-null, the node is subject to
+ *  * MIPRO-styleo ptimization.
  * property to which the delegate is applied.
  */
 public open class AIAgentNodeDelegate<Input, Output>(
     public val name: String?,
     public val inputType: KType,
     public val outputType: KType,
-    public val execute: suspend AIAgentGraphContextBase.(Input) -> Output
+    public val execute: suspend AIAgentGraphContextBase.(Input) -> Output,
+    public val instruction: String? = null,
 ) {
     private var node: AIAgentNodeBase<Input, Output>? = null
 
@@ -63,7 +66,8 @@ public open class AIAgentNodeDelegate<Input, Output>(
                 name = name ?: property.name,
                 inputType = inputType,
                 outputType = outputType,
-                execute = execute
+                execute = execute,
+                instruction = instruction,
             )
         }
 
@@ -85,7 +89,8 @@ public open class AIAgentNodeDelegate<Input, Output>(
             execute = { input ->
                 val result = execute.invoke(this, input)
                 transformation(result)
-            }
+            },
+            instruction = instruction,
         )
     }
 }

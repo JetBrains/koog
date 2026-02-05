@@ -136,6 +136,8 @@ public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
  * @param TInput The type of input data this node processes.
  * @param TOutput The type of output data this node produces.
  * @property name The name of the node, used for identification and debugging.
+ * @property instruction Optional instruction subject to prompt optimization. When non-null, the node is subject to
+ * MIPRO-styleo ptimization.
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
@@ -144,6 +146,7 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
     override val inputType: KType,
     override val outputType: KType,
     public val execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
+    public val instruction: String? = null,
 ) : AIAgentNodeBase<TInput, TOutput>() {
 
     private companion object {
