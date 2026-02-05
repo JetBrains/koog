@@ -4,6 +4,7 @@ import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Token.TokenType
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.Koog.Tool.Call.StatusType
+import ai.koog.agents.features.opentelemetry.metric.DefaultToolCallMapper
 import ai.koog.agents.features.opentelemetry.metric.LLMCallEnded
 import ai.koog.agents.features.opentelemetry.metric.LLMCallStarted
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
@@ -49,7 +50,7 @@ class MetricCollectorTest {
         assertEquals(0, meter.counterValues.size)
         assertEquals(0, meter.histogramValues.size)
 
-        val metricCollector = MetricCollector(meter)
+        val metricCollector = MetricCollector(meter, DefaultToolCallMapper())
 
         // Two counters and one histogram should be created
         assertEquals(countersAmount, meter.buildCounter.size)
@@ -63,7 +64,7 @@ class MetricCollectorTest {
     @Test
     fun `test metric collector to create token counter`() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter)
+        val metricCollector = MetricCollector(meter, DefaultToolCallMapper())
 
         assertContains(
             meter.buildCounter,
@@ -74,7 +75,7 @@ class MetricCollectorTest {
     @Test
     fun `test metric collector to create tool call counter`() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter)
+        val metricCollector = MetricCollector(meter, DefaultToolCallMapper())
 
         assertContains(
             meter.buildCounter,
@@ -85,7 +86,7 @@ class MetricCollectorTest {
     @Test
     fun `test metric collector to create operation duration histogram`() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter)
+        val metricCollector = MetricCollector(meter, DefaultToolCallMapper())
 
         assertContains(
             meter.buildHistogram,
@@ -96,7 +97,7 @@ class MetricCollectorTest {
     @Test
     fun `test metric collector to process LLM Call`() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter)
+        val metricCollector = MetricCollector(meter, DefaultToolCallMapper())
 
         val eventId = "event-id"
         val timestampStart = 100L
@@ -198,7 +199,7 @@ class MetricCollectorTest {
 
         cases.forEach { (status, expectedStatus) ->
             val meter = TestMeter()
-            val metricCollector = MetricCollector(meter)
+            val metricCollector = MetricCollector(meter, DefaultToolCallMapper())
 
             val eventId = "event-id"
             val timestampStart = 100L

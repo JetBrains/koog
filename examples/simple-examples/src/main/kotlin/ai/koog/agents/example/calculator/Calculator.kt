@@ -77,7 +77,7 @@ suspend fun main() {
                         .build(),
                     Duration.ofSeconds(1)
                 )
-                addToolCallNamesMapping(
+                restrictToolNameCardinality(
                     setOf("plus", "minus", "multiply", "divide"),
                     "unknown"
                 )
