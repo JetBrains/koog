@@ -2,7 +2,7 @@
   "id": "complex-decision-tree-flow",
   "version": "1.0",
   "description": "Demonstrates a complex decision tree with multiple branching points and different condition types for a document processing workflow.",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "agents": [
     {
       "name": "document_classifier",

@@ -1,7 +1,7 @@
 {
   "id": "verify-transform-flow",
   "version": "1.0",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
 
   "agents": [
     {

@@ -1,7 +1,7 @@
 {
   "id": "random-numbers-flow-with-mcp-tools",
   "version": "1.0",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "tools": [
     {
       "name": "playwright-tools",
@@ -36,7 +36,7 @@
     {
       "name": "calculator",
       "type": "task",
-      "model": "openai/gpt-4o-mini",
+      "model": "openai/gpt4omini",
       "runtime": "koog",
       "prompt": {
         "system": "You are an calculator agent that can perform math operations."

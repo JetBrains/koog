@@ -140,9 +140,13 @@ public object KoogStrategyFactory {
         }
     }
 
-    private fun ToolRegistry.defineToolSelectionStrategy(toolNames: List<String>): ToolSelectionStrategy {
-        if (toolNames.isEmpty()) {
+    private fun ToolRegistry.defineToolSelectionStrategy(toolNames: List<String>?): ToolSelectionStrategy {
+        if (toolNames == null) {
             return ToolSelectionStrategy.ALL
+        }
+
+        if (toolNames.isEmpty()) {
+            return ToolSelectionStrategy.NONE
         }
 
         val selectedTools = this.tools.filter { tool ->
@@ -323,6 +327,7 @@ public object KoogStrategyFactory {
             is FlowAgentInput.InputInt -> condition.value.data
             is FlowAgentInput.InputDouble -> condition.value.data
             is FlowAgentInput.InputString -> condition.value.data
+            else -> error("Unsupported condition type ${condition.value}")
         }
 
         // Drop the "input." prefix from the condition variable
@@ -341,10 +346,7 @@ public object KoogStrategyFactory {
                     else -> error("Unsupported condition variable: $conditionVariable")
                 }
             }
-            is FlowAgentInput.InputArrayBooleans,
-            is FlowAgentInput.InputArrayDouble,
-            is FlowAgentInput.InputArrayInt,
-            is FlowAgentInput.InputArrayStrings -> error("Not primitive types are not yet supported")
+            else -> error("Not primitive types are not yet supported")
         }
 
         return when (condition.operation) {

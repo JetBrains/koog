@@ -2,7 +2,7 @@
   "id": "retry-loop-flow",
   "version": "1.0",
   "description": "Demonstrates a retry loop pattern with verify-fix-retry cycle. Continues until verification succeeds or manual intervention is needed.",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "agents": [
     {
       "name": "initial_generator",

@@ -7,12 +7,17 @@ import kotlinx.serialization.Serializable
  *
  */
 @Serializable(with = FlowAgentInputSerializer::class)
-public sealed interface FlowAgentInput {
+public interface FlowAgentInput {
 
     /**
      *
      */
-    public sealed interface Primitive : FlowAgentInput
+    public val type: String
+
+    /**
+     *
+     */
+    public interface Primitive : FlowAgentInput
 
     //region Entities
 
@@ -20,25 +25,33 @@ public sealed interface FlowAgentInput {
      *
      */
     @Serializable
-    public data class InputInt(public val data: Int) : Primitive
+    public data class InputInt(public val data: Int) : Primitive {
+        override val type: String = "int"
+    }
 
     /**
      *
      */
     @Serializable
-    public data class InputDouble(public val data: Double) : Primitive
+    public data class InputDouble(public val data: Double) : Primitive {
+        override val type: String = "double"
+    }
 
     /**
      *
      */
     @Serializable
-    public data class InputString(public val data: String) : Primitive
+    public data class InputString(public val data: String) : Primitive {
+        override val type: String = "string"
+    }
 
     /**
      *
      */
     @Serializable
-    public data class InputBoolean(public val data: Boolean) : Primitive
+    public data class InputBoolean(public val data: Boolean) : Primitive {
+        override val type: String = "boolean"
+    }
 
     /**
      *
@@ -48,7 +61,9 @@ public sealed interface FlowAgentInput {
         public val success: Boolean,
         public val feedback: String,
         public val input: FlowAgentInput
-    ) : FlowAgentInput
+    ) : FlowAgentInput {
+        override val type: String = "critique"
+    }
 
     //endregion Entities
 
@@ -59,6 +74,8 @@ public sealed interface FlowAgentInput {
      */
     @Serializable
     public data class InputArrayInt(public val data: Array<Int>) : FlowAgentInput {
+
+        override val type: String = "array_int"
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -74,6 +91,9 @@ public sealed interface FlowAgentInput {
      */
     @Serializable
     public data class InputArrayDouble(public val data: Array<Double>) : FlowAgentInput {
+
+        override val type: String = "array_double"
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other == null || this::class != other::class) return false
@@ -88,6 +108,9 @@ public sealed interface FlowAgentInput {
      */
     @Serializable
     public data class InputArrayStrings(public val data: Array<String>) : FlowAgentInput {
+
+        override val type: String = "array_string"
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other == null || this::class != other::class) return false
@@ -102,6 +125,9 @@ public sealed interface FlowAgentInput {
      */
     @Serializable
     public data class InputArrayBooleans(public val data: Array<Boolean>) : FlowAgentInput {
+
+        override val type: String = "array_bool"
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other == null || this::class != other::class) return false

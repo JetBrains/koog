@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -72,7 +73,7 @@ public class KoogFlow(
         val agentConfig = AIAgentConfig(
             prompt = agentPrompt,
             model = model,
-            maxAgentIterations = firstAgent?.config?.maxIterations ?: defaultMaxIterations
+            maxAgentIterations = firstAgent?.config?.maxIterations ?: defaultMaxIterations,
         )
 
         return GraphAIAgent(
@@ -83,7 +84,17 @@ public class KoogFlow(
             agentConfig = agentConfig,
             strategy = strategy,
             toolRegistry = toolRegistry,
-        )
+        ) {
+            handleEvents {
+                onNodeExecutionStarting { ctx ->
+                    println("> Node: ${ctx.node.id}")
+                }
+
+                onLLMCallCompleted { ctx ->
+                    println("> LLM: ${ctx.responses.firstOrNull()?.content}")
+                }
+            }
+        }
     }
 
     private fun buildPromptExecutor(agents: List<FlowAgent>): PromptExecutor {

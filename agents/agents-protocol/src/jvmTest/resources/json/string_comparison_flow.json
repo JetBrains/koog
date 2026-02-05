@@ -2,7 +2,7 @@
   "id": "string-comparison-flow",
   "version": "1.0",
   "description": "Demonstrates string comparison conditions for language detection and routing to appropriate translators.",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "agents": [
     {
       "name": "language_detector",

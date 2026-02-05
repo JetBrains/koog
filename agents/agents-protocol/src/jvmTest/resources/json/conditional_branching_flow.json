@@ -2,7 +2,7 @@
   "id": "conditional-branching-flow",
   "version": "1.0",
   "description": "Demonstrates conditional branching based on numeric comparison. Analyzes a score and routes to different feedback agents based on the value.",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "agents": [
     {
       "name": "score_analyzer",

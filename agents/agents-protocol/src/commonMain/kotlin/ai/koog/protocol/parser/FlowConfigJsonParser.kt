@@ -80,7 +80,6 @@ public class FlowJsonConfigParser : FlowConfigParser {
                 val toolNames = params?.get("toolNames")
                     ?.let { it as? JsonArray }
                     ?.mapNotNull { it.jsonPrimitive.contentOrNull }
-                    ?: emptyList()
 
                 val params = FlowTaskAgentParameters(task, toolNames)
 
@@ -102,7 +101,6 @@ public class FlowJsonConfigParser : FlowConfigParser {
                 val toolNames = params?.get("toolNames")
                     ?.let { it as? JsonArray }
                     ?.mapNotNull { it.jsonPrimitive.contentOrNull }
-                    ?: emptyList()
 
                 val params = FlowVerifyAgentParameters(task, toolNames)
 

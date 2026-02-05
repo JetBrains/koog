@@ -2,7 +2,7 @@
   "id": "sequential-pipeline-flow",
   "version": "1.0",
   "description": "Demonstrates a simple sequential pipeline without conditions - each agent processes and passes to the next in order.",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "agents": [
     {
       "name": "data_collector",

@@ -1,7 +1,7 @@
 {
   "id": "greeting-flow-with-mcp-tool",
   "version": "1.0",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "tools": [
     {
       "name": "test-mcp-tools",

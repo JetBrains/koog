@@ -15,6 +15,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.setToolChoiceAuto
 import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -119,7 +120,9 @@ internal inline fun <reified Output> identityTool(): Tool<Output, Output> = obje
     name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
     description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
 ) {
-    override suspend fun execute(args: Output): Output = args
+    override suspend fun execute(args: Output): Output {
+        return args
+    }
 }
 
 /**
@@ -477,7 +480,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
             // Model must always call tools in the loop until it decides (via finish tool)
             // that the exit condition is reached
-            setToolChoiceRequired()
+            setToolChoiceAuto()
         }
 
         // Output task description

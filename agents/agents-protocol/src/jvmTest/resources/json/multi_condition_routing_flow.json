@@ -2,7 +2,7 @@
   "id": "multi-condition-routing-flow",
   "version": "1.0",
   "description": "Demonstrates complex routing with multiple condition types (boolean AND, OR, NOT operations) for content moderation workflow.",
-  "defaultModel": "openai/gpt-4o",
+  "defaultModel": "openai/gpt4o",
   "agents": [
     {
       "name": "content_analyzer",

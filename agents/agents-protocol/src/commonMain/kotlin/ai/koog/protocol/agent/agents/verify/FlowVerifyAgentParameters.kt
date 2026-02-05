@@ -9,5 +9,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class FlowVerifyAgentParameters(
     val task: String,
-    val toolNames: List<String> = emptyList()
+    val toolNames: List<String>? = null
 ) : FlowAgentParameters

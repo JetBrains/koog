@@ -74,7 +74,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testRealAgent(): Unit = runBlocking {
-        val jsonContent = readFlow("random_koog_agent_flow.json")
+        val jsonContent = readFlow("real_koog_agent_flow.json")
 
         val parser = FlowJsonConfigParser()
         val config = parser.parse(jsonContent)
@@ -100,13 +100,7 @@ class FlowExecutionTest : FlowTestBase() {
             transitions = config.transitions
         )
 
-        val initialInput =
-            (getFirstAgent(agents = config.agents, transitions = config.transitions).parameters as? FlowTaskAgentParameters)?.
-            task?.let {
-                FlowAgentInput.InputString(it)
-            } ?: error("Could not find task input for first agent")
-
-        val result = flow.run(initialInput)
+        val result = flow.run(null)
         println("Flow execution result: $result")
     }
 

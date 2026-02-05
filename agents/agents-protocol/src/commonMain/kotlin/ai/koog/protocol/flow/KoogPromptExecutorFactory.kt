@@ -55,21 +55,20 @@ public object KoogPromptExecutorFactory {
         val (providerIdentifier, modelIdentifier) = modelString.split("/", limit = 2)
 
         val fullModelIdentifier =
-            if (providerIdentifier.lowercase() == LLMProvider.OpenAI.id && !modelString.contains(".")) {
+            if (providerIdentifier.lowercase() == LLMProvider.OpenAI.id) {
                 // For OpenAI, we need to specify a category if not provided
                 // Default to "chat" category if not specified
-                "$providerIdentifier.chat.$modelIdentifier"
+                "$providerIdentifier/chat/$modelIdentifier"
             } else {
-                "$providerIdentifier.$modelIdentifier"
+                "$providerIdentifier/$modelIdentifier"
             }
 
         val normalizedModelIdentifier = fullModelIdentifier
-            .replace("-", "")
-            .replace("_", "")
+            .replace("-", "_").lowercase()
             .lowercase()
 
-        val model = getModelFromIdentifier(normalizedModelIdentifier)
-            ?: getModelFromIdentifier(normalizedModelIdentifier)
+        val model = getModelFromIdentifier(normalizedModelIdentifier, "/")
+            ?: getModelFromIdentifier(normalizedModelIdentifier, "/")
             ?: error("Unable to find model identifier from string: $normalizedModelIdentifier")
 
         logger.debug { "Resolved input model config (model string: $modelString, default model: $defaultModel) to model: $model" }

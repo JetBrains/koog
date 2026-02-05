@@ -17,6 +17,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -61,6 +62,7 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
         if (isString) {
             return FlowAgentInput.InputString(content)
         }
+
         return booleanOrNull?.let { FlowAgentInput.InputBoolean(it) }
             ?: intOrNull?.let { FlowAgentInput.InputInt(it) }
             ?: doubleOrNull?.let { FlowAgentInput.InputDouble(it) }
@@ -92,7 +94,8 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
         }
     }
 
-    private fun JsonObject.toFlowAgentInputObject(): FlowAgentInput {
+    private fun JsonObject.toFlowAgentInputObject(): FlowAgentInput? {
+
         // Try to parse as InputCritiqueResult
         val success = this["success"]?.jsonPrimitive?.booleanOrNull
         val feedback = this["feedback"]?.jsonPrimitive?.contentOrNull
@@ -101,6 +104,73 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
         if (success != null && feedback != null && input != null) {
             return FlowAgentInput.InputCritiqueResult(success, feedback, input)
         }
+
+        val type = this["type"]?.jsonPrimitive?.contentOrNull ?: return null
+        val dataElement = this["data"]?.toFlowAgentInput() ?: return null
+
+        return dataElement
+
+//        // Try to parse generic wrapper objects commonly produced by tool-calling LLMs
+//        // 1) {"value": <primitive|array|object>} -> unwrap and parse recursively
+//        this["value"]?.let { valueEl ->
+//            return valueEl.toFlowAgentInput()
+//                ?: error("Unable to deserialize FlowAgentInput from JSON object: $this")
+//        }
+//
+//        // 2) {"data": <primitive|array|object>} -> unwrap and parse recursively
+//        this["data"]?.let { dataEl ->
+//            return dataEl.toFlowAgentInput()
+//                ?: error("Unable to deserialize FlowAgentInput from JSON object: $this")
+//        }
+//
+//        // 3) {"type": "InputString"|..., "data": ...} -> interpret by type
+//        val typeStr = this["type"]?.jsonPrimitive?.contentOrNull
+//        val dataEl = this["data"]
+//        if (typeStr != null && dataEl != null) {
+//            return when (typeStr.lowercase()) {
+//                "inputstring" -> {
+//                    val content = dataEl.jsonPrimitive.contentOrNull
+//                        ?: error("Expected string content in 'data', but got: ${dataEl}")
+//                    FlowAgentInput.InputString(content)
+//                }
+//                "inputint" -> {
+//                    val value = dataEl.jsonPrimitive.intOrNull
+//                        ?: error("Expected int content in 'data', but got: ${dataEl}")
+//                    FlowAgentInput.InputInt(value)
+//                }
+//                "inputdouble" -> {
+//                    val value = dataEl.jsonPrimitive.doubleOrNull
+//                        ?: error("Expected double content in 'data', but got: ${dataEl}")
+//                    FlowAgentInput.InputDouble(value)
+//                }
+//                "inputboolean" -> {
+//                    val value = dataEl.jsonPrimitive.booleanOrNull
+//                        ?: error("Expected boolean content in 'data', but got: ${dataEl}")
+//                    FlowAgentInput.InputBoolean(value)
+//                }
+//                "inputarraystrings" -> {
+//                    val arr = (dataEl as? JsonArray)
+//                        ?: error("Expected array in 'data' for InputArrayStrings")
+//                    FlowAgentInput.InputArrayStrings(arr.map { it.jsonPrimitive.content }.toTypedArray())
+//                }
+//                "inputarrayint" -> {
+//                    val arr = (dataEl as? JsonArray)
+//                        ?: error("Expected array in 'data' for InputArrayInt")
+//                    FlowAgentInput.InputArrayInt(arr.map { it.jsonPrimitive.intOrNull ?: 0 }.toTypedArray())
+//                }
+//                "inputarraydouble" -> {
+//                    val arr = (dataEl as? JsonArray)
+//                        ?: error("Expected array in 'data' for InputArrayDouble")
+//                    FlowAgentInput.InputArrayDouble(arr.map { it.jsonPrimitive.doubleOrNull ?: 0.0 }.toTypedArray())
+//                }
+//                "inputarraybooleans" -> {
+//                    val arr = (dataEl as? JsonArray)
+//                        ?: error("Expected array in 'data' for InputArrayBooleans")
+//                    FlowAgentInput.InputArrayBooleans(arr.map { it.jsonPrimitive.booleanOrNull ?: false }.toTypedArray())
+//                }
+//                else -> error("Unknown FlowAgentInput type: $typeStr")
+//            }
+//        }
 
         error("Unable to deserialize FlowAgentInput from JSON object: $this")
     }
@@ -120,6 +190,7 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
                 put("feedback", feedback)
                 put("input", input.toJsonElement())
             }
+            else -> error("Unsupported input type: $this")
         }
     }
 }
