@@ -172,17 +172,14 @@ retained for a specific metric during telemetry data processing. Takes the follo
 
 #### restrictToolNameCardinality
 
-Adds a mapping configuration for metric attributes based on allowed tool call names, determining which tool calls are
-permitted and defining a default value for metrics associated with those calls.
+Adds a configuration that maps tool names to the `gen_ai.tool.name` attribute value.
+Tool names in the allowlist are used as-is. All other tool names are replaced with a single fallback value.
+This reduces attribute cardinality and helps control overall metric cardinality.
 
-| Name                | Data type      | Required | Default value | Description                                                        |
-|---------------------|----------------|----------|---------------|--------------------------------------------------------------------|
-| `allowedToolNames`  | `Set<String>`  | Yes      |               | A set of allowed tool names.                                       |
-| `defaultToolName`   | `String`       | No       | `filtered`    | The default name if the tool call name is not in the allow list.   |
-
-!!! note
-
-    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact the performance of your observability backend. You can use the `restrictToolNameCardinality` method to control this metric by limiting the allowed tool names and mapping others to a default value.
+| Name               | Data type     | Required | Default value | Description                                                      |
+|--------------------|---------------|----------|---------------|------------------------------------------------------------------|
+| `allowedToolNames` | `Set<String>` | Yes      |               | A set of allowed tool names.                                     |
+| `defaultToolName`  | `String`      | No       | `filtered`    | The default name if the tool call name is not in the allow list. |
 
 #### addSpanProcessor
 
@@ -493,7 +490,7 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
 
 !!! note
 
-    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact performance. You can use the `restrictToolNameCardinality` method to control this metric.
+    `gen_ai.tool.name` is a dynamic attribute. A high number of unique tool names can increase metric cardinality and impact performance. You can use the `restrictToolNameCardinality` method to control this metric by limiting the allowed tool names and mapping others to a default value
 
 !!! note
 Metrics are reported via the OpenTelemetry `Meter` created for your service. If no metric exporters are configured,
