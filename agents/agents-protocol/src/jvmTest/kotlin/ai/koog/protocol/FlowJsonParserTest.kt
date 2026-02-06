@@ -67,30 +67,30 @@ class FlowJsonParserTest : FlowTestBase() {
     //region Flow
 
     @Test
-    fun testJsonParsing_randomNumbersFlowJson() {
-        val jsonContent = readFlow("random_koog_agent_flow.json")
+    fun testJsonParsing_basicTaskFlowJson() {
+        val jsonContent = readFlow("basic_task_flow.json")
 
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
         // Verify flow config
-        assertEquals("random-numbers-flow", flowConfig.id)
+        assertEquals("basic-task-flow", flowConfig.id)
         assertEquals("1.0", flowConfig.version)
         assertEquals("openai/gpt4o", flowConfig.defaultModel)
 
         // Verify agents
         assertEquals(2, flowConfig.agents.size)
 
-        // get_numbers
-        val getNumbersAgent = flowConfig.agents[0]
-        assertIs<FlowTaskAgent>(getNumbersAgent)
-        assertEquals("get_numbers", getNumbersAgent.name)
-        assertEquals(FlowAgentKind.TASK, getNumbersAgent.type)
-        assertEquals("openai/gpt4o", getNumbersAgent.model, "Expected to get a default model, but received ${getNumbersAgent.model}")
-        assertNotNull(getNumbersAgent.parameters)
+        // number_generator
+        val numberGeneratorAgent = flowConfig.agents[0]
+        assertIs<FlowTaskAgent>(numberGeneratorAgent)
+        assertEquals("number_generator", numberGeneratorAgent.name)
+        assertEquals(FlowAgentKind.TASK, numberGeneratorAgent.type)
+        assertEquals("openai/gpt4o", numberGeneratorAgent.model, "Expected to get a default model, but received ${numberGeneratorAgent.model}")
+        assertNotNull(numberGeneratorAgent.parameters)
         assertEquals(
-            "Generate two random numbers between 1 and 100. Output them with a space between them.",
-            getNumbersAgent.parameters.task
+            "Generate two random integers between 1 and 100, separated by a space.",
+            numberGeneratorAgent.parameters.task
         )
 
         // Verify the second agent (calculator) - overrides with an own model
@@ -98,10 +98,10 @@ class FlowJsonParserTest : FlowTestBase() {
         assertIs<FlowTaskAgent>(calculatorAgent)
         assertEquals("calculator", calculatorAgent.name)
         assertEquals(FlowAgentKind.TASK, calculatorAgent.type)
-        assertEquals("openai/gpt4omini", calculatorAgent.model, "Expected to get a custom model, but received ${calculatorAgent.model}")
+        assertEquals("openai/gpt4o", calculatorAgent.model, "Expected to get a custom model, but received ${calculatorAgent.model}")
         assertNotNull(calculatorAgent.parameters)
         assertEquals(
-            "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces.",
+            "Sum all numbers in the input (numbers are space-separated).",
             calculatorAgent.parameters.task
         )
 
@@ -109,7 +109,7 @@ class FlowJsonParserTest : FlowTestBase() {
         assertEquals(1, flowConfig.transitions.size)
 
         val transition = flowConfig.transitions[0]
-        assertEquals("get_numbers", transition.from)
+        assertEquals("number_generator", transition.from)
         assertEquals("calculator", transition.to)
     }
 
@@ -119,12 +119,12 @@ class FlowJsonParserTest : FlowTestBase() {
 
     @Test
     fun testFlowParsing_withMcpTools() {
-        val jsonContent = readFlow("random_koog_agent_flow_with_mcp_tools.json")
+        val jsonContent = readFlow("greeting_flow_with_mcp_tool.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
         // Verify flow metadata
-        assertEquals("random-numbers-flow-with-mcp-tools", flowConfig.id)
+        assertEquals("greeting-flow-with-mcp-tool", flowConfig.id)
         assertEquals("1.0", flowConfig.version)
         assertEquals("openai/gpt4o", flowConfig.defaultModel)
 
@@ -134,7 +134,7 @@ class FlowJsonParserTest : FlowTestBase() {
         // First tool: MCP SSE
         val sseTool = flowConfig.tools[0]
         assertIs<FlowTool.Mcp.SSE>(sseTool)
-        assertEquals("http://localhost:8931/sse", sseTool.url)
+        assertEquals("http://localhost:3002", sseTool.url)
         assertEquals(emptyMap(), sseTool.headers)
 
         // Second tool: MCP Stdio
@@ -143,15 +143,12 @@ class FlowJsonParserTest : FlowTestBase() {
         assertEquals("npx", stdioTool.command)
         assertEquals(listOf("-y", "@modelcontextprotocol/server-github"), stdioTool.args)
 
-        // Verify agents are still parsed correctly
-        assertEquals(2, flowConfig.agents.size)
-        assertEquals("get_numbers", flowConfig.agents[0].name)
-        assertEquals("calculator", flowConfig.agents[1].name)
+        // Verify agents are parsed correctly
+        assertEquals(1, flowConfig.agents.size)
+        assertEquals("greeter", flowConfig.agents[0].name)
 
-        // Verify transitions are still parsed correctly
-        assertEquals(1, flowConfig.transitions.size)
-        assertEquals("get_numbers", flowConfig.transitions[0].from)
-        assertEquals("calculator", flowConfig.transitions[0].to)
+        // Verify no transitions (single agent flow)
+        assertEquals(0, flowConfig.transitions.size)
     }
 
     @Test

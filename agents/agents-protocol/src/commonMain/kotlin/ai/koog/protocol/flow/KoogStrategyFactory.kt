@@ -166,7 +166,6 @@ public object KoogStrategyFactory {
         toolRegistry: ToolRegistry,
         defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
-
         return subgraphWithTask<FlowAgentInput, FlowAgentInput>(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),

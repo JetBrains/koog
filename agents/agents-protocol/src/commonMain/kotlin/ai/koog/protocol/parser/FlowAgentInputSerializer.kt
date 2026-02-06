@@ -1,6 +1,7 @@
 package ai.koog.protocol.parser
 
 import ai.koog.protocol.agent.FlowAgentInput
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -33,6 +34,9 @@ import kotlinx.serialization.json.put
  * - JSON objects with {success, feedback, input} -> InputCritiqueResult
  */
 internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
+
+    private val logger = KotlinLogging.logger { }
+
     // Use a primitive string descriptor to hide internal structure from tool schemas
     // The LLM will see this as accepting/returning a simple string value
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("FlowAgentInput", PrimitiveKind.STRING)
@@ -114,17 +118,11 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
     }
 
     private fun JsonObject.toFlowAgentInputObject(): FlowAgentInput? {
-
-        // Try to parse as InputCritiqueResult
-        val success = this["success"]?.jsonPrimitive?.booleanOrNull
-        val feedback = this["feedback"]?.jsonPrimitive?.contentOrNull
-        val input = this["input"]?.toFlowAgentInput()
-
-        if (success != null && feedback != null && input != null) {
-            return FlowAgentInput.InputCritiqueResult(success, feedback, input)
+        val type = this["type"]?.jsonPrimitive?.contentOrNull
+        if (type == null) {
+            logger.warn { "Missing type field in result: $this" }
+            return null
         }
-
-        val type = this["type"]?.jsonPrimitive?.contentOrNull ?: return null
 
         return when (type) {
             "boolean" -> {
@@ -159,6 +157,13 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
                     FlowAgentInput.InputArrayDouble(it)
                 }
             }
+            "critique" -> {
+                val success = this["success"]?.jsonPrimitive?.booleanOrNull ?: return null
+                val feedback = this["feedback"]?.jsonPrimitive?.contentOrNull ?: return null
+                val input = this["input"]?.toFlowAgentInput() ?: return null
+
+                FlowAgentInput.InputCritiqueResult(success, feedback, input)
+            }
 
             else -> error("Unsupported input type: <$type>")
         }
@@ -185,27 +190,19 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
                 }
                 is FlowAgentInput.InputArrayString -> {
                     put("type", "array_string")
-                    put("data",
-                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-                    )
+                    put("data", buildJsonArray { data.forEach { add(JsonPrimitive(it)) } })
                 }
                 is FlowAgentInput.InputArrayInt -> {
                     put("type", "array_int")
-                    put("data",
-                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-                    )
+                    put("data", buildJsonArray { data.forEach { add(JsonPrimitive(it)) } })
                 }
                 is FlowAgentInput.InputArrayDouble -> {
                     put("type", "array_double")
-                    put("data",
-                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-                    )
+                    put("data", buildJsonArray { data.forEach { add(JsonPrimitive(it)) } })
                 }
                 is FlowAgentInput.InputArrayBoolean -> {
                     put("type", "array_boolean")
-                    put("data",
-                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-                    )
+                    put("data", buildJsonArray { data.forEach { add(JsonPrimitive(it)) } })
                 }
                 is FlowAgentInput.InputCritiqueResult -> {
                     put("type", "critique")

@@ -3,7 +3,7 @@ package ai.koog.protocol
 import ai.koog.protocol.flow.KoogFlow
 import ai.koog.protocol.parser.FlowJsonConfigParser
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
 class FlowIntegrationTest : FlowTestBase() {
@@ -13,26 +13,28 @@ class FlowIntegrationTest : FlowTestBase() {
     }
 
     @Test
-    fun testRunKoogFlow_TaskVerify(): Unit = runBlocking {
-        val jsonContent = readFlow("real_koog_agent_flow.json")
+    fun testRunKoogFlow_TaskVerify(): Unit = runTest {
+        val jsonContent = readFlow("basic_task_flow.json")
 
         val parser = FlowJsonConfigParser()
         val config = parser.parse(jsonContent)
 
-        println("Parsed FlowConfig:")
-        println("  ID: ${config.id}")
-        println("  Version: ${config.version}")
-        println("  Agents: ${config.agents.size}")
-        config.agents.forEach { agent ->
-            println("    - ${agent.name} (${agent.type})")
-        }
-        println("  Transitions: ${config.transitions.size}")
-        config.transitions.forEach { transition ->
-            println("    - ${transition.from} -> ${transition.to}")
+        val agentsString = config.agents.joinToString("\n") { agent -> " - ${agent.type}: ${agent.name}"  }
+        val transitionsString = config.transitions.joinToString("\n") { transition -> " - ${transition.from} -> ${transition.to}" }
+        val toolsString = config.tools.joinToString("\n") { tool -> " - $tool" }
+
+        logger.info {
+            "Parsed flow json (" +
+                "id: ${config.id}, " +
+                "version: ${config.version}, " +
+                "agents ${config.agents.size}, " +
+                "transitions: ${config.transitions.size})\n" +
+                "Agents:\n$agentsString\n" +
+                "Transitions:\n$transitionsString\n" +
+                "Tools:\n$toolsString\n"
         }
 
-        // Create a SimpleFlow from the config and run it
-        println("\nCreating a flow and running...")
+        logger.info { "Running the flow..." }
         val flow = KoogFlow(
             id = config.id ?: "simple-flow",
             agents = config.agents,
@@ -41,6 +43,6 @@ class FlowIntegrationTest : FlowTestBase() {
         )
 
         val result = flow.run(null)
-        println("Flow execution result: $result")
+        logger.info { "Flow execution result: $result" }
     }
 }

@@ -1,14 +1,24 @@
 {
   "id": "greeting-flow-with-mcp-tool",
   "version": "1.0",
+  "description": "Demonstrates MCP tool integration with both SSE and Stdio transports.",
   "defaultModel": "openai/gpt4o",
   "tools": [
     {
-      "name": "test-mcp-tools",
+      "name": "test-mcp-sse",
       "type": "mcp",
       "parameters": {
         "transport": "sse",
         "url": "http://localhost:3002"
+      }
+    },
+    {
+      "name": "github-mcp-stdio",
+      "type": "mcp",
+      "parameters": {
+        "transport": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"]
       }
     }
   ],
@@ -17,7 +27,7 @@
       "name": "greeter",
       "type": "task",
       "prompt": {
-        "system": "You are a greeter agent that uses tools to greet users."
+        "system": "You use MCP tools to perform tasks."
       },
       "params": {
         "task": "Use the greeting tool to greet the user named 'TestUser'.",

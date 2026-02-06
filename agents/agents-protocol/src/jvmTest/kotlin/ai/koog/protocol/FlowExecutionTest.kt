@@ -67,13 +67,13 @@ class FlowExecutionTest : FlowTestBase() {
     }
 
     @Test
-    fun testFlowRun_randomNumbersFlowJson() = runTest {
-        val jsonContent = readFlow("random_koog_agent_flow.json")
+    fun testFlowRun_basicTaskFlowJson() = runTest {
+        val jsonContent = readFlow("basic_task_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
-        val generateNumbersAgentTask = "Generate two random numbers between 1 and 100. Output them with a space between them."
-        val calculatorAgentTask = "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces."
+        val generateNumbersAgentTask = "Generate two random integers between 1 and 100, separated by a space."
+        val calculatorAgentTask = "Sum all numbers in the input (numbers are space-separated)."
 
         // Mock executor: the first agent returns "42 58", the second returns "100"
         val testExecutor = getMockExecutor {
@@ -104,7 +104,7 @@ class FlowExecutionTest : FlowTestBase() {
     }
 
     @Test
-    fun testFlowRun_withMcpToolExecution() = runTest(timeout = 30.seconds) {
+    fun testFlowRun_withMcpToolExecution() = runTest {
         val jsonContent = readFlow("greeting_flow_with_mcp_tool.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
