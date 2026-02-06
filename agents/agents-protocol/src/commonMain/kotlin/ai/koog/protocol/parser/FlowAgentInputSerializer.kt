@@ -34,133 +34,6 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
-//region Public Reusable Deserialization Functions
-
-/**
- * Converts a JsonElement to FlowAgentInput. Handles primitives, arrays, and objects.
- * This is a public utility that can be reused across the codebase.
- */
-public fun JsonElement.toFlowAgentInput(): FlowAgentInput? {
-    return when (this) {
-        is JsonPrimitive -> toFlowAgentInputPrimitive()
-        is JsonArray -> toFlowAgentInputArray()
-        is JsonObject -> toFlowAgentInputObject()
-        JsonNull -> null
-    }
-}
-
-/**
- * Converts a JsonPrimitive to a FlowAgentInput primitive type (InputString, InputInt, InputDouble, InputBoolean).
- * Preserves string types even for numeric-looking strings.
- */
-public fun JsonPrimitive.toFlowAgentInputPrimitive(): FlowAgentInput {
-    // Check isString first to preserve string types even for numeric-looking strings
-    if (isString) {
-        return InputString(content)
-    }
-
-    return booleanOrNull?.let { InputBoolean(it) }
-        ?: intOrNull?.let { InputInt(it) }
-        ?: doubleOrNull?.let { InputDouble(it) }
-        ?: InputString(content)
-}
-
-/**
- * Converts a JsonPrimitive to a Primitive FlowAgentInput type.
- * Uses a different order than toFlowAgentInputPrimitive() for numeric type priority.
- */
-public fun JsonPrimitive.toPrimitiveFlowAgentInput(): Primitive {
-    return booleanOrNull?.let { InputBoolean(it) }
-        ?: intOrNull?.let { InputInt(it) }
-        ?: doubleOrNull?.let { InputDouble(it) }
-        ?: contentOrNull?.let { InputString(it) }
-        ?: error("Unsupported primitive type: $this")
-}
-
-/**
- * Converts a JsonArray to a typed FlowAgentInput array (InputArrayString, InputArrayInt, etc.).
- * All elements must be of the same primitive type.
- */
-public fun JsonArray.toFlowAgentInputArray(): FlowAgentInput {
-    if (isEmpty()) {
-        // Default to empty string array for empty arrays
-        return InputArrayString(emptyArray())
-    }
-
-    return when {
-        all { it is JsonPrimitive && it.isString } -> {
-            InputArrayString(mapNotNull { it.jsonPrimitive.contentOrNull }.toTypedArray())
-        }
-        all { it is JsonPrimitive && it.booleanOrNull != null } -> {
-            InputArrayBoolean(mapNotNull { it.jsonPrimitive.booleanOrNull }.toTypedArray())
-        }
-        all { it is JsonPrimitive && it.intOrNull != null } -> {
-            InputArrayInt(mapNotNull { it.jsonPrimitive.intOrNull }.toTypedArray())
-        }
-        all { it is JsonPrimitive && it.doubleOrNull != null } -> {
-            InputArrayDouble(mapNotNull { it.jsonPrimitive.doubleOrNull }.toTypedArray())
-        }
-        else -> {
-            error("Expected an array of uniform primitive types, but got: $this")
-        }
-    }
-}
-
-/**
- * Converts a JsonObject to FlowAgentInput. Handles both typed objects and InputCritiqueResult format.
- */
-public fun JsonObject.toFlowAgentInputObject(): FlowAgentInput? {
-    // Try to parse as InputCritiqueResult
-    val success = this["success"]?.jsonPrimitive?.booleanOrNull
-    val feedback = this["feedback"]?.jsonPrimitive?.contentOrNull
-    val input = this["input"]?.toFlowAgentInput()
-
-    if (success != null && feedback != null && input != null) {
-        return InputCritiqueResult(success, feedback, input)
-    }
-
-    val type = this["type"]?.jsonPrimitive?.contentOrNull ?: return null
-
-    return when (type) {
-        "boolean" -> {
-            this["data"]?.jsonPrimitive?.booleanOrNull?.let { InputBoolean(it) }
-        }
-        "string" -> {
-            this["data"]?.jsonPrimitive?.contentOrNull?.let { InputString(it) }
-        }
-        "int" -> {
-            this["data"]?.jsonPrimitive?.intOrNull?.let { InputInt(it) }
-        }
-        "double" -> {
-            this["data"]?.jsonPrimitive?.doubleOrNull?.let { InputDouble(it) }
-        }
-        "array_boolean" -> {
-            this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.booleanOrNull }?.toTypedArray()?.let {
-                InputArrayBoolean(it)
-            }
-        }
-        "array_string" -> {
-            this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }?.toTypedArray()?.let {
-                InputArrayString(it)
-            }
-        }
-        "array_int" -> {
-            this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.intOrNull }?.toTypedArray()?.let {
-                InputArrayInt(it)
-            }
-        }
-        "array_double" -> {
-            this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.doubleOrNull }?.toTypedArray()?.let {
-                InputArrayDouble(it)
-            }
-        }
-
-        else -> error("Unsupported input type: <$type>")
-    }
-}
-
-//endregion
-
 /**
  * Custom serializer for FlowAgentInput that handles polymorphic JSON deserialization.
  *
@@ -196,21 +69,16 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
         }
     }
 
-    private fun JsonPrimitive.toFlowAgentInputPrimitive(): FlowAgentInput {
-        // Check isString first to preserve string types even for numeric-looking strings
-        if (isString) {
-            return InputString(content)
-        }
-
+    private fun JsonPrimitive.toFlowAgentInputPrimitive(): FlowAgentInput? {
         return booleanOrNull?.let { InputBoolean(it) }
             ?: intOrNull?.let { InputInt(it) }
             ?: doubleOrNull?.let { InputDouble(it) }
-            ?: InputString(content)
+            ?: contentOrNull?.let { InputString(it) }
     }
 
     private fun JsonArray.toFlowAgentInputArray(): FlowAgentInput {
         if (isEmpty()) {
-            // Default to empty string array for empty arrays
+            // Default to an empty string array for empty arrays
             return InputArrayString(emptyArray())
         }
 
@@ -360,4 +228,32 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
             }
         }
     }
+}
+
+/**
+ * Converts a JsonPrimitive to a FlowAgentInput primitive type (InputString, InputInt, InputDouble, InputBoolean).
+ * Preserves string types even for numeric-looking strings.
+ */
+public fun JsonPrimitive.toFlowAgentInputPrimitive(): FlowAgentInput {
+    // Check isString first to preserve string types even for numeric-looking strings
+    if (isString) {
+        return InputString(content)
+    }
+
+    return booleanOrNull?.let { InputBoolean(it) }
+        ?: intOrNull?.let { InputInt(it) }
+        ?: doubleOrNull?.let { InputDouble(it) }
+        ?: InputString(content)
+}
+
+/**
+ * Converts a JsonPrimitive to a Primitive FlowAgentInput type.
+ * Uses a different order than toFlowAgentInputPrimitive() for numeric type priority.
+ */
+public fun JsonPrimitive.toPrimitiveFlowAgentInput(): Primitive {
+    return booleanOrNull?.let { InputBoolean(it) }
+        ?: intOrNull?.let { InputInt(it) }
+        ?: doubleOrNull?.let { InputDouble(it) }
+        ?: contentOrNull?.let { InputString(it) }
+        ?: error("Unsupported primitive type: $this")
 }
