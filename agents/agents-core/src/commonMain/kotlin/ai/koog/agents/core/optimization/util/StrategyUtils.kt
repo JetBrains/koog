@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
+import ai.koog.agents.core.optimization.OptimizableNode
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 
@@ -76,6 +77,19 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findAllNodes(
 
     visit(nodeStart)
     return nodes
+}
+
+/**
+ * Finds all [OptimizableNode] instances in a strategy.
+ *
+ * These are nodes created with the `optimizableNode` DSL that declare their input/output field
+ * mappings for optimization. This is a subset of [findOptimizableNodes] — only nodes that are
+ * specifically [OptimizableNode] (not regular nodes with instruction).
+ *
+ * @return A list of all [OptimizableNode] instances in the strategy.
+ */
+public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizableModules(): List<OptimizableNode> {
+    return findOptimizableNodes().filterIsInstance<OptimizableNode>()
 }
 
 /**
