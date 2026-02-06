@@ -152,8 +152,6 @@ class FlowExecutionTest : FlowTestBase() {
         assertTrue(result.data.contains("Hello, TestUser!"), "Result should contain greeting: ${result.data}")
     }
 
-    //region Verify and Transform Tests
-
     /**
      * Test that InputCritiqueResult can be serialized and deserialized correctly.
      * This validates the custom serializer handles the InputCritiqueResult type properly.
@@ -309,9 +307,6 @@ class FlowExecutionTest : FlowTestBase() {
         }
     }
 
-    //endregion Verify and Transform Tests
-
-    //region Examples
 
     @Test
     fun testConditionalBranchingFlow_highScore() = runTest {
@@ -635,7 +630,45 @@ class FlowExecutionTest : FlowTestBase() {
         assertTrue(result.success)
     }
 
-    //endregion Examples
+    @Test
+    fun testReActFlowExecution() = runTest {
+        val jsonContent = readFlow("react_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Preprocessor prepares the task
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Clarified: Calculate 15 + 27")) onCondition { request ->
+                request.contains("clarify", ignoreCase = true)
+            }
+
+            // ReAct agent - just finalize with the result (the reActStrategy nodes are internal)
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("The sum is 42")) onCondition { request ->
+                request.contains("Solve the problem", ignoreCase = true) ||
+                    request.contains("Clarified: Calculate", ignoreCase = true)
+            }
+
+            // Summarizer provides final summary
+            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Solution: 15 + 27 = 42")) onCondition { request ->
+                request.contains("summary", ignoreCase = true) ||
+                    request.contains("The sum is 42")
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            defaultModel = flowConfig.defaultModel,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowAgentInput.InputString("What is 15 plus 27?"))
+
+        assertIs<FlowAgentInput.InputString>(result)
+        assertTrue(result.data.contains("42") || result.data.contains("sum"), "Result should contain the answer: ${result.data}")
+    }
 
     //region Private Methods
 

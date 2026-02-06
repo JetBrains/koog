@@ -10,10 +10,12 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.CriticResult
+import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformation
@@ -136,6 +138,7 @@ public object KoogStrategyFactory {
             is FlowTaskAgent -> nodeTask(agent, toolRegistry, defaultModel)
             is FlowVerifyAgent -> nodeVerify(agent, toolRegistry, defaultModel)
             is FlowInputTransformAgent -> nodeTransform(agent)
+            is FlowReActAgent -> nodeReAct(agent, toolRegistry, defaultModel)
             else -> error("Parallel agent type is not yet supported")
         }
     }
@@ -176,6 +179,51 @@ public object KoogStrategyFactory {
     }
 
     //endregion Task
+
+    //region ReAct
+
+    /**
+     * Creates a ReAct node that uses the reActStrategy for reasoning and acting cycles.
+     * The task from parameters is provided to the LLM when the agent starts.
+     */
+    private fun AIAgentSubgraphBuilderBase<*, *>.nodeReAct(
+        agent: FlowReActAgent,
+        toolRegistry: ToolRegistry,
+        defaultModel: String?,
+    ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
+        // Create a subgraph that transforms FlowAgentInput to String and back
+        return subgraph(
+            name = agent.name,
+            toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
+            llmModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel),
+        ) {
+            // Node to extract/prepare the task string
+            val prepareTask by node<FlowAgentInput, String> { _ ->
+                // Use the task from configuration
+                agent.parameters.task
+            }
+
+            // Use the reActStrategy as a nested subgraph
+            // Since AIAgentGraphStrategy is-a AIAgentSubgraph, we can use it directly
+            val reactSubgraph = reActStrategy(
+                reasoningInterval = agent.parameters.reasoningInterval,
+                name = "${agent.name}_react_strategy"
+            )
+
+            // Node to wrap the output as FlowAgentInput
+            val wrapOutput by node<String, FlowAgentInput> { output ->
+                FlowAgentInput.InputString(output)
+            }
+
+            // Connect the nodes
+            edge(nodeStart forwardTo prepareTask)
+            edge(prepareTask forwardTo reactSubgraph)
+            edge(reactSubgraph forwardTo wrapOutput)
+            edge(wrapOutput forwardTo nodeFinish)
+        }
+    }
+
+    //endregion ReAct
 
     //region Verify
 

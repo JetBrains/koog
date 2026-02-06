@@ -1,6 +1,7 @@
 package ai.koog.protocol
 
 import ai.koog.protocol.agent.FlowAgentKind
+import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
@@ -309,4 +310,61 @@ class FlowJsonParserTest : FlowTestBase() {
     }
 
     //endregion Verify and Transform
+
+    //region ReAct
+
+    @Test
+    fun testJsonParsing_reactFlowJson() {
+        val jsonContent = readFlow("react_flow.json")
+
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        // Verify flow config
+        assertEquals("react-flow", flowConfig.id)
+        assertEquals("1.0", flowConfig.version)
+        assertEquals("openai/gpt4o", flowConfig.defaultModel)
+
+        // Verify agents
+        assertEquals(3, flowConfig.agents.size)
+
+        // preprocessor
+        val preprocessorAgent = flowConfig.agents[0]
+        assertIs<FlowTaskAgent>(preprocessorAgent)
+        assertEquals("preprocessor", preprocessorAgent.name)
+        assertEquals(FlowAgentKind.TASK, preprocessorAgent.type)
+
+        // react_problem_solver
+        val reactAgent = flowConfig.agents[1]
+        assertIs<FlowReActAgent>(reactAgent)
+        assertEquals("react_problem_solver", reactAgent.name)
+        assertEquals(FlowAgentKind.REACT, reactAgent.type)
+        assertEquals("openai/gpt4o", reactAgent.model)
+        assertNotNull(reactAgent.parameters)
+        assertEquals(
+            "Solve the problem using available tools. Reason about each step before taking action.",
+            reactAgent.parameters.task
+        )
+        assertEquals(1, reactAgent.parameters.reasoningInterval)
+        assertEquals(null, reactAgent.parameters.toolNames)
+
+        // summarizer
+        val summarizerAgent = flowConfig.agents[2]
+        assertIs<FlowTaskAgent>(summarizerAgent)
+        assertEquals("summarizer", summarizerAgent.name)
+        assertEquals(FlowAgentKind.TASK, summarizerAgent.type)
+
+        // Verify transitions
+        assertEquals(2, flowConfig.transitions.size)
+
+        val transition1 = flowConfig.transitions[0]
+        assertEquals("preprocessor", transition1.from)
+        assertEquals("react_problem_solver", transition1.to)
+
+        val transition2 = flowConfig.transitions[1]
+        assertEquals("react_problem_solver", transition2.from)
+        assertEquals("summarizer", transition2.to)
+    }
+
+    //endregion ReAct
 }

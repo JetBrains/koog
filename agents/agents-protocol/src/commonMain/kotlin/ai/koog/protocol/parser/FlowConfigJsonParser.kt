@@ -5,6 +5,8 @@ import ai.koog.protocol.agent.FlowAgentConfig
 import ai.koog.protocol.agent.FlowAgentKind
 import ai.koog.protocol.agent.FlowAgentPrompt
 import ai.koog.protocol.agent.FlowAgentRuntimeKind
+import ai.koog.protocol.agent.agents.react.FlowReActAgent
+import ai.koog.protocol.agent.agents.react.FlowReActAgentParameters
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgentParameters
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
@@ -114,6 +116,19 @@ public class FlowJsonConfigParser : FlowConfigParser {
                     config = agentConfig,
                     prompt = agentPrompt,
                     parameters = params
+                )
+            }
+
+            FlowAgentKind.REACT -> {
+                val task = extractTask() ?: error("Missing <task> parameter")
+                val toolNames = extractToolNames()
+                val reasoningInterval = params?.get("reasoningInterval")?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 1
+                FlowReActAgent(
+                    name = name,
+                    model = resolvedModel,
+                    config = agentConfig,
+                    prompt = agentPrompt,
+                    parameters = FlowReActAgentParameters(task, toolNames, reasoningInterval)
                 )
             }
 
