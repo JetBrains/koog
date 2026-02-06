@@ -17,8 +17,8 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -34,11 +34,10 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
     override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
 
     override fun deserialize(decoder: Decoder): FlowAgentInput {
-        val jsonDecoder = decoder as? JsonDecoder
-            ?: error("FlowAgentInput can only be deserialized from JSON")
+        val jsonDecoder = decoder as? JsonDecoder ?: error("FlowAgentInput can only be deserialized from JSON")
         val element = jsonDecoder.decodeJsonElement()
-        return element.toFlowAgentInput()
-            ?: error("Cannot deserialize FlowAgentInput from: $element")
+
+        return element.toFlowAgentInput() ?: error("Cannot deserialize FlowAgentInput from: $element")
     }
 
     override fun serialize(encoder: Encoder, value: FlowAgentInput) {
@@ -72,15 +71,15 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
     private fun JsonArray.toFlowAgentInputArray(): FlowAgentInput {
         if (isEmpty()) {
             // Default to empty string array for empty arrays
-            return FlowAgentInput.InputArrayStrings(emptyArray())
+            return FlowAgentInput.InputArrayString(emptyArray())
         }
 
         return when {
             all { it is JsonPrimitive && it.isString } -> {
-                FlowAgentInput.InputArrayStrings(mapNotNull { it.jsonPrimitive.contentOrNull }.toTypedArray())
+                FlowAgentInput.InputArrayString(mapNotNull { it.jsonPrimitive.contentOrNull }.toTypedArray())
             }
             all { it is JsonPrimitive && it.booleanOrNull != null } -> {
-                FlowAgentInput.InputArrayBooleans(mapNotNull { it.jsonPrimitive.booleanOrNull }.toTypedArray())
+                FlowAgentInput.InputArrayBoolean(mapNotNull { it.jsonPrimitive.booleanOrNull }.toTypedArray())
             }
             all { it is JsonPrimitive && it.intOrNull != null } -> {
                 FlowAgentInput.InputArrayInt(mapNotNull { it.jsonPrimitive.intOrNull }.toTypedArray())
@@ -105,48 +104,100 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
             return FlowAgentInput.InputCritiqueResult(success, feedback, input)
         }
 
-//        // Generic wrappers commonly produced by LLM tool calls
-//        // 1) {"value": <primitive|array|object>} -> unwrap recursively
-//        this["value"]?.let { valueEl ->
-//            return valueEl.toFlowAgentInput()
-//        }
-//
-        // 2) {"data": <primitive|array|object>} -> unwrap recursively
-        this["data"]?.let { dataEl ->
-            return dataEl.toFlowAgentInput()
+        val type = this["type"]?.jsonPrimitive?.contentOrNull ?: return null
+
+        return when (type) {
+            "boolean" -> {
+                this["data"]?.jsonPrimitive?.booleanOrNull?.let { FlowAgentInput.InputBoolean(it) }
+            }
+            "string" -> {
+                this["data"]?.jsonPrimitive?.contentOrNull?.let { FlowAgentInput.InputString(it) }
+            }
+            "int" -> {
+                this["data"]?.jsonPrimitive?.intOrNull?.let { FlowAgentInput.InputInt(it) }
+            }
+            "double" -> {
+                this["data"]?.jsonPrimitive?.doubleOrNull?.let { FlowAgentInput.InputDouble(it) }
+            }
+            "array_boolean" -> {
+                this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.booleanOrNull }?.toTypedArray()?.let {
+                    FlowAgentInput.InputArrayBoolean(it)
+                }
+            }
+            "array_string" -> {
+                this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }?.toTypedArray()?.let {
+                    FlowAgentInput.InputArrayString(it)
+                }
+            }
+            "array_int" -> {
+                this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.intOrNull }?.toTypedArray()?.let {
+                    FlowAgentInput.InputArrayInt(it)
+                }
+            }
+            "array_double" -> {
+                this["data"]?.jsonArray?.mapNotNull { it.jsonPrimitive.doubleOrNull }?.toTypedArray()?.let {
+                    FlowAgentInput.InputArrayDouble(it)
+                }
+            }
+
+            else -> error("Unsupported input type: <$type>")
         }
-
-//        // 3) {"type": "...", "data": ...} -> interpret by type; for now, just unwrap data
-//        val typeStr = this["type"]?.jsonPrimitive?.contentOrNull
-//        val dataEl = this["data"]
-//        if (typeStr != null && dataEl != null) {
-//            return dataEl.toFlowAgentInput()
-//        }
-
-        // 4) Heuristic: single-key object -> unwrap its value
-//        if (this.size == 1) {
-//            return this.entries.first().value.toFlowAgentInput()
-//        }
-
-        error("Unable to deserialize FlowAgentInput from JSON object: $this")
     }
 
     private fun FlowAgentInput.toJsonElement(): JsonElement {
-        return when (this) {
-            is FlowAgentInput.InputString -> JsonPrimitive(data)
-            is FlowAgentInput.InputInt -> JsonPrimitive(data)
-            is FlowAgentInput.InputDouble -> JsonPrimitive(data)
-            is FlowAgentInput.InputBoolean -> JsonPrimitive(data)
-            is FlowAgentInput.InputArrayStrings -> buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-            is FlowAgentInput.InputArrayInt -> buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-            is FlowAgentInput.InputArrayDouble -> buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-            is FlowAgentInput.InputArrayBooleans -> buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
-            is FlowAgentInput.InputCritiqueResult -> buildJsonObject {
-                put("success", success)
-                put("feedback", feedback)
-                put("input", input.toJsonElement())
+        return buildJsonObject {
+            when (this@toJsonElement) {
+                is FlowAgentInput.InputString -> {
+                    put("type", "string")
+                    put("data", JsonPrimitive((data)))
+                }
+                is FlowAgentInput.InputInt -> {
+                    put("type", "int")
+                    put("data", JsonPrimitive((data)))
+                }
+                is FlowAgentInput.InputDouble -> {
+                    put("type", "double")
+                    put("data", JsonPrimitive((data)))
+                }
+                is FlowAgentInput.InputBoolean -> {
+                    put("type", "boolean")
+                    put("data", JsonPrimitive((data)))
+                }
+                is FlowAgentInput.InputArrayString -> {
+                    put("type", "array_string")
+                    put("data",
+                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
+                    )
+                }
+                is FlowAgentInput.InputArrayInt -> {
+                    put("type", "array_int")
+                    put("data",
+                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
+                    )
+                }
+                is FlowAgentInput.InputArrayDouble -> {
+                    put("type", "array_double")
+                    put("data",
+                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
+                    )
+                }
+                is FlowAgentInput.InputArrayBoolean -> {
+                    put("type", "array_boolean")
+                    put("data",
+                        buildJsonArray { data.forEach { add(JsonPrimitive(it)) } }
+                    )
+                }
+                is FlowAgentInput.InputCritiqueResult -> {
+                    buildJsonObject {
+                        put("type", "critique")
+                        put("success", success)
+                        put("feedback", feedback)
+                        put("input", input.toJsonElement())
+                    }
+                }
+
+                else -> error("Unsupported input type: $this")
             }
-            else -> error("Unsupported input type: $this")
         }
     }
 }

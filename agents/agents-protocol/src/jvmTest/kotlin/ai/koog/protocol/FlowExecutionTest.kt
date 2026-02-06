@@ -9,14 +9,9 @@ import ai.koog.agents.ext.agent.CriticResultFromLLM
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.protocol.agent.FlowAgentInput
-import ai.koog.protocol.agent.agents.task.FlowTaskAgentParameters
 import ai.koog.protocol.flow.KoogFlow
 import ai.koog.protocol.mock.TestMcpServer
 import ai.koog.protocol.parser.FlowJsonConfigParser
-import ai.koog.protocol.transition.FlowTransition
-import ai.koog.protocol.transition.FlowTransitionCondition
-import ai.koog.protocol.flow.ConditionOperationKind
-import ai.koog.protocol.flow.FlowUtil.getFirstAgent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -70,38 +65,6 @@ class FlowExecutionTest : FlowTestBase() {
                 throw UnsupportedOperationException("Mock tool should not be executed directly")
             }
         }
-    }
-
-    @Test
-    fun testRealAgent(): Unit = runBlocking {
-        val jsonContent = readFlow("real_koog_agent_flow.json")
-
-        val parser = FlowJsonConfigParser()
-        val config = parser.parse(jsonContent)
-
-        println("Parsed FlowConfig:")
-        println("  ID: ${config.id}")
-        println("  Version: ${config.version}")
-        println("  Agents: ${config.agents.size}")
-        config.agents.forEach { agent ->
-            println("    - ${agent.name} (${agent.type})")
-        }
-        println("  Transitions: ${config.transitions.size}")
-        config.transitions.forEach { transition ->
-            println("    - ${transition.from} -> ${transition.to}")
-        }
-
-        // Create a SimpleFlow from the config and run it
-        println("\nCreating a flow and running...")
-        val flow = KoogFlow(
-            id = config.id ?: "simple-flow",
-            agents = config.agents,
-            tools = config.tools,
-            transitions = config.transitions
-        )
-
-        val result = flow.run(null)
-        println("Flow execution result: $result")
     }
 
     @Test
@@ -317,10 +280,10 @@ class FlowExecutionTest : FlowTestBase() {
             FlowAgentInput.InputInt(42),
             FlowAgentInput.InputDouble(3.14),
             FlowAgentInput.InputBoolean(true),
-            FlowAgentInput.InputArrayStrings(arrayOf("a", "b", "c")),
+            FlowAgentInput.InputArrayString(arrayOf("a", "b", "c")),
             FlowAgentInput.InputArrayInt(arrayOf(1, 2, 3)),
             FlowAgentInput.InputArrayDouble(arrayOf(1.1, 2.2, 3.3)),
-            FlowAgentInput.InputArrayBooleans(arrayOf(true, false, true)),
+            FlowAgentInput.InputArrayBoolean(arrayOf(true, false, true)),
             FlowAgentInput.InputCritiqueResult(
                 success = true,
                 feedback = "All good",

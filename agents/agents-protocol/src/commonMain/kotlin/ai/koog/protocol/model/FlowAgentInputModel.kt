@@ -48,10 +48,10 @@ internal fun JsonPrimitive.toFlowAgentInput(): FlowAgentInput {
 internal fun JsonArray.toInputArray(): FlowAgentInput {
     return when {
         all { it.jsonPrimitive.isString } -> {
-            FlowAgentInput.InputArrayStrings(mapNotNull { it.jsonPrimitive.contentOrNull }.toTypedArray())
+            FlowAgentInput.InputArrayString(mapNotNull { it.jsonPrimitive.contentOrNull }.toTypedArray())
         }
         all { it.jsonPrimitive.booleanOrNull != null } -> {
-            FlowAgentInput.InputArrayBooleans(mapNotNull { it.jsonPrimitive.booleanOrNull }.toTypedArray())
+            FlowAgentInput.InputArrayBoolean(mapNotNull { it.jsonPrimitive.booleanOrNull }.toTypedArray())
         }
         all { it.jsonPrimitive.intOrNull != null } -> {
             FlowAgentInput.InputArrayInt(mapNotNull { it.jsonPrimitive.intOrNull }.toTypedArray())
