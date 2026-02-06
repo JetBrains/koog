@@ -46,7 +46,7 @@ public class LabeledFewShot(
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         trainset: Dataset,
         valset: Dataset?,
-        metric: Metric,
+        metric: Metric<TOutput>,
     ): OptimizationResult {
         require(trainset.isNotEmpty()) { "trainset is required for LabeledFewShot" }
 

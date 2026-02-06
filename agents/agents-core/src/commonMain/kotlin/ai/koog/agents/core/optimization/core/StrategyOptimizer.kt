@@ -37,7 +37,7 @@ public data class OptimizationResult(
  * val optimizer = MIPROv2Optimizer(config)
  *
  * // Define a metric
- * val exactMatch: Metric = { expected, actual -> if (expected == actual) 1.0 else 0.0 }
+ * val exactMatch: Metric<String> = { expected, actual -> if (expected == actual) 1.0 else 0.0 }
  *
  * // Optimize and get best configuration
  * val result = optimizer.optimize(
@@ -54,15 +54,19 @@ public data class OptimizationResult(
 public interface StrategyOptimizer {
 
     /**
-     * Optimizes the strategy's optimizable nodes and returns the best configuration found.
+     * Optimizes the strategy's [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]s
+     * and returns the best configuration found.
      *
-     * Nodes are considered optimizable if they have a non-null [instruction][ai.koog.agents.core.agent.entity.AIAgentNode.instruction].
+     * Only nodes created with the `optimizableNode` DSL participate in optimization. These nodes
+     * declare their field mappings (`inputField`/`outputField`) which optimizers use to create
+     * per-node demonstrations from the training data.
+     *
      * During optimization, different instruction and demonstration combinations are evaluated
      * by passing them through the coroutine context via [OptimizationConfig].
      *
      * @param TInput The strategy's input type.
      * @param TOutput The strategy's output type.
-     * @param strategy The strategy to optimize. Nodes must have instruction set to be optimized.
+     * @param strategy The strategy to optimize.
      * @param trainset Training examples used for bootstrapping demonstrations and evaluation.
      * @param valset Validation examples for evaluating configurations. If null, a portion of
      *  trainset will be split off for validation.
@@ -73,7 +77,7 @@ public interface StrategyOptimizer {
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         trainset: Dataset,
         valset: Dataset? = null,
-        metric: Metric,
+        metric: Metric<TOutput>,
     ): OptimizationResult
 }
 
