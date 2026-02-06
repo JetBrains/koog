@@ -8,6 +8,8 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.optimization.core.Demonstration
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Configuration for the [TraceCollectionFeature].
@@ -38,27 +40,26 @@ public class TraceCollectionConfig : FeatureConfig() {
  * Collected traces for a single agent run.
  *
  * This class holds the demonstrations (input-output pairs) captured during execution.
- * It is thread-safe for concurrent access via internal synchronization.
+ * It is safe for concurrent access from parallel node execution via [Mutex].
  *
- * @property traces Map from node name to list of collected demonstrations.
+ * All mutating and reading methods are suspend functions to support coroutine-based locking.
  */
 public class CollectedTraces {
     private val _traces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
-    private val lock = Any()
+    private val mutex = Mutex()
 
     /**
      * Gets all collected traces as an immutable snapshot.
      */
-    public val traces: Map<String, List<Demonstration<Any?, Any?>>>
-        get() = synchronized(lock) {
-            _traces.mapValues { it.value.toList() }
-        }
+    public suspend fun getTraces(): Map<String, List<Demonstration<Any?, Any?>>> = mutex.withLock {
+        _traces.mapValues { it.value.toList() }
+    }
 
     /**
      * Adds a demonstration for a node.
      */
-    internal fun addTrace(nodeName: String, input: Any?, output: Any?, maxPerNode: Int) {
-        synchronized(lock) {
+    internal suspend fun addTrace(nodeName: String, input: Any?, output: Any?, maxPerNode: Int) {
+        mutex.withLock {
             val nodeTraces = _traces.getOrPut(nodeName) { mutableListOf() }
 
             // Evict oldest if at capacity
@@ -73,8 +74,8 @@ public class CollectedTraces {
     /**
      * Gets traces for a specific node.
      */
-    public fun getTracesForNode(nodeName: String): List<Demonstration<Any?, Any?>> {
-        return synchronized(lock) {
+    public suspend fun getTracesForNode(nodeName: String): List<Demonstration<Any?, Any?>> {
+        return mutex.withLock {
             _traces[nodeName]?.toList() ?: emptyList()
         }
     }
@@ -85,7 +86,7 @@ public class CollectedTraces {
      * Performs unchecked casts - caller must ensure type compatibility.
      */
     @Suppress("UNCHECKED_CAST")
-    public fun <TInput, TOutput> getTypedTracesForNode(
+    public suspend fun <TInput, TOutput> getTypedTracesForNode(
         nodeName: String
     ): List<Demonstration<TInput, TOutput>> {
         return getTracesForNode(nodeName) as List<Demonstration<TInput, TOutput>>
@@ -94,8 +95,8 @@ public class CollectedTraces {
     /**
      * Clears all collected traces.
      */
-    public fun clear() {
-        synchronized(lock) {
+    public suspend fun clear() {
+        mutex.withLock {
             _traces.clear()
         }
     }
@@ -103,18 +104,16 @@ public class CollectedTraces {
     /**
      * Gets the total number of traces collected across all nodes.
      */
-    public val totalTraceCount: Int
-        get() = synchronized(lock) {
-            _traces.values.sumOf { it.size }
-        }
+    public suspend fun getTotalTraceCount(): Int = mutex.withLock {
+        _traces.values.sumOf { it.size }
+    }
 
     /**
      * Gets the names of nodes that have collected traces.
      */
-    public val nodeNames: Set<String>
-        get() = synchronized(lock) {
-            _traces.keys.toSet()
-        }
+    public suspend fun getNodeNames(): Set<String> = mutex.withLock {
+        _traces.keys.toSet()
+    }
 }
 
 /**
@@ -145,7 +144,7 @@ public class TraceCollectionFeatureImpl(
         return true
     }
 
-    internal fun addTrace(nodeName: String, input: Any?, output: Any?) {
+    internal suspend fun addTrace(nodeName: String, input: Any?, output: Any?) {
         collectedTraces.addTrace(nodeName, input, output, config.maxTracesPerNode)
     }
 }
