@@ -402,7 +402,7 @@ agents/agents-core/src/commonMain/kotlin/ai/koog/agents/
     │   ├── Demonstration.kt            # DONE: Typed input-output pair
     │   ├── OptimizationConfig.kt       # DONE: Coroutine context element for trial configs
     │   ├── StrategyOptimizer.kt        # DONE: Optimizer interface + OptimizationResult
-    │   └── Example.kt                  # DONE: Training data type + Metric typealias + Metrics object
+    │   └── Example.kt                  # DONE: Training data type + Metric typealias
     │
     ├── features/
     │   └── TraceCollectionFeature.kt   # DONE: Pipeline feature for capturing node I/O
@@ -424,6 +424,9 @@ agents/agents-core/src/commonMain/kotlin/ai/koog/agents/
         ├── StrategyUtils.kt            # DONE: findOptimizableNodes(), validateOptimizationConfig(), etc.
         ├── SchemaGeneration.kt         # TODO: Port from current impl if needed
         └── Evaluation.kt               # TODO: Metric evaluation helpers
+
+agents/agents-core/src/jvmTest/kotlin/ai/koog/agents/core/optimization/
+└── OptimizationInfrastructureTest.kt   # DONE: Tests for Phase 2 infrastructure
 
 examples/
 └── optimization/
@@ -464,6 +467,14 @@ examples/
 - `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/dsl/OptimizationContextHelpers.kt`
 - `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/features/TraceCollectionFeature.kt`
 - `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/util/StrategyUtils.kt`
+- `agents/agents-core/src/jvmTest/kotlin/ai/koog/agents/core/optimization/OptimizationInfrastructureTest.kt` (tests)
+
+**Validated via tests:**
+- Node DSL correctly passes `instruction`, `demonstrations`, `description` to nodes
+- `OptimizationConfig` works as coroutine context element via `withContext(config)`
+- Context reading pattern `coroutineContext[OptimizationConfig]?.getInstruction(name) ?: default` works
+- `findOptimizableNodes()` discovers nodes with non-null instruction
+- `Node.copy()` creates variants with updated optimization fields
 
 **Note:** The `withOptimizedConfig()` full implementation is deferred. The primary mechanism for optimization is passing configs via coroutine context. Strategy utility functions provide the ability to inspect, validate, and extract configs from strategies.
 
@@ -477,8 +488,8 @@ examples/
 
 ### Phase 4: Integration & Testing
 - [ ] Port heart disease example to new abstractions
-- [ ] Unit tests for extended node types
-- [ ] Unit tests for TraceCollectionFeature
+- [x] Unit tests for optimization infrastructure (OptimizationInfrastructureTest.kt)
+- [ ] Unit tests for TraceCollectionFeature (with agent execution)
 - [ ] Integration tests for optimizers
 - [ ] Verify parallel evaluation works correctly
 - [ ] Benchmark against current implementation
