@@ -1,8 +1,8 @@
 package ai.koog.agents.ext.tool.file.render
 
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
 import ai.koog.prompt.text.TextContentBuilder
 import ai.koog.rag.base.files.FileMetadata
+import ai.koog.rag.base.files.model.FileSystemEntry
 
 private const val FOLDER_INDENTATION = "  "
 

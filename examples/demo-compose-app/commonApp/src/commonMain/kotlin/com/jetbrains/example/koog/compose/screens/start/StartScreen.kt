@@ -25,31 +25,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
-import com.jetbrains.example.koog.compose.NavRoute
+import androidx.compose.ui.tooling.preview.Preview
 import com.jetbrains.example.koog.compose.theme.AppDimension
 import com.jetbrains.example.koog.compose.theme.AppTheme
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun StartScreen(
-    onNavigateToSettings: () -> Unit,
-    onNavigateToAgentDemo: (NavRoute.AgentDemoRoute) -> Unit,
-    viewModel: StartViewModel,
-) {
+fun StartScreen(viewModel: StartViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     StartScreenContent(
         cards = uiState.demoCards,
-        onNavigateToSettings = onNavigateToSettings,
-        onNavigateToAgentDemo = onNavigateToAgentDemo,
+        onEvent = viewModel::onEvent,
     )
 }
 
 @Composable
 private fun StartScreenContent(
     cards: List<CardItem>,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToAgentDemo: (NavRoute.AgentDemoRoute) -> Unit,
+    onEvent: (StartUiEvents) -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -69,7 +62,7 @@ private fun StartScreenContent(
                 horizontalArrangement = Arrangement.End
             ) {
                 IconButton(
-                    onClick = onNavigateToSettings,
+                    onClick = { onEvent.invoke(StartUiEvents.Settings) },
                     modifier = Modifier
                         .size(AppDimension.iconButtonSizeLarge)
                         .clip(CircleShape)
@@ -131,7 +124,9 @@ private fun StartScreenContent(
                                 .fillMaxWidth()
                                 .padding(bottom = AppDimension.spacingMedium),
                             onClick = {
-                                card.agentDemoRoute?.let { demoRoute -> onNavigateToAgentDemo(demoRoute) }
+                                card.agentDemoRoute?.let { demoRoute ->
+                                    onEvent.invoke(StartUiEvents.AgentDemo(demoRoute))
+                                }
                             }
                         )
                     }
@@ -192,8 +187,7 @@ fun StartScreenContentPreview() {
                     description = "Second agent description. It does some cool stuff. Probably"
                 ),
             ),
-            onNavigateToSettings = {},
-            onNavigateToAgentDemo = {}
+            onEvent = {}
         )
     }
 }

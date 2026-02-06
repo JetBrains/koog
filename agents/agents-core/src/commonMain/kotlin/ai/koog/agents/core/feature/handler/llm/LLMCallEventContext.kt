@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.handler.llm
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
@@ -30,6 +31,7 @@ public data class LLMCallStartingContext(
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
+    val context: AIAgentContext
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallStarting
 }
@@ -53,7 +55,8 @@ public data class LLMCallCompletedContext(
     val model: LLModel,
     val tools: List<ToolDescriptor>,
     val responses: List<Message.Response>,
-    val moderationResponse: ModerationResult?
+    val moderationResponse: ModerationResult?,
+    val context: AIAgentContext
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallCompleted
 }

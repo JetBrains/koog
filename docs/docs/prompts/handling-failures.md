@@ -234,7 +234,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.retry.RetryConfig
 import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 
@@ -245,7 +244,7 @@ val resilientClient = RetryingLLMClient(
     OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
     RetryConfig.PRODUCTION
 )
-val executor = SingleLLMPromptExecutor(resilientClient)
+val executor = MultiLLMPromptExecutor(resilientClient)
 
 // Multi-provider executor with flexible client configuration
 val multiExecutor = MultiLLMPromptExecutor(

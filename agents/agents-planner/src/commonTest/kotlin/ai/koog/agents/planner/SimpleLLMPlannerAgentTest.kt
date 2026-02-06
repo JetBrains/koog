@@ -93,7 +93,7 @@ class SimpleLLMPlannerAgentTest {
             agentConfig = agentConfig
         )
 
-        val result = agent.run(initialState)
+        val result = agent.run(initialState, null)
 
         // Verify that we got a final state back (should contain results from step executions)
         assertTrue(

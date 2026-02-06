@@ -77,7 +77,7 @@ class GOAPPlannerAgentTest {
         )
 
         val initialState = SimpleState()
-        val finalState = agent.run(initialState)
+        val finalState = agent.run(initialState, null)
 
         assertTrue(finalState.hasKey, "Agent should have obtained the key")
         assertTrue(finalState.doorUnlocked, "Agent should have unlocked the door")
@@ -149,7 +149,7 @@ class GOAPPlannerAgentTest {
         )
 
         val initialState = PathState()
-        val finalState = agent.run(initialState)
+        val finalState = agent.run(initialState, null)
 
         assertTrue(finalState.hasItem, "Agent should have obtained the item")
         assertTrue(finalState.goalReached, "Agent should have reached the goal")
@@ -243,7 +243,7 @@ class GOAPPlannerAgentTest {
         )
 
         val initialState = ComplexState()
-        val finalState = agent.run(initialState)
+        val finalState = agent.run(initialState, null)
 
         assertTrue(finalState.hasWood, "Agent should have gathered wood")
         assertTrue(finalState.hasStone, "Agent should have gathered stone")

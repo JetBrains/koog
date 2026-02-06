@@ -108,7 +108,7 @@ class NodeUniquenessCheckpointTest {
             }
         }
 
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 
     /**
@@ -144,6 +144,6 @@ class NodeUniquenessCheckpointTest {
         )
 
         // Run the agent to verify it works without the AgentCheckpoint feature
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 }

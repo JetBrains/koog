@@ -3,9 +3,9 @@ package ai.koog.prompt.structure.json
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.Structure
+import ai.koog.prompt.structure.StructuredOutputPrompts
 import ai.koog.prompt.structure.json.generator.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
-import ai.koog.prompt.structure.structure
 import ai.koog.prompt.text.TextContentBuilderBase
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.ClassDiscriminatorMode
@@ -21,8 +21,10 @@ import kotlinx.serialization.serializer
  * @property examples A list of example data items that conform to the structure.
  * @property serializer The serializer used to convert the data to and from JSON.
  * @property json [kotlinx.serialization.json.Json] instance to perform de/serialization.
- * @property definitionPrompt Prompt with definition, explaining the structure to the LLM.
+ * @param definitionPrompt Prompt with definition, explaining the structure to the LLM.
  * Default is [JsonStructure.defaultDefinitionPrompt]
+ * @param examplesPrompt Prompt with examples of valid formats for the structured data.
+ * Default is [StructuredOutputPrompts.examplesPrompt]
 */
 public class JsonStructure<TStruct>(
     id: String,
@@ -32,8 +34,12 @@ public class JsonStructure<TStruct>(
     public val json: Json,
     private val definitionPrompt: (
         builder: TextContentBuilderBase<*>,
-        structuredData: JsonStructure<TStruct>
-    ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt
+        structure: JsonStructure<TStruct>
+    ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt,
+    private val examplesPrompt: (
+        builder: TextContentBuilderBase<*>,
+        structure: JsonStructure<TStruct>,
+    ) -> TextContentBuilderBase<*> = StructuredOutputPrompts::examplesPrompt,
 ) : Structure<TStruct, LLMParams.Schema.JSON>(id, schema, examples) {
 
     override fun parse(text: String): TStruct = json.decodeFromString(serializer, text.trim().stripMarkdown())
@@ -41,6 +47,8 @@ public class JsonStructure<TStruct>(
     override fun pretty(value: TStruct): String = json.encodeToString(serializer, value)
 
     override fun definition(builder: TextContentBuilderBase<*>): TextContentBuilderBase<*> = definitionPrompt(builder, this)
+
+    override fun examples(builder: TextContentBuilderBase<*>): TextContentBuilderBase<*> = examplesPrompt(builder, this)
 
     // LLMs often enclose JSON output in Markdown code blocks.
     // Stripping them saves extra LLM call which would be required to fix the string.
@@ -88,24 +96,7 @@ public class JsonStructure<TStruct>(
                     +json.encodeToString(schema.schema)
                     br()
 
-                    if (examples.isNotEmpty()) {
-                        h4("EXAMPLES")
-
-                        if (examples.size == 1) {
-                            +"Here is an example of a valid response:"
-                        } else {
-                            +"Here are some examples of valid responses:"
-                        }
-
-                        examples.forEach { example ->
-                            codeblock(
-                                code = ai.koog.prompt.text.text {
-                                    structure(this@with, example)
-                                },
-                                language = "json"
-                            )
-                        }
-                    }
+                    StructuredOutputPrompts.examplesPrompt(this, structuredData)
 
                     h2("RESULT")
                     +"Provide ONLY the resulting JSON, WITHOUT ANY free text comments, backticks, or other symbols."

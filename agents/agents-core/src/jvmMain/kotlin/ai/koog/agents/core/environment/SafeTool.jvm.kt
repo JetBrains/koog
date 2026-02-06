@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KFunction
 
 /**
@@ -187,11 +188,15 @@ public data class SafeToolFromCallable<TResult>(
  * @return A `SafeToolFromCallable.Result` object, either a `Success` with the extracted result
  *         and content or a `Failure` with an appropriate message.
  */
-private fun <TResult> ReceivedToolResult.toSafeResultFromCallable(tool: Tool<ToolFromCallable.VarArgs, TResult>): SafeToolFromCallable.Result<TResult> =
-    when (result) {
-        null -> SafeToolFromCallable.Result.Failure(message = content)
-        else -> SafeToolFromCallable.Result.Success(
-            result = tool.decodeResult(result),
-            content = content
-        )
+private fun <TResult> ReceivedToolResult.toSafeResultFromCallable(tool: Tool<ToolFromCallable.VarArgs, TResult>): SafeToolFromCallable.Result<TResult> {
+    val encodedResult = result ?: return SafeToolFromCallable.Result.Failure(message = content)
+    val decodedResult = try {
+        tool.decodeResult(encodedResult)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        return SafeToolFromCallable.Result.Failure("Tool with name '${tool.name}' failed to deserialize result with error: ${e.message}")
     }
+
+    return SafeToolFromCallable.Result.Success(result = decodedResult, content = content)
+}

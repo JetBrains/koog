@@ -22,6 +22,10 @@ import kotlinx.coroutines.flow.Flow
  * @constructor Creates an instance of `LLMPromptExecutor`.
  * @param llmClient The client used for direct communication with the LLM provider.
  */
+@Deprecated(
+    "Please use MultiLLMPromptExecutor instead",
+    replaceWith = ReplaceWith("MultiLLMPromptExecutor", "ai.koog.prompt.executor.llms.MultiLLMPromptExecutor")
+)
 public open class SingleLLMPromptExecutor(
     private val llmClient: LLMClient,
 ) : PromptExecutor {

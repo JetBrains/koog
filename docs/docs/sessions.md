@@ -243,6 +243,7 @@ Example:
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.example.exampleParallelNodeExecution07.JokeRating
 
+
 val strategy = strategy<Unit, Unit>("strategy-name") {
     val node by node<Unit, Unit> {
 -->
@@ -416,6 +417,8 @@ Example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.ext.tool.AskUser
+import ai.koog.agents.core.agent.session.callTool
+import ai.koog.agents.core.agent.session.callToolRaw
 
 val myTool = AskUser
 val myArgs = AskUser.Args("this is a string")

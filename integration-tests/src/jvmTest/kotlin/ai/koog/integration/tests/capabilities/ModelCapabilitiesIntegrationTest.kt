@@ -158,7 +158,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Vision.Image -> {
-                    val imagePath = testResourcesDir.resolve("basic.jpg")
+                    val imagePath = testResourcesDir.resolve("basic.jpeg")
                     val base64 = Base64.encode(imagePath.readBytes())
                     val prompt = prompt("cap-vision-image-positive") {
                         system("You are a helpful assistant that can describe images.")

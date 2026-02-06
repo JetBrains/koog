@@ -1,21 +1,12 @@
 package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
-import ai.koog.agents.features.opentelemetry.extension.setAttributes
-import ai.koog.agents.features.opentelemetry.extension.setEvents
-import ai.koog.agents.features.opentelemetry.extension.setSpanStatus
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.context.Context
-import java.time.Instant
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-internal class SpanCollector(
-    private val tracer: Tracer,
-    private val verbose: Boolean = false
-) {
+internal class SpanCollector {
 
     companion object {
         private val logger = KotlinLogging.logger { }
@@ -52,68 +43,26 @@ internal class SpanCollector(
     internal val activeSpansCount: Int
         get() = pathToNodeMap.values.sumOf { it.size }
 
-    /**
-     * Starts a new span with the given details and adds it to the tree structure.
-     *
-     * @param span The span to start.
-     * @param path The execution path for this span.
-     * @param instant The start timestamp for the span. Defaults to the current time if null.
-     */
-    fun startSpan(
+    fun collectSpan(
         span: GenAIAgentSpan,
         path: AgentExecutionInfo,
-        instant: Instant? = null,
     ) {
-        logger.debug { "Starting span (name: ${span.name}, id: ${span.id}, path: ${path.path()})" }
-
-        val spanKind = span.kind
-        val parentContext = span.parentSpan?.context ?: Context.current()
-
-        val spanBuilder = tracer.spanBuilder(span.name)
-            .setStartTimestamp(instant ?: Instant.now())
-            .setSpanKind(spanKind)
-            .setParent(parentContext)
-
-        spanBuilder.setAttributes(span.attributes, verbose)
-
-        val startedSpan = spanBuilder.startSpan()
-
-        // Update span context and span properties
-        span.span = startedSpan
-        span.context = startedSpan.storeInContext(parentContext)
-
-        // Add to the tree structure
+        logger.debug { "${span.logString} Starting span with path: ${path.path()}" }
         addSpanToTree(span, path)
-        logger.debug { "Span has been started (id: ${span.id}, name: ${span.name})" }
     }
 
-    /**
-     * Ends a span with the given status and removes it from the tree.
-     *
-     * @param span The span to end.
-     * @param spanEndStatus Optional status to set when ending the span.
-     * @throws IllegalStateException if the span has active children.
-     */
-    fun endSpan(
+    fun removeSpan(
         span: GenAIAgentSpan,
         path: AgentExecutionInfo,
-        spanEndStatus: SpanEndStatus? = null
     ) {
-        logger.debug { "${span.logString} Finishing the span." }
-
-        val spanToFinish = span.span
-
-        spanToFinish.setAttributes(span.attributes, verbose)
-        spanToFinish.setEvents(span.events, verbose)
-        spanToFinish.setSpanStatus(spanEndStatus)
-        spanToFinish.end()
-
-        // Remove the span from the tree structure
+        logger.debug { "${span.logString} Finishing the span with path: ${path.path()}" }
         removeSpanFromTree(span, path)
-        logger.debug { "${span.logString} Span has been finished." }
     }
 
-    fun getSpan(path: AgentExecutionInfo, filter: ((SpanNode) -> Boolean)? = null): GenAIAgentSpan? = spansLock.read get@{
+    fun getSpan(
+        path: AgentExecutionInfo,
+        filter: ((SpanNode) -> Boolean)? = null
+    ): GenAIAgentSpan? = spansLock.read get@{
         val spanNodes = pathToNodeMap[path.path()]
 
         if (spanNodes.isNullOrEmpty()) {
@@ -126,60 +75,24 @@ internal class SpanCollector(
         return filteredNode?.span
     }
 
-    /**
-     * Retrieves a span by its ID and casts it to the specified type.
-     * Returns null if the span is not found or cannot be cast to the specified type.
-     *
-     * @param T The type to cast the span to.
-     * @param path The execution path for the span.
-     * @param filter Optional filter for spans to search.
-     * @return The span cast to type T if found and castable, null otherwise.
-     */
-    inline fun <reified T : GenAIAgentSpan> getSpanCatching(
-        path: AgentExecutionInfo,
-        noinline filter: ((SpanNode) -> Boolean)? = null,
-    ): T? = try {
-        getSpan(path, filter) as? T
-    } catch (e: Exception) {
-        logger.warn(e) { "Failed to get span with path: ${path.path()}" }
-        null
-    }
+    fun getStartedSpan(
+        executionInfo: AgentExecutionInfo,
+        eventId: String,
+        spanType: SpanType
+    ): GenAIAgentSpan? = spansLock.read {
+        logger.debug { "Looking for span with parameters (type: ${spanType.name}, path: ${executionInfo.path()}, event id: $eventId)" }
 
-    /**
-     * Ends all unfinished spans that match the given predicate.
-     * If no predicate is provided, ends all spans.
-     * Spans are closed from leaf nodes up to parent nodes to maintain a proper hierarchy.
-     *
-     * @param filter Optional filter for spans to end.
-     */
-    fun endUnfinishedSpans(filter: ((GenAIAgentSpan) -> Boolean)? = null) {
-        val spansToEnd = spansLock.read {
-            // Traverse tree depth-first (post-order) to get leaf nodes before parents
-            val collectedNodes = mutableListOf<SpanNode>()
+        val spanNodes = pathToNodeMap[executionInfo.path()]
 
-            fun traversePostOrder(node: SpanNode) {
-                // Visit children depth-first
-                node.children.forEach { traversePostOrder(it) }
-
-                // Add the node itself
-                if (filter == null || filter(node.span)) {
-                    collectedNodes.add(node)
-                }
-            }
-
-            // Start traversal from all root nodes
-            rootNodes.forEach { traversePostOrder(it) }
-
-            collectedNodes
+        if (spanNodes.isNullOrEmpty()) {
+            return@read null
         }
 
-        spansToEnd.forEach { spanNode ->
-            try {
-                endSpan(spanNode.span, spanNode.path)
-            } catch (e: Exception) {
-                logger.warn(e) { "${spanNode.span.logString} Failed to end span due to the error: ${e.message}" }
-            }
+        logger.trace { "Found <${spanNodes.size}> span node(s) for path: ${executionInfo.path()}. Filter by parameters (type: ${spanType.name}, event id: $eventId)" }
+        val filteredNode = spanNodes.firstOrNull { node ->
+            node.span.id == eventId && node.span.type == spanType
         }
+        return filteredNode?.span
     }
 
     /**
@@ -189,6 +102,32 @@ internal class SpanCollector(
         pathToNodeMap.clear()
         rootNodes.clear()
         logger.debug { "All spans are cleared in span collector" }
+    }
+
+    /**
+     * Retrieves all spans from the tree in post-order (leaf nodes before parents).
+     *
+     * @param filter Optional filter for spans to include.
+     * @return List of span nodes in post-order traversal.
+     */
+    fun getActiveSpans(filter: ((GenAIAgentSpan) -> Boolean)? = null): List<SpanNode> = spansLock.read {
+        // Traverse tree depth-first (post-order) to get leaf nodes before parents
+        val collectedNodes = mutableListOf<SpanNode>()
+
+        fun traversePostOrder(node: SpanNode) {
+            // Visit children depth-first
+            node.children.forEach { traversePostOrder(it) }
+
+            // Add the node itself
+            if (filter == null || filter(node.span)) {
+                collectedNodes.add(node)
+            }
+        }
+
+        // Start traversal from all root nodes
+        rootNodes.forEach { traversePostOrder(it) }
+
+        collectedNodes
     }
 
     //region Private Methods

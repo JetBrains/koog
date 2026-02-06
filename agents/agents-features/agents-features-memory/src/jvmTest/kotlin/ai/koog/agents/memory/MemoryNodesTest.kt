@@ -197,7 +197,7 @@ class MemoryNodesTest {
             }
         }
 
-        agent.run("")
+        agent.run("", null)
 
         // Verify that the fact was saved and loaded correctly with timestamp
         assertEquals(1, result.size)
@@ -246,7 +246,7 @@ class MemoryNodesTest {
             }
         }
 
-        agent.run("")
+        agent.run("", null)
 
         // Verify that facts were detected and saved with timestamps
         assertEquals(2, memory.facts.size)
@@ -321,7 +321,7 @@ class MemoryNodesTest {
             }
         }
 
-        val result = agent.run("Hi")
+        val result = agent.run("Hi", null)
 
         assertEquals("Done", result, "Agent should complete successfully")
         assertTrue(memory.facts.isNotEmpty(), "Facts should be saved to memory")
@@ -398,7 +398,7 @@ class MemoryNodesTest {
             }
         }
 
-        agent.run("Hey")
+        agent.run("Hey", null)
         assertTrue(memory.facts.isNotEmpty(), "Auto-detected facts should be saved to memory")
 
         val savedFacts = memory.facts.values.flatten()
@@ -479,7 +479,7 @@ class MemoryNodesTest {
             }
         }
 
-        val resultPrompt = agent.run("Why")
+        val resultPrompt = agent.run("Why", null)
 
         assertEquals(1, resultPrompt.messages.size)
         assertTrue { factValue in resultPrompt.messages.first().content }

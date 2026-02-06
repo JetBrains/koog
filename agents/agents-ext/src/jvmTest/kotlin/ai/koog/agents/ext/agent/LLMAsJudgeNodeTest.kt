@@ -63,6 +63,8 @@ class LLMAsJudgeNodeTest {
 
         val initialModel = OllamaModels.Meta.LLAMA_3_2
 
+        val agentConfig = AIAgentConfig(prompt = prompt("id") {}, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10)
+
         val mockLLM = AIAgentLLMContext(
             tools = emptyList(),
             toolRegistry = ToolRegistry {},
@@ -71,7 +73,7 @@ class LLMAsJudgeNodeTest {
             responseProcessor = null,
             promptExecutor = mockPromptExecutor,
             environment = mockEnv,
-            config = AIAgentConfig(prompt = prompt("id") {}, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10),
+            config = agentConfig,
             clock = testClock
         )
 
@@ -88,7 +90,7 @@ class LLMAsJudgeNodeTest {
             storage = mockk(),
             runId = "run-1",
             strategyName = "test-strategy",
-            pipeline = AIAgentGraphPipeline(),
+            pipeline = AIAgentGraphPipeline(agentConfig),
             executionInfo = executionInfo,
             parentContext = null
         )
@@ -105,7 +107,7 @@ class LLMAsJudgeNodeTest {
             task = CRITIC_TASK
         )
 
-        coEvery { mockPromptExecutor.execute(any(), any(), any()) } returns listOf(
+        coEvery { mockPromptExecutor.execute(any(), any()) } returns listOf(
             Message.Assistant(
                 content = Json.encodeToString(
                     CriticResultFromLLM.serializer(),
@@ -156,8 +158,7 @@ class LLMAsJudgeNodeTest {
                 },
                 model = match {
                     it == anotherModel
-                },
-                tools = any()
+                }
             )
         }
 

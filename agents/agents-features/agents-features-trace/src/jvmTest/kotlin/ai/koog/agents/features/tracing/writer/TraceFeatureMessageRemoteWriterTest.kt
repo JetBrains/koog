@@ -145,7 +145,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         )
                     }
                 }.use { agent ->
-                    agent.run("")
+                    agent.run("", null)
                 }
             }
         }
@@ -268,7 +268,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         addMessageProcessor(writer)
                     }
                 }.use { agent ->
-                    agent.run(userPrompt)
+                    agent.run(userPrompt, null)
                 }
             }
         }
@@ -675,7 +675,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             addMessageProcessor(testWriter)
                         }
                     }.use { agent ->
-                        agent.run("")
+                        agent.run("", null)
                     }
                 }
             }
@@ -839,7 +839,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         addMessageProcessor(writer)
                     }
                 }.use { agent ->
-                    agent.run(userPrompt)
+                    agent.run(userPrompt, null)
                 }
             }
         }

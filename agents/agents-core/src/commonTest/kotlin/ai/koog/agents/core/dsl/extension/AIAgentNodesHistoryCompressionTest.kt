@@ -68,7 +68,7 @@ class AIAgentNodesHistoryCompressionTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("")
+            agent.run("", null)
         }
 
         // After compression, we should have one result
@@ -120,7 +120,7 @@ class AIAgentNodesHistoryCompressionTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("")
+            agent.run("", null)
         }
 
         // After compression, we should have one result
@@ -175,7 +175,7 @@ class AIAgentNodesHistoryCompressionTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("")
+            agent.run("", null)
         }
 
         // After compression, we should have one result

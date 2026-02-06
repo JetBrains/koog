@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.handler.streaming
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
@@ -30,6 +31,7 @@ public data class LLMStreamingStartingContext(
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
+    val context: AIAgentContext
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingStarting
 }
@@ -52,6 +54,7 @@ public data class LLMStreamingFrameReceivedContext(
     val prompt: Prompt,
     val model: LLModel,
     val streamFrame: StreamFrame,
+    val context: AIAgentContext
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingFrameReceived
 }
@@ -73,7 +76,8 @@ public data class LLMStreamingFailedContext(
     val runId: String,
     val prompt: Prompt,
     val model: LLModel,
-    val error: Throwable
+    val error: Throwable,
+    val context: AIAgentContext
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingFailed
 }
@@ -95,7 +99,8 @@ public data class LLMStreamingCompletedContext(
     val runId: String,
     val prompt: Prompt,
     val model: LLModel,
-    val tools: List<ToolDescriptor>
+    val tools: List<ToolDescriptor>,
+    val context: AIAgentContext
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingCompleted
 }

@@ -105,7 +105,7 @@ internal object DebuggerTestAPI {
                     // Use System env var 'KOOG_DEBUGGER_PORT' or VM option 'koog.debugger.port'
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
         }
 
@@ -304,7 +304,7 @@ internal object DebuggerTestAPI {
             }.use { agent ->
                 actualAgentRunTime = measureTime {
                     withTimeoutOrNull(defaultClientServerTimeout) {
-                        agent.run(userPrompt)
+                        agent.run(userPrompt, null)
                     }
                 }
             }

@@ -7,6 +7,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.jvm.JvmStatic
 
@@ -115,7 +116,9 @@ public class LLMBasedToolCallFixProcessor(
         logger.info { "Updating message: $response" }
 
         var result = preprocessor.process(executor, prompt, model, tools, response)
-        if (!isToolCallIntended(executor, prompt, model, result)) return@processSingleMessage result
+        if (!isToolCallRequired(prompt.params.toolChoice) && !isToolCallIntended(executor, prompt, model, result)) {
+            return@processSingleMessage result
+        }
 
         var fixToolCallPrompt = prompt(prompt.withMessages { emptyList() }) {
             system(fixToolCallSystemMessage)
@@ -136,6 +139,15 @@ public class LLMBasedToolCallFixProcessor(
         fallbackProcessor?.process(executor, prompt, model, tools, response) ?: response
     }.also {
         logger.info { "Updated messages: $it" }
+    }
+
+    private fun isToolCallRequired(toolChoice: LLMParams.ToolChoice?) = when (toolChoice) {
+        null -> false
+        LLMParams.ToolChoice.Named -> true
+        LLMParams.ToolChoice.None -> false
+        LLMParams.ToolChoice.Auto -> false
+        LLMParams.ToolChoice.Required -> true
+        else -> error("Unknown tool choice: $toolChoice")
     }
 
     private suspend fun isToolCallIntended(
@@ -172,8 +184,12 @@ public class LLMBasedToolCallFixProcessor(
             return invalidNameFeedback(toolName, tools)
         }
 
-        val tool = toolRegistry.getTool(toolName)
-
+        val tool = try {
+            toolRegistry.getTool(toolName)
+        } catch (e: Exception) {
+            // assume that it's the hack tool from the subgraphWithTask, since it is available in `tools`, but not available in the `toolRegistry`
+            return null
+        }
         try {
             tool.decodeArgs((message as Message.Tool.Call).contentJson)
         } catch (e: Exception) {

@@ -32,8 +32,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.StreamFrameFlowBuilder
-import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
@@ -49,10 +47,12 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -79,7 +79,8 @@ public abstract class OpenAIBaseSettings(
  * @param baseClient The HTTP client to use for API requests. Defaults to a new HttpClient instance.
  * @param clock Clock instance used for tracking response metadata timestamps. Defaults to Clock.System.
  */
-public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
+public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>
+@JvmOverloads constructor(
     private val apiKey: String,
     settings: OpenAIBaseSettings,
     baseClient: HttpClient = HttpClient(),
@@ -163,10 +164,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     protected abstract fun decodeResponse(data: String): TResponse
 
     /**
-     * Processes a provider-specific streaming response chunk.
+     * Processes a provider-specific streaming response.
      * Must be implemented by concrete client classes.
      */
-    protected abstract suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: TStreamResponse)
+    protected abstract fun processStreamingResponse(response: Flow<TStreamResponse>): Flow<StreamFrame>
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
@@ -191,8 +192,8 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = true
         )
 
-        return buildStreamFrameFlow {
-            try {
+        return try {
+            channelFlow {
                 httpClient.sse(
                     path = chatCompletionsPath,
                     request = request,
@@ -200,18 +201,16 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     dataFilter = { it != "[DONE]" },
                     decodeStreamingResponse = ::decodeStreamingResponse,
                     processStreamingChunk = { it }
-                ).collect {
-                    processStreamingChunk(it)
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                throw LLMClientException(
-                    clientName = clientName,
-                    message = e.message,
-                    cause = e
-                )
-            }
+                ).collect { send(it) }
+            }.let { processStreamingResponse(it) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
         }
     }
 

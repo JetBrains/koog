@@ -1,7 +1,10 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext

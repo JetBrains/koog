@@ -1,5 +1,4 @@
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -22,6 +21,7 @@ class PersistenceRestoreStrategyTests {
         val provider = InMemoryPersistenceStorageProvider()
 
         val agentId = "persistency-restore-default"
+        val sessionId = "persistency-restore-default"
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
@@ -32,7 +32,7 @@ class PersistenceRestoreStrategyTests {
             version = 0L
         )
 
-        provider.saveCheckpoint(agentId, checkpoint)
+        provider.saveCheckpoint(sessionId, checkpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -42,7 +42,6 @@ class PersistenceRestoreStrategyTests {
                 model = OllamaModels.Meta.LLAMA_3_2,
                 maxAgentIterations = 10
             ),
-            id = agentId
         ) {
             install(Persistence) {
                 storage = provider
@@ -52,7 +51,7 @@ class PersistenceRestoreStrategyTests {
             }
         }
 
-        val result = agent.run("start")
+        val result = agent.run("start", sessionId = sessionId)
 
         assertEquals(
             "History: History Before\n" +
@@ -65,7 +64,7 @@ class PersistenceRestoreStrategyTests {
     fun `rollback MessageHistoryOnly starts from beginning`() = runTest {
         val provider = InMemoryPersistenceStorageProvider()
 
-        val agentService = AIAgentService(
+        val agent = AIAgent(
             promptExecutor = getMockExecutor { },
             strategy = restoreStrategyGraph(),
             agentConfig = AIAgentConfig(
@@ -82,9 +81,9 @@ class PersistenceRestoreStrategyTests {
         }
 
         // run first time to create a history
-        agentService.createAgent(id = "same-id").run("Agent Input")
+        agent.run("Agent Input", sessionId = "same-id")
 
-        val result2 = agentService.createAgent(id = "same-id").run("Agent Input2")
+        val result2 = agent.run("Agent Input2", sessionId = "same-id")
         assertEquals(
             "History: You are a test agent.\n" +
                 "Agent Input\n" +

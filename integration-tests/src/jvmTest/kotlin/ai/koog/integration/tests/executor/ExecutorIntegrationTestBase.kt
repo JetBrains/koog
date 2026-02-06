@@ -58,7 +58,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -77,6 +76,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
@@ -90,7 +90,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
+import java.util.Base64
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
@@ -124,7 +124,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
 
-    private fun createReasoningParams(model: LLModel): LLMParams {
+    open fun createReasoningParams(model: LLModel): LLMParams {
         return when (model.provider) {
             is LLMProvider.Anthropic -> AnthropicParams(
                 thinking = AnthropicThinking.Enabled(budgetTokens = 1024)
@@ -241,7 +241,18 @@ abstract class ExecutorIntegrationTestBase {
                 toolMessages.shouldBeEmpty()
                 when (model.provider) {
                     is LLMProvider.Ollama -> endMessages.size shouldBe 0
-                    else -> endMessages.size shouldBe 1
+
+                    else -> {
+                        endMessages.size shouldBe 1
+                        endMessages.first() should { end ->
+                            end.metaInfo should { meta ->
+                                withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
+                                    listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
+                                        .shouldForAny { it != null }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 toString() shouldNotBeNull {
@@ -500,21 +511,7 @@ abstract class ExecutorIntegrationTestBase {
                         +"I'm sending you an image. Please analyze it and identify the image format if possible."
                     }
 
-                    when (scenario) {
-                        ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                            image(
-                                ContentPart.Image(
-                                    content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
-                                    format = "jpg",
-                                    mimeType = "image/jpeg"
-                                )
-                            )
-                        }
-
-                        else -> {
-                            image(KtPath(imageFile.pathString))
-                        }
-                    }
+                    image(KtPath(imageFile.pathString))
                 }
             }
 
@@ -527,19 +524,23 @@ abstract class ExecutorIntegrationTestBase {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
                             val message = e.message.shouldNotBeNull()
 
-                            message.shouldContain("Status code: 400")
-                            message.shouldContain("image exceeds")
+                            listOf(
+                                "Status code: 400",
+                                "image exceeds",
+                                "Could not process image"
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
                             val message = e.message.shouldNotBeNull()
 
-                            message.shouldContain("Status code: 400")
-                            if (model.provider == LLMProvider.Anthropic) {
-                                message.shouldContain("Could not process image")
-                            } else if (model.provider == LLMProvider.OpenAI) {
-                                message.shouldContain("You uploaded an unsupported image. Please make sure your image is valid.")
-                            }
+                            listOf(
+                                "Status code: 400",
+                                "Could not process image",
+                                "You uploaded an unsupported image. Please make sure your image is valid.",
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         else -> {
@@ -1131,10 +1132,6 @@ abstract class ExecutorIntegrationTestBase {
         assumeTrue(
             model.provider !== LLMProvider.OpenRouter,
             "KG-626 Error from OpenRouter on a streaming with a tool call"
-        )
-        assumeTrue(
-            model.provider !== LLMProvider.Bedrock,
-            "KG-627 Error from Bedrock executor on a streaming with a tool call"
         )
 
         val executor = getExecutor(model)

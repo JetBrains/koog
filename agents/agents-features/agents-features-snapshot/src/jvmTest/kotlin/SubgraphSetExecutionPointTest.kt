@@ -38,7 +38,7 @@ class SubgraphSetExecutionPointTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +
@@ -62,7 +62,7 @@ class SubgraphSetExecutionPointTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +
@@ -90,7 +90,7 @@ class SubgraphSetExecutionPointTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +
@@ -115,7 +115,7 @@ class SubgraphSetExecutionPointTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +
@@ -142,7 +142,7 @@ class SubgraphSetExecutionPointTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +
@@ -169,7 +169,7 @@ class SubgraphSetExecutionPointTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +

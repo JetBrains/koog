@@ -1,7 +1,4 @@
-@file:OptIn(ExperimentalWasmDsl::class)
-
 import org.jetbrains.compose.reload.gradle.ComposeHotRun
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
@@ -15,11 +12,10 @@ plugins {
 kotlin {
     jvmToolchain(libs.versions.javaVersion.get().toInt())
 
-    android {
+    androidLibrary {
         namespace = "com.jetbrains.example.koog.share.ui"
         compileSdk = 36
         minSdk = 23
-        androidResources.enable = true
     }
 
     jvm()
@@ -32,33 +28,37 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.animation)
-            implementation(compose.animationGraphics)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.runtime)
-            implementation(compose.ui)
-            implementation(compose.uiUtil)
-            implementation(libs.jetbrains.lifecycle.viewmodel.compose)
-            implementation(libs.jetbrains.navigation.compose)
+            implementation(libs.jetbrains.compose.animation)
+            implementation(libs.jetbrains.compose.animation.graphics)
+            implementation(libs.jetbrains.compose.components.resources)
+            implementation(libs.jetbrains.compose.foundation)
+            implementation(libs.jetbrains.compose.material.icons.extended)
+            implementation(libs.jetbrains.compose.material3)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.ui)
+            implementation(libs.jetbrains.compose.ui.tooling.preview)
+            implementation(libs.jetbrains.compose.ui.util)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
+            implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.koin.compose)
-            implementation(libs.koog.agents.core)
-            implementation(libs.koog.prompt.executor.llms.all)
+            implementation(libs.koog.agents)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.markdown.renderer)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.markdown.renderer)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(project.dependencies.platform(libs.ktor.bom))
         }
 
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.jetbrains.compose.ui.test)
+        }
+
         androidMain.dependencies {
-            implementation(compose.uiTooling)
             implementation(libs.androidx.datastore.preferences)
+            implementation(libs.jetbrains.compose.ui.tooling)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
         }

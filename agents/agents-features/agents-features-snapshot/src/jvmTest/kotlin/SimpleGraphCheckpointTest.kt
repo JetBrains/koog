@@ -59,7 +59,7 @@ class SimpleGraphCheckpointTest {
         }
 
         // Run the agent
-        val result = agent.run("Start the test")
+        val result = agent.run("Start the test", null)
 
         // Verify that the result contains the expected output from the teleported node
         assertEquals(
@@ -119,7 +119,7 @@ class SimpleGraphCheckpointTest {
         }
 
         // Run the agent
-        agent.run("Start the test")
+        agent.run("Start the test", null)
 
         // Verify that a checkpoint was created and saved
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
@@ -167,7 +167,7 @@ class SimpleGraphCheckpointTest {
         }
 
         // Run the agent
-        agent.run("Start the test")
+        agent.run("Start the test", null)
 
         // Verify that a checkpoint was created and saved
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull() ?: error("checkpoint is null")

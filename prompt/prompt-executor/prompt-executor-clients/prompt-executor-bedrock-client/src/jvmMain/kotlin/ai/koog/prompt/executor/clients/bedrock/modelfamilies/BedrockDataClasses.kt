@@ -5,7 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -205,7 +204,7 @@ public data class BedrockAnthropicResponse(
     val role: String,
     val content: List<AnthropicContent>,
     val model: String,
-    @JsonNames("stop_reason") val stopReason: String? = null,
+    val stopReason: String? = null,
     val usage: BedrockAnthropicUsage? = null
 )
 
@@ -220,6 +219,6 @@ public data class BedrockAnthropicResponse(
  */
 @Serializable
 public data class BedrockAnthropicUsage(
-    @SerialName("input_tokens") @JsonNames("inputTokens", "input_tokens") val inputTokens: Int,
-    @SerialName("output_tokens") @JsonNames("outputTokens", "output_tokens") val outputTokens: Int
+    val inputTokens: Int,
+    val outputTokens: Int
 )

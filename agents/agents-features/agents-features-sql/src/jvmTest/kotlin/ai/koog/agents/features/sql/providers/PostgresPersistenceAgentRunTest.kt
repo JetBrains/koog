@@ -179,7 +179,7 @@ class PostgresPersistenceAgentRunTest {
         }
 
         // Act: run
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
         val latest = provider.getLatestCheckpoint(agentId)
 
         output shouldBe "History: You are a test agent.\n" +
@@ -191,6 +191,7 @@ class PostgresPersistenceAgentRunTest {
 
     fun preSeedFinishedChainPlusUnfinishedTest(provider: PersistenceStorageProvider<*>) = runBlocking<Unit> {
         val agentId = "pg-agent-preseed-2"
+        val sessionId = "pg-agent-preseed-2"
         val stratName = "strategy"
         val time = Clock.System.now()
 
@@ -223,7 +224,7 @@ class PostgresPersistenceAgentRunTest {
         }
 
         // Act: run
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", agentId)
 
         output shouldBeEqual "History: You are a test agent.\n" +
             "Node 1 output\n" +
@@ -239,16 +240,17 @@ class PostgresPersistenceAgentRunTest {
 
     fun preSeedSingleCheckpoint(provider: PersistenceStorageProvider<*>) = runBlocking<Unit> {
         val agentId = "pg-agent-preseed-3"
+        val sessionId = "sessionid"
         val strategyId = "strategy"
         val time = Clock.System.now()
 
-        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(agentId, strategyId, "Node1"))
+        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(sessionId, strategyId, "Node1"))
 
         // Save single checkpoint
-        provider.saveCheckpoint(agentId, cp1)
+        provider.saveCheckpoint(sessionId, cp1)
 
         // Pre-run assertions about the chain
-        val seeded = provider.getLatestCheckpoint(agentId)
+        val seeded = provider.getLatestCheckpoint(sessionId)
         assertEquals("cp-1", seeded?.checkpointId, "Latest checkpoint must be the single pre-seeded one")
 
         // Create agent with persistence but without automatic persistence to keep seeded chain intact
@@ -265,8 +267,8 @@ class PostgresPersistenceAgentRunTest {
         }
 
         // Act: run
-        val output = agent.run("Start the test")
-        val latest = provider.getLatestCheckpoint(agentId)
+        val output = agent.run("Start the test", sessionId)
+        val latest = provider.getLatestCheckpoint(sessionId)
 
         output shouldBe "History: You are a test agent.\n" +
             "Node 1 output\n" +

@@ -940,7 +940,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
  *
  * @property response The text response to return
  */
-public class DefaultResponseReceiver(
+public open class DefaultResponseReceiver(
     internal val response: String,
     internal val builder: MockLLMBuilder,
 ) {

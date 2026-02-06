@@ -140,6 +140,15 @@ public interface AIAgentContext {
      * Retrieves the history of messages exchanged during the agent's execution.
      */
     public suspend fun getHistory(): List<Message>
+
+    /**
+     * Checks if the list of `Message.Response` contains any instances
+     * of `Message.Tool.Call`.
+     *
+     * @receiver A list of `Message.Response` objects to evaluate.
+     * @return `true` if there is at least one `Message.Tool.Call` in the list, otherwise `false`.
+     */
+    public fun List<Message.Response>.containsToolCalls(): Boolean = this.any { it is Message.Tool.Call }
 }
 
 /**

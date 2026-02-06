@@ -3,7 +3,6 @@ package ai.koog.agents.features.opentelemetry.feature.span
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.features.opentelemetry.NodeInfo
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_LONDON
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.MOCK_LLM_RESPONSE_PARIS
@@ -11,13 +10,16 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.SYST
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER_PROMPT_LONDON
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
-import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.installEventDataCollector
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getMessagesString
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getSystemInstructionsString
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestData
 import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -64,25 +66,15 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                 this.collectedSpans = mockExporter.collectedSpans
             }
 
-            var nodesInfo0 = listOf<NodeInfo>()
-            var nodesInfo1 = listOf<NodeInfo>()
-
             val agentService = OpenTelemetryTestAPI.createAgentService(
                 strategy = strategy,
                 promptId = promptId,
                 systemPrompt = systemPrompt,
+                temperature = OpenTelemetryTestAPI.Parameter.TEMPERATURE,
             ) {
                 install(OpenTelemetry.Feature) {
                     addSpanExporter(mockExporter)
                     setVerbose(true)
-                }
-
-                installEventDataCollector().also {
-                    if (index == 0) {
-                        nodesInfo0 = it.nodeData
-                    } else {
-                        nodesInfo1 = it.nodeData
-                    }
                 }
             }
 
@@ -90,77 +82,108 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
             index++
             agentService.createAgentAndRun(userPrompt1, id = agentId)
 
-            val collectedSpans = collectedTestData.collectedSpans
+            val collectedSpans = mockExporter.collectedSpans
             assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
 
-            agentService.closeAll()
-
-            // Check each span
-
+            // Check spans
             val model = defaultModel
+
+            val actualCreateAgentEvents = collectedTestData.filterCreateAgentEventIds(agentId)
+            val strategyEvents = collectedTestData.filterStrategyEventIds(strategyName)
+            val startNodeEvents = collectedTestData.filterNodeEventIdsByNodeId(START_NODE_PREFIX)
+            val testNodeEvents = collectedTestData.filterNodeEventIdsByNodeId(nodeName)
+            val finishNodeEvents = collectedTestData.filterNodeEventIdsByNodeId(FINISH_NODE_PREFIX)
 
             val expectedSpans = listOf(
                 // First run
                 mapOf(
-                    "$START_NODE_PREFIX.${nodesInfo0.single { it.nodeId == START_NODE_PREFIX }.eventId}" to mapOf(
+                    "node $START_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "koog.node.id" to START_NODE_PREFIX,
                             "koog.node.input" to "\"$userPrompt0\"",
                             "koog.node.output" to "\"$userPrompt0\"",
+                            "koog.event.id" to startNodeEvents[0],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "$nodeName.${nodesInfo0.single { it.nodeId == nodeName }.eventId}" to mapOf(
+                    "node $nodeName" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "koog.node.id" to nodeName,
                             "koog.node.input" to "\"$userPrompt0\"",
                             "koog.node.output" to "\"$nodeOutput0\"",
+                            "koog.event.id" to testNodeEvents[0],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "$FINISH_NODE_PREFIX.${nodesInfo0.single { it.nodeId == FINISH_NODE_PREFIX }.eventId}" to mapOf(
+                    "node $FINISH_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "koog.node.id" to FINISH_NODE_PREFIX,
                             "koog.node.input" to "\"$nodeOutput0\"",
                             "koog.node.output" to "\"$nodeOutput0\"",
+                            "koog.event.id" to finishNodeEvents[0],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    strategyName to mapOf(
+                    "strategy $strategyName" to mapOf(
                         "attributes" to mapOf(
                             "koog.strategy.name" to strategyName,
-                            "gen_ai.conversation.id" to mockExporter.runIds[0]
+                            "gen_ai.conversation.id" to mockExporter.runIds[0],
+                            "koog.event.id" to strategyEvents[0]
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "invoke.${mockExporter.runIds[0]}" to mapOf(
+                    "${OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
-                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.provider.name" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
-                            "gen_ai.conversation.id" to mockExporter.runIds[0]
+                            "gen_ai.conversation.id" to mockExporter.runIds[0],
+                            "gen_ai.output.type" to "text",
+                            "gen_ai.request.model" to model.id,
+                            "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                            "gen_ai.input.messages" to getMessagesString(
+                                listOf(
+                                    Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
+                                    // User message is not added in invoked agent span
+                                    // as it is propagated through user input in run() agent method
+                                )
+                            ),
+                            "system_instructions" to getSystemInstructionsString(listOf(systemPrompt)),
+                            "gen_ai.response.model" to model.id,
+                            "gen_ai.usage.input_tokens" to 0L,
+                            "gen_ai.usage.output_tokens" to 0L,
+                            "gen_ai.output.messages" to getMessagesString(
+                                listOf(
+                                    Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
+                                    // User message is not added in invoked agent span
+                                    // as it is propagated through user input in run() agent method
+                                )
+                            ),
+                            "koog.event.id" to mockExporter.runIds[0],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    agentId to mapOf(
+                    "${OperationNameType.CREATE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
-                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.provider.name" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
-                            "gen_ai.request.model" to model.id
+                            "gen_ai.request.model" to model.id,
+                            "system_instructions" to getSystemInstructionsString(listOf(systemPrompt)),
+                            "koog.event.id" to actualCreateAgentEvents[0]
                         ),
                         "events" to emptyMap()
                     )
@@ -168,65 +191,93 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
 
                 // Second run
                 mapOf(
-                    "$START_NODE_PREFIX.${nodesInfo1.single { it.nodeId == START_NODE_PREFIX }.eventId}" to mapOf(
+                    "node $START_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "koog.node.id" to START_NODE_PREFIX,
                             "koog.node.input" to "\"$userPrompt1\"",
                             "koog.node.output" to "\"$userPrompt1\"",
+                            "koog.event.id" to startNodeEvents[1],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "$nodeName.${nodesInfo1.single { it.nodeId == nodeName }.eventId}" to mapOf(
+                    "node $nodeName" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "koog.node.id" to nodeName,
                             "koog.node.input" to "\"$userPrompt1\"",
                             "koog.node.output" to "\"$nodeOutput1\"",
+                            "koog.event.id" to testNodeEvents[1],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "$FINISH_NODE_PREFIX.${nodesInfo1.single { it.nodeId == FINISH_NODE_PREFIX}.eventId}" to mapOf(
+                    "node $FINISH_NODE_PREFIX" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "koog.node.id" to FINISH_NODE_PREFIX,
                             "koog.node.input" to "\"$nodeOutput1\"",
                             "koog.node.output" to "\"$nodeOutput1\"",
+                            "koog.event.id" to finishNodeEvents[1],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    strategyName to mapOf(
+                    "strategy $strategyName" to mapOf(
                         "attributes" to mapOf(
                             "koog.strategy.name" to strategyName,
-                            "gen_ai.conversation.id" to mockExporter.runIds[1]
+                            "gen_ai.conversation.id" to mockExporter.runIds[1],
+                            "koog.event.id" to strategyEvents[1]
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "invoke.${mockExporter.runIds[1]}" to mapOf(
+                    "${OperationNameType.INVOKE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.INVOKE_AGENT.id,
-                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.provider.name" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
-                            "gen_ai.conversation.id" to mockExporter.runIds[1]
+                            "gen_ai.conversation.id" to mockExporter.runIds[1],
+                            "gen_ai.output.type" to "text",
+                            "gen_ai.request.model" to model.id,
+                            "gen_ai.request.temperature" to OpenTelemetryTestAPI.Parameter.TEMPERATURE,
+                            "gen_ai.input.messages" to getMessagesString(
+                                listOf(
+                                    Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
+                                    // User message is not added in invoked agent span
+                                    // as it is propagated through user input in run() agent method
+                                )
+                            ),
+                            "system_instructions" to getSystemInstructionsString(listOf(systemPrompt)),
+                            "gen_ai.response.model" to model.id,
+                            "gen_ai.usage.input_tokens" to 0L,
+                            "gen_ai.usage.output_tokens" to 0L,
+                            "gen_ai.output.messages" to getMessagesString(
+                                listOf(
+                                    Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
+                                    // User message is not added in invoked agent span
+                                    // as it is propagated through user input in run() agent method
+                                )
+                            ),
+                            "koog.event.id" to mockExporter.runIds[1],
                         ),
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    agentId to mapOf(
+                    "${OperationNameType.CREATE_AGENT.id} $agentId" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
-                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.provider.name" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
-                            "gen_ai.request.model" to model.id
+                            "gen_ai.request.model" to model.id,
+                            "system_instructions" to getSystemInstructionsString(listOf(systemPrompt)),
+                            "koog.event.id" to actualCreateAgentEvents[1]
                         ),
                         "events" to emptyMap()
                     )

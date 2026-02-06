@@ -292,7 +292,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
-    fun integration_AIAgentNoSystemMessage(model: LLModel) = runTest {
+    fun integration_AIAgentWithoutSystemMessage(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
@@ -401,7 +401,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
-    fun integration_testRequestLLMWithoutToolsTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    fun integration_RequestLLMWithoutTools(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -557,7 +557,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
-    fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    fun integration_AIAgentCreateAndRestoreFromCheckpoint(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val sayHello = "Hello World!"
         val hello = "Hello"
@@ -646,7 +646,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
-    fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    fun integration_AIAgentCheckpointRollback(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
 
         val hello = "Hello"
@@ -762,7 +762,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
-    fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    fun integration_AIAgentCheckpointContinuousPersistence(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider =
             InMemoryPersistenceStorageProvider()
 
@@ -832,7 +832,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
-    fun integration_AgentCheckpointStorageProvidersTest(
+    fun integration_AIAgentCheckpointStorageProviders(
         model: LLModel,
         @TempDir tempDir: Path,
     ) = runTest(timeout = 180.seconds) {
@@ -849,7 +849,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val systemMessage = "You are a helpful assistant."
         val testInput = "Start the test"
 
-        val noCheckpointsError = "No checkpoints were created"
         val incorrectNodeIdError = "Checkpoint has incorrect node ID"
 
         val fileStorageProvider = JVMFilePersistenceStorageProvider(tempDir)
@@ -901,10 +900,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val expectedNodePath = path(agentId, strategyName, bye)
         with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }) {
-            withClue(noCheckpointsError) {
-                isNotEmpty() shouldBe true
-            }
             withClue(incorrectNodeIdError) {
+                shouldNotBeEmpty()
                 first().nodePath shouldBe expectedNodePath
             }
         }
@@ -913,7 +910,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @ParameterizedTest
     @MethodSource("allModels")
     @Disabled("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
-    fun integration_AgentCheckpointWithToolCallsTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    fun integration_AIAgentCheckpointWithToolCalls(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val storageProvider = InMemoryPersistenceStorageProvider()
@@ -979,7 +976,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
-    fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    fun integration_AIAgentWithToolsWithoutParams(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val registry = ToolRegistry {
@@ -1080,7 +1077,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 agent.run("Hi")
 
                 with(state) {
-                    errors.shouldBeEmpty() // There should be no errors during parallel execution}
+                    errors.shouldBeEmpty()
                     results.shouldNotBeEmpty().first() as String should {
                         contain("Math result: 56")
                         contain("Text result: Hello World")

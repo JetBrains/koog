@@ -59,7 +59,7 @@ object SQLPersistentAgentExample {
 
         // Create and save checkpoint
         val checkpoint = createSampleCheckpoint("postgres-checkpoint-1", version = 0)
-        provider.saveCheckpoint(agentId = agentId, agentCheckpointData = checkpoint)
+        provider.saveCheckpoint(sessionId = agentId, agentCheckpointData = checkpoint)
         println("Saved checkpoint: ${checkpoint.checkpointId}")
 
         // Retrieve checkpoint

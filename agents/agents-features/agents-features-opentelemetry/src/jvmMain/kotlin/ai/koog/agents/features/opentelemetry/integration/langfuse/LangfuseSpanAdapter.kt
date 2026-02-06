@@ -1,6 +1,8 @@
 package ai.koog.agents.features.opentelemetry.integration.langfuse
 
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.EventBodyFields
@@ -12,9 +14,7 @@ import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
-import ai.koog.agents.features.opentelemetry.span.InferenceSpan
-import ai.koog.agents.features.opentelemetry.span.InvokeAgentSpan
-import ai.koog.agents.features.opentelemetry.span.NodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.SpanType
 import ai.koog.prompt.message.Message
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -36,16 +36,21 @@ internal class LangfuseSpanAdapter(
     private val stepKey = AtomicInteger(0)
 
     override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
-        when (span) {
-            is InvokeAgentSpan -> {
-                span.addAttribute(CustomAttribute("langfuse.session.id", span.runId))
+        when (span.type) {
+            SpanType.INVOKE_AGENT -> {
+                val runId =
+                    span.attributes.find { attribute -> attribute.key == SpanAttributes.Conversation.Id("").key }?.value
+
+                runId?.let { runId ->
+                    span.addAttribute(CustomAttribute("langfuse.session.id", runId))
+                }
 
                 traceAttributes.forEach { attribute ->
                     span.addAttribute(attribute)
                 }
             }
 
-            is InferenceSpan -> {
+            SpanType.INFERENCE -> {
                 val eventsToProcess = span.events.toList()
 
                 // Each event - convert into the span attribute
@@ -60,7 +65,7 @@ internal class LangfuseSpanAdapter(
                 }
             }
 
-            is NodeExecuteSpan -> {
+            SpanType.NODE -> {
                 val step = stepKey.getAndIncrement()
 
                 span.addAttribute(
@@ -70,19 +75,26 @@ internal class LangfuseSpanAdapter(
                     )
                 )
 
-                span.addAttribute(
-                    CustomAttribute(
-                        "langfuse.observation.metadata.langgraph_node",
-                        span.nodeId
+                val nodeId =
+                    span.attributes.find { attribute -> attribute.key == KoogAttributes.Koog.Node.Id("").key }?.value
+
+                nodeId?.let { nodeId ->
+                    span.addAttribute(
+                        CustomAttribute(
+                            "langfuse.observation.metadata.langgraph_node",
+                            nodeId
+                        )
                     )
-                )
+                }
             }
+
+            else -> {}
         }
     }
 
     override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
-        when (span) {
-            is InferenceSpan -> {
+        when (span.type) {
+            SpanType.INFERENCE -> {
                 val eventsToProcess = span.events.toList()
 
                 eventsToProcess.forEachIndexed { index, event ->
@@ -92,6 +104,7 @@ internal class LangfuseSpanAdapter(
                     }
                 }
             }
+            else -> {}
         }
     }
 
@@ -123,7 +136,7 @@ internal class LangfuseSpanAdapter(
         span.removeEvent(this)
     }
 
-    private fun AssistantMessageEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+    private fun AssistantMessageEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
         // Convert event data fields into the span attributes
         span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
             CustomAttribute("gen_ai.completion.$index.${role.key}", role.value)
@@ -145,10 +158,10 @@ internal class LangfuseSpanAdapter(
         span.removeEvent(this)
     }
 
-    private fun ChoiceEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+    private fun ChoiceEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
         // Convert event data fields into the span attributes
         span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            // Langfuse expects to have an assistant message for correct displaying the responses from LLM.
+            // Langfuse expects to have an assistant message for correctly displaying the responses from LLM.
             // Set a role explicitly to Assistant (even for LLM Tool Calls response).
             CustomAttribute("gen_ai.completion.$index.${role.key}", Message.Role.Assistant.name.lowercase())
         }

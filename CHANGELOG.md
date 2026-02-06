@@ -1,3 +1,34 @@
+# 0.6.1
+> Published 28 January 2026
+
+## Major Features
+**Block of changes**:
+- **Converse API support in Bedrock LLM client**: Added support for the Converse API in the Bedrock LLM client, enabling richer prompt-based interactions ([KG-543](https://youtrack.jetbrains.com/issue/KG-543), #1384)
+- **Tool choice heuristics**: Introduced heuristic-based required tool selection via `LLMBasedToolCallFixProcessor` for models that do not support explicit tool choice ([KG-200](https://youtrack.jetbrains.com/issue/KG-200), #1389)
+
+## Improvements
+- **Prompt parameter preservation**: Ensured that `LLMParams` fields are preserved after calling `Prompt.withUpdatedParams` (#1194)
+- **Error handling for tools**: Improved error handling for tool argument parsing, result serialization, and subgraph tool execution failures ([KG-597](https://youtrack.jetbrains.com/issue/KG-597), #1329)
+- **OpenTelemetry**:
+    - Updated span attributes and names to better align with semantic conventions ([KG-646](https://youtrack.jetbrains.com/issue/KG-646), #1351; [KG-647](https://youtrack.jetbrains.com/issue/KG-647), #1359)
+    - Replaced agent data propagation through the coroutine context with the `AIAgentContext` instance for agent events ([KG-178](https://youtrack.jetbrains.com/issue/KG-178), #1336)
+- **ACP SDK update**: Updated the ACP SDK to version 0.13.1 to enable connections from IntelliJ-based IDE clients ([KG-671](https://youtrack.jetbrains.com/issue/KG-671), #1363)
+
+## Bug fixes
+- **OpenAI client**:
+    - Restored the `minimal` option in `ReasonEffort` within `OpenAIDataModels` (#1412)
+    - Fixed missing token usage information in streaming mode (#1072, #1404)
+- **Bedrock client**:
+    - Fixed JSON schema generation for Bedrock tools to correctly handle nested objects (#1259, #1361)
+    - Fixed parsing of tool usage in Bedrock Anthropic streaming responses ([KG-627](https://youtrack.jetbrains.com/issue/KG-627), #1310)
+- **DeepSeek structured output**: Fixed structured output handling for DeepSeek ([KG-537](https://youtrack.jetbrains.com/issue/KG-537), #1385)
+- **Gemini 3.0 tool calls**: Fixed thought signature handling for tool calls ([KG-596](https://youtrack.jetbrains.com/issue/KG-596), #1317)
+- **Subtask completion flow**: Ensured that subtasks return after a tool call finishes, before issuing a new LLM request (#1322, #1362)
+
+## Examples
+- Updated the ACP example to use the latest ACP SDK version (#1363)
+- Updated the Compose Demo App to use the latest Koog version (#1227)
+
 # 0.6.0
 > Published 22 December 2025
 
@@ -502,3 +533,4 @@ Kotlin.
 
 - JVM (requires JDK 17 or higher)
 - JavaScript
+

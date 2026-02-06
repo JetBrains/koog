@@ -5,6 +5,9 @@ import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger("code-agent-events")
 
 /**
  * Extracted observability setup used by agents in this module.
@@ -21,7 +24,19 @@ fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
     }
     handleEvents {
         onToolCallStarting { ctx ->
-            println("[$agentName] Tool '${ctx.toolName}' called with args: ${ctx.toolArgs.toString().take(100)}")
+            logger.info { "[$agentName] Tool '${ctx.toolName}' called with args: ${ctx.toolArgs.toString().take(100)}" }
+        }
+        onNodeExecutionStarting { ctx ->
+            if (ctx.node.name == "compressHistory") {
+                val messages = ctx.context.llm.prompt.messages
+                logger.info { "[$agentName] Pre-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
+            }
+        }
+        onNodeExecutionCompleted { ctx ->
+            if (ctx.node.name == "compressHistory") {
+                val messages = ctx.context.llm.prompt.messages
+                logger.info { "[$agentName] Post-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
+            }
         }
     }
 }

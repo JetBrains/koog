@@ -31,27 +31,27 @@ public interface AIAgentEnvironment {
      * @param exception The exception representing the problem to report.
      */
     public suspend fun reportProblem(exception: Throwable)
-}
 
-/**
- * Executes a batch of tool calls within the AI agent environment and processes their results.
- *
- * This method takes a list of tool call messages, processes them by sending appropriate requests
- * to the underlying environment, and returns a list of results corresponding to the tool calls.
- *
- * @param toolCalls A list of tool call messages to be executed. Each message contains details
- *        about the tool, its identifier, the request content, and associated metadata.
- * @return A list of results corresponding to the executed tool calls. Each result includes details
- *         such as the tool name, identifier, response content, and metadata.
- */
-public suspend fun AIAgentEnvironment.executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-    val results = supervisorScope {
-        toolCalls
-            .map { toolCall ->
-                async { executeTool(toolCall) }
-            }
-            .awaitAll()
+    /**
+     * Executes a batch of tool calls within the AI agent environment and processes their results.
+     *
+     * This method takes a list of tool call messages, processes them by sending appropriate requests
+     * to the underlying environment, and returns a list of results corresponding to the tool calls.
+     *
+     * @param toolCalls A list of tool call messages to be executed. Each message contains details
+     *        about the tool, its identifier, the request content, and associated metadata.
+     * @return A list of results corresponding to the executed tool calls. Each result includes details
+     *         such as the tool name, identifier, response content, and metadata.
+     */
+    public suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
+        val results = supervisorScope {
+            toolCalls
+                .map { toolCall ->
+                    async { executeTool(toolCall) }
+                }
+                .awaitAll()
+        }
+
+        return results
     }
-
-    return results
 }

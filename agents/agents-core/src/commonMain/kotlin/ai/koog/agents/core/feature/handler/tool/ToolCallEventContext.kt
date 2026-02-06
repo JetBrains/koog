@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.handler.tool
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
@@ -29,6 +30,7 @@ public data class ToolCallStartingContext(
     val toolName: String,
     val toolDescription: String?,
     val toolArgs: JsonObject,
+    val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallStarting
 }
@@ -54,7 +56,8 @@ public data class ToolValidationFailedContext(
     val toolDescription: String?,
     val toolArgs: JsonObject,
     val message: String,
-    val error: AIAgentError
+    val error: AIAgentError,
+    val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolValidationFailed
 }
@@ -80,7 +83,8 @@ public data class ToolCallFailedContext(
     val toolDescription: String?,
     val toolArgs: JsonObject,
     val message: String,
-    val error: AIAgentError?
+    val error: AIAgentError?,
+    val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallFailed
 }
@@ -104,7 +108,8 @@ public data class ToolCallCompletedContext(
     val toolName: String,
     val toolDescription: String?,
     val toolArgs: JsonObject,
-    val toolResult: JsonElement?
+    val toolResult: JsonElement?,
+    val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallCompleted
 }

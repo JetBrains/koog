@@ -57,7 +57,7 @@ To use Koog, you need to include all necessary dependencies in your build config
         ```xml
         <dependency>
             <groupId>ai.koog</groupId>
-            <artifactId>koog-agents-jvm</artifactId>
+            <artifactId>koog-agents</artifactId>
             <version>LATEST_VERSION</version>
         </dependency>
         ```
@@ -77,6 +77,17 @@ To use Koog, you need to include all necessary dependencies in your build config
     you need to include the additional dependencies in your build configuration.
     For the exact dependencies, refer to the relevant pages in the Koog documentation.
 
+??? tip "Nightly builds"
+
+    Nightly builds from the develop branch are published to the [JetBrains Grazie Maven](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public) repository.
+    
+    To use a nightly build, add the following repository to your build configuration:
+    `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public`.
+    
+    Then update your Koog dependency to the desired nightly version. Nightly versions follow the pattern
+    `[next-major-version]-develop-[date]-[time]`.
+    
+    You can browse the available nightly builds [here](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/ai/koog/koog-agents/).
 
 ## Set an API key
 
@@ -206,6 +217,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 
     The example below creates and runs a simple AI agent using the [`GPT-4o`](https://platform.openai.com/docs/models/gpt-4o) model.
 
+    <!--- CLEAR -->
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -343,7 +355,7 @@ To use Koog, you need to include all necessary dependencies in your build config
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
-    import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
     import kotlinx.coroutines.runBlocking
     -->
@@ -359,7 +371,7 @@ To use Koog, you need to include all necessary dependencies in your build config
         // Create an agent
         val agent = AIAgent(
             // Create a prompt executor using the LLM client
-            promptExecutor = SingleLLMPromptExecutor(deepSeekClient),
+            promptExecutor = MultiLLMPromptExecutor(deepSeekClient),
             // Provide a model
             llmModel = DeepSeekModels.DeepSeekChat
         )

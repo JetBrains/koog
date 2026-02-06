@@ -39,12 +39,22 @@ public class ContextualPromptExecutor(
         val eventId = Uuid.random().toString()
 
         logger.debug { "Executing LLM call (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        context.pipeline.onLLMCallStarting(eventId, context.executionInfo, context.runId, prompt, model, tools)
+        context.pipeline.onLLMCallStarting(eventId, context.executionInfo, context.runId, prompt, model, tools, context)
 
         val responses = executor.execute(prompt, model, tools)
 
         logger.trace { "Finished LLM call (event id: $eventId) with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
-        context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context.runId, prompt, model, tools, responses)
+        context.pipeline.onLLMCallCompleted(
+            eventId,
+            context.executionInfo,
+            context.runId,
+            prompt,
+            model,
+            tools,
+            responses,
+            null,
+            context
+        )
 
         return responses
     }
@@ -75,20 +85,52 @@ public class ContextualPromptExecutor(
         return executor.executeStreaming(prompt, model, tools)
             .onStart {
                 logger.debug { "Starting LLM streaming call (event id: $eventId)" }
-                context.pipeline.onLLMStreamingStarting(eventId, context.executionInfo, context.runId, prompt, model, tools)
+                context.pipeline.onLLMStreamingStarting(
+                    eventId,
+                    context.executionInfo,
+                    context.runId,
+                    prompt,
+                    model,
+                    tools,
+                    context
+                )
             }
             .onEach { frame ->
                 logger.debug { "Received frame from LLM streaming call (event id: $eventId): $frame" }
-                context.pipeline.onLLMStreamingFrameReceived(eventId, context.executionInfo, context.runId, prompt, model, frame)
+                context.pipeline.onLLMStreamingFrameReceived(
+                    eventId,
+                    context.executionInfo,
+                    context.runId,
+                    prompt,
+                    model,
+                    frame,
+                    context
+                )
             }
             .catch { error ->
                 logger.debug(error) { "Error in LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingFailed(eventId, context.executionInfo, context.runId, prompt, model, error)
+                context.pipeline.onLLMStreamingFailed(
+                    eventId,
+                    context.executionInfo,
+                    context.runId,
+                    prompt,
+                    model,
+                    error,
+                    context
+                )
                 throw error
             }
             .onCompletion { error ->
                 logger.debug(error) { "Finished LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingCompleted(eventId, context.executionInfo, context.runId, prompt, model, tools)
+                context.pipeline.onLLMStreamingCompleted(
+                    eventId,
+                    context.executionInfo,
+                    context.runId,
+                    prompt,
+                    model,
+                    tools,
+                    context
+                )
             }
     }
 
@@ -127,12 +169,30 @@ public class ContextualPromptExecutor(
 
         logger.debug { "Executing moderation LLM request (event id: $eventId, prompt: $prompt)" }
 
-        context.pipeline.onLLMCallStarting(eventId, context.executionInfo, context.runId, prompt, model, tools = emptyList())
+        context.pipeline.onLLMCallStarting(
+            eventId,
+            context.executionInfo,
+            context.runId,
+            prompt,
+            model,
+            tools = emptyList(),
+            context
+        )
 
         val result = executor.moderate(prompt, model)
         logger.trace { "Finished moderation LLM request (event id: $eventId) with response: $result" }
 
-        context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context.runId, prompt, model, tools = emptyList(), responses = emptyList(), moderationResponse = result)
+        context.pipeline.onLLMCallCompleted(
+            eventId,
+            context.executionInfo,
+            context.runId,
+            prompt,
+            model,
+            tools = emptyList(),
+            responses = emptyList(),
+            moderationResponse = result,
+            context = context
+        )
 
         return result
     }

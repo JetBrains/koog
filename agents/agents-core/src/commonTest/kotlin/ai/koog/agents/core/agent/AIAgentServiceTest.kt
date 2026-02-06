@@ -52,15 +52,8 @@ class AIAgentServiceTest {
 
         // create agent and run
         val agent = service.createAgent(id = "id-1", clock = Clock.System)
-        val out = agent.run("in")
+        val out = agent.run("in", null)
         assertEquals("ok:in", out)
-
-        // managed agents tracking
-        assertEquals(1, service.listAllAgents().size)
-        assertEquals(agent, service.agentById("id-1"))
-        assertTrue(
-            service.listInactiveAgents().isNotEmpty()
-        ) // before run, agent has finished immediately, not running now
     }
 
     @Test
@@ -93,19 +86,12 @@ class AIAgentServiceTest {
         )
 
         val agent = service.createAgent()
-        val out = agent.run(41)
+        val out = agent.run(41, null)
         assertEquals(42, out)
-
-        // management API
-        assertEquals(1, service.listAllAgents().size)
-        assertEquals(1, service.listInactiveAgents().size)
-        assertEquals(0, service.listActiveAgents().size)
-        assertEquals(1, service.listFinishedAgents().size)
 
         // remove operations
         assertTrue(service.removeAgent(agent))
         assertFalse(service.removeAgentWithId("no-such"))
-        assertEquals(0, service.listAllAgents().size)
     }
 
     @Test
@@ -155,7 +141,5 @@ class AIAgentServiceTest {
         // Create a couple agents then closeAll should not throw
         service.createAgent("a")
         service.createAgent("b")
-        assertEquals(3, service.listAllAgents().size)
-        service.closeAll() // should call close() on all without error
     }
 }

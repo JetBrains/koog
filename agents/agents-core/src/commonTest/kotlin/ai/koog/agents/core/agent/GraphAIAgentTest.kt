@@ -43,7 +43,7 @@ class GraphAIAgentTest {
             }
         }
 
-        agent.run("Test input")
+        agent.run("Test input", null)
         assertFalse(
             testFeatureMessageProcessor.isOpen.value,
             "Feature message processors should be closed after the agent run"

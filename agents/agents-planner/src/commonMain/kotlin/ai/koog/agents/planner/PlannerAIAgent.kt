@@ -1,6 +1,6 @@
 package ai.koog.agents.planner
 
-import ai.koog.agents.core.agent.StatefulSingleUseAIAgent
+import ai.koog.agents.core.agent.AIAgentBase
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
@@ -19,6 +19,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmStatic
 
 /**
  * Represents an instance of planner agent using [AIAgentPlannerStrategy].
@@ -43,15 +44,25 @@ public class PlannerAIAgent<State, Plan>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<State, State, AIAgentFunctionalContext>(
+) : AIAgentBase<State, State, AIAgentFunctionalContext>(
     logger = logger,
     id = id,
 ) {
-    private companion object {
+    /**
+     * Companion object providing the static `builder()` method.
+     */
+    public companion object {
         private val logger = KotlinLogging.logger {}
+
+        /**
+         * Creates a new instance of [PlannerAIAgentBuilder] for configuring and building a planner AI agent.
+         */
+        @JvmStatic
+        public fun <State, Plan> builder(strategy: AIAgentPlannerStrategy<State, Plan>): PlannerAIAgentBuilder<State, Plan> =
+            PlannerAIAgentBuilder(strategy)
     }
 
-    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
+    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(agentConfig, clock)
 
     /**
      * Represents a context for managing and configuring features in an AI agent.

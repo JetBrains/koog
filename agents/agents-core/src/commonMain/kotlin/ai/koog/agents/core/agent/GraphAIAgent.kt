@@ -58,7 +58,7 @@ public open class GraphAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
+) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(
     logger = logger,
     id = id,
 ) {
@@ -67,7 +67,7 @@ public open class GraphAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
+    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(agentConfig, clock)
 
     /**
      * The context for adding and configuring features in a Kotlin AI Agent instance.

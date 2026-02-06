@@ -98,6 +98,13 @@ internal object Prompts {
                 item("Incorrect json formatting in tool call json: unescaped characters, missing quotes, etc.")
             }
 
+            h2("SPECIAL TOOLS")
+            +"Pay attention to the special tools. For example:"
+            bulleted {
+                item("A finish tool: if a user provided a tool to finish the subgraph, you need to call this tool when the task is completed")
+                item("A chat tool: if a user provided a tool for chatting, you need to call this tool to send a message to the chat")
+            }
+
             h2("Available tools")
             showTools(tools)
         }

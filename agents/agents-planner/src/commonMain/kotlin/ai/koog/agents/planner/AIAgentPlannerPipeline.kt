@@ -1,5 +1,6 @@
 package ai.koog.agents.planner
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import kotlinx.datetime.Clock
@@ -9,8 +10,8 @@ import kotlinx.datetime.Clock
  *
  * @property clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentPlannerPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
-
+public class AIAgentPlannerPipeline(agentConfig: AIAgentConfig, clock: Clock = Clock.System) :
+    AIAgentPipeline(agentConfig, clock) {
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *
