@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients
 
 import ai.koog.prompt.llm.LLModel
+import org.jetbrains.annotations.VisibleForTesting
 import java.lang.reflect.Modifier
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.createType
@@ -16,7 +17,8 @@ import kotlin.reflect.jvm.javaField
  * @return A list of `LLModel` instances extracted from the public properties of the provided object
  *   and its nested objects.
  */
-internal fun allModelsIn(obj: Any): List<LLModel> {
+@VisibleForTesting
+public fun allModelsIn(obj: Any): List<LLModel> {
     val immediateModels = (obj::class.memberProperties + obj::class.memberExtensionProperties)
         .filter { it.visibility == KVisibility.PUBLIC }
         .filter { it.returnType == LLModel::class.createType() }
@@ -49,6 +51,7 @@ internal fun allModelsIn(obj: Any): List<LLModel> {
  *
  * @return A list of `LLModel` instances representing all models defined in this `LLModelDefinitions`.
  */
-internal fun LLModelDefinitions.list(customModels: List<LLModel> = emptyList()): List<LLModel> {
+@VisibleForTesting
+public fun LLModelDefinitions.list(customModels: List<LLModel> = emptyList()): List<LLModel> {
     return allModelsIn(this) + customModels
 }
