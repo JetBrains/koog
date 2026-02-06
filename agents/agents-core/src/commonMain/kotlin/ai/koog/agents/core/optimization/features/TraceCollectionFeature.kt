@@ -7,6 +7,7 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.optimization.OptimizableNode
 import ai.koog.agents.core.optimization.core.Demonstration
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -14,14 +15,14 @@ import kotlinx.coroutines.sync.withLock
 /**
  * Configuration for the [TraceCollectionFeature].
  *
- * @property collectOnlyOptimizable If true, only collect traces for nodes that have a non-null
- *  instruction (i.e., nodes marked for optimization). Default is true.
+ * @property collectOnlyOptimizable If true, only collect traces for [OptimizableNode] instances
+ *  (i.e., nodes created with the `optimizableNode` DSL). Default is true.
  * @property maxTracesPerNode Maximum number of traces to collect per node. Once reached, older
  *  traces may be evicted (FIFO). Use 0 or negative for unlimited. Default is 100.
  */
 public class TraceCollectionConfig : FeatureConfig() {
     /**
-     * If true, only collect traces for nodes with optimization metadata (instruction != null).
+     * If true, only collect traces for [OptimizableNode] instances.
      */
     public var collectOnlyOptimizable: Boolean = true
 
@@ -137,7 +138,7 @@ public class TraceCollectionFeatureImpl(
         }
 
         // Check optimizable filter
-        if (config.collectOnlyOptimizable && node.instruction == null) {
+        if (config.collectOnlyOptimizable && node !is OptimizableNode<*, *>) {
             return false
         }
 
@@ -155,7 +156,7 @@ public class TraceCollectionFeatureImpl(
  * This feature is used during MIPRO bootstrapping to collect demonstrations from successful
  * executions. The collected traces can then be used as few-shot examples during optimization.
  *
- * By default, only nodes with optimization metadata (instruction != null) have their I/O captured.
+ * By default, only [OptimizableNode] instances (created via `optimizableNode` DSL) have their I/O captured.
  * This behavior can be configured via [TraceCollectionConfig].
  *
  * Example usage:

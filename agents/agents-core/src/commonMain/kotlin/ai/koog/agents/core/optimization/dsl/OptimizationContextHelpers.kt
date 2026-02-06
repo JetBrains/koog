@@ -11,20 +11,11 @@ import kotlin.coroutines.coroutineContext
  * During MIPRO optimization, candidate instructions are passed via [OptimizationConfig] in the
  * coroutine context. This helper checks for such overrides before falling back to the default.
  *
- * Example usage in a node lambda:
- * ```kotlin
- * val classify by node<String, Classification>(
- *     instruction = "Classify the input text",
- * ) { input ->
- *     val instruction = getNodeInstruction(name, this@node.instruction)
- *     llm.writeSession {
- *         appendPrompt { system(instruction) }
- *         // ...
- *     }
- * }
- * ```
+ * This is called automatically by [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]'s
+ * execute lambda. It can also be used in custom [OptimizablePromptFn][ai.koog.agents.core.optimization.OptimizablePromptFn]
+ * implementations, though typically the instruction is already resolved and passed as a parameter.
  *
- * @param nodeName The name of the node (typically `name` within a node lambda).
+ * @param nodeName The name of the node.
  * @param default The default instruction from the node definition, or null if none.
  * @return The instruction to use: context override if present, otherwise the default.
  * @throws IllegalStateException if neither context override nor default is available.
@@ -62,28 +53,14 @@ public suspend fun AIAgentGraphContextBase.getNodeInstructionOrNull(
  *
  * Note: Due to type erasure, this performs an unchecked cast. The caller must ensure type compatibility.
  *
- * Example usage in a node lambda:
- * ```kotlin
- * val classify by node<String, Classification>(
- *     demonstrations = listOf(demo1, demo2),
- * ) { input ->
- *     val demos = getNodeDemonstrations<String, Classification>(name, this@node.demonstrations)
- *     llm.writeSession {
- *         appendPrompt {
- *             for (demo in demos) {
- *                 user(formatInput(demo.input))
- *                 assistant(formatOutput(demo.output))
- *             }
- *         }
- *         // ...
- *     }
- * }
- * ```
+ * This is called automatically by [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]'s
+ * execute lambda. It can also be used in custom [OptimizablePromptFn][ai.koog.agents.core.optimization.OptimizablePromptFn]
+ * implementations, though typically demos are already resolved and passed as a parameter.
  *
  * @param TInput The input type of the demonstrations.
  * @param TOutput The output type of the demonstrations.
- * @param nodeName The name of the node (typically `name` within a node lambda).
- * @param default The default demonstrations from the node definition.
+ * @param nodeName The name of the node.
+ * @param default The default demonstrations (typically empty for a fresh node).
  * @return The demonstrations to use: context override if present, otherwise the default.
  */
 public suspend inline fun <reified TInput, reified TOutput> AIAgentGraphContextBase.getNodeDemonstrations(

@@ -7,47 +7,7 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.optimization.OptimizableNode
-import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
-
-/**
- * Finds all optimizable nodes in a strategy.
- *
- * A node is considered optimizable if it:
- * - Is an [AIAgentNode] (not a start/finish node or subgraph)
- * - Has a non-null [AIAgentNode.instruction]
- *
- * @return A list of all optimizable nodes in the strategy, discovered by traversing from the start node.
- */
-public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizableNodes(): List<AIAgentNode<*, *>> {
-    val optimizableNodes = mutableListOf<AIAgentNode<*, *>>()
-    val visited = mutableSetOf<AIAgentNodeBase<*, *>>()
-
-    fun visit(node: AIAgentNodeBase<*, *>) {
-        if (node in visited) return
-        visited.add(node)
-
-        // Check if this is an optimizable AIAgentNode
-        if (node is AIAgentNode<*, *> && node !is StartNode<*> && node !is FinishNode<*>) {
-            if (node.instruction != null) {
-                optimizableNodes.add(node)
-            }
-        }
-
-        // Recurse into subgraphs
-        if (node is AIAgentSubgraph<*, *>) {
-            visit(node.start)
-        }
-
-        // Visit all connected nodes via edges
-        for (edge in node.edges) {
-            visit(edge.toNode)
-        }
-    }
-
-    visit(nodeStart)
-    return optimizableNodes
-}
 
 /**
  * Gets all nodes in a strategy (optimizable or not).
@@ -83,26 +43,25 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findAllNodes(
  * Finds all [OptimizableNode] instances in a strategy.
  *
  * These are nodes created with the `optimizableNode` DSL that declare their input/output field
- * mappings for optimization. This is a subset of [findOptimizableNodes] — only nodes that are
- * specifically [OptimizableNode] (not regular nodes with instruction).
+ * mappings for optimization. Only these nodes participate in prompt optimization.
  *
  * @return A list of all [OptimizableNode] instances in the strategy.
  */
 public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizableModules(): List<OptimizableNode<*, *>> {
-    return findOptimizableNodes().filterIsInstance<OptimizableNode<*, *>>()
+    return findAllNodes().filterIsInstance<OptimizableNode<*, *>>()
 }
 
 /**
  * Gets the names of all optimizable nodes in a strategy.
  *
- * @return A set of node names for all optimizable nodes.
+ * @return A set of node names for all [OptimizableNode] instances.
  */
 public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.getOptimizableNodeNames(): Set<String> {
-    return findOptimizableNodes().map { it.name }.toSet()
+    return findOptimizableModules().map { it.name }.toSet()
 }
 
 /**
- * Creates an [OptimizationConfig] from the current instruction and demonstration values of all
+ * Creates an [OptimizationConfig] from the current instruction values of all
  * optimizable nodes in the strategy.
  *
  * This is useful for capturing the current state of a strategy's optimization parameters.
@@ -110,19 +69,12 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.getOptimizabl
  * @return An [OptimizationConfig] containing the current values from optimizable nodes.
  */
 public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.extractOptimizationConfig(): OptimizationConfig {
-    val optimizableNodes = findOptimizableNodes()
+    val modules = findOptimizableModules()
 
-    val instructions = optimizableNodes
-        .filter { it.instruction != null }
-        .associate { it.name to it.instruction!! }
-
-    val demonstrations = optimizableNodes
-        .filter { it.demonstrations.isNotEmpty() }
-        .associate { it.name to it.demonstrations as List<Demonstration<*, *>> }
+    val instructions = modules.associate { it.name to it.instruction }
 
     return OptimizationConfig(
         instructions = instructions,
-        demonstrations = demonstrations,
     )
 }
 
@@ -150,7 +102,7 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.validateOptim
                 errors.add("Instruction specified for unknown node: '$nodeName'")
             }
             nodeName !in optimizableNodeNames -> {
-                errors.add("Instruction specified for non-optimizable node: '$nodeName' (node has no base instruction)")
+                errors.add("Instruction specified for non-optimizable node: '$nodeName'")
             }
         }
     }
@@ -162,7 +114,7 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.validateOptim
                 errors.add("Demonstrations specified for unknown node: '$nodeName'")
             }
             nodeName !in optimizableNodeNames -> {
-                errors.add("Demonstrations specified for non-optimizable node: '$nodeName' (node has no base instruction)")
+                errors.add("Demonstrations specified for non-optimizable node: '$nodeName'")
             }
         }
     }
@@ -175,43 +127,36 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.validateOptim
  *
  * This generates a text description of the strategy structure including:
  * - Strategy name
- * - List of optimizable nodes with their descriptions
- * - Overall flow structure
+ * - List of optimizable nodes with their descriptions and instructions
  *
  * @return A text description of the strategy.
  */
 public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.describeForOptimization(): String {
-    val optimizableNodes = findOptimizableNodes()
+    val modules = findOptimizableModules()
 
     return buildString {
         appendLine("Strategy: $name")
         appendLine()
 
-        if (optimizableNodes.isEmpty()) {
+        if (modules.isEmpty()) {
             appendLine("No optimizable nodes found.")
         } else {
-            appendLine("Optimizable Nodes (${optimizableNodes.size}):")
-            for (node in optimizableNodes) {
+            appendLine("Optimizable Nodes (${modules.size}):")
+            for (node in modules) {
                 appendLine("  - ${node.name}")
                 node.description?.let { desc ->
                     appendLine("    Description: $desc")
                 }
-                node.instruction?.let { instr ->
-                    appendLine("    Current Instruction: ${instr.take(100)}${if (instr.length > 100) "..." else ""}")
-                }
-                if (node.demonstrations.isNotEmpty()) {
-                    appendLine("    Demonstrations: ${node.demonstrations.size}")
-                }
+                val instr = node.instruction
+                appendLine("    Current Instruction: ${instr.take(100)}${if (instr.length > 100) "..." else ""}")
             }
         }
     }
 }
 
-// Note: Full implementation of withOptimizedConfig() is deferred.
+// Note: Full implementation of withOptimizedConfig() / bake-in is deferred.
 // The primary mechanism for using optimized configs is via coroutine context during
 // optimization evaluation. For deployment, users can either:
-// 1. Continue using coroutine context (recommended for flexibility)
-// 2. Manually construct a new strategy with optimized nodes using the strategy DSL
-//
-// Future enhancement: Provide a strategy cloning mechanism that can rebuild the graph
-// with new node instances. This requires deeper integration with the strategy builder.
+// 1. Continue using coroutine context: withContext(optimizationConfig) { agent.run(input) }
+// 2. Eventually: use a bake-in mechanism that returns an optimized agent/strategy
+//    with instruction and demonstrations set as node defaults (no context wrapper needed).

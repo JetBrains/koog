@@ -14,7 +14,6 @@ import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
@@ -71,26 +70,17 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
      *
      * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
-     * @param instruction Optional instruction text for prompt optimization. When set, the node can participate in MIPRO-style optimization.
-     * @param demonstrations Few-shot examples for prompt optimization. These input-output pairs are used to provide examples to the LLM during execution.
-     * @param description Optional description of what this node does, used for MIPRO program description during instruction proposal.
      * @param execute A suspendable function that defines the node's execution logic.
      */
     public inline fun <reified Input, reified Output> node(
         name: String? = null,
-        instruction: String? = null,
-        demonstrations: List<Demonstration<Input, Output>> = emptyList(),
-        description: String? = null,
         noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(
             name = name,
             inputType = typeOf<Input>(),
             outputType = typeOf<Output>(),
-            execute = execute,
-            instruction = instruction,
-            demonstrations = demonstrations,
-            description = description,
+            execute = execute
         )
     }
 

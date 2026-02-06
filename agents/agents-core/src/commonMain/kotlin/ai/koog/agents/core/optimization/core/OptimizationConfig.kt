@@ -17,14 +17,12 @@ import kotlin.coroutines.CoroutineContext
  *
  * Example usage:
  * ```kotlin
- * // Evaluate a configuration
+ * // Evaluate a configuration during optimization
  * withContext(OptimizationConfig(instructions, demonstrations)) {
  *     agent.run(input)
  * }
  *
- * // In node lambda, read from context
- * val instruction = coroutineContext[OptimizationConfig]?.instructions?.get(name)
- *     ?: this@node.instruction
+ * // OptimizableNode reads from context automatically via getNodeInstruction/getNodeDemonstrations
  * ```
  *
  * @property instructions Map from node name to instruction text override.

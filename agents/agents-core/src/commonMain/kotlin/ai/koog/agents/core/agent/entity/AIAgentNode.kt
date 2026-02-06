@@ -3,7 +3,6 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.optimization.core.Demonstration
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlin.reflect.KType
@@ -137,49 +136,15 @@ public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
  * @param TInput The type of input data this node processes.
  * @param TOutput The type of output data this node produces.
  * @property name The name of the node, used for identification and debugging.
- * @property instruction Optional instruction subject to prompt optimization. When non-null, the node is subject to
- *  MIPRO-style optimization.
- * @property demonstrations Few-shot examples for prompt optimization. These input-output pairs are used
- *  to provide examples to the LLM during execution.
- * @property description Optional description of what this node does, used for MIPRO program description
- *  during instruction proposal.
  * @property execute A suspending function that defines the execution logic for the node. It
- *  processes the provided input within the given execution context and produces an output.
+ * processes the provided input within the given execution context and produces an output.
  */
 public open class AIAgentNode<TInput, TOutput> internal constructor(
     override val name: String,
     override val inputType: KType,
     override val outputType: KType,
     public val execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
-    public val instruction: String? = null,
-    public val demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),
-    public val description: String? = null,
 ) : AIAgentNodeBase<TInput, TOutput>() {
-
-    /**
-     * Creates a copy of this node with updated optimization fields.
-     *
-     * This is used during optimization to create node variants with different
-     * instructions or demonstrations without modifying the original node.
-     *
-     * @param instruction New instruction text, or null to keep the current value.
-     * @param demonstrations New demonstrations list, or null to keep the current value.
-     * @param description New description, or null to keep the current value.
-     * @return A new [AIAgentNode] instance with the specified fields updated.
-     */
-    public fun copy(
-        instruction: String? = this.instruction,
-        demonstrations: List<Demonstration<TInput, TOutput>> = this.demonstrations,
-        description: String? = this.description,
-    ): AIAgentNode<TInput, TOutput> = AIAgentNode(
-        name = name,
-        inputType = inputType,
-        outputType = outputType,
-        execute = execute,
-        instruction = instruction,
-        demonstrations = demonstrations,
-        description = description,
-    )
 
     private companion object {
         private val logger = KotlinLogging.logger { }

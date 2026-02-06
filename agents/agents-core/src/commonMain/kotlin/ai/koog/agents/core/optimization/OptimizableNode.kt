@@ -84,18 +84,15 @@ public class OptimizableNode<TInput, TOutput> internal constructor(
     public val inputField: String,
     public val outputField: String,
     execute: suspend AIAgentGraphContextBase.(TInput) -> TOutput,
-    instruction: String,
+    public val instruction: String,
     inputType: KType,
     outputType: KType,
-    description: String? = null,
+    public val description: String? = null,
 ) : AIAgentNode<TInput, TOutput>(
     name = name,
     inputType = inputType,
     outputType = outputType,
     execute = execute,
-    instruction = instruction,
-    demonstrations = emptyList(),
-    description = description,
 )
 
 /**
