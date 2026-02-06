@@ -17,6 +17,9 @@ public enum class FlowAgentKind {
     @SerialName("transform")
     TRANSFORM,
 
+    @SerialName("react")
+    REACT,
+
     @SerialName("parallel")
     PARALLEL
 }
