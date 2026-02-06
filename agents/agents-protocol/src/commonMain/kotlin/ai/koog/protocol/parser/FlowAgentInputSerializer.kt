@@ -11,9 +11,9 @@ import ai.koog.protocol.agent.InputDouble
 import ai.koog.protocol.agent.InputInt
 import ai.koog.protocol.agent.InputString
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
@@ -42,13 +42,9 @@ import kotlinx.serialization.json.put
  * - JSON objects with {success, feedback, input} -> InputCritiqueResult
  */
 internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("FlowAgentInput") {
-        element<String>("type", isOptional = true)
-        element<JsonElement>("data", isOptional = true)
-        element<Boolean>("success", isOptional = true)
-        element<String>("feedback", isOptional = true)
-        element<JsonElement>("input", isOptional = true)
-    }
+    // Use a primitive string descriptor to hide internal structure from tool schemas
+    // The LLM will see this as accepting/returning a simple string value
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("FlowAgentInput", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): FlowAgentInput {
         val jsonDecoder = decoder as? JsonDecoder ?: error("FlowAgentInput can only be deserialized from JSON")

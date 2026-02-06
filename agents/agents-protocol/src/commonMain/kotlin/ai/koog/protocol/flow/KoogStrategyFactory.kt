@@ -10,7 +10,6 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.CriticResult
-import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.protocol.agent.FlowAgent
@@ -173,13 +172,10 @@ public object KoogStrategyFactory {
         defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
 
-        val finalizeTaskTool = SubgraphWithTaskUtils.finishTool<FlowAgentInput>()
-
-        return subgraphWithTask(
+        return subgraphWithTask<FlowAgentInput, FlowAgentInput>(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
             llmModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel),
-            finishTool = finalizeTaskTool,
         ) { input ->
             agent.parameters.task
         }

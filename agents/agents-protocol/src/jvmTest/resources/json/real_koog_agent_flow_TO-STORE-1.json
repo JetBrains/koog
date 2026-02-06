@@ -1,0 +1,20 @@
+{
+  "id": "random-numbers-flow-real",
+  "version": "1.0",
+  "defaultModel": "anthropic/sonnet_4",
+  "agents": [
+    {
+      "name": "get_numbers",
+      "type": "task",
+      "prompt": {
+        "system": "You are a numbers generator agent."
+      },
+      "params": {
+        "task": "Generate two random numbers between 1 and 100. Output them with a space between them.",
+        "toolNames": []
+      }
+    }
+  ],
+  "transitions": [
+  ]
+}
