@@ -1,6 +1,6 @@
 package ai.koog.protocol.transition
 
-import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.Primitive
 import ai.koog.protocol.flow.ConditionOperationKind
 import kotlinx.serialization.Serializable
 
@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 public data class FlowTransitionCondition(
     val variable: String, // input.data / input.success
     val operation: ConditionOperationKind, // less_than
-    val value: FlowAgentInput.Primitive, // 1 / 1.0 / "one" / true
+    val value: Primitive, // 1 / 1.0 / "one" / true
 )

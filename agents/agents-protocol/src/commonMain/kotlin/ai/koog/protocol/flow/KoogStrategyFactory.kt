@@ -15,6 +15,11 @@ import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.InputBoolean
+import ai.koog.protocol.agent.InputCritiqueResult
+import ai.koog.protocol.agent.InputDouble
+import ai.koog.protocol.agent.InputInt
+import ai.koog.protocol.agent.InputString
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformation
@@ -201,7 +206,7 @@ public object KoogStrategyFactory {
 
         return subgraph(name = agent.name) {
             val transformResult by node<CriticResult<FlowAgentInput>, FlowAgentInput> { result ->
-                FlowAgentInput.InputCritiqueResult(
+                InputCritiqueResult(
                     success = result.successful,
                     feedback = result.feedback,
                     input = result.input
@@ -260,12 +265,12 @@ public object KoogStrategyFactory {
 
         return when (valueString) {
             "success" -> {
-                val value = (input as? FlowAgentInput.InputCritiqueResult)?.success ?: error("Unexpected value string: $valueString")
-                FlowAgentInput.InputBoolean(value)
+                val value = (input as? InputCritiqueResult)?.success ?: error("Unexpected value string: $valueString")
+                InputBoolean(value)
             }
             "feedback" -> {
-                val value = (input as? FlowAgentInput.InputCritiqueResult)?.feedback ?: error("Unexpected value string: $valueString")
-                FlowAgentInput.InputString(value)
+                val value = (input as? InputCritiqueResult)?.feedback ?: error("Unexpected value string: $valueString")
+                InputString(value)
             }
             else -> error("Not primitive types are not yet supported")
         }
@@ -329,10 +334,10 @@ public object KoogStrategyFactory {
 
         // String / Boolean / Double / Int vs. String / Boolean / Double / Int
         val conditionValue: Comparable<*> = when (condition.value) {
-            is FlowAgentInput.InputBoolean -> condition.value.data
-            is FlowAgentInput.InputInt -> condition.value.data
-            is FlowAgentInput.InputDouble -> condition.value.data
-            is FlowAgentInput.InputString -> condition.value.data
+            is InputBoolean -> condition.value.data
+            is InputInt -> condition.value.data
+            is InputDouble -> condition.value.data
+            is InputString -> condition.value.data
             else -> error("Unsupported condition type ${condition.value}")
         }
 
@@ -341,11 +346,11 @@ public object KoogStrategyFactory {
 
         // TODO: Add careful validation for conditionVariable
         val outputValue: Comparable<*> = when (output) {
-            is FlowAgentInput.InputBoolean -> output.data
-            is FlowAgentInput.InputInt -> output.data
-            is FlowAgentInput.InputDouble -> output.data
-            is FlowAgentInput.InputString -> output.data
-            is FlowAgentInput.InputCritiqueResult -> {
+            is InputBoolean -> output.data
+            is InputInt -> output.data
+            is InputDouble -> output.data
+            is InputString -> output.data
+            is InputCritiqueResult -> {
                 when (conditionVariable) {
                     "success" -> output.success
                     "feedback" -> output.feedback

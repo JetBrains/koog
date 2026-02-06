@@ -10,6 +10,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.InputString
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
 import ai.koog.protocol.tool.FlowTool
@@ -47,8 +48,8 @@ public class KoogFlow(
 
     private fun getInputFromFlowAgent(agent: FlowAgent): FlowAgentInput? {
         return when (agent) {
-            is FlowTaskAgent -> FlowAgentInput.InputString(agent.parameters.task)
-            is FlowVerifyAgent -> FlowAgentInput.InputString(agent.parameters.task)
+            is FlowTaskAgent -> InputString(agent.parameters.task)
+            is FlowVerifyAgent -> InputString(agent.parameters.task)
             else -> null
         }
     }

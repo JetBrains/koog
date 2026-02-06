@@ -1,21 +1,29 @@
 package ai.koog.protocol
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.ext.agent.CriticResultFromLLM
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.InputArrayBoolean
+import ai.koog.protocol.agent.InputArrayDouble
+import ai.koog.protocol.agent.InputArrayInt
+import ai.koog.protocol.agent.InputArrayString
+import ai.koog.protocol.agent.InputBoolean
+import ai.koog.protocol.agent.InputCritiqueResult
+import ai.koog.protocol.agent.InputDouble
+import ai.koog.protocol.agent.InputInt
+import ai.koog.protocol.agent.InputString
 import ai.koog.protocol.flow.KoogFlow
 import ai.koog.protocol.mock.TestMcpServer
 import ai.koog.protocol.parser.FlowJsonConfigParser
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.serializer
@@ -78,10 +86,10 @@ class FlowExecutionTest : FlowTestBase() {
 
         // Mock executor: the first agent returns "42 58", the second returns "100"
         val testExecutor = getMockExecutor {
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("42 58")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("42 58")) onCondition { request ->
                 request.contains(generateNumbersAgentTask)
             }
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("100")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("100")) onCondition { request ->
                 request.contains(calculatorAgentTask)
             }
         }
@@ -96,11 +104,11 @@ class FlowExecutionTest : FlowTestBase() {
         )
 
         // Create initial input based on the first agent's task
-        val initialInput = FlowAgentInput.InputString(generateNumbersAgentTask)
+        val initialInput = InputString(generateNumbersAgentTask)
         val result = flow.run(initialInput)
 
         // Verify the result is the sum from the calculator agent
-        assertIs<FlowAgentInput.InputString>(result)
+        assertIs<InputString>(result)
         assertEquals("100", result.data)
     }
 
@@ -126,7 +134,7 @@ class FlowExecutionTest : FlowTestBase() {
             // After getting a tool result, finalize with the greeting
             mockLLMToolCall(
                 finalizeTaskTool,
-                FlowAgentInput.InputString("Hello, TestUser!")
+                InputString("Hello, TestUser!")
             ) onCondition { request ->
                 request.contains("Hello, TestUser!")
             }
@@ -142,14 +150,14 @@ class FlowExecutionTest : FlowTestBase() {
         )
 
         // Create initial input based on the task
-        val initialInput = FlowAgentInput.InputString(taskInput)
+        val initialInput = InputString(taskInput)
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withMcpServer(port = 3002) { _ ->
                 flow.run(initialInput)
             }
         }
 
-        assertIs<FlowAgentInput.InputString>(result)
+        assertIs<InputString>(result)
         assertTrue(result.data.contains("Hello, TestUser!"), "Result should contain greeting: ${result.data}")
     }
 
@@ -161,10 +169,10 @@ class FlowExecutionTest : FlowTestBase() {
      */
     @Test
     fun testInputCritiqueResult_serializationRoundTrip() {
-        val original = FlowAgentInput.InputCritiqueResult(
+        val original = InputCritiqueResult(
             success = false,
             feedback = "Missing greeting word. Please add 'Hello' or 'Hi'.",
-            input = FlowAgentInput.InputString("World")
+            input = InputString("World")
         )
 
         val json = kotlinx.serialization.json.Json.encodeToString(
@@ -177,10 +185,10 @@ class FlowExecutionTest : FlowTestBase() {
             json
         )
 
-        assertIs<FlowAgentInput.InputCritiqueResult>(deserialized)
+        assertIs<InputCritiqueResult>(deserialized)
         assertEquals(original.success, deserialized.success)
         assertEquals(original.feedback, deserialized.feedback)
-        assertIs<FlowAgentInput.InputString>(deserialized.input)
+        assertIs<InputString>(deserialized.input)
         assertEquals("World", deserialized.input.data)
     }
 
@@ -189,13 +197,13 @@ class FlowExecutionTest : FlowTestBase() {
      */
     @Test
     fun testInputCritiqueResult_nestedSerialization() {
-        val nested = FlowAgentInput.InputCritiqueResult(
+        val nested = InputCritiqueResult(
             success = true,
             feedback = "Nested result",
-            input = FlowAgentInput.InputInt(42)
+            input = InputInt(42)
         )
 
-        val original = FlowAgentInput.InputCritiqueResult(
+        val original = InputCritiqueResult(
             success = false,
             feedback = "Outer feedback",
             input = nested
@@ -211,15 +219,15 @@ class FlowExecutionTest : FlowTestBase() {
             json
         )
 
-        assertIs<FlowAgentInput.InputCritiqueResult>(deserialized)
+        assertIs<InputCritiqueResult>(deserialized)
         assertEquals(false, deserialized.success)
         assertEquals("Outer feedback", deserialized.feedback)
 
         val nestedResult = deserialized.input
-        assertIs<FlowAgentInput.InputCritiqueResult>(nestedResult)
+        assertIs<InputCritiqueResult>(nestedResult)
         assertEquals(true, nestedResult.success)
         assertEquals("Nested result", nestedResult.feedback)
-        assertIs<FlowAgentInput.InputInt>(nestedResult.input)
+        assertIs<InputInt>(nestedResult.input)
         assertEquals(42, nestedResult.input.data)
     }
 
@@ -276,18 +284,18 @@ class FlowExecutionTest : FlowTestBase() {
     @Test
     fun testFlowAgentInput_allTypesSerialization() {
         val testCases = listOf(
-            FlowAgentInput.InputString("test string"),
-            FlowAgentInput.InputInt(42),
-            FlowAgentInput.InputDouble(3.14),
-            FlowAgentInput.InputBoolean(true),
-            FlowAgentInput.InputArrayString(arrayOf("a", "b", "c")),
-            FlowAgentInput.InputArrayInt(arrayOf(1, 2, 3)),
-            FlowAgentInput.InputArrayDouble(arrayOf(1.1, 2.2, 3.3)),
-            FlowAgentInput.InputArrayBoolean(arrayOf(true, false, true)),
-            FlowAgentInput.InputCritiqueResult(
+            InputString("test string"),
+            InputInt(42),
+            InputDouble(3.14),
+            InputBoolean(true),
+            InputArrayString(arrayOf("a", "b", "c")),
+            InputArrayInt(arrayOf(1, 2, 3)),
+            InputArrayDouble(arrayOf(1.1, 2.2, 3.3)),
+            InputArrayBoolean(arrayOf(true, false, true)),
+            InputCritiqueResult(
                 success = true,
                 feedback = "All good",
-                input = FlowAgentInput.InputString("original")
+                input = InputString("original")
             )
         )
 
@@ -322,12 +330,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Score analyzer returns a high score
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputInt(95)) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputInt(95)) onCondition { request ->
                 request.contains("Extract the numeric score")
             }
 
             // High score feedback
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Excellent performance!")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Excellent performance!")) onCondition { request ->
                 request.contains("Congratulate the user")
             }
         }
@@ -341,9 +349,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("Score: 95"))
+        val result = flow.run(InputString("Score: 95"))
 
-        assertIs<FlowAgentInput.InputString>(result)
+        assertIs<InputString>(result)
         assertTrue(result.data.contains("Excellent") || result.data.contains("performance"))
     }
 
@@ -355,12 +363,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Score analyzer returns a low score
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputInt(30)) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputInt(30)) onCondition { request ->
                 request.contains("Extract the numeric score")
             }
 
             // Low score feedback
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Constructive feedback provided")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Constructive feedback provided")) onCondition { request ->
                 request.contains("constructive feedback")
             }
         }
@@ -374,9 +382,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("Score: 30"))
+        val result = flow.run(InputString("Score: 30"))
 
-        assertIs<FlowAgentInput.InputString>(result)
+        assertIs<InputString>(result)
         assertTrue(result.data.contains("feedback") || result.data.contains("Constructive"))
     }
 
@@ -388,7 +396,7 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Initial generator produces code
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("def hello(): pass")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("def hello(): pass")) onCondition { request ->
                 request.contains("generate", ignoreCase = true)
             }
 
@@ -414,9 +422,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("Create a hello function"))
+        val result = flow.run(InputString("Create a hello function"))
 
-        assertIs<FlowAgentInput.InputCritiqueResult>(result)
+        assertIs<InputCritiqueResult>(result)
         assertTrue(result.success)
     }
 
@@ -428,19 +436,19 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Data collector
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Structured: name=John, age=30")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Structured: name=John, age=30")) onCondition { request ->
                 request.contains("collect", ignoreCase = true) &&
                     request.contains("structure data", ignoreCase = true)
             }
 
             // Data enricher
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Enriched: name=John, age=30, location=USA")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Enriched: name=John, age=30, location=USA")) onCondition { request ->
                 request.contains("enrich data", ignoreCase = true) &&
                     request.contains("additional context", ignoreCase = true)
             }
 
             // Data formatter
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Formatted: John (30) - USA")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Formatted: John (30) - USA")) onCondition { request ->
                 request.contains("format data", ignoreCase = true) &&
                     request.contains("final output", ignoreCase = true)
             }
@@ -459,7 +467,7 @@ class FlowExecutionTest : FlowTestBase() {
             }
 
             // Fallback for any non-verify requests to ensure task agents always finalize
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("OK")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("OK")) onCondition { request ->
                 !request.contains("verify", ignoreCase = true) &&
                     !request.contains("check", ignoreCase = true)
             }
@@ -474,9 +482,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("Raw data: John is 30"))
+        val result = flow.run(InputString("Raw data: John is 30"))
 
-        assertIs<FlowAgentInput.InputCritiqueResult>(result)
+        assertIs<InputCritiqueResult>(result)
         assertTrue(result.success)
     }
 
@@ -488,12 +496,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Language detector detects English
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("en")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("en")) onCondition { request ->
                 request.contains("Detect the language", ignoreCase = true)
             }
 
             // English processor
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Processed English text")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Processed English text")) onCondition { request ->
                 request.contains("Process this English text", ignoreCase = true)
             }
         }
@@ -507,9 +515,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("Hello, how are you?"))
+        val result = flow.run(InputString("Hello, how are you?"))
 
-        assertIs<FlowAgentInput.InputString>(result)
+        assertIs<InputString>(result)
         assertTrue(result.data.contains("English"))
     }
 
@@ -521,12 +529,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Content analyzer returns safe
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputBoolean(true)) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputBoolean(true)) onCondition { request ->
                 request.contains("Analyze the input content", ignoreCase = true)
             }
 
             // Safe content processor
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Content approved for publication")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Content approved for publication")) onCondition { request ->
                 request.contains("approved content", ignoreCase = true)
             }
         }
@@ -540,9 +548,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("This is safe content"))
+        val result = flow.run(InputString("This is safe content"))
 
-        assertIs<FlowAgentInput.InputString>(result)
+        assertIs<InputString>(result)
         assertTrue(result.data.contains("approved") || result.data.contains("publication"))
     }
 
@@ -554,12 +562,12 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Document classifier identifies invoice
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("invoice")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("invoice")) onCondition { request ->
                 request.contains("Classify the document type", ignoreCase = true) || request.contains("classify", ignoreCase = true)
             }
 
             // Invoice processor
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Invoice data extracted")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Invoice data extracted")) onCondition { request ->
                 request.contains("Extract invoice number", ignoreCase = true) || request.contains("process invoices", ignoreCase = true)
             }
 
@@ -576,7 +584,7 @@ class FlowExecutionTest : FlowTestBase() {
             }
 
             // Final archiver
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Document archived")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Document archived")) onCondition { request ->
                 request.contains("Archive the processed document", ignoreCase = true) || request.contains("archive", ignoreCase = true)
             }
         }
@@ -590,9 +598,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("Invoice #12345, Date: 2024-01-01, Amount: $100"))
+        val result = flow.run(InputString("Invoice #12345, Date: 2024-01-01, Amount: $100"))
 
-        assertIs<FlowAgentInput.InputString>(result)
+        assertIs<InputString>(result)
         assertTrue(result.data.contains("archived") || result.data.contains("Document"))
     }
 
@@ -604,7 +612,7 @@ class FlowExecutionTest : FlowTestBase() {
 
         val testExecutor = getMockExecutor {
             // Task agent generates greeting
-            mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Hello, World!")) onCondition { request ->
+            mockLLMToolCall(finalizeTaskTool, InputString("Hello, World!")) onCondition { request ->
                 request.contains("generate", ignoreCase = true)
             }
 
@@ -630,9 +638,9 @@ class FlowExecutionTest : FlowTestBase() {
             promptExecutor = testExecutor
         )
 
-        val result = flow.run(FlowAgentInput.InputString("Create a greeting"))
+        val result = flow.run(InputString("Create a greeting"))
 
-        assertIs<FlowAgentInput.InputCritiqueResult>(result)
+        assertIs<InputCritiqueResult>(result)
         assertTrue(result.success)
     }
 

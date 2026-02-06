@@ -1,6 +1,11 @@
 package ai.koog.protocol
 
 import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.InputBoolean
+import ai.koog.protocol.agent.InputCritiqueResult
+import ai.koog.protocol.agent.InputDouble
+import ai.koog.protocol.agent.InputInt
+import ai.koog.protocol.agent.InputString
 import ai.koog.protocol.flow.ConditionOperationKind
 import ai.koog.protocol.flow.KoogStrategyFactory
 import ai.koog.protocol.transition.FlowTransitionCondition
@@ -25,118 +30,118 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionEquals_withBoolean_true() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withBoolean_false() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputBoolean(false)
+            value = InputBoolean(false)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withInt() {
-        val output = FlowAgentInput.InputInt(42)
+        val output = InputInt(42)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputInt(42)
+            value = InputInt(42)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withInt_notEqual() {
-        val output = FlowAgentInput.InputInt(42)
+        val output = InputInt(42)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputInt(100)
+            value = InputInt(100)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withString() {
-        val output = FlowAgentInput.InputString("hello")
+        val output = InputString("hello")
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputString("hello")
+            value = InputString("hello")
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withString_notEqual() {
-        val output = FlowAgentInput.InputString("hello")
+        val output = InputString("hello")
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputString("world")
+            value = InputString("world")
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withDouble() {
-        val output = FlowAgentInput.InputDouble(3.14)
+        val output = InputDouble(3.14)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputDouble(3.14)
+            value = InputDouble(3.14)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withCritiqueResult_success() {
-        val output = FlowAgentInput.InputCritiqueResult(
+        val output = InputCritiqueResult(
             success = true,
             feedback = "Great!",
-            input = FlowAgentInput.InputString("test")
+            input = InputString("test")
         )
         val condition = FlowTransitionCondition(
             variable = "input.success",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withCritiqueResult_feedback() {
-        val output = FlowAgentInput.InputCritiqueResult(
+        val output = InputCritiqueResult(
             success = true,
             feedback = "Great!",
-            input = FlowAgentInput.InputString("test")
+            input = InputString("test")
         )
         val condition = FlowTransitionCondition(
             variable = "input.feedback",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputString("Great!")
+            value = InputString("Great!")
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionEquals_withMixedNumericTypes_intAndDouble() {
-        val output = FlowAgentInput.InputInt(42)
+        val output = InputInt(42)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.EQUALS,
-            value = FlowAgentInput.InputDouble(42.0)
+            value = InputDouble(42.0)
         )
         // Note: This compares 42 == 42.0 which returns false because they are different types
         // For equality to work, both values must be the same type
@@ -149,44 +154,44 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionNotEquals_withBoolean_true() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.NOT_EQUALS,
-            value = FlowAgentInput.InputBoolean(false)
+            value = InputBoolean(false)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionNotEquals_withBoolean_false() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.NOT_EQUALS,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionNotEquals_withInt() {
-        val output = FlowAgentInput.InputInt(42)
+        val output = InputInt(42)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.NOT_EQUALS,
-            value = FlowAgentInput.InputInt(100)
+            value = InputInt(100)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionNotEquals_withString() {
-        val output = FlowAgentInput.InputString("hello")
+        val output = InputString("hello")
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.NOT_EQUALS,
-            value = FlowAgentInput.InputString("world")
+            value = InputString("world")
         )
         assertTrue(evaluateCondition(output, condition))
     }
@@ -197,66 +202,66 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionMore_withInt_true() {
-        val output = FlowAgentInput.InputInt(100)
+        val output = InputInt(100)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMore_withInt_false() {
-        val output = FlowAgentInput.InputInt(25)
+        val output = InputInt(25)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMore_withInt_equal() {
-        val output = FlowAgentInput.InputInt(50)
+        val output = InputInt(50)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMore_withDouble() {
-        val output = FlowAgentInput.InputDouble(5.0)
+        val output = InputDouble(5.0)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE,
-            value = FlowAgentInput.InputDouble(3.14)
+            value = InputDouble(3.14)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMore_withString() {
-        val output = FlowAgentInput.InputString("banana")
+        val output = InputString("banana")
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE,
-            value = FlowAgentInput.InputString("apple")
+            value = InputString("apple")
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMore_withMixedNumericTypes() {
-        val output = FlowAgentInput.InputInt(100)
+        val output = InputInt(100)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE,
-            value = FlowAgentInput.InputDouble(50.5)
+            value = InputDouble(50.5)
         )
         assertTrue(evaluateCondition(output, condition))
     }
@@ -267,55 +272,55 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionLess_withInt_true() {
-        val output = FlowAgentInput.InputInt(25)
+        val output = InputInt(25)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionLess_withInt_false() {
-        val output = FlowAgentInput.InputInt(100)
+        val output = InputInt(100)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionLess_withInt_equal() {
-        val output = FlowAgentInput.InputInt(50)
+        val output = InputInt(50)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionLess_withDouble() {
-        val output = FlowAgentInput.InputDouble(2.0)
+        val output = InputDouble(2.0)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS,
-            value = FlowAgentInput.InputDouble(3.14)
+            value = InputDouble(3.14)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionLess_withString() {
-        val output = FlowAgentInput.InputString("apple")
+        val output = InputString("apple")
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS,
-            value = FlowAgentInput.InputString("banana")
+            value = InputString("banana")
         )
         assertTrue(evaluateCondition(output, condition))
     }
@@ -326,44 +331,44 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionMoreOrEqual_withInt_more() {
-        val output = FlowAgentInput.InputInt(100)
+        val output = InputInt(100)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE_OR_EQUAL,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMoreOrEqual_withInt_equal() {
-        val output = FlowAgentInput.InputInt(50)
+        val output = InputInt(50)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE_OR_EQUAL,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMoreOrEqual_withInt_less() {
-        val output = FlowAgentInput.InputInt(25)
+        val output = InputInt(25)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE_OR_EQUAL,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionMoreOrEqual_withDouble() {
-        val output = FlowAgentInput.InputDouble(3.14)
+        val output = InputDouble(3.14)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.MORE_OR_EQUAL,
-            value = FlowAgentInput.InputDouble(3.14)
+            value = InputDouble(3.14)
         )
         assertTrue(evaluateCondition(output, condition))
     }
@@ -374,44 +379,44 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionLessOrEqual_withInt_less() {
-        val output = FlowAgentInput.InputInt(25)
+        val output = InputInt(25)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS_OR_EQUAL,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionLessOrEqual_withInt_equal() {
-        val output = FlowAgentInput.InputInt(50)
+        val output = InputInt(50)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS_OR_EQUAL,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionLessOrEqual_withInt_more() {
-        val output = FlowAgentInput.InputInt(100)
+        val output = InputInt(100)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS_OR_EQUAL,
-            value = FlowAgentInput.InputInt(50)
+            value = InputInt(50)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionLessOrEqual_withDouble() {
-        val output = FlowAgentInput.InputDouble(3.14)
+        val output = InputDouble(3.14)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.LESS_OR_EQUAL,
-            value = FlowAgentInput.InputDouble(3.14)
+            value = InputDouble(3.14)
         )
         assertTrue(evaluateCondition(output, condition))
     }
@@ -422,33 +427,33 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionNot_trueNotEqualsFalse() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.NOT,
-            value = FlowAgentInput.InputBoolean(false)
+            value = InputBoolean(false)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionNot_trueEqualsTrue() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.NOT,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionNot_falseNotEqualsTrue() {
-        val output = FlowAgentInput.InputBoolean(false)
+        val output = InputBoolean(false)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.NOT,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertTrue(evaluateCondition(output, condition))
     }
@@ -459,44 +464,44 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionAnd_trueAndTrue() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.AND,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionAnd_trueAndFalse() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.AND,
-            value = FlowAgentInput.InputBoolean(false)
+            value = InputBoolean(false)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionAnd_falseAndTrue() {
-        val output = FlowAgentInput.InputBoolean(false)
+        val output = InputBoolean(false)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.AND,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertFalse(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionAnd_falseAndFalse() {
-        val output = FlowAgentInput.InputBoolean(false)
+        val output = InputBoolean(false)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.AND,
-            value = FlowAgentInput.InputBoolean(false)
+            value = InputBoolean(false)
         )
         assertFalse(evaluateCondition(output, condition))
     }
@@ -507,44 +512,44 @@ class FlowTransitionConditionTest {
 
     @Test
     fun testConditionOr_trueOrTrue() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.OR,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionOr_trueOrFalse() {
-        val output = FlowAgentInput.InputBoolean(true)
+        val output = InputBoolean(true)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.OR,
-            value = FlowAgentInput.InputBoolean(false)
+            value = InputBoolean(false)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionOr_falseOrTrue() {
-        val output = FlowAgentInput.InputBoolean(false)
+        val output = InputBoolean(false)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.OR,
-            value = FlowAgentInput.InputBoolean(true)
+            value = InputBoolean(true)
         )
         assertTrue(evaluateCondition(output, condition))
     }
 
     @Test
     fun testConditionOr_falseOrFalse() {
-        val output = FlowAgentInput.InputBoolean(false)
+        val output = InputBoolean(false)
         val condition = FlowTransitionCondition(
             variable = "input.data",
             operation = ConditionOperationKind.OR,
-            value = FlowAgentInput.InputBoolean(false)
+            value = InputBoolean(false)
         )
         assertFalse(evaluateCondition(output, condition))
     }

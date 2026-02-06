@@ -1,6 +1,10 @@
 package ai.koog.protocol.model
 
-import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.InputBoolean
+import ai.koog.protocol.agent.InputDouble
+import ai.koog.protocol.agent.InputInt
+import ai.koog.protocol.agent.InputString
+import ai.koog.protocol.agent.Primitive
 import ai.koog.protocol.flow.ConditionOperationKind
 import ai.koog.protocol.transition.FlowTransitionCondition
 import kotlinx.serialization.Serializable
@@ -36,11 +40,11 @@ public data class FlowTransitionConditionModel(
 
     //region Private Methods
 
-    private fun JsonPrimitive.toFlowAgentInput(): FlowAgentInput.Primitive {
-        return doubleOrNull?.let { FlowAgentInput.InputDouble(it) }
-            ?: intOrNull?.let { FlowAgentInput.InputInt(it) }
-            ?: booleanOrNull?.let { FlowAgentInput.InputBoolean(it) }
-            ?: contentOrNull?.let { FlowAgentInput.InputString(it) }
+    private fun JsonPrimitive.toFlowAgentInput(): Primitive {
+        return doubleOrNull?.let { InputDouble(it) }
+            ?: intOrNull?.let { InputInt(it) }
+            ?: booleanOrNull?.let { InputBoolean(it) }
+            ?: contentOrNull?.let { InputString(it) }
             ?: error("Unsupported primitive type: $this")
     }
 

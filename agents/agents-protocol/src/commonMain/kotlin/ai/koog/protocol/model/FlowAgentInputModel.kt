@@ -1,6 +1,15 @@
 package ai.koog.protocol.model
 
 import ai.koog.protocol.agent.FlowAgentInput
+import ai.koog.protocol.agent.InputArrayBoolean
+import ai.koog.protocol.agent.InputArrayDouble
+import ai.koog.protocol.agent.InputArrayInt
+import ai.koog.protocol.agent.InputArrayString
+import ai.koog.protocol.agent.InputBoolean
+import ai.koog.protocol.agent.InputCritiqueResult
+import ai.koog.protocol.agent.InputDouble
+import ai.koog.protocol.agent.InputInt
+import ai.koog.protocol.agent.InputString
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -38,26 +47,26 @@ internal fun JsonElement.toFlowAgentInput(): FlowAgentInput? {
 }
 
 internal fun JsonPrimitive.toFlowAgentInput(): FlowAgentInput {
-    return booleanOrNull?.let { data -> FlowAgentInput.InputBoolean(data) }
-        ?: intOrNull?.let { data -> FlowAgentInput.InputInt(data) }
-        ?: doubleOrNull?.let { data -> FlowAgentInput.InputDouble(data) }
-        ?: contentOrNull?.let { data -> FlowAgentInput.InputString(data) }
+    return booleanOrNull?.let { data -> InputBoolean(data) }
+        ?: intOrNull?.let { data -> InputInt(data) }
+        ?: doubleOrNull?.let { data -> InputDouble(data) }
+        ?: contentOrNull?.let { data -> InputString(data) }
         ?: error("Unsupported primitive type: $this")
 }
 
 internal fun JsonArray.toInputArray(): FlowAgentInput {
     return when {
         all { it.jsonPrimitive.isString } -> {
-            FlowAgentInput.InputArrayString(mapNotNull { it.jsonPrimitive.contentOrNull }.toTypedArray())
+            InputArrayString(mapNotNull { it.jsonPrimitive.contentOrNull }.toTypedArray())
         }
         all { it.jsonPrimitive.booleanOrNull != null } -> {
-            FlowAgentInput.InputArrayBoolean(mapNotNull { it.jsonPrimitive.booleanOrNull }.toTypedArray())
+            InputArrayBoolean(mapNotNull { it.jsonPrimitive.booleanOrNull }.toTypedArray())
         }
         all { it.jsonPrimitive.intOrNull != null } -> {
-            FlowAgentInput.InputArrayInt(mapNotNull { it.jsonPrimitive.intOrNull }.toTypedArray())
+            InputArrayInt(mapNotNull { it.jsonPrimitive.intOrNull }.toTypedArray())
         }
         all { it.jsonPrimitive.doubleOrNull != null } -> {
-            FlowAgentInput.InputArrayDouble(mapNotNull { it.jsonPrimitive.doubleOrNull }.toTypedArray())
+            InputArrayDouble(mapNotNull { it.jsonPrimitive.doubleOrNull }.toTypedArray())
         }
         else -> {
             error("Expected an array of uniform primitive types, but got: <$this>")
@@ -70,10 +79,10 @@ internal fun JsonObject.toInputObject(): FlowAgentInput {
         ?: error("Unable to create Flow Agent Input type from Json input: $this")
 }
 
-internal fun JsonObject.toInputCritiqueResult(): FlowAgentInput.InputCritiqueResult? {
+internal fun JsonObject.toInputCritiqueResult(): InputCritiqueResult? {
     val success = this["success"]?.jsonPrimitive?.booleanOrNull ?: return null
     val feedback = this["feedback"]?.jsonPrimitive?.contentOrNull ?: return null
     val input = this["input"]?.toFlowAgentInput() ?: return null
 
-    return FlowAgentInput.InputCritiqueResult(success, feedback, input)
+    return InputCritiqueResult(success, feedback, input)
 }
