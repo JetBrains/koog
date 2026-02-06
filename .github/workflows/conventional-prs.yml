@@ -7,7 +7,7 @@ on:
       - opened
       - reopened
       - edited
-      # - synchronize (if you use required Actions)
+      - synchronize
 
 jobs:
   main:
