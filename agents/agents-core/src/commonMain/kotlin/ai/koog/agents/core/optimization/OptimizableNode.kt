@@ -147,9 +147,10 @@ internal val defaultStringExecutePrompt: suspend AIAgentGraphContextBase.(Prompt
  * @param TInput The type of input this node receives from the graph.
  * @param TOutput The type of output this node produces for the graph.
  * @property inputField The key in [Example.data][ai.koog.agents.core.optimization.core.Example.data]
- *  that provides this node's input.
+ *  that provides this node's input. Null if this node doesn't map to Example fields
+ *  (e.g., when demonstrations are provided directly).
  * @property outputField The key in [Example.data][ai.koog.agents.core.optimization.core.Example.data]
- *  that provides this node's expected output.
+ *  that provides this node's expected output. Null if this node doesn't map to Example fields.
  * @property instruction The base instruction for prompt construction. May be overridden at
  *  runtime via [OptimizationConfig] in the coroutine context.
  * @property promptFn The prompt construction function that builds a [Prompt] from instruction,
@@ -160,8 +161,8 @@ internal val defaultStringExecutePrompt: suspend AIAgentGraphContextBase.(Prompt
  */
 public class OptimizableNode<TInput, TOutput> internal constructor(
     name: String,
-    public val inputField: String,
-    public val outputField: String,
+    public val inputField: String?,
+    public val outputField: String?,
     public val instruction: String,
     public val promptFn: OptimizablePromptFn<TInput, TOutput>,
     internal val executePrompt: suspend AIAgentGraphContextBase.(Prompt) -> TOutput,
@@ -194,8 +195,8 @@ public class OptimizableNode<TInput, TOutput> internal constructor(
  */
 public class OptimizableNodeDelegate<TInput, TOutput>(
     private val name: String?,
-    private val inputField: String,
-    private val outputField: String,
+    private val inputField: String?,
+    private val outputField: String?,
     private val instruction: String,
     private val description: String?,
     private val demonstrations: List<Demonstration<TInput, TOutput>>,
@@ -244,8 +245,8 @@ public class OptimizableNodeDelegate<TInput, TOutput>(
  * ```
  *
  * @param instruction The base instruction for prompt construction.
- * @param inputField The key in Example.data that provides this node's input.
- * @param outputField The key in Example.data that provides this node's expected output.
+ * @param inputField The key in Example.data that provides this node's input. Null if not mapping to Examples.
+ * @param outputField The key in Example.data that provides this node's expected output. Null if not mapping to Examples.
  * @param name Explicit node name. If null, derived from the delegated property name.
  * @param description Optional description for MIPRO program description.
  * @param demonstrations Default demonstrations for few-shot prompting.
@@ -254,8 +255,8 @@ public class OptimizableNodeDelegate<TInput, TOutput>(
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
     instruction: String,
-    inputField: String,
-    outputField: String,
+    inputField: String? = null,
+    outputField: String? = null,
     name: String? = null,
     description: String? = null,
     demonstrations: List<Demonstration<String, String>> = emptyList(),
@@ -307,8 +308,8 @@ public fun AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
  * @param TInput The type of input the node receives (must be `@Serializable` if using default promptFn).
  * @param TOutput The type of output the node produces (must be `@Serializable`; used for structured output).
  * @param instruction The base instruction for prompt construction.
- * @param inputField The key in Example.data that provides this node's input.
- * @param outputField The key in Example.data that provides this node's expected output.
+ * @param inputField The key in Example.data that provides this node's input. Null if not mapping to Examples.
+ * @param outputField The key in Example.data that provides this node's expected output. Null if not mapping to Examples.
  * @param name Explicit node name. If null, derived from the delegated property name.
  * @param description Optional description for MIPRO program description.
  * @param demonstrations Default demonstrations for few-shot prompting.
@@ -318,8 +319,8 @@ public fun AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
 @JvmName("optimizableNodeTyped")
 public inline fun <reified TInput, reified TOutput> AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
     instruction: String,
-    inputField: String,
-    outputField: String,
+    inputField: String? = null,
+    outputField: String? = null,
     name: String? = null,
     description: String? = null,
     demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),

@@ -62,9 +62,12 @@ public class LabeledFewShot(
         val demonstrations = mutableMapOf<String, List<Demonstration<*, *>>>()
 
         for (module in modules) {
+            val inField = module.inputField ?: continue
+            val outField = module.outputField ?: continue
+
             val candidates = trainset.filter { example ->
-                example.data.containsKey(module.inputField) &&
-                    example.data.containsKey(module.outputField)
+                example.data.containsKey(inField) &&
+                    example.data.containsKey(outField)
             }
 
             val selected = if (sample) {
@@ -75,8 +78,8 @@ public class LabeledFewShot(
 
             val demos = selected.map { example ->
                 Demonstration(
-                    input = example.data[module.inputField]!!,
-                    output = example.data[module.outputField]!!,
+                    input = example.data[inField]!!,
+                    output = example.data[outField]!!,
                     isBootstrapped = false,
                 )
             }

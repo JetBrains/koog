@@ -1,11 +1,10 @@
 package ai.koog.agents.core.optimization
 
-import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
-import ai.koog.agents.core.optimization.util.findOptimizableNodes
+import ai.koog.agents.core.optimization.util.findOptimizableModules
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
@@ -17,21 +16,23 @@ import kotlin.test.assertEquals
  * These tests validate that:
  * 1. OptimizationConfig can override node instructions via coroutine context
  * 2. Context helper functions read from context correctly
- * 3. TraceCollectionFeature captures node I/O
- * 4. Strategy utils find optimizable nodes
+ * 3. Strategy utils find optimizable nodes
+ * 4. OptimizableNode properties are set correctly
  */
 class OptimizationInfrastructureTest {
 
     /**
-     * Test that findOptimizableNodes() discovers nodes with instructions.
+     * Test that findOptimizableModules() discovers OptimizableNode instances
+     * and ignores regular nodes.
      */
     @Test
-    fun testFindOptimizableNodes() {
-        // Strategy with one optimizable node and one non-optimizable node
+    fun testFindOptimizableModules() {
         val testStrategy = strategy("test") {
-            val optimizable by node<String, String>(
-                instruction = "This node is optimizable"
-            ) { input -> input.uppercase() }
+            val optimizable by optimizableNode(
+                instruction = "This node is optimizable",
+                inputField = "text",
+                outputField = "label",
+            )
 
             val notOptimizable by node<String, String> { input ->
                 input.lowercase()
@@ -42,11 +43,13 @@ class OptimizationInfrastructureTest {
             edge(notOptimizable forwardTo nodeFinish)
         }
 
-        val optimizableNodes = testStrategy.findOptimizableNodes()
+        val modules = testStrategy.findOptimizableModules()
 
-        assertEquals(1, optimizableNodes.size)
-        assertEquals("optimizable", optimizableNodes[0].name)
-        assertEquals("This node is optimizable", optimizableNodes[0].instruction)
+        assertEquals(1, modules.size)
+        assertEquals("optimizable", modules[0].name)
+        assertEquals("This node is optimizable", modules[0].instruction)
+        assertEquals("text", modules[0].inputField)
+        assertEquals("label", modules[0].outputField)
     }
 
     /**
@@ -67,70 +70,59 @@ class OptimizationInfrastructureTest {
     }
 
     /**
-     * Test that node's instruction field is set correctly via DSL.
+     * Test that OptimizableNode properties are set correctly via DSL.
      */
     @Test
-    fun testNodeInstructionFieldViaDelegate() {
+    fun testOptimizableNodePropertiesViaDelegate() {
         val testStrategy = strategy("test") {
-            val myNode by node<String, String>(
+            val myNode by optimizableNode(
                 instruction = "My instruction",
+                inputField = "text",
+                outputField = "sentiment",
                 description = "My description",
-                demonstrations = listOf(Demonstration("example in", "example out"))
-            ) { input -> input }
+                demonstrations = listOf(Demonstration("example in", "example out")),
+            )
 
             edge(nodeStart forwardTo myNode)
             edge(myNode forwardTo nodeFinish)
         }
 
-        val nodes = testStrategy.findOptimizableNodes()
-        assertEquals(1, nodes.size)
+        val modules = testStrategy.findOptimizableModules()
+        assertEquals(1, modules.size)
 
-        val node = nodes[0]
-        assertEquals("myNode", node.name)
-        assertEquals("My instruction", node.instruction)
-        assertEquals("My description", node.description)
-        assertEquals(1, node.demonstrations.size)
-        assertEquals("example in", node.demonstrations[0].input)
-        assertEquals("example out", node.demonstrations[0].output)
+        val module = modules[0]
+        assertEquals("myNode", module.name)
+        assertEquals("My instruction", module.instruction)
+        assertEquals("My description", module.description)
+        assertEquals("text", module.inputField)
+        assertEquals("sentiment", module.outputField)
+        assertEquals(1, module.demonstrations.size)
+        assertEquals("example in", module.demonstrations[0].input)
+        assertEquals("example out", module.demonstrations[0].output)
     }
 
     /**
-     * Test that AIAgentNode.copy() creates a proper copy with updated fields.
+     * Test that optimizableNode works with nullable inputField/outputField.
      */
     @Test
-    fun testNodeCopy() {
+    fun testOptimizableNodeNullableFields() {
         val testStrategy = strategy("test") {
-            val myNode by node<String, String>(
-                instruction = "original instruction",
-                demonstrations = emptyList(),
-                description = "original description"
-            ) { input -> input }
+            val myNode by optimizableNode(
+                instruction = "My instruction",
+                demonstrations = listOf(Demonstration("a", "b")),
+            )
 
             edge(nodeStart forwardTo myNode)
             edge(myNode forwardTo nodeFinish)
         }
 
-        val originalNode = testStrategy.findOptimizableNodes()[0]
+        val modules = testStrategy.findOptimizableModules()
+        assertEquals(1, modules.size)
 
-        @Suppress("UNCHECKED_CAST")
-        val copiedNode = (originalNode as AIAgentNode<String, String>).copy(
-            instruction = "new instruction",
-            demonstrations = listOf(Demonstration("a", "b")),
-            description = "new description"
-        )
-
-        // Original unchanged
-        assertEquals("original instruction", originalNode.instruction)
-        assertEquals(0, originalNode.demonstrations.size)
-        assertEquals("original description", originalNode.description)
-
-        // Copy has new values
-        assertEquals("new instruction", copiedNode.instruction)
-        assertEquals(1, copiedNode.demonstrations.size)
-        assertEquals("new description", copiedNode.description)
-
-        // Name and execute preserved
-        assertEquals(originalNode.name, copiedNode.name)
+        val module = modules[0]
+        assertEquals(null, module.inputField)
+        assertEquals(null, module.outputField)
+        assertEquals(1, module.demonstrations.size)
     }
 
     /**
@@ -160,18 +152,15 @@ class OptimizationInfrastructureTest {
 
     /**
      * Test the pattern that node lambdas would use to read instruction from context.
-     * This mimics what getNodeInstruction() does internally.
+     * This mimics what OptimizableNode does internally.
      */
     @Test
     fun testNodeLambdaPattern() = runBlocking {
         val config = OptimizationConfig(instructions = mapOf("myNode" to "optimized instruction"))
 
-        // Verify config has the instruction
         assertEquals("optimized instruction", config.getInstruction("myNode"))
 
-        // Test that withContext properly adds the config to coroutine context
         withContext(config) {
-            // Inside withContext, the config should be accessible
             val retrievedConfig = coroutineContext[OptimizationConfig]
             assertEquals(config, retrievedConfig, "Config should be in coroutine context")
             assertEquals("optimized instruction", retrievedConfig?.getInstruction("myNode"))
