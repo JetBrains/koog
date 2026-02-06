@@ -12,6 +12,8 @@ import ai.koog.protocol.agent.InputInt
 import ai.koog.protocol.agent.InputString
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
@@ -40,7 +42,13 @@ import kotlinx.serialization.json.put
  * - JSON objects with {success, feedback, input} -> InputCritiqueResult
  */
 internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
-    override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("FlowAgentInput") {
+        element<String>("type", isOptional = true)
+        element<JsonElement>("data", isOptional = true)
+        element<Boolean>("success", isOptional = true)
+        element<String>("feedback", isOptional = true)
+        element<JsonElement>("input", isOptional = true)
+    }
 
     override fun deserialize(decoder: Decoder): FlowAgentInput {
         val jsonDecoder = decoder as? JsonDecoder ?: error("FlowAgentInput can only be deserialized from JSON")
@@ -196,12 +204,10 @@ internal object FlowAgentInputSerializer : KSerializer<FlowAgentInput> {
                     )
                 }
                 is InputCritiqueResult -> {
-                    buildJsonObject {
-                        put("type", "critique")
-                        put("success", success)
-                        put("feedback", feedback)
-                        put("input", input.toJsonElement())
-                    }
+                    put("type", "critique")
+                    put("success", success)
+                    put("feedback", feedback)
+                    put("input", input.toJsonElement())
                 }
 
                 else -> error("Unsupported input type: $this")

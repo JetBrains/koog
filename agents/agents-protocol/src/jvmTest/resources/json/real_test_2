@@ -6,7 +6,6 @@
     {
       "name": "get_numbers",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You are a numbers generator agent."
       },
@@ -18,7 +17,6 @@
     {
       "name": "calculator",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You are a calculator agent that performs math operations."
       },

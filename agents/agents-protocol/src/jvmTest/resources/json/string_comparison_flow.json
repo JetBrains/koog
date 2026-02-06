@@ -7,7 +7,6 @@
     {
       "name": "language_detector",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You detect the language of input text. Return the ISO 639-1 language code (e.g., 'en', 'es', 'fr', 'de')."
       },
@@ -18,7 +17,6 @@
     {
       "name": "english_processor",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You process English text."
       },
@@ -29,7 +27,6 @@
     {
       "name": "spanish_processor",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You process Spanish text."
       },
@@ -40,7 +37,6 @@
     {
       "name": "other_language_processor",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You handle texts in languages other than English and Spanish."
       },

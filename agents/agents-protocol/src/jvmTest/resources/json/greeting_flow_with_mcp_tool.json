@@ -16,7 +16,6 @@
     {
       "name": "greeter",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You are a greeter agent that uses tools to greet users."
       },

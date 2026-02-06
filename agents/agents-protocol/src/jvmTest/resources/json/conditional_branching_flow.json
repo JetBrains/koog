@@ -7,7 +7,6 @@
     {
       "name": "score_analyzer",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You are a score analyzer. Parse the input and extract the numeric score."
       },
@@ -18,7 +17,6 @@
     {
       "name": "high_score_feedback",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You provide feedback for high scores."
       },
@@ -29,7 +27,6 @@
     {
       "name": "medium_score_feedback",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You provide feedback for average scores."
       },
@@ -40,7 +37,6 @@
     {
       "name": "low_score_feedback",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You provide feedback for low scores."
       },

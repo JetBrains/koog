@@ -7,7 +7,6 @@
     {
       "name": "document_classifier",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You classify documents by type. Return: 'invoice', 'contract', 'report', or 'other'."
       },
@@ -18,7 +17,6 @@
     {
       "name": "invoice_processor",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You process invoices and extract financial information."
       },
@@ -29,7 +27,6 @@
     {
       "name": "invoice_validator",
       "type": "verify",
-      "runtime": "koog",
       "prompt": {
         "system": "You validate that invoice data is complete and correct."
       },
@@ -40,7 +37,6 @@
     {
       "name": "contract_processor",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You process contracts and extract key terms."
       },
@@ -51,7 +47,6 @@
     {
       "name": "contract_risk_analyzer",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You analyze contracts for potential risks."
       },
@@ -62,7 +57,6 @@
     {
       "name": "report_processor",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You process reports and create summaries."
       },
@@ -73,7 +67,6 @@
     {
       "name": "generic_processor",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You handle documents that don't fit standard categories."
       },
@@ -84,7 +77,6 @@
     {
       "name": "extract_validation_result",
       "type": "transform",
-      "runtime": "koog",
       "params": {
         "transformations": [
           {
@@ -96,7 +88,6 @@
     {
       "name": "invoice_corrector",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You correct issues in invoice data."
       },
@@ -107,7 +98,6 @@
     {
       "name": "final_archiver",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You archive processed documents."
       },
