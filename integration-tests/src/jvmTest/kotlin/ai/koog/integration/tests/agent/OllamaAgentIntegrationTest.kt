@@ -29,8 +29,8 @@ import ai.koog.integration.tests.utils.tools.GeographyQueryTool
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.LLMBasedToolCallFixProcessor

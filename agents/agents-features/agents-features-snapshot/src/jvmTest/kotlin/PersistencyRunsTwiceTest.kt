@@ -6,7 +6,7 @@ import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import io.kotest.matchers.collections.shouldContainExactly
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest

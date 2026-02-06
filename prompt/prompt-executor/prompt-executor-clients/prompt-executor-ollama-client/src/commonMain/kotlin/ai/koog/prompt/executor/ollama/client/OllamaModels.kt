@@ -1,12 +1,16 @@
-package ai.koog.prompt.llm
+package ai.koog.prompt.executor.ollama.client
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import kotlin.jvm.JvmField
 
 /**
  * Represents a collection of predefined Large Language Models (LLM) categorized by makers.
  * Each maker contains specific models with configurations such as unique identifiers and capabilities.
  */
-public object OllamaModels {
+public object OllamaModels : LLModelDefinitions {
     /**
      *  The Groq object represents the configuration for the Groq large language model (LLM).
      *  It contains the predefined model specifications for Groq's LLMs, including their identifiers

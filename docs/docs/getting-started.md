@@ -480,7 +480,7 @@ To use Koog, you need to include all necessary dependencies in your build config
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-    import ai.koog.prompt.llm.OllamaModels
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
     import kotlinx.coroutines.runBlocking
     -->
     ```kotlin
