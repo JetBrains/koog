@@ -17,7 +17,6 @@ import ai.koog.protocol.model.FlowAgentModel
 import ai.koog.protocol.model.FlowModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -72,44 +71,26 @@ public class FlowJsonConfigParser : FlowConfigParser {
 
         return when (type) {
             FlowAgentKind.TASK -> {
-                val task = params?.get("task")
-                    ?.jsonPrimitive
-                    ?.contentOrNull
-                    ?: ""
-
-                val toolNames = params?.get("toolNames")
-                    ?.let { it as? JsonArray }
-                    ?.mapNotNull { it.jsonPrimitive.contentOrNull }
-
-                val params = FlowTaskAgentParameters(task, toolNames)
-
+                val task = extractTask() ?: error("Missing 'task' parameter")
+                val toolNames = extractToolNames()
                 FlowTaskAgent(
                     name = name,
                     model = resolvedModel,
                     config = agentConfig,
                     prompt = agentPrompt,
-                    parameters = params
+                    parameters = FlowTaskAgentParameters(task, toolNames)
                 )
             }
 
             FlowAgentKind.VERIFY -> {
-                val task = params?.get("task")
-                    ?.jsonPrimitive
-                    ?.contentOrNull
-                    ?: ""
-
-                val toolNames = params?.get("toolNames")
-                    ?.let { it as? JsonArray }
-                    ?.mapNotNull { it.jsonPrimitive.contentOrNull }
-
-                val params = FlowVerifyAgentParameters(task, toolNames)
-
+                val task = extractTask() ?: error("Missing 'task' parameter")
+                val toolNames = extractToolNames()
                 FlowVerifyAgent(
                     name = name,
                     model = resolvedModel,
                     config = agentConfig,
                     prompt = agentPrompt,
-                    parameters = params
+                    parameters = FlowVerifyAgentParameters(task, toolNames)
                 )
             }
 
@@ -139,6 +120,18 @@ public class FlowJsonConfigParser : FlowConfigParser {
 
             FlowAgentKind.PARALLEL -> error("PARALLEL agent type is not yet supported")
         }
+    }
+
+    /**
+     * Extracts common task and toolNames parameters from agent params.
+     * Used by both TASK and VERIFY agent types.
+     */
+    private fun FlowAgentModel.extractTask(): String? {
+        return params?.get("task")?.jsonPrimitive?.contentOrNull
+    }
+
+    private fun FlowAgentModel.extractToolNames(): List<String>? {
+        return params?.get("toolNames")?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }
     }
 
     //endregion Private Methods
