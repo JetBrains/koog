@@ -4,7 +4,7 @@ This document describes the integration of MIPRO v2 prompt optimization into Koo
 
 ## Goal
 
-Extend Koog's existing `AIAgentNode` and `AIAgentGraphStrategy` types to support automatic prompt optimization via MIPRO v2. Users should be able to add optimization metadata (instruction, demonstrations) to nodes and run an optimizer that finds the best configuration.
+Support automatic prompt optimization (MIPRO v2) within Koog's agent framework. Users define `OptimizableNode`s — nodes whose instruction and demonstrations can be tuned by an optimizer — alongside regular nodes. Optimizers discover these nodes, evaluate candidate configurations, and return an `OptimizationConfig` that can be applied via coroutine context or baked into node defaults.
 
 ## Reference Materials
 
@@ -13,358 +13,204 @@ Extend Koog's existing `AIAgentNode` and `AIAgentGraphStrategy` types to support
 - **Koog abstractions summary:** `koog-auto-agent-optimization/koog-abstractions.md`
 - **Koog source:** `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/`
 
-## Understanding the Current State
-
-### MIPRO Implementation Abstractions
-
-The current implementation in `koog-auto-agent-optimization/` uses these core types:
-
-| Type | Purpose |
-|------|---------|
-| `Agent` | Container for multiple `AgentModule`s, represents the full program |
-| `AgentModule` | Single LLM call unit with instruction, traces, and prompt construction |
-| `Signature` | Task spec: instruction string + input/output `KType` |
-| `Trace` | A Koog `Prompt` representing a few-shot demonstration |
-| `Example` | Training data with input map + optional label |
-| `Optimizer` | Interface: `optimize(agent, trainset, valset) -> Agent` |
-
-Key methods:
-- `AgentModule.withConfiguration(instruction, traces)` - immutable update
-- `Agent.withModules(newModules)` - immutable update
-- `Agent.forwardWithTraces(batch)` - execute and collect traces for bootstrapping
-
-### Koog Native Abstractions
-
-Koog's strategy/node system:
-
-| Type | Purpose |
-|------|---------|
-| `AIAgentGraphStrategy<TInput, TOutput>` | Graph of nodes with start/finish, defines workflow |
-| `AIAgentNode<TInput, TOutput>` | Single processing step with `execute` lambda |
-| `AIAgentSubgraph<TInput, TOutput>` | Encapsulated sub-workflow, is itself a node |
-| `AIAgentEdge<In, Out>` | Conditional connection between nodes |
-
-Key properties of nodes:
-- `name: String` - identifier
-- `inputType: KType`, `outputType: KType` - type information
-- `execute: suspend AIAgentGraphContextBase.(TInput) -> TOutput` - the logic
-
-Nodes access LLMs via context:
-```kotlin
-val myNode by node<String, String> { input ->
-    llm.writeSession {
-        appendPrompt {
-            system("You are a helpful assistant.")
-            user(input)
-        }
-        requestLLM().content
-    }
-}
-```
-
-### Gap Analysis
-
-| What MIPRO Needs | Koog Has | Gap |
-|------------------|----------|-----|
-| Instruction string to optimize | Prompts built inline in node lambdas | Need to externalize/parameterize instruction |
-| Few-shot demonstrations | No native concept | Need to add demonstration storage |
-| Module-level tracing | Pipeline events exist | Need trace collection feature |
-| Parallel evaluation with different configs | Single execution path | Need config-via-context mechanism |
-
-## Architecture Design
+## Architecture
 
 ### Key Design Decisions
 
-1. **Extend existing types:** Add optional optimization fields directly to `AIAgentNode` rather than creating wrapper types. This keeps a single type hierarchy.
+1. **Separate type, don't pollute base.** Optimization fields live on a dedicated `OptimizableNode` subclass of `AIAgentNode`, not on the base class. Regular nodes are unaffected. This was a deliberate reversal of an earlier "extend existing types" approach — adding optional fields to `AIAgentNode` created coupling between the optimization package and the core agent API.
 
-2. **Configuration via coroutine context:** During optimization, pass candidate configurations through Kotlin's coroutine context. This enables parallel evaluation without mutating nodes or copying strategy graphs.
+2. **Node owns its prompt construction.** Each `OptimizableNode` carries a `promptFn` that builds a `Prompt` from (instruction, demonstrations, input). The node's execute lambda calls `promptFn`, then passes the result to an internal `executePrompt` function that handles the LLM call and response parsing. Users never write boilerplate to read from coroutine context.
 
-3. **Pipeline feature for trace collection:** Use Koog's existing pipeline mechanism to capture node inputs/outputs during bootstrap execution.
+3. **Configuration via coroutine context.** During optimization, candidate configurations (instruction overrides, demonstration sets) are passed through `OptimizationConfig` in the coroutine context. Nodes check the context first, fall back to their own defaults. This enables parallel evaluation without mutating nodes or copying strategy graphs.
 
-4. **Immutable nodes, shared strategy:** Nodes have `copy()` for creating variants. The strategy graph structure is never copied during optimization - only the config changes per evaluation.
+4. **Pipeline feature for trace collection.** `TraceCollectionFeature` uses Koog's pipeline mechanism to capture node inputs/outputs during execution, for use in bootstrapping.
 
-5. **Leverage Koog's type system:** Nodes are already generic with `KType`. No need to duplicate in signatures.
+5. **Leverage Koog's type system.** Nodes are already generic with `KType`. Structured output uses Koog's `executeStructured<T>()` for typed response parsing.
 
 ### Concept Mapping
 
 | MIPRO Concept | Koog Integration |
 |---------------|------------------|
-| `Agent` | `AIAgentGraphStrategy` (unchanged structure) |
-| `AgentModule` | `AIAgentNode` (extended with optimization fields) |
-| `Signature.instruction` | `AIAgentNode.instruction: String?` |
+| `Agent` | `AIAgentGraphStrategy` (unchanged) |
+| `AgentModule` | `OptimizableNode<TInput, TOutput>` (subclass of `AIAgentNode`) |
+| `Signature.instruction` | `OptimizableNode.instruction: String` |
 | `Trace` | `Demonstration<TInput, TOutput>` |
+| `Example` | `Example(data: Map<String, Any>, labelKey)` |
 | `Optimizer` | `StrategyOptimizer` interface |
 
-### Extended AIAgentNode (IMPLEMENTED)
+### OptimizableNode
 
-Added optional optimization fields to the existing `AIAgentNode`:
+`OptimizableNode<TInput, TOutput>` is a subclass of `AIAgentNode` that owns all optimization-related state. It separates prompt construction from LLM execution:
 
 ```kotlin
-public open class AIAgentNode<TInput, TOutput> internal constructor(
-    override val name: String,
-    override val inputType: KType,
-    override val outputType: KType,
-    public val execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
-    // Optimization fields
-    public val instruction: String? = null,
-    public val demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),
-    public val description: String? = null,
-) : AIAgentNodeBase<TInput, TOutput>() {
+public class OptimizableNode<TInput, TOutput>(
+    name: String,
+    public val inputField: String?,          // key in Example.data for this node's input (null if not mapping to Examples)
+    public val outputField: String?,         // key in Example.data for this node's output
+    public val instruction: String,          // base instruction; overridable via OptimizationConfig
+    public val promptFn: OptimizablePromptFn<TInput, TOutput>,  // builds Prompt from (instruction, demos, input)
+    internal val executePrompt: suspend AIAgentGraphContextBase.(Prompt) -> TOutput,  // LLM call + response parsing
+    public val description: String? = null,  // for MIPRO program description
+    public val demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),  // default few-shot demos
+    inputType: KType,
+    outputType: KType,
+) : AIAgentNode<TInput, TOutput>(name, inputType, outputType, execute = { input ->
+    val config = coroutineContext[OptimizationConfig]
+    val effectiveInstruction = config?.getInstruction(name) ?: instruction
+    val effectiveDemos = config?.getTypedDemonstrations<TInput, TOutput>(name) ?: demonstrations
+    val builtPrompt = promptFn(effectiveInstruction, effectiveDemos, input)
+    executePrompt(builtPrompt)
+})
+```
 
-    /** Create a copy with updated optimization fields */
-    public fun copy(
-        instruction: String? = this.instruction,
-        demonstrations: List<Demonstration<TInput, TOutput>> = this.demonstrations,
-        description: String? = this.description,
-    ): AIAgentNode<TInput, TOutput> = AIAgentNode(
-        name = name,
-        inputType = inputType,
-        outputType = outputType,
-        execute = execute,
-        instruction = instruction,
-        demonstrations = demonstrations,
-        description = description,
+Key points:
+- `promptFn` is a **pure function** `(instruction, demos, input) -> Prompt`. It does not call the LLM.
+- `executePrompt` handles the LLM call. For `String` output: `promptExecutor.execute()`. For typed output: `promptExecutor.executeStructured()`.
+- The `execute` lambda (inherited from `AIAgentNode`) is derived automatically — users don't write it.
+- `inputField`/`outputField` are nullable. When null, the node can't be linked to `Example` data (e.g., when demonstrations are provided directly at construction time).
+
+### OptimizablePromptFn
+
+```kotlin
+public typealias OptimizablePromptFn<TInput, TOutput> = (
+    instruction: String,
+    demos: List<Demonstration<TInput, TOutput>>,
+    input: TInput,
+) -> Prompt
+```
+
+Two defaults are provided:
+
+- **`defaultStringPromptFn`** — for `String -> String` nodes. Passes raw text as system/user/assistant messages.
+- **`defaultPromptFn(inputSerializer, outputSerializer)`** — for generic typed nodes. JSON-encodes demonstration inputs/outputs and the node input.
+
+### DSL
+
+Nodes are created via the `optimizableNode()` DSL function inside a strategy builder:
+
+```kotlin
+val myStrategy = strategy("classifier") {
+    // String -> String (simplest case)
+    val classify by optimizableNode(
+        instruction = "Classify the sentiment of the text.",
+        inputField = "text",
+        outputField = "sentiment",
     )
-    // ... existing execute logic unchanged
+
+    // With pre-existing demonstrations
+    val summarize by optimizableNode(
+        instruction = "Summarize the article.",
+        demonstrations = listOf(
+            Demonstration("Long article...", "Brief summary."),
+        ),
+    )
+
+    // Generic typed output (uses JSON prompt + structured output by default)
+    val extract by optimizableNode<String, PersonInfo>(
+        instruction = "Extract person information.",
+        inputField = "text",
+        outputField = "person",
+    )
+
+    edge(nodeStart forwardTo classify)
+    edge(classify forwardTo summarize)
+    edge(summarize forwardTo extract)
+    edge(extract forwardTo nodeFinish)
 }
 ```
 
-### Demonstration Type (IMPLEMENTED)
+Both `inputField` and `outputField` default to `null`. They are only needed when the node participates in `Example`-based optimization (e.g., `LabeledFewShot`).
 
-Located at `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/Demonstration.kt`:
-
-```kotlin
-/**
- * A typed input-output pair for few-shot learning.
- *
- * Demonstrations are used to provide examples to LLM nodes during prompt optimization.
- * They can be manually created from labeled data or automatically generated via bootstrapping.
- */
-public data class Demonstration<TInput, TOutput>(
-    val input: TInput,
-    val output: TOutput,
-    val isBootstrapped: Boolean = false,  // true if generated via bootstrap
-)
-```
+There are two overloads:
+- `optimizableNode(instruction, ...)` — `String -> String`, uses `defaultStringPromptFn` and plain text LLM execution.
+- `optimizableNode<TInput, TOutput>(instruction, ...)` — generic types (annotated `@JvmName("optimizableNodeTyped")`), uses `defaultPromptFn` with JSON serialization and `executeStructured<TOutput>()`.
 
 ### Optimization Config via Coroutine Context
 
-During optimization, pass candidate configurations through coroutine context to enable parallel evaluation:
-
 ```kotlin
-/**
- * Immutable configuration for a single optimization trial.
- * Passed via coroutine context, not by mutating nodes.
- */
 class OptimizationConfig(
-    val instructions: Map<String, String>,  // nodeName -> instruction
-    val demonstrations: Map<String, List<Demonstration<*, *>>>,  // nodeName -> demos
-) : CoroutineContext.Element {
-    override val key = Key
-    companion object Key : CoroutineContext.Key<OptimizationConfig>
-}
+    val instructions: Map<String, String> = emptyMap(),   // nodeName -> instruction override
+    val demonstrations: Map<String, List<Demonstration<*, *>>> = emptyMap(),  // nodeName -> demos override
+) : CoroutineContext.Element
 
 // Parallel evaluation of different configs
 val results = configs.map { config ->
     async {
-        withContext(OptimizationConfig(config.instructions, config.demonstrations)) {
+        withContext(config) {
             agent.run(input)
         }
     }
 }.awaitAll()
 ```
 
-### Accessing Config in Node Execute Lambda
-
-Nodes read from coroutine context, falling back to node's default fields:
-
-```kotlin
-val classifyNode by node<String, Classification>(
-    instruction = "Classify the input text",  // default instruction
-) { input ->
-    // Check coroutine context for optimization override
-    val instruction = coroutineContext[OptimizationConfig]?.instructions?.get(name)
-        ?: this@node.instruction
-        ?: error("No instruction for node $name")
-
-    val demos = coroutineContext[OptimizationConfig]?.demonstrations?.get(name)
-        ?: this@node.demonstrations
-
-    llm.writeSession {
-        appendPrompt {
-            system(instruction)
-            // Format demonstrations as few-shot examples
-            for (demo in demos) {
-                user(formatInput(demo.input))
-                assistant(formatOutput(demo.output))
-            }
-            user(formatInput(input))
-        }
-        requestLLMStructured<Classification>()
-    }
-}
-```
+`OptimizableNode`'s execute lambda checks the coroutine context first, then falls back to node defaults. This happens automatically — users don't write context-reading code.
 
 ### Trace Collection Feature
 
-Use Koog's pipeline mechanism to capture node I/O during bootstrap:
+Captures node inputs/outputs during execution for bootstrapping:
 
 ```kotlin
-/**
- * Pipeline feature that captures inputs/outputs of optimizable nodes.
- */
-class TraceCollectionFeature : AIAgentFeature<TraceCollectionFeature.Config, TraceCollectionFeature.State> {
-
-    class Config
-    class State {
-        val traces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
-    }
-
-    override fun onNodeExecutionCompleted(
-        eventId: String,
-        info: ExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
-        context: AIAgentGraphContextBase,
-        input: Any?,
-        inputType: KType,
-        output: Any?,
-        outputType: KType
-    ) {
-        // Only capture for nodes with optimization metadata
-        if (node is AIAgentNode<*, *> && node.instruction != null) {
-            val state = context.getFeatureState(this)
-            state.traces.getOrPut(node.name) { mutableListOf() }
-                .add(Demonstration(input, output, isBootstrapped = true))
-        }
+val agent = AIAgent(strategy = myStrategy) {
+    collectTraces {
+        collectOnlyOptimizable = true   // only OptimizableNode instances (default)
+        maxTracesPerNode = 100
     }
 }
 
-// Usage
-val traceFeature = TraceCollectionFeature()
-val agent = AIAgent(strategy = myStrategy) { install(traceFeature) }
 agent.run(input)
-val collectedTraces = traceFeature.state.traces  // Map<nodeName, List<Demonstration>>
+
+val traces = agent.feature(TraceCollectionFeature)?.collectedTraces
+val nodeTraces = traces?.getTracesForNode("classify")
 ```
+
+The feature checks `node is OptimizableNode<*, *>` to determine which nodes to trace.
 
 ### Strategy Optimizer Interface
 
 ```kotlin
-/**
- * Optimizer that finds best instruction/demonstration configuration for a strategy.
- */
-interface StrategyOptimizer {
-    /**
-     * Optimize the strategy's nodes and return a new strategy with best config baked in.
-     *
-     * @param strategy The strategy to optimize (nodes must have instruction set)
-     * @param trainset Training examples
-     * @param valset Validation examples (optional, will split trainset if null)
-     * @return New strategy with optimized instruction/demonstrations in nodes
-     */
+public interface StrategyOptimizer {
     suspend fun <TInput, TOutput> optimize(
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
-        trainset: List<Example>,
-        valset: List<Example>? = null,
-    ): AIAgentGraphStrategy<TInput, TOutput>
+        trainset: Dataset,
+        valset: Dataset? = null,
+        metric: Metric<TOutput>,
+    ): OptimizationResult
 }
 ```
 
-### Baking Optimized Config into Strategy
+Returns `OptimizationResult(config, score, iterations, metadata)`. The `config` can be used directly via coroutine context, or eventually baked into node defaults.
 
-After optimization finds the best config, create new node instances with the winning values:
+### Example and Metric Types
 
 ```kotlin
-fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.withOptimizedConfig(
-    config: OptimizationConfig
-): AIAgentGraphStrategy<TInput, TOutput> {
-    // For each optimizable node, create a copy with the optimized instruction/demos
-    // This requires rebuilding the strategy with the new nodes
-    // Implementation details TBD based on Koog's strategy builder internals
-}
+// Training data — values can be any type matching node I/O
+data class Example(
+    val data: Map<String, Any>,
+    val labelKey: String? = null,
+)
+
+// Typed metric — T matches the strategy's output type
+typealias Metric<T> = (expected: T, actual: T) -> Double
 ```
 
-### DSL Extensions (IMPLEMENTED)
+### Strategy Utilities
 
-Extended Koog's existing `node` DSL to accept optimization parameters:
+`StrategyUtils.kt` provides:
+- `findAllNodes()` — all `AIAgentNode` instances in a strategy
+- `findOptimizableModules()` — all `OptimizableNode` instances
+- `getOptimizableNodeNames()` — names of optimizable nodes
+- `extractOptimizationConfig()` — captures current instruction values
+- `validateOptimizationConfig(config)` — checks config matches strategy
+- `describeForOptimization()` — text description for MIPRO instruction proposal
 
-```kotlin
-// Extended node builder with optimization fields (in AIAgentSubgraphBuilderBase)
-public inline fun <reified Input, reified Output> node(
-    name: String? = null,
-    instruction: String? = null,
-    demonstrations: List<Demonstration<Input, Output>> = emptyList(),
-    description: String? = null,
-    noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
-): AIAgentNodeDelegate<Input, Output>
+### Context Helpers
 
-// Usage - looks like normal Koog, just with extra parameters
-val myStrategy = strategy<String, Classification>("classifier") {
-    val classify by node<String, Classification>(
-        instruction = "Classify the input text into categories",
-        description = "Main classification step",
-    ) { input ->
-        // Read instruction from context (optimization) or node default
-        val instruction = coroutineContext[OptimizationConfig]?.instructions?.get(name)
-            ?: this@node.instruction!!
+`OptimizationContextHelpers.kt` provides utilities for custom node lambdas that need to read optimization config:
+- `getNodeInstruction(nodeName, default)` — instruction from context or default
+- `getNodeDemonstrations<TInput, TOutput>(nodeName, default)` — demos from context or default
+- `hasOptimizationConfig()` / `getOptimizationConfig()` — check/get config
 
-        val demos = coroutineContext[OptimizationConfig]?.demonstrations?.get(name)
-            ?: this@node.demonstrations
-
-        llm.writeSession {
-            appendPrompt {
-                system(instruction)
-                for (demo in demos) {
-                    user(formatInput(demo.input))
-                    assistant(formatOutput(demo.output))
-                }
-                user(formatInput(input))
-            }
-            requestLLMStructured<Classification>().getOrThrow()
-        }
-    }
-
-    nodeStart then classify then nodeFinish
-}
-
-// Optimization
-val optimizer = MIPROv2Optimizer(config)
-val optimizedStrategy = optimizer.optimize(myStrategy, trainset, valset)
-
-// Execution with optimized strategy
-val agent = AIAgent(strategy = optimizedStrategy, ...)
-val result = agent.run(input)
-```
-
-### Helper for Instruction/Demo Access
-
-To reduce boilerplate in node lambdas:
-
-```kotlin
-// Extension on AIAgentGraphContextBase
-suspend fun AIAgentGraphContextBase.getNodeInstruction(nodeName: String, default: String?): String {
-    return coroutineContext[OptimizationConfig]?.instructions?.get(nodeName)
-        ?: default
-        ?: error("No instruction for node $nodeName")
-}
-
-suspend inline fun <reified TInput, reified TOutput> AIAgentGraphContextBase.getNodeDemonstrations(
-    nodeName: String,
-    default: List<Demonstration<TInput, TOutput>>
-): List<Demonstration<TInput, TOutput>> {
-    @Suppress("UNCHECKED_CAST")
-    return coroutineContext[OptimizationConfig]?.demonstrations?.get(nodeName) as? List<Demonstration<TInput, TOutput>>
-        ?: default
-}
-
-// Cleaner node lambda
-val classify by node<String, Classification>(
-    instruction = "Classify the input text",
-) { input ->
-    val instruction = getNodeInstruction(name, this@node.instruction)
-    val demos = getNodeDemonstrations<String, Classification>(name, this@node.demonstrations)
-    // ...
-}
-```
+These are **not** used by `OptimizableNode` itself (it accesses `OptimizationConfig` directly in its execute lambda), but are available for custom scenarios.
 
 ## MIPRO v2 Algorithm (Reference)
 
@@ -389,122 +235,91 @@ Three-step optimization pipeline:
 ## File Structure
 
 ```
-agents/agents-core/src/commonMain/kotlin/ai/koog/agents/
-├── core/agent/entity/
-│   └── AIAgentNode.kt                  # DONE: Added instruction, demonstrations, description fields + copy()
-│
-├── core/dsl/builder/
-│   ├── AIAgentNodeDelegate.kt          # DONE: Added optimization fields, passes through to AIAgentNode
-│   └── AIAgentSubgraphBuilder.kt       # DONE: Extended node() builder with optimization params
-│
-└── optimization/                        # NEW PACKAGE
+agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/
+└── optimization/                            # Optimization package (all new files)
+    ├── OptimizableNode.kt                   # DONE: OptimizableNode, OptimizableNodeDelegate, DSL, prompt fns
+    │
     ├── core/
-    │   ├── Demonstration.kt            # DONE: Typed input-output pair
-    │   ├── OptimizationConfig.kt       # DONE: Coroutine context element for trial configs
-    │   ├── StrategyOptimizer.kt        # DONE: Optimizer interface + OptimizationResult
-    │   └── Example.kt                  # DONE: Training data type + Metric typealias
+    │   ├── Demonstration.kt                 # DONE: Typed input-output pair
+    │   ├── OptimizationConfig.kt            # DONE: Coroutine context element for trial configs
+    │   ├── StrategyOptimizer.kt             # DONE: Optimizer interface + OptimizationResult + StrategyOptimizerConfig
+    │   └── Example.kt                       # DONE: Training data type (Map<String, Any>) + Metric<T>
     │
     ├── features/
-    │   └── TraceCollectionFeature.kt   # DONE: Pipeline feature for capturing node I/O
+    │   └── TraceCollectionFeature.kt        # DONE: Pipeline feature for capturing node I/O
     │
     ├── dsl/
-    │   ├── OptimizationContextHelpers.kt  # DONE: getNodeInstruction(), getNodeDemonstrations()
-    │   └── DemonstrationFormatting.kt     # TODO: Helpers for demo -> prompt messages
+    │   └── OptimizationContextHelpers.kt    # DONE: getNodeInstruction(), getNodeDemonstrations(), etc.
     │
-    ├── optimizers/                        # TODO: Phase 3
-    │   ├── LabeledFewShot.kt
-    │   ├── BootstrapFewShot.kt
+    ├── optimizers/
+    │   ├── LabeledFewShot.kt                # DONE: Samples labeled examples as demonstrations
+    │   ├── BootstrapFewShot.kt              # TODO
     │   └── mipro/
-    │       ├── MIPROv2Optimizer.kt
-    │       ├── DemoSetGenerator.kt
-    │       ├── InstructionProposer.kt
-    │       └── ConfigurationSearch.kt
+    │       ├── MIPROv2Optimizer.kt           # TODO
+    │       ├── DemoSetGenerator.kt           # TODO
+    │       ├── InstructionProposer.kt        # TODO
+    │       └── ConfigurationSearch.kt        # TODO
     │
     └── util/
-        ├── StrategyUtils.kt            # DONE: findOptimizableNodes(), validateOptimizationConfig(), etc.
-        ├── SchemaGeneration.kt         # TODO: Port from current impl if needed
-        └── Evaluation.kt               # TODO: Metric evaluation helpers
+        ├── StrategyUtils.kt                 # DONE: findOptimizableModules(), validateOptimizationConfig(), etc.
+        └── Evaluation.kt                    # TODO: Metric evaluation helpers
 
 agents/agents-core/src/jvmTest/kotlin/ai/koog/agents/core/optimization/
-└── OptimizationInfrastructureTest.kt   # DONE: Tests for Phase 2 infrastructure
-
-examples/
-└── optimization/
-    └── heartDisease/
-        ├── HeartDiseaseStrategy.kt     # Strategy with optimizable nodes
-        └── RunOptimization.kt          # Main optimization runner
+└── OptimizationInfrastructureTest.kt        # DONE: Tests for infrastructure + OptimizableNode DSL
 ```
 
-## Implementation Phases
+No Koog core files are modified — `AIAgentNode`, `AIAgentNodeDelegate`, and `AIAgentSubgraphBuilder` are untouched.
 
-### Phase 1: Extend Koog Core Types (COMPLETED)
-- [x] Modify `AIAgentNode` to add optional `instruction`, `demonstrations`, `description` fields
-- [x] Add `copy()` method to `AIAgentNode` for creating variants
-- [x] Extend `node()` DSL builder to accept optimization parameters
-- [x] Extend `AIAgentNodeDelegate` to pass through optimization fields
-- [x] Create `Demonstration<TInput, TOutput>` data class
+## Implementation Status
 
-**Files changed:**
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/agent/entity/AIAgentNode.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/dsl/builder/AIAgentNodeDelegate.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilder.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/Demonstration.kt` (new)
+### Done
+- [x] `Demonstration<TInput, TOutput>` data class
+- [x] `OptimizableNode<TInput, TOutput>` subclass with prompt construction + LLM execution
+- [x] `optimizableNode()` DSL (String and generic overloads)
+- [x] Default prompt functions (`defaultStringPromptFn`, `defaultPromptFn` with JSON serialization)
+- [x] Structured output via `executeStructured<T>()` for typed nodes
+- [x] `OptimizationConfig` coroutine context element with typed accessors
+- [x] `TraceCollectionFeature` with `collectTraces {}` DSL
+- [x] Context helpers (`getNodeInstruction`, `getNodeDemonstrations`, etc.)
+- [x] `StrategyOptimizer` interface + `OptimizationResult` + `StrategyOptimizerConfig`
+- [x] `Example` (with `Map<String, Any>`) and `Metric<T>` types
+- [x] Strategy utilities (`findOptimizableModules`, `validateOptimizationConfig`, `describeForOptimization`)
+- [x] `LabeledFewShot` optimizer
+- [x] Infrastructure tests (`OptimizationInfrastructureTest`)
 
-**Note:** The `AIAgentNodeDelegate.transform()` method throws `NotImplementedError` if the node has demonstrations, because the transformation is a suspend function that cannot be applied to demonstrations at delegate construction time.
-
-### Phase 2: Optimization Infrastructure (COMPLETED)
-- [x] Create `OptimizationConfig` coroutine context element
-- [x] Implement `TraceCollectionFeature` for capturing node I/O
-- [x] Create context helper functions (`getNodeInstruction()`, `getNodeDemonstrations()`)
-- [x] Create `StrategyOptimizer` interface
-- [x] Create strategy utility functions (`findOptimizableNodes()`, `validateOptimizationConfig()`, etc.)
-- [x] Create `Example` and `Metric` types
-
-**Files added:**
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/OptimizationConfig.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/Example.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/core/StrategyOptimizer.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/dsl/OptimizationContextHelpers.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/features/TraceCollectionFeature.kt`
-- `agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/optimization/util/StrategyUtils.kt`
-- `agents/agents-core/src/jvmTest/kotlin/ai/koog/agents/core/optimization/OptimizationInfrastructureTest.kt` (tests)
-
-**Validated via tests:**
-- Node DSL correctly passes `instruction`, `demonstrations`, `description` to nodes
-- `OptimizationConfig` works as coroutine context element via `withContext(config)`
-- Context reading pattern `coroutineContext[OptimizationConfig]?.getInstruction(name) ?: default` works
-- `findOptimizableNodes()` discovers nodes with non-null instruction
-- `Node.copy()` creates variants with updated optimization fields
-
-**Note:** The `withOptimizedConfig()` full implementation is deferred. The primary mechanism for optimization is passing configs via coroutine context. Strategy utility functions provide the ability to inspect, validate, and extract configs from strategies.
-
-### Phase 3: Port Optimizers
-- [ ] Port `LabeledFewShot` optimizer
+### TODO
 - [ ] Port `BootstrapFewShot` optimizer
-- [ ] Port MIPRO v2 Step 1: `DemoSetGenerator`
-- [ ] Port MIPRO v2 Step 2: `InstructionProposer`
-- [ ] Port MIPRO v2 Step 3: `ConfigurationSearch`
-- [ ] Port `MIPROv2Optimizer` main class
+- [ ] Port MIPRO v2 (`DemoSetGenerator`, `InstructionProposer`, `ConfigurationSearch`, `MIPROv2Optimizer`)
+- [ ] Bake-in mechanism: apply `OptimizationConfig` as node defaults for deployment without coroutine context
+- [ ] Metric evaluation helpers
+- [ ] End-to-end integration tests (with mocked LLM)
+- [ ] Port heart disease example
 
-### Phase 4: Integration & Testing
-- [ ] Port heart disease example to new abstractions
-- [x] Unit tests for optimization infrastructure (OptimizationInfrastructureTest.kt)
-- [ ] Unit tests for TraceCollectionFeature (with agent execution)
-- [ ] Integration tests for optimizers
-- [ ] Verify parallel evaluation works correctly
-- [ ] Benchmark against current implementation
+## Bake-In Mechanism (Design Sketch)
 
-## Key Differences from Current Implementation
+After optimization, users have two ways to use the result:
 
-| Aspect | Current (`promptOptimization/`) | New Design |
-|--------|--------------------------------|------------|
+1. **Coroutine context (current):** `withContext(result.config) { agent.run(input) }` — works today.
+2. **Bake-in (future):** Create new `OptimizableNode` instances with instruction/demonstrations set as defaults, rebuilding the strategy. This eliminates the need for coroutine context wrappers in production.
+
+The bake-in approach requires either:
+- A `copy()`-like mechanism on `OptimizableNode` to produce a new node with updated defaults, or
+- A strategy-level rebuild that replaces nodes
+
+Implementation is deferred until the optimizer pipeline is more complete.
+
+## Key Differences from Reference Implementation
+
+| Aspect | Reference (`promptOptimization/`) | Koog Integration |
+|--------|-----------------------------------|------------------|
 | Agent container | Custom `Agent` class | Native `AIAgentGraphStrategy` (unchanged) |
-| Module/predictor | Custom `AgentModule` | Extended `AIAgentNode` with optional fields |
-| Prompt construction | `PromptFn` type alias | Koog DSL + context helpers |
+| Module/predictor | Custom `AgentModule` | `OptimizableNode` subclass of `AIAgentNode` |
+| Prompt construction | `PromptFn` closure calling LLM | `OptimizablePromptFn` returning `Prompt` (pure) |
+| LLM execution | Inside `AgentModule.forward()` | `executePrompt` internal to `OptimizableNode` |
+| Structured output | Custom schema injection | Koog's `executeStructured<T>()` |
 | Type handling | `Signature.inputType/outputType` | Node's existing `KType` generics |
-| Execution | Custom `forwardWithTrace()` | Koog's strategy execution + TraceCollectionFeature |
-| Structured output | Custom schema injection | Koog's `requestLLMStructured<T>()` |
-| Parallel evaluation | Creates copies of Agent | Coroutine context with OptimizationConfig |
+| Execution + tracing | Custom `forwardWithTrace()` | Koog strategy execution + `TraceCollectionFeature` |
+| Parallel evaluation | Creates copies of Agent | Coroutine context with `OptimizationConfig` |
 | Immutability | Copy Agent/AgentModule instances | Shared strategy, config via coroutine context |
 
 ## Open Questions
@@ -513,17 +328,16 @@ examples/
 
 2. **Serialization:** How to save/load optimized configurations? Consider kotlinx.serialization for `OptimizationConfig` and `Demonstration`.
 
-3. **Multi-model support:** Should different nodes support different LLM models during optimization? (Current design assumes uniform model)
+3. **Multi-model support:** Should different nodes support different LLM models during optimization? Current design uses the model from the agent's LLM context.
 
-4. **Strategy rebuilding:** The `withOptimizedConfig()` function needs to create new node instances and rebuild the strategy. Need to understand Koog's strategy builder internals to implement this correctly.
-
-5. **Demo type erasure:** `Demonstration<TInput, TOutput>` in `OptimizationConfig` uses `List<Demonstration<*, *>>` which loses type info. May need runtime casting or separate type-safe accessors.
+4. **Demo type erasure:** `OptimizationConfig` stores `List<Demonstration<*, *>>`. Typed access via `getTypedDemonstrations<TInput, TOutput>()` performs an unchecked cast. This works but isn't fully type-safe at the config level.
 
 ## Design Principles
 
-1. **Extend, don't wrap:** Add to existing Koog types rather than creating parallel hierarchies
-2. **Immutable evaluation:** Config passed via coroutine context, strategy/nodes never mutated during optimization
-3. **Type safety:** Leverage Kotlin generics and Koog's existing type system
-4. **DSL consistency:** Extended `node()` builder feels like natural Koog
-5. **Gradual adoption:** Nodes without instruction/demos work exactly as before
-6. **Parallel-safe:** Each evaluation coroutine isolated via coroutine context
+1. **Separate type, clean base:** `OptimizableNode` subclass keeps optimization concerns out of `AIAgentNode`. Regular nodes are completely unaffected.
+2. **Node owns its pieces:** Instruction, demonstrations, prompt function, and execution are all properties of the node, not hidden in closures.
+3. **Prompt construction is pure:** `promptFn` returns a `Prompt` object. LLM call and response parsing are separate.
+4. **Immutable evaluation:** Config passed via coroutine context; strategy/nodes never mutated during optimization.
+5. **Type safety:** Leverage Kotlin generics, Koog's `KType`, and `executeStructured<T>()`.
+6. **Gradual adoption:** Only `OptimizableNode`s participate in optimization. Regular `node()` is unchanged.
+7. **Parallel-safe:** Each evaluation coroutine isolated via coroutine context.
