@@ -4,7 +4,6 @@ import ai.koog.prompt.executor.clients.list
 import ai.koog.prompt.llm.LLMProvider
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import kotlin.test.Test
 
 class OpenAIModelsTest {

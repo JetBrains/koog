@@ -547,7 +547,7 @@ public object OpenRouterModels : LLModelDefinitions {
     /**
      * List of the supported models by the OpenRouter provider.
      */
-    private val models: MutableList<LLModel> = mutableListOf(
+    private val supportedModels: List<LLModel> = listOf(
         // Phi Models
         Phi4Reasoning,
 
@@ -599,10 +599,16 @@ public object OpenRouterModels : LLModelDefinitions {
         Qwen3VL,
     )
 
-    override fun models(): List<LLModel> = models
+    /**
+     * List of custom models added to the OpenRouter provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
 
     override fun addCustomModel(model: LLModel) {
         require(model.provider == LLMProvider.OpenRouter) { "Model provider must be OpenRouter" }
-        models.add(model)
+        customModels.add(model)
     }
 }

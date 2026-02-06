@@ -15,6 +15,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_5
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
 import kotlin.jvm.JvmField
 
 /**
@@ -310,9 +311,9 @@ public object AnthropicModels : LLModelDefinitions {
     )
 
     /**
-     * List of available anthropic models
+     * List of the supported models by the Anthropic provider.
      */
-    private val models: MutableList<LLModel> = mutableListOf(
+    private val supportedModels: List<LLModel> = listOf(
         Opus_3,
         Haiku_3,
         Sonnet_3_5,
@@ -326,11 +327,17 @@ public object AnthropicModels : LLModelDefinitions {
         Haiku_4_5
     )
 
-    override fun models(): List<LLModel> = models
+    /**
+     * Custom models added to the Anthropic provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
 
     override fun addCustomModel(model: LLModel) {
         require(model.provider == LLMProvider.Anthropic) { "Model provider must be Anthropic" }
-        models.add(model)
+        customModels.add(model)
     }
 }
 

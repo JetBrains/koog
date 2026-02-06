@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekReasoner
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
 import kotlin.jvm.JvmField
 
 /**
@@ -70,12 +71,18 @@ public object DeepSeekModels : LLModelDefinitions {
     /**
      * List of the supported models by the DeepSeek provider.
      */
-    private val models: MutableList<LLModel> = mutableListOf(DeepSeekChat, DeepSeekReasoner)
+    private val supportedModels: List<LLModel> = listOf(DeepSeekChat, DeepSeekReasoner)
 
-    override fun models(): List<LLModel> = models
+    /**
+     * List of custom models added to the DeepSeek provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
 
     override fun addCustomModel(model: LLModel) {
-        require(model.provider == LLMProvider.DeepSeek) { "Model provider must be Bedrock" }
-        models.add(model)
+        require(model.provider == LLMProvider.DeepSeek) { "Model provider must be DeepSeek" }
+        customModels.add(model)
     }
 }

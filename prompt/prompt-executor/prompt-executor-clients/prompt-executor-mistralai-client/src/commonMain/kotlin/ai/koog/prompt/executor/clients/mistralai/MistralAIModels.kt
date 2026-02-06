@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
 import kotlin.jvm.JvmField
 
 /**
@@ -248,7 +249,7 @@ public object MistralAIModels : LLModelDefinitions {
     /**
      * List of the supported models by the Mistral AI provider.
      */
-    private val models: MutableList<LLModel> = mutableListOf(
+    private val supportedModels: List<LLModel> = listOf(
         Chat.MistralMedium31,
         Chat.MistralLarge21,
         Chat.MistralSmall2,
@@ -260,10 +261,16 @@ public object MistralAIModels : LLModelDefinitions {
         Moderation.MistralModeration
     )
 
-    override fun models(): List<LLModel> = models
+    /**
+     * List of custom models added to the Mistral AI provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
 
     override fun addCustomModel(model: LLModel) {
         require(model.provider == LLMProvider.MistralAI) { "Model provider must be MistralAI" }
-        models.add(model)
+        customModels.add(model)
     }
 }

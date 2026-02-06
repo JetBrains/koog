@@ -744,7 +744,7 @@ public object BedrockModels : LLModelDefinitions {
     /**
      * List of the supported models by the Bedrock provider.
      */
-    private val models: MutableList<LLModel> = mutableListOf(
+    private val supportedModels: List<LLModel> = listOf(
         // Claude 3 Series
         AnthropicClaude3Opus,
         AnthropicClaude3Sonnet,
@@ -801,11 +801,17 @@ public object BedrockModels : LLModelDefinitions {
         Embeddings.CohereEmbedMultilingualV3,
     )
 
-    override fun models(): List<LLModel> = models
+    /**
+     * List of custom models added to the Bedrock provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
 
     override fun addCustomModel(model: LLModel) {
         require(model.provider == LLMProvider.Bedrock) { "Model provider must be Bedrock" }
-        models.add(model)
+        customModels.add(model)
     }
 }
 
