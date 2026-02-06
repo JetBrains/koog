@@ -6,43 +6,40 @@
     {
       "name": "generate",
       "type": "task",
-      "runtime": "koog",
       "config": {
         "model": "openai/gpt4o"
       },
       "prompt": {
         "system": "You are an AI agent that can create files and folders inside some empty project repository..."
       },
-      "input": {
+      "params": {
         "task": "Your task is to generate an Kotlin Server application. Please set up files and folders structure for the future development."
       }
     },
     {
       "name": "fix",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You are an AI agent that fix problems with project compilation"
       },
-      "input": {
+      "params": {
         "task": "Your task is to fix the project build and makes sure that all following problems are resolved: ${agent.verify.output.feedback}"
       }
     },
     {
       "name": "verify",
       "type": "verify",
-      "runtime": "koog",
       "prompt": {
         "system": "You are an AI agent that verify the project and make a decision if the project have no errors"
       },
-      "input": {
+      "params": {
         "task": "You have to check and verify that the created project in the current directory is not broken by calling appropriate tools"
       }
     },
     {
       "name": "transform",
       "type": "transform",
-      "input": {
+      "params": {
         "transformations": [
           {
             "input": "input.feedback",

@@ -76,7 +76,7 @@ class FlowJsonParserTest : FlowTestBase() {
         // Verify flow config
         assertEquals("random-numbers-flow", flowConfig.id)
         assertEquals("1.0", flowConfig.version)
-        assertEquals("openai/gpt-4o", flowConfig.defaultModel)
+        assertEquals("openai/gpt4o", flowConfig.defaultModel)
 
         // Verify agents
         assertEquals(2, flowConfig.agents.size)
@@ -86,7 +86,7 @@ class FlowJsonParserTest : FlowTestBase() {
         assertIs<FlowTaskAgent>(getNumbersAgent)
         assertEquals("get_numbers", getNumbersAgent.name)
         assertEquals(FlowAgentKind.TASK, getNumbersAgent.type)
-        assertEquals("openai/gpt-4o", getNumbersAgent.model, "Expected to get a default model, but received ${getNumbersAgent.model}")
+        assertEquals("openai/gpt4o", getNumbersAgent.model, "Expected to get a default model, but received ${getNumbersAgent.model}")
         assertNotNull(getNumbersAgent.parameters)
         assertEquals(
             "Generate two random numbers between 1 and 100. Output them with a space between them.",
@@ -98,7 +98,7 @@ class FlowJsonParserTest : FlowTestBase() {
         assertIs<FlowTaskAgent>(calculatorAgent)
         assertEquals("calculator", calculatorAgent.name)
         assertEquals(FlowAgentKind.TASK, calculatorAgent.type)
-        assertEquals("openai/gpt-4o-mini", calculatorAgent.model, "Expected to get a custom model, but received ${calculatorAgent.model}")
+        assertEquals("openai/gpt4omini", calculatorAgent.model, "Expected to get a custom model, but received ${calculatorAgent.model}")
         assertNotNull(calculatorAgent.parameters)
         assertEquals(
             "Your task is to sum all individual numbers in the input string. Numbers are separated by spaces.",
@@ -126,7 +126,7 @@ class FlowJsonParserTest : FlowTestBase() {
         // Verify flow metadata
         assertEquals("random-numbers-flow-with-mcp-tools", flowConfig.id)
         assertEquals("1.0", flowConfig.version)
-        assertEquals("openai/gpt-4o", flowConfig.defaultModel)
+        assertEquals("openai/gpt4o", flowConfig.defaultModel)
 
         // Verify tools are parsed correctly
         assertEquals(2, flowConfig.tools.size)
@@ -160,7 +160,7 @@ class FlowJsonParserTest : FlowTestBase() {
         {
             "id": "test-flow",
             "version": "1.0",
-            "defaultModel": "openai/gpt-4o",
+            "defaultModel": "openai/gpt4o",
             "tools": [
                 {
                     "name": "authenticated-mcp-server",
@@ -203,7 +203,7 @@ class FlowJsonParserTest : FlowTestBase() {
         {
             "id": "test-flow",
             "version": "1.0",
-            "defaultModel": "openai/gpt-4o",
+            "defaultModel": "openai/gpt4o",
             "tools": [
                 {
                     "name": "simple-stdio-tool",
@@ -244,7 +244,7 @@ class FlowJsonParserTest : FlowTestBase() {
         // Verify flow config
         assertEquals("verify-transform-flow", flowConfig.id)
         assertEquals("1.0", flowConfig.version)
-        assertEquals("openai/gpt-4o", flowConfig.defaultModel)
+        assertEquals("openai/gpt4o", flowConfig.defaultModel)
 
         // Verify agents
         assertEquals(4, flowConfig.agents.size)

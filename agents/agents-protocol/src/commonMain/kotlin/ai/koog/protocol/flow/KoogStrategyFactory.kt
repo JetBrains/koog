@@ -165,14 +165,16 @@ public object KoogStrategyFactory {
         agent: FlowTaskAgent,
         toolRegistry: ToolRegistry,
         defaultModel: String?,
-    ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> =
-        subgraphWithTask<FlowAgentInput, FlowAgentInput>(
+    ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
+
+        return subgraphWithTask<FlowAgentInput, FlowAgentInput>(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
             llmModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel),
         ) { input ->
             agent.parameters.task
         }
+    }
 
     //endregion Task
 
@@ -254,11 +256,15 @@ public object KoogStrategyFactory {
 
         return when (valueString) {
             "success" -> {
-                val value = (input as? FlowAgentInput.InputCritiqueResult)?.success ?: error("Unexpected value string: $valueString")
+                val value = (input as? FlowAgentInput.InputCritiqueResult)?.success
+                    ?: error("Unexpected value string: $valueString")
+
                 FlowAgentInput.InputBoolean(value)
             }
             "feedback" -> {
-                val value = (input as? FlowAgentInput.InputCritiqueResult)?.feedback ?: error("Unexpected value string: $valueString")
+                val value = (input as? FlowAgentInput.InputCritiqueResult)?.feedback
+                    ?: error("Unexpected value string: $valueString")
+
                 FlowAgentInput.InputString(value)
             }
             else -> error("Not primitive types are not yet supported")

@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  *
  */
 @Serializable(with = FlowAgentInputSerializer::class)
-public interface FlowAgentInput {
+public sealed interface FlowAgentInput {
 
     /**
      *
@@ -15,11 +15,15 @@ public interface FlowAgentInput {
     public val type: String
 
     /**
+     * Determines if the input is a primitive type.
+     */
+    public val isPrimitive: Boolean
+        get() = this is Primitive
+
+    /**
      *
      */
     public interface Primitive : FlowAgentInput
-
-    //region Entities
 
     /**
      *
@@ -65,9 +69,9 @@ public interface FlowAgentInput {
         override val type: String = "critique"
     }
 
-    //endregion Entities
+//endregion Entities
 
-    //region Arrays
+//region Arrays
 
     /**
      *
@@ -107,14 +111,14 @@ public interface FlowAgentInput {
      *
      */
     @Serializable
-    public data class InputArrayStrings(public val data: Array<String>) : FlowAgentInput {
+    public data class InputArrayString(public val data: Array<String>) : FlowAgentInput {
 
         override val type: String = "array_string"
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other == null || this::class != other::class) return false
-            return data.contentEquals((other as InputArrayStrings).data)
+            return data.contentEquals((other as InputArrayString).data)
         }
 
         override fun hashCode(): Int = data.contentHashCode()
@@ -124,24 +128,16 @@ public interface FlowAgentInput {
      *
      */
     @Serializable
-    public data class InputArrayBooleans(public val data: Array<Boolean>) : FlowAgentInput {
+    public data class InputArrayBoolean(public val data: Array<Boolean>) : FlowAgentInput {
 
-        override val type: String = "array_bool"
+        override val type: String = "array_boolean"
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other == null || this::class != other::class) return false
-            return data.contentEquals((other as InputArrayBooleans).data)
+            return data.contentEquals((other as InputArrayBoolean).data)
         }
 
         override fun hashCode(): Int = data.contentHashCode()
     }
-
-    //endregion Arrays
-
-    /**
-     * Determines if the input is a primitive type.
-     */
-    public val isPrimitive: Boolean
-        get() = this is Primitive
 }

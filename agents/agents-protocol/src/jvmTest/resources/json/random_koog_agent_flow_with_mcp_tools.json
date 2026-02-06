@@ -25,7 +25,6 @@
     {
       "name": "get_numbers",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You are a numbers generator agent."
       },
@@ -37,7 +36,6 @@
       "name": "calculator",
       "type": "task",
       "model": "openai/gpt4omini",
-      "runtime": "koog",
       "prompt": {
         "system": "You are an calculator agent that can perform math operations."
       },

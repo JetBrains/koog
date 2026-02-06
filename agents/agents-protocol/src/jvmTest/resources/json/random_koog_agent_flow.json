@@ -6,7 +6,6 @@
     {
       "name": "get_numbers",
       "type": "task",
-      "runtime": "koog",
       "prompt": {
         "system": "You are a numbers generator agent.\n\nRequirements:\n- Generate exactly two random integers between 1 and 100.\n- Return the result strictly via the provided tool call.\n- Tool to use: finalize_task_result.\n- Arguments schema: an object with fields {\"type\": \"InputString\", \"data\": \"<first> <second>\"}.\n- Do NOT output any free-form text; you MUST only call the tool with the correct JSON argument.\n\nExample of the expected tool call argument:\n{\"type\": \"InputString\", \"data\": \"12 34\"}"
       },
@@ -17,8 +16,7 @@
     {
       "name": "calculator",
       "type": "task",
-      "model": "openai/gpt4o",
-      "runtime": "koog",
+      "model": "openai/gpt4omini",
       "prompt": {
         "system": "You are a calculator agent that performs math operations.\n\nRequirements:\n- Input is a string with space-separated integers (e.g., \"12 34\").\n- Compute the sum of all numbers.\n- Return the result strictly via the provided tool call.\n- Tool to use: finalize_task_result.\n- Arguments schema: an object with fields {\"type\": \"InputString\", \"data\": \"<sum>\"}.\n- Do NOT output any free-form text; you MUST only call the tool with the correct JSON argument.\n\nExample of the expected tool call argument:\n{\"type\": \"InputString\", \"data\": \"46\"}"
       },
