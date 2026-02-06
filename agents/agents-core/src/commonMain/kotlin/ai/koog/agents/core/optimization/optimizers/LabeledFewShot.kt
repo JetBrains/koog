@@ -3,12 +3,11 @@ package ai.koog.agents.core.optimization.optimizers
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
-import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
 import ai.koog.agents.core.optimization.core.StrategyOptimizer
-import ai.koog.agents.core.optimization.util.findOptimizableNodes
+import ai.koog.agents.core.optimization.util.findOptimizableModules
 import kotlin.random.Random
 
 /**
@@ -51,8 +50,8 @@ public class LabeledFewShot(
     ): OptimizationResult {
         require(trainset.isNotEmpty()) { "trainset is required for LabeledFewShot" }
 
-        val optimizableNodes = strategy.findOptimizableNodes()
-        if (optimizableNodes.isEmpty()) {
+        val modules = strategy.findOptimizableModules()
+        if (modules.isEmpty()) {
             return OptimizationResult(
                 config = OptimizationConfig(),
                 score = 0.0,
@@ -62,24 +61,27 @@ public class LabeledFewShot(
 
         val demonstrations = mutableMapOf<String, List<Demonstration<*, *>>>()
 
-        for (node in optimizableNodes) {
-            val selected = if (sample) {
-                trainset.shuffled(random).take(k.coerceAtMost(trainset.size))
-            } else {
-                trainset.take(k.coerceAtMost(trainset.size))
+        for (module in modules) {
+            val candidates = trainset.filter { example ->
+                example.data.containsKey(module.inputField) &&
+                    example.data.containsKey(module.outputField)
             }
 
-            val demos: List<Demonstration<Map<String, String>, String>> = selected
-                .filter { it.hasLabel }
-                .map { example ->
-                    Demonstration(
-                        input = example.inputOnly(),
-                        output = example.label!!,
-                        isBootstrapped = false,
-                    )
-                }
+            val selected = if (sample) {
+                candidates.shuffled(random).take(k.coerceAtMost(candidates.size))
+            } else {
+                candidates.take(k.coerceAtMost(candidates.size))
+            }
 
-            demonstrations[node.name] = demos
+            val demos = selected.map { example ->
+                Demonstration(
+                    input = example.data[module.inputField]!!,
+                    output = example.data[module.outputField]!!,
+                    isBootstrapped = false,
+                )
+            }
+
+            demonstrations[module.name] = demos
         }
 
         val config = OptimizationConfig(
@@ -94,7 +96,7 @@ public class LabeledFewShot(
                 "optimizer" to "LabeledFewShot",
                 "k" to k,
                 "sample" to sample,
-                "numNodes" to optimizableNodes.size,
+                "numModules" to modules.size,
             ),
         )
     }

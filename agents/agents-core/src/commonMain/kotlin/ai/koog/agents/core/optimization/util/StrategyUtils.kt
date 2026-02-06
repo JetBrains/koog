@@ -88,8 +88,8 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findAllNodes(
  *
  * @return A list of all [OptimizableNode] instances in the strategy.
  */
-public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizableModules(): List<OptimizableNode> {
-    return findOptimizableNodes().filterIsInstance<OptimizableNode>()
+public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizableModules(): List<OptimizableNode<*, *>> {
+    return findOptimizableNodes().filterIsInstance<OptimizableNode<*, *>>()
 }
 
 /**

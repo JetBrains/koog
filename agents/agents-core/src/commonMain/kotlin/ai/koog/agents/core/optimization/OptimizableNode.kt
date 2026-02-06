@@ -8,21 +8,26 @@ import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.dsl.getNodeDemonstrations
 import ai.koog.agents.core.optimization.dsl.getNodeInstruction
 import kotlin.reflect.KProperty
+import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 /**
- * A prompt function that constructs the LLM response from instruction, demonstrations, and input.
+ * A prompt function that owns how the Koog Prompt is constructed from instruction, demonstrations,
+ * and input, then calls the LLM and returns the result.
  *
  * When provided, this replaces the default prompt construction logic of [OptimizableNode].
  * The function receives the effective instruction (possibly overridden by optimization),
- * the current demonstrations, and the user input. It should construct and send the prompt
- * via [AIAgentGraphContextBase.llm] and return the string result.
+ * the current demonstrations, and the node input. It should construct and send the prompt
+ * via [AIAgentGraphContextBase.llm] and return the result.
+ *
+ * @param TInput The type of input the node receives from the graph.
+ * @param TOutput The type of output the node produces for the graph.
  */
-public typealias OptimizablePromptFn = suspend AIAgentGraphContextBase.(
+public typealias OptimizablePromptFn<TInput, TOutput> = suspend AIAgentGraphContextBase.(
     instruction: String,
-    demos: List<Demonstration<String, String>>,
-    input: String,
-) -> String
+    demos: List<Demonstration<TInput, TOutput>>,
+    input: TInput,
+) -> TOutput
 
 /**
  * A node with built-in optimization support for MIPRO-style prompt optimization.
@@ -32,7 +37,7 @@ public typealias OptimizablePromptFn = suspend AIAgentGraphContextBase.(
  * to create per-node [Demonstration]s with the correct field values.
  *
  * The node owns prompt construction: it builds a prompt from instruction + demonstrations + input
- * and sends it to the LLM via [AIAgentGraphContextBase.llm]. The default prompt format is:
+ * and sends it to the LLM via [AIAgentGraphContextBase.llm]. The default prompt format (for `String, String` nodes) is:
  * ```
  * system(instruction)
  * user(demo1.input) / assistant(demo1.output)
@@ -41,33 +46,52 @@ public typealias OptimizablePromptFn = suspend AIAgentGraphContextBase.(
  * user(input)
  * ```
  *
- * This can be overridden by providing a custom [OptimizablePromptFn].
+ * For non-String types, provide an [OptimizablePromptFn] that handles type conversion.
  *
  * Usage:
  * ```kotlin
+ * // String -> String (default prompt construction):
  * val classify by optimizableNode(
  *     instruction = "Classify the sentiment of the text.",
  *     inputField = "text",
  *     outputField = "sentiment",
  * )
+ *
+ * // Custom types (promptFn required):
+ * val classify by optimizableNode<String, Sentiment>(
+ *     instruction = "Classify the sentiment.",
+ *     inputField = "text",
+ *     outputField = "sentiment",
+ *     promptFn = { instruction, demos, input ->
+ *         val response = llm.writeSession {
+ *             appendPrompt { system(instruction); user(input) }
+ *             requestLLMWithoutTools()
+ *         }.content
+ *         Sentiment.valueOf(response.trim())
+ *     }
+ * )
  * ```
  *
+ * @param TInput The type of input this node receives from the graph.
+ * @param TOutput The type of output this node produces for the graph.
  * @property inputField The key in [Example.data][ai.koog.agents.core.optimization.core.Example.data]
  *  that provides this node's input.
  * @property outputField The key in [Example.data][ai.koog.agents.core.optimization.core.Example.data]
  *  that provides this node's expected output.
  */
-public class OptimizableNode internal constructor(
+public class OptimizableNode<TInput, TOutput> internal constructor(
     name: String,
     public val inputField: String,
     public val outputField: String,
-    execute: suspend AIAgentGraphContextBase.(String) -> String,
+    execute: suspend AIAgentGraphContextBase.(TInput) -> TOutput,
     instruction: String,
+    inputType: KType,
+    outputType: KType,
     description: String? = null,
-) : AIAgentNode<String, String>(
+) : AIAgentNode<TInput, TOutput>(
     name = name,
-    inputType = typeOf<String>(),
-    outputType = typeOf<String>(),
+    inputType = inputType,
+    outputType = outputType,
     execute = execute,
     instruction = instruction,
     demonstrations = emptyList(),
@@ -75,37 +99,95 @@ public class OptimizableNode internal constructor(
 )
 
 /**
- * Property delegate that creates an [OptimizableNode] with automatic prompt construction.
+ * Property delegate that creates an [OptimizableNode].
  *
- * The delegate builds the execute lambda internally. At execution time, it:
+ * The delegate wraps a pre-built execute lambda. At execution time, the lambda:
  * 1. Resolves the effective instruction (from [OptimizationConfig][ai.koog.agents.core.optimization.core.OptimizationConfig] context or default)
  * 2. Resolves demonstrations (from context or default)
  * 3. Constructs and sends the prompt via [AIAgentGraphContextBase.llm]
- * 4. Returns the LLM response content as a String
+ * 4. Returns the result
  *
  * The node name is resolved lazily — either from an explicit name or from the delegated property name.
  * This is safe because graph construction (which triggers [getValue]) always happens before execution.
  *
- * @param name Explicit node name, or null to derive from the property name.
- * @param inputField The Example data key for this node's input.
- * @param outputField The Example data key for this node's output.
- * @param instruction The base instruction for prompt construction.
- * @param description Optional description for MIPRO program description.
- * @param promptFn Optional custom prompt function. When null, uses the default prompt construction.
+ * @param TInput The type of input the node receives from the graph.
+ * @param TOutput The type of output the node produces for the graph.
  */
-public class OptimizableNodeDelegate(
+public class OptimizableNodeDelegate<TInput, TOutput>(
     private val name: String?,
     public val inputField: String,
     public val outputField: String,
     private val instruction: String,
     private val description: String?,
-    private val promptFn: OptimizablePromptFn?,
+    private val inputType: KType,
+    private val outputType: KType,
+    private val executeImpl: suspend AIAgentGraphContextBase.(TInput) -> TOutput,
 ) {
-    private var resolvedName: String? = name
-    private var optimizableNode: OptimizableNode? = null
+    @PublishedApi internal var resolvedName: String? = name
+    private var optimizableNode: OptimizableNode<TInput, TOutput>? = null
 
-    private val executeImpl: suspend AIAgentGraphContextBase.(String) -> String = { input ->
-        val nodeName = resolvedName ?: error("OptimizableNode name not resolved — graph not built yet?")
+    /**
+     * Creates (or returns cached) the [OptimizableNode], deriving the name from [property] if not explicit.
+     */
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<TInput, TOutput> {
+        if (optimizableNode == null) {
+            resolvedName = name ?: property.name
+            optimizableNode = OptimizableNode(
+                name = resolvedName!!,
+                inputField = inputField,
+                outputField = outputField,
+                execute = executeImpl,
+                instruction = instruction,
+                inputType = inputType,
+                outputType = outputType,
+                description = description,
+            )
+        }
+        return optimizableNode!!
+    }
+}
+
+/**
+ * Creates an optimizable `String -> String` node with automatic prompt construction and LLM execution.
+ *
+ * This is the convenience overload for the most common case. No type parameters needed.
+ * The node owns how the Koog Prompt is constructed. The LLM call happens via
+ * [AIAgentGraphContextBase.llm].
+ *
+ * Default behavior (no [promptFn]):
+ * - Constructs: `system(instruction) + user/assistant demo pairs + user(input)`
+ * - Calls `requestLLMWithoutTools()` and returns `content`
+ *
+ * Example:
+ * ```kotlin
+ * val classify by optimizableNode(
+ *     instruction = "Classify the sentiment.",
+ *     inputField = "text",
+ *     outputField = "sentiment",
+ * )
+ * ```
+ *
+ * @param instruction The base instruction for prompt construction.
+ * @param inputField The key in Example.data that provides this node's input.
+ * @param outputField The key in Example.data that provides this node's expected output.
+ * @param name Explicit node name. If null, derived from the delegated property name.
+ * @param description Optional description for MIPRO program description.
+ * @param promptFn Optional custom prompt function to override default prompt construction.
+ * @return An [OptimizableNodeDelegate] for use with Kotlin property delegation (`by`).
+ */
+public fun AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
+    instruction: String,
+    inputField: String,
+    outputField: String,
+    name: String? = null,
+    description: String? = null,
+    promptFn: OptimizablePromptFn<String, String>? = null,
+): OptimizableNodeDelegate<String, String> {
+    val delegateRef = object { lateinit var delegate: OptimizableNodeDelegate<String, String> }
+
+    val executeImpl: suspend AIAgentGraphContextBase.(String) -> String = { input ->
+        val nodeName = delegateRef.delegate.resolvedName
+            ?: error("OptimizableNode name not resolved — graph not built yet?")
         val effectiveInstruction = getNodeInstruction(nodeName, instruction)
         val demos = getNodeDemonstrations<String, String>(nodeName, emptyList())
 
@@ -126,91 +208,85 @@ public class OptimizableNodeDelegate(
         }
     }
 
-    /**
-     * Creates (or returns cached) the [OptimizableNode], deriving the name from [property] if not explicit.
-     */
-    public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<String, String> {
-        if (optimizableNode == null) {
-            resolvedName = name ?: property.name
-            optimizableNode = OptimizableNode(
-                name = resolvedName!!,
-                inputField = inputField,
-                outputField = outputField,
-                execute = executeImpl,
-                instruction = instruction,
-                description = description,
-            )
-        }
-        return optimizableNode!!
-    }
-}
-
-/**
- * Creates an optimizable node with automatic prompt construction and LLM execution.
- *
- * This is the primary DSL for declaring nodes that participate in MIPRO-style optimization.
- * The node owns how the Koog [Prompt][ai.koog.prompt.dsl.Prompt] is constructed from instruction,
- * demonstrations, and input. The LLM call happens via [promptExecutor][AIAgentGraphContextBase.llm].
- *
- * Default behavior (no [promptFn]):
- * - Constructs: `system(instruction) + user/assistant demo pairs + user(input)`
- * - Calls `requestLLMWithoutTools()` and returns `content`
- *
- * Custom behavior (with [promptFn]):
- * - The provided function receives the effective instruction, demos, and input
- * - It is responsible for constructing the prompt and calling the LLM
- *
- * Example:
- * ```kotlin
- * val classify by optimizableNode(
- *     instruction = "Classify the sentiment.",
- *     inputField = "text",
- *     outputField = "sentiment",
- * )
- *
- * // With custom prompt construction:
- * val classify by optimizableNode(
- *     instruction = "Classify the sentiment.",
- *     inputField = "text",
- *     outputField = "sentiment",
- *     promptFn = { instruction, demos, input ->
- *         llm.writeSession {
- *             appendPrompt {
- *                 system("$instruction\nOutput JSON only.")
- *                 for (demo in demos) {
- *                     user(demo.input)
- *                     assistant(demo.output)
- *                 }
- *                 user(input)
- *             }
- *             requestLLMWithoutTools()
- *         }.content
- *     }
- * )
- * ```
- *
- * @param instruction The base instruction for prompt construction.
- * @param inputField The key in Example.data that provides this node's input.
- * @param outputField The key in Example.data that provides this node's expected output.
- * @param name Explicit node name. If null, derived from the delegated property name.
- * @param description Optional description for MIPRO program description.
- * @param promptFn Optional custom prompt function to override default prompt construction.
- * @return An [OptimizableNodeDelegate] for use with Kotlin property delegation (`by`).
- */
-public fun AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
-    instruction: String,
-    inputField: String,
-    outputField: String,
-    name: String? = null,
-    description: String? = null,
-    promptFn: OptimizablePromptFn? = null,
-): OptimizableNodeDelegate {
     return OptimizableNodeDelegate(
         name = name,
         inputField = inputField,
         outputField = outputField,
         instruction = instruction,
         description = description,
-        promptFn = promptFn,
-    )
+        inputType = typeOf<String>(),
+        outputType = typeOf<String>(),
+        executeImpl = executeImpl,
+    ).also { delegateRef.delegate = it }
+}
+
+/**
+ * Creates an optimizable node with custom types and a required prompt function.
+ *
+ * Use this overload when the node's graph input/output types are not `String`.
+ * The [promptFn] is responsible for prompt construction, LLM call, and response parsing.
+ *
+ * Demonstrations are `Demonstration<TInput, TOutput>` — the optimizer is responsible for
+ * producing correctly-typed demos (e.g., LabeledFewShot produces `Demonstration<String, String>`,
+ * BootstrapFewShot captures actual node I/O types).
+ *
+ * Example:
+ * ```kotlin
+ * val classify by optimizableNode<String, Sentiment>(
+ *     instruction = "Classify the sentiment.",
+ *     inputField = "text",
+ *     outputField = "sentiment",
+ *     promptFn = { instruction, demos, input ->
+ *         val response = llm.writeSession {
+ *             appendPrompt {
+ *                 system(instruction)
+ *                 for (demo in demos) { user(demo.input.toString()); assistant(demo.output.name) }
+ *                 user(input)
+ *             }
+ *             requestLLMWithoutTools()
+ *         }.content
+ *         Sentiment.valueOf(response.trim())
+ *     }
+ * )
+ * ```
+ *
+ * @param TInput The type of input the node receives from the graph.
+ * @param TOutput The type of output the node produces for the graph.
+ * @param instruction The base instruction for prompt construction.
+ * @param inputField The key in Example.data that provides this node's input.
+ * @param outputField The key in Example.data that provides this node's expected output.
+ * @param promptFn The prompt function that handles prompt construction, LLM call, and response parsing.
+ * @param name Explicit node name. If null, derived from the delegated property name.
+ * @param description Optional description for MIPRO program description.
+ * @return An [OptimizableNodeDelegate] for use with Kotlin property delegation (`by`).
+ */
+public inline fun <reified TInput, reified TOutput> AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
+    instruction: String,
+    inputField: String,
+    outputField: String,
+    noinline promptFn: OptimizablePromptFn<TInput, TOutput>,
+    name: String? = null,
+    description: String? = null,
+): OptimizableNodeDelegate<TInput, TOutput> {
+    val delegateRef = object { lateinit var delegate: OptimizableNodeDelegate<TInput, TOutput> }
+
+    val executeImpl: suspend AIAgentGraphContextBase.(TInput) -> TOutput = { input ->
+        val nodeName = delegateRef.delegate.resolvedName
+            ?: error("OptimizableNode name not resolved — graph not built yet?")
+        val effectiveInstruction = getNodeInstruction(nodeName, instruction)
+        val demos = getNodeDemonstrations<TInput, TOutput>(nodeName, emptyList())
+
+        promptFn.invoke(this, effectiveInstruction, demos, input)
+    }
+
+    return OptimizableNodeDelegate(
+        name = name,
+        inputField = inputField,
+        outputField = outputField,
+        instruction = instruction,
+        description = description,
+        inputType = typeOf<TInput>(),
+        outputType = typeOf<TOutput>(),
+        executeImpl = executeImpl,
+    ).also { delegateRef.delegate = it }
 }
