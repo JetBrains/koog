@@ -1,7 +1,5 @@
 package ai.koog.agents.features.opentelemetry.metric
 
-internal data class MetricFilter(val metricName: String, val attributesKeysToRetain: Set<String>)
-
 internal interface ToolNameMapper {
     fun map(toolName: String): String
 }
