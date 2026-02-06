@@ -7,7 +7,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
+ * Serializable model for conditional flow transitions.
  *
+ * Defines a condition that must be satisfied for a transition to be taken between agents.
+ * Conditions compare a variable from the agent's output against a specified value.
+ *
+ * @property variable The variable path to evaluate (e.g., "input.data", "input.success")
+ * @property operation The comparison operation to perform (e.g., "equals", "less_than", "more_than")
+ * @property value The value to compare against (can be int, double, string, or boolean)
  */
 @Serializable
 public data class FlowTransitionConditionModel(
@@ -17,7 +24,10 @@ public data class FlowTransitionConditionModel(
 ) {
 
     /**
+     * Converts this serializable model to a runtime [FlowTransitionCondition] instance.
      *
+     * @return A runtime FlowTransitionCondition object ready for evaluation
+     * @throws IllegalStateException if the operation string is not recognized
      */
     public fun toFlowTransitionCondition(): FlowTransitionCondition {
         val operation = ConditionOperationKind.entries.find { it.id.equals(operation, ignoreCase = true) }

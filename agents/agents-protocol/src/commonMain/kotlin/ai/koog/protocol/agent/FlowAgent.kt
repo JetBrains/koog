@@ -1,7 +1,7 @@
 package ai.koog.protocol.agent
 
 /**
- *
+ * Base interface for all flow agents.
  */
 public interface FlowAgent {
 

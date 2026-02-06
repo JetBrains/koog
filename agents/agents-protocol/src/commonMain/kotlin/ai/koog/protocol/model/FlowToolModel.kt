@@ -19,7 +19,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
+ * Serializable model representing a tool configuration in a flow.
  *
+ * Tools are external capabilities that agents can use to perform actions beyond LLM inference,
+ * such as accessing APIs, running commands, or querying databases.
+ *
+ * @property name Unique identifier for the tool
+ * @property type The kind of tool integration (MCP or Local)
+ * @property parameters Configuration parameters specific to the tool type
  */
 @Serializable(with = FlowToolModelSerializer::class)
 public data class FlowToolModel(
@@ -28,7 +35,9 @@ public data class FlowToolModel(
     public val parameters: FlowToolParameters
 ) {
     /**
+     * Converts this serializable model to a runtime [FlowTool] instance.
      *
+     * @return A runtime FlowTool object ready for use by agents
      */
     public fun toFlowTool(): FlowTool {
         return when (type) {
@@ -56,24 +65,31 @@ public data class FlowToolModel(
 }
 
 /**
+ * Represents the type of tool integration supported by the flow framework.
  *
+ * @property id String identifier used for serialization
  */
 @Serializable(with = FlowToolKindSerializer::class)
 public sealed class FlowToolKind(public val id: String) {
 
     /**
-     *
+     * Model Context Protocol (MCP) tool integration for connecting to external services
+     * via standardized communication protocols like stdio or SSE.
      */
     public data object MCP : FlowToolKind("mcp")
 
     /**
-     *
+     * Local tool implementation registered within the application by fully qualified name.
      */
     public data object LOCAL : FlowToolKind("local")
 }
 
 /**
+ * Transport protocol for Model Context Protocol (MCP) tool communication.
  *
+ * Defines how the application communicates with MCP-based tools.
+ *
+ * @property id String identifier used for serialization
  */
 @Serializable
 public enum class FlowMcpToolTransportKind(public val id: String) {
@@ -85,24 +101,29 @@ public enum class FlowMcpToolTransportKind(public val id: String) {
 }
 
 /**
- *
+ * Base interface for tool configuration parameters.
  */
 @Serializable
 public sealed interface FlowToolParameters {
 
     /**
-     *
+     * Parameters for MCP-based tools with transport configuration.
      */
     @Serializable
     public sealed interface FlowMcpToolParameters : FlowToolParameters {
         /**
-         *
+         * The transport protocol to use for MCP communication.
          */
         public val transport: FlowMcpToolTransportKind
     }
 
     /**
+     * Parameters for standard input/output (stdio) MCP transport.
      *
+     * Launches an external process and communicates via standard input/output streams.
+     *
+     * @property command The executable command to run
+     * @property args List of command-line arguments to pass to the command
      */
     @Serializable
     public data class FlowToolStdioParameters(
@@ -113,7 +134,12 @@ public sealed interface FlowToolParameters {
     }
 
     /**
+     * Parameters for Server-Sent Events (SSE) MCP transport.
      *
+     * Connects to an MCP server via HTTP Server-Sent Events.
+     *
+     * @property url The HTTP(S) URL endpoint for the SSE connection
+     * @property headers Optional HTTP headers to include in the connection request
      */
     @Serializable
     public data class FlowToolSSEParameters(
@@ -124,7 +150,11 @@ public sealed interface FlowToolParameters {
     }
 
     /**
+     * Parameters for local tool implementations.
      *
+     * References a tool that is registered within the application by its fully qualified name.
+     *
+     * @property path The fully qualified name or path identifier for the local tool
      */
     @Serializable
     public data class FlowLocalToolParameters(

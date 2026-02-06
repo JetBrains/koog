@@ -4,7 +4,7 @@ import ai.koog.protocol.agent.FlowAgentParameters
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * Parameters for task agents.
  */
 @Serializable
 public data class FlowTaskAgentParameters(

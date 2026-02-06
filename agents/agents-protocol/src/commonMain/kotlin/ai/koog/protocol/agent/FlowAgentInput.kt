@@ -4,13 +4,13 @@ import ai.koog.protocol.parser.FlowAgentInputSerializer
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * Type-safe input values for flow agents supporting primitives, arrays, and complex types.
  */
 @Serializable(with = FlowAgentInputSerializer::class)
 public sealed interface FlowAgentInput {
 
     /**
-     *
+     * The type identifier for this input.
      */
     public val type: String
 
@@ -21,12 +21,12 @@ public sealed interface FlowAgentInput {
         get() = this is Primitive
 
     /**
-     *
+     * Marker interface for primitive input types.
      */
     public interface Primitive : FlowAgentInput
 
     /**
-     *
+     * Integer input value.
      */
     @Serializable
     public data class InputInt(public val data: Int) : Primitive {
@@ -34,7 +34,7 @@ public sealed interface FlowAgentInput {
     }
 
     /**
-     *
+     * Double-precision floating point input value.
      */
     @Serializable
     public data class InputDouble(public val data: Double) : Primitive {
@@ -42,7 +42,7 @@ public sealed interface FlowAgentInput {
     }
 
     /**
-     *
+     * String input value.
      */
     @Serializable
     public data class InputString(public val data: String) : Primitive {
@@ -50,7 +50,7 @@ public sealed interface FlowAgentInput {
     }
 
     /**
-     *
+     * Boolean input value.
      */
     @Serializable
     public data class InputBoolean(public val data: Boolean) : Primitive {
@@ -58,7 +58,7 @@ public sealed interface FlowAgentInput {
     }
 
     /**
-     *
+     * Result from a verification/critique agent containing success status and feedback.
      */
     @Serializable
     public data class InputCritiqueResult(
@@ -74,7 +74,7 @@ public sealed interface FlowAgentInput {
 //region Arrays
 
     /**
-     *
+     * Array of integer values.
      */
     @Serializable
     public data class InputArrayInt(public val data: Array<Int>) : FlowAgentInput {
@@ -91,7 +91,7 @@ public sealed interface FlowAgentInput {
     }
 
     /**
-     *
+     * Array of double-precision floating point values.
      */
     @Serializable
     public data class InputArrayDouble(public val data: Array<Double>) : FlowAgentInput {
@@ -108,7 +108,7 @@ public sealed interface FlowAgentInput {
     }
 
     /**
-     *
+     * Array of string values.
      */
     @Serializable
     public data class InputArrayString(public val data: Array<String>) : FlowAgentInput {
@@ -125,7 +125,7 @@ public sealed interface FlowAgentInput {
     }
 
     /**
-     *
+     * Array of boolean values.
      */
     @Serializable
     public data class InputArrayBoolean(public val data: Array<Boolean>) : FlowAgentInput {

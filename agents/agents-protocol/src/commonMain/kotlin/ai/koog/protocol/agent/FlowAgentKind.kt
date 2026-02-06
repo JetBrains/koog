@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * Types of agents available in a flow.
  */
 @Serializable
 public enum class FlowAgentKind {

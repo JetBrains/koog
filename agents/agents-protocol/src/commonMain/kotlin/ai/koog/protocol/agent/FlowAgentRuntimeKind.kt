@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * Supported runtime environments for flow agents.
  */
 @Serializable
 public enum class FlowAgentRuntimeKind(public val id: String) {

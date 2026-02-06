@@ -6,7 +6,7 @@ import ai.koog.protocol.agent.FlowAgentKind
 import ai.koog.protocol.agent.FlowAgentPrompt
 
 /**
- *
+ * Agent that performs a task using LLM with optional tool access.
  */
 public class FlowTaskAgent(
     override val name: String,

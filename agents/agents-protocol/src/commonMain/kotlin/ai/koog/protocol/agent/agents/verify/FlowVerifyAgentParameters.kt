@@ -4,7 +4,7 @@ import ai.koog.protocol.agent.FlowAgentParameters
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * Parameters for verification agents.
  */
 @Serializable
 public data class FlowVerifyAgentParameters(

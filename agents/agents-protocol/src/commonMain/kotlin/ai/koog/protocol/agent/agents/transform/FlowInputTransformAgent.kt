@@ -6,7 +6,7 @@ import ai.koog.protocol.agent.FlowAgentKind
 import ai.koog.protocol.agent.FlowAgentPrompt
 
 /**
- *
+ * Agent that transforms input data without LLM interaction.
  */
 public data class FlowInputTransformAgent(
     override val name: String,

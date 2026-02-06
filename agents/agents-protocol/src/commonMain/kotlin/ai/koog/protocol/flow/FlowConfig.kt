@@ -5,7 +5,17 @@ import ai.koog.protocol.tool.FlowTool
 import ai.koog.protocol.transition.FlowTransition
 
 /**
+ * Runtime configuration object for a flow after parsing from serializable format.
  *
+ * This represents the complete configuration needed to execute a flow, including
+ * all agents, available tools, and the transition graph connecting them.
+ *
+ * @property id Optional unique identifier for the flow
+ * @property version Optional version string for the flow configuration
+ * @property defaultModel Optional default LLM model identifier for agents that don't specify their own
+ * @property agents List of runtime agent instances that make up the flow
+ * @property tools List of runtime tool instances available to agents
+ * @property transitions List of transitions defining how control flows between agents
  */
 public data class FlowConfig(
     val id: String? = null,

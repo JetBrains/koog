@@ -22,12 +22,12 @@ import ai.koog.protocol.transition.FlowTransition
 import ai.koog.protocol.transition.FlowTransitionCondition
 
 /**
- *
+ * Factory for creating AI agent graph strategies from flow configurations.
  */
 public object KoogStrategyFactory {
 
     /**
-     *
+     * Builds an agent graph strategy from flow configuration.
      */
     public fun buildStrategy(
         id: String,

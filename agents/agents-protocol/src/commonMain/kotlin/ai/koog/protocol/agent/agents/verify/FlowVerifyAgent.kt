@@ -6,7 +6,7 @@ import ai.koog.protocol.agent.FlowAgentKind
 import ai.koog.protocol.agent.FlowAgentPrompt
 
 /**
- *
+ * Agent that validates or critiques input using LLM with structured output.
  */
 public class FlowVerifyAgent(
     override val name: String,

@@ -17,7 +17,7 @@ import ai.koog.protocol.transition.FlowTransition
 import kotlin.reflect.typeOf
 
 /**
- *
+ * Koog-specific implementation of the Flow interface with agent orchestration.
  */
 public class KoogFlow(
     override val id: String,
