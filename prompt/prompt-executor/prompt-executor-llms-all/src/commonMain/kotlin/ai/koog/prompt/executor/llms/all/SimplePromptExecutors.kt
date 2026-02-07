@@ -3,12 +3,16 @@ package ai.koog.prompt.executor.llms.all
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.header
 
 /**
  * Creates a `SingleLLMPromptExecutor` instance configured to use the OpenAI client.
@@ -54,6 +58,41 @@ public fun simpleAzureOpenAIExecutor(
     apiToken: String,
 ): SingleLLMPromptExecutor =
     SingleLLMPromptExecutor(OpenAILLMClient(apiToken, AzureOpenAIClientSettings(baseUrl, version)))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with an `OpenAILLMClient` configured for Azure OpenAI.
+ *
+ * @param baseUrl The base URL for the Azure OpenAI service.
+ * @param apiKey The API key (or Entra ID token) used for authentication with the Azure OpenAI service.
+ * @param usesAzureEntraId Indicates whether the authentication uses Azure Entra ID token (true)
+ * or `api-key` header (false). Defaults to true.
+ * @return A new instance of `SingleLLMPromptExecutor` configured with the `OpenAILLMClient` for Azure OpenAI.
+ */
+public fun simpleAzureOpenAIExecutor(
+    baseUrl: String,
+    apiKey: String,
+    usesAzureEntraId: Boolean = true
+): SingleLLMPromptExecutor {
+    if (usesAzureEntraId) {
+        return SingleLLMPromptExecutor(
+            OpenAILLMClient(
+                apiKey,
+                OpenAIClientSettings(baseUrl),
+            )
+        )
+    }
+
+    return SingleLLMPromptExecutor(
+        OpenAILLMClient(
+            "",
+            OpenAIClientSettings(baseUrl),
+            HttpClient {
+                defaultRequest {
+                    header("api-key", apiKey)
+                }
+            }
+        ))
+}
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `AnthropicLLMClient`.
