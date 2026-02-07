@@ -84,7 +84,7 @@ public fun simpleAzureOpenAIExecutor(
 
     return SingleLLMPromptExecutor(
         OpenAILLMClient(
-            "",
+            "", // Authorization: Bearer not needed when using api-key header for Azure OpenAI
             OpenAIClientSettings(baseUrl),
             HttpClient {
                 defaultRequest {
