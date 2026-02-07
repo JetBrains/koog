@@ -62,7 +62,7 @@ public fun simpleAzureOpenAIExecutor(
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OpenAILLMClient` configured for Azure OpenAI.
  *
- * @param baseUrl The base URL for the Azure OpenAI service.
+ * @param baseUrl The v1 base URL for the Azure OpenAI service.
  * @param apiKey The API key (or Entra ID token) used for authentication with the Azure OpenAI service.
  * @param usesAzureEntraId Indicates whether the authentication uses Azure Entra ID token (true)
  * or `api-key` header (false). Defaults to true.
