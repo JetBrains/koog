@@ -331,4 +331,35 @@ public object OllamaModels : LLModelDefinitions {
             contextLength = 16_384,
         )
     }
+
+    /**
+     * List of the supported models by the Anthropic provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        Groq.LLAMA_3_GROK_TOOL_USE_8B,
+        Groq.LLAMA_3_GROK_TOOL_USE_70B,
+        Meta.LLAMA_3_2,
+        Meta.LLAMA_3_2_3B,
+        Meta.LLAMA_4,
+        Meta.LLAMA_GUARD_3,
+        Alibaba.QWEN_2_5_05B,
+        Alibaba.QWEN_3_06B,
+        Alibaba.QWQ_32B,
+        Alibaba.QWQ,
+        Alibaba.QWEN_CODER_2_5_32B,
+        Granite.GRANITE_3_2_VISION,
+    )
+
+    /**
+     * Custom models added to the Anthropic provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Ollama) { "Model provider must be Ollama" }
+        customModels.add(model)
+    }
 }
