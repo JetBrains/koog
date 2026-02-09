@@ -36,7 +36,6 @@ public object KoogStrategyFactory {
         agents: List<FlowAgent>,
         transitions: List<FlowTransition>,
         toolRegistry: ToolRegistry,
-        defaultModel: String?
     ): AIAgentGraphStrategy<FlowAgentInput, FlowAgentInput> {
         // No agents - create an empty strategy
         if (agents.isEmpty()) {
@@ -45,13 +44,13 @@ public object KoogStrategyFactory {
 
         // No transitions - chain agents sequentially
         if (transitions.isEmpty()) {
-            return createSequentialStrategy(id, agents, toolRegistry, defaultModel)
+            return createSequentialStrategy(id, agents, toolRegistry)
         }
 
         return strategy(id) {
             // Nodes
             val collectedNodes = agents.map { agent ->
-                val node by convertFlowAgentToKoogNode(agent, toolRegistry, defaultModel)
+                val node by convertFlowAgentToKoogNode(agent, toolRegistry)
                 node
             }
 
@@ -132,13 +131,12 @@ public object KoogStrategyFactory {
     private fun AIAgentSubgraphBuilderBase<*, *>.convertFlowAgentToKoogNode(
         agent: FlowAgent,
         toolRegistry: ToolRegistry,
-        defaultModel: String?
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
         return when (agent) {
-            is FlowTaskAgent -> nodeTask(agent, toolRegistry, defaultModel)
-            is FlowVerifyAgent -> nodeVerify(agent, toolRegistry, defaultModel)
+            is FlowTaskAgent -> nodeTask(agent, toolRegistry)
+            is FlowVerifyAgent -> nodeVerify(agent, toolRegistry)
             is FlowInputTransformAgent -> nodeTransform(agent)
-            is FlowReActAgent -> nodeReAct(agent, toolRegistry, defaultModel)
+            is FlowReActAgent -> nodeReAct(agent, toolRegistry)
             else -> error("Parallel agent type is not yet supported")
         }
     }
@@ -153,19 +151,17 @@ public object KoogStrategyFactory {
      *
      * @param agent The flow agent to execute a particular task;
      * @param toolRegistry The tool registry to use for tool selection;
-     * @param defaultModel The default model to use if not specified in the agent configuration.
      */
     private fun AIAgentSubgraphBuilderBase<*, *>.nodeTask(
         agent: FlowTaskAgent,
         toolRegistry: ToolRegistry,
-        defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
-        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel)
+        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model)
         return subgraphWithTask<FlowAgentInput, FlowAgentInput>(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
             llmModel = resolvedModel,
-        ) { input ->
+        ) { _: FlowAgentInput ->
             agent.parameters.task
         }
     }
@@ -175,27 +171,25 @@ public object KoogStrategyFactory {
     //region ReAct
 
     /**
-     * Creates a subgraph with ReAct strategy.
+     * Creates a subgraph with 'ReAct' strategy.
      * The subgraph takes the flow agent input type [FlowAgentInput],
      * converts it into the [reActStrategy] input type [String], and return an expected agent flow type [FlowAgentInput].
      *
      * @param agent The flow agent configuration;
      * @param toolRegistry The tool registry for selecting tools;
-     * @param defaultModel The default model to use if not specified in the agent configuration.
      */
     private fun AIAgentSubgraphBuilderBase<*, *>.nodeReAct(
         agent: FlowReActAgent,
         toolRegistry: ToolRegistry,
-        defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
-        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel)
+        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model)
         return subgraph(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
             llmModel = resolvedModel,
         ) {
-            // Node to transform the custom [FlowAgentInput] type into the reAct strategy input of type [String]
-            val prepareReActInput by node<FlowAgentInput, String> { input: FlowAgentInput ->
+            // Node to transform the custom [FlowAgentInput] type into the 'ReAct' strategy input of type [String]
+            val prepareReActInput by node<FlowAgentInput, String> { _: FlowAgentInput ->
                 agent.parameters.task
             }
 
@@ -205,7 +199,7 @@ public object KoogStrategyFactory {
                 name = "${agent.name}_react_strategy"
             )
 
-            // Node to wrap the output from the ReAct strategy back to [FlowAgentInput] flow agent type
+            // Node to wrap the output from the 'ReAct' strategy back to [FlowAgentInput] flow agent type
             // to send it further into the agent flow.
             val wrapOutput by node<String, FlowAgentInput> { output ->
                 FlowAgentInput.InputString(output)
@@ -228,13 +222,12 @@ public object KoogStrategyFactory {
     private fun AIAgentSubgraphBuilderBase<*, *>.nodeVerify(
         agent: FlowVerifyAgent,
         toolRegistry: ToolRegistry,
-        defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
-        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel)
+        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model)
         val verifySubgraph by subgraphWithVerification<FlowAgentInput>(
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
             llmModel = resolvedModel,
-        ) { input ->
+        ) { _: FlowAgentInput ->
             agent.parameters.task
         }
 
@@ -335,11 +328,10 @@ public object KoogStrategyFactory {
         id: String,
         agents: List<FlowAgent>,
         toolRegistry: ToolRegistry,
-        defaultModel: String?
     ): AIAgentGraphStrategy<FlowAgentInput, FlowAgentInput> {
         return strategy(id) {
             val collectedNodes = agents.map { agent ->
-                val node by convertFlowAgentToKoogNode(agent, toolRegistry, defaultModel)
+                val node by convertFlowAgentToKoogNode(agent, toolRegistry)
                 node
             }
 

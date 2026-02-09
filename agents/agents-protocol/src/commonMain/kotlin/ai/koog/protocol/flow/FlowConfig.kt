@@ -1,6 +1,5 @@
 package ai.koog.protocol.flow
 
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.tool.FlowTool
 import ai.koog.protocol.transition.FlowTransition
@@ -37,17 +36,12 @@ public fun FlowConfig.toKoogFlow(
     agents: List<FlowAgent>? = null,
     tools: List<FlowTool>? = null,
     transitions: List<FlowTransition>? = null,
-    defaultModel: String? = null
 ): KoogFlow {
-
-
-
     return KoogFlow(
         id = id ?: this.id ?: "koog_flow",
         agents = agents ?: this.agents,
         tools = tools ?: this.tools,
         transitions = transitions ?: this.transitions,
-        defaultModel = defaultModel ?: this.defaultModel,
         promptExecutor = null,
     )
 }

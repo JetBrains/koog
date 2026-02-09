@@ -138,7 +138,7 @@ class FlowTransitionConditionTest {
             operation = ConditionOperationKind.EQUALS,
             value = FlowAgentInput.InputDouble(42.0)
         )
-        // Note: This compares 42 == 42.0 which returns false because they are different types
+        // Note: This compares 42 == 42.0 which returns false because they are different types,
         // For equality to work, both values must be the same type
         assertFalse(evaluateCondition(output, condition))
     }

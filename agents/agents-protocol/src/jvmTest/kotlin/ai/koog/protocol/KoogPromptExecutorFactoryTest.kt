@@ -11,7 +11,7 @@ import kotlin.test.assertNull
 class KoogPromptExecutorFactoryTest {
     @Test
     fun testResolveModelBothNullReturnsNull() {
-        val model = KoogPromptExecutorFactory.resolveModel(null, defaultModel = null)
+        val model = KoogPromptExecutorFactory.resolveModel("")
         assertNull(model, "Should return null when both modelString and defaultModel are null")
     }
 

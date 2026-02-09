@@ -7,7 +7,6 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.getModelFromIdentifier
@@ -40,58 +39,40 @@ public object KoogPromptExecutorFactory {
     /**
      * Resolves model string to LLModel instance.
      *
-     * Supports various model string formats:
-     * - "provider/model-id" (e.g., "openai/gpt-4o")
-     * - Just "model-id" (defaults to OpenAI)
+     * Model string format: <provider_name>/<model_name>
+     * Example: openai/gpt-4o
      *
-     * @param modelString Model string in format "provider/model-id" (e.g., "openai/gpt-4o")
-     * @param defaultModel Optional default model string to use when modelString is null
-     * @return LLModel instance, or null if model cannot be resolved
+     * @param model Model string in format "provider/model-id" (e.g., "openai/gpt-4o")
+     * @return LLModel instance, or null if the model cannot be resolved
      */
-    public fun resolveModel(modelString: String?, defaultModel: String?): LLModel? {
-        // Use defaultModel if modelString is null, otherwise return null
-        // Note: Parser validation ensures at least one is always provided in production
-        val effectiveModelString = modelString ?: defaultModel ?: return null
-
-        // Validate that model string contains a provider separator
-        if (!effectiveModelString.contains("/")) {
-            logger.error { "Invalid model string format: '$effectiveModelString'. Expected format: 'provider/model-id'" }
-            return null
+    public fun resolveModel(model: String): LLModel {
+        if (!model.contains("/")) {
+            error { "Invalid model string format: <$model>. Expected format: <provider_name>/<model_name>" }
         }
 
-        // Convert from "/" separated format to "." separated format expected by getModelFromIdentifier
-        // Examples: "openai/gpt4o" -> "openai.chat.gpt4o", "ollama/meta/llama3.2:3b" -> "ollama.meta.llama3.2:3b"
-        val fullModelIdentifier = effectiveModelString
-            .replace("/", ".")
-            .let { identifier ->
-                val parts = identifier.split(".", limit = 2)
-                if (parts.size == 2 && parts[0].lowercase() == LLMProvider.OpenAI.id) {
-                    // For OpenAI, inject "chat" category if not already present
-                    if (!parts[1].startsWith("chat.")) {
-                        "${parts[0]}.chat.${parts[1]}"
-                    } else {
-                        identifier
-                    }
-                } else {
-                    identifier
-                }
-            }
+        val normalizedModelIdentifier = getNormalizedModelIdentifier(model)
 
-        // Normalize identifier: replace hyphens with underscores for consistency, lowercase
-        // Preserve dots and colons as they're used in model identifiers (e.g., Ollama llama3.2:3b)
-        val normalizedModelIdentifier = fullModelIdentifier
-            .replace("-", "_")
-            .lowercase()
+        val llModel = getModelFromIdentifier(normalizedModelIdentifier)
+            ?: error { "Unable to find model identifier from string: '$model' (normalized: '$normalizedModelIdentifier')" }
 
-        val model = getModelFromIdentifier(normalizedModelIdentifier)
+        logger.debug { "Resolved input model config (model string: $model) to model: $llModel" }
+        return llModel
+    }
 
-        if (model == null) {
-            logger.error { "Unable to find model identifier from string: '$effectiveModelString' (normalized: '$normalizedModelIdentifier')" }
-            return null
+    /**
+     * Attempts to resolve the given model string to an [LLModel] instance.
+     * If the resolution fails due to an [IllegalStateException], it returns null.
+     *
+     * @param model A string representing the model in the format "provider/model-id" (e.g., "openai/gpt-4o").
+     * @return The resolved [LLModel] instance if successful, or null if the resolution fails.
+     */
+    public fun resolveModelOrNull(model: String): LLModel? {
+        return try {
+            resolveModel(model)
+        } catch (e: IllegalStateException) {
+            logger.warn { "Failed to resolve model '$model': ${e.message}" }
+            null
         }
-
-        logger.debug { "Resolved input model config (model string: $modelString, default model: $defaultModel) to model: $model" }
-        return model
     }
 
     /**
@@ -133,6 +114,40 @@ public object KoogPromptExecutorFactory {
     }
 
     //region Private Methods and Operators
+
+    /**
+     * Convert from "/" separated format to "." separated format expected by getModelFromIdentifier
+     *
+     * Examples:
+     *   "openai/gpt4o" -> "openai.chat.gpt4o",
+     *   "ollama/meta/llama3.2:3b" -> "ollama.meta.llama3.2:3b"
+     */
+    private fun getNormalizedModelIdentifier(model: String): String {
+        val fullModelIdentifier = model
+            .replace("/", ".")
+            .let { identifier ->
+                val parts = identifier.split(".", limit = 2)
+                if (parts.size == 2 && parts[0].lowercase() == LLMProvider.OpenAI.id) {
+                    // For OpenAI, inject the "chat" category if not already present
+                    if (!parts[1].startsWith("chat.")) {
+                        "${parts[0]}.chat.${parts[1]}"
+                    } else {
+                        identifier
+                    }
+                } else {
+                    identifier
+                }
+            }
+
+        // Normalize identifier: replace hyphens with underscores for consistency, lowercase
+        // Preserve dots and colons as they're used in model identifiers (e.g., Ollama llama3.2:3b)
+        val normalizedModelIdentifier = fullModelIdentifier
+            .replace("-", "_")
+            .lowercase()
+
+        logger.debug { "Normalized model identifier from model string <$model>: $normalizedModelIdentifier" }
+        return normalizedModelIdentifier
+    }
 
     /**
      * Creates an LLMClient for the specified provider by reading credentials from environment variables.

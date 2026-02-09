@@ -24,7 +24,6 @@ public class KoogFlow(
     override val agents: List<FlowAgent>,
     override val tools: List<FlowTool>,
     override val transitions: List<FlowTransition>,
-    public val defaultModel: String? = null,
     public val promptExecutor: PromptExecutor? = null
 ) : Flow {
 
@@ -119,8 +118,8 @@ public class KoogFlow(
     }
 
     private fun buildPromptExecutor(agents: List<FlowAgent>): PromptExecutor {
-        val models = agents.map { agent -> agent.model }.distinct().mapNotNull { modelName ->
-            KoogPromptExecutorFactory.resolveModel(modelName, defaultModel)
+        val models = agents.map { agent -> agent.model }.distinct().map { modelName ->
+            KoogPromptExecutorFactory.resolveModel(modelName)
         }
 
         return KoogPromptExecutorFactory.buildFromModels(models)
@@ -171,7 +170,7 @@ public class KoogFlow(
 
     private fun buildModel() =
         KoogPromptExecutorFactory.resolveModel(
-            modelString = defaultModel,
+            model = defaultModel,
             defaultModel = null
         ) ?: error("Unable to resolve model from string: $defaultModel")
 

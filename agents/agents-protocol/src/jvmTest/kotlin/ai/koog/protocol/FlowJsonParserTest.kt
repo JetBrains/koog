@@ -390,8 +390,12 @@ class FlowJsonParserTest : FlowTestBase() {
         val exception = assertFailsWith<IllegalStateException> {
             parser.parse(jsonContent)
         }
+
+
+        val actualMessage = exception.message
+        assertNotNull(actualMessage)
         assertTrue(
-            exception.message?.contains("Missing model name") == true,
+            actualMessage.contains("Missing model name"),
             "Exception message should mention missing model name, but got: ${exception.message}"
         )
     }

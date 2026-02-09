@@ -90,7 +90,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -136,7 +135,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = flowConfig.tools,
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -164,12 +162,12 @@ class FlowExecutionTest : FlowTestBase() {
             input = FlowAgentInput.InputString("World")
         )
 
-        val json = kotlinx.serialization.json.Json.encodeToString(
+        val json = Json.encodeToString(
             FlowAgentInput.serializer(),
             original
         )
 
-        val deserialized = kotlinx.serialization.json.Json.decodeFromString(
+        val deserialized = Json.decodeFromString(
             FlowAgentInput.serializer(),
             json
         )
@@ -198,12 +196,12 @@ class FlowExecutionTest : FlowTestBase() {
             input = nested
         )
 
-        val json = kotlinx.serialization.json.Json.encodeToString(
+        val json = Json.encodeToString(
             FlowAgentInput.serializer(),
             original
         )
 
-        val deserialized = kotlinx.serialization.json.Json.decodeFromString(
+        val deserialized = Json.decodeFromString(
             FlowAgentInput.serializer(),
             json
         )
@@ -222,7 +220,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     /**
      * Test that the flow configuration correctly parses verify->transform transitions.
-     * This validates that conditional transitions based on InputCritiqueResult.success
+     * This validates that conditional transitions based on the InputCritiqueResult 'success' property
      * are properly configured.
      */
     @Test
@@ -331,7 +329,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -364,7 +361,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -404,7 +400,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -452,7 +447,7 @@ class FlowExecutionTest : FlowTestBase() {
                     request.contains("check", ignoreCase = true)
             }
 
-            // Fallback for any non-verify requests to ensure task agents always finalize
+            // Fallback for any non-verified requests to ensure task agents always finalize
             mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("OK")) onCondition { request ->
                 !request.contains("verify", ignoreCase = true) &&
                     !request.contains("check", ignoreCase = true)
@@ -464,7 +459,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -497,7 +491,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -530,7 +523,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -580,7 +572,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -620,7 +611,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
@@ -648,7 +638,7 @@ class FlowExecutionTest : FlowTestBase() {
                     request.contains("Clarified: Calculate", ignoreCase = true)
             }
 
-            // Summarizer provides final summary
+            // Summarizer provides a final summary
             mockLLMToolCall(finalizeTaskTool, FlowAgentInput.InputString("Solution: 15 + 27 = 42")) onCondition { request ->
                 request.contains("summary", ignoreCase = true) ||
                     request.contains("The sum is 42")
@@ -660,7 +650,6 @@ class FlowExecutionTest : FlowTestBase() {
             agents = flowConfig.agents,
             tools = emptyList(),
             transitions = flowConfig.transitions,
-            defaultModel = flowConfig.defaultModel,
             promptExecutor = testExecutor
         )
 
