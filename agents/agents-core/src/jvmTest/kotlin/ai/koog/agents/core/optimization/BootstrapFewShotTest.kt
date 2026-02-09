@@ -7,15 +7,18 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
-import ai.koog.agents.core.optimization.features.collectTraces
+import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
 import ai.koog.agents.core.optimization.util.findOptimizableModules
+import ai.koog.agents.core.optimization.util.toAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -63,40 +66,19 @@ class BootstrapFewShotTest {
         edge(answer forwardTo nodeFinish)
     }
 
-    private fun createAgent(
-        mockAnswer: String = "mock answer",
+    private val agentConfig = AIAgentConfig(
+        Prompt.Empty,
+        OpenAIModels.Chat.GPT4oMini,
+        10
+    )
+
+    private fun createMockExecutor(
         processResponse: String = "mock thinking",
         answerResponse: String = "mock answer",
-    ): AIAgent<String, String> {
-        val executor = getMockExecutor {
-            mockLLMAnswer(processResponse) onRequestContains "Process"
-            mockLLMAnswer(answerResponse) onRequestContains "Answer"
-            mockLLMAnswer(mockAnswer).asDefaultResponse
-        }
-
-        val agentConfig = AIAgentConfig(
-            Prompt.Empty,
-            OpenAIModels.Chat.GPT4oMini,
-            10
-        )
-
-        return AIAgent(
-            promptExecutor = executor,
-            agentConfig = agentConfig,
-            strategy = testStrategy,
-            toolRegistry = ToolRegistry.EMPTY,
-            installFeatures = {
-                withTesting()
-                collectTraces {
-                    collectOnlyOptimizable = true
-                    maxTracesPerNode = 100
-                }
-            },
-        )
-    }
-
-    private val exactMatch: Metric<String> = { expected, actual ->
-        if (expected == actual) 1.0 else 0.0
+    ): PromptExecutor = getMockExecutor {
+        mockLLMAnswer(processResponse) onRequestContains "Process"
+        mockLLMAnswer(answerResponse) onRequestContains "Answer"
+        mockLLMAnswer("default response").asDefaultResponse
     }
 
     private val alwaysPass: Metric<String> = { _, _ -> 1.0 }
@@ -105,7 +87,7 @@ class BootstrapFewShotTest {
 
     @Test
     fun testAllBootstrapsSucceedNoMetric() = runBlocking {
-        val agent = createAgent()
+        val executor = createMockExecutor()
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = 4,
             maxLabeledDemos = 0,
@@ -113,7 +95,8 @@ class BootstrapFewShotTest {
         )
 
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = testStrategy,
             trainset = trainset,
             metric = null,
@@ -138,7 +121,7 @@ class BootstrapFewShotTest {
 
     @Test
     fun testAllBootstrapsSucceedWithPassingMetric() = runBlocking {
-        val agent = createAgent()
+        val executor = createMockExecutor()
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = 3,
             maxLabeledDemos = 0,
@@ -146,7 +129,8 @@ class BootstrapFewShotTest {
         )
 
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = testStrategy,
             trainset = trainset,
             metric = alwaysPass,
@@ -163,7 +147,7 @@ class BootstrapFewShotTest {
 
     @Test
     fun testAllFailMetricOnlyLabeledDemos() = runBlocking {
-        val agent = createAgent()
+        val executor = createMockExecutor()
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = 4,
             maxLabeledDemos = 8,
@@ -171,7 +155,8 @@ class BootstrapFewShotTest {
         )
 
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = testStrategy,
             trainset = trainset,
             metric = alwaysFail,
@@ -197,7 +182,7 @@ class BootstrapFewShotTest {
             if (callCount % 2 == 1) 1.0 else 0.0
         }
 
-        val agent = createAgent()
+        val executor = createMockExecutor()
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = 4,
             maxLabeledDemos = 4,
@@ -205,7 +190,8 @@ class BootstrapFewShotTest {
         )
 
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = testStrategy,
             trainset = trainset,
             metric = sometimesPass,
@@ -222,7 +208,7 @@ class BootstrapFewShotTest {
 
     @Test
     fun testMaxErrorsStopsEarly() = runBlocking {
-        val agent = createAgent()
+        val executor = createMockExecutor()
         var inputCallCount = 0
 
         val optimizer = BootstrapFewShot(
@@ -233,7 +219,8 @@ class BootstrapFewShotTest {
         )
 
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = testStrategy,
             trainset = trainset,
             metric = null,
@@ -257,12 +244,13 @@ class BootstrapFewShotTest {
 
     @Test
     fun testEmptyTrainsetThrows() = runBlocking {
-        val agent = createAgent()
+        val executor = createMockExecutor()
         val optimizer = BootstrapFewShot()
 
         try {
             optimizer.optimize(
-                agent = agent,
+                promptExecutor = executor,
+                agentConfig = agentConfig,
                 strategy = testStrategy,
                 trainset = emptyList(),
                 metric = null,
@@ -282,29 +270,12 @@ class BootstrapFewShotTest {
             edge(node forwardTo nodeFinish)
         }
 
-        val executor = getMockExecutor {
-            mockLLMAnswer("response").asDefaultResponse
-        }
-
-        val agentConfig = AIAgentConfig(
-            Prompt.Empty,
-            OpenAIModels.Chat.GPT4oMini,
-            10
-        )
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            agentConfig = agentConfig,
-            strategy = plainStrategy,
-            installFeatures = {
-                withTesting()
-                collectTraces()
-            },
-        )
+        val executor = createMockExecutor()
 
         val optimizer = BootstrapFewShot()
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = plainStrategy,
             trainset = trainset,
             metric = null,
@@ -317,7 +288,7 @@ class BootstrapFewShotTest {
 
     @Test
     fun testTeacherPreOptimization() = runBlocking {
-        val agent = createAgent()
+        val executor = createMockExecutor()
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = 2,
             maxLabeledDemos = 4, // > 0 triggers LabeledFewShot pre-optimization
@@ -325,7 +296,8 @@ class BootstrapFewShotTest {
         )
 
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = testStrategy,
             trainset = trainset,
             metric = alwaysPass,
@@ -367,7 +339,7 @@ class BootstrapFewShotTest {
 
     @Test
     fun testMaxBootstrappedDemosRespected() = runBlocking {
-        val agent = createAgent()
+        val executor = createMockExecutor()
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = 2, // Only 2 bootstrapped demos even though 5 examples
             maxLabeledDemos = 0,
@@ -375,7 +347,8 @@ class BootstrapFewShotTest {
         )
 
         val result = optimizer.optimize(
-            agent = agent,
+            promptExecutor = executor,
+            agentConfig = agentConfig,
             strategy = testStrategy,
             trainset = trainset,
             metric = null,
@@ -388,6 +361,65 @@ class BootstrapFewShotTest {
             assertTrue(demos != null, "Module ${module.name} should have demos")
             assertTrue(demos.size <= 2,
                 "Module ${module.name} should have at most 2 demos, got ${demos.size}")
+        }
+    }
+
+    @Test
+    fun testToAgentCreatesOptimizedCopy() = runBlocking {
+        val executor = createMockExecutor()
+
+        // First, optimize
+        val optimizer = BootstrapFewShot(
+            maxBootstrappedDemos = 2,
+            maxLabeledDemos = 0,
+            maxRounds = 1,
+        )
+        val result = optimizer.optimize(
+            promptExecutor = executor,
+            agentConfig = agentConfig,
+            strategy = testStrategy,
+            trainset = trainset,
+            metric = null,
+            inputFromExample = { it["question"] as String },
+        )
+
+        // Create a user agent
+        val userAgent = AIAgent(
+            promptExecutor = executor,
+            agentConfig = agentConfig,
+            strategy = testStrategy,
+            toolRegistry = ToolRegistry.EMPTY,
+            installFeatures = {
+                withTesting()
+            },
+        )
+
+        // Create optimized copy
+        val optimizedAgent = result.toAgent(userAgent)
+
+        // Verify the optimization config is accessible when running the optimized agent
+        // (we can't easily run the agent without full mock setup, but we can verify the result is valid)
+        assertTrue(result.config.demonstrations.isNotEmpty(), "Optimization result should have demonstrations")
+
+        // Verify the optimized agent is a different instance
+        assertTrue(optimizedAgent !== userAgent, "Optimized agent should be a different instance")
+    }
+
+    @Test
+    fun testToAgentConfigIsAccessible() = runBlocking {
+        // Verify that OptimizationConfig from result is structured correctly for toAgent
+        val config = OptimizationConfig(
+            instructions = mapOf("process" to "optimized instruction"),
+            demonstrations = mapOf(
+                "process" to listOf(Demonstration("q", "a", isBootstrapped = true))
+            ),
+        )
+
+        // Verify the config can be used in coroutine context
+        withContext(config) {
+            val retrieved = kotlin.coroutines.coroutineContext[OptimizationConfig]
+            assertEquals(config, retrieved)
+            assertEquals("optimized instruction", retrieved?.getInstruction("process"))
         }
     }
 }

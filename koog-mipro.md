@@ -232,6 +232,58 @@ Three-step optimization pipeline:
 - Evaluate candidates on validation set
 - Return best configuration
 
+## BootstrapFewShot Algorithm (Detailed)
+
+BootstrapFewShot generates demonstrations by running a "teacher" agent on training data and keeping traces from successful executions. It is Step 1 of the MIPRO v2 pipeline (above), and also a standalone optimizer.
+
+### Algorithm Flow
+
+1. **Teacher pre-optimization**: If `maxLabeledDemos > 0` and the teacher isn't already optimized, run `LabeledFewShot(k=maxLabeledDemos)` on the teacher first. This gives the teacher a baseline of good demonstrations.
+
+2. **Bootstrap loop**: For each training example (until `maxBootstrappedDemos` traces collected):
+   - **Filter teacher demos**: Remove any teacher demonstrations that would leak the current example's ground truth (prevent data leakage).
+   - **Run teacher**: Execute the teacher agent on the example, collecting per-node traces via `TraceCollectionFeature`.
+   - **Evaluate**: Run `metric(expected, actual)` against `metricThreshold`. If no metric is provided, all completions are accepted.
+   - **On success**: Store per-node traces. Move to next example.
+   - **On metric failure**: Retry up to `maxRounds` times. If all rounds fail, add example to fallback pool.
+   - **On exception**: Increment error counter. If `maxErrors` exceeded, stop bootstrapping entirely.
+
+3. **Train student**: For each optimizable node:
+   - Take up to `maxBootstrappedDemos` bootstrapped traces (prioritized).
+   - Fill remaining slots with labeled examples from the fallback pool (examples that failed to bootstrap), up to `maxLabeledDemos` total.
+   - Combine into demonstrations for the node.
+
+### Trace Selection
+
+When a single example produces **multiple traces** for one node (e.g., from multiple rounds or retry paths):
+- 50% chance: sample uniformly from the first N-1 traces (exploration)
+- 50% chance: take the last trace (exploitation — most recent/refined)
+- Deterministic per-trace via seeded random.
+
+### Outcome Types
+
+Each bootstrap attempt produces one of:
+- **Success**: Metric passed → per-node traces stored. `Map<nodeName, Trace>`
+- **MetricNotPassed**: Expected failure → retry next round, benign.
+- **ExceptionRaised**: Runtime error → increments error counter, treated as hard failure.
+
+### Key Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `maxBootstrappedDemos` | 4 | Max bootstrapped traces to collect per node |
+| `maxLabeledDemos` | 16 | Max total demo slots (bootstrapped fill first, labeled fill remainder) |
+| `maxRounds` | 1 | Retry attempts per example |
+| `maxErrors` | null | Cap on exception count before stopping (null = unlimited) |
+| `metric` | null | Evaluation function `(expected, actual) -> Double` |
+| `metricThreshold` | 1.0 | Required metric score for a trace to be considered successful |
+
+### Reference Implementation Files
+
+- Algorithm: `koog-auto-agent-optimization/src/main/kotlin/promptOptimization/boostrap/BootstrapFewShot.kt`
+- Tests: `koog-auto-agent-optimization/src/test/kotlin/promptOptimization/BootstrapFewShotTest.kt`
+- Koog-specific variant: `koog-auto-agent-optimization/src/main/kotlin/agentOptimization/optimizationFramework/optimizerImplementations/BootstrapFewShotOptimizer.kt`
+
 ## File Structure
 
 ```
@@ -331,6 +383,13 @@ Implementation is deferred until the optimizer pipeline is more complete.
 3. **Multi-model support:** Should different nodes support different LLM models during optimization? Current design uses the model from the agent's LLM context.
 
 4. **Demo type erasure:** `OptimizationConfig` stores `List<Demonstration<*, *>>`. Typed access via `getTypedDemonstrations<TInput, TOutput>()` performs an unchecked cast. This works but isn't fully type-safe at the config level.
+
+5. **Agent execution for BootstrapFewShot:** `StrategyOptimizer.optimize()` takes a `strategy`, but `BootstrapFewShot` needs to actually execute an agent (with tools, features, LLM executor) to collect traces. Options:
+   - (a) Accept an agent runner/factory in the `BootstrapFewShot` constructor, still implement `StrategyOptimizer`
+   - (b) Widen the `StrategyOptimizer` interface to optionally accept an agent or agent factory
+   - (c) Use a separate interface (e.g., `AgentOptimizer`) that takes an agent directly
+
+   The reference implementation takes the full agent. Option (a) keeps the interface stable while giving BootstrapFewShot what it needs.
 
 ## Design Principles
 
