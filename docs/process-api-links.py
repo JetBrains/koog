@@ -1,14 +1,10 @@
 import re
 from urllib import request, error
 from urllib.parse import urljoin
+from bs4 import BeautifulSoup
 
 yellow = '\033[33m'
 reset = '\033[0m'
-
-try:
-    from bs4 import BeautifulSoup  # type: ignore
-except Exception:  # pragma: no cover - environment may not have bs4
-    BeautifulSoup = None  # fallback handled at runtime
 
 # Simple in-memory cache for URL existence checks during a single MkDocs build run
 _URL_EXISTS_CACHE: dict[str, bool] = {}
