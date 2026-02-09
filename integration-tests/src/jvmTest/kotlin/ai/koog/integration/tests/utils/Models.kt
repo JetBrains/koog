@@ -67,6 +67,7 @@ object Models {
             OpenAIModels.Embeddings.TextEmbedding3Large,
             MistralAIModels.Embeddings.MistralEmbed,
             GoogleModels.Embeddings.GeminiEmbedding001,
+            OpenRouterModels.Embeddings.GoogleGeminiEmbedding001,
         )
     }
 
