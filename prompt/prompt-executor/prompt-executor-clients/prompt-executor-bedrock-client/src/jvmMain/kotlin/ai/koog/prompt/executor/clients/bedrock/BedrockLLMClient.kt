@@ -242,7 +242,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
 
         model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
         // Check tool support
-        if (tools.isNotEmpty() && !model.capabilities.contains(LLMCapability.Tools)) {
+        if (tools.isNotEmpty() && !model.supports(LLMCapability.Tools)) {
             throw LLMClientException(clientName, "Model ${model.id} does not support tools")
         }
 
@@ -357,7 +357,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
 
         model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
         // Check tool support
-        if (tools.isNotEmpty() && !model.capabilities.contains(LLMCapability.Tools)) {
+        if (tools.isNotEmpty() && !model.supports(LLMCapability.Tools)) {
             throw LLMClientException(clientName, "Model ${model.id} does not support tools")
         }
 
@@ -610,7 +610,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
         }
 
     private fun LLModel.requireCapability(capability: LLMCapability, message: String? = null) {
-        require(capabilities.contains(capability)) {
+        require(supports(capability)) {
             "Model $id does not support ${capability.id}" + (message?.let { ": $it" } ?: "")
         }
     }

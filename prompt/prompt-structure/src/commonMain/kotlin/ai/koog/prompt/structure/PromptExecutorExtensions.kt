@@ -239,7 +239,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
     val id = serializer.descriptor.serialName.substringAfterLast(".")
 
     val structuredRequest = when {
-        LLMCapability.Schema.JSON.Standard in model.capabilities -> StructuredRequest.Native(
+        model.supports(LLMCapability.Schema.JSON.Standard) -> StructuredRequest.Native(
             JsonStructure.create(
                 id = id,
                 serializer = serializer,
@@ -247,7 +247,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
             )
         )
 
-        LLMCapability.Schema.JSON.Basic in model.capabilities -> StructuredRequest.Native(
+        model.supports(LLMCapability.Schema.JSON.Basic) -> StructuredRequest.Native(
             JsonStructure.create(
                 id = id,
                 serializer = serializer,

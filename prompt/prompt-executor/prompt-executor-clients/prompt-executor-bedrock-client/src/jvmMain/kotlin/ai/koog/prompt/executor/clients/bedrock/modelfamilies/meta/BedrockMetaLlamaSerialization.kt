@@ -34,7 +34,7 @@ internal object BedrockMetaLlamaSerialization {
         return LlamaRequest(
             prompt = promptText,
             maxGenLen = 2048,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) {
+            temperature = if (model.supports(LLMCapability.Temperature)) {
                 prompt.params.temperature
             } else {
                 null
