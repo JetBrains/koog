@@ -74,6 +74,7 @@ jobs:
 
   tests:
     needs: compilation
+    if: ${{ needs.changes.outputs.koog-src == 'true' || needs.changes.outputs.simple-examples == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

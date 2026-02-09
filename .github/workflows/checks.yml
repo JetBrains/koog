@@ -106,6 +106,7 @@ jobs:
 
   tests:
     needs: compilation
+    if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
