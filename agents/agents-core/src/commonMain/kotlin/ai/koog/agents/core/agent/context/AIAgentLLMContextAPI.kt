@@ -169,6 +169,18 @@ public interface AIAgentLLMContextAPI {
     public suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T
 
     /**
+     * Mutates the currently active write session without re-acquiring the write lock.
+     *
+     * MUST only be called from within an active [writeSession] (e.g., from pipeline interceptors
+     * triggered during an LLM request). Throws [IllegalStateException] if no write session is active.
+     *
+     * This is the safe way for interceptors to modify LLM state during a write session,
+     * avoiding re-entrancy and deadlock issues with [writeSession].
+     */
+    @OptIn(ExperimentalStdlibApi::class)
+    public suspend fun <T> mutateActiveSession(block: suspend AIAgentLLMWriteSession.() -> T): T
+
+    /**
      * Returns the current prompt used in the LLM context.
      *
      * @return The current [Prompt] instance.

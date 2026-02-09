@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Timeout
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -139,6 +140,40 @@ class AIAgentLLMContextConcurrencyTest {
 
             assertTrue(promptId.isNotEmpty(), "Prompt ID should not be empty")
             assertNotNull(toolName, "Tool name should not be null")
+        }
+    }
+
+    @Test
+    @Timeout(30)
+    fun testWithPromptRaceCondition() {
+        runBlocking {
+            val context = createTestLLMContext()
+            // Reset prompt to a known start state
+            context.withPrompt { prompt("0") {} }
+
+            val iterations = 100
+            val jobs = (1..iterations).map {
+                async(Dispatchers.Default) {
+                    // Simulate some work and update prompt
+                    context.withPrompt {
+                        // Append "." to the ID
+                        // We simulate a read-modify-write cycle here.
+                        // If multiple threads read the same 'id' and append '.', they overwrite each other.
+                        prompt(this.id + ".") {}
+                    }
+                }
+            }
+
+            jobs.awaitAll()
+
+            val finalId = context.prompt.id
+            // Expected length: 1 (initial "0") + 100 (dots) = 101.
+            // With ReadLock, many updates will be lost, so length < 101.
+            assertEquals(
+                1 + iterations,
+                finalId.length,
+                "Lost updates detected! Race condition in withPrompt."
+            )
         }
     }
 
