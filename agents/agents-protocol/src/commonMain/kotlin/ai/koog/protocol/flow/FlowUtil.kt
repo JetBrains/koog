@@ -39,7 +39,7 @@ public object FlowUtil {
      *
      * @param agents List of all agents in the flow
      * @param transitions List of transitions defining the flow graph
-     * @return The agent that should execute first, or null if none can be determined
+     * @return The agent that should execute first or null if none can be determined
      */
     public fun getFirstAgentOrNull(agents: List<FlowAgent>, transitions: List<FlowTransition>): FlowAgent? {
         return transitions.firstOrNull()?.let { firstTransaction ->

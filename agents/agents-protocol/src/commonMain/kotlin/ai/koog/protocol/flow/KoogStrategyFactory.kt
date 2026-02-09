@@ -143,21 +143,7 @@ public object KoogStrategyFactory {
         }
     }
 
-    private fun ToolRegistry.defineToolSelectionStrategy(toolNames: List<String>?): ToolSelectionStrategy {
-        if (toolNames == null) {
-            return ToolSelectionStrategy.ALL
-        }
-
-        if (toolNames.isEmpty()) {
-            return ToolSelectionStrategy.NONE
-        }
-
-        val selectedTools = this.tools.filter { tool ->
-            tool.name in toolNames
-        }
-
-        return ToolSelectionStrategy.Tools(selectedTools.map { it.descriptor })
-    }
+    //endregion Nodes
 
     //region Task
 
@@ -327,8 +313,6 @@ public object KoogStrategyFactory {
 
     //endregion Transformation
 
-    //endregion Nodes
-
     //region Strategy
 
     /**
@@ -370,6 +354,22 @@ public object KoogStrategyFactory {
     }
 
     //endregion Strategy
+
+    private fun ToolRegistry.defineToolSelectionStrategy(toolNames: List<String>?): ToolSelectionStrategy {
+        if (toolNames == null) {
+            return ToolSelectionStrategy.ALL
+        }
+
+        if (toolNames.isEmpty()) {
+            return ToolSelectionStrategy.NONE
+        }
+
+        val selectedTools = this.tools.filter { tool ->
+            tool.name in toolNames
+        }
+
+        return ToolSelectionStrategy.Tools(selectedTools.map { it.descriptor })
+    }
 
     /**
      * Evaluates a transition condition against the current output.

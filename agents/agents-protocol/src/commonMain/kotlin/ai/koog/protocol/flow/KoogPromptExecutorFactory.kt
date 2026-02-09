@@ -113,6 +113,8 @@ public object KoogPromptExecutorFactory {
         return promptExecutor
     }
 
+    //region Private Methods and Operators
+
     /**
      * Creates an LLMClient for the specified provider by reading credentials from environment variables.
      *
@@ -193,4 +195,6 @@ public object KoogPromptExecutorFactory {
         logger.debug { "Using Ollama base URL: $baseUrl" }
         return OllamaClient(baseUrl)
     }
+
+    //endregion Private Methods and Operators
 }
