@@ -83,6 +83,7 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                 LLMProvider.MistralAI,
                 LLMProvider.OpenRouter,
                 LLMProvider.Google,
+                LLMProvider.Anthropic
             ).map { provider -> Arguments.of(provider) }
         }
 

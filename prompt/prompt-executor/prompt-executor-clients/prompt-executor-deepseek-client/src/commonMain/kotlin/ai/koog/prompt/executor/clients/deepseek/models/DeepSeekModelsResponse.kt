@@ -3,6 +3,9 @@ package ai.koog.prompt.executor.clients.deepseek.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * DeepSeek Models list API Response
+ */
 @Serializable
 internal data class DeepSeekModelsResponse(
     val data: List<DeepSeekModel>,
@@ -10,6 +13,9 @@ internal data class DeepSeekModelsResponse(
     val objectType: String
 )
 
+/**
+ * DeepSeek Model API Response
+ */
 @Serializable
 internal data class DeepSeekModel(
     val id: String,
