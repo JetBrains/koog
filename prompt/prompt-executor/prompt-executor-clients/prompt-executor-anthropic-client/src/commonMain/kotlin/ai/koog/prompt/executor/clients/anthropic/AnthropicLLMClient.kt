@@ -25,6 +25,7 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicUsage
 import ai.koog.prompt.executor.clients.anthropic.models.DocumentSource
 import ai.koog.prompt.executor.clients.anthropic.models.ImageSource
 import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -635,7 +636,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         }
     }
 
-    public override suspend fun models(): List<String> {
+    public override suspend fun models(): List<LLModel> {
         logger.debug { "Fetching available models from Anthropic" }
 
         val response = httpClient.get(
@@ -643,7 +644,9 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             responseType = AnthropicModelsResponse::class
         )
 
-        return response.data.map { it.id }
+        val modelsById = AnthropicModels.modelsById()
+
+        return response.data.map { modelsById[it.id] ?: LLModel(id = it.id, provider = LLMProvider.Anthropic) }
     }
 
     /**
