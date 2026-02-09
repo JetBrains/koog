@@ -117,13 +117,13 @@ object Models {
         return Stream.concat(
             openAIModels()
                 .filter { model ->
-                    model.capabilities.contains(LLMCapability.Vision.Image)
+                    model.supports(LLMCapability.Vision.Image)
                 }
                 .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
 
             anthropicModels()
                 .filter { model ->
-                    model.capabilities.contains(LLMCapability.Vision.Image)
+                    model.supports(LLMCapability.Vision.Image)
                 }
                 .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
         )

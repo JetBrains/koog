@@ -448,7 +448,7 @@ internal object BedrockConverseConverters {
                 throw IllegalArgumentException("Bedrock Converse API doesn't support audio content.")
 
             is ContentPart.File -> {
-                require(LLMCapability.Document in model.capabilities) {
+                require(model.supports(LLMCapability.Document)) {
                     "${model.id} doesn't support documents"
                 }
 
@@ -474,7 +474,7 @@ internal object BedrockConverseConverters {
             }
 
             is ContentPart.Image -> {
-                require(LLMCapability.Vision.Image in model.capabilities) {
+                require(model.supports(LLMCapability.Vision.Image)) {
                     "${model.id} doesn't support images"
                 }
 
@@ -497,7 +497,7 @@ internal object BedrockConverseConverters {
             }
 
             is ContentPart.Video -> {
-                require(LLMCapability.Vision.Video in model.capabilities) {
+                require(model.supports(LLMCapability.Vision.Video)) {
                     "${model.id} doesn't support videos"
                 }
 

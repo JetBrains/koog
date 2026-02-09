@@ -75,7 +75,7 @@ public class StructureFixingParser(
         val prompt = prompt(
             "structure-fixing",
             LLMParams(
-                schema = if (structure.schema.capability in model.capabilities) {
+                schema = if (model.supports(structure.schema.capability)) {
                     structure.schema
                 } else {
                     null

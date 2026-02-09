@@ -114,7 +114,7 @@ class ModelCapabilitiesIntegrationTest {
         @JvmStatic
         fun positiveModelCapabilityCombinations(): Stream<Arguments> =
             allModels().flatMap { model ->
-                model.capabilities.stream().map { capability ->
+                model.capabilities?.stream()?.map { capability ->
                     Arguments.of(model, capability)
                 }
             }
@@ -123,7 +123,7 @@ class ModelCapabilitiesIntegrationTest {
         fun negativeModelCapabilityCombinations(): Stream<Arguments> =
             allModels().flatMap { model ->
                 allCapabilities.stream()
-                    .filter { capability -> !model.capabilities.contains(capability) }
+                    .filter { capability -> !model.supports(capability) }
                     .map { capability -> Arguments.of(model, capability) }
             }
     }

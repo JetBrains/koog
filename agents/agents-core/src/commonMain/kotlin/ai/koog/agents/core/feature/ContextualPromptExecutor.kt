@@ -197,7 +197,7 @@ public class ContextualPromptExecutor(
         return result
     }
 
-    override suspend fun models(): List<String> {
+    override suspend fun models(): List<LLModel> {
         return executor.models()
     }
 

@@ -506,4 +506,72 @@ public object OpenRouterModels : LLModelDefinitions {
         contextLength = 131_072,
         maxOutputTokens = 33_000,
     )
+
+    /**
+     * List of the supported models by the OpenRouter provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        // Phi Models
+        Phi4Reasoning,
+
+        // Claude Models
+        Claude3Opus,
+        Claude3Sonnet,
+        Claude3Haiku,
+        Claude3_5Sonnet,
+        Claude3_7Sonnet,
+        Claude4Sonnet,
+        Claude4_1Opus,
+        Claude4_5Haiku,
+        Claude4_5Sonnet,
+        Claude4_5Opus,
+        Claude3VisionSonnet,
+        Claude3VisionOpus,
+        Claude3VisionHaiku,
+
+        // OpenAI Models
+        GPT35Turbo,
+        GPT4,
+        GPT4o,
+        GPT4oMini,
+        GPT4Turbo,
+        GPT5,
+        GPT5Mini,
+        GPT5Nano,
+        GPT5Chat,
+        GPT_OSS_120b,
+        GPT5_2,
+        GPT5_2Pro,
+        Llama3,
+        Llama3Instruct,
+
+        // Mistral Models
+        Mistral7B,
+        Mixtral8x7B,
+
+        // DeepSeek Models
+        DeepSeekV30324,
+
+        // Gemini 2.5 Models
+        Gemini2_5FlashLite,
+        Gemini2_5Flash,
+        Gemini2_5Pro,
+
+        // Qwen Models
+        Qwen2_5,
+        Qwen3VL,
+    )
+
+    /**
+     * List of custom models added to the OpenRouter provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.OpenRouter) { "Model provider must be OpenRouter" }
+        customModels.add(model)
+    }
 }
