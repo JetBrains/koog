@@ -162,7 +162,12 @@ public object KoogStrategyFactory {
     //region Task
 
     /**
-     * Creates a task node that performs LLM request with the agent's configuration.
+     * Creates a task node which is executed as a subgraphWithTask strategy.
+     * Input and output types for flow agent are preserved in the subgraphWithTask strategy.
+     *
+     * @param agent The flow agent to execute a particular task;
+     * @param toolRegistry The tool registry to use for tool selection;
+     * @param defaultModel The default model to use if not specified in the agent configuration.
      */
     private fun AIAgentSubgraphBuilderBase<*, *>.nodeTask(
         agent: FlowTaskAgent,
@@ -183,41 +188,43 @@ public object KoogStrategyFactory {
     //region ReAct
 
     /**
-     * Creates a ReAct node that uses the reActStrategy for reasoning and acting cycles.
-     * The task from parameters is provided to the LLM when the agent starts.
+     * Creates a subgraph with ReAct strategy.
+     * The subgraph takes the flow agent input type [FlowAgentInput],
+     * converts it into the [reActStrategy] input type [String], and return an expected agent flow type [FlowAgentInput].
+     *
+     * @param agent The flow agent configuration;
+     * @param toolRegistry The tool registry for selecting tools;
+     * @param defaultModel The default model to use if not specified in the agent configuration.
      */
     private fun AIAgentSubgraphBuilderBase<*, *>.nodeReAct(
         agent: FlowReActAgent,
         toolRegistry: ToolRegistry,
         defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
-        // Create a subgraph that transforms FlowAgentInput to String and back
         return subgraph(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
             llmModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel),
         ) {
-            // Node to extract/prepare the task string
-            val prepareTask by node<FlowAgentInput, String> { _ ->
-                // Use the task from configuration
+            // Node to transform the custom [FlowAgentInput] type into the reAct strategy input of type [String]
+            val prepareReActInput by node<FlowAgentInput, String> { input: FlowAgentInput ->
                 agent.parameters.task
             }
 
             // Use the reActStrategy as a nested subgraph
-            // Since AIAgentGraphStrategy is-a AIAgentSubgraph, we can use it directly
             val reactSubgraph = reActStrategy(
                 reasoningInterval = agent.parameters.reasoningInterval,
                 name = "${agent.name}_react_strategy"
             )
 
-            // Node to wrap the output as FlowAgentInput
+            // Node to wrap the output from the ReAct strategy back to [FlowAgentInput] flow agent type
+            // to send it further into the agent flow.
             val wrapOutput by node<String, FlowAgentInput> { output ->
                 FlowAgentInput.InputString(output)
             }
 
-            // Connect the nodes
-            edge(nodeStart forwardTo prepareTask)
-            edge(prepareTask forwardTo reactSubgraph)
+            edge(nodeStart forwardTo prepareReActInput)
+            edge(prepareReActInput forwardTo reactSubgraph)
             edge(reactSubgraph forwardTo wrapOutput)
             edge(wrapOutput forwardTo nodeFinish)
         }
