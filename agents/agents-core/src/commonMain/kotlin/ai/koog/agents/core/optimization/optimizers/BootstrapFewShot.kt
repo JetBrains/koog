@@ -313,15 +313,11 @@ public class BootstrapFewShot(
         }
 
         // Collect traces: for each module, select one trace
-        val traces = mutableMapOf<String, Demonstration<Any?, Any?>>()
-
-        for (module in modules) {
+        val traces = modules.mapNotNull { module ->
             val nodeTraces = traceFeature.collectedTraces.getTracesForNode(module.name)
-            if (nodeTraces.isEmpty()) continue
-
-            val selectedTrace = selectTrace(nodeTraces, random)
-            traces[module.name] = selectedTrace
-        }
+            if (nodeTraces.isEmpty()) return@mapNotNull null
+            module.name to selectTrace(nodeTraces, random)
+        }.toMap()
 
         return BootstrapOutcome.Success(traces)
     }
