@@ -768,31 +768,12 @@ public open class GoogleLLMClient(
         model: LLModel,
         params: EmbeddingParams
     ): List<Double> {
-        require(model.capabilities.contains(LLMCapability.Embed)) {
-            "Model ${model.id} does not support embedding."
-        }
-        
-        // Validate dimensions capability
-        if (params.dimensions != null) {
-            require(model.supports(LLMCapability.Embedding.Dimensions)) {
-                "Model ${model.id} does not support custom embedding dimensions. " +
-                "Use a model with LLMCapability.Embedding.Dimensions or omit the dimensions parameter."
-            }
-        }
+        val googleParams = params.toGoogleEmbeddingParams()
+        validateEmbeddingRequest(model, googleParams)
 
         logger.debug { "Embedding text with model: ${model.id}" }
-        
-        val googleParams = params.toGoogleEmbeddingParams()
 
-        val request = GoogleEmbeddingRequest(
-            model = "models/${model.id}",
-            content = GoogleContent(
-                parts = listOf(GooglePart.Text(text))
-            ),
-            outputDimensionality = googleParams.dimensions,
-            taskType = googleParams.taskType?.apiValue,
-            title = googleParams.title,
-        )
+        val request = GoogleEmbeddingRequest.from(model, text, googleParams)
 
         try {
             val response = httpClient.post(
@@ -811,6 +792,18 @@ public open class GoogleLLMClient(
                 message = e.message,
                 cause = e
             )
+        }
+    }
+
+    private fun validateEmbeddingRequest(model: LLModel, params: GoogleEmbeddingParams) {
+        require(model.capabilities.contains(LLMCapability.Embed)) {
+            "Model ${model.id} does not support embedding."
+        }
+        if (params.dimensions != null) {
+            require(model.supports(LLMCapability.Embedding.Dimensions)) {
+                "Model ${model.id} does not support custom embedding dimensions. " +
+                    "Use a model with LLMCapability.Embedding.Dimensions or omit the dimensions parameter."
+            }
         }
     }
 }

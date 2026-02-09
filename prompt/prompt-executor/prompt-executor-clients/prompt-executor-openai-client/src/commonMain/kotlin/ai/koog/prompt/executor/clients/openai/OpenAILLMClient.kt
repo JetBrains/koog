@@ -48,6 +48,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.EmbeddingParams
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
@@ -405,7 +406,7 @@ public open class OpenAILLMClient(
     override suspend fun embed(
         text: String,
         model: LLModel,
-        params: ai.koog.prompt.params.EmbeddingParams
+        params: EmbeddingParams
     ): List<Double> {
         model.requireCapability(LLMCapability.Embed)
 

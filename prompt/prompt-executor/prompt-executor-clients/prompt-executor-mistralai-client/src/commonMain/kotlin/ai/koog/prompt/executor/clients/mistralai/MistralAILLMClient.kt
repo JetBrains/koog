@@ -32,6 +32,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.params.EmbeddingParams
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -184,7 +185,7 @@ public open class MistralAILLMClient(
     override suspend fun embed(
         text: String,
         model: LLModel,
-        params: ai.koog.prompt.params.EmbeddingParams
+        params: EmbeddingParams
     ): List<Double> {
         model.requireCapability(LLMCapability.Embed)
 

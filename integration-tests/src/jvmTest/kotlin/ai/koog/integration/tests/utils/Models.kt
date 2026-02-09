@@ -61,11 +61,10 @@ object Models {
 
     @JvmStatic
     fun embeddingModels(): Stream<LLModel> {
-        // TODO: Re-enable after provider migration complete
         return Stream.of(
-            // BedrockModels.Embeddings.AmazonTitanEmbedText,
-            // OpenAIModels.Embeddings.TextEmbedding3Large,
-            // MistralAIModels.Embeddings.MistralEmbed,
+            BedrockModels.Embeddings.AmazonTitanEmbedText,
+            OpenAIModels.Embeddings.TextEmbedding3Large,
+            MistralAIModels.Embeddings.MistralEmbed,
             GoogleModels.Embeddings.GeminiEmbedding001,
         )
     }

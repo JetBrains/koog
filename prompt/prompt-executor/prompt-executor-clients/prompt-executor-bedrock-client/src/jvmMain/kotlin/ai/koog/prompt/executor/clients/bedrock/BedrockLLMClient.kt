@@ -25,6 +25,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.EmbeddingParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.SuitableForIO
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
@@ -357,7 +358,7 @@ public class BedrockLLMClient(
     override suspend fun embed(
         text: String,
         model: LLModel,
-        params: ai.koog.prompt.params.EmbeddingParams
+        params: EmbeddingParams
     ): List<Double> {
         model.requireCapability(LLMCapability.Embed)
         logger.debug { "Embedding text with model: ${model.id}" }

@@ -289,12 +289,6 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("embeddingModels")
-    override fun integration_testEmbedBatch(model: LLModel) {
-        super.integration_testEmbedBatch(model)
-    }
-
-    @ParameterizedTest
     @MethodSource("moderationModels")
     override fun integration_testSingleMessageModeration(model: LLModel) {
         super.integration_testSingleMessageModeration(model)

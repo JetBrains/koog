@@ -33,6 +33,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.EmbeddingParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitAppend
 import ai.koog.prompt.streaming.emitToolCall
@@ -337,7 +338,7 @@ public class OllamaClient(
     override suspend fun embed(
         text: String,
         model: LLModel,
-        params: ai.koog.prompt.params.EmbeddingParams
+        params: EmbeddingParams
     ): List<Double> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 

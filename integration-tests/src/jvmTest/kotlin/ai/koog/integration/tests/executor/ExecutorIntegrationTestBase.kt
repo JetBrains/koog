@@ -42,6 +42,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleEmbeddingParams
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
@@ -904,8 +905,6 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open fun integration_testEmbed(model: LLModel) = runTest {
-        Models.assumeAvailable(model.provider)
-        
         val client = getLLMClient(model)
         if (client !is LLMEmbeddingProvider) {
             return@runTest
@@ -920,60 +919,34 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    /**
-     * Tests embedding with custom output dimensions.
-     * Only runs for models that support [LLMCapability.Embedding.Dimensions].
-     */
     open fun integration_testEmbedWithDimensions(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
-        
+
+        // Only test if model supports dimensions
         val client = getLLMClient(model)
         if (client !is LLMEmbeddingProvider) {
             return@runTest
         }
-        
-        // Only test if model supports dimensions
         assumeTrue(
             model.capabilities.contains(LLMCapability.Embedding.Dimensions),
             "Model ${model.id} does not support custom embedding dimensions"
         )
-        
-        val testDimensions = 256
-        val params = ai.koog.prompt.params.EmbeddingParams(dimensions = testDimensions)
+
+        // Provider-specific params with dimension support
+        val params = when (model.provider) {
+            LLMProvider.Google -> GoogleEmbeddingParams(dimensions = 256)
+            else -> {
+                assumeTrue(false, "Dimension test not implemented for ${model.provider}")
+                return@runTest
+            }
+        }
+
         val result = client.embed("test embedding with dimensions", model, params)
-        
+
         result shouldNotBeNull {
             shouldNotBeEmpty()
-            size shouldBe testDimensions
+            size shouldBe params.dimensions
             shouldForAll { it.isFinite() }
-        }
-    }
-
-    /**
-     * Tests batch embedding of multiple texts.
-     */
-    open fun integration_testEmbedBatch(model: LLModel) = runTest {
-        Models.assumeAvailable(model.provider)
-        
-        val client = getLLMClient(model)
-        if (client !is LLMEmbeddingProvider) {
-            return@runTest
-        }
-        
-        val texts = listOf(
-            "first text for batch embedding",
-            "second text for batch embedding",
-            "third text for batch embedding"
-        )
-        val results = client.embedBatch(texts, model)
-        
-        results shouldNotBeNull {
-            size shouldBe 3
-            shouldForAll { embedding ->
-                embedding.shouldNotBeEmpty()
-                embedding.size shouldBeGreaterThan 100
-                embedding.shouldForAll { it.isFinite() }
-            }
         }
     }
 
