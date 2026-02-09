@@ -1,6 +1,6 @@
 package ai.koog.protocol
 
-import ai.koog.protocol.flow.KoogFlow
+import ai.koog.protocol.flow.toKoogFlow
 import ai.koog.protocol.parser.FlowJsonConfigParser
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.test.runTest
@@ -35,12 +35,7 @@ class FlowIntegrationTest : FlowTestBase() {
         }
 
         logger.info { "Running the flow..." }
-        val flow = KoogFlow(
-            id = config.id ?: "simple-flow",
-            agents = config.agents,
-            tools = config.tools,
-            transitions = config.transitions
-        )
+        val flow = config.toKoogFlow()
 
         val result = flow.run(null)
         logger.info { "Flow execution result: $result" }

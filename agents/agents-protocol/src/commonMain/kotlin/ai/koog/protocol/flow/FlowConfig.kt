@@ -1,5 +1,6 @@
 package ai.koog.protocol.flow
 
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.tool.FlowTool
 import ai.koog.protocol.transition.FlowTransition
@@ -25,3 +26,25 @@ public data class FlowConfig(
     val tools: List<FlowTool> = emptyList(),
     val transitions: List<FlowTransition> = emptyList()
 )
+
+/**
+ * Converts this [FlowConfig] to a [KoogFlow] instance that can be executed.
+ *
+ * @return A new [KoogFlow] instance configured with this config's properties
+ */
+public fun FlowConfig.toKoogFlow(
+    id: String? = null,
+    agents: List<FlowAgent>? = null,
+    tools: List<FlowTool>? = null,
+    transitions: List<FlowTransition>? = null,
+    defaultModel: String? = null
+): KoogFlow {
+    return KoogFlow(
+        id = id ?: this.id ?: "koog_flow",
+        agents = agents ?: this.agents,
+        tools = tools ?: this.tools,
+        transitions = transitions ?: this.transitions,
+        defaultModel = defaultModel ?: this.defaultModel,
+        promptExecutor = null,
+    )
+}
