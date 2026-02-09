@@ -45,31 +45,50 @@ public object KoogPromptExecutorFactory {
      * - Just "model-id" (defaults to OpenAI)
      *
      * @param modelString Model string in format "provider/model-id" (e.g., "openai/gpt-4o")
-     * @return LLModel instance
+     * @param defaultModel Optional default model string to use when modelString is null
+     * @return LLModel instance, or null if model cannot be resolved
      */
-    public fun resolveModel(modelString: String?, defaultModel: String?): LLModel {
-        if (modelString == null) {
-            return OpenAIModels.Chat.GPT4o
+    public fun resolveModel(modelString: String?, defaultModel: String?): LLModel? {
+        // Use defaultModel if modelString is null, otherwise return null
+        // Note: Parser validation ensures at least one is always provided in production
+        val effectiveModelString = modelString ?: defaultModel ?: return null
+
+        // Validate that model string contains a provider separator
+        if (!effectiveModelString.contains("/")) {
+            logger.error { "Invalid model string format: '$effectiveModelString'. Expected format: 'provider/model-id'" }
+            return null
         }
 
-        val (providerIdentifier, modelIdentifier) = modelString.split("/", limit = 2)
-
-        val fullModelIdentifier =
-            if (providerIdentifier.lowercase() == LLMProvider.OpenAI.id) {
-                // For OpenAI, we need to specify a category if not provided
-                // Default to "chat" category if not specified
-                "$providerIdentifier/chat/$modelIdentifier"
-            } else {
-                "$providerIdentifier/$modelIdentifier"
+        // Convert from "/" separated format to "." separated format expected by getModelFromIdentifier
+        // Examples: "openai/gpt4o" -> "openai.chat.gpt4o", "ollama/meta/llama3.2:3b" -> "ollama.meta.llama3.2:3b"
+        val fullModelIdentifier = effectiveModelString
+            .replace("/", ".")
+            .let { identifier ->
+                val parts = identifier.split(".", limit = 2)
+                if (parts.size == 2 && parts[0].lowercase() == LLMProvider.OpenAI.id) {
+                    // For OpenAI, inject "chat" category if not already present
+                    if (!parts[1].startsWith("chat.")) {
+                        "${parts[0]}.chat.${parts[1]}"
+                    } else {
+                        identifier
+                    }
+                } else {
+                    identifier
+                }
             }
 
+        // Normalize identifier: replace hyphens with underscores for consistency, lowercase
+        // Preserve dots and colons as they're used in model identifiers (e.g., Ollama llama3.2:3b)
         val normalizedModelIdentifier = fullModelIdentifier
-            .replace("-", "_").lowercase()
+            .replace("-", "_")
             .lowercase()
 
-        val model = getModelFromIdentifier(normalizedModelIdentifier, "/")
-            ?: getModelFromIdentifier(normalizedModelIdentifier, "/")
-            ?: error("Unable to find model identifier from string: $normalizedModelIdentifier")
+        val model = getModelFromIdentifier(normalizedModelIdentifier)
+
+        if (model == null) {
+            logger.error { "Unable to find model identifier from string: '$effectiveModelString' (normalized: '$normalizedModelIdentifier')" }
+            return null
+        }
 
         logger.debug { "Resolved input model config (model string: $modelString, default model: $defaultModel) to model: $model" }
         return model

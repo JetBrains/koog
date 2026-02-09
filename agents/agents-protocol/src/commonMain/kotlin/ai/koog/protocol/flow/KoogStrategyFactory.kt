@@ -160,10 +160,11 @@ public object KoogStrategyFactory {
         toolRegistry: ToolRegistry,
         defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
+        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel)
         return subgraphWithTask<FlowAgentInput, FlowAgentInput>(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
-            llmModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel),
+            llmModel = resolvedModel,
         ) { input ->
             agent.parameters.task
         }
@@ -187,10 +188,11 @@ public object KoogStrategyFactory {
         toolRegistry: ToolRegistry,
         defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
+        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel)
         return subgraph(
             name = agent.name,
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
-            llmModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel),
+            llmModel = resolvedModel,
         ) {
             // Node to transform the custom [FlowAgentInput] type into the reAct strategy input of type [String]
             val prepareReActInput by node<FlowAgentInput, String> { input: FlowAgentInput ->
@@ -228,9 +230,10 @@ public object KoogStrategyFactory {
         toolRegistry: ToolRegistry,
         defaultModel: String?,
     ): AIAgentSubgraphDelegate<FlowAgentInput, FlowAgentInput> {
+        val resolvedModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel)
         val verifySubgraph by subgraphWithVerification<FlowAgentInput>(
             toolSelectionStrategy = toolRegistry.defineToolSelectionStrategy(toolNames = agent.parameters.toolNames),
-            llmModel = KoogPromptExecutorFactory.resolveModel(agent.model, defaultModel),
+            llmModel = resolvedModel,
         ) { input ->
             agent.parameters.task
         }

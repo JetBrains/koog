@@ -119,7 +119,7 @@ public class KoogFlow(
     }
 
     private fun buildPromptExecutor(agents: List<FlowAgent>): PromptExecutor {
-        val models = agents.map { agent -> agent.model }.distinct().map { modelName ->
+        val models = agents.map { agent -> agent.model }.distinct().mapNotNull { modelName ->
             KoogPromptExecutorFactory.resolveModel(modelName, defaultModel)
         }
 
@@ -173,7 +173,7 @@ public class KoogFlow(
         KoogPromptExecutorFactory.resolveModel(
             modelString = defaultModel,
             defaultModel = null
-        )
+        ) ?: error("Unable to resolve model from string: $defaultModel")
 
     //endregion Private Methods
 }

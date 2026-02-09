@@ -16,6 +16,7 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -367,4 +368,81 @@ class FlowJsonParserTest : FlowTestBase() {
     }
 
     //endregion ReAct
+
+    //region Model Validation
+
+    @Test
+    fun testParserRejectsConfigWithoutModel() {
+        val jsonContent = """
+        {
+            "id": "no-model-flow",
+            "version": "1.0",
+            "agents": [{
+                "name": "test_agent",
+                "type": "task",
+                "params": {"task": "Do something"}
+            }],
+            "transitions": []
+        }
+        """.trimIndent()
+
+        val parser = FlowJsonConfigParser()
+        val exception = assertFailsWith<IllegalStateException> {
+            parser.parse(jsonContent)
+        }
+        assertTrue(
+            exception.message?.contains("Missing model name") == true,
+            "Exception message should mention missing model name, but got: ${exception.message}"
+        )
+    }
+
+    @Test
+    fun testParserAcceptsConfigWithDefaultModel() {
+        val jsonContent = """
+        {
+            "id": "with-default-model-flow",
+            "version": "1.0",
+            "defaultModel": "openai/gpt4o",
+            "agents": [{
+                "name": "test_agent",
+                "type": "task",
+                "params": {"task": "Do something"}
+            }],
+            "transitions": []
+        }
+        """.trimIndent()
+
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        assertNotNull(flowConfig)
+        assertEquals(1, flowConfig.agents.size)
+        assertEquals("openai/gpt4o", flowConfig.agents[0].model)
+    }
+
+    @Test
+    fun testParserAcceptsConfigWithAgentSpecificModel() {
+        val jsonContent = """
+        {
+            "id": "with-agent-model-flow",
+            "version": "1.0",
+            "agents": [{
+                "name": "test_agent",
+                "type": "task",
+                "model": "ollama/meta/llama3.2:3b",
+                "params": {"task": "Do something"}
+            }],
+            "transitions": []
+        }
+        """.trimIndent()
+
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        assertNotNull(flowConfig)
+        assertEquals(1, flowConfig.agents.size)
+        assertEquals("ollama/meta/llama3.2:3b", flowConfig.agents[0].model)
+    }
+
+    //endregion Model Validation
 }

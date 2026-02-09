@@ -10,9 +10,21 @@ import kotlin.test.assertNull
 
 class KoogPromptExecutorFactoryTest {
     @Test
-    fun testResolveModelNullDefaultsToGpt4o() {
+    fun testResolveModelBothNullReturnsNull() {
         val model = KoogPromptExecutorFactory.resolveModel(null, defaultModel = null)
-        assertEquals(OpenAIModels.Chat.GPT4o, model, "Null modelString should default to OpenAI GPT-4o")
+        assertNull(model, "Should return null when both modelString and defaultModel are null")
+    }
+
+    @Test
+    fun testResolveModelUsesDefaultModel() {
+        val model = KoogPromptExecutorFactory.resolveModel(null, defaultModel = "ollama/meta/llama3.2:3b")
+        assertEquals(OllamaModels.Meta.LLAMA_3_2_3B, model, "Should use defaultModel when modelString is null")
+    }
+
+    @Test
+    fun testResolveModelPrefersModelStringOverDefault() {
+        val model = KoogPromptExecutorFactory.resolveModel("openai/gpt4o", defaultModel = "ollama/meta/llama3.2:3b")
+        assertEquals(OpenAIModels.Chat.GPT4o, model, "Should prefer modelString over defaultModel")
     }
 
     @Test
@@ -20,6 +32,30 @@ class KoogPromptExecutorFactoryTest {
         // Using short form "openai/gpt4o" (category will be auto-resolved to chat)
         val model = KoogPromptExecutorFactory.resolveModel("openai/gpt4o", defaultModel = null)
         assertEquals(OpenAIModels.Chat.GPT4o, model)
+    }
+
+    @Test
+    fun testResolveModelInvalidFormatReturnsNull() {
+        val model = KoogPromptExecutorFactory.resolveModel("invalid-format", defaultModel = null)
+        assertNull(model, "Should return null for invalid model string format")
+    }
+
+    @Test
+    fun testResolveModelEmptyProviderReturnsNull() {
+        val model = KoogPromptExecutorFactory.resolveModel("/model", defaultModel = null)
+        assertNull(model, "Should return null when provider is empty")
+    }
+
+    @Test
+    fun testResolveModelEmptyModelIdReturnsNull() {
+        val model = KoogPromptExecutorFactory.resolveModel("provider/", defaultModel = null)
+        assertNull(model, "Should return null when model-id is empty")
+    }
+
+    @Test
+    fun testResolveModelUnknownModelReturnsNull() {
+        val model = KoogPromptExecutorFactory.resolveModel("openai/nonexistent-model", defaultModel = null)
+        assertNull(model, "Should return null for unknown model identifier")
     }
 
     @Test
