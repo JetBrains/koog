@@ -110,7 +110,7 @@ class FlowExecutionTest : FlowTestBase() {
 
         val taskInput = "Use the greeting tool to greet the user named 'TestUser'"
 
-        assertEquals(1, flowConfig.tools.size, "Check tools were parsed from JSON")
+        assertEquals(2, flowConfig.tools.size, "Check tools were parsed from JSON")
 
         val testExecutor = getMockExecutor {
             // When asked to greet, call the greeting tool
@@ -304,7 +304,6 @@ class FlowExecutionTest : FlowTestBase() {
             )
         }
     }
-
 
     @Test
     fun testConditionalBranchingFlow_highScore() = runTest {

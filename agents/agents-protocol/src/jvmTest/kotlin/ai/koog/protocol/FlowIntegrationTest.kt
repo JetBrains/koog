@@ -4,6 +4,7 @@ import ai.koog.protocol.flow.toKoogFlow
 import ai.koog.protocol.parser.FlowJsonConfigParser
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 
 class FlowIntegrationTest : FlowTestBase() {
@@ -12,6 +13,7 @@ class FlowIntegrationTest : FlowTestBase() {
         private val logger = KotlinLogging.logger { }
     }
 
+    @Disabled("Ignore the integration test on a real Prompt executor by default")
     @Test
     fun testRunKoogFlow_TaskVerify(): Unit = runTest {
         val jsonContent = readFlow("json/basic_task_flow.json")
@@ -19,7 +21,7 @@ class FlowIntegrationTest : FlowTestBase() {
         val parser = FlowJsonConfigParser()
         val config = parser.parse(jsonContent)
 
-        val agentsString = config.agents.joinToString("\n") { agent -> " - ${agent.type}: ${agent.name}"  }
+        val agentsString = config.agents.joinToString("\n") { agent -> " - ${agent.type}: ${agent.name}" }
         val transitionsString = config.transitions.joinToString("\n") { transition -> " - ${transition.from} -> ${transition.to}" }
         val toolsString = config.tools.joinToString("\n") { tool -> " - $tool" }
 

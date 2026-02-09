@@ -13,7 +13,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.io.path.Path
 import kotlin.io.path.extension
 import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
+import kotlin.io.path.pathString
+import kotlin.io.path.relativeTo
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -26,12 +27,16 @@ class FlowJsonParserTest : FlowTestBase() {
     companion object {
         @JvmStatic
         fun getResourceJsonNames(): Array<String> {
-            val resourcePath = object {}.javaClass.getResource("/json")?.let { Path(it.path) }
+            val resourceJsonPath = object {}.javaClass.getResource("/json")?.let { Path(it.path) }
                 ?: error("Could not find '/resource/json' directory")
 
-            val exampleJsonFiles = resourcePath.listDirectoryEntries()
+            val resourcePath = resourceJsonPath.parent
+
+            val exampleJsonFiles = resourceJsonPath.listDirectoryEntries()
                 .filter { entry -> entry.extension.equals("json", ignoreCase = true) }
-                .map { it.name }
+                .map { jsonPath ->
+                    jsonPath.relativeTo(resourcePath).pathString
+                }
 
             return exampleJsonFiles.toTypedArray()
         }
@@ -78,7 +83,7 @@ class FlowJsonParserTest : FlowTestBase() {
         // Verify flow config
         assertEquals("basic-task-flow", flowConfig.id)
         assertEquals("1.0", flowConfig.version)
-        assertEquals("openai/gpt4o", flowConfig.defaultModel)
+        assertEquals("anthropic/sonnet_4", flowConfig.defaultModel)
 
         // Verify agents
         assertEquals(2, flowConfig.agents.size)
@@ -88,7 +93,7 @@ class FlowJsonParserTest : FlowTestBase() {
         assertIs<FlowTaskAgent>(numberGeneratorAgent)
         assertEquals("number_generator", numberGeneratorAgent.name)
         assertEquals(FlowAgentKind.TASK, numberGeneratorAgent.type)
-        assertEquals("openai/gpt4o", numberGeneratorAgent.model, "Expected to get a default model, but received ${numberGeneratorAgent.model}")
+        assertEquals("anthropic/sonnet_4", numberGeneratorAgent.model, "Expected to get a default model, but received ${numberGeneratorAgent.model}")
         assertNotNull(numberGeneratorAgent.parameters)
         assertEquals(
             "Generate two random integers between 1 and 100, separated by a space.",
@@ -391,13 +396,9 @@ class FlowJsonParserTest : FlowTestBase() {
             parser.parse(jsonContent)
         }
 
-
         val actualMessage = exception.message
         assertNotNull(actualMessage)
-        assertTrue(
-            actualMessage.contains("Missing model name"),
-            "Exception message should mention missing model name, but got: ${exception.message}"
-        )
+        assertTrue(actualMessage.contains("Model for an agent is node defined"))
     }
 
     @Test

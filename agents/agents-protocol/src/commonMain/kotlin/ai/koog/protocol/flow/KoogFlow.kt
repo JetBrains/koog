@@ -164,15 +164,12 @@ public class KoogFlow(
             id = "koog-flow-strategy-$id",
             agents = agents,
             transitions = transitions,
-            toolRegistry = toolRegistry,
-            defaultModel = defaultModel
+            toolRegistry = toolRegistry
         )
 
-    private fun buildModel() =
-        KoogPromptExecutorFactory.resolveModel(
-            model = defaultModel,
-            defaultModel = null
-        ) ?: error("Unable to resolve model from string: $defaultModel")
+    private fun buildModel() = agents.firstOrNull()?.let { agent ->
+        KoogPromptExecutorFactory.resolveModel(agent.model)
+    } ?: error("No agents found to determine model")
 
     //endregion Private Methods
 }

@@ -2,7 +2,7 @@
   "id": "basic-task-flow",
   "version": "1.0",
   "description": "Simple two-agent sequential flow demonstrating basic task execution and agent chaining.",
-  "defaultModel": "openai/gpt4o",
+  "defaultModel": "anthropic/sonnet_4",
   "agents": [
     {
       "name": "number_generator",
