@@ -1,4 +1,4 @@
-@file:OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class, ExperimentalUuidApi::class)
+@file:OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 
 package ai.koog.agents.core.agent.context
@@ -15,8 +15,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.
@@ -133,15 +131,9 @@ public interface AIAgentLLMContextAPI {
     public var prompt: Prompt
 
     /**
-     * Atomically updates the prompt using the provided transformation block.
+     * Updates the current `AIAgentLLMContext` with a new prompt and ensures thread-safe access using a read lock.
      *
-     * This method acquires an exclusive write lock to ensure thread-safe read-modify-write operations.
-     * Multiple concurrent calls to this method are serialized.
-     *
-     * CAVEAT: Do NOT call this method from within [readSession] - this will deadlock
-     * due to lock upgrade not being supported.
-     *
-     * @param block A transformation function that receives the current [Prompt] and returns the new [Prompt].
+     * @param prompt The new [Prompt] to be set for the context.
      */
     public suspend fun withPrompt(block: Prompt.() -> Prompt)
 
@@ -163,58 +155,15 @@ public interface AIAgentLLMContextAPI {
     ): AIAgentLLMContext
 
     /**
-     * Executes a write session on the [AIAgentLLMContext] with exclusive access.
-     *
-     * Behavior:
-     * - Only one write session can be active at a time (serialized via Mutex)
-     * - If a write session with the same [sessionId] is already active, the caller reuses that session (reentrancy)
-     * - If a write session with a different [sessionId] is active, the caller waits for it to complete
-     * - Changes are committed atomically when the original session completes
-     *
-     * For reentrancy across thread boundaries (e.g., Java ExecutorService), capture the sessionId
-     * provided to the block and pass it to nested writeSession calls:
-     * ```kotlin
-     * context.writeSession { sessionId ->
-     *     executor.submit {
-     *         runBlocking {
-     *             context.writeSession(sessionId) { _ ->
-     *                 // Reuses the outer session - no deadlock!
-     *             }
-     *         }
-     *     }.get()
-     * }
-     * ```
-     *
-     * @param sessionId Unique identifier for this session. Default is a random UUID.
-     *   - Same ID as active session: Reuses the active session (reentrancy)
-     *   - Different ID than active session: Waits for active session to complete
-     * @param block The block to execute within the write session. Receives the sessionId for propagation.
-     * @return The result of the block execution.
+     * Executes a write session on the [AIAgentLLMContext], ensuring that all active write and read sessions
+     * are completed before initiating the write session.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> writeSession(
-        sessionId: String = Uuid.random().toString(),
-        block: suspend AIAgentLLMWriteSession.(sessionId: String) -> T
-    ): T
+    public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T
 
     /**
-     * Executes a read session with shared access to the current state.
-     *
-     * Behavior:
-     * - Multiple readers can execute concurrently (shared read lock)
-     * - Readers are blocked while a writer holds the write lock
-     * - Readers see a consistent snapshot of all mutable fields
-     * - If called while a [writeSession] is active, reads from the write session's current (uncommitted) state
-     *
-     * CAVEAT: Do NOT call [writeSession] from within readSession - this will deadlock.
-     *
-     * CAVEAT: When a write session is active, this method reads from the uncommitted
-     * state regardless of whether the caller is logically part of that write session.
-     * This means concurrent readers may observe uncommitted changes that could be
-     * rolled back if the writer throws an exception.
-     *
-     * @param block The block to execute within the read session.
-     * @return The result of the block execution.
+     * Executes a read session within the [AIAgentLLMContext], ensuring concurrent safety
+     * with active write session and other read sessions.
      */
     @OptIn(ExperimentalStdlibApi::class)
     public suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T

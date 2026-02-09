@@ -237,16 +237,15 @@ class AIAgentMemoryTest {
 
         val llm = mockk<AIAgentLLMContext> {
             coEvery {
-                writeSession<Any?>(any(), any())
+                writeSession<Any?>(any<suspend AIAgentLLMWriteSession.() -> Any?>())
             } coAnswers {
-                val sessionId = firstArg<String>()
-                val block = secondArg<suspend AIAgentLLMWriteSession.(String) -> Any?>()
+                val block = firstArg<suspend AIAgentLLMWriteSession.() -> Any?>()
                 val writeSession = mockk<AIAgentLLMWriteSession> {
                     every { appendPrompt(capture(promptUpdateSlot)) } answers {
                         println("[DEBUG_LOG] Updating prompt with message containing facts")
                     }
                 }
-                block.invoke(writeSession, sessionId)
+                block.invoke(writeSession)
             }
         }
 
@@ -259,7 +258,7 @@ class AIAgentMemoryTest {
 
         // Verify that writeSession was called and the prompt was updated with facts
         coVerify {
-            llm.writeSession<Any?>(any(), any())
+            llm.writeSession(any<suspend AIAgentLLMWriteSession.() -> Any?>())
         }
         assertTrue(promptUpdateSlot.isCaptured, "Prompt update should be captured")
 

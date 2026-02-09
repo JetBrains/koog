@@ -23,11 +23,11 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
 
 fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
     name: String? = null,
-): AIAgentNodeDelegate<String, String> = node(name) { input ->
+): AIAgentNodeDelegate<String, String> = node(name) {
     llm.writeSession {
-        appendPrompt { user { text(input) } }
+        appendPrompt { user { text(it) } }
     }
-    return@node input
+    return@node it
 }
 
 internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(

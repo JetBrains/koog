@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
-import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -30,7 +29,7 @@ class LLMWriteSessionJavaApiTest {
                 "useWriteSession",
                 BiFunction { ctx: AIAgentFunctionalContext, input: String ->
                     // Mutate prompt inside writeSession and ensure it restores back
-                    ctx.llm().writeSession { session: AIAgentLLMWriteSession ->
+                    ctx.llm().writeSession { session ->
                         val orig = session.prompt
                         session.prompt = Prompt.builder("temp").system("temporary").user(input).build()
                         // restore immediately to validate restoration path without invoking suspend APIs here
