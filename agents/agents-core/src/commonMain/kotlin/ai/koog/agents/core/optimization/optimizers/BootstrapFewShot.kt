@@ -1,6 +1,5 @@
 package ai.koog.agents.core.optimization.optimizers
 
-import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -52,11 +51,10 @@ public sealed class BootstrapOutcome {
  * per-node input/output traces via [TraceCollectionFeature].
  *
  * The algorithm:
- * 1. Build an internal teacher agent with trace collection enabled
- * 2. Pre-optimize the teacher with [LabeledFewShot] (if [maxLabeledDemos] > 0)
- * 3. Run the teacher on each training example, collecting node traces
- * 4. Keep traces from runs where the metric passes (or all runs if no metric)
- * 5. Build a student config combining bootstrapped traces + labeled fallback
+ * 1. Pre-optimize the teacher with [LabeledFewShot] (if [maxLabeledDemos] > 0)
+ * 2. For each training example, build a fresh teacher agent with trace collection,
+ *    run it, and collect per-node traces from successful executions
+ * 3. Build a student config combining bootstrapped traces + labeled fallback
  *
  * The optimizer takes agent components (executor, config, strategy) rather than a pre-built
  * agent, so it can construct its own internal teacher with the necessary tracing features.
@@ -104,7 +102,7 @@ public class BootstrapFewShot(
     /**
      * Optimizes the strategy by bootstrapping demonstrations from teacher executions.
      *
-     * Builds an internal teacher agent from the provided components with trace collection
+     * For each training example, builds a fresh teacher agent with trace collection
      * enabled. The caller does not need to install [TraceCollectionFeature] themselves.
      *
      * @param TInput The strategy's input type.
@@ -140,26 +138,6 @@ public class BootstrapFewShot(
             )
         }
 
-        // Build internal teacher agent with trace collection
-        val teacherAgent = GraphAIAgent<TInput, TOutput>(
-            inputType = strategy.inputType,
-            outputType = strategy.outputType,
-            promptExecutor = promptExecutor,
-            agentConfig = agentConfig,
-            strategy = strategy,
-            toolRegistry = toolRegistry,
-            installFeatures = {
-                collectTraces {
-                    collectOnlyOptimizable = true
-                }
-            },
-        )
-
-        // Get trace feature from teacher's pipeline
-        val traceFeatureImpl = teacherAgent.createSession().pipeline()!!
-            .feature(TraceCollectionFeatureImpl::class, TraceCollectionFeature)
-            ?: error("TraceCollectionFeature should have been installed on teacher agent")
-
         // Step 1: Teacher pre-optimization with LabeledFewShot
         val teacherConfig = if (maxLabeledDemos > 0) {
             val labeledFewShot = LabeledFewShot(k = maxLabeledDemos, sample = true, random = random)
@@ -174,11 +152,13 @@ public class BootstrapFewShot(
 
         // Step 2: Bootstrap — collect traces from teacher executions
         val (name2traces, bootstrapValset) = bootstrap(
-            agent = teacherAgent,
+            promptExecutor = promptExecutor,
+            agentConfig = agentConfig,
+            strategy = strategy,
+            toolRegistry = toolRegistry,
             modules = modules,
             trainset = trainset,
             teacherConfig = teacherConfig,
-            traceFeatureImpl = traceFeatureImpl,
             metric = metric,
             inputFromExample = inputFromExample,
         )
@@ -209,11 +189,13 @@ public class BootstrapFewShot(
      * @return Pair of (per-node traces map, validation set of non-bootstrapped examples)
      */
     private suspend fun <TInput, TOutput> bootstrap(
-        agent: AIAgent<TInput, TOutput>,
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        strategy: AIAgentGraphStrategy<TInput, TOutput>,
+        toolRegistry: ToolRegistry,
         modules: List<OptimizableNode<*, *>>,
         trainset: Dataset,
         teacherConfig: OptimizationConfig,
-        traceFeatureImpl: TraceCollectionFeatureImpl,
         metric: Metric<TOutput>?,
         inputFromExample: (Example) -> TInput,
     ): Pair<Map<String, MutableList<Demonstration<Any?, Any?>>>, Dataset> {
@@ -230,11 +212,13 @@ public class BootstrapFewShot(
 
             for (round in 0 until maxRounds) {
                 val outcome = bootstrapOneExample(
-                    agent = agent,
+                    promptExecutor = promptExecutor,
+                    agentConfig = agentConfig,
+                    strategy = strategy,
+                    toolRegistry = toolRegistry,
                     modules = modules,
                     example = example,
                     teacherConfig = teacherConfig,
-                    traceFeatureImpl = traceFeatureImpl,
                     metric = metric,
                     inputFromExample = inputFromExample,
                 )
@@ -270,30 +254,50 @@ public class BootstrapFewShot(
     /**
      * Bootstrap a single training example.
      *
-     * Runs the teacher agent on the example and evaluates the result.
+     * Builds a fresh teacher agent with trace collection, runs it on the example,
+     * and evaluates the result. Each call gets its own agent and trace storage,
+     * making this safe for parallel execution.
      */
     @Suppress("UNCHECKED_CAST")
     private suspend fun <TInput, TOutput> bootstrapOneExample(
-        agent: AIAgent<TInput, TOutput>,
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        strategy: AIAgentGraphStrategy<TInput, TOutput>,
+        toolRegistry: ToolRegistry,
         modules: List<OptimizableNode<*, *>>,
         example: Example,
         teacherConfig: OptimizationConfig,
-        traceFeatureImpl: TraceCollectionFeatureImpl,
         metric: Metric<TOutput>?,
         inputFromExample: (Example) -> TInput,
     ): BootstrapOutcome {
+        // Build a fresh teacher agent with its own trace collection
+        val teacherAgent = GraphAIAgent<TInput, TOutput>(
+            inputType = strategy.inputType,
+            outputType = strategy.outputType,
+            promptExecutor = promptExecutor,
+            agentConfig = agentConfig,
+            strategy = strategy,
+            toolRegistry = toolRegistry,
+            installFeatures = {
+                collectTraces {
+                    collectOnlyOptimizable = true
+                }
+            },
+        )
+
+        val traceFeature = teacherAgent.createSession().pipeline()!!
+            .feature(TraceCollectionFeatureImpl::class, TraceCollectionFeature)
+            ?: error("TraceCollectionFeature should have been installed on teacher agent")
+
         // Filter teacher demos: remove demos matching current example's input to prevent data leakage
         val filteredConfig = filterTeacherDemos(teacherConfig, modules, example)
-
-        // Clear traces before running
-        traceFeatureImpl.collectedTraces.clear()
 
         // Run teacher
         val output: TOutput
         try {
             val input = inputFromExample(example)
             output = withContext(filteredConfig) {
-                agent.run(input)
+                teacherAgent.run(input)
             }
         } catch (e: Exception) {
             return BootstrapOutcome.Failure.ExceptionRaised(e)
@@ -310,10 +314,9 @@ public class BootstrapFewShot(
 
         // Collect traces: for each module, select one trace
         val traces = mutableMapOf<String, Demonstration<Any?, Any?>>()
-        val collectedTraces = traceFeatureImpl.collectedTraces
 
         for (module in modules) {
-            val nodeTraces = collectedTraces.getTracesForNode(module.name)
+            val nodeTraces = traceFeature.collectedTraces.getTracesForNode(module.name)
             if (nodeTraces.isEmpty()) continue
 
             val selectedTrace = selectTrace(nodeTraces, random)
