@@ -3,14 +3,14 @@ package ai.koog.agents.core.optimization.core
 /**
  * Training or validation data for prompt optimization.
  *
- * An example consists of a map of field names to values, where one field is designated
- * as the label (expected output). Field values can be any type — strings, data classes,
- * enums, etc., matching whatever the corresponding [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]
- * produces or consumes, as long as they are `@Serializable` (kotlinx.serialization) so that
- * optimizers can convert them into [Demonstration]s for prompt construction.
+ * An example consists of a map of mapping data field keys (node names) to data field values (node outputs).
+ * When generating few-shot examples, the example for the node specified by the field key is converted to a few-shot example.
+ * The field values can be any type, strings, data classes, enums, etc., matching whatever the corresponding [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]
+ *
+ * If given, `labelKey` defines the key in [data] that contains the expected output for the whole agent.
  *
  * @property data Map from field name to value. Contains both inputs and the label.
- *  Values can be any type that the corresponding node expects.
+ *  Values can be any type that the corresponding node outputs.
  * @property labelKey The key in [data] that contains the expected output/label.
  *  If null, this example has no label (unlabeled data for semi-supervised learning).
  */
