@@ -6,7 +6,6 @@ import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
-import ai.koog.agents.core.optimization.core.StrategyOptimizer
 import ai.koog.agents.core.optimization.util.findOptimizableModules
 import kotlin.random.Random
 
@@ -40,12 +39,11 @@ public class LabeledFewShot(
     public val k: Int = 16,
     public val sample: Boolean = true,
     public val random: Random = Random(42L),
-) : StrategyOptimizer {
+) {
 
-    override suspend fun <TInput, TOutput> optimize(
+    public suspend fun <TInput, TOutput> optimize(
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         trainset: Dataset,
-        valset: Dataset?,
         metric: Metric<TOutput>,
     ): OptimizationResult {
         require(trainset.isNotEmpty()) { "trainset is required for LabeledFewShot" }
