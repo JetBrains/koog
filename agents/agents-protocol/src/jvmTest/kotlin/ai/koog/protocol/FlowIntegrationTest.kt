@@ -14,7 +14,7 @@ class FlowIntegrationTest : FlowTestBase() {
 
     @Test
     fun testRunKoogFlow_TaskVerify(): Unit = runTest {
-        val jsonContent = readFlow("basic_task_flow.json")
+        val jsonContent = readFlow("json/basic_task_flow.json")
 
         val parser = FlowJsonConfigParser()
         val config = parser.parse(jsonContent)

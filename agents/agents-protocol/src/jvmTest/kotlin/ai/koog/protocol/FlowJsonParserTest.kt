@@ -69,7 +69,7 @@ class FlowJsonParserTest : FlowTestBase() {
 
     @Test
     fun testJsonParsing_basicTaskFlowJson() {
-        val jsonContent = readFlow("basic_task_flow.json")
+        val jsonContent = readFlow("json/basic_task_flow.json")
 
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
@@ -120,7 +120,7 @@ class FlowJsonParserTest : FlowTestBase() {
 
     @Test
     fun testFlowParsing_withMcpTools() {
-        val jsonContent = readFlow("greeting_flow_with_mcp_tool.json")
+        val jsonContent = readFlow("json/greeting_flow_with_mcp_tool.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -234,7 +234,7 @@ class FlowJsonParserTest : FlowTestBase() {
 
     @Test
     fun testJsonParsing_verifyTransformFlowJson() {
-        val jsonContent = readFlow("verify_transform_flow.json")
+        val jsonContent = readFlow("json/verify_transform_flow.json")
 
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
@@ -315,7 +315,7 @@ class FlowJsonParserTest : FlowTestBase() {
 
     @Test
     fun testJsonParsing_reactFlowJson() {
-        val jsonContent = readFlow("react_flow.json")
+        val jsonContent = readFlow("json/react_flow.json")
 
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)

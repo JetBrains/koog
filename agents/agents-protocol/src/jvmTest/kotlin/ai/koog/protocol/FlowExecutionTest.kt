@@ -68,7 +68,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testFlowRun_basicTaskFlowJson() = runTest {
-        val jsonContent = readFlow("basic_task_flow.json")
+        val jsonContent = readFlow("json/basic_task_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -105,7 +105,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testFlowRun_withMcpToolExecution() = runTest {
-        val jsonContent = readFlow("greeting_flow_with_mcp_tool.json")
+        val jsonContent = readFlow("json/greeting_flow_with_mcp_tool.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -227,7 +227,7 @@ class FlowExecutionTest : FlowTestBase() {
      */
     @Test
     fun testFlowConfig_verifyTransformTransitions() {
-        val jsonContent = readFlow("verify_transform_flow.json")
+        val jsonContent = readFlow("json/verify_transform_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -310,7 +310,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testConditionalBranchingFlow_highScore() = runTest {
-        val jsonContent = readFlow("conditional_branching_flow.json")
+        val jsonContent = readFlow("json/conditional_branching_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -343,7 +343,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testConditionalBranchingFlow_lowScore() = runTest {
-        val jsonContent = readFlow("conditional_branching_flow.json")
+        val jsonContent = readFlow("json/conditional_branching_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -376,7 +376,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testRetryLoopFlow_successOnFirstTry() = runTest {
-        val jsonContent = readFlow("retry_loop_flow.json")
+        val jsonContent = readFlow("json/retry_loop_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -416,7 +416,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testSequentialPipelineFlow() = runTest {
-        val jsonContent = readFlow("sequential_pipeline_flow.json")
+        val jsonContent = readFlow("json/sequential_pipeline_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -476,7 +476,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testStringComparisonFlow_english() = runTest {
-        val jsonContent = readFlow("string_comparison_flow.json")
+        val jsonContent = readFlow("json/string_comparison_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -509,7 +509,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testMultiConditionRoutingFlow_safeContent() = runTest {
-        val jsonContent = readFlow("multi_condition_routing_flow.json")
+        val jsonContent = readFlow("json/multi_condition_routing_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -542,7 +542,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testComplexDecisionTreeFlow_invoice() = runTest {
-        val jsonContent = readFlow("complex_decision_tree_flow.json")
+        val jsonContent = readFlow("json/complex_decision_tree_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -592,7 +592,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testVerifyTransformFlow_successPath() = runTest {
-        val jsonContent = readFlow("verify_transform_flow.json")
+        val jsonContent = readFlow("json/verify_transform_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
@@ -632,7 +632,7 @@ class FlowExecutionTest : FlowTestBase() {
 
     @Test
     fun testReActFlowExecution() = runTest {
-        val jsonContent = readFlow("react_flow.json")
+        val jsonContent = readFlow("json/react_flow.json")
         val parser = FlowJsonConfigParser()
         val flowConfig = parser.parse(jsonContent)
 
