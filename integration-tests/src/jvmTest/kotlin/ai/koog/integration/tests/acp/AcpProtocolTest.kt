@@ -3,7 +3,7 @@ package ai.koog.integration.tests.acp
 import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import com.agentclientprotocol.common.SessionCreationParameters
 import com.agentclientprotocol.model.AcpMethod
 import com.agentclientprotocol.model.AuthMethod
@@ -48,7 +48,7 @@ class AcpProtocolTest {
 
     @Test
     fun integration_testNotificationDelivery() = runTest(timeout = 1.minutes) {
-        SingleLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
                     val randomNumberTool = RandomNumberTool()
@@ -89,7 +89,7 @@ class AcpProtocolTest {
         audio: Boolean,
         image: Boolean
     ) = runTest(timeout = 1.minutes) {
-        SingleLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
                     val randomNumberTool = RandomNumberTool()
@@ -146,7 +146,7 @@ class AcpProtocolTest {
 
     @Test
     fun integration_testAuthenticationWithAuthMethod() = runTest(timeout = 1.minutes) {
-        SingleLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(2)) {
                 withTimeout(30.seconds) {
                     val setup = setupAcpClient(
@@ -176,7 +176,7 @@ class AcpProtocolTest {
 
     @Test
     fun integration_testAuthenticationError() = runTest(timeout = 1.minutes) {
-        SingleLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(2)) {
                 withTimeout(10.seconds) {
                     val setup = setupAcpClient(

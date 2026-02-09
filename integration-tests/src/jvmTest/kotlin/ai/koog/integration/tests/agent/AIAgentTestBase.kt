@@ -34,7 +34,6 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -93,8 +92,8 @@ open class AIAgentTestBase {
 
     val systemPrompt = "You are a helpful assistant."
 
-    fun getExecutor(model: LLModel): SingleLLMPromptExecutor =
-        SingleLLMPromptExecutor(getLLMClientForProvider(model.provider))
+    fun getExecutor(model: LLModel): MultiLLMPromptExecutor =
+        MultiLLMPromptExecutor(getLLMClientForProvider(model.provider))
 
     protected class State(
         var reasoningCallsCount: Int = 0,

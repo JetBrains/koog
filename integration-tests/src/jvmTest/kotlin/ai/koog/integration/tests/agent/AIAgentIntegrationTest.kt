@@ -614,7 +614,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             }
         )
 
-        agent.run("Start the test")
+        agent.run("Start the test", agent.id)
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             shouldNotBeEmpty()
@@ -641,7 +641,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         )
 
         // Verify that the agent continued from the checkpoint
-        restoredAgent.run("Continue the test") shouldContain sayBye
+        restoredAgent.run("Continue the test", agent.id) shouldContain sayBye
     }
 
     @ParameterizedTest
@@ -740,7 +740,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         )
 
         withClue("Final result should contain output from the second execution of $rollback") {
-            agent.run("Start the test") shouldContain alreadyRolledBackMessage
+            agent.run("Start the test", agent.id) shouldContain alreadyRolledBackMessage
         }
 
         with(executionLog.toString()) {
@@ -817,8 +817,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
             }
         )
-
-        agent.run(testInput)
+        agent.run(testInput, agent.id)
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             size shouldBeGreaterThanOrEqual 3
@@ -895,8 +894,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
             }
         )
-
-        agent.run(testInput)
+        agent.run(testInput, agent.id)
 
         val expectedNodePath = path(agentId, strategyName, bye)
         with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }) {
@@ -952,7 +950,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     },
                 )
 
-                agent.run("What is 12 + 34?")
+                agent.run("What is 12 + 34?", agent.id)
 
                 with(state) {
                     actualToolCalls shouldBe listOf(SimpleCalculatorTool.descriptor.name)

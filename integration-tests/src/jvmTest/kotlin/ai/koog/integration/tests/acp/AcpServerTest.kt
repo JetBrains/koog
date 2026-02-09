@@ -5,7 +5,7 @@ import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import com.agentclientprotocol.common.Event
@@ -38,7 +38,7 @@ class AcpServerTest {
     @ParameterizedTest
     @MethodSource("getModels")
     fun integration_testACPWithTools(model: LLModel) = runTest(timeout = 1.minutes) {
-        SingleLLMPromptExecutor(getLLMClientForProvider(model.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProvider(model.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
                     val result = runAcpAgent(promptExecutor, model)
@@ -64,12 +64,11 @@ class AcpServerTest {
             val events = mutableListOf<Event>()
             setup.session!!.prompt(promptContent).collect { events.add(it) }
 
-            val toolCalls = events.filterIsInstance<Event.SessionUpdateEvent>()
+            val updates = events.filterIsInstance<Event.SessionUpdateEvent>()
                 .map { it.update }
-                .filterIsInstance<SessionUpdate.ToolCall>()
 
-            toolCalls.any { it.status == ToolCallStatus.IN_PROGRESS } shouldBe true
-            toolCalls.any { it.status == ToolCallStatus.COMPLETED } shouldBe true
+            updates.any { it is SessionUpdate.ToolCall && it.status == ToolCallStatus.IN_PROGRESS } shouldBe true
+            updates.any { it is SessionUpdate.ToolCallUpdate && it.status == ToolCallStatus.COMPLETED } shouldBe true
 
             "Tool ${randomNumberTool.name} generated: ${randomNumberTool.last}"
         } finally {
