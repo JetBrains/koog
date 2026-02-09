@@ -13,6 +13,7 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicModelsResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamDeltaContentType
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamEventType
@@ -24,6 +25,7 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicUsage
 import ai.koog.prompt.executor.clients.anthropic.models.DocumentSource
 import ai.koog.prompt.executor.clients.anthropic.models.ImageSource
 import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -70,6 +72,7 @@ public class AnthropicClientSettings(
     public val baseUrl: String = "https://api.anthropic.com",
     public val apiVersion: String = "2023-06-01",
     public val messagesPath: String = "v1/messages",
+    public val modelsPath: String = "v1/models",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
@@ -669,6 +672,19 @@ public open class AnthropicLLMClient(
                 "AnyOf type is not supported"
             )
         }
+    }
+
+    public override suspend fun models(): List<LLModel> {
+        logger.debug { "Fetching available models from Anthropic" }
+
+        val response = httpClient.get(
+            path = settings.modelsPath,
+            responseType = AnthropicModelsResponse::class
+        )
+
+        val modelsById = AnthropicModels.modelsById()
+
+        return response.data.map { modelsById[it.id] ?: LLModel(id = it.id, provider = LLMProvider.Anthropic) }
     }
 
     /**
