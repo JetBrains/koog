@@ -32,6 +32,12 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
+                implementation(libs.testcontainers)
+                implementation(libs.testcontainers.postgresql)
+                implementation("com.pgvector:pgvector:0.1.6") // TODO: add to libs.versions.toml
+
+                runtimeOnly(libs.postgresql)
             }
         }
     }
