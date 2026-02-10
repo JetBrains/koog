@@ -104,6 +104,8 @@ jobs:
           uv sync --frozen --all-extras
           uv run mkdocs build
 
+  # Do not set individual matrix jobs (e.g., "tests (ubuntu-latest)") as required in GitHub branch protection.
+  # Instead, use the summary job `tests-result` below, which properly reports status when tests are skipped.
   tests:
     needs: compilation
     if: ${{ needs.changes.outputs.koog-src == 'true' }}
@@ -174,6 +176,24 @@ jobs:
           include_empty_in_summary: false
           include_time_in_summary: true
           annotate_only: true
+
+  # Matrix jobs don't report status when skipped, causing required checks to hang.
+  # This summary job always checks `tests` jobs result and reports status for branch protection.
+  tests-result:
+    needs: [ changes, tests ]
+    if: always()
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check tests status
+        #language=bash
+        run: |
+          if [[ "${{ needs.tests.result }}" == "skipped" ]]; then
+            echo "Tests skipped"
+            exit 0
+          elif [[ "${{ needs.tests.result }}" != "success" ]]; then
+            echo "Tests didn't finish successfully"
+            exit 1
+          fi 
 
   knit:
     needs: changes
