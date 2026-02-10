@@ -87,12 +87,70 @@ Please provide a two to three sentence summary of only the most significant high
 }
 
 /**
+ * Prompt to describe what the overall program does, given its code and an example.
+ *
+ * Corresponds to dspy's DescribeProgram signature.
+ *
+ * @param programCode Structural representation of the program (from [describeForOptimization])
+ * @param programExample An example of the program in use (formatted task demos or trainset example)
+ */
+internal fun describeProgramPrompt(programCode: String, programExample: String): Prompt = prompt("describe-program") {
+    system(
+        """Below is a language model program with various modules that work together to solve a task.
+Please describe what task this program is designed to solve and how it accomplishes this task, based on the program structure and the example provided.
+Be concise but thorough in your description."""
+    )
+    user(
+        """PROGRAM CODE:
+$programCode
+
+EXAMPLE OF PROGRAM IN USE:
+$programExample
+
+Please describe what this program does and how it works."""
+    )
+}
+
+/**
+ * Prompt to describe a specific module's role within the broader program.
+ *
+ * Corresponds to dspy's DescribeModule signature.
+ *
+ * @param programCode Structural representation of the program
+ * @param programDescription Description of what the overall program does
+ * @param moduleCode The specific module's type signature and instruction
+ */
+internal fun describeModulePrompt(
+    programCode: String,
+    programDescription: String,
+    moduleCode: String,
+): Prompt = prompt("describe-module") {
+    system(
+        """Below is a language model program with various modules that work together to solve a task.
+Please describe the role of the specified module within this program. Be concise but specific about what this module contributes to the overall program."""
+    )
+    user(
+        """PROGRAM CODE:
+$programCode
+
+PROGRAM DESCRIPTION:
+$programDescription
+
+MODULE:
+$moduleCode
+
+Please describe this module's role in the program."""
+    )
+}
+
+/**
  * Configuration for building a GenerateModuleInstruction prompt.
  */
 internal data class GenerateInstructionPromptConfig(
     val datasetSummary: String?,
     val programDescription: String?,
     val moduleCodeString: String,
+    val moduleDescription: String?,
     val taskDemos: String,
     val basicInstruction: String,
     val tip: String?,
@@ -126,6 +184,12 @@ internal fun generateModuleInstructionPrompt(config: GenerateInstructionPromptCo
             appendLine("MODULE TO OPTIMIZE:")
             appendLine(config.moduleCodeString)
             appendLine()
+
+            if (config.moduleDescription != null) {
+                appendLine("MODULE DESCRIPTION:")
+                appendLine(config.moduleDescription)
+                appendLine()
+            }
 
             appendLine("TASK DEMO(S):")
             appendLine(config.taskDemos)

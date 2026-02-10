@@ -71,12 +71,24 @@ public class InstructionProposer(
     private val llModel: LLModel,
     private val config: InstructionProposerConfig = InstructionProposerConfig(),
     private val random: Random = Random.Default,
+    programDescription: String? = null,
 ) {
     private var datasetSummary: String? = null
-    private var programDescription: String? = null
+    private var programCode: String? = null
+    private var programDescription: String? = programDescription
+    private val moduleDescriptions: MutableMap<String, String> = mutableMapOf()
 
     /**
-     * Initialize the proposer by generating dataset summary and program description.
+     * Initialize the proposer by generating dataset summary, program description,
+     * and per-module descriptions.
+     *
+     * If a [programDescription] was provided in the constructor, it is used as-is.
+     * Otherwise, if [InstructionProposerConfig.programAware] is true, the LLM generates one.
+     *
+     * Similarly, if an [OptimizableNode] has a non-null [OptimizableNode.description],
+     * it is used directly. Otherwise, if programAware, the LLM generates a description
+     * of the module's role.
+     *
      * Call this before [proposeInstructionsForProgram].
      */
     public suspend fun initialize() {
@@ -94,11 +106,57 @@ public class InstructionProposer(
 
         if (config.programAware) {
             try {
-                programDescription = strategy.describeForOptimization()
+                programCode = strategy.describeForOptimization()
+            } catch (_: Exception) {
+                // Continue without program code
+            }
+        }
+
+        // Generate program description via LLM if not user-provided
+        if (programDescription == null && config.programAware && programCode != null) {
+            try {
+                val programExample = formatTrainsetExample()
+                val prompt = describeProgramPrompt(programCode!!, programExample)
+                val responses = promptExecutor.execute(prompt, llModel)
+                programDescription = extractAssistantContent(responses).ifBlank { null }
             } catch (_: Exception) {
                 // Continue without program description
             }
         }
+
+        // Generate per-module descriptions
+        if (config.programAware) {
+            val modules = strategy.findOptimizableModules()
+            for (module in modules) {
+                if (module.description != null) {
+                    // User-provided description on the node
+                    moduleDescriptions[module.name] = module.description
+                } else if (programCode != null && programDescription != null) {
+                    // LLM-generated description
+                    try {
+                        val moduleCode = buildModuleCodeString(module.name, module)
+                        val prompt = describeModulePrompt(programCode!!, programDescription!!, moduleCode)
+                        val responses = promptExecutor.execute(prompt, llModel)
+                        val desc = extractAssistantContent(responses).ifBlank { null }
+                        if (desc != null) {
+                            moduleDescriptions[module.name] = desc
+                        }
+                    } catch (_: Exception) {
+                        // Continue without this module's description
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Format a trainset example for use as the "program example" in [describeProgramPrompt].
+     * Matches DSPy's use of task_demos as program_example.
+     */
+    private fun formatTrainsetExample(): String {
+        if (trainset.isEmpty()) return "No examples available."
+        val example = trainset.first()
+        return example.data.entries.joinToString("\n") { (k, v) -> "$k: $v" }
     }
 
     /**
@@ -168,6 +226,7 @@ public class InstructionProposer(
             datasetSummary = datasetSummary,
             programDescription = programDescription,
             moduleCodeString = moduleCodeString,
+            moduleDescription = moduleDescriptions[moduleName],
             taskDemos = taskDemos,
             basicInstruction = basicInstruction,
             tip = if (config.useTip) tip else null,

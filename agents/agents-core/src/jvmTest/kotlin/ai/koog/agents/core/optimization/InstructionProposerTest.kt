@@ -55,6 +55,19 @@ class InstructionProposerTest {
         edge(answer forwardTo nodeFinish)
     }
 
+    private val noDescriptionStrategy = strategy("test-strategy-no-desc") {
+        val thinking by optimizableNode(
+            instruction = "Think step by step about the math question.",
+        )
+        val answer by optimizableNode(
+            instruction = "Provide the final numeric answer.",
+        )
+
+        edge(nodeStart forwardTo thinking)
+        edge(thinking forwardTo answer)
+        edge(answer forwardTo nodeFinish)
+    }
+
     private val llModel = OpenAIModels.Chat.GPT5Nano
 
     /**
@@ -62,9 +75,13 @@ class InstructionProposerTest {
      *
      * - Observation prompts → returns observation text
      * - Summarizer prompts → returns summary text
+     * - DescribeProgram prompts → returns program description
+     * - DescribeModule prompts → returns module description
      * - Instruction generation prompts → returns a generated instruction
+     *
+     * @param trackCalls If non-null, appends prompt names to this list for call tracking
      */
-    private fun createMockExecutor(): PromptExecutor {
+    private fun createMockExecutor(trackCalls: MutableList<String>? = null): PromptExecutor {
         val baseExecutor = getMockExecutor {
             mockLLMAnswer("unused")
         }
@@ -77,6 +94,7 @@ class InstructionProposerTest {
 
                 // Dataset descriptor (observation)
                 if ("write observations about trends" in systemContent) {
+                    trackCalls?.add("dataset-descriptor")
                     if ("PRIOR OBSERVATIONS" in userContent) {
                         return listOf(Message.Assistant("Additional observation: the data contains math questions.", metaInfo))
                     }
@@ -85,11 +103,30 @@ class InstructionProposerTest {
 
                 // Observation summarizer
                 if ("summarize them into a brief" in systemContent) {
+                    trackCalls?.add("observation-summarizer")
                     return listOf(Message.Assistant("This dataset contains arithmetic questions requiring numeric answers.", metaInfo))
+                }
+
+                // DescribeProgram
+                if ("describe what task this program is designed to solve" in systemContent) {
+                    trackCalls?.add("describe-program")
+                    return listOf(Message.Assistant("This program solves arithmetic questions using a two-step reasoning approach.", metaInfo))
+                }
+
+                // DescribeModule
+                if ("describe the role of the specified module" in systemContent) {
+                    trackCalls?.add("describe-module")
+                    val moduleName = when {
+                        "thinking" in userContent -> "thinking"
+                        "answer" in userContent -> "answer"
+                        else -> "unknown"
+                    }
+                    return listOf(Message.Assistant("The $moduleName module handles its step in the reasoning pipeline.", metaInfo))
                 }
 
                 // Instruction generation
                 if ("generate a new instruction" in systemContent) {
+                    trackCalls?.add("generate-instruction")
                     // Include the module name from the user content for distinguishability
                     val moduleName = when {
                         "thinking" in userContent -> "thinking"
@@ -297,5 +334,127 @@ class InstructionProposerTest {
         assertTrue("Answer node" in description, "Should contain answer description")
         assertTrue("Think step by step" in description, "Should contain thinking instruction")
         assertTrue("Provide the final numeric answer" in description, "Should contain answer instruction")
+    }
+
+    @Test
+    fun testUserProvidedProgramDescriptionSkipsLLMCall() = runBlocking {
+        val calls = mutableListOf<String>()
+        val executor = createMockExecutor(trackCalls = calls)
+        val proposer = InstructionProposer(
+            strategy = twoNodeStrategy,
+            trainset = trainset,
+            promptExecutor = executor,
+            llModel = llModel,
+            programDescription = "User-provided program description",
+        )
+
+        proposer.initialize()
+
+        // Should NOT have called describe-program since we provided a description
+        assertTrue(
+            "describe-program" !in calls,
+            "Should not call DescribeProgram when user provides programDescription"
+        )
+    }
+
+    @Test
+    fun testUserProvidedNodeDescriptionSkipsLLMCall() = runBlocking {
+        // twoNodeStrategy has descriptions on both nodes ("Reasoning node", "Answer node")
+        val calls = mutableListOf<String>()
+        val executor = createMockExecutor(trackCalls = calls)
+        val proposer = InstructionProposer(
+            strategy = twoNodeStrategy,
+            trainset = trainset,
+            promptExecutor = executor,
+            llModel = llModel,
+        )
+
+        proposer.initialize()
+
+        // Should NOT have called describe-module since both nodes have descriptions
+        assertTrue(
+            "describe-module" !in calls,
+            "Should not call DescribeModule when nodes have descriptions"
+        )
+    }
+
+    @Test
+    fun testMissingDescriptionTriggersLLMGeneration() = runBlocking {
+        // noDescriptionStrategy has no descriptions on nodes
+        val calls = mutableListOf<String>()
+        val executor = createMockExecutor(trackCalls = calls)
+        val proposer = InstructionProposer(
+            strategy = noDescriptionStrategy,
+            trainset = trainset,
+            promptExecutor = executor,
+            llModel = llModel,
+        )
+
+        proposer.initialize()
+
+        // Should have called describe-program (no user-provided description)
+        assertTrue(
+            "describe-program" in calls,
+            "Should call DescribeProgram when no programDescription provided"
+        )
+
+        // Should have called describe-module for each node without a description
+        val describeModuleCalls = calls.count { it == "describe-module" }
+        assertEquals(2, describeModuleCalls, "Should call DescribeModule for each node without description")
+    }
+
+    @Test
+    fun testModuleDescriptionAppearsInInstructionPrompt() = runBlocking {
+        val calls = mutableListOf<String>()
+        val executor = createMockExecutor(trackCalls = calls)
+        // Use noDescriptionStrategy so LLM generates module descriptions
+        val proposer = InstructionProposer(
+            strategy = noDescriptionStrategy,
+            trainset = trainset,
+            promptExecutor = executor,
+            llModel = llModel,
+        )
+
+        proposer.initialize()
+
+        val result = proposer.proposeInstructionsForProgram(
+            demoCandidates = null,
+            numCandidates = 1,
+        )
+
+        // Verify instructions were generated
+        assertEquals(2, result.size, "Should have instructions for 2 modules")
+        for ((_, instructions) in result) {
+            assertEquals(1, instructions.size)
+            assertTrue(instructions.first().isNotBlank())
+        }
+
+        // The generate-instruction calls should have been made
+        assertTrue(
+            "generate-instruction" in calls,
+            "Should have called instruction generation"
+        )
+    }
+
+    @Test
+    fun testProgramAwareDisabledSkipsAllDescriptionCalls() = runBlocking {
+        val calls = mutableListOf<String>()
+        val executor = createMockExecutor(trackCalls = calls)
+        val config = InstructionProposerConfig(
+            programAware = false,
+            useDatasetSummary = false,
+        )
+        val proposer = InstructionProposer(
+            strategy = noDescriptionStrategy,
+            trainset = trainset,
+            promptExecutor = executor,
+            llModel = llModel,
+            config = config,
+        )
+
+        proposer.initialize()
+
+        assertTrue("describe-program" !in calls, "Should not call DescribeProgram when programAware=false")
+        assertTrue("describe-module" !in calls, "Should not call DescribeModule when programAware=false")
     }
 }
