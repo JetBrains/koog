@@ -39,3 +39,17 @@ Output has to be work with Koog structued output (i.e. JSON serializable and sch
 - In OptimizableNode, can we subsume instruction and demonstrations somehow?
 
 - hook into subgraph primitive somehow?
+
+# BUG!!!
+We rely on optimizable node names / ids to be unique
+Check whether this is also true for vanilla Koog nodes
+Fix: Make optimizableNOde hashable and use that as key
+
+
+# Input Output Fields
+Provide labeled examples at the point of strategy constructions via the demonstrations field
+
+# Get rid of LabeledFewShot
+Only thing it is doing: Shuffling and coercing demonstrations.
+Make sure that teacher also gets assigned those shuffled and coerced examples.
+

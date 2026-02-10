@@ -34,7 +34,7 @@ Support automatic prompt optimization (MIPRO v2) within Koog's agent framework. 
 | `Agent` | `AIAgentGraphStrategy` (unchanged) |
 | `AgentModule` | `OptimizableNode<TInput, TOutput>` (subclass of `AIAgentNode`) |
 | `Signature.instruction` | `OptimizableNode.instruction: String` |
-| `Trace` | `Demonstration<TInput, TOutput>` |
+| `Trace` | `Demonstration<TInput, TOutput>` (labeled = from training data, bootstrapped = from teacher execution) |
 | `Example` | `Example(data: Map<String, Any>, labelKey)` |
 | `Optimizer` | Standalone classes (`LabeledFewShot`, `BootstrapFewShot`) returning `OptimizationResult` |
 
@@ -45,15 +45,13 @@ Support automatic prompt optimization (MIPRO v2) within Koog's agent framework. 
 ```kotlin
 public class OptimizableNode<TInput, TOutput>(
     name: String,
-    public val inputField: String?,          // key in Example.data for this node's input (null if not mapping to Examples)
-    public val outputField: String?,         // key in Example.data for this node's output
     public val instruction: String,          // base instruction; overridable via OptimizationConfig
     public val promptFn: OptimizablePromptFn<TInput, TOutput>,  // builds Prompt from (instruction, demos, input)
     internal val executePrompt: suspend AIAgentGraphContextBase.(Prompt) -> TOutput,  // LLM call + response parsing
-    public val description: String? = null,  // for MIPRO program description
-    public val demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),  // default few-shot demos
     inputType: KType,
     outputType: KType,
+    public val description: String? = null,  // for MIPRO program description
+    public val demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),  // labeled few-shot examples from training data
 ) : AIAgentNode<TInput, TOutput>(name, inputType, outputType, execute = { input ->
     val config = coroutineContext[OptimizationConfig]
     val effectiveInstruction = config?.getInstruction(name) ?: instruction
@@ -67,7 +65,6 @@ Key points:
 - `promptFn` is a **pure function** `(instruction, demos, input) -> Prompt`. It does not call the LLM.
 - `executePrompt` handles the LLM call. For `String` output: `promptExecutor.execute()`. For typed output: `promptExecutor.executeStructured()`.
 - The `execute` lambda (inherited from `AIAgentNode`) is derived automatically — users don't write it.
-- `inputField`/`outputField` are nullable. When null, the node can't be linked to `Example` data (e.g., when demonstrations are provided directly at construction time).
 
 ### OptimizablePromptFn
 
@@ -93,11 +90,9 @@ val myStrategy = strategy("classifier") {
     // String -> String (simplest case)
     val classify by optimizableNode(
         instruction = "Classify the sentiment of the text.",
-        inputField = "text",
-        outputField = "sentiment",
     )
 
-    // With pre-existing demonstrations
+    // With labeled few-shot examples from training data
     val summarize by optimizableNode(
         instruction = "Summarize the article.",
         demonstrations = listOf(
@@ -108,8 +103,6 @@ val myStrategy = strategy("classifier") {
     // Generic typed output (uses JSON prompt + structured output by default)
     val extract by optimizableNode<String, PersonInfo>(
         instruction = "Extract person information.",
-        inputField = "text",
-        outputField = "person",
     )
 
     edge(nodeStart forwardTo classify)
@@ -119,7 +112,7 @@ val myStrategy = strategy("classifier") {
 }
 ```
 
-Both `inputField` and `outputField` default to `null`. They are only needed when the node participates in `Example`-based optimization (e.g., `LabeledFewShot`).
+The `demonstrations` parameter provides **labeled few-shot examples** — ground truth input-output pairs from training data. These serve as the baseline for `LabeledFewShot` and as the teacher's initial demos in `BootstrapFewShot`. During bootstrapping, the teacher's demos for the current example are filtered out to prevent data leakage (the teacher must generate independently, not parrot the ground truth).
 
 There are two overloads:
 - `optimizableNode(instruction, ...)` — `String -> String`, uses `defaultStringPromptFn` and plain text LLM execution.
@@ -245,7 +238,7 @@ The `optimize()` method returns an `OptimizationResult`. To use it:
 
 2. **Bootstrap loop**: For each training example (until `maxBootstrappedDemos` traces collected):
    - **Build teacher**: Construct a fresh `GraphAIAgent` with `TraceCollectionFeature` for this example.
-   - **Filter teacher demos**: Remove any teacher demonstrations that would leak the current example's ground truth (prevent data leakage).
+   - **Filter teacher demos**: Remove any teacher demonstration whose input and output are both values in the current example's data (prevent data leakage — the teacher must generate independently, not parrot labeled examples).
    - **Run teacher**: Execute the teacher agent on the example, collecting per-node traces.
    - **Evaluate**: Run `metric(expected, actual)` against `metricThreshold`. If no metric is provided, all completions are accepted.
    - **On success**: Store per-node traces. Move to next example.
@@ -323,7 +316,8 @@ agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/
 
 agents/agents-core/src/jvmTest/kotlin/ai/koog/agents/core/optimization/
 ├── OptimizationInfrastructureTest.kt        # DONE: Tests for infrastructure + OptimizableNode DSL
-└── BootstrapFewShotTest.kt                  # DONE: Tests for BootstrapFewShot optimizer
+├── BootstrapFewShotTest.kt                  # DONE: Tests for BootstrapFewShot optimizer
+└── BootstrapFewShotTestRegression.kt        # DONE: Regression test for demo leakage prevention
 ```
 
 No Koog core files are modified — `AIAgentNode`, `AIAgentNodeDelegate`, and `AIAgentSubgraphBuilder` are untouched.
@@ -347,6 +341,8 @@ No Koog core files are modified — `AIAgentNode`, `AIAgentNodeDelegate`, and `A
 - [x] `BootstrapFewShot` optimizer (takes components, builds per-example teacher agent)
 - [x] `OptimizationResult.toAgent()` extension for creating optimized agent copies
 - [x] `BootstrapFewShotTest` (13 tests)
+- [x] BootstrapFewShot demo leakage prevention (filter current example's demos from teacher prompt)
+- [x] `BootstrapFewShotTestRegression` (2 tests)
 
 ### TODO
 - [ ] Port MIPRO v2 (`DemoSetGenerator`, `InstructionProposer`, `ConfigurationSearch`, `MIPROv2Optimizer`)
