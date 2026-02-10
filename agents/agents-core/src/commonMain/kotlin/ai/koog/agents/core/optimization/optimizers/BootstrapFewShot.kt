@@ -216,6 +216,7 @@ public class BootstrapFewShot(
                     toolRegistry = toolRegistry,
                     modules = modules,
                     example = example,
+                    exampleIndex = index,
                     teacherConfig = teacherConfig,
                     metric = metric,
                     inputFromExample = inputFromExample,
@@ -265,6 +266,7 @@ public class BootstrapFewShot(
         toolRegistry: ToolRegistry,
         modules: List<OptimizableNode<*, *>>,
         example: Example,
+        exampleIndex: Int,
         teacherConfig: OptimizationConfig,
         metric: Metric<TOutput>?,
         inputFromExample: (Example) -> TInput,
@@ -288,10 +290,18 @@ public class BootstrapFewShot(
             .feature(TraceCollectionFeatureImpl::class, TraceCollectionFeature)
             ?: error("TraceCollectionFeature should have been installed on teacher agent")
 
-        // Filter teacher demos: remove demos matching current example's input to prevent data leakage
-        // TODO: dspy removes demos matching current example's input to prevent data leakage
-        // We simplified the API by removing this information from optimizableNode. Could bring it back
-        val filteredConfig = teacherConfig
+        // Filter teacher demos: remove demos matching current example to prevent data leakage.
+        // Each module's demonstrations list is ordered the same as the trainset, so
+        // module.demonstrations[exampleIndex] is the demo for the current example.
+        val modulesByName = modules.associateBy { it.name }
+        val filteredDemos = teacherConfig.demonstrations.mapValues { (moduleName, demos) ->
+            val exampleDemo = modulesByName.getValue(moduleName).demonstrations[exampleIndex]
+            demos.filterNot { it.input == exampleDemo.input && it.output == exampleDemo.output }
+        }
+        val filteredConfig = OptimizationConfig(
+            instructions = teacherConfig.instructions,
+            demonstrations = filteredDemos,
+        )
 
         // Run teacher
         val output: TOutput
