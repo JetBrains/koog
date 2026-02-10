@@ -1,9 +1,10 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
-import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.features.opentelemetry.AgentType
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_AGENT_ID
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSimpleStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getMessagesString
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getSystemInstructionsString
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
@@ -15,18 +16,18 @@ import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.assertTrue
 
 class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
 
-    @Test
-    fun `test create and invoke agent spans are collected`() = runTest {
+    @ParameterizedTest
+    @EnumSource(AgentType::class)
+    fun `test create and invoke agent spans are collected`(agentType: AgentType) = runTest {
         val userInput = "User input"
 
-        val strategy = strategy<String, String>("test-strategy") {
-            nodeStart then nodeFinish
-        }
+        val strategy = getSimpleStrategy(agentType)
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
@@ -104,13 +105,12 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
      *
      * Verbose level does not affect logs visibility for agent create and invoke spans
      */
-    @Test
-    fun `test create and invoke agent spans with verbose logging disabled`() = runTest {
+    @ParameterizedTest
+    @EnumSource(AgentType::class)
+    fun `test create and invoke agent spans with verbose logging disabled`(agentType: AgentType) = runTest {
         val userInput = "User input"
 
-        val strategy = strategy<String, String>("test-strategy") {
-            nodeStart then nodeFinish
-        }
+        val strategy = getSimpleStrategy(agentType)
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,

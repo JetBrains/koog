@@ -1,7 +1,10 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.reflect.typeOf
 
 /**
  * A strategy for implementing AI agent behavior that operates in a loop-based manner.
@@ -23,7 +26,22 @@ public class AIAgentFunctionalStrategy<TInput, TOutput>(
     override suspend fun execute(
         context: AIAgentFunctionalContext,
         input: TInput
-    ): TOutput = context.func(input)
+    ): TOutput {
+        return try {
+            context.with(partName = name) { executionInfo, eventId ->
+                context.pipeline.onStrategyStarting(eventId, executionInfo, this, context)
+                val result = context.func(input)
+                context.pipeline.onStrategyCompleted(eventId, executionInfo, this, context, result, typeOf<Any>())
+
+                result
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            context.environment.reportProblem(e)
+            throw e
+        }
+    }
 }
 
 /**
