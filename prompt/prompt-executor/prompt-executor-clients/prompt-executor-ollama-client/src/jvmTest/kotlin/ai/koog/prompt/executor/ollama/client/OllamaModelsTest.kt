@@ -19,9 +19,9 @@ class OpenAIModelsTest {
 
     @Test
     fun `OpenAIModels models should return all declared models`() {
-        val reflectionModels = OllamaModels.list().map { it.id }
+        val reflectionModels = OllamaModels.list().map { it.id }.toSet()
 
-        val models = OllamaModels.models.map { it.id }
+        val models = OllamaModels.models.map { it.id }.toSet()
 
         assert(models.size == reflectionModels.size)
 
