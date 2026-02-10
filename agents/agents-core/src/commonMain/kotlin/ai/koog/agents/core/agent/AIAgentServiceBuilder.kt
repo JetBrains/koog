@@ -94,7 +94,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
     ),
-    private var clock: Clock = Clock.System,
+    private var clock: Clock = kotlin.time.Clock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
 ) {
 
@@ -292,7 +292,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
     ),
-    private var clock: Clock = Clock.System,
+    private var clock: Clock = kotlin.time.Clock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) {
     /**

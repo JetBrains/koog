@@ -5,8 +5,8 @@ import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Represents an event triggered when a language model (LLM) streaming operation is starting.

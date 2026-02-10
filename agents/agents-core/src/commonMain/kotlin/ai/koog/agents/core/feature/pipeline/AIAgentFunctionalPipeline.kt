@@ -16,7 +16,7 @@ import kotlinx.datetime.Clock
  */
 public class AIAgentFunctionalPipeline(
     agentConfig: AIAgentConfig,
-    clock: Clock = Clock.System
+    clock: Clock = kotlin.time.Clock.System
 ) : AIAgentPipeline(agentConfig, clock) {
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.

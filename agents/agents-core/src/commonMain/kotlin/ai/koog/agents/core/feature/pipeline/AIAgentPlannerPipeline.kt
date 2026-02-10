@@ -10,7 +10,7 @@ import kotlinx.datetime.Clock
  *
  * @property clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentPlannerPipeline(agentConfig: AIAgentConfig, clock: Clock = Clock.System) :
+public class AIAgentPlannerPipeline(agentConfig: AIAgentConfig, clock: Clock = kotlin.time.Clock.System) :
     AIAgentPipeline(agentConfig, clock) {
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.

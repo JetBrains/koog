@@ -14,8 +14,8 @@ val libs = the<LibrariesForLibs>()
 
   See: https://youtrack.jetbrains.com/issue/KT-66755/Native-non-JVM-targets-add-support-for-languageVersion
  */
-val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_1
-val kotlinApiVersion = KotlinVersion.KOTLIN_2_1
+val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_3
+val kotlinApiVersion = KotlinVersion.KOTLIN_2_3
 val kotlinBomVersion = requireNotNull(libs.kotlin.bom.get().version)
 
 extensions.getByType<KotlinProjectExtension>().apply {

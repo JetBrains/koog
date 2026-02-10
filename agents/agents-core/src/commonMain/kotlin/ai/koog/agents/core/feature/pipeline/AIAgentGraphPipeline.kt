@@ -28,7 +28,7 @@ import kotlin.reflect.KType
  */
 public expect open class AIAgentGraphPipeline(
     agentConfig: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     basePipelineDelegate: AIAgentPipelineImpl = AIAgentPipelineImpl(agentConfig, clock)
 ) : AIAgentPipeline, AIAgentGraphPipelineAPI {
 

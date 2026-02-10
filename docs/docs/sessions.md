@@ -275,7 +275,7 @@ In a write session, you can add messages to the prompt (conversation history) us
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val myToolResult = Message.Tool.Result(
     id = "",

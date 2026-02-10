@@ -36,7 +36,7 @@ public data class ReceivedToolResult(
      * @param clock The clock to use for generating the timestamp in the metadata. Defaults to `Clock.System`.
      * @return A `Message.Tool.Result` instance representing the tool result with the current data and metadata.
      */
-    public fun toMessage(clock: Clock = Clock.System): Message.Tool.Result = Message.Tool.Result(
+    public fun toMessage(clock: Clock = kotlin.time.Clock.System): Message.Tool.Result = Message.Tool.Result(
         id = id,
         tool = tool,
         content = content,

@@ -43,7 +43,7 @@ public data class Prompt @JvmOverloads constructor(
         @JvmStatic
         @JvmOverloads
         @JavaAPI
-        public fun builder(id: String, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(id, clock = clock)
+        public fun builder(id: String, clock: Clock = kotlin.time.Clock.System): PromptBuilder = PromptBuilder(id, clock = clock)
 
         /**
          * Represents an empty state for a [Prompt] object. This variable is initialized
@@ -68,7 +68,7 @@ public data class Prompt @JvmOverloads constructor(
         public fun build(
             id: String,
             params: LLMParams = LLMParams(),
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             init: PromptBuilder.() -> Unit
         ): Prompt {
             val builder = PromptBuilder(id, params, clock)
@@ -84,7 +84,7 @@ public data class Prompt @JvmOverloads constructor(
          * @param init The initialization block applied to configure the [PromptBuilder].
          * @return A new [Prompt] instance configured with the specified initialization logic.
          */
-        public fun build(prompt: Prompt, clock: Clock = Clock.System, init: PromptBuilder.() -> Unit): Prompt {
+        public fun build(prompt: Prompt, clock: Clock = kotlin.time.Clock.System, init: PromptBuilder.() -> Unit): Prompt {
             return PromptBuilder.from(prompt, clock).also(init).build()
         }
     }

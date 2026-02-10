@@ -26,7 +26,7 @@ public class BedrockClientConfig {
     /**
      * Override the clock used for time-based operations.
      */
-    public var clock: Clock = Clock.System
+    public var clock: Clock = kotlin.time.Clock.System
 }
 
 /**
@@ -39,7 +39,7 @@ public class BedrockClientConfig {
  */
 public fun KoogAgentsConfig.bedrock(
     apiKey: String,
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     configure: BedrockRuntimeClient.Config.Builder.() -> Unit = {}
 ) {
@@ -65,7 +65,7 @@ public fun KoogAgentsConfig.bedrock(
  * @param configure A lambda receiver to customize the OpenAI configuration such as base URL, timeout settings, and paths.
  */
 public fun KoogAgentsConfig.bedrock(
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     configure: BedrockRuntimeClient.Config.Builder.() -> Unit
 ) {

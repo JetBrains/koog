@@ -8,7 +8,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.jvm.JvmName
 
 /**
@@ -1032,7 +1032,7 @@ public open class DefaultResponseReceiver(
  */
 public fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     tokenizer: Tokenizer? = null,
     handleLastAssistantMessage: Boolean = false,
     init: MockLLMBuilder.() -> Unit

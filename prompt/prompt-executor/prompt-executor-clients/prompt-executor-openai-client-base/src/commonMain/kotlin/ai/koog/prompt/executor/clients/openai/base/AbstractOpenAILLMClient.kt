@@ -84,7 +84,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     private val apiKey: String,
     settings: OpenAIBaseSettings,
     baseClient: HttpClient = HttpClient(),
-    protected val clock: Clock = Clock.System,
+    protected val clock: Clock = kotlin.time.Clock.System,
     protected val logger: KLogger,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient {

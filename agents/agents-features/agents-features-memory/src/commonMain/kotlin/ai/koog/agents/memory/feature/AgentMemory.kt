@@ -458,7 +458,7 @@ public class AgentMemory(
 @OptIn(InternalAgentsApi::class)
 public suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     concept: Concept,
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
 ): Fact {
     @Serializable
     @LLMDescription("Fact text")

@@ -55,7 +55,7 @@ public open class GraphAIAgent<Input, Output>(
     override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    public val clock: Clock = Clock.System,
+    public val clock: Clock = kotlin.time.Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(

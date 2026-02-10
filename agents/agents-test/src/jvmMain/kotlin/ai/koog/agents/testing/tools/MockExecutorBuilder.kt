@@ -4,7 +4,7 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import java.util.function.Function
 
 /**
@@ -43,7 +43,7 @@ public class MockExecutorBuilder internal constructor() {
      * facilitate fine-grained control over time during executions, enabling scenarios such as testing
      * time-sensitive logic or simulating specific timestamps.
      */
-    private var clock: Clock = Clock.System
+    private var clock: kotlin.time.Clock = kotlin.time.Clock.System
 
     /**
      * Holds the instance of the `Tokenizer` interface used for tokenizing text and counting tokens.

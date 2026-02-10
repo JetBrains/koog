@@ -87,7 +87,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             noinline installFeatures: FeatureContext.() -> Unit = {},
         ): AIAgent<Input, Output>
 
@@ -133,7 +133,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
         ): FunctionalAIAgent<Input, Output>
 
@@ -195,7 +195,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             responseProcessor: ResponseProcessor? = null,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             systemPrompt: String? = null,
             temperature: Double? = null,
             numberOfChoices: Int = 1,

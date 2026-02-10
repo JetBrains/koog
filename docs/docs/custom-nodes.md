@@ -288,7 +288,7 @@ val summarizeTextNode by node<String, String>("node_name") { input ->
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.*

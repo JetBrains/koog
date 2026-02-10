@@ -12,8 +12,8 @@ import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Clock
 import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
 
 internal class MockOpenAILLMClient @JvmOverloads constructor(
     private val executeResponseContent: String = "OpenAI response",

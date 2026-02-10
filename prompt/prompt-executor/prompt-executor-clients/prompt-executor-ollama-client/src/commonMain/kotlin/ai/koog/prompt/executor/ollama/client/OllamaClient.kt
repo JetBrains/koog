@@ -80,7 +80,7 @@ public class OllamaClient @JvmOverloads constructor(
     public val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-    private val clock: Clock = Clock.System,
+    private val clock: Clock = kotlin.time.Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
 ) : LLMClient, LLMEmbeddingProvider {

@@ -30,7 +30,7 @@ There are two types of facts:
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.SingleFact
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 -->
 ```kotlin
 // Storing favorite IDE theme (single value)
@@ -49,7 +49,7 @@ val themeFact = SingleFact(
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MultipleFacts
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 -->
 ```kotlin
 // Storing programming languages (multiple values)
@@ -216,7 +216,7 @@ import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.SingleFact
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 suspend fun main() {
 -->
@@ -342,7 +342,7 @@ import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.SingleFact
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 suspend fun main() {
 -->
@@ -452,7 +452,7 @@ import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.SingleFact
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun main() {
     runBlocking {

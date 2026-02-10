@@ -55,7 +55,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
         executorService: ExecutorService? = null,
-        clock: Clock = Clock.System
+        clock: Clock = kotlin.time.Clock.System
     ): TAgent = agentConfig.runOnStrategyDispatcher(executorService) {
         createAgent(id, additionalToolRegistry, agentConfig, clock)
     }

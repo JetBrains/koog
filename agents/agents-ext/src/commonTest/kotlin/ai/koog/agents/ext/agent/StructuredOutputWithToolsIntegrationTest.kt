@@ -197,7 +197,7 @@ class StructuredOutputWithToolsIntegrationTest {
         }
 
         val toolCallTimestamps = mutableMapOf<String, Long>()
-        val currentTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val currentTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
 
         val mockExecutor = getMockExecutor {
             // Return structured output

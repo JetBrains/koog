@@ -32,12 +32,12 @@ import kotlinx.datetime.Clock
 public class PromptBuilder internal constructor(
     private val id: String,
     private val params: LLMParams = LLMParams(),
-    private val clock: Clock = Clock.System
+    private val clock: Clock = kotlin.time.Clock.System
 ) {
     private val messages = mutableListOf<Message>()
 
     internal companion object {
-        internal fun from(prompt: Prompt, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(
+        internal fun from(prompt: Prompt, clock: Clock = kotlin.time.Clock.System): PromptBuilder = PromptBuilder(
             prompt.id,
             prompt.params,
             clock
