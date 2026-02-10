@@ -113,7 +113,7 @@ public class BootstrapFewShot(
      * @param strategy The strategy to optimize. Must contain [OptimizableNode]s.
      * @param trainset Training examples to bootstrap from.
      * @param toolRegistry Tools available to the agent. Defaults to empty.
-     * @param valset Validation set. If null, unused training examples become the validation set.
+     * @param nonTrainSet Dataset to be used for labeled few shot examples. If null, unused training examples become the nonTrainSet set.
      * @param metric Optional metric to evaluate bootstrap quality. If null, all bootstraps are accepted.
      * @param inputFromExample Maps an [Example] to the strategy's typed input.
      * @return The optimization result with bootstrapped + labeled demonstrations.
@@ -124,7 +124,7 @@ public class BootstrapFewShot(
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         trainset: Dataset,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-        valset: Dataset? = null,
+        nonTrainSet: Dataset? = null,
         metric: Metric<TOutput>? = null,
         inputFromExample: (Example) -> TInput,
     ): OptimizationResult {
@@ -148,8 +148,8 @@ public class BootstrapFewShot(
             OptimizationConfig()
         }
 
-        // Step 2: Bootstrap — collect traces from teacher executions
-        val (name2traces, bootstrapValset) = bootstrap(
+        // Step 2: Bootstrap - collect traces from teacher executions
+        val (name2traces, bootstrapNonTrainset) = bootstrap(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
             strategy = strategy,
@@ -161,10 +161,9 @@ public class BootstrapFewShot(
             inputFromExample = inputFromExample,
         )
 
-        // Step 3: Train — build student config from bootstrapped + labeled demos
-        // TODO: Is this correct?
-        val effectiveValset = valset ?: bootstrapValset
-        val config = train(modules, name2traces, effectiveValset)
+        // Step 3: Train - build student config from bootstrapped + labeled demos
+        val labeledExamples = nonTrainSet ?: bootstrapNonTrainset
+        val config = train(modules, name2traces, labeledExamples)
 
         val totalBootstrapped = name2traces.values.sumOf { it.size }
 
@@ -185,7 +184,7 @@ public class BootstrapFewShot(
     /**
      * Bootstrap phase: runs teacher on training examples and collects traces from successful runs.
      *
-     * @return Pair of (per-node traces map, validation set of non-bootstrapped examples)
+     * @return Pair of (map of nodes to bootstrapped demonstrations, dataset of training examples that were not bootstrapped successfully)
      */
     private suspend fun <TInput, TOutput> bootstrap(
         promptExecutor: PromptExecutor,
@@ -243,11 +242,12 @@ public class BootstrapFewShot(
             }
         }
 
-        // Validation set: training examples NOT bootstrapped, shuffled
-        val valset = trainset.filterIndexed { index, _ -> index !in bootstrappedIndices }
+        // Training examples that were NOT bootstrapped remain ordinary examples, i.e. labeled few shot examples
+        // Our optimizer shuffles them
+        val notBootstrapped = trainset.filterIndexed { index, _ -> index !in bootstrappedIndices }
             .shuffled(random)
 
-        return name2traces to valset
+        return name2traces to notBootstrapped
     }
 
     /**
@@ -333,7 +333,7 @@ public class BootstrapFewShot(
     private fun train(
         modules: List<OptimizableNode<*, *>>,
         name2traces: Map<String, List<Demonstration<Any?, Any?>>>,
-        valset: Dataset,
+        labeledExamples: Dataset,
     ): OptimizationConfig {
         val demonstrations = mutableMapOf<String, List<Demonstration<*, *>>>()
 
@@ -343,7 +343,7 @@ public class BootstrapFewShot(
 
             // Calculate remaining labeled demo slots
             val remaining = (maxLabeledDemos - bootstrapped.size).coerceAtLeast(0)
-                .coerceAtMost(valset.size)
+                .coerceAtMost(labeledExamples.size)
 
             val labeled = if (remaining > 0) {
                 // TODO: Double check again
