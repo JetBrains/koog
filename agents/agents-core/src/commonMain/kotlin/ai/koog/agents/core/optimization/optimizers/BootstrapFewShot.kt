@@ -216,7 +216,6 @@ public class BootstrapFewShot(
                     toolRegistry = toolRegistry,
                     modules = modules,
                     example = example,
-                    exampleIndex = index,
                     teacherConfig = teacherConfig,
                     metric = metric,
                     inputFromExample = inputFromExample,
@@ -266,7 +265,6 @@ public class BootstrapFewShot(
         toolRegistry: ToolRegistry,
         modules: List<OptimizableNode<*, *>>,
         example: Example,
-        exampleIndex: Int,
         teacherConfig: OptimizationConfig,
         metric: Metric<TOutput>?,
         inputFromExample: (Example) -> TInput,
@@ -290,13 +288,11 @@ public class BootstrapFewShot(
             .feature(TraceCollectionFeatureImpl::class, TraceCollectionFeature)
             ?: error("TraceCollectionFeature should have been installed on teacher agent")
 
-        // Filter teacher demos: remove demos matching current example to prevent data leakage.
-        // Each module's demonstrations list is ordered the same as the trainset, so
-        // module.demonstrations[exampleIndex] is the demo for the current example.
-        val modulesByName = modules.associateBy { it.name }
-        val filteredDemos = teacherConfig.demonstrations.mapValues { (moduleName, demos) ->
-            val exampleDemo = modulesByName.getValue(moduleName).demonstrations[exampleIndex]
-            demos.filterNot { it.input == exampleDemo.input && it.output == exampleDemo.output }
+        // Filter teacher demos: remove demos whose input and output both come from the
+        // current example's data, to prevent the teacher from parroting the ground truth.
+        val exampleValues = example.data.values.toSet()
+        val filteredDemos = teacherConfig.demonstrations.mapValues { (_, demos) ->
+            demos.filterNot { it.input in exampleValues && it.output in exampleValues }
         }
         val filteredConfig = OptimizationConfig(
             instructions = teacherConfig.instructions,
