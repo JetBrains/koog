@@ -1,44 +1,57 @@
 package ai.koog.agents.features.opentelemetry.metric
 
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
+import ai.koog.agents.features.opentelemetry.attribute.Attribute
+import kotlinx.datetime.Instant
 
-internal interface MetricEvent {
-    val id: String
-    val timestamp: Long
+internal abstract class MetricEvent {
+    abstract val id: String
+    abstract val timestamp: Instant
+    abstract val metricName: String
+    abstract val attributes: List<Attribute>
 }
 
-internal data class LLMCallStarted(
+internal class CounterMetricEvent(
     override val id: String,
-    override val timestamp: Long,
-    val model: LLModel,
-    val modelProvider: LLMProvider
-) : MetricEvent
+    override val timestamp: Instant,
+    override val metricName: String,
+    override val attributes: List<Attribute>,
+    val value: Long
+) : MetricEvent() {
 
-internal data class LLMCallEnded(
-    override val id: String,
-    override val timestamp: Long,
-    val model: LLModel,
-    val modelProvider: LLMProvider,
-    val inputTokenSpend: Long?,
-    val outputTokenSpend: Long?
-) : MetricEvent
-
-internal data class ToolCallStarted(
-    override val id: String,
-    override val timestamp: Long,
-    val toolName: String
-) : MetricEvent
-
-internal enum class ToolCallStatus {
-    SUCCESS,
-    FAILED,
-    VALIDATION_FAILED,
+    fun copy(
+        metricName: String? = null,
+        attributes: List<Attribute>? = null,
+        value: Long? = null
+    ): CounterMetricEvent {
+        return CounterMetricEvent(
+            this.id,
+            this.timestamp,
+            metricName ?: this.metricName,
+            attributes ?: this.attributes,
+            value ?: this.value
+        )
+    }
 }
 
-internal data class ToolCallEnded(
+internal class HistogramMetricEvent(
     override val id: String,
-    override val timestamp: Long,
-    val toolName: String,
-    val status: ToolCallStatus,
-) : MetricEvent
+    override val timestamp: Instant,
+    override val metricName: String,
+    override val attributes: List<Attribute>,
+    val value: Double
+) : MetricEvent() {
+
+    fun copy(
+        metricName: String? = null,
+        attributes: List<Attribute>? = null,
+        value: Double? = null
+    ): HistogramMetricEvent {
+        return HistogramMetricEvent(
+            this.id,
+            this.timestamp,
+            metricName ?: this.metricName,
+            attributes ?: this.attributes,
+            value ?: this.value
+        )
+    }
+}

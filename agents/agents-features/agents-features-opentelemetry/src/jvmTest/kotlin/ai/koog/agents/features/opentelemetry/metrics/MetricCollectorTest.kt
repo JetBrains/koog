@@ -4,13 +4,17 @@ import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Token.TokenType
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.Koog.Tool.Call.StatusType
-import ai.koog.agents.features.opentelemetry.metric.LLMCallEnded
-import ai.koog.agents.features.opentelemetry.metric.LLMCallStarted
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
-import ai.koog.agents.features.opentelemetry.metric.NoopToolNameMapper
-import ai.koog.agents.features.opentelemetry.metric.ToolCallEnded
-import ai.koog.agents.features.opentelemetry.metric.ToolCallStarted
-import ai.koog.agents.features.opentelemetry.metric.ToolCallStatus
+import ai.koog.agents.features.opentelemetry.metric.events.createExecuteToolDurationHistogramMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDurationHistogramMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMOutputTokensMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createToolCallCounterMetricEvent
+import ai.koog.agents.features.opentelemetry.metrics.mock.Metric
+import ai.koog.agents.features.opentelemetry.metrics.mock.TestMeter
+import ai.koog.agents.features.opentelemetry.metrics.mock.getRecordsByCounterName
+import ai.koog.agents.features.opentelemetry.metrics.mock.getRecordsByHistogramName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -21,12 +25,14 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class MetricCollectorTest {
     companion object {
-        val tokenCountMetricName = "gen_ai.client.token.usage"
-        val toolCallCountMetricName = "koog.tool.count"
-        val operationDurationMetricName = "gen_ai.client.operation.duration"
+        private const val tokenCountMetricName = "gen_ai.client.token.usage"
+        private const val toolCallCountMetricName = "koog.tool.count"
+        private const val operationDurationMetricName = "gen_ai.client.operation.duration"
 
         val model: LLModel = LLModel(
             provider = LLMProvider.Ollama,
@@ -44,13 +50,15 @@ class MetricCollectorTest {
     }
 
     @Test
-    fun `test metric collector to initialize metrics`() {
+    fun testMetricCollectorToInitializeMetrics() {
         val meter = TestMeter()
 
         assertEquals(0, meter.counterValues.size)
         assertEquals(0, meter.histogramValues.size)
 
-        val metricCollector = MetricCollector(meter, NoopToolNameMapper())
+        // Initialize MetricCollector to register metrics on the meter
+        val config = OpenTelemetryConfig()
+        MetricCollector(meter, config)
 
         // Two counters and one histogram should be created
         assertEquals(countersAmount, meter.buildCounter.size)
@@ -62,9 +70,10 @@ class MetricCollectorTest {
     }
 
     @Test
-    fun `test metric collector to create token counter`() {
+    fun testMetricCollectorToCreateTokenCounter() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter, NoopToolNameMapper())
+        val config = OpenTelemetryConfig()
+        MetricCollector(meter, config)
 
         assertContains(
             meter.buildCounter,
@@ -73,9 +82,10 @@ class MetricCollectorTest {
     }
 
     @Test
-    fun `test metric collector to create tool call counter`() {
+    fun testMetricCollectorToCreateToolCallCounter() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter, NoopToolNameMapper())
+        val config = OpenTelemetryConfig()
+        MetricCollector(meter, config)
 
         assertContains(
             meter.buildCounter,
@@ -84,9 +94,10 @@ class MetricCollectorTest {
     }
 
     @Test
-    fun `test metric collector to create operation duration histogram`() {
+    fun testMetricCollectorToCreateOperationDurationHistogram() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter, NoopToolNameMapper())
+        val config = OpenTelemetryConfig()
+        MetricCollector(meter, config)
 
         assertContains(
             meter.buildHistogram,
@@ -95,44 +106,32 @@ class MetricCollectorTest {
     }
 
     @Test
-    fun `test metric collector to process LLM Call`() {
+    fun testMetricCollectorToProcessLLMTokens() {
         val meter = TestMeter()
-        val metricCollector = MetricCollector(meter, NoopToolNameMapper())
+        val config = OpenTelemetryConfig()
+        val metricCollector = MetricCollector(meter, config)
 
-        val eventId = "event-id"
-        val timestampStart = 100L
-        val timestampEnd = 101L
         val model = model
         val inputTokenSpend = 100L
         val outputTokenSpend = 200L
 
-        metricCollector.recordEvent(
-            LLMCallStarted(
-                id = eventId,
-                timestamp = timestampStart,
+        metricCollector.addCounterMetricEvent(
+            createLLMInputTokensMetricEvent(
+                id = "test-id",
                 model = model,
-                modelProvider = model.provider
-            ),
-            true
+                inputTokens = inputTokenSpend
+            )
         )
 
-        assertEquals(countersAmount, meter.counterValues.size)
-        assertEquals(0, meter.histogramValues.size)
-
-        metricCollector.recordEvent(
-            LLMCallEnded(
-                id = eventId,
-                timestamp = timestampEnd,
+        metricCollector.addCounterMetricEvent(
+            createLLMOutputTokensMetricEvent(
+                id = "test-id",
                 model = model,
-                modelProvider = model.provider,
-                inputTokenSpend = inputTokenSpend,
-                outputTokenSpend = outputTokenSpend
-            ),
-            true
+                outputTokens = outputTokenSpend
+            )
         )
 
         assertEquals(countersAmount + 2, meter.counterValues.size)
-        assertEquals(histogramsAmount, meter.buildHistogram.size)
 
         // Token Count Metric
         // Check values of the token count metric
@@ -151,11 +150,31 @@ class MetricCollectorTest {
         val outputTokenAttributes = tokenCountRecords.getOrNull(2)?.attributes
         assertLlmModelAttributes(outputTokenAttributes, model, model.provider)
         assertLlmModelTokenAttribute(outputTokenAttributes, TokenType.OUTPUT)
+    }
+
+    @Test
+    fun testMetricCollectorToProcessLLMCallDuration() {
+        val meter = TestMeter()
+        val config = OpenTelemetryConfig()
+        val metricCollector = MetricCollector(meter, config)
+
+        val model = model
+        val duration = 1.seconds
+
+        metricCollector.recordHistogramMetricEvent(
+            createLLMCallDurationHistogramMetricEvent(
+                id = "test-id",
+                model = model,
+                duration = duration
+            )
+        )
+
+        assertEquals(histogramsAmount, meter.buildHistogram.size)
 
         // Operation Duration Metric
         // Check values of the operation duration metric
         assertContentEquals(
-            listOf((timestampEnd - timestampStart).toSec()),
+            listOf(duration.inWholeSeconds.toDouble()),
             meter.getRecordsByHistogramName(operationDurationMetricName).map { it.value }
         )
 
@@ -190,46 +209,30 @@ class MetricCollectorTest {
     }
 
     @Test
-    fun `test metric collector to process tool call`() {
+    fun testMetricCollectorToProcessToolCall() {
         val cases = listOf(
-            ToolCallStatus.SUCCESS to StatusType.SUCCESS,
-            ToolCallStatus.FAILED to StatusType.ERROR,
-            ToolCallStatus.VALIDATION_FAILED to StatusType.VALIDATION_FAILED
+            StatusType.SUCCESS,
+            StatusType.ERROR,
+            StatusType.VALIDATION_FAILED
         )
 
-        cases.forEach { (status, expectedStatus) ->
+        cases.forEach { status ->
             val meter = TestMeter()
-            val metricCollector = MetricCollector(meter, NoopToolNameMapper())
+            val config = OpenTelemetryConfig()
+            val metricCollector = MetricCollector(meter, config)
 
-            val eventId = "event-id"
-            val timestampStart = 100L
-            val timestampEnd = 101L
             val toolCallName = "test-tool"
+            val duration = 100.milliseconds
 
-            metricCollector.recordEvent(
-                ToolCallStarted(
-                    id = eventId,
-                    timestamp = timestampStart,
+            metricCollector.addCounterMetricEvent(
+                createToolCallCounterMetricEvent(
+                    id = "test-id",
                     toolName = toolCallName,
-                ),
-                true
-            )
-
-            assertEquals(countersAmount, meter.counterValues.size)
-            assertEquals(0, meter.histogramValues.size)
-
-            metricCollector.recordEvent(
-                ToolCallEnded(
-                    id = eventId,
-                    timestamp = timestampEnd,
-                    toolName = toolCallName,
-                    status = status
-                ),
-                true
+                    toolCallStatus = status
+                )
             )
 
             assertEquals(countersAmount + 1, meter.counterValues.size)
-            assertEquals(histogramsAmount, meter.buildHistogram.size)
 
             // Tool Call Count Metric
             // Check values of the Tool Call Count Metric
@@ -242,12 +245,24 @@ class MetricCollectorTest {
                 meter.getRecordsByCounterName(toolCallCountMetricName).getOrNull(1)?.attributes
 
             // Check values' attributes of the input count metric
-            assertToolCallAttributes(toolCallCountAttributes, toolCallName, expectedStatus)
+            assertToolCallAttributes(toolCallCountAttributes, toolCallName, status)
+
+            // Record duration
+            metricCollector.recordHistogramMetricEvent(
+                createExecuteToolDurationHistogramMetricEvent(
+                    id = "test-id",
+                    duration = duration,
+                    toolName = toolCallName,
+                    toolCallStatus = status
+                )
+            )
+
+            assertEquals(histogramsAmount, meter.buildHistogram.size)
 
             // Operation Duration Metric
             // Check values of the operation duration metric
             assertContentEquals(
-                listOf((timestampEnd - timestampStart).toSec()),
+                listOf(duration.inWholeMilliseconds.toDouble() / 1000),
                 meter.getRecordsByHistogramName(operationDurationMetricName).map { it.value }
             )
 
@@ -255,7 +270,7 @@ class MetricCollectorTest {
                 meter.getRecordsByHistogramName(operationDurationMetricName).getOrNull(0)
 
             // Check values' attributes of the operation duration metric
-            assertToolCallAttributes(operationDurationMetric?.attributes, toolCallName, expectedStatus)
+            assertToolCallAttributes(operationDurationMetric?.attributes, toolCallName, status)
         }
     }
 

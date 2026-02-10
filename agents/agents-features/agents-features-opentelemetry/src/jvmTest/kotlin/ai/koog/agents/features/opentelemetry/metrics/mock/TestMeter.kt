@@ -1,4 +1,4 @@
-package ai.koog.agents.features.opentelemetry.metrics
+package ai.koog.agents.features.opentelemetry.metrics.mock
 
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.DoubleCounterBuilder
