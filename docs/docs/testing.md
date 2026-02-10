@@ -1010,7 +1010,7 @@ fun testMultiSubgraphAgentStructure() = runTest {
 
 ## API reference
 
-For a complete API reference related to the Testing feature, see the reference documentation for the [agents-test](https://api.koog.ai/agents/agents-test/index.html) module.
+For a complete API reference related to the Testing feature, see the reference documentation for the [agents-test](api:agents-test::) module.
 
 ## FAQ and troubleshooting
 

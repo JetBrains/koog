@@ -268,10 +268,10 @@ if (greeting.size > 1) {
 
 The AgentMemory feature provides the following predefined memory nodes that can be used in agent strategies:
 
-* [nodeLoadAllFactsFromMemory](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.feature.nodes/node-load-all-facts-from-memory.html): loads all facts about the subject from the memory for a given concept.
-* [nodeLoadFromMemory](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.feature.nodes/node-load-from-memory.html): loads specific facts from the memory for a given concept.
-* [nodeSaveToMemory](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.feature.nodes/node-save-to-memory.html): saves a fact to the memory.
-* [nodeSaveToMemoryAutoDetectFacts](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.feature.nodes/node-save-to-memory-auto-detect-facts.html): automatically detects and extracts facts from the chat history and saves them to the memory. Uses the LLM to identify concepts.
+* [nodeLoadAllFactsFromMemory](api:agents-features-memory::ai.koog.agents.memory.feature.nodes.nodeLoadAllFactsFromMemory): loads all facts about the subject from the memory for a given concept.
+* [nodeLoadFromMemory](api:agents-features-memory::ai.koog.agents.memory.feature.nodes.nodeLoadFromMemory): loads specific facts from the memory for a given concept.
+* [nodeSaveToMemory](api:agents-features-memory::ai.koog.agents.memory.feature.nodes.nodeSaveToMemory): saves a fact to the memory.
+* [nodeSaveToMemoryAutoDetectFacts](api:agents-features-memory::ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts): automatically detects and extracts facts from the chat history and saves them to the memory. Uses the LLM to identify concepts.
 
 Here is an example of how nodes can be implemented in an agent strategy:
 
@@ -497,21 +497,21 @@ The AgentMemory feature includes several mechanisms to handle edge cases:
 
 ## API documentation
 
-For a complete API reference related to the AgentMemory feature, see the reference documentation for the [agents-features-memory](https://api.koog.ai/agents/agents-features/agents-features-memory/index.html) module.
+For a complete API reference related to the AgentMemory feature, see the reference documentation for the [agents-features-memory](api:agents-features-memory::) module.
 
 API documentation for specific packages:
 
-- [ai.koog.agents.local.memory.feature](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.feature/index.html): includes the `AgentMemory` class and the core implementation of the
+- [ai.koog.agents.local.memory.feature](api:agents-features-memory::ai.koog.agents.memory.feature): includes the `AgentMemory` class and the core implementation of the
   AI agents memory feature.
-- [ai.koog.agents.local.memory.feature.nodes](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.feature.nodes/index.html): includes predefined memory-related nodes that can be used in
+- [ai.koog.agents.local.memory.feature.nodes](api:agents-features-memory::ai.koog.agents.memory.feature.nodes): includes predefined memory-related nodes that can be used in
   subgraphs.
-- [ai.koog.agents.local.memory.config](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.config/index.html): provides definitions of memory scopes used for memory operations.
-- [ai.koog.agents.local.memory.model](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.model/index.html): includes definitions of the core data structures and interfaces
+- [ai.koog.agents.local.memory.config](api:agents-features-memory::ai.koog.agents.memory.config): provides definitions of memory scopes used for memory operations.
+- [ai.koog.agents.local.memory.model](api:agents-features-memory::ai.koog.agents.memory.model): includes definitions of the core data structures and interfaces
   that enable agents to store, organize, and retrieve information across different contexts and time periods.
-- [ai.koog.agents.local.memory.feature.history](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.feature.history/index.html): provides the history compression strategy for retrieving and
+- [ai.koog.agents.local.memory.feature.history](api:agents-features-memory::ai.koog.agents.memory.feature.history): provides the history compression strategy for retrieving and
   incorporating factual knowledge about specific concepts from past session activity or stored memory.
-- [ai.koog.agents.local.memory.providers](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.providers/index.html): provides the core interface that defines the fundamental operation for storing and retrieving knowledge in a structured, context-aware manner and its implementations.
-- [ai.koog.agents.local.memory.storage](https://api.koog.ai/agents/agents-features/agents-features-memory/ai.koog.agents.local.memory.storage/index.html): provides the core interface and specific implementations for file operations across different platforms and storage backends.
+- [ai.koog.agents.local.memory.providers](api:agents-features-memory::ai.koog.agents.memory.providers): provides the core interface that defines the fundamental operation for storing and retrieving knowledge in a structured, context-aware manner and its implementations.
+- [ai.koog.agents.local.memory.storage](api:agents-features-memory::ai.koog.agents.memory.storage): provides the core interface and specific implementations for file operations across different platforms and storage backends.
 
 ## FAQ and troubleshooting
 

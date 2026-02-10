@@ -31,7 +31,7 @@ The key features of the tool registry:
 - Supports merging of multiple tool registries.
 - Provides methods to retrieve tools by name or type.
 
-To learn more, see [ToolRegistry](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html).
+To learn more, see [ToolRegistry](api:agents-tools::ai.koog.agents.core.tools.ToolRegistry).
 
 Here is an example of how to create the tool registry and add the tool to it:
 
@@ -109,7 +109,7 @@ It provides several methods for calling tools so that you can:
 - Call a tool of the specified type with the given arguments.
 - Call a tool that returns a raw string result.
 
-For more details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.session/-a-i-agent-l-l-m-write-session/index.html).
+For more details, see [API reference](api:agents-core::ai.koog.agents.core.agent.session.AIAgentLLMWriteSession).
 
 #### Parallel tool calls
 
@@ -166,15 +166,15 @@ val strategy = strategy<Unit, Unit>("strategy-name") {
 
 When building agent workflows with nodes, you can use special nodes to call tools:
 
-* **nodeExecuteTool**: calls a single tool call and returns its result. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-execute-tool.html).
+* **nodeExecuteTool**: calls a single tool call and returns its result. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteTool).
 
-* **nodeExecuteSingleTool** that calls a specific tool with the provided arguments. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-execute-single-tool.html).
+* **nodeExecuteSingleTool** that calls a specific tool with the provided arguments. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool).
 
-* **nodeExecuteMultipleTools** that performs multiple tool calls and returns their results. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-execute-multiple-tools.html).
+* **nodeExecuteMultipleTools** that performs multiple tool calls and returns their results. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools).
 
-* **nodeLLMSendToolResult** that sends a tool result to the LLM and gets a response. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-tool-result.html).
+* **nodeLLMSendToolResult** that sends a tool result to the LLM and gets a response. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult).
 
-* **nodeLLMSendMultipleToolResults** that sends multiple tool results to the LLM. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-multiple-tool-results.html).
+* **nodeLLMSendMultipleToolResults** that sends multiple tool results to the LLM. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults).
 
 ## Using agents as tools
 

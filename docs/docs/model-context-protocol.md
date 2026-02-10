@@ -37,9 +37,9 @@ Here are the main components of the MCP integration in Koog:
 
 | Component                                                                                                                                                           | Description                                                                                                |
 |---------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| [`McpTool`](https://api.koog.ai/agents/agents-mcp/ai.koog.agents.mcp/-mcp-tool/index.html)                                                                          | Serves as a bridge between the Koog tool interface and the MCP SDK.                  |                                                                              |
-| [`McpToolDescriptorParser`](https://api.koog.ai/agents/agents-mcp/ai.koog.agents.mcp/-mcp-tool-descriptor-parser/index.html)                                        | Parses MCP tool definitions into the Koog tool descriptor format.                                          |
-| [`McpToolRegistryProvider`](https://api.koog.ai/agents/agents-mcp/ai.koog.agents.mcp/-mcp-tool-registry-provider/index.html?query=object%20McpToolRegistryProvider) | Creates MCP tool registries that connect to MCP servers through various transport mechanisms (stdio, SSE). |
+| [`McpTool`](api:agents-mcp::ai.koog.agents.mcp.McpTool)                                                                          | Serves as a bridge between the Koog tool interface and the MCP SDK.                  |                                                                              |
+| [`McpToolDescriptorParser`](api:agents-mcp::ai.koog.agents.mcp.McpToolDescriptorParser)                                        | Parses MCP tool definitions into the Koog tool descriptor format.                                          |
+| [`McpToolRegistryProvider`](api:agents-mcp::ai.koog.agents.mcp.McpToolRegistryProvider) | Creates MCP tool registries that connect to MCP servers through various transport mechanisms (stdio, SSE). |
 
 ## Getting started
 

@@ -57,11 +57,11 @@ where the agent accepts an initial state string and returns the final state stri
 
 Koog provides two simple planners: 
 
-- [SimpleLLMPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.llm/-simple-l-l-m-planner/index.html)
+- [SimpleLLMPlanner](api:agents-planner::ai.koog.agents.planner.llm.SimpleLLMPlanner)
     generates a plan only once at the very beginning and then follows the plan until it is completed. 
     To include replanning, extend `SimpleLLMPlanner` and override the `assessPlan` method,
     indicating when the agent should replan.
-- [SimpleLLMWithCriticPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.llm/-simple-l-l-m-with-critic-planner/index.html)
+- [SimpleLLMWithCriticPlanner](api:agents-planner::ai.koog.agents.planner.llm.SimpleLLMWithCriticPlanner)
     implements the `assessPlan` method that uses an LLM.
     The method checks the validity of the plan via an LLM request and assesses whether the agent should replan.
 
@@ -130,10 +130,10 @@ A GOAP planner uses A* search to find the sequence of actions that satisfies the
 To create a GOAP agent, you need to:
 
 1. Define the state as a data class with properties representing various aspects specific to your goal.
-2. Create a [GOAPPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner/index.html) instance using the [goap()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/goap.html) function.
-    1. Define actions with preconditions and beliefs using the [action()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/action.html) function.
-    2. Define goals with completion conditions using the [goal()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/goal.html) function.
-3. Wrap the planner with [AIAgentPlannerStrategy](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-a-i-agent-planner-strategy/index.html) and pass it to the [PlannerAIAgent](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-planner-a-i-agent/index.html) constructor.
+2. Create a [GOAPPlanner](api:agents-planner::ai.koog.agents.planner.goap.GOAPPlanner) instance using the [goap()](api:agents-planner::ai.koog.agents.planner.goap.goap) function.
+    1. Define actions with preconditions and beliefs using the [action()](api:agents-planner::ai.koog.agents.planner.goap.GOAPPlannerBuilder.action) function.
+    2. Define goals with completion conditions using the [goal()](api:agents-planner::ai.koog.agents.planner.goap.GOAPPlannerBuilder.goal) function.
+3. Wrap the planner with [AIAgentPlannerStrategy](api:agents-planner::ai.koog.agents.planner.AIAgentPlannerStrategy) and pass it to the [PlannerAIAgent](api:agents-planner::ai.koog.agents.planner.PlannerAIAgent) constructor.
 
 !!! note
 
