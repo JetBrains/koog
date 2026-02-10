@@ -146,26 +146,20 @@ public expect class AIAgentLLMContext internal constructor(
      * are completed before initiating the write session.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public override suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T
+    public override suspend fun <T> writeSession(
+        reuseActiveSession: Boolean,
+        block: suspend AIAgentLLMWriteSession.() -> T
+    ): T
 
     /**
      * Executes a read session within the [AIAgentLLMContext], ensuring concurrent safety
      * with active write session and other read sessions.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public override suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T
-
-    /**
-     * Mutates the currently active write session without re-acquiring the write lock.
-     *
-     * MUST only be called from within an active [writeSession] (e.g., from pipeline interceptors
-     * triggered during an LLM request). Throws [IllegalStateException] if no write session is active.
-     *
-     * This is the safe way for interceptors to modify LLM state during a write session,
-     * avoiding re-entrancy and deadlock issues with [writeSession].
-     */
-    @OptIn(ExperimentalStdlibApi::class)
-    public override suspend fun <T> mutateActiveSession(block: suspend AIAgentLLMWriteSession.() -> T): T
+    public override suspend fun <T> readSession(
+        readUncommitted: Boolean,
+        block: suspend AIAgentLLMReadSession.() -> T
+    ): T
 
     /**
      * Returns the current prompt used in the LLM context.

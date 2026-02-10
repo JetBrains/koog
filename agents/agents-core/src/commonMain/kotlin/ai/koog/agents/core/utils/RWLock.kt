@@ -7,6 +7,13 @@ import kotlinx.coroutines.sync.withLock
  * A KMP read-write lock implementation that allows concurrent read access but ensures exclusive write access.
  *
  * This implementation uses `kotlinx.coroutines.sync.Mutex` to coordinate access for both readers and writers.
+ *
+ * ### Key limitations
+ * - **Writer starvation**: continuous readers can prevent writers from ever acquiring the lock (see [withReadLock]).
+ * - **Non-reentrant write lock**: the same coroutine cannot call [withWriteLock] while already holding it;
+ *   doing so will deadlock. Callers that need nested write access (e.g., interceptors running inside a
+ *   write session) must use an external mechanism to reuse the active session instead of re-acquiring
+ *   the lock (see `AIAgentLLMContextImpl.writeSession` with `reuseActiveSession = true`).
  */
 internal class RWLock {
     private val writeMutex = Mutex()

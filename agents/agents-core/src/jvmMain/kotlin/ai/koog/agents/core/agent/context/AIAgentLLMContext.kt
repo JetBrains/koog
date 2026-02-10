@@ -92,8 +92,10 @@ public actual open class AIAgentLLMContext internal actual constructor(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    public actual override suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T =
-        delegate.readSession(block)
+    public actual override suspend fun <T> readSession(
+        readUncommitted: Boolean,
+        block: suspend AIAgentLLMReadSession.() -> T
+    ): T = delegate.readSession(readUncommitted, block)
 
     @JvmOverloads
     public actual final override fun copy(

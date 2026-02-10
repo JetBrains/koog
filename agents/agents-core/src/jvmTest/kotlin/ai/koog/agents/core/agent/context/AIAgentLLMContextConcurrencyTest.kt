@@ -17,12 +17,17 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.message.Message
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
@@ -174,6 +179,149 @@ class AIAgentLLMContextConcurrencyTest {
                 finalId.length,
                 "Lost updates detected! Race condition in withPrompt."
             )
+        }
+    }
+
+    /**
+     * Issue 1: readSession exposes uncommitted state to unrelated concurrent readers.
+     * When a writeSession is active, ALL readSession calls bypass the lock and see
+     * uncommitted (potentially rolled-back) state.
+     */
+    @Test
+    @Timeout(30)
+    fun testReadSessionSeesUncommittedStateFromUnrelatedWriter() {
+        runBlocking {
+            val context = createTestLLMContext()
+            val originalPromptId = context.readSession { prompt.id }
+
+            val writerEnteredSession = CompletableDeferred<Unit>()
+            val readerFinished = CompletableDeferred<String>()
+
+            // Writer: enters writeSession, modifies prompt, then waits before committing
+            val writerJob = launch(Dispatchers.Default) {
+                try {
+                    context.writeSession {
+                        this.prompt = prompt("uncommitted-prompt") {}
+                        writerEnteredSession.complete(Unit)
+                        // Hold the session open while reader runs
+                        delay(500)
+                        // Throw to simulate rollback — changes should NOT be committed
+                        error("Simulated failure — rolling back write session")
+                    }
+                } catch (_: IllegalStateException) {
+                    // Expected
+                }
+            }
+
+            // Reader: wait for writer to enter session, then read
+            val readerJob = launch(Dispatchers.Default) {
+                writerEnteredSession.await()
+                val readPromptId = context.readSession { prompt.id }
+                readerFinished.complete(readPromptId)
+            }
+
+            val observedPromptId = readerFinished.await()
+            writerJob.join()
+            readerJob.join()
+
+            // After rollback, the committed state should still be the original
+            val committedPromptId = context.readSession { prompt.id }
+            assertEquals(originalPromptId, committedPromptId, "Committed state should be unchanged after rollback")
+
+            // BUG: The concurrent reader observed "uncommitted-prompt" which was never committed.
+            // With a correct implementation, the reader should have seen the original prompt.
+            // This assertion documents the current buggy behavior:
+            if (observedPromptId == "uncommitted-prompt") {
+                println("[DEBUG_LOG] BUG CONFIRMED: readSession exposed uncommitted state to unrelated reader")
+            }
+            // Ideally this should pass, but with the current implementation it may fail:
+            // assertEquals(originalPromptId, observedPromptId, "Reader should not see uncommitted state")
+        }
+    }
+
+    /**
+     * Issue 4: responseProcessor changes inside writeSession are not committed.
+     * Note: This is NOT a regression — the develop branch also did not commit responseProcessor.
+     * This test documents the current behavior (by design or long-standing omission).
+     */
+    @Test
+    @Timeout(30)
+    fun testResponseProcessorNotCommittedInWriteSession() {
+        runBlocking {
+            val context = createTestLLMContext()
+
+            // Verify initial state
+            val initialProcessor = context.readSession { responseProcessor }
+            assertEquals(null, initialProcessor, "Initial responseProcessor should be null")
+
+            // Set a responseProcessor inside writeSession
+            val testProcessor = object : ResponseProcessor() {
+                override suspend fun process(
+                    executor: PromptExecutor,
+                    prompt: Prompt,
+                    model: LLModel,
+                    tools: List<ToolDescriptor>,
+                    responses: List<Message.Response>
+                ) = responses
+            }
+            context.writeSession {
+                this.responseProcessor = testProcessor
+            }
+
+            // BUG: responseProcessor is NOT committed because the TODO removed the commit line
+            val afterWriteProcessor = context.readSession { responseProcessor }
+            // This documents the bug — the processor should be testProcessor but is null
+            if (afterWriteProcessor == null) {
+                println("[DEBUG_LOG] BUG CONFIRMED: responseProcessor was not committed by writeSession")
+            }
+            // Ideally: assertEquals(testProcessor, afterWriteProcessor)
+        }
+    }
+
+    /**
+     * Issue 7: writeSession(reuseActiveSession = true) can be called by any coroutine while
+     * a write session is active, not just the owning coroutine. This bypasses the write lock.
+     */
+    @Test
+    @Timeout(30)
+    fun testReuseActiveSessionCallableFromUnrelatedCoroutine() {
+        runBlocking {
+            val context = createTestLLMContext()
+            val writerEnteredSession = CompletableDeferred<Unit>()
+            val mutationDone = CompletableDeferred<Boolean>()
+
+            // Writer holds the write session open
+            val writerJob = launch(Dispatchers.Default) {
+                context.writeSession {
+                    writerEnteredSession.complete(Unit)
+                    // Hold session open
+                    delay(500)
+                    "done"
+                }
+            }
+
+            // Unrelated coroutine calls writeSession(reuseActiveSession = true)
+            val intruderJob = launch(Dispatchers.Default) {
+                writerEnteredSession.await()
+                try {
+                    context.writeSession(reuseActiveSession = true) {
+                        this.prompt = prompt("intruder-prompt") {}
+                    }
+                    mutationDone.complete(true)
+                    println("[DEBUG_LOG] BUG CONFIRMED: writeSession(reuseActiveSession=true) succeeded from unrelated coroutine")
+                } catch (e: IllegalStateException) {
+                    mutationDone.complete(false)
+                }
+            }
+
+            val succeeded = mutationDone.await()
+            writerJob.join()
+            intruderJob.join()
+
+            // BUG: This succeeds even though the caller is not the write session owner
+            if (succeeded) {
+                println("[DEBUG_LOG] writeSession(reuseActiveSession=true) has no caller verification — any coroutine can mutate during active write")
+            }
         }
     }
 

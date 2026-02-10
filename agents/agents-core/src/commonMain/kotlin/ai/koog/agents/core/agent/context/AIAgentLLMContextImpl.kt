@@ -15,34 +15,37 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlinx.datetime.Clock
 
 /**
  * Implementation of [AIAgentLLMContextAPI] with read-write lock based session management.
  *
  * ### Writer Starvation
- * The underlying lock allows writer starvation: continuous read requests
+ * The underlying [RWLock] allows writer starvation: continuous read requests
  * can prevent writers from ever acquiring the lock.
  *
- * ### Active Write Session
- * - [mutateActiveSession] allows interceptors to safely mutate the active
- *   write session without re-acquiring the write lock, preventing deadlocks.
- * - [readSession] calls within an active [writeSession] will read from the uncommitted state
- *   without acquiring a lock, preventing deadlocks when called from within writeSession.
+ * ### Deadlock Avoidance Trade-offs
+ * The underlying [RWLock] uses a non-reentrant `Mutex`, so nested lock acquisition from the same
+ * coroutine (e.g., calling `writeSession` or `readSession` from within an active `writeSession`)
+ * would deadlock. Two opt-in parameters exist specifically to avoid this:
  *
- * ### Uncommitted State Visibility
- * When a writeSession is active, ALL concurrent readSession calls (not just
- * those from the same logical session) will see the uncommitted state.
- * This is a trade-off for preventing deadlock when readSession is called from within writeSession.
+ * - **`writeSession(reuseActiveSession = true)`** — reuses the currently active write session
+ *   without re-acquiring the write lock. This is intended for interceptors that
+ *   need to mutate state during an already-active write session.
+ *   **Trade-off:** there is no caller/owner verification — *any* coroutine can call this while a
+ *   write session is active and mutate the session without holding the lock. This is accepted
+ *   because the alternative (re-acquiring the non-reentrant lock) would deadlock.
  *
- * ### Race Window in Read Fast Path
- * There is a race window where a reader may observe an active write session
- * that commits and closes between the check and the read. The reader will
- * read from the session object's final state (which matches committed state),
- * but technically accesses a closed session. This is safe because the session
- * fields remain accessible after close, but it's a subtle correctness issue.
+ * - **`readSession(readUncommitted = true)`** — reads from the uncommitted write session state
+ *   without acquiring any lock. This is intended for code running inside a `writeSession` that
+ *   needs to read the current (uncommitted) state.
+ *   **Trade-off:** *any* coroutine can call this while a write session is active and observe
+ *   uncommitted state that may later be rolled back. This is accepted because acquiring the
+ *   read lock from within a write session would deadlock.
+ *
+ * By default, both `readSession` and `writeSession` acquire proper locks for full isolation.
  */
 internal class AIAgentLLMContextImpl(
     override var tools: List<ToolDescriptor>,
@@ -55,27 +58,8 @@ internal class AIAgentLLMContextImpl(
     override val config: AIAgentConfig,
     override val clock: Clock
 ) : AIAgentLLMContextAPI {
-
-    /**
-     * Read-write lock for coordinating access to mutable state.
-     * - Writers acquire exclusive access via write lock methods
-     * - Readers acquire shared access via withReadLock
-     * - Multiple readers can read concurrently
-     * - Writers block readers and other writers
-     */
-    private val rwLock = RWLock()
-
-    /**
-     * Tracks the currently active write session.
-     * Used by [mutateActiveSession] to access the session without re-acquiring the lock,
-     * and by [readSession] to read uncommitted state when called within a write session.
-     */
-    private val activeWriteSession: AtomicReference<AIAgentLLMWriteSession?> = AtomicReference(null)
-
-    public override suspend fun withPrompt(block: Prompt.() -> Prompt) {
-        rwLock.withWriteLock {
-            this.prompt = prompt.block()
-        }
+    public override suspend fun withPrompt(block: Prompt.() -> Prompt): Unit = rwLock.withWriteLock {
+        this.prompt = prompt.block()
     }
 
     public override suspend fun copy(
@@ -88,21 +72,36 @@ internal class AIAgentLLMContextImpl(
         environment: AIAgentEnvironment,
         config: AIAgentConfig,
         clock: Clock
-    ): AIAgentLLMContext {
-        return rwLock.withReadLock {
-            AIAgentLLMContext(
-                tools = tools,
-                toolRegistry = toolRegistry,
-                prompt = prompt,
-                model = model,
-                promptExecutor = promptExecutor,
-                environment = environment,
-                config = config,
-                clock = clock,
-                responseProcessor = responseProcessor
-            )
-        }
+    ): AIAgentLLMContext = rwLock.withReadLock {
+        AIAgentLLMContext(
+            tools = tools,
+            toolRegistry = toolRegistry,
+            prompt = prompt,
+            model = model,
+            promptExecutor = promptExecutor,
+            environment = environment,
+            config = config,
+            clock = clock,
+            responseProcessor = responseProcessor
+        )
     }
+
+    /**
+     * Read-write lock for coordinating access to mutable state.
+     * - Writers acquire exclusive access via write lock methods
+     * - Readers acquire shared access via withReadLock
+     * - Multiple readers can read concurrently
+     * - Writers block readers and other writers
+     */
+    private val rwLock = RWLock()
+
+    /**
+     * Tracks the currently active write session.
+     * Used by [writeSession] with `reuseActiveSession = true` to reuse the session without
+     * re-acquiring the lock, and by [readSession] with `readUncommitted = true` to read
+     * uncommitted state when called within a write session.
+     */
+    private val activeWriteSession: AtomicReference<AIAgentLLMWriteSession?> = AtomicReference(null)
 
     /**
      * Executes a write session with exclusive access.
@@ -110,11 +109,25 @@ internal class AIAgentLLMContextImpl(
      * Only one writer can execute at a time (serialized via [RWLock] write lock).
      * Changes are committed atomically when the block completes successfully.
      *
-     * Interceptors that need to mutate state during a write session (e.g., Memory2)
-     * should use [mutateActiveSession] instead of nesting writeSession calls.
+     * @param reuseActiveSession When `true` and a write session is already active, the block
+     *   executes on the existing session **without re-acquiring the write lock**. This prevents
+     *   deadlocks when interceptors need to mutate state during an active write session.
+     *   **Caveat:** no caller/owner verification is performed — any coroutine can reuse the
+     *   active session. See class-level documentation for the rationale.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public override suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T {
+    public override suspend fun <T> writeSession(
+        reuseActiveSession: Boolean,
+        block: suspend AIAgentLLMWriteSession.() -> T
+    ): T {
+        if (reuseActiveSession) {
+            val active = activeWriteSession.load()
+            if (active != null) {
+                return active.block()
+            }
+            // No active session — fall through to normal write
+        }
+
         return rwLock.withWriteLock {
             val session = AIAgentLLMWriteSession(
                 environment,
@@ -137,7 +150,7 @@ internal class AIAgentLLMContextImpl(
                 this.prompt = session.prompt
                 this.tools = session.tools
                 this.model = session.model
-                this.responseProcessor = session.responseProcessor
+                // TODO: should we update responseProcessor?
 
                 result
             } finally {
@@ -148,50 +161,32 @@ internal class AIAgentLLMContextImpl(
     }
 
     /**
-     * Mutates the currently active write session without re-acquiring the write lock.
+     * Executes a read session with shared access.
      *
-     * MUST only be called from within an active [writeSession] (e.g., from pipeline interceptors
-     * triggered during an LLM request). Throws [IllegalStateException] if no write session is active.
+     * Multiple readers can execute concurrently; readers are blocked while a writer holds the lock.
+     *
+     * @param readUncommitted When `true` and a write session is currently active, the block
+     *   reads directly from the uncommitted write session state **without acquiring any lock**.
+     *   This prevents deadlocks when reading from within an active write session.
+     *   **Caveat:** any coroutine (not just the write-session owner) calling with
+     *   `readUncommitted = true` will observe uncommitted state that may be rolled back.
+     *   See class-level documentation for the rationale.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public override suspend fun <T> mutateActiveSession(block: suspend AIAgentLLMWriteSession.() -> T): T {
-        val session = activeWriteSession.load()
-            ?: error("mutateActiveSession called outside an active writeSession")
-        return session.block()
-    }
-
-    /**
-     * Executes a read session with shared access to the current state.
-     *
-     * Behavior:
-     * - If there's an active write session, reads from its current (uncommitted) state
-     *   without acquiring a lock (prevents deadlock when called from within writeSession)
-     * - Otherwise, acquires read lock for consistent snapshot of all mutable fields
-     * - Multiple readers can execute concurrently when no write session is active
-     *
-     * CAVEAT: When a write session is active, this method reads from the uncommitted
-     * state regardless of whether the caller is logically part of that write session.
-     * This means concurrent readers may observe uncommitted changes that could be
-     * rolled back if the writer throws an exception.
-     */
-    @OptIn(ExperimentalStdlibApi::class)
-    public override suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T {
-        // Check if there is an active write session
-        val active = activeWriteSession.load()
-        if (active != null) {
-            // Read from uncommitted state without lock
-            val session = AIAgentLLMReadSession(
-                active.tools,
-                promptExecutor,
-                active.prompt,
-                active.model,
-                active.responseProcessor,
-                config
-            )
-            return session.use { block(it) }
+    public override suspend fun <T> readSession(
+        readUncommitted: Boolean,
+        block: suspend AIAgentLLMReadSession.() -> T
+    ): T {
+        if (readUncommitted) {
+            val activeSession = activeWriteSession.load()
+            if (activeSession != null) {
+                val uncommitted = AIAgentLLMReadSession(
+                    activeSession.tools, promptExecutor, activeSession.prompt,
+                    activeSession.model, activeSession.responseProcessor, config
+                )
+                return uncommitted.use { block(it) }
+            }
         }
-
-        // Otherwise, acquire read lock
         return rwLock.withReadLock {
             val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, responseProcessor, config)
             session.use { block(it) }

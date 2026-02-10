@@ -157,28 +157,33 @@ public interface AIAgentLLMContextAPI {
     /**
      * Executes a write session on the [AIAgentLLMContext], ensuring that all active write and read sessions
      * are completed before initiating the write session.
+     *
+     * @param reuseActiveSession If `true` and a write session is already active, reuses the existing session
+     *   without re-acquiring the write lock. This is useful for interceptors that need to mutate state during
+     *   an active write session (e.g., pipeline interceptors triggered during an LLM request).
+     *   If no write session is active, falls through to normal write session acquisition.
+     *   Defaults to `false` (always acquire the write lock).
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T
+    public suspend fun <T> writeSession(
+        reuseActiveSession: Boolean = false,
+        block: suspend AIAgentLLMWriteSession.() -> T
+    ): T
 
     /**
      * Executes a read session within the [AIAgentLLMContext], ensuring concurrent safety
      * with active write session and other read sessions.
+     *
+     * @param readUncommitted If `true` and a write session is currently active, reads from the
+     *   uncommitted write session state without acquiring the read lock. This prevents deadlocks
+     *   when `readSession` is called from within a `writeSession`, but exposes uncommitted state
+     *   that may be rolled back. Defaults to `false` (always acquire the read lock).
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T
-
-    /**
-     * Mutates the currently active write session without re-acquiring the write lock.
-     *
-     * MUST only be called from within an active [writeSession] (e.g., from pipeline interceptors
-     * triggered during an LLM request). Throws [IllegalStateException] if no write session is active.
-     *
-     * This is the safe way for interceptors to modify LLM state during a write session,
-     * avoiding re-entrancy and deadlock issues with [writeSession].
-     */
-    @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> mutateActiveSession(block: suspend AIAgentLLMWriteSession.() -> T): T
+    public suspend fun <T> readSession(
+        readUncommitted: Boolean = false,
+        block: suspend AIAgentLLMReadSession.() -> T
+    ): T
 
     /**
      * Returns the current prompt used in the LLM context.
