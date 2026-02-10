@@ -30,8 +30,6 @@ class OptimizationInfrastructureTest {
         val testStrategy = strategy("test") {
             val optimizable by optimizableNode(
                 instruction = "This node is optimizable",
-                inputField = "text",
-                outputField = "label",
             )
 
             val notOptimizable by node<String, String> { input ->
@@ -48,8 +46,6 @@ class OptimizationInfrastructureTest {
         assertEquals(1, modules.size)
         assertEquals("optimizable", modules[0].name)
         assertEquals("This node is optimizable", modules[0].instruction)
-        assertEquals("text", modules[0].inputField)
-        assertEquals("label", modules[0].outputField)
     }
 
     /**
@@ -77,8 +73,6 @@ class OptimizationInfrastructureTest {
         val testStrategy = strategy("test") {
             val myNode by optimizableNode(
                 instruction = "My instruction",
-                inputField = "text",
-                outputField = "sentiment",
                 description = "My description",
                 demonstrations = listOf(Demonstration("example in", "example out")),
             )
@@ -94,8 +88,6 @@ class OptimizationInfrastructureTest {
         assertEquals("myNode", module.name)
         assertEquals("My instruction", module.instruction)
         assertEquals("My description", module.description)
-        assertEquals("text", module.inputField)
-        assertEquals("sentiment", module.outputField)
         assertEquals(1, module.demonstrations.size)
         assertEquals("example in", module.demonstrations[0].input)
         assertEquals("example out", module.demonstrations[0].output)
@@ -120,8 +112,6 @@ class OptimizationInfrastructureTest {
         assertEquals(1, modules.size)
 
         val module = modules[0]
-        assertEquals(null, module.inputField)
-        assertEquals(null, module.outputField)
         assertEquals(1, module.demonstrations.size)
     }
 

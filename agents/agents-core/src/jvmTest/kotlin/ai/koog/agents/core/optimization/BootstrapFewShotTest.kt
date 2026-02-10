@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationResult
@@ -49,13 +50,11 @@ class BootstrapFewShotTest {
     private val simpleStrategy = strategy("test") {
         val thinking by optimizableNode(
             instruction = "Think about the question",
-            inputField = "question",
-            outputField = "thinking",
+            demonstrations = trainset.map { Demonstration(it.data["question"] as String, it.data["thinking"] as String, false) }
         )
         val answer by optimizableNode(
             instruction = "Answer the question",
-            inputField = "thinking",
-            outputField = "answer",
+            demonstrations = trainset.map { Demonstration(it.data["thinking"] as String, it.data["answer"] as String, false) }
         )
 
         edge(nodeStart forwardTo thinking)

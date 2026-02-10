@@ -13,6 +13,7 @@ import ai.koog.agents.core.optimization.core.OptimizationResult
 import ai.koog.agents.core.optimization.features.TraceCollectionFeature
 import ai.koog.agents.core.optimization.features.TraceCollectionFeatureImpl
 import ai.koog.agents.core.optimization.features.collectTraces
+import ai.koog.agents.core.optimization.util.sampleLabeledDemonstrations
 import ai.koog.agents.core.optimization.util.findOptimizableModules
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -140,12 +141,9 @@ public class BootstrapFewShot(
 
         // Step 1: Teacher pre-optimization with LabeledFewShot
         val teacherConfig = if (maxLabeledDemos > 0) {
-            val labeledFewShot = LabeledFewShot(k = maxLabeledDemos, sample = true, random = random)
-            labeledFewShot.optimize(
-                strategy = strategy,
-                trainset = trainset,
-                metric = metric ?: { _, _ -> 0.0 },
-            ).config
+            OptimizationConfig(
+                demonstrations = modules.associate { it.name to sampleLabeledDemonstrations(it.demonstrations, true, maxLabeledDemos, random) }
+            )
         } else {
             OptimizationConfig()
         }
@@ -164,6 +162,7 @@ public class BootstrapFewShot(
         )
 
         // Step 3: Train — build student config from bootstrapped + labeled demos
+        // TODO: Is this correct?
         val effectiveValset = valset ?: bootstrapValset
         val config = train(modules, name2traces, effectiveValset)
 
@@ -290,7 +289,9 @@ public class BootstrapFewShot(
             ?: error("TraceCollectionFeature should have been installed on teacher agent")
 
         // Filter teacher demos: remove demos matching current example's input to prevent data leakage
-        val filteredConfig = filterTeacherDemos(teacherConfig, modules, example)
+        // TODO: dspy removes demos matching current example's input to prevent data leakage
+        // We simplified the API by removing this information from optimizableNode. Could bring it back
+        val filteredConfig = teacherConfig
 
         // Run teacher
         val output: TOutput
@@ -323,35 +324,6 @@ public class BootstrapFewShot(
     }
 
     /**
-     * Filters teacher demonstrations to prevent data leakage.
-     *
-     * Removes any demonstration whose input matches the current example's input field value
-     * for each optimizable module.
-     */
-    private fun filterTeacherDemos(
-        teacherConfig: OptimizationConfig,
-        modules: List<OptimizableNode<*, *>>,
-        example: Example,
-    ): OptimizationConfig {
-        val filteredDemos = teacherConfig.demonstrations.toMutableMap()
-
-        for (module in modules) {
-            val inputField = module.inputField ?: continue
-            val exampleInput = example[inputField] ?: continue
-            val demos = filteredDemos[module.name] ?: continue
-
-            filteredDemos[module.name] = demos.filter { demo ->
-                demo.input != exampleInput
-            }
-        }
-
-        return OptimizationConfig(
-            instructions = teacherConfig.instructions,
-            demonstrations = filteredDemos,
-        )
-    }
-
-    /**
      * Builds the student [OptimizationConfig] from bootstrapped traces and labeled fallback.
      *
      * For each module:
@@ -374,22 +346,8 @@ public class BootstrapFewShot(
                 .coerceAtMost(valset.size)
 
             val labeled = if (remaining > 0) {
-                val inField = module.inputField
-                val outField = module.outputField
-                if (inField != null && outField != null) {
-                    valset.shuffled(random)
-                        .filter { it.data.containsKey(inField) && it.data.containsKey(outField) }
-                        .take(remaining)
-                        .map { example ->
-                            Demonstration(
-                                input = example.data[inField]!!,
-                                output = example.data[outField]!!,
-                                isBootstrapped = false,
-                            )
-                        }
-                } else {
-                    emptyList()
-                }
+                // TODO: Double check again
+                sampleLabeledDemonstrations(module.demonstrations, true, remaining, random)
             } else {
                 emptyList()
             }
