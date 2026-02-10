@@ -1,3 +1,12 @@
+# 0.6.2
+> Published 10 February 2026
+
+## Improvements
+- **Structured output with examples**: Include examples in the prompt with `StructuredRequest.Native` to help LLMs better understand desired data format (#1328, #1396)
+
+## Bug fixes
+- **Kotlin/Wasm support**: Applied workaround for Kotlin/Wasm compiler bug which produced invalid Wasm files ([KT-83728](https://youtrack.jetbrains.com/issue/KT-83728), #1365)
+
 # 0.6.1
 > Published 28 January 2026
 
