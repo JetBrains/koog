@@ -210,6 +210,7 @@ dependencies {
     dokka(project(":agents:agents-core"))
     dokka(project(":agents:agents-ext"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
+    dokka(project(":agents:agents-features:agents-features-longterm-memory"))
     dokka(project(":agents:agents-features:agents-features-memory"))
     dokka(project(":agents:agents-features:agents-features-opentelemetry"))
     dokka(project(":agents:agents-features:agents-features-snapshot"))

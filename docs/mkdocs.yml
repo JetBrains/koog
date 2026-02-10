@@ -44,6 +44,7 @@ nav:
           - Event handlers: agent-event-handlers.md
           - Tracing: tracing.md
           - Memory: agent-memory.md
+          - Long Term Memory: long-term-memory.md
           - Agent Persistence: agent-persistence.md
           - OpenTelemetry:
               - Overview: opentelemetry-support.md

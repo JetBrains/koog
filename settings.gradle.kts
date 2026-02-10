@@ -14,6 +14,7 @@ include(":agents:agents-ext")
 
 include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")
+include(":agents:agents-features:agents-features-longterm-memory")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-opentelemetry")
 include(":agents:agents-features:agents-features-sql")

@@ -127,6 +127,12 @@ Learn about the core components of Koog agents in detail:
 
     Debug and monitor agent execution with detailed, configurable tracing
 
+-   :material-timeline-text:{ .lg .middle } [**Long Term Memory**](long-term-memory.md)
+
+    ---
+
+    Integrate vector databases and memory providers for RAG and persistent memory.
+
 </div>
 
 ## Integrations
