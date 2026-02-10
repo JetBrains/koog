@@ -12,6 +12,7 @@ import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
 import ai.koog.agents.core.optimization.util.toAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -123,9 +124,9 @@ class BootstrapFewShotTest {
     ): List<Prompt> = runBlocking {
         val capturedPrompts = mutableListOf<Prompt>()
         val capturingExecutor = object : PromptExecutor by executor {
-            override suspend fun execute(prompt: Prompt, model: LLModel): List<Message.Response> {
+            override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
                 capturedPrompts.add(prompt)
-                return executor.execute(prompt, model)
+                return executor.execute(prompt, model, tools)
             }
         }
 
