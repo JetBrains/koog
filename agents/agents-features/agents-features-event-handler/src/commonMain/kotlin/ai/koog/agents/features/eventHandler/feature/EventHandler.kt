@@ -3,6 +3,7 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -63,7 +64,9 @@ public class EventHandler {
         override val key: AIAgentStorageKey<EventHandler> =
             AIAgentStorageKey("agents-features-event-handler")
 
-        override fun createInitialConfig(): EventHandlerConfig = EventHandlerConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): EventHandlerConfig = EventHandlerConfig()
 
         override fun install(
             config: EventHandlerConfig,

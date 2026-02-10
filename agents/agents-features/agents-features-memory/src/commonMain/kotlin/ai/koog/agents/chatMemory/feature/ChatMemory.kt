@@ -1,5 +1,6 @@
 package ai.koog.agents.chatMemory.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -48,7 +49,9 @@ public class ChatMemory {
         override val key: AIAgentStorageKey<ChatMemory> =
             AIAgentStorageKey("agents-features-chat-memory")
 
-        override fun createInitialConfig(): ChatMemoryConfig = ChatMemoryConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): ChatMemoryConfig = ChatMemoryConfig()
 
         override fun install(
             config: ChatMemoryConfig,

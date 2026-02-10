@@ -5,15 +5,17 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import org.junit.jupiter.api.Test
 import java.util.function.BiFunction
 import kotlin.test.assertEquals
 
 class LLMWriteSessionJavaApiTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun writeSession_allowsPromptSwapAndRequest() {
-        val executor = getMockExecutor { }
+        val executor = getMockExecutor(serializer) { }
 
         val config = AIAgentConfig(
             prompt = Prompt.builder("write-session")

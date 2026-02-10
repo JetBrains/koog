@@ -58,6 +58,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.flow.first
@@ -75,6 +76,7 @@ import kotlin.test.assertTrue
 
 @Disabled("Flaky, see #1124")
 class DebuggerTest {
+    private val serializer = KotlinxSerializer()
 
     @OptIn(InternalAgentsApi::class)
     @Test
@@ -126,7 +128,7 @@ class DebuggerTest {
                 toolResultMessage(
                     toolCallId = "0",
                     toolName = dummyTool.name,
-                    content = dummyTool.encodeResultToString(dummyTool.result),
+                    content = dummyTool.encodeResultToString(dummyTool.result, serializer),
                     metaInfo = RequestMetaInfo.create(testClock)
                 )
             )
@@ -154,7 +156,7 @@ class DebuggerTest {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                 mockLLMToolCall(
                     tool = dummyTool,
                     args = DummyTool.Args(requestedDummyToolArgs),
@@ -387,7 +389,7 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             toolCallId = "0",
                             toolName = dummyTool.name,
-                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         ToolCallCompletedEvent(
@@ -396,9 +398,9 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             toolCallId = "0",
                             toolName = dummyTool.name,
-                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                             toolDescription = dummyTool.descriptor.description,
-                            result = dummyTool.encodeResult(dummyTool.result),
+                            result = dummyTool.encodeResult(dummyTool.result, serializer),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -418,11 +420,11 @@ class DebuggerTest {
                                 data = ReceivedToolResult(
                                     id = "0",
                                     tool = dummyTool.name,
-                                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                     toolDescription = dummyTool.descriptor.description,
                                     content = dummyTool.result,
                                     resultKind = ToolResultKind.Success,
-                                    result = dummyTool.encodeResult(dummyTool.result)
+                                    result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
                                 dataType = typeOf<ReceivedToolResult>()
                             ),
@@ -437,11 +439,11 @@ class DebuggerTest {
                                 data = ReceivedToolResult(
                                     id = "0",
                                     tool = dummyTool.name,
-                                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                     toolDescription = dummyTool.descriptor.description,
                                     content = dummyTool.result,
                                     resultKind = ToolResultKind.Success,
-                                    result = dummyTool.encodeResult(dummyTool.result)
+                                    result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
                                 dataType = typeOf<ReceivedToolResult>()
                             ),
@@ -474,11 +476,11 @@ class DebuggerTest {
                                 data = ReceivedToolResult(
                                     id = "0",
                                     tool = dummyTool.name,
-                                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                     toolDescription = dummyTool.descriptor.description,
                                     content = dummyTool.result,
                                     resultKind = ToolResultKind.Success,
-                                    result = dummyTool.encodeResult(dummyTool.result)
+                                    result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
                                 dataType = typeOf<ReceivedToolResult>()
                             ),

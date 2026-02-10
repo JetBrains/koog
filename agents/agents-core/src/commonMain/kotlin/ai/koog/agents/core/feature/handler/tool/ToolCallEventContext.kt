@@ -5,8 +5,8 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.feature.model.AIAgentError
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
 
 /**
  * Represents the context for handling tool call events.
@@ -35,7 +35,7 @@ public interface ToolCallEventContext : AgentLifecycleEventContext {
     /**
      * [toolArgs] The arguments provided for the tool execution, adhering to the tool's expected input structure.
      */
-    public val toolArgs: JsonObject
+    public val toolArgs: JSONObject
 
     /**
      * [context] The agent context associated with the tool call;
@@ -55,7 +55,7 @@ public data class ToolCallStartingContext(
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
-    override val toolArgs: JsonObject,
+    override val toolArgs: JSONObject,
     override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallStarting
@@ -75,7 +75,7 @@ public data class ToolValidationFailedContext(
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
-    override val toolArgs: JsonObject,
+    override val toolArgs: JSONObject,
     val message: String,
     val error: AIAgentError,
     override val context: AIAgentContext
@@ -97,7 +97,7 @@ public data class ToolCallFailedContext(
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
-    override val toolArgs: JsonObject,
+    override val toolArgs: JSONObject,
     val message: String,
     val error: AIAgentError?,
     override val context: AIAgentContext
@@ -118,8 +118,8 @@ public data class ToolCallCompletedContext(
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
-    override val toolArgs: JsonObject,
-    val toolResult: JsonElement?,
+    override val toolArgs: JSONObject,
+    val toolResult: JSONElement?,
     override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallCompleted

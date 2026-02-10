@@ -39,6 +39,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.flow.Flow
@@ -58,6 +59,7 @@ import kotlin.test.assertTrue
 
 @Disabled("Flaky, see #1124")
 class DebuggerStreamingTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun `test debugger collect streaming success events on agent run`() = runBlocking {
@@ -95,7 +97,7 @@ class DebuggerStreamingTest {
         // Executor
         val testLLMResponse = "Default test response"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals userPrompt
         }
 

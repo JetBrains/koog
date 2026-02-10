@@ -23,18 +23,20 @@ import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.core.tools.asToolDescriptor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.serializer
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.typeToken
+import kotlinx.serialization.Serializable
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.reflect.KClass
 
 /**
  * Utility object providing tools and methods for working with subgraphs and tasks in a controlled
@@ -72,28 +74,10 @@ public object SubgraphWithTaskUtils {
     public const val FINALIZE_SUBGRAPH_TOOL_DESCRIPTION: String = "Call this tool when finish and provide final result"
 
     /**
-     * Creates and returns a `Tool` instance with serializers and a descriptor for processing.
-     *
-     * @return A `Tool` instance where the input arguments and results share the same type `T`. The tool uses serializers and a descriptor based on the generic type `T`.
+     * Creates an instance of [FinishTool] for output type [T]
      */
     @OptIn(InternalAgentToolsApi::class)
-    public inline fun <reified T> finishTool(): Tool<T, T> = object : Tool<T, T>(
-        argsSerializer = serializer(),
-        resultSerializer = serializer(),
-        descriptor = serializer<T>().descriptor.asToolDescriptor(
-            toolName = FINALIZE_SUBGRAPH_TOOL_NAME,
-            toolDescription = FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
-        )
-    ) {
-        /**
-         * Executes the given argument and returns it as the result. This is a simple pass-through
-         * implementation that processes input and directly returns it without modification.
-         *
-         * @param args The input argument of type [T] to be processed.
-         * @return The same input argument [args] of type [T] as the result.
-         */
-        override suspend fun execute(args: T): T = args
-    }
+    public inline fun <reified T> finishTool(): Tool<T, T> = FinishTool(typeToken<T>())
 
     /**
      * The maximum number of times an assistant is allowed to repeat responses within an interaction session,
@@ -107,34 +91,43 @@ public object SubgraphWithTaskUtils {
 }
 
 /**
- * Creates an identity tool which performs no transformations, returning the input as the output.
- *
- * @return An instance of a Tool that processes input of type Output and returns the same input as output.
+ * A pass-through tool used with [subgraphWithTask] to signal task completion and return a structured result.
+ * Wraps outputs in [FinishResult] to support primitive [outputType]s, which base [Tool] cannot handle directly.
  */
-@PublishedApi
 @OptIn(InternalAgentToolsApi::class)
-internal inline fun <reified Output> identityTool(): Tool<Output, Output> = object : Tool<Output, Output>(
-    argsSerializer = serializer(),
-    resultSerializer = serializer(),
+public class FinishTool<Output>(
+    outputType: TypeToken,
+) : Tool<Output, Output>(
+    argsType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
+    resultType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
     name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
     description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
 ) {
-    override suspend fun execute(args: Output): Output = args
-}
+    /**
+     * Wrapper for the output, since the output itself might be a primitive type, and they are not
+     * supported for automatic tool descriptor generation.
+     */
+    @Serializable
+    private data class FinishResult<Output>(
+        val result: Output
+    )
 
-/**
- * Creates an identity tool which performs no transformations, returning the input as the output.
- *
- * @return An instance of a Tool that processes input of type Output and returns the same input as output.
- */
-@PublishedApi
-@OptIn(InternalAgentToolsApi::class, InternalSerializationApi::class)
-internal fun <Output : Any> identityTool(outputClass: KClass<Output>): Tool<Output, Output> = object : Tool<Output, Output>(
-    argsSerializer = outputClass.serializer(),
-    resultSerializer = outputClass.serializer(),
-    name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
-    description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
-) {
+    override fun decodeArgs(rawArgs: JSONObject, serializer: JSONSerializer): Output {
+        return serializer.decodeFromJSONElement<FinishResult<Output>>(rawArgs, argsType).result
+    }
+
+    override fun encodeArgs(args: Output, serializer: JSONSerializer): JSONObject {
+        return serializer.encodeToJSONElement(FinishResult(args), argsType) as JSONObject
+    }
+
+    override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): Output {
+        return decodeArgs(rawResult as JSONObject, serializer)
+    }
+
+    override fun encodeResult(result: Output, serializer: JSONSerializer): JSONElement {
+        return encodeArgs(result, serializer)
+    }
+
     override suspend fun execute(args: Output): Output = args
 }
 
@@ -176,7 +169,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     llmParams = llmParams,
     responseProcessor = responseProcessor,
 ) {
-    val finishTool = identityTool<Output>()
+    val finishTool = FinishTool<Output>(typeToken<Output>())
 
     setupSubgraphWithTask<Input, Output, Output>(
         finishTool = finishTool,
@@ -490,7 +483,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             tools = storage.get(originalToolsKey)!!
         }
 
-        toolResult.toSafeResult(finishTool).asSuccessful().result
+        toolResult.toSafeResult(finishTool, config.serializer).asSuccessful().result
     }
 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
@@ -594,7 +587,10 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
     edge(
         callToolsHacked forwardTo finalizeTask
-            onCondition { toolResults -> toolResults.firstOrNull()?.let { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success } == true }
+            onCondition { toolResults ->
+                toolResults.firstOrNull()
+                    ?.let { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success } == true
+            }
             transformed { toolsResults -> toolsResults.first() }
     )
 
@@ -619,16 +615,18 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
     val toolDescription = finishTool.descriptor.description
     // Execute Finish tool directly and get a result
     val encodedResult = try {
-        val args = finishTool.decodeArgs(toolCall.contentJson)
+        val args = finishTool.decodeArgs(toolCall.contentJson.toJSONObject(), config.serializer)
         val toolResult = finishTool.execute(args = args)
-        finishTool.encodeResult(toolResult)
+        finishTool.encodeResult(toolResult, config.serializer)
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
         return ReceivedToolResult(
             id = toolCall.id,
             tool = finishTool.name,
-            toolArgs = toolCall.contentJsonResult.getOrElse { JsonObject(emptyMap()) },
+            toolArgs = toolCall.contentJsonResult
+                .map { it.toJSONObject() }
+                .getOrElse { JSONObject(emptyMap()) },
             toolDescription = toolDescription,
             content = "Failed to execute '${finishTool.name}' with error: ${e.message}'",
             resultKind = ToolResultKind.Failure(e.toAgentError()),
@@ -649,7 +647,7 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
     return ReceivedToolResult(
         id = toolCall.id,
         tool = finishTool.name,
-        toolArgs = toolCall.contentJson,
+        toolArgs = toolCall.contentJson.toJSONObject(),
         content = toolCall.content,
         resultKind = ToolResultKind.Success,
         toolDescription = toolDescription,

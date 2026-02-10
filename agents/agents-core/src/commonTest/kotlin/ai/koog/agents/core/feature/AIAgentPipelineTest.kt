@@ -46,6 +46,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.Message.Role
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlin.coroutines.cancellation.CancellationException
@@ -59,6 +60,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 class AIAgentPipelineTest {
+    private val serializer = KotlinxSerializer()
 
     companion object {
         private const val DEFAULT_ASSISTANT_RESPONSE = "Default test response"
@@ -500,10 +502,10 @@ class AIAgentPipelineTest {
 
         val expectedEvents = listOf(
             "${ToolCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, args: ${
-                CalculatorTools.PlusTool.encodeArgs(CalculatorTools.CalculatorTool.Args(2.2F, 2.2F))
+                CalculatorTools.PlusTool.encodeArgs(CalculatorTools.CalculatorTool.Args(2.2F, 2.2F), serializer)
             })",
             "${ToolCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, result: ${
-                CalculatorTools.PlusTool.encodeResult(CalculatorTools.CalculatorTool.Result(4.4F))
+                CalculatorTools.PlusTool.encodeResult(CalculatorTools.CalculatorTool.Result(4.4F), serializer)
             })"
         )
 
@@ -768,10 +770,10 @@ class AIAgentPipelineTest {
 
         val expectedEvents = listOf(
             "${ToolCallStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, args: ${
-                CalculatorTools.PlusTool.encodeArgs(CalculatorTools.CalculatorTool.Args(2.2F, 2.2F))
+                CalculatorTools.PlusTool.encodeArgs(CalculatorTools.CalculatorTool.Args(2.2F, 2.2F), serializer)
             })",
             "${ToolCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeToolCallName)}, tool: ${CalculatorTools.PlusTool.name}, result: ${
-                CalculatorTools.PlusTool.encodeResult(CalculatorTools.CalculatorTool.Result(4.4F))
+                CalculatorTools.PlusTool.encodeResult(CalculatorTools.CalculatorTool.Result(4.4F), serializer)
             })"
         )
 
@@ -815,7 +817,7 @@ class AIAgentPipelineTest {
 
         createAgent(
             strategy = strategy,
-            promptExecutor = getMockExecutor { }
+            promptExecutor = getMockExecutor(serializer) { }
         ) {
             install(TestFeature) {
                 events = interceptedEvents
@@ -871,7 +873,11 @@ class AIAgentPipelineTest {
         val actualEvents = mutableListOf<String>()
         val multipleHandlers = object : AIAgentGraphFeature<FeatureConfig, Unit> {
             override val key: AIAgentStorageKey<Unit> = createStorageKey("multiple-handlers-feature")
-            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+
+            override fun createInitialConfig(
+                agentConfig: AIAgentConfig,
+            ): FeatureConfig = object : FeatureConfig() {}
+
             override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
                 pipeline.interceptAgentStarting(this) { event ->
                     actualEvents += "Handler 1: ${event.eventType::class.simpleName}"
@@ -922,7 +928,11 @@ class AIAgentPipelineTest {
 
         val environmentTransformFeature = object : AIAgentGraphFeature<FeatureConfig, Unit> {
             override val key: AIAgentStorageKey<Unit> = createStorageKey("env-transform-feature")
-            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+
+            override fun createInitialConfig(
+                agentConfig: AIAgentConfig,
+            ): FeatureConfig = object : FeatureConfig() {}
+
             override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
                 pipeline.interceptEnvironmentCreated(this) { _, environment ->
                     val updatedEnvironment = WrapperEnvironment("Modified environment 1", environment)
@@ -973,7 +983,11 @@ class AIAgentPipelineTest {
 
         fun createFeature(name: String) = object : AIAgentGraphFeature<FeatureConfig, Unit> {
             override val key: AIAgentStorageKey<Unit> = createStorageKey("$name-feature")
-            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+
+            override fun createInitialConfig(
+                agentConfig: AIAgentConfig,
+            ): FeatureConfig = object : FeatureConfig() {}
+
             override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
                 pipeline.interceptAgentStarting(this) { _ ->
                     actualEvents += name
@@ -1024,7 +1038,7 @@ class AIAgentPipelineTest {
             maxAgentIterations = 10
         )
 
-        val testExecutor = getMockExecutor(clock = testClock) {
+        val testExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer(DEFAULT_ASSISTANT_RESPONSE).asDefaultResponse
         }
 

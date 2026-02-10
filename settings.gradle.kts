@@ -86,6 +86,10 @@ include(":http-client:http-client-ktor")
 include(":http-client:http-client-okhttp")
 include(":http-client:http-client-java")
 
+include(":serialization:serialization-core")
+include(":serialization:serialization-test")
+include(":serialization:serialization-jackson")
+
 include(":koog-spring-boot-starter")
 
 include(":koog-ktor")

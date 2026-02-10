@@ -11,6 +11,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -36,6 +37,7 @@ private fun getBasicResult(
     )
 
 class SubgraphWithRetryTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testRetrySubgraphResult() = runTest {
@@ -121,7 +123,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -178,7 +180,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -231,7 +233,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -297,7 +299,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -347,7 +349,7 @@ class SubgraphWithRetryTest {
         )
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -398,7 +400,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -471,7 +473,7 @@ class SubgraphWithRetryTest {
         )
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {

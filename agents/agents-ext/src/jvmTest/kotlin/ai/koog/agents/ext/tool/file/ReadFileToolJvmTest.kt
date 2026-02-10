@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.file.render.norm
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -21,6 +22,8 @@ class ReadFileToolJvmTest {
 
     private val fs = JVMFileSystemProvider.ReadOnly
     private val tool = ReadFileTool(fs)
+
+    private val serializer = KotlinxSerializer()
 
     @TempDir
     lateinit var tempDir: Path
@@ -87,7 +90,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -113,7 +116,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -130,7 +133,7 @@ class ReadFileToolJvmTest {
             c
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -145,7 +148,7 @@ class ReadFileToolJvmTest {
             b: 2
             ```
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -159,7 +162,7 @@ class ReadFileToolJvmTest {
             print('hi')
             ```
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -173,7 +176,7 @@ class ReadFileToolJvmTest {
             Write-Host 'hello'
             ```
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -187,7 +190,7 @@ class ReadFileToolJvmTest {
             task hello { }
             ```
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -201,7 +204,7 @@ class ReadFileToolJvmTest {
             echo hello
             ```
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -215,7 +218,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -238,7 +241,7 @@ class ReadFileToolJvmTest {
             fun c() = 3
             ```
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -251,7 +254,7 @@ class ReadFileToolJvmTest {
             ```markdown
             ```
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -265,7 +268,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -330,6 +333,6 @@ class ReadFileToolJvmTest {
             line2
             line3
         """.trimIndent()
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 }

@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
@@ -22,8 +23,12 @@ public interface AIAgentFeature<TConfig : FeatureConfig, TFeatureImpl : Any> {
 
     /**
      * Creates and returns an initial configuration for the feature.
+     *
+     * @param agentConfig The config of the agent this feature config is being created for.
      */
-    public fun createInitialConfig(): TConfig
+    public fun createInitialConfig(
+        agentConfig: AIAgentConfig,
+    ): TConfig
 }
 
 /**

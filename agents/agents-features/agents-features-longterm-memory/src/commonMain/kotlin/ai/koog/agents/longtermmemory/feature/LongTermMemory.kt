@@ -1,5 +1,6 @@
 package ai.koog.agents.longtermmemory.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -256,7 +257,9 @@ public class LongTermMemory(
         override val key: AIAgentStorageKey<LongTermMemory> =
             createStorageKey("long-term-memory-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): Config = Config()
 
         /**
          * Create a feature implementation using the provided configuration.

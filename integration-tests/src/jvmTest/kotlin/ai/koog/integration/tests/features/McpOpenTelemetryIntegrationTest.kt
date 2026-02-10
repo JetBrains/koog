@@ -5,13 +5,14 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.mcp.McpToolRegistryProvider
-import ai.koog.agents.testing.tools.MockLLMBuilder
+import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.integration.tests.utils.tools.CalculatorOperation
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorArgs
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.kotest.matchers.shouldBe
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.types.LATEST_PROTOCOL_VERSION
@@ -53,6 +54,8 @@ class McpOpenTelemetryIntegrationTest {
             }
         }
     }
+
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun `should create OpenTelemetry spans for MCP tool calls`() = runTestWithTimeout {
@@ -102,7 +105,7 @@ class McpOpenTelemetryIntegrationTest {
     }
 
     private suspend fun runAgentWithMcpAndOtel(
-        builder: MockLLMBuilder.() -> Unit = {},
+        builder: MockExecutorDSLBuilder.() -> Unit = {},
         checkBody: (List<SpanData>) -> Unit
     ) {
         val spanExporter = InMemorySpanExporter.create()
@@ -113,11 +116,11 @@ class McpOpenTelemetryIntegrationTest {
 
     private suspend fun createAgentWithMcpAndOtel(
         spanExporter: SpanExporter,
-        builder: MockLLMBuilder.() -> Unit = {},
+        builder: MockExecutorDSLBuilder.() -> Unit = {},
     ): AIAgent<String, String> {
         val mcpTools = McpToolRegistryProvider.fromSseUrl("http://localhost:$McpServerPort")
         return AIAgent(
-            promptExecutor = getMockExecutor {
+            promptExecutor = getMockExecutor(serializer) {
                 builder(this)
             },
             llmModel = OpenAIModels.Chat.GPT4o,

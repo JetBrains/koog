@@ -8,10 +8,11 @@ import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONNull
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONPrimitive
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -34,11 +35,11 @@ public data class AgentCheckpointData(
     val createdAt: Instant,
     val nodePath: String,
     @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
-    val lastInput: JsonElement? = null,
-    val lastOutput: JsonElement? = null,
+    val lastInput: JSONElement? = null,
+    val lastOutput: JSONElement? = null,
     val messageHistory: List<Message>,
     val version: Long,
-    val properties: Map<String, JsonElement>? = null
+    val properties: JSONObject? = null
 ) {
     init {
         if (nodePath != PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) {
@@ -47,8 +48,8 @@ public data class AgentCheckpointData(
         }
     }
 
-    private fun eq(json1: JsonElement?, json2: JsonElement?): Boolean =
-        json1 == json2 || ((json1 == null || json1 == JsonNull) && (json2 == null || json2 == JsonNull))
+    private fun eq(json1: JSONElement?, json2: JSONElement?): Boolean =
+        json1 == json2 || ((json1 == null || json1 == JSONNull) && (json2 == null || json2 == JSONNull))
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -77,9 +78,13 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
         checkpointId = Uuid.random().toString(),
         createdAt = time,
         nodePath = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
-        lastOutput = JsonNull,
+        lastOutput = JSONNull,
         messageHistory = emptyList(),
-        properties = mapOf(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JsonPrimitive(true)),
+        properties = JSONObject(
+            mapOf(
+                PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JSONPrimitive(true)
+            )
+        ),
         version = version
     )
 }
@@ -117,4 +122,4 @@ public fun AgentCheckpointData.toAgentContextData(
  *         and the value is a JSON primitive set to `true`, otherwise `false`.
  */
 public fun AgentCheckpointData.isTombstone(): Boolean =
-    properties?.get(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) == JsonPrimitive(true)
+    properties?.entries?.get(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) == JSONPrimitive(true)

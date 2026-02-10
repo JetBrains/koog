@@ -31,6 +31,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.io.TempDir
@@ -72,6 +73,8 @@ internal class TestMemoryProvider : AgentMemoryProvider {
 
 @OptIn(InternalAgentsApi::class)
 class MemoryNodesTest {
+    private val serializer = KotlinxSerializer()
+
     object MemorySubjects {
         /**
          * Information specific to the current user
@@ -98,7 +101,7 @@ class MemoryNodesTest {
         }
     }
 
-    private fun createMockExecutor() = getMockExecutor {
+    private fun createMockExecutor() = getMockExecutor(serializer) {
         mockLLMAnswer(
             "Here's a summary of the conversation: Test user asked questions and received responses."
         ) onRequestContains
@@ -281,7 +284,7 @@ class MemoryNodesTest {
 
         val memory = TestMemoryProvider()
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Custom model extracted fact") onRequestContains "test-concept-custom"
             mockLLMAnswer("Default test response").asDefaultResponse
         }
@@ -363,7 +366,7 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(
                 """
                 [
@@ -465,7 +468,7 @@ class MemoryNodesTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = strategy,
             agentConfig = AIAgentConfig(
                 prompt = prompt("memory-loading") {},

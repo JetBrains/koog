@@ -30,7 +30,7 @@ public actual class AIAgentLLMReadSession actual constructor(
     prompt: Prompt,
     model: LLModel,
     responseProcessor: ResponseProcessor?,
-    private val config: AIAgentConfig,
+    config: AIAgentConfig,
 ) : AIAgentLLMSessionAPI by AIAgentLLMReadSessionImpl(executor, tools, prompt, model, responseProcessor, config) {
 
     /**

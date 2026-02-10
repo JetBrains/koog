@@ -36,7 +36,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         feature: AIAgentPlannerFeature<TConfig, TFeature>,
         configure: TConfig.() -> Unit,
     ) {
-        val featureConfig = feature.createInitialConfig().apply { configure() }
+        val featureConfig = feature.createInitialConfig(config).apply { configure() }
         val featureImpl = feature.install(
             config = featureConfig,
             pipeline = this,

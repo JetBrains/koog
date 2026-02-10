@@ -5,7 +5,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.withPersistence
-import kotlinx.serialization.json.JsonPrimitive
+import ai.koog.serialization.JSONPrimitive
 import kotlin.reflect.typeOf
 
 /**
@@ -106,7 +106,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
         teleportState.teleported = true
         withPersistence { ctx ->
             val history = llm.readSession { this.prompt.messages }
-            setExecutionPoint(ctx, teleportToPath, history, input = JsonPrimitive("$it\nTeleported"))
+            setExecutionPoint(ctx, teleportToPath, history, input = JSONPrimitive("$it\nTeleported"))
             return@withPersistence "Teleported"
         }
     } else {

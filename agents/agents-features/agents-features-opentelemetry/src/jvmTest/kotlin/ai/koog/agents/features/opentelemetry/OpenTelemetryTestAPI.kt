@@ -37,6 +37,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -51,6 +52,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 internal object OpenTelemetryTestAPI {
+    private val serializer = KotlinxSerializer()
 
     internal val testClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
@@ -139,7 +141,7 @@ internal object OpenTelemetryTestAPI {
         }
     }
 
-    internal val defaultMockExecutor = getMockExecutor(clock = testClock) {
+    internal val defaultMockExecutor = getMockExecutor(serializer, testClock) {
         mockLLMAnswer(MOCK_LLM_RESPONSE_PARIS) onRequestEquals USER_PROMPT_PARIS
     }
 
@@ -153,7 +155,7 @@ internal object OpenTelemetryTestAPI {
     ): OpenTelemetryTestData {
         val strategy = getSingleLLMCallStrategy(agentType)
 
-        val executor = getMockExecutor(clock = testClock) {
+        val executor = getMockExecutor(serializer, testClock) {
             mockLLMAnswer(mockLLMResponse) onRequestEquals userPrompt
         }
 
@@ -178,7 +180,7 @@ internal object OpenTelemetryTestAPI {
             tool(mockToolCallResponse.tool)
         }
 
-        val executor = getMockExecutor(clock = testClock) {
+        val executor = getMockExecutor(serializer, testClock) {
             // Mock tool call
             mockLLMToolCall(
                 tool = mockToolCallResponse.tool,
@@ -188,7 +190,7 @@ internal object OpenTelemetryTestAPI {
 
             // Mock response from the "send tool result" node
             mockLLMAnswer(mockLLMResponse) onRequestContains
-                mockToolCallResponse.tool.encodeResultToString(mockToolCallResponse.toolResult)
+                mockToolCallResponse.tool.encodeResultToString(mockToolCallResponse.toolResult, serializer)
         }
 
         return runAgentWithStrategy(
@@ -322,7 +324,7 @@ internal object OpenTelemetryTestAPI {
             model = model ?: OpenAIModels.Chat.GPT4o,
             maxAgentIterations = 10,
         )
-        val promptExecutor = executor ?: getMockExecutor(clock = testClock) { }
+        val promptExecutor = executor ?: getMockExecutor(serializer, testClock) { }
         val toolRegistry = toolRegistry ?: ToolRegistry.EMPTY
 
         return when (strategy) {
@@ -336,7 +338,7 @@ internal object OpenTelemetryTestAPI {
             }
 
             is AIAgentFunctionalStrategy -> AIAgentService(
-                promptExecutor = executor ?: getMockExecutor(clock = testClock) { },
+                promptExecutor = executor ?: getMockExecutor(serializer, testClock) { },
                 strategy = strategy,
                 agentConfig = agentConfig,
                 toolRegistry = toolRegistry

@@ -9,7 +9,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.simpleapi.Switch
 import ai.koog.agents.example.simpleapi.SwitchTools

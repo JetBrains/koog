@@ -5,8 +5,9 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.kotlinx.toJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.JsonObject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -39,14 +40,14 @@ public class ContextualAgentEnvironment(
         val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
 
         val toolArgs = try {
-            toolCall.contentJson
+            toolCall.contentJson.toJSONObject()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             logger.error { "Failed to execute tool call with id '${toolCall.id}' while parsing args: ${e.message}" }
 
             val tool = toolCall.tool
-            val toolArgs = JsonObject(emptyMap())
+            val toolArgs = JSONObject(emptyMap())
             val message = "Failed to parse tool arguments: ${e.message}"
             context.pipeline.onToolValidationFailed(
                 eventId = eventId,

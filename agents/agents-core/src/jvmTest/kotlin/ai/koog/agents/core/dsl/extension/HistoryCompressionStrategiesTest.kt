@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
@@ -24,7 +25,9 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 class HistoryCompressionStrategiesTest {
-    private fun createMockExecutor() = getMockExecutor {
+    private val serializer = KotlinxSerializer()
+
+    private fun createMockExecutor() = getMockExecutor(serializer) {
         mockLLMAnswer("TLDR").onRequestContains("Create a comprehensive summary")
     }
 

@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools

@@ -43,6 +43,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SpanExporter
@@ -59,6 +60,7 @@ import kotlin.time.Clock
 
 abstract class TraceStructureTestBase(private val openTelemetryConfigurator: OpenTelemetryConfig.() -> Unit) {
     private val json = Json { allowStructuredMapKeys = true }
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testSingleLLMCall() = runBlocking {
@@ -77,7 +79,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val userPrompt = "What's the weather in Paris?"
             val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
 
-            val promptExecutor = getMockExecutor {
+            val promptExecutor = getMockExecutor(serializer) {
                 mockLLMAnswer(mockResponse) onRequestEquals userPrompt
             }
 
@@ -186,7 +188,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val toolCallId = "get-weather-tool-call-id"
 
-            val mockExecutor = getMockExecutor {
+            val mockExecutor = getMockExecutor(serializer) {
                 mockLLMToolCall(
                     tool = TestGetWeatherTool,
                     args = toolCallArgs,
@@ -326,7 +328,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val finalResponse = "The weather in Paris is rainy (57°F) and in London it's cloudy (62°F)"
 
-            val mockExecutor = getMockExecutor {
+            val mockExecutor = getMockExecutor(serializer) {
                 mockLLMToolCall(tool = TestGetWeatherTool, args = toolCallArgs1) onRequestEquals userPrompt
                 mockLLMToolCall(tool = TestGetWeatherTool, args = toolCallArgs2) onRequestContains toolResponse1
                 mockLLMAnswer(finalResponse) onRequestContains toolResponse2
@@ -417,7 +419,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val userPrompt = "Summarize: test subgraph"
             val finalString = "Task done for: test subgraph"
 
-            val mockExecutor = getMockExecutor {
+            val mockExecutor = getMockExecutor(serializer) {
                 mockLLMToolCall(::subgraphFinish, finalString) onRequestContains "Please finish the task"
             }
 
@@ -464,7 +466,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, testClock) {
                 mockLLMAnswer(mockResponse) onRequestEquals userPrompt
             }
 
@@ -558,7 +560,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 "\"temperature\":20," +
                 "\"conditions\":\"Cloudy\"}"
 
-            val promptExecutor = getMockExecutor {
+            val promptExecutor = getMockExecutor(serializer) {
                 mockLLMAnswer(mockAssistantText) onRequestContains "Helsinki"
             }
 
@@ -676,7 +678,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val tokenizer = SimpleRegexBasedTokenizer()
 
             // Set tokenizer explicitly to calculate output tokens and return the value in responses
-            val mockExecutor = getMockExecutor(tokenizer = tokenizer) {
+            val mockExecutor = getMockExecutor(serializer, tokenizer = tokenizer) {
                 mockLLMToolCall(
                     tool = TestGetWeatherTool,
                     args = toolCallArgs,
@@ -726,7 +728,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     runId = mockSpanExporter.lastRunId,
                     toolCallId = toolCallId,
                     outputTokens = tokenizer.countTokens(
-                        text = TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"))
+                        text = TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"), serializer)
                     ).toLong()
                 ).plus(
                     mapOf(
@@ -810,7 +812,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 )
             )
 
-            val promptExecutor = getMockExecutor {
+            val promptExecutor = getMockExecutor(serializer) {
                 addModerationResponseExactPattern(userPrompt, moderationResult)
             }
 
@@ -826,9 +828,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val spans = mockSpanExporter.collectedSpans
             assertTrue(spans.any { it.name == "node moderate-message" })
 
-            val llmSpan = spans.firstOrNull { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
-                ?: spans.firstOrNull { span -> span.events.any { it.name == "moderation.result" } }
-                ?: error("No LLM span for moderation found (expected '${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}' or a span with 'moderation.result' event)")
+            val llmSpan =
+                spans.firstOrNull { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
+                    ?: spans.firstOrNull { span -> span.events.any { it.name == "moderation.result" } }
+                    ?: error("No LLM span for moderation found (expected '${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}' or a span with 'moderation.result' event)")
 
             val moderationEvent = llmSpan.events.firstOrNull { it.name == "moderation.result" }
             assertNotNull(moderationEvent, "LLM span should contain a moderation.result event")

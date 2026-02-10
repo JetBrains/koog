@@ -23,6 +23,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -36,6 +37,7 @@ import kotlin.test.assertFails
 import kotlin.time.Instant
 
 class EventHandlerTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun `test event handler for agent without nodes and tools`() = runTest {
@@ -185,7 +187,7 @@ class EventHandlerTest {
             tool(dummyTool)
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMToolCall(dummyTool, DummyTool.Args("test")) onRequestEquals userPrompt
             mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
         }
@@ -210,8 +212,8 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
         val dummyToolName = dummyTool.name
         val dummyToolDescription = dummyTool.descriptor.description
-        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
 
         val dummyToolReceivedToolResult = ReceivedToolResult(
             id = null,
@@ -528,7 +530,7 @@ class EventHandlerTest {
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
 
         val testLLMResponse = "Default test response"
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(serializer) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals "Test user message"
         }
 

@@ -2,20 +2,22 @@ package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
-import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming;
 import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor;
 import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
-import ai.koog.agents.testing.tools.MockExecutor;
+import ai.koog.agents.testing.tools.MockExecutorBuilder;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
+import ai.koog.serialization.JSONSerializer;
+import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Java tests for configuring {@link LongTermMemory} ingestion settings from Java code.
@@ -23,8 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @ExperimentalAgentsApi
 public class LongTermMemoryIngestionJavaTest {
-
-    private static final ToolRegistry EMPTY_REGISTRY = ToolRegistry.builder().build();
+    private static final JSONSerializer serializer = new JacksonSerializer();
 
     @Test
     public void testIngestionWithFilteringExtractorAndOnLlmCallTiming() {
@@ -32,8 +33,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                MockExecutor.builder()
-                    .toolRegistry(EMPTY_REGISTRY)
+                new MockExecutorBuilder(serializer)
                     .mockLLMAnswer("The capital of France is Paris.").asDefaultResponse()
                     .build()
             )
@@ -68,8 +68,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                MockExecutor.builder()
-                    .toolRegistry(EMPTY_REGISTRY)
+                new MockExecutorBuilder(serializer)
                     .mockLLMAnswer("answer").asDefaultResponse()
                     .build()
             )
@@ -103,8 +102,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                MockExecutor.builder()
-                    .toolRegistry(EMPTY_REGISTRY)
+                new MockExecutorBuilder(serializer)
                     .mockLLMAnswer("answer").asDefaultResponse()
                     .build()
             )
@@ -139,8 +137,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                MockExecutor.builder()
-                    .toolRegistry(EMPTY_REGISTRY)
+                new MockExecutorBuilder(serializer)
                     .mockLLMAnswer("full config answer").asDefaultResponse()
                     .build()
             )

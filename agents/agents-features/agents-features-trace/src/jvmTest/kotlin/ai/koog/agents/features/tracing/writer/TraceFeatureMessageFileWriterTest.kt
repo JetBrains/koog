@@ -41,6 +41,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.Sink
@@ -58,6 +59,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class TraceFeatureMessageFileWriterTest {
+    private val serializer = KotlinxSerializer()
 
     companion object {
         private fun createTempLogFile(tempDir: Path) = Files.createTempFile(tempDir, "agent-trace", ".log")
@@ -125,7 +127,7 @@ class TraceFeatureMessageFileWriterTest {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                 mockLLMToolCall(
                     tool = dummyTool,
                     args = DummyTool.Args("test"),
@@ -161,8 +163,8 @@ class TraceFeatureMessageFileWriterTest {
                 agent.run(userPrompt, null)
             }
 
-            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
             val dummyToolName = dummyTool.name
             val dummyToolDescription = dummyTool.descriptor.description
 
@@ -171,7 +173,7 @@ class TraceFeatureMessageFileWriterTest {
                 data = receivedToolResult(
                     toolCallId = "0",
                     toolName = dummyToolName,
-                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                     toolDescription = dummyToolDescription,
                     content = dummyTool.result,
                     result = dummyToolResultEncoded,
@@ -254,7 +256,7 @@ class TraceFeatureMessageFileWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyToolName,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyToolDescription,
                                 content = dummyTool.result,
                                 result = dummyToolResultEncoded,
@@ -270,7 +272,7 @@ class TraceFeatureMessageFileWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyToolName,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyToolDescription,
                                 content = dummyTool.result,
                                 result = dummyToolResultEncoded,
@@ -488,7 +490,7 @@ class TraceFeatureMessageFileWriterTest {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                 mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals
                     userPrompt
                 mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
@@ -520,8 +522,8 @@ class TraceFeatureMessageFileWriterTest {
                 agent.run(userPrompt, null)
             }
 
-            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
             val dummyToolName = dummyTool.name
             val dummyToolDescription = dummyTool.descriptor.description
 
@@ -548,7 +550,7 @@ class TraceFeatureMessageFileWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyToolName,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyToolDescription,
                                 content = dummyTool.result,
                                 result = dummyToolResultEncoded,
@@ -564,7 +566,7 @@ class TraceFeatureMessageFileWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyToolName,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyToolDescription,
                                 content = dummyTool.result,
                                 result = dummyToolResultEncoded,

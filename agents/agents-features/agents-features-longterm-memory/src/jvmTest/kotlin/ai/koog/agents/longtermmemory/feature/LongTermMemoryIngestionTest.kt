@@ -44,7 +44,7 @@ class LongTermMemoryIngestionTest {
     private val defaultAgentConfig = AIAgentConfig(
         prompt = prompt("test") { system("You are a helpful assistant") },
         model = OllamaModels.Meta.LLAMA_3_2,
-        maxAgentIterations = 10
+        maxAgentIterations = 10,
     )
 
     private val nonStreamingStrategy =
@@ -95,7 +95,7 @@ class LongTermMemoryIngestionTest {
     fun `default extractor stores both user and assistant messages`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("Assistant knows about Kotlin coroutines").asDefaultResponse
         }
 
@@ -136,7 +136,7 @@ class LongTermMemoryIngestionTest {
     fun `assistant-only extractor stores only assistant messages`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("This is the assistant response to store").asDefaultResponse
         }
 
@@ -168,7 +168,7 @@ class LongTermMemoryIngestionTest {
     fun `user-only extractor stores only user messages`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("Assistant reply").asDefaultResponse
         }
 
@@ -206,7 +206,7 @@ class LongTermMemoryIngestionTest {
     fun `assistant-only extractor excludes user messages`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("Kotlin is a modern language").asDefaultResponse
         }
 
@@ -245,7 +245,7 @@ class LongTermMemoryIngestionTest {
     fun `no messages stored when ingestion is not configured`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("This response should NOT be stored").asDefaultResponse
         }
 
@@ -365,7 +365,7 @@ class LongTermMemoryIngestionTest {
     fun `ON_AGENT_COMPLETION stores messages after agent run completes`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("This is the assistant response stored on completion").asDefaultResponse
         }
 
@@ -450,7 +450,7 @@ class LongTermMemoryIngestionTest {
     fun `ON_AGENT_COMPLETION stores user messages`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("Assistant reply").asDefaultResponse
         }
 
@@ -484,7 +484,7 @@ class LongTermMemoryIngestionTest {
     fun `ON_AGENT_COMPLETION stores both user and assistant messages`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("Assistant response about Kotlin").asDefaultResponse
         }
 
@@ -525,7 +525,7 @@ class LongTermMemoryIngestionTest {
     fun `custom extractor transforms content before storing`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("First sentence. Second sentence. Third sentence.").asDefaultResponse
         }
 
@@ -562,7 +562,7 @@ class LongTermMemoryIngestionTest {
     fun `custom extractor that uppercases content`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("The answer is 42").asDefaultResponse
         }
 
@@ -602,7 +602,7 @@ class LongTermMemoryIngestionTest {
     fun `extractor returning empty list stores nothing`() = runTest {
         val storage = InMemoryRecordStorage()
 
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
             mockLLMAnswer("Some response").asDefaultResponse
         }
 

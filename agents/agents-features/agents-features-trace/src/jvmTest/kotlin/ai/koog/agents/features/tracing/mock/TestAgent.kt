@@ -15,8 +15,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -78,10 +78,10 @@ fun toolCallMessage(toolName: String, content: String): Message.Tool.Call =
 fun receivedToolResult(
     toolCallId: String?,
     toolName: String,
-    toolArgs: JsonObject,
+    toolArgs: JSONObject,
     toolDescription: String,
     content: String,
-    result: JsonElement
+    result: JSONElement
 ): ReceivedToolResult = ReceivedToolResult(
     id = toolCallId,
     tool = toolName,
@@ -89,7 +89,7 @@ fun receivedToolResult(
     toolDescription = toolDescription,
     content = content,
     resultKind = ToolResultKind.Success,
-    result = result
+    result = result,
 )
 
 /**

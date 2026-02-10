@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -107,6 +108,8 @@ class StructuredOutputWithToolsIntegrationTest {
             "Humidity in ${args.city}, ${args.country}: 65%"
     }
 
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun testStructuredOutputWithToolsIntegration() = runTest {
         val structure = JsonStructure.create<WeatherResponse>()
@@ -125,7 +128,7 @@ class StructuredOutputWithToolsIntegrationTest {
         val results = mutableListOf<WeatherResponse>()
 
         // For common tests, we need to use a simpler mock setup
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             // Simply return the structured output directly
             mockLLMAnswer(
                 """
@@ -200,7 +203,7 @@ class StructuredOutputWithToolsIntegrationTest {
         val toolCallTimestamps = mutableMapOf<String, Long>()
         val currentTime = Clock.System.now().toEpochMilliseconds()
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             // Return structured output
             mockLLMAnswer(
                 """
@@ -268,7 +271,7 @@ class StructuredOutputWithToolsIntegrationTest {
             "Generate mock weather data for ${request.city}, ${request.country}"
         }
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             // LLM directly returns structured output without calling tools
             // Set as default response to match any request
             mockLLMAnswer(

@@ -15,6 +15,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,6 +24,7 @@ import kotlin.test.assertEquals
  * Tests for the Testing feature.
  */
 class GraphTestingFeatureTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testMultiSubgraphAgentStructure() = runTest {
@@ -66,7 +68,7 @@ class GraphTestingFeatureTest {
             tool(SolveTool)
         }
 
-        val mockLLMApi = getMockExecutor(toolRegistry) {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
         }
@@ -132,7 +134,7 @@ class GraphTestingFeatureTest {
         // In a real test, you would use an actual AIAgent
 
         // Create a Config instance directly to test the API
-        val config = Testing.Config().apply {
+        val config = Testing.Config(serializer).apply {
             verifyStrategy<String, String>("test") {
                 val first = assertSubgraphByName<String, String>("first")
                 val second = assertSubgraphByName<String, String>("second")

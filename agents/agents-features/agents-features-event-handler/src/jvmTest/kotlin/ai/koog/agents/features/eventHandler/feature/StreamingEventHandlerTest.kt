@@ -5,9 +5,10 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
-import ai.koog.agents.testing.tools.MockLLMBuilder
+import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.streaming.collectText
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -77,13 +78,14 @@ private fun assertEventsCollected(eventsCollector: TestEventsCollector) =
 
 private suspend fun mockStreaming(
     strategy: AIAgentGraphStrategy<String, String>,
-    buildLlmMock: MockLLMBuilder.() -> Unit,
+    buildLlmMock: MockExecutorDSLBuilder.() -> Unit,
     runAgent: suspend (AIAgent<String, String>) -> Unit
 ): TestEventsCollector {
+    val serializer = KotlinxSerializer()
     val eventsCollector = TestEventsCollector()
     val agent: AIAgent<String, String> = createAgent(
         strategy = strategy,
-        executor = getMockExecutor(clock = testClock) { buildLlmMock() }
+        executor = getMockExecutor(serializer, clock = testClock) { buildLlmMock() }
     ) {
         install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
     }

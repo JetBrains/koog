@@ -171,6 +171,7 @@ public open class GraphAIAgent<Input, Output>(
             agentId = id,
             logger = logger,
             toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
         )
 
         val preparedEnvironment = pipeline.onAgentEnvironmentTransforming(

@@ -13,6 +13,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -20,6 +21,7 @@ import kotlin.test.Test
  * Tests for verifying node uniqueness requirements with the AgentCheckpoint feature.
  */
 class NodeUniquenessCheckpointTest {
+    private val serializer = KotlinxSerializer()
 
     /**
      * Creates a simple node that appends the output to the input.
@@ -79,7 +81,7 @@ class NodeUniquenessCheckpointTest {
     @Test
     fun `test no error when Persistence feature is present and nodes are non-unique`() = runTest {
         // Create a mock executor
-        val mockExecutor: PromptExecutor = getMockExecutor {}
+        val mockExecutor: PromptExecutor = getMockExecutor(serializer) {}
 
         // Create a tool registry
         val toolRegistry = ToolRegistry {
@@ -118,7 +120,7 @@ class NodeUniquenessCheckpointTest {
     @Test
     fun `test no error when Persistence feature is not present and nodes are non-unique`() = runTest {
         // Create a mock executor
-        val mockExecutor: PromptExecutor = getMockExecutor {}
+        val mockExecutor: PromptExecutor = getMockExecutor(serializer) {}
 
         // Create a tool registry
         val toolRegistry = ToolRegistry {

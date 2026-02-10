@@ -53,9 +53,10 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation("org.jetbrains.lincheck:lincheck:3.4")
-                implementation(libs.ktor.client.cio)
                 implementation(project(":integration-tests"))
+                implementation(project(":serialization:serialization-jackson"))
+
+                implementation(libs.ktor.client.cio)
             }
         }
     }

@@ -2,17 +2,19 @@ package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
-import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest;
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings;
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy;
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
-import ai.koog.agents.testing.tools.MockExecutor;
+import ai.koog.agents.testing.tools.MockExecutorBuilder;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+import ai.koog.serialization.JSONSerializer;
+import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Java tests for configuring {@link LongTermMemory} retrieval settings from Java code.
@@ -20,14 +22,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @ExperimentalAgentsApi
 public class LongTermMemoryRetrievalJavaTest {
-
-    private static final ToolRegistry EMPTY_REGISTRY = ToolRegistry.builder().build();
+    private static final JSONSerializer serializer = new JacksonSerializer();
 
     private AIAgent buildAgentWithRetrieval(RetrievalSettings retrievalSettings) {
         return AIAgent.builder()
             .promptExecutor(
-                MockExecutor.builder()
-                    .toolRegistry(EMPTY_REGISTRY)
+                new MockExecutorBuilder(serializer)
                     .mockLLMAnswer("answer").asDefaultResponse()
                     .build()
             )

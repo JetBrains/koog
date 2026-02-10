@@ -71,49 +71,28 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         if (typeStr == null) {
             val anyOf = element["anyOf"]?.jsonArray
             if (anyOf != null) {
-                val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
                 /**
-                 * Special case for nullable types.
+                 * anyOf with multiple types.
                  * Schema example:
                  * {
-                 *   "nullableParam": {
+                 *   "anyOfParam": {
                  *     "anyOf": [
                  *       { "type": "string" },
-                 *       { "type": "null" }
+                 *       { "type": "number" }
                  *     ],
-                 *     "title": "Nullable string parameter"
+                 *     "title": "string or number parameter"
                  *   }
                  * }
                  */
-                if (anyOf.size == 2 && types.contains("null")) {
-                    val nonNullType = anyOf.first {
-                        it.jsonObject["type"]?.jsonPrimitive?.content != "null"
-                    }.jsonObject
-                    return parseParameterType(nonNullType, depth + 1)
-                } else {
-                    /**
-                     * anyOf with multiple types.
-                     * Schema example:
-                     * {
-                     *   "anyOfParam": {
-                     *     "anyOf": [
-                     *       { "type": "string" },
-                     *       { "type": "number" }
-                     *     ],
-                     *     "title": "string or number parameter"
-                     *   }
-                     * }
-                     */
-                    return ToolParameterType.AnyOf(
-                        types = anyOf.map { it.jsonObject }.map {
-                            ToolParameterDescriptor(
-                                name = "",
-                                description = it["description"]?.jsonPrimitive?.content.orEmpty(),
-                                type = parseParameterType(it.jsonObject)
-                            )
-                        }.toTypedArray()
-                    )
-                }
+                return ToolParameterType.AnyOf(
+                    types = anyOf.map { it.jsonObject }.map {
+                        ToolParameterDescriptor(
+                            name = "",
+                            description = it["description"]?.jsonPrimitive?.content.orEmpty(),
+                            type = parseParameterType(it.jsonObject)
+                        )
+                    }.toTypedArray()
+                )
             }
 
             /**

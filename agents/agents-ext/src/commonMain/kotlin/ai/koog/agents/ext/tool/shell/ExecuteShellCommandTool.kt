@@ -2,6 +2,8 @@ package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -18,8 +20,8 @@ public class ExecuteShellCommandTool(
     private val executor: ShellCommandExecutor,
     private val confirmationHandler: ShellCommandConfirmationHandler
 ) : Tool<ExecuteShellCommandTool.Args, ExecuteShellCommandTool.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     name = "__execute_shell_command__",
     description = """
         Executes a shell command.
@@ -98,7 +100,7 @@ public class ExecuteShellCommandTool(
             Result(null, "Command execution denied with user response: ${confirmation.userResponse}")
     }
 
-    override fun encodeResultToString(result: Result): String = with(result) {
+    override fun encodeResultToString(result: Result, serializer: JSONSerializer): String = with(result) {
         buildString {
             if (output.isNotEmpty()) {
                 appendLine(output)

@@ -1,10 +1,10 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
 
 @Suppress("USELESS_CAST")
 class MockLLMBuilderTests {
+    private val serializer = KotlinxSerializer()
 
     // Sample tool for testing
     private object TestTool : Tool<TestTool.Args, String>(
@@ -33,7 +34,7 @@ class MockLLMBuilderTests {
     @Test
     fun testBasicMockLLMAnswer() = runTest {
         // Create a mock executor with a simple response
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Hello, world!") onRequestContains "hello"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -57,7 +58,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testExactMatchResponse() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Exact match response") onRequestEquals "exact match query"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -80,7 +81,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testPartialMatchResponse() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Partial match response") onRequestContains "partial match"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -96,7 +97,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testConditionalMatchResponse() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Conditional response") onCondition { it.length > 20 }
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -120,11 +121,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testToolCallMocking() = runTest {
-        val toolRegistry = ToolRegistry {
-            tool(TestTool)
-        }
-
-        val mockExecutor = getMockExecutor(toolRegistry) {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(TestTool, TestTool.Args("test input")) onRequestContains "use tool"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -141,16 +138,12 @@ class MockLLMBuilderTests {
 
     @Test
     fun testMultipleToolCallsMocking() = runTest {
-        val toolRegistry = ToolRegistry {
-            tool(TestTool)
-        }
-
         val toolCalls = listOf(
             TestTool to TestTool.Args("first input"),
             TestTool to TestTool.Args("second input")
         )
 
-        val mockExecutor = getMockExecutor(toolRegistry) {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(toolCalls) onRequestContains "use multiple tools"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -171,17 +164,13 @@ class MockLLMBuilderTests {
 
     @Test
     fun testMixedResponseMocking() = runTest {
-        val toolRegistry = ToolRegistry {
-            tool(TestTool)
-        }
-
         val mixedToolCalls = listOf(
             TestTool to TestTool.Args("mixed input")
         )
 
         val textResponses = listOf("This is a mixed response with tool calls")
 
-        val mockExecutor = getMockExecutor(toolRegistry) {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMMixedResponse(mixedToolCalls, textResponses) onRequestContains "mixed response"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -206,11 +195,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testToolBehaviorMocking() = runTest {
-        val toolRegistry = ToolRegistry {
-            tool(TestTool)
-        }
-
-        val mockExecutor = getMockExecutor(toolRegistry) {
+        val mockExecutor = getMockExecutor(serializer) {
             // Mock the tool behavior
             mockTool(TestTool) alwaysReturns "Mocked result"
 
@@ -230,7 +215,7 @@ class MockLLMBuilderTests {
         val toolCall = response as Message.Tool.Call
 
         // Find the tool condition that matches this call
-        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.firstOrNull {
+        val toolCondition = (mockExecutor as MockPromptExecutor).toolActions.firstOrNull {
             it.tool.name == toolCall.tool
         }
 
@@ -244,11 +229,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testToolBehaviorWithCondition() = runTest {
-        val toolRegistry = ToolRegistry {
-            tool(TestTool)
-        }
-
-        val mockExecutor = getMockExecutor(toolRegistry) {
+        val mockExecutor = getMockExecutor(serializer) {
             // Mock the tool behavior with a condition
             mockTool(TestTool).returns("Specific result").onArguments(TestTool.Args("specific input"))
             mockTool(TestTool) alwaysReturns "Default result"
@@ -267,7 +248,7 @@ class MockLLMBuilderTests {
         assertTrue(specificResponse is Message.Tool.Call)
 
         val specificToolCall = specificResponse as Message.Tool.Call
-        val specificToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
+        val specificToolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
             it.satisfies(specificToolCall)
         }
 
@@ -284,7 +265,7 @@ class MockLLMBuilderTests {
         assertTrue(otherResponse is Message.Tool.Call)
 
         val otherToolCall = otherResponse as Message.Tool.Call
-        val otherToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
+        val otherToolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
             it.satisfies(otherToolCall)
         }
 
@@ -295,13 +276,9 @@ class MockLLMBuilderTests {
 
     @Test
     fun testToolBehaviorWithCustomAction() = runTest {
-        val toolRegistry = ToolRegistry {
-            tool(TestTool)
-        }
-
         var actionCalled = false
 
-        val mockExecutor = getMockExecutor(toolRegistry) {
+        val mockExecutor = getMockExecutor(serializer) {
             // Mock the tool behavior with a custom action
             mockTool(TestTool) alwaysDoes {
                 actionCalled = true
@@ -320,7 +297,7 @@ class MockLLMBuilderTests {
         assertTrue(response is Message.Tool.Call)
 
         val toolCall = response
-        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
+        val toolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
             it.satisfies(toolCall)
         }
 

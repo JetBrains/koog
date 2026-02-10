@@ -35,6 +35,7 @@ import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
+import ai.koog.serialization.JSONSerializer
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
 import kotlin.time.Clock
@@ -410,8 +411,12 @@ public class Testing {
      * Represents a configuration class responsible for managing assertion handlers and stage configurations.
      * It includes methods for registering custom assertion handling, managing stages and their order,
      * and defining stage-specific assertions.
+     *
+     * @param serializer JSON serializer configured in the [AIAgentConfig] for this agent instance
      */
-    public class Config : FeatureConfig() {
+    public class Config(
+        private val serializer: JSONSerializer,
+    ) : FeatureConfig() {
         /**
          * A clock instance used for managing timestamps within the configuration,
          * primarily for mock message timestamping purposes.
@@ -518,9 +523,10 @@ public class Testing {
         ) {
             assertions =
                 SubgraphAssertionsBuilder(
-                    NodeReference.Strategy<Input, Output>(name),
-                    clock,
-                    tokenizer
+                    subgraphRef = NodeReference.Strategy<Input, Output>(name),
+                    clock = clock,
+                    tokenizer = tokenizer,
+                    serializer = serializer
                 ).apply(buildAssertions).build()
         }
 
@@ -530,12 +536,14 @@ public class Testing {
          *
          * @param subgraphRef: A [NodeReference.SubgraphNode] reference to a subgraph of the agent's graph strategy
          * @param clock: A clock that is used for mock message timestamps
-         * @param tokenizer: Tokenizer that will be used to estimate token counts in mock messages
+         * @param tokenizer Tokenizer that will be used to estimate token counts in mock messages
+         * @param serializer JSON serializer
          */
         public class SubgraphAssertionsBuilder<Input, Output>(
             private val subgraphRef: NodeReference.SubgraphNode<Input, Output>,
             internal val clock: Clock,
             internal val tokenizer: Tokenizer?,
+            internal val serializer: JSONSerializer,
         ) {
 
             private val start: NodeReference.Start<Input> = NodeReference.Start()
@@ -672,7 +680,7 @@ public class Testing {
                 subgraph: NodeReference.SubgraphNode<I, O>,
                 checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}
             ) {
-                val assertions = SubgraphAssertionsBuilder(subgraph, clock, tokenizer).apply(checkSubgraph).build()
+                val assertions = SubgraphAssertionsBuilder(subgraph, clock, tokenizer, serializer).apply(checkSubgraph).build()
                 subgraphAssertions.add(SubGraphAssertions(subgraph, assertions))
             }
 
@@ -926,11 +934,12 @@ public class Testing {
     /**
      * Companion object implementing agent feature, handling [Testing] creation and installation.
      */
-    @TestOnly
     public companion object Feature : AIAgentGraphFeature<Config, Testing> {
         override val key: AIAgentStorageKey<Testing> = createStorageKey("graph-testing-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): Config = Config(agentConfig.serializer)
 
         override fun install(
             config: Config,
@@ -938,7 +947,7 @@ public class Testing {
         ): Testing {
             val testing = Testing()
             pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
-                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, environment)
+                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, pipeline.config.serializer, environment)
             }
 
             if (config.enableGraphTesting) {
@@ -1010,7 +1019,7 @@ public class Testing {
                 val environment = if (assertion.context.isEnvironmentDefined) {
                     assertion.context.environment
                 } else {
-                    MockEnvironment(agent.toolRegistry, agent.promptExecutor)
+                    MockEnvironment(agent.toolRegistry, agent.promptExecutor, pipeline.config.serializer)
                 }
 
                 val llm = if (assertion.context.isLLMDefined) {
@@ -1157,7 +1166,7 @@ public fun <Args> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage
     tool: Tool<Args, *>,
     args: Args
 ): Message.Tool.Call {
-    val toolContent = tool.encodeArgsToString(args)
+    val toolContent = tool.encodeArgsToString(args, serializer)
     val tokenCount = tokenizer?.countTokens(toolContent)
 
     return Message.Tool.Call(
@@ -1209,15 +1218,19 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
  * }
  * ```
  */
-public fun <TArgs, TResult> toolResult(tool: Tool<TArgs, TResult>, args: TArgs, result: TResult): ReceivedToolResult =
+public fun <TArgs, TResult> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolResult(
+    tool: Tool<TArgs, TResult>,
+    args: TArgs,
+    result: TResult
+): ReceivedToolResult =
     ReceivedToolResult(
         id = null,
         tool = tool.name,
-        toolArgs = tool.encodeArgs(args),
+        toolArgs = tool.encodeArgs(args, serializer),
         toolDescription = tool.descriptor.description,
-        content = tool.encodeResultToString(result),
+        content = tool.encodeResultToString(result, serializer),
         resultKind = ToolResultKind.Success,
-        result = tool.encodeResult(result)
+        result = tool.encodeResult(result, serializer)
     )
 
 /**
@@ -1241,15 +1254,19 @@ public fun <TArgs, TResult> toolResult(tool: Tool<TArgs, TResult>, args: TArgs, 
  * }
  * ```
  */
-public fun <TArgs> toolResult(tool: SimpleTool<TArgs>, args: TArgs, result: String): ReceivedToolResult =
+public fun <TArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolResult(
+    tool: SimpleTool<TArgs>,
+    args: TArgs,
+    result: String
+): ReceivedToolResult =
     ReceivedToolResult(
         id = null,
         tool = tool.name,
-        toolArgs = tool.encodeArgs(args),
+        toolArgs = tool.encodeArgs(args, serializer),
         toolDescription = tool.descriptor.description,
-        content = tool.encodeResultToString(result),
+        content = tool.encodeResultToString(result, serializer),
         resultKind = ToolResultKind.Success,
-        result = tool.encodeResult(result)
+        result = tool.encodeResult(result, serializer)
     )
 
 /**

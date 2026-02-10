@@ -50,9 +50,6 @@ public actual class AIAgentLLMWriteSession internal constructor(
         )
     )
 
-    private val config
-        get() = delegate.config
-
     /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.
      *

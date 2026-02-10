@@ -8,11 +8,14 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SubgraphSetExecutionPointTest {
+    private val serializer = KotlinxSerializer()
+
     val systemPrompt = "You are a test agent."
     val agentConfig = AIAgentConfig(
         prompt = prompt("test") {
@@ -28,7 +31,7 @@ class SubgraphSetExecutionPointTest {
     @Test
     fun test_singleSubgraph_teleportForward() = runTest {
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = createSimpleTeleportSubgraphStrategy(path = path("teleport-test", "Node2")),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
@@ -52,7 +55,7 @@ class SubgraphSetExecutionPointTest {
     @Test
     fun test_singleSubgraph_teleportBackwards() = runTest {
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = createSimpleTeleportSubgraphStrategy(path = path("teleport-test", "Node1")),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
@@ -80,7 +83,7 @@ class SubgraphSetExecutionPointTest {
     @Test
     fun test_singleSubgraph_teleportInsideSubgraph_teleportForward() = runTest {
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = createSimpleTeleportSubgraphStrategy("sgNode2"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
@@ -105,7 +108,7 @@ class SubgraphSetExecutionPointTest {
     @Test
     fun test_singleSubgraph_teleportInsideSubgraph_teleportBackwards() = runTest {
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = createSimpleTeleportSubgraphStrategy("sgNode1"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
@@ -132,7 +135,7 @@ class SubgraphSetExecutionPointTest {
     @Test
     fun test_innerSubgraphs_teleportToOuterSubgraphForward() = runTest {
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = simpleTeleportSubgraphWithInnerSubgraph("sgNode2"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
@@ -159,7 +162,7 @@ class SubgraphSetExecutionPointTest {
     @Test
     fun test_innerSubgraphs_teleportToOuterSubgraphBackwards() = runTest {
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = simpleTeleportSubgraphWithInnerSubgraph("sgNode1"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry

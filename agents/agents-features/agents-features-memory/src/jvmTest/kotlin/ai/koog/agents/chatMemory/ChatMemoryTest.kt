@@ -4,12 +4,13 @@ import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.testing.tools.MockLLMBuilder
+import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -18,6 +19,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Instant
 
 class ChatMemoryTest {
+    private val serializer = KotlinxSerializer()
 
     private val preSeededHistory = listOf(
         Message.User("What is the capital of France?", RequestMetaInfo.Empty),
@@ -59,9 +61,9 @@ class ChatMemoryTest {
     private fun createGraphAgent(
         historyProvider: ChatHistoryProvider,
         windowSize: Int? = null,
-        mockExecutorInit: MockLLMBuilder.() -> Unit
+        mockExecutorInit: MockExecutorDSLBuilder.() -> Unit
     ): AIAgent<String, String> {
-        val mockExecutor = getMockExecutor(init = mockExecutorInit)
+        val mockExecutor = getMockExecutor(serializer, init = mockExecutorInit)
         return AIAgent(
             promptExecutor = mockExecutor,
             llmModel = OpenAIModels.Chat.GPT4oMini,
@@ -78,9 +80,9 @@ class ChatMemoryTest {
     private fun createFunctionalAgent(
         historyProvider: ChatHistoryProvider,
         windowSize: Int? = null,
-        mockExecutorInit: MockLLMBuilder.() -> Unit
+        mockExecutorInit: MockExecutorDSLBuilder.() -> Unit
     ): AIAgent<String, List<Message>> {
-        val mockExecutor = getMockExecutor(init = mockExecutorInit)
+        val mockExecutor = getMockExecutor(serializer, init = mockExecutorInit)
         return AIAgent(
             promptExecutor = mockExecutor,
             llmModel = OpenAIModels.Chat.GPT4oMini,
@@ -105,7 +107,7 @@ class ChatMemoryTest {
         )
 
         var counter = 0
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("mock reply - $counter").asDefaultResponse
         }
 
@@ -139,7 +141,7 @@ class ChatMemoryTest {
             history = mutableMapOf()
         )
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Paris is the capital of France.") onRequestContains "France"
             mockLLMAnswer("Berlin is the capital of Germany.") onRequestContains "Germany"
             mockLLMAnswer("mock reply").asDefaultResponse
@@ -492,7 +494,7 @@ class ChatMemoryTest {
 
     @Test
     fun testDefaultProviderRunsWithoutExplicitConfiguration() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("mock reply").asDefaultResponse
         }
 
@@ -838,7 +840,7 @@ class ChatMemoryTest {
         val sessionId = "filter-session"
         val historyProvider = InMemoryChatHistoryProvider()
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Short").onRequestContains("short")
             mockLLMAnswer("This is a very long reply that should be filtered out").onRequestContains("long")
             mockLLMAnswer("mock reply").asDefaultResponse
@@ -884,7 +886,7 @@ class ChatMemoryTest {
         // This agent does NOT use filterMessages, just to get baseline data.
         // We need a separate agent that filters.
         val filterAgent = run {
-            val exec = getMockExecutor {
+            val exec = getMockExecutor(serializer) {
                 mockLLMAnswer("Reply 1").onRequestContains("Q1")
                 mockLLMAnswer("Reply 2").onRequestContains("Q2")
                 mockLLMAnswer("mock reply").asDefaultResponse
@@ -923,7 +925,7 @@ class ChatMemoryTest {
         val sessionId = "window-then-filter"
         val historyProvider = InMemoryChatHistoryProvider()
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Reply 1").onRequestContains("Q1")
             mockLLMAnswer("Reply 2").onRequestContains("Q2")
             mockLLMAnswer("Reply 3").onRequestContains("Q3")
@@ -965,7 +967,7 @@ class ChatMemoryTest {
         val sessionId = "filter-then-window"
         val historyProvider = InMemoryChatHistoryProvider()
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Reply 1").onRequestContains("Q1")
             mockLLMAnswer("Reply 2").onRequestContains("Q2")
             mockLLMAnswer("Reply 3").onRequestContains("Q3")

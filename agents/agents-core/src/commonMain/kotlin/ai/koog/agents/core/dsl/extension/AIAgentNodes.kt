@@ -613,7 +613,7 @@ public inline fun <reified ToolArg, reified TResult> AIAgentSubgraphBuilderBase<
                     // The only workaround is to generate it
                     user(
                         "Tool call: ${tool.name} was explicitly called with args: ${
-                            tool.encodeArgs(toolArgs)
+                            tool.encodeArgs(toolArgs, config.serializer)
                         }"
                     )
                 }

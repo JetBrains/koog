@@ -8,12 +8,15 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.text.text
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class SimpleLLMPlannerAgentTest {
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun testSimplePlannerCreatesAndExecutesPlan() = runTest {
         val initialState = "Organize a team meeting"
@@ -34,7 +37,7 @@ class SimpleLLMPlannerAgentTest {
         // Counts plan execution iterations
         var planIteration = 0
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             // Mock initial plan creation request
             mockLLMAnswer(Json.encodeToString(initialPlan)) onRequestContains "Main Goal -- Create a Plan"
 

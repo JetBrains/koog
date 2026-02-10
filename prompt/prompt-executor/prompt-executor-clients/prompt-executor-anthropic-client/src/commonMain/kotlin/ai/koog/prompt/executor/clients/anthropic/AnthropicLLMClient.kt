@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.ktor.fromKtorClient
 import ai.koog.prompt.dsl.ModerationResult
@@ -500,7 +501,9 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
                         val imageSource: ImageSource = when (val content = part.content) {
                             is AttachmentContent.URL -> ImageSource.Url(content.url)
+
                             is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), part.mimeType)
+
                             else -> throw LLMClientException(
                                 clientName,
                                 "Unsupported image attachment content: ${content::class}"
@@ -517,6 +520,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
                         val documentSource: DocumentSource = when (val content = part.content) {
                             is AttachmentContent.URL -> DocumentSource.Url(content.url)
+
                             is AttachmentContent.Binary -> DocumentSource.Base64(
                                 content.asBase64(),
                                 part.mimeType
@@ -591,6 +595,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return when {
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+
             // If no messages where returned, return an empty message and check stopReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
@@ -604,6 +609,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                     )
                 )
             )
+
             // Just return responses
             else -> responses
         }
@@ -612,13 +618,19 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
     /**
      * Helper function to get the type map for a parameter type without using smart casting
      */
+    @OptIn(InternalAgentToolsApi::class)
     private fun getTypeMapForParameter(type: ToolParameterType): JsonObject {
         return when (type) {
             ToolParameterType.Boolean -> JsonObject(mapOf("type" to JsonPrimitive("boolean")))
+
             ToolParameterType.Float -> JsonObject(mapOf("type" to JsonPrimitive("number")))
+
             ToolParameterType.Integer -> JsonObject(mapOf("type" to JsonPrimitive("integer")))
+
             ToolParameterType.String -> JsonObject(mapOf("type" to JsonPrimitive("string")))
+
             ToolParameterType.Null -> JsonObject(mapOf("type" to JsonPrimitive("null")))
+
             is ToolParameterType.Enum -> JsonObject(
                 mapOf(
                     "type" to JsonPrimitive("string"),
@@ -668,10 +680,11 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 JsonObject(objectMap)
             }
 
-            is ToolParameterType.AnyOf -> throw LLMClientException(
-                clientName,
-                "AnyOf type is not supported"
-            )
+            is ToolParameterType.AnyOf -> {
+                // FIXME this is hack, represent union types properly in ToolDescriptor
+                type.hackRepresentAnyOfWithNullAsTypeUnionWithNull(::getTypeMapForParameter)
+                    ?: throw LLMClientException(clientName, "AnyOf type is not supported")
+            }
         }
     }
 

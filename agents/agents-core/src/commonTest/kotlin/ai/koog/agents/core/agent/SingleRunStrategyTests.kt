@@ -4,11 +4,13 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SingleRunStrategyTests {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun test_SingleRunStrategy_Single_AssistantMessages() = runTest {
@@ -18,7 +20,7 @@ class SingleRunStrategyTests {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("Task solved!!") onRequestContains "Solve task"
@@ -49,7 +51,7 @@ class SingleRunStrategyTests {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
@@ -80,7 +82,7 @@ class SingleRunStrategyTests {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Task solved!") onRequestContains "Solve task"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
         }
@@ -110,7 +112,7 @@ class SingleRunStrategyTests {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Task solved!") onRequestContains "Solve task"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
         }
@@ -140,7 +142,7 @@ class SingleRunStrategyTests {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
@@ -179,7 +181,7 @@ class SingleRunStrategyTests {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
@@ -219,7 +221,7 @@ class SingleRunStrategyTests {
         }
 
         val assistantResponse = "Hey, I want to call following tools:"
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = true) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = true) {
             mockLLMAnswer(assistantResponse) onRequestContains assistantResponse
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
 
@@ -259,7 +261,7 @@ class SingleRunStrategyTests {
         }
 
         val assistantResponse = "Hey, I want to call following tools:"
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = true) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = true) {
             mockLLMAnswer(assistantResponse) onRequestContains assistantResponse
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
 

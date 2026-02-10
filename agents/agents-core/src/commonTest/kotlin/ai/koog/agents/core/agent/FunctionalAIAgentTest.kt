@@ -15,6 +15,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -24,6 +25,8 @@ import kotlin.test.assertFalse
 
 @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 class FunctionalAIAgentTest {
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun mixedTools_thenAssistantMessage() = runTest {
         val actualToolCalls = mutableListOf<String>()
@@ -33,7 +36,7 @@ class FunctionalAIAgentTest {
         }
 
         val assistantResponse = "Hey, I want to call following tools:"
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = true) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = true) {
             mockLLMAnswer(assistantResponse) onRequestContains assistantResponse
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
 
@@ -82,7 +85,7 @@ class FunctionalAIAgentTest {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("Task solved!!") onRequestContains "Solve task"
@@ -122,7 +125,7 @@ class FunctionalAIAgentTest {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
@@ -295,12 +298,17 @@ class FunctionalAIAgentTest {
 
     // Define sample tools for subtasks, similar in spirit to QATools so tool lists are not empty
     object ArchitectureTools {
-        object AnalyzeRequirements : SimpleTool<String>(
-            argsSerializer = String.serializer(),
+        object AnalyzeRequirements : SimpleTool<AnalyzeRequirements.Requirements>(
+            argsSerializer = Requirements.serializer(),
             name = "analyze_requirements",
             description = "Analyzes high-level mission requirements."
         ) {
-            override suspend fun execute(args: String): String = "Requirements analyzed: $args"
+            @Serializable
+            data class Requirements(
+                val value: String,
+            )
+
+            override suspend fun execute(args: Requirements): String = "Requirements analyzed: ${args.value}"
         }
 
         object DraftArchitecture : SimpleTool<Architecture>(
@@ -421,7 +429,7 @@ class FunctionalAIAgentTest {
 
         var qaAttempt = 0
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             // Design architecture subtask - match exact first request
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<Architecture>(),
@@ -568,7 +576,7 @@ class FunctionalAIAgentTest {
     fun subtask_default_sequential_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             // The subtask should immediately call the finish tool in SEQUENTIAL (multi-tool) mode
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<SimpleOut>(),
@@ -609,7 +617,7 @@ class FunctionalAIAgentTest {
 
         val testToolRegistry = ToolRegistry { tool(DummyTool) }
 
-        val mockLLMApi = getMockExecutor(testToolRegistry, handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             // First, LLM asks to call a normal tool, then after tool results it calls finish tool
             mockLLMToolCall(
                 listOf(
@@ -657,7 +665,7 @@ class FunctionalAIAgentTest {
     fun subtask_parallel_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<SimpleOut>(),
                 SimpleOut("done-par")
@@ -693,7 +701,7 @@ class FunctionalAIAgentTest {
     fun subtask_single_run_sequential_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<SimpleOut>(),
                 SimpleOut("done-single")
@@ -730,7 +738,7 @@ class FunctionalAIAgentTest {
     fun subtask_withVerification_success() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<ai.koog.agents.ext.agent.CriticResultFromLLM>(),
                 ai.koog.agents.ext.agent.CriticResultFromLLM(isCorrect = true, feedback = "OK")
@@ -772,7 +780,7 @@ class FunctionalAIAgentTest {
         val testFeatureMessageProcessor = TestFeatureMessageProcessor()
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             llmModel = model,
             strategy = strategy,
             systemPrompt = "You are helpful"

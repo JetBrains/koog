@@ -83,6 +83,7 @@ public class FunctionalAIAgent<Input, Output>(
             agentId = id,
             logger = logger,
             toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
         )
 
         val initialLLMContext = AIAgentLLMContext(
@@ -148,6 +149,7 @@ public class FunctionalAIAgent<Input, Output>(
             agentId = id,
             logger = logger,
             toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
         )
 
         return baseEnvironment

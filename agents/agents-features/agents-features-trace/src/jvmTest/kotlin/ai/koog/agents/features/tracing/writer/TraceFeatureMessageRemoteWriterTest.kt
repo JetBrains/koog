@@ -54,6 +54,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -85,6 +86,7 @@ import kotlin.time.Duration.Companion.seconds
 @Disabled("Flaky, see #1252")
 @Execution(ExecutionMode.SAME_THREAD)
 class TraceFeatureMessageRemoteWriterTest {
+    private val serializer = KotlinxSerializer()
 
     companion object {
         private val logger = KotlinLogging.logger { }
@@ -203,7 +205,7 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + userMessage(content = userPrompt)
         )
 
-        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
 
         val expectedLLMCallWithToolsPrompt = expectedPrompt.copy(
             messages = expectedPrompt.messages + listOf(
@@ -212,10 +214,10 @@ class TraceFeatureMessageRemoteWriterTest {
                 receivedToolResult(
                     toolCallId = "0",
                     toolName = dummyTool.name,
-                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                     toolDescription = dummyTool.descriptor.description,
-                    content = dummyTool.encodeResultToString(dummyTool.result),
-                    result = dummyTool.encodeResult(dummyTool.result)
+                    content = dummyTool.encodeResultToString(dummyTool.result, serializer),
+                    result = dummyTool.encodeResult(dummyTool.result, serializer)
                 ).toMessage(clock = testClock)
             )
         )
@@ -244,7 +246,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
                 }
 
-                val mockExecutor = getMockExecutor(clock = testClock) {
+                val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                     mockLLMToolCall(
                         tool = dummyTool,
                         args = DummyTool.Args("test"),
@@ -325,8 +327,8 @@ class TraceFeatureMessageRemoteWriterTest {
 
                 val actualToolCallStartingEvent = actualClientEvents.singleEvent<ToolCallStartingEvent>()
 
-                val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-                val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+                val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+                val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
                 val dummyToolName = dummyTool.name
                 val dummyToolDescription = dummyTool.descriptor.description
 
@@ -335,7 +337,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     data = receivedToolResult(
                         toolCallId = "0",
                         toolName = dummyToolName,
-                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                         toolDescription = dummyToolDescription,
                         content = dummyTool.result,
                         result = dummyToolResultEncoded,
@@ -486,7 +488,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             toolCallId = "0",
                             toolName = dummyTool.name,
-                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         ToolCallCompletedEvent(
@@ -495,9 +497,9 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             toolCallId = "0",
                             toolName = dummyTool.name,
-                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                            toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                             toolDescription = dummyTool.descriptor.description,
-                            result = dummyTool.encodeResult(dummyTool.result),
+                            result = dummyTool.encodeResult(dummyTool.result, serializer),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -774,7 +776,7 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + userMessage(content = userPrompt)
         )
 
-        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
 
         val expectedLLMCallWithToolsPrompt = expectedPrompt.copy(
             messages = expectedPrompt.messages + listOf(
@@ -783,10 +785,10 @@ class TraceFeatureMessageRemoteWriterTest {
                 receivedToolResult(
                     toolCallId = "0",
                     toolName = dummyTool.name,
-                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                     toolDescription = dummyTool.descriptor.description,
-                    content = dummyTool.encodeResultToString(dummyTool.result),
-                    result = dummyTool.encodeResult(dummyTool.result)
+                    content = dummyTool.encodeResultToString(dummyTool.result, serializer),
+                    result = dummyTool.encodeResult(dummyTool.result, serializer)
                 ).toMessage(clock = testClock)
             )
         )
@@ -815,7 +817,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
                 }
 
-                val mockExecutor = getMockExecutor(clock = testClock) {
+                val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                     mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals
                         userPrompt
                     mockLLMAnswer(mockResponse) onRequestContains dummyTool.result

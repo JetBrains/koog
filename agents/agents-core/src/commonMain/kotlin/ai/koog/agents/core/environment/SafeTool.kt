@@ -1,11 +1,9 @@
-@file:Suppress("UNCHECKED_CAST")
-
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlin.coroutines.cancellation.CancellationException
+import ai.koog.serialization.JSONSerializer
 import kotlin.time.Clock
 
 /**
@@ -13,49 +11,40 @@ import kotlin.time.Clock
  * It provides mechanisms for handling tool execution results and differentiating between
  * success and failure cases.
  *
- * @param TArgs The type of arguments accepted by the underlying tool.
- * @param TResult The type of result produced by the underlying tool.
  * @property tool The tool instance to be executed. Defines the operation and its required input/output behavior.
  * @property clock The clock used to determine tool call message timestamps
  * @property environment The environment in which the tool operates. Handles the execution of tool logic.
  */
 public data class SafeTool<TArgs, TResult>(
-    private val tool: Tool<TArgs, TResult>,
-    private val environment: AIAgentEnvironment,
-    private val clock: Clock
+    internal val tool: Tool<TArgs, TResult>,
+    internal val environment: AIAgentEnvironment,
+    internal val clock: Clock
 ) {
     /**
      * Represents a sealed interface for results, which can either be a success or a failure.
      *
-     * This interface models the outcome of an operation, encapsulating both the result content
-     * and the status of the operation (successful or failed). It is parameterized by `TResult`,
-     * which must extend the `ToolResult` interface.
-     *
-     * @param TResult The type of the result, constrained to types that implement `ToolResult`.
+     * @param TResult The type of the result
      */
     public sealed interface Result<TResult> {
         /**
-         * Represents the content of the result within the sealed interface `Result`.
+         * Content of the result
          *
-         * This property is used to hold the content as a `String`, which could vary depending on whether
-         * the result is successful or a failure.
-         *
-         * - In the `Success` case, this corresponds to the provided content of the successful result.
-         * - In the `Failure` case, this corresponds to the failure message.
+         * - In the [Success] case, this corresponds to the provided content of the successful result.
+         * - In the ]Failure] case, this corresponds to the failure message.
          */
         public val content: String
 
         /**
          * Determines if the current result represents a successful operation.
          *
-         * @return `true` if the result is an instance of `Success`, otherwise `false`.
+         * @return `true` if the result is an instance of [Success], otherwise `false`.
          */
         public fun isSuccessful(): Boolean = this is Success<TResult>
 
         /**
          * Determines whether the current instance represents a failure state.
          *
-         * @return `true` if the current instance is of type `Failure`, otherwise `false`.
+         * @return `true` if the current instance is of type [Failure], otherwise `false`.
          */
         public fun isFailure(): Boolean = this is Failure<TResult>
 
@@ -87,12 +76,8 @@ public data class SafeTool<TArgs, TResult>(
         /**
          * Represents a successful result of an operation, wrapping a specific tool result and its corresponding content.
          *
-         * The `Success` class is a concrete implementation of the `Result` sealed interface,
-         * specifically used to indicate successful outcomes. It stores both the result of type `TResult`
-         * and its associated content as a string.
-         *
-         * @param TResult The type of the tool result, which must implement the `ToolResult` interface.
-         * @property result The tool result encapsulated within this success instance.
+         * @param TResult The type of the tool result.
+         * @property result The tool result
          * @property content The associated content describing or representing the result in string format.
          */
         public data class Success<TResult>(
@@ -102,21 +87,10 @@ public data class SafeTool<TArgs, TResult>(
 
         /**
          * Represents a failed result encapsulating an error message.
-         *
-         * This class extends the base `Result` interface and is used to indicate that a particular operation
-         * has failed. The associated failure message provides additional context or details about the failure.
-         *
-         * @param TResult The type of the tool result associated with the operation.
+         * @param TResult The type of the tool result.
          * @property message A descriptive error message explaining the reason for the failure.
          */
         public data class Failure<TResult>(val message: String) : Result<TResult> {
-            /**
-             * Returns the failure message associated with this result.
-             *
-             * The `content` property provides access to the descriptive error message encapsulated
-             * within a `Failure` instance of the `Result` interface. This message is useful for
-             * understanding the cause or nature of a failure in a tool operation.
-             */
             override val content: String get() = message
         }
     }
@@ -129,36 +103,22 @@ public data class SafeTool<TArgs, TResult>(
      * into a safe result encapsulated in a `Result` type.
      *
      * @param args The arguments required for the tool execution.
-     * @return A `Result` containing the outcome of the tool execution, either
+     * @param serializer The JSON serializer for encoding the tool arguments.
+     * @return A [Result] containing the outcome of the tool execution, either
      * a success or a failure.
      */
-    @Suppress("UNCHECKED_CAST")
-    public suspend fun execute(args: TArgs): Result<TResult> {
+    public suspend fun execute(
+        args: TArgs,
+        serializer: JSONSerializer,
+    ): Result<TResult> {
         return environment.executeTool(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgs(args).toString(),
+                content = tool.encodeArgsToString(args, serializer),
                 metaInfo = ResponseMetaInfo.create(clock)
             )
-        ).toSafeResult(tool)
-    }
-
-    /**
-     * Executes a raw tool call with the given arguments, returning the resulting content as a string.
-     *
-     * @param args The arguments to encode and use in the tool call.
-     * @return The content of the response from executing the tool.
-     */
-    public suspend fun executeRaw(args: TArgs): String {
-        return environment.executeTool(
-            Message.Tool.Call(
-                id = null,
-                tool = tool.name,
-                content = tool.encodeArgs(args).toString(),
-                metaInfo = ResponseMetaInfo.create(clock)
-            )
-        ).content
+        ).toSafeResult(tool, serializer)
     }
 
     /**
@@ -166,37 +126,30 @@ public data class SafeTool<TArgs, TResult>(
      * This method does not enforce type safety for the arguments provided to the tool.
      *
      * @param args The arguments to be passed to the tool.
-     * @return A Result containing the outcome of the tool execution with TResult as the result type.
+     * @param serializer The JSON serializer for encoding the tool arguments.
+     * @return A [Result] containing the outcome of the tool execution with TResult as the result type.
      */
-    @Suppress("UNCHECKED_CAST")
-    public suspend fun executeUnsafe(args: Any?): Result<TResult> {
-        return environment.executeTool(
-            Message.Tool.Call(
-                id = null,
-                tool = tool.name,
-                content = tool.encodeArgs(args as TArgs).toString(),
-                metaInfo = ResponseMetaInfo.create(clock)
-            )
-        ).toSafeResult(tool)
+    public suspend fun executeUnsafe(
+        args: Any?,
+        serializer: JSONSerializer,
+    ): Result<TResult> {
+        @Suppress("UNCHECKED_CAST")
+        return execute(args as TArgs, serializer)
     }
 }
 
 /**
  * Converts a [ReceivedToolResult] instance into a [SafeTool.Result] for safer result handling.
  *
- * If the `result` in the [ReceivedToolResult] is null, it returns a [SafeTool.Result.Failure]
- * containing the `content` as a failure message. Otherwise, it casts the `result` to the given
- * type parameter [TResult] and returns a [SafeTool.Result.Success] containing the `result` and `content`.
- *
  * @return A [SafeTool.Result] which will either be a [SafeTool.Result.Failure] or [SafeTool.Result.Success]
- * based on the presence and validity of the `result` in the [ReceivedToolResult].
  */
-public fun <TResult> ReceivedToolResult.toSafeResult(tool: Tool<*, TResult>): SafeTool.Result<TResult> {
+public fun <TResult> ReceivedToolResult.toSafeResult(
+    tool: Tool<*, TResult>,
+    serializer: JSONSerializer,
+): SafeTool.Result<TResult> {
     val encodedResult = result ?: return SafeTool.Result.Failure(message = content)
     val decodedResult = try {
-        tool.decodeResult(encodedResult)
-    } catch (e: CancellationException) {
-        throw e
+        tool.decodeResult(encodedResult, serializer)
     } catch (e: Exception) {
         return SafeTool.Result.Failure("Tool with name '${tool.name}' failed to deserialize result with error: ${e.message}")
     }

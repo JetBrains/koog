@@ -23,6 +23,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -47,6 +48,7 @@ import kotlin.time.Duration.Companion.seconds
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 class AIAgentPipelineJvmTest {
+    private val serializer = KotlinxSerializer()
 
     companion object {
         private val testTimeout = 10.seconds
@@ -268,7 +270,7 @@ class AIAgentPipelineJvmTest {
 
         return TestAIAgent(
             id = id ?: "test-agent-id",
-            promptExecutor = promptExecutor ?: getMockExecutor(clock = testClock) { },
+            promptExecutor = promptExecutor ?: getMockExecutor(serializer, clock = testClock) { },
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry { },

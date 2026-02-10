@@ -1,7 +1,9 @@
 package ai.koog.agents.chatMemory
 
-import ai.koog.agents.testing.tools.MockLLMBuilder
+import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.serialization.jackson.JacksonSerializer
+import java.util.function.Consumer
 import kotlin.time.Clock
 
 /**
@@ -9,19 +11,14 @@ import kotlin.time.Clock
  * that use types not easily accessible from Java in a multiplatform project.
  */
 object JavaTestHelpers {
+    private val serializer = JacksonSerializer()
 
     /**
-     * Creates a [MockLLMBuilder] using the system clock.
+     * Creates a [PromptExecutor] by configuring a [MockExecutorDSLBuilder] via a Java-friendly callback.
      */
     @JvmStatic
-    fun createMockLLMBuilder(): MockLLMBuilder = MockLLMBuilder(Clock.System)
-
-    /**
-     * Creates a [PromptExecutor] by configuring a [MockLLMBuilder] via a Java-friendly callback.
-     */
-    @JvmStatic
-    fun createMockExecutor(configure: java.util.function.Consumer<MockLLMBuilder>): PromptExecutor {
-        val builder = createMockLLMBuilder()
+    fun createMockExecutor(configure: Consumer<MockExecutorDSLBuilder>): PromptExecutor {
+        val builder = MockExecutorDSLBuilder(Clock.System, serializer)
         configure.accept(builder)
         return builder.build()
     }

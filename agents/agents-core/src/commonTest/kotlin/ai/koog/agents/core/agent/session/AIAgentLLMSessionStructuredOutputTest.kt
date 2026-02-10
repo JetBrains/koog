@@ -15,6 +15,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -22,6 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
+    private val serializer = KotlinxSerializer()
 
     @Serializable
     data class TestStructure(
@@ -40,7 +42,7 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
             default = StructuredRequest.Manual(structure)
         )
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -94,7 +96,7 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
             default = StructuredRequest.Manual(structure)
         )
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -165,7 +167,7 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
             default = StructuredRequest.Manual(structure)
         )
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 

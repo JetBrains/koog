@@ -1,7 +1,11 @@
 package ai.koog.agents.core.tools
 
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.KSerializerTypeToken
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
 
 /**
  * Represents a simplified tool base class that processes specific arguments and produces a textual result.
@@ -9,14 +13,26 @@ import kotlinx.serialization.builtins.serializer
  * @param TArgs The type of arguments the tool accepts.
  */
 public abstract class SimpleTool<TArgs>(
-    argsSerializer: KSerializer<TArgs>,
+    argsType: TypeToken,
     name: String,
     description: String,
 ) : Tool<TArgs, String>(
-    argsSerializer = argsSerializer,
-    resultSerializer = String.serializer(),
+    argsType = argsType,
+    resultType = typeToken<String>(),
     name = name,
     description = description,
 ) {
-    override fun encodeResultToString(result: String): String = result
+    @OptIn(InternalKoogSerializationApi::class)
+    @Deprecated("Use TypeToken constructor instead")
+    public constructor(
+        argsSerializer: KSerializer<TArgs>,
+        name: String,
+        description: String,
+    ) : this(
+        argsType = KSerializerTypeToken(argsSerializer),
+        name = name,
+        description = description
+    )
+
+    override fun encodeResultToString(result: String, serializer: JSONSerializer): String = result
 }

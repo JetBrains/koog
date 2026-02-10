@@ -54,8 +54,27 @@ public open class ToolDescriptor(
         return true
     }
 
-    override fun toString(): String {
-        return "ToolDescriptor(name=$name, description=$description, requiredParameters=$requiredParameters, optionalParameters=$optionalParameters)"
+    override fun toString(): String = buildString {
+        fun appendParameters(parameters: List<ToolParameterDescriptor>) {
+            parameters.forEach {
+                append(it.toString().prependIndent("    "))
+                appendLine(",")
+            }
+        }
+
+        appendLine("ToolDescriptor(")
+        appendLine("  name = $name,")
+        appendLine("  description = $description,")
+
+        appendLine("  requiredParameters = [")
+        appendParameters(requiredParameters)
+        appendLine("  ]")
+
+        appendLine("  optionalParameters = [")
+        appendParameters(optionalParameters)
+        appendLine("  ]")
+
+        append(")")
     }
 
     override fun hashCode(): Int {

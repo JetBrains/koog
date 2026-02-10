@@ -15,6 +15,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -24,6 +25,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AIAgentNodesTest {
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun testNodeLLMCompressHistory() = runTest {
         val agentStrategy = strategy<String, String>("test") {
@@ -41,7 +44,7 @@ class AIAgentNodesTest {
             maxAgentIterations = 10
         )
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(
                 "Here's a summary of the conversation: Test user asked questions and received responses."
             ) onRequestContains
@@ -77,7 +80,7 @@ class AIAgentNodesTest {
         val results = mutableListOf<Any?>()
         val executionEvents = mutableListOf<String>()
 
-        val modelCapturingExecutor = getMockExecutor {
+        val modelCapturingExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Custom model compression summary") onRequestContains "Summarize all the main achievements"
             mockLLMAnswer("Default test response").asDefaultResponse
         }
@@ -173,7 +176,7 @@ class AIAgentNodesTest {
             edge(checkPrompt forwardTo nodeFinish)
         }
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Test").asDefaultResponse
         }
 

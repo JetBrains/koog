@@ -27,6 +27,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -42,6 +43,8 @@ import kotlin.time.Instant
 
 @OptIn(InternalAgentsApi::class)
 class AIAgentMemoryTest {
+    private val serializer = KotlinxSerializer()
+
     object MemorySubjects {
         /**
          * Information specific to the current user
@@ -106,7 +109,7 @@ class AIAgentMemoryTest {
             model = testModel,
             responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -183,7 +186,7 @@ class AIAgentMemoryTest {
             model = testModel,
             responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -299,7 +302,7 @@ class AIAgentMemoryTest {
             model = testModel,
             promptExecutor = promptExecutor,
             responseProcessor = null,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -383,7 +386,7 @@ class AIAgentMemoryTest {
             model = originalModel,
             responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, originalModel, 100),
             clock = testClock
         )
@@ -471,7 +474,7 @@ class AIAgentMemoryTest {
             model = testModel,
             responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -550,7 +553,7 @@ class AIAgentMemoryTest {
             model = testModel,
             responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )

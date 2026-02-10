@@ -9,17 +9,12 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
-import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
-import ai.koog.prompt.structure.StructuredRequestConfig
-import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 import kotlin.time.Clock
 
@@ -152,108 +147,6 @@ public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
      * @param newParams The new set of LLMParams to replace the existing parameters in the prompt.
      */
     public fun changeLLMParams(newParams: LLMParams)
-
-    /**
-     * Sends a request to the language model without utilizing any tools, returns multiple responses,
-     * and updates the prompt with the received messages.
-     *
-     * @return A list of response messages from the language model.
-     */
-    override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response>
-
-    /**
-     * Sends a request to the Language Model (LLM) without including any tools, processes the response,
-     * and updates the prompt with the returned message.
-     *
-     * LLM might answer only with a textual assistant message.
-     *
-     * @return the response from the LLM after processing the request, as a [Message.Response].
-     */
-    override suspend fun requestLLMWithoutTools(): Message.Response
-
-    /**
-     * Requests a response from the Language Learning Model (LLM) while also processing
-     * the response by updating the current prompt with the received message.
-     *
-     * @return The response received from the Language Learning Model (LLM).
-     */
-    override suspend fun requestLLMOnlyCallingTools(): Message.Response
-
-    /**
-     * Requests a response from the Language Model (LLM) enforcing tool usage (`ToolChoice.Required`),
-     * validates the session, and processes all returned messages (e.g. thinking + tool call).
-     *
-     * Crucially, this method appends **all** received messages to the prompt history to preserve context.
-     *
-     * @return A list of responses received from the Language Model (LLM).
-     */
-    override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response>
-
-    /**
-     * Requests an LLM (Large Language Model) to forcefully utilize a specific tool during its operation.
-     *
-     * @param tool A descriptor object representing the tool to be enforced for use by the LLM.
-     * @return A response message received from the LLM after executing the enforced tool request.
-     */
-    override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response
-
-    /**
-     * Requests the execution of a single specified tool, enforcing its use,
-     * and updates the prompt based on the generated response.
-     *
-     * @param tool The tool that will be enforced and executed. It contains the input and output types.
-     * @return The response generated after executing the provided tool.
-     */
-    override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response
-
-    /**
-     * Makes an asynchronous request to a Large Language Model (LLM) and updates the current prompt
-     * with the response received from the LLM.
-     *
-     * @return A [Message.Response] object containing the response from the LLM.
-     */
-    override suspend fun requestLLM(): Message.Response
-
-    /**
-     * Requests multiple responses from the LLM and updates the prompt with the received responses.
-     *
-     * This method invokes the superclass implementation to fetch a list of LLM responses. Each
-     * response is subsequently used to update the session's prompt. The prompt updating mechanism
-     * allows stateful interactions with the LLM, maintaining context across multiple requests.
-     *
-     * @return A list of `Message.Response` containing the results from the LLM.
-     */
-    override suspend fun requestLLMMultiple(): List<Message.Response>
-
-    /**
-     * Sends a request to LLM and gets a structured response.
-     *
-     * @param config A configuration defining structures and behavior.
-     */
-    override suspend fun <T> requestLLMStructured(
-        config: StructuredRequestConfig<T>,
-        fixingParser: StructureFixingParser?
-    ): Result<StructuredResponse<T>>
-
-    /**
-     * Sends a request to LLM and gets a structured response.
-     *
-     * This is a simple version of the full `requestLLMStructured`. Unlike the full version, it does not require specifying
-     * struct definitions and structured output modes manually. It attempts to find the best approach to provide a structured
-     * output based on the defined [model] capabilities.
-     *
-     * @param serializer Serializer for the requested structure type.
-     * @param examples Optional list of examples in case manual mode will be used. These examples might help the model to
-     * understand the format better.
-     * @param fixingParser Optional parser that handles malformed responses by using an auxiliary LLM to
-     * intelligently fix parsing errors. When specified, parsing errors trigger additional
-     * LLM calls with error context to attempt correction of the structure format.
-     */
-    override suspend fun <T> requestLLMStructured(
-        serializer: KSerializer<T>,
-        examples: List<T>,
-        fixingParser: StructureFixingParser?
-    ): Result<StructuredResponse<T>>
 
     /**
      * Streams the result of a request to a language model.

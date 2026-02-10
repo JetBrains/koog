@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.message.Message.Tool
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -12,6 +13,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GenericAgentEnvironmentTest {
+    private val serializer = KotlinxSerializer()
+
     @Serializable
     private data class RequiredArgs(val required: String)
 
@@ -29,6 +32,7 @@ class GenericAgentEnvironmentTest {
             agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(RequiredArgsTool()) },
+            serializer = serializer,
         )
 
         val toolCall = Tool.Call(
@@ -49,6 +53,7 @@ class GenericAgentEnvironmentTest {
             agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(RequiredArgsTool()) },
+            serializer = serializer,
         )
 
         val toolCall = Tool.Call(

@@ -43,6 +43,7 @@ import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -56,6 +57,7 @@ import kotlin.test.assertFails
 import kotlin.time.Instant
 
 class TraceFeatureMessageTestWriterTest {
+    private val serializer = KotlinxSerializer()
 
     private val targetLogger = TestLogger("test-logger")
 
@@ -356,7 +358,7 @@ class TraceFeatureMessageTestWriterTest {
 
         val testLLMResponse = "Default test response"
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals userPrompt
         }
 

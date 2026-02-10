@@ -19,11 +19,13 @@ import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.utils.HiddenString
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun `test execute tool spans are collected`() = runTest {
@@ -46,13 +48,13 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
         val actualSpans = collectedTestData.filterExecuteToolSpans()
         assertTrue(actualSpans.isNotEmpty(), "ExecuteTool spans should be created during agent execution")
 
-        val serializedArgs = TestGetWeatherTool.encodeArgsToString(mockToolCallResponse.arguments)
+        val serializedArgs = TestGetWeatherTool.encodeArgsToString(mockToolCallResponse.arguments, serializer)
 
         val expectedSpans = listOf(
             mapOf(
                 "${OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
                     "attributes" to mapOf(
-                        "gen_ai.tool.call.result" to TestGetWeatherTool.encodeResult(mockToolCallResponse.toolResult).toString(),
+                        "gen_ai.tool.call.result" to TestGetWeatherTool.encodeResult(mockToolCallResponse.toolResult, serializer).toString(),
                         "gen_ai.tool.call.arguments" to serializedArgs,
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.tool.call.id" to mockToolCallResponse.toolCallId,
@@ -141,13 +143,13 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
         val toolArgsParis = TestGetWeatherTool.Args("Paris")
         val toolArgsLondon = TestGetWeatherTool.Args("London")
 
-        val serializedToolArgsParis = TestGetWeatherTool.encodeArgsToString(toolArgsParis)
-        val serializedToolArgsLondon = TestGetWeatherTool.encodeArgsToString(toolArgsLondon)
+        val serializedToolArgsParis = TestGetWeatherTool.encodeArgsToString(toolArgsParis, serializer)
+        val serializedToolArgsLondon = TestGetWeatherTool.encodeArgsToString(toolArgsLondon, serializer)
 
-        val serializedToolResultParis = TestGetWeatherTool.encodeResultToString(TestGetWeatherTool.DEFAULT_PARIS_RESULT)
-        val serializedToolResultLondon = TestGetWeatherTool.encodeResultToString(TestGetWeatherTool.DEFAULT_LONDON_RESULT)
+        val serializedToolResultParis = TestGetWeatherTool.encodeResultToString(TestGetWeatherTool.DEFAULT_PARIS_RESULT, serializer)
+        val serializedToolResultLondon = TestGetWeatherTool.encodeResultToString(TestGetWeatherTool.DEFAULT_LONDON_RESULT, serializer)
 
-        val executor = getMockExecutor(clock = testClock) {
+        val executor = getMockExecutor(serializer, testClock) {
             // Mock tool call
             val toolCalls = listOf(
                 TestGetWeatherTool to toolArgsParis,

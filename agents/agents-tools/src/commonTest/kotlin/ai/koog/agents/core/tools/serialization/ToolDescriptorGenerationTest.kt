@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -59,7 +60,7 @@ data class ComplexNestedToolArgs(
 )
 
 object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>(
-    argsSerializer = ComplexNestedToolArgs.serializer(),
+    argsType = typeToken<ComplexNestedToolArgs>(),
     name = "complex_nested_tool",
     description = "A tool that processes user profiles with complex nested structures.",
 ) {

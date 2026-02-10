@@ -5,11 +5,12 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONSerializer
 
 /**
  * A processor for handling and modifying LLM responses.
  */
-public abstract class ResponseProcessor() {
+public abstract class ResponseProcessor {
 
     /**
      * Processes the given LLM responses.
@@ -20,7 +21,8 @@ public abstract class ResponseProcessor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>
+        responses: List<Message.Response>,
+        serializer: JSONSerializer,
     ): List<Message.Response>
 
     /**
@@ -31,13 +33,15 @@ public abstract class ResponseProcessor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        response: Message.Response
+        response: Message.Response,
+        serializer: JSONSerializer,
     ): Message.Response = process(
-        executor,
-        prompt,
-        model,
-        tools,
-        listOf(response)
+        executor = executor,
+        prompt = prompt,
+        model = model,
+        tools = tools,
+        responses = listOf(response),
+        serializer = serializer
     ).first()
 
     /**
@@ -51,11 +55,12 @@ public abstract class ResponseProcessor() {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            responses: List<Message.Response>
+            responses: List<Message.Response>,
+            serializer: JSONSerializer,
         ): List<Message.Response> {
             var result = responses
             for (processor in processors) {
-                result = processor.process(executor, prompt, model, tools, result)
+                result = processor.process(executor, prompt, model, tools, result, serializer)
             }
             return result
         }

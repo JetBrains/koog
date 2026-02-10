@@ -7,13 +7,15 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class AIAgentNodeBuilderTransformTest {
+    private val serializer = KotlinxSerializer()
 
-    private fun createMockExecutor() = getMockExecutor {
+    private fun createMockExecutor() = getMockExecutor(serializer) {
     }
 
     private fun createToolRegistry() = ToolRegistry {

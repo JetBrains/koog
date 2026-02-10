@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -43,9 +44,11 @@ import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.agents.mcp.metadata.McpMetadataKeys
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.kotlinx.toKotlinxJsonElement
+import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import kotlin.reflect.KType
 
 /**
@@ -67,7 +70,9 @@ public class OpenTelemetry {
 
         override val key: AIAgentStorageKey<OpenTelemetry> = AIAgentStorageKey("agents-features-opentelemetry")
 
-        override fun createInitialConfig(): OpenTelemetryConfig {
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): OpenTelemetryConfig {
             return OpenTelemetryConfig()
         }
 
@@ -625,7 +630,7 @@ public class OpenTelemetry {
                     parentSpan = parentSpan,
                     id = eventContext.eventId,
                     toolName = eventContext.toolName,
-                    toolArgs = eventContext.toolArgs,
+                    toolArgs = eventContext.toolArgs.toKotlinxJsonObject(),
                     toolDescription = eventContext.toolDescription,
                     toolCallId = eventContext.toolCallId
                 )
@@ -658,7 +663,7 @@ public class OpenTelemetry {
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry tool result handler" }
-                val toolResult = eventContext.toolResult ?: JsonObject(emptyMap())
+                val toolResult = eventContext.toolResult ?: JSONObject(emptyMap())
                 endAndRemoveExecuteToolSpan(
                     toolResult = toolResult,
                     config = config,
@@ -673,7 +678,7 @@ public class OpenTelemetry {
                 endAndRemoveExecuteToolSpan(
                     spanAdapter = spanAdapter,
                     spanCollector = spanCollector,
-                    toolResult = JsonObject(emptyMap()),
+                    toolResult = JSONObject(emptyMap()),
                     config = config,
                     eventContext = eventContext,
                     error = eventContext.error,
@@ -798,7 +803,7 @@ public class OpenTelemetry {
         }
 
         private fun endAndRemoveExecuteToolSpan(
-            toolResult: JsonElement?,
+            toolResult: JSONElement?,
             config: OpenTelemetryConfig,
             spanAdapter: SpanAdapter?,
             spanCollector: SpanCollector,
@@ -815,7 +820,7 @@ public class OpenTelemetry {
             spanAdapter?.onBeforeSpanFinished(span = span)
             endExecuteToolSpan(
                 span = span,
-                toolResult = toolResult,
+                toolResult = toolResult?.toKotlinxJsonElement(),
                 error = error,
                 verbose = config.isVerbose
             )

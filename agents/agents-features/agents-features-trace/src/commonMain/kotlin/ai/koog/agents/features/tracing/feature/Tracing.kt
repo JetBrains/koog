@@ -1,5 +1,6 @@
 package ai.koog.agents.features.tracing.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -104,7 +105,9 @@ public class Tracing {
         override val key: AIAgentStorageKey<Tracing> =
             AIAgentStorageKey("agents-features-tracing")
 
-        override fun createInitialConfig(): TraceFeatureConfig = TraceFeatureConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): TraceFeatureConfig = TraceFeatureConfig()
 
         override fun install(
             config: TraceFeatureConfig,

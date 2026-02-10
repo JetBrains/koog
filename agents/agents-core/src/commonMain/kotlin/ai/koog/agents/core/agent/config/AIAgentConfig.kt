@@ -6,6 +6,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlin.jvm.JvmName
 
 /**
@@ -24,14 +26,16 @@ import kotlin.jvm.JvmName
  *        typically due to differences in tool sets between steps or subgraphs while the same history is reused.
  *        This ensures the prompt remains consistent and readable for the model, even with undefined tools.
  * @param responseProcessor Optional processor for the agent's responses. If specified, will modify the responses from the llm.
+ * @param serializer Optional serializer to (de)serialize tool arguments and results. Defaults to [KotlinxSerializer]
  */
-public expect class AIAgentConfig constructor(
+public expect class AIAgentConfig(
     prompt: Prompt,
     model: LLModel,
     maxAgentIterations: Int,
     missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
-    responseProcessor: ResponseProcessor? = null
+    responseProcessor: ResponseProcessor? = null,
+    serializer: JSONSerializer = KotlinxSerializer(),
 ) : AIAgentConfigBase {
 
     /**
@@ -80,6 +84,12 @@ public expect class AIAgentConfig constructor(
      * or subgraphs where tools used in different*/
     @get:JvmName("missingToolsConversionStrategy")
     public val missingToolsConversionStrategy: MissingToolsConversionStrategy
+
+    /**
+     * Serializer to (de)serialize tool arguments and results.
+     */
+    @get:JvmName("serializer")
+    public val serializer: JSONSerializer
 
     /**
      * Companion object for providing utility methods related to [AIAgentConfig].

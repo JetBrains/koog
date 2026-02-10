@@ -3,6 +3,7 @@ package ai.koog.agents.a2a.server.feature
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -71,7 +72,9 @@ public class A2AAgentServer(
         override val key: AIAgentStorageKey<A2AAgentServer> =
             createStorageKey<A2AAgentServer>("agents-features-a2a-server")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): Config = Config()
 
         /**
          * Creates a feature implementation using the provided configuration.

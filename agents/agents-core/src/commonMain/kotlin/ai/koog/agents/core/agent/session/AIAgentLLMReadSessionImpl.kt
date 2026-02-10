@@ -17,6 +17,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.prompt.processor.ResponseProcessorConfig
 import ai.koog.prompt.processor.executeProcessed
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -32,7 +33,7 @@ internal class AIAgentLLMReadSessionImpl(
     prompt: Prompt,
     model: LLModel,
     responseProcessor: ResponseProcessor?,
-    private val config: AIAgentConfig,
+    override val config: AIAgentConfig,
     private var isActive: Boolean = true
 ) : AIAgentLLMSessionAPI {
     override val prompt: Prompt by ActiveProperty(prompt) { isActive }
@@ -58,7 +59,12 @@ internal class AIAgentLLMReadSessionImpl(
 
     private suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.executeProcessed(preparedPrompt, model, tools, responseProcessor)
+        return executor.executeProcessed(
+            prompt = preparedPrompt,
+            model = model,
+            tools = tools,
+            processorConfig = responseProcessor?.let { ResponseProcessorConfig(it, config.serializer) }
+        )
     }
 
     private suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =

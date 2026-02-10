@@ -93,6 +93,7 @@ public class PlannerAIAgent<Input, Output>(
             agentId = this.id,
             logger = logger,
             toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
         )
 
         val initialLLMContext = AIAgentLLMContext(

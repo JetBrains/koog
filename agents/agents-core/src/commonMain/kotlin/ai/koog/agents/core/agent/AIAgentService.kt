@@ -12,10 +12,10 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.serializer
 import kotlin.jvm.JvmStatic
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -441,11 +441,8 @@ public operator fun AIAgentService.Companion.invoke(
  *
  * @param agentName Agent name that would be a tool name for this agent tool.
  * @param agentDescription Agent description that would be a tool description for this agent tool.
- * @param inputDescription An optional description of the agent's input. Required for primitive types only!
- *  * If not specified for a primitive input type (ex: String, Int, ...), an empty input description will be sent to LLM.
- *  * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
- * @param inputSerializer Serializer to deserialize tool arguments to agent input.
- * @param outputSerializer Serializer to serialize agent output to a tool result.
+ * @param inputType Type token representing agent input.
+ * @param outputType Type token representing agent output.
  * @return A special tool that wraps the agent functionality.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
@@ -456,16 +453,15 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     agentName: String,
     agentDescription: String,
     inputDescription: String? = null,
-    inputSerializer: KSerializer<Input> = serializer(),
-    outputSerializer: KSerializer<Output> = serializer(),
+    inputType: TypeToken = typeToken<Input>(),
+    outputType: TypeToken = typeToken<Output>(),
     parentAgentId: String? = null,
     clock: Clock = Clock.System
 ): Tool<Input, AIAgentTool.AgentToolResult<Output>> = AIAgentTool(
     agentService = this,
     agentName = agentName,
     agentDescription = agentDescription,
-    inputDescription = inputDescription,
-    inputSerializer = inputSerializer,
-    outputSerializer = outputSerializer,
+    inputType = inputType,
+    outputType = outputType,
     parentAgentId = parentAgentId
 )

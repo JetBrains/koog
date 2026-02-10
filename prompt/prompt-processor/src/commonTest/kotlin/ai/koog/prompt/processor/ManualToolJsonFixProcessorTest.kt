@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -17,6 +18,8 @@ import kotlin.time.Instant
 
 class ManualToolJsonFixProcessorTest {
     private companion object {
+        private val serializer = KotlinxSerializer()
+
         private val testClock: Clock = object : Clock {
             override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
         }
@@ -85,7 +88,7 @@ class ManualToolJsonFixProcessorTest {
             }
         """.trimIndent()
 
-        private val executor = getMockExecutor { }
+        private val executor = getMockExecutor(serializer) { }
         private val prompt = prompt("test-prompt") { }
         private val model = OpenAIModels.Chat.GPT4o
         private val toolRegistry = Tools.toolRegistry
@@ -216,5 +219,5 @@ class ManualToolJsonFixProcessorTest {
     }
 
     private suspend fun process(response: Message.Response) =
-        processor.process(executor, prompt, model, tools, response)
+        processor.process(executor, prompt, model, tools, response, serializer)
 }

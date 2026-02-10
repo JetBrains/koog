@@ -560,6 +560,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @ParameterizedTest
     @MethodSource("allModels")
     fun integration_AIAgentCreateAndRestoreFromCheckpoint(model: LLModel) = runTest(timeout = 180.seconds) {
+        // assumeTrue(model == GoogleModels.Gemini2_5Flash)
+
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val sayHello = "Hello World!"
         val hello = "Hello"
@@ -612,6 +614,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -638,6 +641,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -649,6 +653,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @ParameterizedTest
     @MethodSource("allModels")
     fun integration_AIAgentCheckpointRollback(model: LLModel) = runTest(timeout = 180.seconds) {
+        // assumeTrue(model == GoogleModels.Gemini2_5Flash)
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
 
         val hello = "Hello"
@@ -737,6 +742,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -892,6 +898,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = fileStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )

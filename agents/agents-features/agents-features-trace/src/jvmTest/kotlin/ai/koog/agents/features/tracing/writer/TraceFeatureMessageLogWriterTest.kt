@@ -42,6 +42,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlin.reflect.typeOf
@@ -51,7 +52,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class TraceFeatureMessageLogWriterTest {
-
+    private val serializer = KotlinxSerializer()
     private val targetLogger = TestLogger("test-logger")
 
     @AfterTest
@@ -114,7 +115,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                 mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals
                     userPrompt
                 mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
@@ -146,8 +147,8 @@ class TraceFeatureMessageLogWriterTest {
                 agent.run(userPrompt, null)
             }
 
-            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
             val dummyToolName = dummyTool.name
             val dummyToolDescription = dummyTool.descriptor.description
 
@@ -156,7 +157,7 @@ class TraceFeatureMessageLogWriterTest {
                 data = receivedToolResult(
                     toolCallId = "0",
                     toolName = dummyToolName,
-                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                     toolDescription = dummyToolDescription,
                     content = dummyTool.result,
                     result = dummyToolResultEncoded,
@@ -232,10 +233,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -248,10 +249,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -454,7 +455,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                 mockLLMToolCall(
                     tool = dummyTool,
                     args = DummyTool.Args("test"),
@@ -490,8 +491,8 @@ class TraceFeatureMessageLogWriterTest {
                 agent.run(userPrompt, null)
             }
 
-            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
             val dummyToolName = dummyTool.name
             val dummyToolDescription = dummyTool.descriptor.description
 
@@ -518,10 +519,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -534,10 +535,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString

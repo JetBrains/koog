@@ -13,8 +13,9 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.AfterTest
@@ -32,6 +33,8 @@ import kotlin.time.Duration.Companion.seconds
  * to persist and restore its state across executions.
  */
 class FileCheckpointsTests {
+    private val serializer = KotlinxSerializer()
+
     private lateinit var tempDir: Path
     private lateinit var provider: JVMFilePersistenceStorageProvider
 
@@ -65,7 +68,7 @@ class FileCheckpointsTests {
     fun testAgentExecutionWithRollback() = runTest {
         val sessionId = "rollbackAgentId"
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = createCheckpointGraphWithRollback("checkpointId"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
@@ -95,7 +98,7 @@ class FileCheckpointsTests {
     @Test
     fun testAgentRestorationNoCheckpoint() = runTest {
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
@@ -124,7 +127,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodePath = path(agentId, "straight-forward", "Node2"),
-            lastInput = JsonPrimitive("Test input"),
+            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -135,7 +138,7 @@ class FileCheckpointsTests {
         provider.saveCheckpoint(sessionId, testCheckpoint)
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
@@ -166,7 +169,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodePath = path(agentId, "straight-forward", "Node2"),
-            lastOutput = JsonPrimitive("Test output"),
+            lastOutput = JSONPrimitive("Test output"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time)),
@@ -178,7 +181,7 @@ class FileCheckpointsTests {
         provider.saveCheckpoint(sessionId, testCheckpoint)
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
@@ -208,7 +211,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId2",
             createdAt = time - 10.seconds,
             nodePath = path(agentId, "straight-forward", "Node1"),
-            lastInput = JsonPrimitive("Test input"),
+            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
@@ -220,7 +223,7 @@ class FileCheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodePath = path(agentId, "straight-forward", "Node2"),
-            lastInput = JsonPrimitive("Test input"),
+            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -232,7 +235,7 @@ class FileCheckpointsTests {
         provider.saveCheckpoint(sessionId, testCheckpoint2)
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
@@ -258,7 +261,7 @@ class FileCheckpointsTests {
         val sessionId = "continuousSessionId"
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,

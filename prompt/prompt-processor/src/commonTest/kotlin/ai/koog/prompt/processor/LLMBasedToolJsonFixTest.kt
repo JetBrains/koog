@@ -10,6 +10,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -46,6 +48,8 @@ class LLMBasedToolJsonFixTest {
         val processor = LLMBasedToolCallFixProcessor(toolRegistry)
     }
 
+    private val serializer = KotlinxSerializer()
+
     private class MockExecutor(
         private val responses: List<Message.Response>,
     ) : PromptExecutor() {
@@ -71,7 +75,7 @@ class LLMBasedToolJsonFixTest {
         executor: PromptExecutor,
         response: Message.Response,
         processor: ResponseProcessor
-    ) = processor.process(executor, prompt, model, tools, response)
+    ) = processor.process(executor, prompt, model, tools, response, serializer)
 
     @Test
     fun test_shouldStopIfToolCallNotIntended() = runTest {
@@ -163,7 +167,8 @@ class LLMBasedToolJsonFixTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                responses: List<Message.Response>
+                responses: List<Message.Response>,
+                serializer: JSONSerializer,
             ): List<Message.Response> = fallbackExecutor.execute(prompt, model, tools)
         }
 

@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent.session
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
@@ -19,6 +20,10 @@ import kotlinx.serialization.KSerializer
  * Common API for [AIAgentLLMReadSession] and [AIAgentLLMWriteSession].
  */
 public interface AIAgentLLMSessionAPI : AutoCloseable {
+    /**
+     * Config of the agent running the session.
+     */
+    public val config: AIAgentConfig
 
     /**
      * Represents the current prompt associated with the LLM session.

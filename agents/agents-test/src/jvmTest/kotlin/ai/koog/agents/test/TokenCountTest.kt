@@ -11,6 +11,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.tokenizer.Tokenizer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
@@ -23,6 +24,8 @@ import kotlin.test.Test
 import kotlin.time.Clock
 
 class TokenCountTest {
+    private val serializer = KotlinxSerializer()
+
     /**
      * A mock tokenizer that tracks the total tokens counted and provides deterministic token counts.
      * This implementation counts tokens by counting words and adding 1 for consistency and tests' transparency.
@@ -97,8 +100,9 @@ class TokenCountTest {
     @Test
     fun `test token counts for assistant responses`() = runTest {
         val testExecutor = getMockExecutor(
+            serializer = serializer,
             tokenizer = mockTokenizer,
-            clock = clock
+            clock = clock,
         ) {
             mockLLMAnswer("This is a test response with multiple words") onRequestEquals "Test simple response"
         }
@@ -127,7 +131,7 @@ class TokenCountTest {
         }
 
         val testExecutor = getMockExecutor(
-            toolRegistry = toolRegistry,
+            serializer = serializer,
             tokenizer = mockTokenizer,
             clock = clock
         ) {
@@ -163,7 +167,7 @@ class TokenCountTest {
         val initialTokenCount = mockTokenizer.totalTokens
 
         val testExecutor = getMockExecutor(
-            toolRegistry = toolRegistry,
+            serializer = serializer,
             tokenizer = mockTokenizer,
             clock = clock
         ) {
@@ -203,7 +207,7 @@ class TokenCountTest {
         }
 
         val testExecutor = getMockExecutor(
-            toolRegistry = toolRegistry,
+            serializer = serializer,
             tokenizer = mockTokenizer,
             clock = clock
         ) {

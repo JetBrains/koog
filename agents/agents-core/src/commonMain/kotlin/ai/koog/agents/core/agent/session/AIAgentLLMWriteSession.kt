@@ -233,7 +233,7 @@ public suspend inline fun <reified TArgs, reified TResult> AIAgentLLMWriteSessio
     tool: Tool<TArgs, TResult>,
     args: TArgs
 ): SafeTool.Result<TResult> {
-    return findTool(tool::class).execute(args)
+    return findTool(tool::class).execute(args, config.serializer)
 }
 
 /**
@@ -247,7 +247,7 @@ public suspend inline fun <reified TArgs> AIAgentLLMWriteSession.callTool(
     toolName: String,
     args: TArgs
 ): SafeTool.Result<out Any?> {
-    return findToolByName<TArgs>(toolName).execute(args)
+    return findToolByName<TArgs>(toolName).execute(args, config.serializer)
 }
 
 /**
@@ -261,7 +261,7 @@ public suspend inline fun <reified TArgs> AIAgentLLMWriteSession.callToolRaw(
     toolName: String,
     args: TArgs
 ): String {
-    return findToolByName<TArgs>(toolName).executeRaw(args)
+    return findToolByName<TArgs>(toolName).execute(args, config.serializer).content
 }
 
 /**
@@ -278,7 +278,7 @@ public suspend inline fun <reified TArgs, reified TResult> AIAgentLLMWriteSessio
     args: TArgs
 ): SafeTool.Result<TResult> {
     val tool = findTool(toolClass)
-    return tool.execute(args)
+    return tool.execute(args, config.serializer)
 }
 
 /**
@@ -291,7 +291,7 @@ public suspend inline fun <reified ToolT : Tool<Any?, Any?>> AIAgentLLMWriteSess
     args: Any?
 ): SafeTool.Result<out Any?> {
     val tool = findTool(ToolT::class)
-    return tool.executeUnsafe(args)
+    return tool.executeUnsafe(args, config.serializer)
 }
 
 /**

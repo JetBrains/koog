@@ -5,6 +5,7 @@ import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -19,6 +20,8 @@ class GOAPPlannerAgentTest {
     ) : GoapAgentState<Unit, SimpleState>(Unit) {
         override fun provideOutput(): SimpleState = this
     }
+
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testGOAPLinearPath() = runTest {
@@ -59,7 +62,7 @@ class GOAPPlannerAgentTest {
             )
         }
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("OK").asDefaultResponse
         }
 
@@ -131,7 +134,8 @@ class GOAPPlannerAgentTest {
                 condition = { state -> state.goalReached }
             )
         }
-        val mockExecutor = getMockExecutor {
+
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("OK").asDefaultResponse
         }
 
@@ -224,7 +228,8 @@ class GOAPPlannerAgentTest {
                 condition = { state -> state.hasShelter }
             )
         }
-        val mockExecutor = getMockExecutor {
+
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("OK").asDefaultResponse
         }
 

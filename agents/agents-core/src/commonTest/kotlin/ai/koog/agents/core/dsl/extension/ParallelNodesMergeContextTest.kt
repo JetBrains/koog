@@ -13,12 +13,14 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class ParallelNodesMergeContextTest {
+    private val serializer = KotlinxSerializer()
 
     private val testKey = AIAgentStorageKey<String>("testKey")
 
@@ -39,7 +41,7 @@ class ParallelNodesMergeContextTest {
             maxAgentIterations = 10
         )
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 

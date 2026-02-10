@@ -39,7 +39,8 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.serialization.json.JsonObject
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONPrimitive
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -227,7 +228,7 @@ internal object AIAgentFeatureTestAPI {
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
-        toolArgs = JsonObject(mapOf("test-argument-key" to JsonPrimitive("test-argument-value"))),
+        toolArgs = JSONObject(mapOf("test-argument-key" to JSONPrimitive("test-argument-value"))),
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
@@ -237,7 +238,7 @@ internal object AIAgentFeatureTestAPI {
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
-        toolArgs = JsonObject(mapOf("test-argument-key" to JsonPrimitive("test-argument-value"))),
+        toolArgs = JSONObject(mapOf("test-argument-key" to JSONPrimitive("test-argument-value"))),
         toolDescription = "test-tool-description",
         message = "test-error-message",
         error = AIAgentError("test-error-message", "test-error-stacktrace", "test-error-cause"),
@@ -250,7 +251,7 @@ internal object AIAgentFeatureTestAPI {
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
-        toolArgs = JsonObject(mapOf("test-argument-key" to JsonPrimitive("test-argument-value"))),
+        toolArgs = JSONObject(mapOf("test-argument-key" to JSONPrimitive("test-argument-value"))),
         toolDescription = "test-tool-description",
         error = AIAgentError(
             message = "test-error-message",
@@ -266,9 +267,9 @@ internal object AIAgentFeatureTestAPI {
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
-        toolArgs = JsonObject(mapOf("test-argument-key" to JsonPrimitive("test-argument-value"))),
+        toolArgs = JSONObject(mapOf("test-argument-key" to JSONPrimitive("test-argument-value"))),
         toolDescription = "test-tool-description",
-        result = JsonPrimitive("test-result"),
+        result = JSONPrimitive("test-result"),
         timestamp = testClock.now().toEpochMilliseconds()
     )
 

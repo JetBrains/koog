@@ -24,6 +24,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
@@ -39,10 +40,11 @@ import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
 class SubgraphWithTaskTest {
-
     companion object {
         private val logger = KotlinLogging.logger { }
     }
+
+    private val serializer = KotlinxSerializer()
 
     //region Model With tool_choice Support
 
@@ -61,14 +63,14 @@ class SubgraphWithTaskTest {
         val inputRequest = "Test input"
         val blankToolResult = "I'm done"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onRequestEquals inputRequest
             mockLLMToolCall(finishTool, TestFinishTool.Args()) onRequestContains blankToolResult
         }
 
         // Expected / Actual
-        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
+        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
@@ -108,7 +110,7 @@ class SubgraphWithTaskTest {
         val inputRequest = "Test input"
         val testAssistantResponse = "Test assistant response"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(testAssistantResponse) onRequestEquals inputRequest
         }
 
@@ -146,7 +148,7 @@ class SubgraphWithTaskTest {
         val blankTool1Result = "Blank tool 1 result"
         val blankTool2Result = "Blank tool 2 result"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(
                 toolCalls = listOf(
                     blankTool1 to TestBlankTool.Args(blankTool1Result),
@@ -158,9 +160,9 @@ class SubgraphWithTaskTest {
         }
 
         // Expected / Actual
-        val blankTool1ArgsSerialized = blankTool1.encodeArgsToString(TestBlankTool.Args(blankTool1Result))
-        val blankTool2ArgsSerialized = blankTool2.encodeArgsToString(TestBlankTool.Args(blankTool2Result))
-        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+        val blankTool1ArgsSerialized = blankTool1.encodeArgsToString(TestBlankTool.Args(blankTool1Result), serializer)
+        val blankTool2ArgsSerialized = blankTool2.encodeArgsToString(TestBlankTool.Args(blankTool2Result), serializer)
+        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
 
         val actualExecutionResult = mutableListOf<String>()
 
@@ -204,7 +206,7 @@ class SubgraphWithTaskTest {
         val inputRequest = "Test input"
         val testAssistantResponse = "Test assistant response"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMMixedResponse(
                 toolCalls = emptyList<Pair<Tool<Any?, Any?>, Any?>>(),
                 responses = listOf(testAssistantResponse)
@@ -243,7 +245,7 @@ class SubgraphWithTaskTest {
             val blankToolResult = "Blank tool result"
             val assistantResponse = "Assistant response"
 
-            val mockExecutor = getMockExecutor {
+            val mockExecutor = getMockExecutor(serializer) {
                 mockLLMMixedResponse(
                     toolCalls = listOf(blankTool to TestBlankTool.Args(blankToolResult)),
                     responses = listOf(assistantResponse)
@@ -253,8 +255,8 @@ class SubgraphWithTaskTest {
             }
 
             // Expected / Actual
-            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-            val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
+            val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
 
             val expectedExecutionResult = listOf(
                 requestString(Message.Role.User, inputRequest),
@@ -305,14 +307,14 @@ class SubgraphWithTaskTest {
         val inputRequest = "Test input"
         val blankToolResult = "I'm done"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onRequestEquals inputRequest
             mockLLMToolCall(finishTool, TestFinishTool.Args()) onRequestContains blankToolResult
         }
 
         // Expected / Actual
-        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
+        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
@@ -361,7 +363,7 @@ class SubgraphWithTaskTest {
         var assistantResponded = 0
         var responses = 0
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
                 responses++ == 0 && input == inputRequest
             }
@@ -379,8 +381,8 @@ class SubgraphWithTaskTest {
         }
 
         // Expected / Actual
-        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
+        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
         val expectedToolCallAssistantRequest =
             "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
 
@@ -435,7 +437,7 @@ class SubgraphWithTaskTest {
             val mockResponse = "Test assistant response"
             var responses = 0
 
-            val mockExecutor = getMockExecutor {
+            val mockExecutor = getMockExecutor(serializer) {
                 mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
                     responses++ == 0 && input == inputRequest
                 }
@@ -444,7 +446,7 @@ class SubgraphWithTaskTest {
             }
 
             // Expected / Actual
-            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
+            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
             val expectedToolCallAssistantRequest =
                 "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
 
@@ -505,7 +507,7 @@ class SubgraphWithTaskTest {
         val blankTool1Result = "Blank tool 1 result"
         val blankTool2Result = "Blank tool 2 result"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(
                 toolCalls = listOf(
                     blankTool1 to TestBlankTool.Args(blankTool1Result),
@@ -517,9 +519,9 @@ class SubgraphWithTaskTest {
         }
 
         // Expected / Actual
-        val blankTool1ArgsSerialized = blankTool1.encodeArgsToString(TestBlankTool.Args(blankTool1Result))
-        val blankTool2ArgsSerialized = blankTool2.encodeArgsToString(TestBlankTool.Args(blankTool2Result))
-        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+        val blankTool1ArgsSerialized = blankTool1.encodeArgsToString(TestBlankTool.Args(blankTool1Result), serializer)
+        val blankTool2ArgsSerialized = blankTool2.encodeArgsToString(TestBlankTool.Args(blankTool2Result), serializer)
+        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
@@ -573,7 +575,7 @@ class SubgraphWithTaskTest {
         var assistantResponded = 0
         var responses = 0
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
                 responses++ == 0 && input == inputRequest
             }
@@ -594,8 +596,8 @@ class SubgraphWithTaskTest {
         }
 
         // Expected / Actual
-        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
+        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
         val expectedToolCallAssistantRequest =
             "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
 
@@ -650,7 +652,7 @@ class SubgraphWithTaskTest {
             val mockResponse = "Test assistant response"
             var responses = 0
 
-            val mockExecutor = getMockExecutor {
+            val mockExecutor = getMockExecutor(serializer) {
                 mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
                     responses++ == 0 && input == inputRequest
                 }
@@ -662,7 +664,7 @@ class SubgraphWithTaskTest {
             }
 
             // Expected / Actual
-            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
+            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
             val expectedToolCallAssistantRequest =
                 "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
 
@@ -827,7 +829,7 @@ class SubgraphWithTaskTest {
         )
 
         return AIAgent(
-            promptExecutor = executor ?: getMockExecutor { },
+            promptExecutor = executor ?: getMockExecutor(serializer) { },
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
@@ -838,7 +840,7 @@ class SubgraphWithTaskTest {
     private fun FeatureContext.installEventHandlerCaptureEvents(actualEvents: MutableList<String>) {
         install(EventHandler) {
             onToolCallStarting {
-                actualEvents += toolCallString(it.toolName, it.toolArgs.toString())
+                actualEvents += toolCallString(it.toolName, serializer.encodeJSONElementToString(it.toolArgs))
             }
 
             onLLMCallStarting {

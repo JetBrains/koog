@@ -8,6 +8,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,6 +16,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AIAgentGenericTypesTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testGenericInputOutputTypes() = runTest {
@@ -22,7 +24,7 @@ class AIAgentGenericTypesTest {
         data class CustomOutput(val result: String, val confidence: Double)
 
         val mockResponse = "This is a mock response"
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(mockResponse).asDefaultResponse
         }
 
@@ -70,11 +72,11 @@ class AIAgentGenericTypesTest {
             edge(callLLM forwardTo nodeFinish transformed { output -> parseResponse(output) })
         }
 
-        val mockExecutorForEven = getMockExecutor {
+        val mockExecutorForEven = getMockExecutor(serializer) {
             mockLLMAnswer("Yes, 42 is an even number.").asDefaultResponse
         }
 
-        val mockExecutorForOdd = getMockExecutor {
+        val mockExecutorForOdd = getMockExecutor(serializer) {
             mockLLMAnswer("No, 43 is an odd number.").asDefaultResponse
         }
 

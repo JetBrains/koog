@@ -13,6 +13,7 @@ import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -27,11 +28,12 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalAgentsApi::class)
 class LongTermMemoryStrategyTest {
     private val myNamespace = "ns"
+    private val serializer = KotlinxSerializer()
 
     @Test
     @Timeout(30)
     fun `install LongTermMemory with custom storages and use search and add in strategy`() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Done").asDefaultResponse
         }
 

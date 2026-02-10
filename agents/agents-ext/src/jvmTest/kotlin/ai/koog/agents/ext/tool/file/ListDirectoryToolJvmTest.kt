@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.file.render.norm
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -18,9 +19,10 @@ import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class ListDirectoryToolJvmTest {
-
     private val fs = JVMFileSystemProvider.ReadOnly
     private val tool = ListDirectoryTool(fs)
+
+    private val serializer = KotlinxSerializer()
 
     @TempDir
     lateinit var tempDir: Path
@@ -71,7 +73,7 @@ class ListDirectoryToolJvmTest {
         // empty/ (empty directory)
         val empty = createDir("empty")
 
-        val resultText = tool.encodeResultToString(list(empty, depth = 1))
+        val resultText = tool.encodeResultToString(list(empty, depth = 1), serializer)
 
         // Expected: /path/to/empty/
         val expectedText = "${empty.toAbsolutePath().toString().norm()}/"
@@ -87,7 +89,7 @@ class ListDirectoryToolJvmTest {
         val dir = createDir("project")
         val readmeFile = dir.resolve("README.md").createFile().apply { writeText("hello world") }
 
-        val resultText = tool.encodeResultToString(list(dir, depth = 1))
+        val resultText = tool.encodeResultToString(list(dir, depth = 1), serializer)
 
         // Expected: /path/to/project/README.md (<0.1 KiB, 1 line)
         val expectedText = "${readmeFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -105,7 +107,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
         dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
 
-        val resultText = tool.encodeResultToString(list(dir, depth = 1))
+        val resultText = tool.encodeResultToString(list(dir, depth = 1), serializer)
 
         // Expected:
         // /path/to/project/
@@ -128,7 +130,7 @@ class ListDirectoryToolJvmTest {
         val root = createDir("root")
         val srcDir = root.resolve("src").createDirectories()
 
-        val resultText = tool.encodeResultToString(list(root, depth = 1))
+        val resultText = tool.encodeResultToString(list(root, depth = 1), serializer)
 
         // Expected: /path/to/root/src/
         val expectedText = "${srcDir.toAbsolutePath().toString().norm()}/"
@@ -146,7 +148,7 @@ class ListDirectoryToolJvmTest {
         root.resolve("src").createDirectories()
         root.resolve("test").createDirectories()
 
-        val resultText = tool.encodeResultToString(list(root, depth = 1))
+        val resultText = tool.encodeResultToString(list(root, depth = 1), serializer)
 
         // Expected:
         // /path/to/root/
@@ -175,7 +177,7 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         val mainFile = kotlin.resolve("Main.kt").createFile().apply { writeText("fun main() {}") }
 
-        val resultText = tool.encodeResultToString(list(project, depth = 1))
+        val resultText = tool.encodeResultToString(list(project, depth = 1), serializer)
 
         // Expected: /path/to/project/src/main/kotlin/Main.kt (<0.1 KiB, 1 line)
         val expectedText = "${mainFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -199,7 +201,7 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("Utils.kt").createFile().writeText("class Utils")
 
-        val resultText = tool.encodeResultToString(list(project, depth = 1))
+        val resultText = tool.encodeResultToString(list(project, depth = 1), serializer)
 
         // Expected:
         // /path/to/project/src/main/kotlin/
@@ -229,7 +231,7 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("utils").createDirectories()
 
-        val resultText = tool.encodeResultToString(list(project, depth = 1))
+        val resultText = tool.encodeResultToString(list(project, depth = 1), serializer)
 
         // Expected:
         // /path/to/project/src/main/kotlin/
@@ -261,7 +263,7 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
 
-        val resultText = tool.encodeResultToString(list(project, depth = 1))
+        val resultText = tool.encodeResultToString(list(project, depth = 1), serializer)
 
         // Expected:
         // /path/to/project/
@@ -290,7 +292,7 @@ class ListDirectoryToolJvmTest {
         val c = b.resolve("c").createDirectories()
         val d = c.resolve("d").createDirectories()
 
-        val resultText = tool.encodeResultToString(list(project, depth = 1))
+        val resultText = tool.encodeResultToString(list(project, depth = 1), serializer)
 
         // Expected: /path/to/project/a/b/c/d/
         val expectedText = "${d.toAbsolutePath().toString().norm()}/"
@@ -314,7 +316,7 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("Utils.kt").createFile().writeText("class Utils")
 
-        val resultText = tool.encodeResultToString(list(project, depth = 2))
+        val resultText = tool.encodeResultToString(list(project, depth = 2), serializer)
 
         // Expected:
         // /path/to/project/src/main/kotlin/
@@ -345,7 +347,7 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         kotlin.resolve("Main.kt").createFile().writeText("fun main(){}\n")
 
-        val resultText = tool.encodeResultToString(list(project, depth = 4))
+        val resultText = tool.encodeResultToString(list(project, depth = 4), serializer)
 
         // Expected:
         // /path/to/project/
@@ -372,7 +374,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("Main.java").createFile().writeText("java")
         dir.resolve("README.md").createFile().writeText("readme")
 
-        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = "*.kt"))
+        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = "*.kt"), serializer)
 
         // Expected: /path/to/project/Main.kt (<0.1 KiB, 1 line)
         val expectedText = "${mainKtFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -415,7 +417,7 @@ class ListDirectoryToolJvmTest {
         src.resolve("Utils.kt").createFile().writeText("utils")
         src.resolve("Test.java").createFile().writeText("test")
 
-        val resultText = tool.encodeResultToString(list(project, depth = 2, filter = "*/*.kt"))
+        val resultText = tool.encodeResultToString(list(project, depth = 2, filter = "*/*.kt"), serializer)
 
         // Expected:
         // /path/to/project/src/
@@ -446,7 +448,7 @@ class ListDirectoryToolJvmTest {
         val srcDir = project.resolve("src").createDirectories()
         srcDir.resolve("Main.kt").createFile().writeText("main")
 
-        val resultText = tool.encodeResultToString(list(project, depth = 2, filter = "*/Test*"))
+        val resultText = tool.encodeResultToString(list(project, depth = 2, filter = "*/Test*"), serializer)
 
         // Expected: /path/to/project/test/TestMain.kt (<0.1 KiB, 1 line)
         val expectedText = "${testMainFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -464,7 +466,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
         dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
 
-        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = ""))
+        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = ""), serializer)
 
         // Expected:
         // /path/to/project/
@@ -489,7 +491,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
         dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
 
-        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = "read*"))
+        val resultText = tool.encodeResultToString(list(dir, depth = 1, filter = "read*"), serializer)
 
         // Expected:
         // /path/to/project/README.md (<0.1 KiB, 1 line)
@@ -526,7 +528,7 @@ class ListDirectoryToolJvmTest {
         val test = src.resolve("test").createDirectories()
         test.resolve("TestUtils.kt").createFile().writeText("test") // 4 bytes
 
-        val resultText = tool.encodeResultToString(list(project, depth = 3))
+        val resultText = tool.encodeResultToString(list(project, depth = 3), serializer)
 
         // Expected:
         // /path/to/project/
@@ -563,7 +565,7 @@ class ListDirectoryToolJvmTest {
         b.resolve("c1").createDirectories()
         b.resolve("c2").createDirectories()
 
-        val resultText = tool.encodeResultToString(list(project, depth = 1))
+        val resultText = tool.encodeResultToString(list(project, depth = 1), serializer)
 
         // Expected:
         // /path/to/project/a/b/
@@ -588,7 +590,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("README.md").createFile().writeText("hello") // 1 line
         dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 1 line
 
-        val resultText = tool.encodeResultToString(list(dir, depth = 1))
+        val resultText = tool.encodeResultToString(list(dir, depth = 1), serializer)
 
         // Expected:
         // /path/to/project-depth1/

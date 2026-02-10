@@ -30,7 +30,7 @@ public class AIAgentFunctionalPipeline(
         feature: AIAgentFunctionalFeature<TConfig, TFeature>,
         configure: TConfig.() -> Unit,
     ) {
-        val featureConfig = feature.createInitialConfig().apply { configure() }
+        val featureConfig = feature.createInitialConfig(config).apply { configure() }
         val featureImpl = feature.install(
             config = featureConfig,
             pipeline = this,

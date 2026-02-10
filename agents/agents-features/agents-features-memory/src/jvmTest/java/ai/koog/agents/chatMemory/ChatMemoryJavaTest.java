@@ -7,7 +7,7 @@ import ai.koog.agents.chatMemory.feature.ChatMemoryPreProcessor;
 import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider;
 import ai.koog.agents.chatMemory.feature.WindowSizePreProcessor;
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.testing.tools.MockLLMBuilder;
+import ai.koog.agents.testing.tools.MockExecutorDSLBuilder;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.message.Message;
@@ -47,7 +47,7 @@ class ChatMemoryJavaTest {
     /**
      * Creates a mock PromptExecutor from Java using MockLLMBuilder directly.
      */
-    private PromptExecutor createMockExecutor(java.util.function.Consumer<MockLLMBuilder> configure) {
+    private PromptExecutor createMockExecutor(java.util.function.Consumer<MockExecutorDSLBuilder> configure) {
         return JavaTestHelpers.createMockExecutor(configure);
     }
 

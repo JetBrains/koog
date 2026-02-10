@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -34,7 +35,9 @@ class TestFeature(val events: MutableList<String>) {
     companion object Feature : AIAgentGraphFeature<TestConfig, TestFeature>, AIAgentFunctionalFeature<TestConfig, TestFeature> {
         override val key: AIAgentStorageKey<TestFeature> = createStorageKey("test-feature")
 
-        override fun createInitialConfig(): TestConfig = TestConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): TestConfig = TestConfig()
 
         override fun install(
             config: TestConfig,

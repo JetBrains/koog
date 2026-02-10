@@ -3,7 +3,6 @@ package ai.koog.agents.example.structuredoutput
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.structuredoutput.models.FullWeatherForecast
 import ai.koog.agents.example.structuredoutput.models.FullWeatherForecastRequest

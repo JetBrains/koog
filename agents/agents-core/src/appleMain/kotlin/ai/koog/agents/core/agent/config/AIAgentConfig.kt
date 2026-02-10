@@ -6,13 +6,15 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.JSONSerializer
 
 public actual class AIAgentConfig actual constructor(
     public actual override val prompt: Prompt,
     public actual override val model: LLModel,
     public actual val maxAgentIterations: Int,
     public actual val missingToolsConversionStrategy: MissingToolsConversionStrategy,
-    public actual val responseProcessor: ResponseProcessor?
+    public actual val responseProcessor: ResponseProcessor?,
+    public actual val serializer: JSONSerializer,
 ) : AIAgentConfigBase {
 
     init {

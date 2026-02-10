@@ -7,9 +7,10 @@ import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 
 /**
@@ -91,7 +92,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
         // Set current graph node:
         @Suppress("DEPRECATION")
         when {
-            data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput)
+            data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput, agentContext)
             data.lastOutput != null -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
 
             // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpoints:
@@ -141,7 +142,11 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
      * Finds and sets the node for the strategy based on the provided context.
      */
     @Deprecated("Use setExecutionPointAfterNode instead, setExecutionPoint will be removed in future versions")
-    public suspend fun setExecutionPoint(nodePath: String, input: JsonElement) {
+    public suspend fun setExecutionPoint(
+        nodePath: String,
+        input: JSONElement,
+        agentContext: AIAgentGraphContextBase,
+    ) {
         // we drop first because it's agent's id, we don't need it here
         val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
 
@@ -153,10 +158,8 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
 
         val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
 
-        val actualInput = serializer.decodeFromJsonElement(
-            serializer.serializersModule.serializer(completedNode.inputType),
-            input
-        )
+        val actualInput = agentContext.config.serializer
+            .decodeFromJSONElement<Any?>(input, typeToken(completedNode.inputType))
 
         // Note: completed node will be re-executed because the output wasn't saved in checkpoints
         // (this was the original behavior before 0.6.1)
@@ -168,7 +171,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
      */
     public suspend fun setExecutionPointAfterNode(
         nodePath: String,
-        output: JsonElement,
+        output: JSONElement,
         agentContext: AIAgentGraphContextBase
     ) {
         // we drop first because it's agent's id, we don't need it here
@@ -182,10 +185,8 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
 
         val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
 
-        val actualOutput = serializer.decodeFromJsonElement(
-            serializer.serializersModule.serializer(completedNode.outputType),
-            output
-        )
+        val actualOutput = agentContext.config.serializer
+            .decodeFromJSONElement<Any?>(output, typeToken(completedNode.outputType))
 
         if (completedNode is FinishNode<*>) {
             // finish node (of some subgraph) doesn't have next edges, and it's input equals output, so it's safe to re-start it:

@@ -37,8 +37,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.time.Clock
@@ -173,7 +173,7 @@ public interface AIAgentPipelineAPI {
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
+        toolArgs: JSONObject,
         context: AIAgentContext
     )
 
@@ -185,7 +185,7 @@ public interface AIAgentPipelineAPI {
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
+        toolArgs: JSONObject,
         message: String,
         error: AIAgentError,
         context: AIAgentContext
@@ -199,7 +199,7 @@ public interface AIAgentPipelineAPI {
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
+        toolArgs: JSONObject,
         message: String,
         error: AIAgentError?,
         context: AIAgentContext
@@ -213,8 +213,8 @@ public interface AIAgentPipelineAPI {
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
-        toolResult: JsonElement?,
+        toolArgs: JSONObject,
+        toolResult: JSONElement?,
         context: AIAgentContext
     )
 

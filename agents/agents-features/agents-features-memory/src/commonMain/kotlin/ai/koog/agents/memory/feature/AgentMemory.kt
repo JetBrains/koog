@@ -1,5 +1,6 @@
 package ai.koog.agents.memory.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.featureOrThrow
@@ -186,7 +187,9 @@ public class AgentMemory(
         override val key: AIAgentStorageKey<AgentMemory> =
             createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): Config = Config()
 
         /**
          * Create a feature implementation using the provided configuration.

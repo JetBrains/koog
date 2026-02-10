@@ -4,8 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
@@ -17,7 +15,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.serialization.json.JsonObject
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 
 /**
  * Creates a user message with optional media attachments.
@@ -70,17 +68,6 @@ fun toolCallMessage(toolName: String, content: String): Message.Tool.Call =
         metaInfo = ResponseMetaInfo.create(testClock)
     )
 
-fun receivedToolResult(toolCallId: String?, toolName: String, content: String, result: JsonObject): ReceivedToolResult =
-    ReceivedToolResult(
-        id = toolCallId,
-        tool = toolName,
-        toolArgs = JsonObject(emptyMap()),
-        toolDescription = null,
-        content = content,
-        resultKind = ToolResultKind.Success,
-        result = result
-    )
-
 fun toolResultMessage(toolCallId: String?, toolName: String, content: String, metaInfo: RequestMetaInfo): Message.Tool.Result =
     Message.Tool.Result(
         id = toolCallId,
@@ -119,12 +106,13 @@ internal fun createAgent(
             assistant(assistantPrompt ?: "Test assistant response")
         },
         model = model ?: OpenAIModels.Chat.GPT4o,
-        maxAgentIterations = 10
+        maxAgentIterations = 10,
+        serializer = KotlinxSerializer(),
     )
 
     return AIAgent(
         id = agentId,
-        promptExecutor = promptExecutor ?: getMockExecutor { },
+        promptExecutor = promptExecutor ?: getMockExecutor(agentConfig.serializer) { },
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry ?: ToolRegistry { tool(DummyTool()) },

@@ -8,13 +8,16 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.time.Clock
 
 class PersistenceRestoreStrategyTests {
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun `rollback Default resumes from checkpoint node`() = runTest {
         val provider = InMemoryPersistenceStorageProvider()
@@ -26,7 +29,7 @@ class PersistenceRestoreStrategyTests {
             checkpointId = "chk-1",
             createdAt = Clock.System.now(),
             nodePath = "$agentId/restore-strategy/Node2",
-            lastInput = JsonPrimitive("input-for-node2"),
+            lastInput = JSONPrimitive("input-for-node2"),
             messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(Clock.System.now()))),
             version = 0L
         )
@@ -34,7 +37,7 @@ class PersistenceRestoreStrategyTests {
         provider.saveCheckpoint(sessionId, checkpoint)
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = restoreStrategyGraph(),
             agentConfig = AIAgentConfig(
                 prompt = prompt("test") { system("You are a test agent.") },

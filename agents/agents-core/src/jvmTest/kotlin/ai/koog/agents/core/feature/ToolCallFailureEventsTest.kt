@@ -16,6 +16,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.reflect.typeOf
@@ -25,6 +27,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class ToolCallFailureEventsTest {
+    private val serializer = KotlinxSerializer()
+
     @Serializable
     private data class RequiredArgs(val required: String)
 
@@ -42,7 +46,7 @@ class ToolCallFailureEventsTest {
         description = "Tool that fails on result serialization.",
     ) {
         override suspend fun execute(args: RequiredArgs): String = "Ok"
-        override fun encodeResultToString(result: String): String {
+        override fun encodeResultToString(result: String, serializer: JSONSerializer): String {
             throw IllegalStateException("Serialization failed")
         }
     }
@@ -54,7 +58,11 @@ class ToolCallFailureEventsTest {
 
     private object ToolFailureCaptureFeature : AIAgentGraphFeature<ToolFailureCaptureConfig, Unit> {
         override val key = AIAgentStorageKey<Unit>("tool_failure_capture")
-        override fun createInitialConfig(): ToolFailureCaptureConfig = ToolFailureCaptureConfig()
+
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): ToolFailureCaptureConfig = ToolFailureCaptureConfig()
+
         override fun install(config: ToolFailureCaptureConfig, pipeline: AIAgentGraphPipeline) {
             pipeline.interceptToolCallFailed(this) { eventContext ->
                 config.onToolCallFailed(eventContext)
@@ -78,7 +86,7 @@ class ToolCallFailureEventsTest {
         val agent = GraphAIAgent(
             inputType = typeOf<Message.Tool.Call>(),
             outputType = typeOf<ReceivedToolResult>(),
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
             toolRegistry = ToolRegistry { tool(RequiredArgsTool()) },
@@ -115,7 +123,7 @@ class ToolCallFailureEventsTest {
         val agent = GraphAIAgent(
             inputType = typeOf<Message.Tool.Call>(),
             outputType = typeOf<ReceivedToolResult>(),
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
             toolRegistry = ToolRegistry { tool(RequiredArgsTool()) },
@@ -151,7 +159,7 @@ class ToolCallFailureEventsTest {
         val agent = GraphAIAgent(
             inputType = typeOf<Message.Tool.Call>(),
             outputType = typeOf<ReceivedToolResult>(),
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
             toolRegistry = ToolRegistry { tool(BadResultTool()) },

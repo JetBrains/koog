@@ -4,6 +4,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.structure.LLMStructuredParsingError
 import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -16,6 +17,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class StructureFixingParserTest {
+    private val serializer = KotlinxSerializer()
+
     @Serializable
     private data class TestData(
         val a: String,
@@ -38,7 +41,7 @@ class StructureFixingParserTest {
             model = OpenAIModels.Chat.GPT4oMini,
             retries = 2,
         )
-        val mockExecutor = getMockExecutor {}
+        val mockExecutor = getMockExecutor(serializer) {}
 
         val result = parser.parse(mockExecutor, testStructure, testDataJson)
         assertEquals(testData, result)
@@ -58,7 +61,7 @@ class StructureFixingParserTest {
         val firstResponse = testDataJson
             .replace("\"a\"\\s*:".toRegex(), "")
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(firstResponse) onRequestContains invalidContent
             mockLLMAnswer(testDataJson) onRequestContains firstResponse
         }
@@ -78,7 +81,7 @@ class StructureFixingParserTest {
             .replace("\"a\"\\s*:".toRegex(), "")
             .replace("\"b\"\\s*:".toRegex(), "")
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(invalidContent).asDefaultResponse
         }
 
@@ -116,7 +119,7 @@ class StructureFixingParserTest {
             }
         """.trimIndent()
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(fixedContent) onRequestContains "unquotedKey"
         }
 

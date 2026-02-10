@@ -45,12 +45,11 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     prompt: Prompt,
     model: LLModel,
     responseProcessor: ResponseProcessor?,
-    internal val config: AIAgentConfig,
+    override val config: AIAgentConfig,
     @get:JvmName("clock")
     override val clock: Clock,
 ) : AIAgentLLMWriteSessionAPI {
-
-    private val delegate
+    private val readSessionImpl
         get() = AIAgentLLMReadSessionImpl(executor, tools, prompt, model, responseProcessor, config, isActive)
 
     override var prompt: Prompt by ActiveProperty(prompt) { isActive }
@@ -97,54 +96,54 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     }
 
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
-        return delegate.requestLLMMultipleWithoutTools().also { responses ->
+        return readSessionImpl.requestLLMMultipleWithoutTools().also { responses ->
             appendPrompt { messages(responses) }
         }
     }
 
     override suspend fun requestLLMWithoutTools(): Message.Response {
         config
-        return delegate.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
+        return readSessionImpl.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLMOnlyCallingTools(): Message.Response {
-        return delegate.requestLLMOnlyCallingTools()
+        return readSessionImpl.requestLLMOnlyCallingTools()
             .also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
-        return delegate.requestLLMMultipleOnlyCallingTools()
+        return readSessionImpl.requestLLMMultipleOnlyCallingTools()
             .also { responses ->
                 appendPrompt { messages(responses) }
             }
     }
 
     override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
-        return delegate.requestLLMForceOneTool(tool)
+        return readSessionImpl.requestLLMForceOneTool(tool)
             .also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
-        return delegate.requestLLMForceOneTool(tool)
+        return readSessionImpl.requestLLMForceOneTool(tool)
             .also { response -> appendPrompt { message(response) } }
     }
 
     override suspend fun requestLLM(): Message.Response {
-        return delegate.requestLLM().also { response ->
+        return readSessionImpl.requestLLM().also { response ->
             appendPrompt { message(response) }
         }
     }
 
     override suspend fun requestLLMStreaming(): Flow<StreamFrame> {
-        return delegate.requestLLMStreaming()
+        return readSessionImpl.requestLLMStreaming()
     }
 
     override suspend fun requestModeration(moderatingModel: LLModel?): ModerationResult {
-        return delegate.requestModeration(moderatingModel)
+        return readSessionImpl.requestModeration(moderatingModel)
     }
 
     override suspend fun requestLLMMultiple(): List<Message.Response> {
-        return delegate.requestLLMMultiple().also { responses ->
+        return readSessionImpl.requestLLMMultiple().also { responses ->
             appendPrompt {
                 responses.forEach { message(it) }
             }
@@ -155,7 +154,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         config: StructuredRequestConfig<T>,
         fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>> {
-        return delegate.requestLLMStructured(config).also {
+        return readSessionImpl.requestLLMStructured(config).also {
             it.onSuccess { response ->
                 appendPrompt {
                     message(response.message)
@@ -179,7 +178,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         examples: List<T>,
         fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>> {
-        return delegate.requestLLMStructured(serializer, examples, fixingParser).also {
+        return readSessionImpl.requestLLMStructured(serializer, examples, fixingParser).also {
             it.onSuccess { response ->
                 appendPrompt {
                     message(response.message)
@@ -193,11 +192,11 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         config: StructuredRequestConfig<T>,
         fixingParser: StructureFixingParser?
     ): StructuredResponse<T> {
-        return delegate.parseResponseToStructuredResponse(response, config)
+        return readSessionImpl.parseResponseToStructuredResponse(response, config)
     }
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
-        return delegate.requestLLMMultipleChoices()
+        return readSessionImpl.requestLLMMultipleChoices()
     }
 
     override suspend fun requestLLMStreaming(definition: StructureDefinition?): Flow<StreamFrame> {
@@ -210,7 +209,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
             this.prompt = prompt
         }
 
-        return delegate.requestLLMStreaming()
+        return readSessionImpl.requestLLMStreaming()
     }
 
     @PublishedApi
@@ -219,7 +218,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> = flatMapMerge(concurrency) { args ->
         flow {
-            emit(safeTool.execute(args))
+            emit(safeTool.execute(args, config.serializer))
         }
     }
 
@@ -229,7 +228,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
         concurrency: Int = 16
     ): Flow<String> = flatMapMerge(concurrency) { args ->
         flow {
-            emit(safeTool.executeRaw(args))
+            emit(safeTool.execute(args, config.serializer).content)
         }
     }
 
@@ -240,7 +239,7 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
     ): Flow<SafeTool.Result<TResult>> = flatMapMerge(concurrency) { args ->
         val safeTool = findTool(tool::class)
         flow {
-            emit(safeTool.execute(args))
+            emit(safeTool.execute(args, config.serializer))
         }
     }
 

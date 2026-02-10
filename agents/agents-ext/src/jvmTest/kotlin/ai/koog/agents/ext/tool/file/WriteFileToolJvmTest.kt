@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.file.render.norm
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -20,6 +21,8 @@ class WriteFileToolJvmTest {
 
     private val fs = JVMFileSystemProvider.ReadWrite
     private val tool = WriteFileTool(fs)
+
+    private val serializer = KotlinxSerializer()
 
     @TempDir
     lateinit var tempDir: Path
@@ -66,7 +69,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -84,7 +87,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertEquals("new content", p.readText())
     }
 
@@ -102,7 +105,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"
         ).joinToString("\n")
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertTrue(p.exists())
         assertEquals(content, p.readText())
     }

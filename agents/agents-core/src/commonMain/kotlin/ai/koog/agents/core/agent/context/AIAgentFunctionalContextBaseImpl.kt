@@ -21,9 +21,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.CriticResultFromLLM
+import ai.koog.agents.ext.agent.FinishTool
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.ext.agent.executeFinishTool
-import ai.koog.agents.ext.agent.identityTool
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
@@ -33,6 +33,7 @@ import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
@@ -259,19 +260,19 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
     ): SafeTool.Result<TResult> {
         return llm.writeSession {
             if (doUpdatePrompt) {
-                updatePrompt {
+                appendPrompt {
                     user(
                         "Tool call: ${tool.name} was explicitly called with args: ${
-                            tool.encodeArgs(toolArgs)
+                            tool.encodeArgs(toolArgs, config.serializer)
                         }"
                     )
                 }
             }
 
-            val toolResult = findTool(tool).execute(toolArgs)
+            val toolResult = findTool(tool).execute(toolArgs, config.serializer)
 
             if (doUpdatePrompt) {
-                updatePrompt {
+                appendPrompt {
                     user(
                         "Tool call: ${tool.name} was explicitly called and returned result: ${
                             toolResult.content
@@ -332,7 +333,7 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
         assistantResponseRepeatMax: Int?,
         responseProcessor: ResponseProcessor?
     ): Output {
-        val finishTool = identityTool(outputClass)
+        val finishTool = FinishTool<Output>(typeToken(outputClass))
 
         return subtask(
             taskDescription,
@@ -453,7 +454,7 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
                     val toolResult = executeToolHacked(response, finishTool)
 
                     if (toolResult.tool == finishTool.descriptor.name) {
-                        return toolResult.toSafeResult(finishTool).asSuccessful().result
+                        return toolResult.toSafeResult(finishTool, config.serializer).asSuccessful().result
                     }
 
                     response = sendToolResult(toolResult)
@@ -528,7 +529,7 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
 
                     toolResults.firstOrNull { it.tool == finishTool.descriptor.name }
                         ?.let { finishResult ->
-                            return finishResult.toSafeResult(finishTool).asSuccessful().result
+                            return finishResult.toSafeResult(finishTool, config.serializer).asSuccessful().result
                         }
 
                     responses = sendMultipleToolResults(toolResults)

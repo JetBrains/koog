@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.debugger
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -101,7 +102,9 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
         override val key: AIAgentStorageKey<Debugger> =
             AIAgentStorageKey("agents-features-debugger")
 
-        override fun createInitialConfig(): DebuggerConfig = DebuggerConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): DebuggerConfig = DebuggerConfig()
 
         override fun install(config: DebuggerConfig, pipeline: AIAgentGraphPipeline): Debugger {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }

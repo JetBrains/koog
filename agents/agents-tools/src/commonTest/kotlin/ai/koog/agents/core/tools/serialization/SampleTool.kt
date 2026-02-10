@@ -2,10 +2,11 @@ package ai.koog.agents.core.tools.serialization
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = name,
     description = "First tool description",
 ) {

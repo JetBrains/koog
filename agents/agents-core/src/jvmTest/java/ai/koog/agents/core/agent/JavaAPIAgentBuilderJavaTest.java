@@ -2,12 +2,13 @@ package ai.koog.agents.core.agent;
 
 import ai.koog.agents.core.agent.config.AIAgentConfig;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
-import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
-import ai.koog.agents.testing.tools.MockExecutor;
+import ai.koog.agents.testing.tools.MockExecutorBuilder;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
+import ai.koog.serialization.JSONSerializer;
+import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Executors;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Java tests for AIAgent builder API and functional strategies (lambda and custom class).
  */
 public class JavaAPIAgentBuilderJavaTest {
+    private static final JSONSerializer serializer = new JacksonSerializer();
 
     private static AIAgentConfig baseConfig() {
         return AIAgentConfig.builder(OpenAIModels.Chat.GPT4_1)
@@ -42,17 +44,13 @@ public class JavaAPIAgentBuilderJavaTest {
 
     @Test
     public void testBuilderWithAgentConfigAndEventInstall() {
-        ToolRegistry registry = ToolRegistry.builder().build();
-
         var agent = AIAgent.builder()
             .promptExecutor(
-                MockExecutor.builder()
-                    .toolRegistry(registry)
+                new MockExecutorBuilder(serializer)
                     .mockLLMAnswer("ok").asDefaultResponse()
                     .build()
             )
             .agentConfig(baseConfig())
-            .toolRegistry(registry)
             .install(EventHandler.Feature, config -> {
                 config.onToolCallStarting(ctx -> {
                 });
@@ -69,7 +67,7 @@ public class JavaAPIAgentBuilderJavaTest {
 
     @Test
     public void testFunctionalStrategyWithLambda() {
-        var executor = MockExecutor.builder()
+        var executor = new MockExecutorBuilder(serializer)
             .mockLLMAnswer("assistant-reply").asDefaultResponse()
             .build();
 
@@ -118,7 +116,7 @@ public class JavaAPIAgentBuilderJavaTest {
 
     @Test
     public void testFunctionalStrategyWithClass() {
-        var executor = MockExecutor.builder()
+        var executor = new MockExecutorBuilder(serializer)
             .mockLLMAnswer("class-reply").asDefaultResponse()
             .build();
 

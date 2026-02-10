@@ -94,6 +94,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // For testing dev versions of dependencies
+        mavenLocal()
     }
 }
 

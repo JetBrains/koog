@@ -8,6 +8,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.toJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.jvm.JvmStatic
 
@@ -111,11 +113,12 @@ public class LLMBasedToolCallFixProcessor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>
+        responses: List<Message.Response>,
+        serializer: JSONSerializer,
     ): List<Message.Response> = responses.map processSingleMessage@{ response ->
         logger.info { "Updating message: $response" }
 
-        var result = preprocessor.process(executor, prompt, model, tools, response)
+        var result = preprocessor.process(executor, prompt, model, tools, response, serializer)
         if (!isToolCallRequired(prompt.params.toolChoice) && !isToolCallIntended(executor, prompt, model, result)) {
             return@processSingleMessage result
         }
@@ -127,16 +130,21 @@ public class LLMBasedToolCallFixProcessor(
         var i = 0
 
         while (i++ < maxRetries) {
-            val feedback = getFeedback(result, tools) ?: return@processSingleMessage result
+            val feedback = getFeedback(result, tools, serializer) ?: return@processSingleMessage result
             fixToolCallPrompt = prompt(fixToolCallPrompt) {
                 message(result)
                 user(feedback)
             }
-            result = executor.executeProcessed(fixToolCallPrompt, model, tools, preprocessor).first()
+            result = executor.executeProcessed(
+                prompt = fixToolCallPrompt,
+                model = model,
+                tools = tools,
+                processorConfig = ResponseProcessorConfig(preprocessor, serializer)
+            ).first()
         }
 
         // use fallback with the initial prompt
-        fallbackProcessor?.process(executor, prompt, model, tools, response) ?: response
+        fallbackProcessor?.process(executor, prompt, model, tools, response, serializer) ?: response
     }.also {
         logger.info { "Updated messages: $it" }
     }
@@ -175,6 +183,7 @@ public class LLMBasedToolCallFixProcessor(
     private fun getFeedback(
         message: Message.Response,
         tools: List<ToolDescriptor>,
+        serializer: JSONSerializer,
     ): String? {
         val toolName = (message as? Message.Tool.Call)?.tool
             ?: getToolName(message.content)
@@ -186,12 +195,12 @@ public class LLMBasedToolCallFixProcessor(
 
         val tool = try {
             toolRegistry.getTool(toolName)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // assume that it's the hack tool from the subgraphWithTask, since it is available in `tools`, but not available in the `toolRegistry`
             return null
         }
         try {
-            tool.decodeArgs((message as Message.Tool.Call).contentJson)
+            tool.decodeArgs((message as Message.Tool.Call).contentJson.toJSONObject(), serializer)
         } catch (e: Exception) {
             val errorMessage = e.message ?: "Unknown error"
             return invalidArgumentsFeedback(errorMessage, tool.descriptor)

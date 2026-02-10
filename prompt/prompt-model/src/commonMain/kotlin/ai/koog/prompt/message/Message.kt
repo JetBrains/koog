@@ -258,6 +258,7 @@ public sealed interface Message {
             /**
              * Lazily parses and caches the result of parsing [content] as a JSON object.
              */
+            // TODO remove?
             val contentJsonResult: kotlin.Result<JsonObject> by lazy {
                 runCatching { Json.parseToJsonElement(content).jsonObject }
             }
@@ -266,6 +267,7 @@ public sealed interface Message {
              * Lazily parses the content of the tool call as a JSON object.
              * Can throw an exception when parsing fails.
              */
+            // TODO make it JSONObject instead?
             val contentJson: JsonObject
                 get() = contentJsonResult.getOrThrow()
 

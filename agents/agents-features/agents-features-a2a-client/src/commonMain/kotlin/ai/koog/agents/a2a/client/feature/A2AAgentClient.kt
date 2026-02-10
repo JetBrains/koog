@@ -1,6 +1,7 @@
 package ai.koog.agents.a2a.client.feature
 
 import ai.koog.a2a.client.A2AClient
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -60,7 +61,9 @@ public class A2AAgentClient(
         override val key: AIAgentStorageKey<A2AAgentClient> =
             createStorageKey<A2AAgentClient>("agents-features-a2a-client")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): Config = Config()
 
         /**
          * Creates a feature implementation using the provided configuration.
