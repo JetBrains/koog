@@ -69,7 +69,7 @@ public class OpenTelemetry {
             val openTelemetry = OpenTelemetry()
 
             val spanCollector = SpanCollector()
-            val metricCollector = MetricCollector(config.meter, config.toolNameMapper)
+            val metricCollector = MetricCollector(config.meter, config.toolNameStrategy)
             val spanAdapter = config.spanAdapter
             val tracer = config.tracer
 

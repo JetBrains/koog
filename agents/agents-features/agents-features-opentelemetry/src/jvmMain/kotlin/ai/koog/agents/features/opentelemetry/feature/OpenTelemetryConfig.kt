@@ -4,10 +4,8 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
-import ai.koog.agents.features.opentelemetry.metric.AllowlistToolNameMapper
 import ai.koog.agents.features.opentelemetry.metric.MetricFilter
-import ai.koog.agents.features.opentelemetry.metric.NoopToolNameMapper
-import ai.koog.agents.features.opentelemetry.metric.ToolNameMapper
+import ai.koog.agents.features.opentelemetry.metric.ToolNameCardinalityStrategy
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -151,7 +149,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private val metricFilters = mutableListOf<MetricFilter>()
 
-    internal var toolNameMapper: ToolNameMapper = NoopToolNameMapper()
+    internal var toolNameStrategy: ToolNameCardinalityStrategy = ToolNameCardinalityStrategy.passthrough()
 
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
@@ -175,8 +173,34 @@ public class OpenTelemetryConfig : FeatureConfig() {
     }
 
     /**
+     * Sets a custom strategy for controlling cardinality of tool names in metrics.
+     *
+     * Tool names are used as attribute values in OpenTelemetry metrics. High cardinality
+     * can impact performance and storage. Use this method to apply custom transformation
+     * logic to tool names before they're recorded in metrics.
+     *
+     * @param strategy The cardinality control strategy to apply
+     * @see ToolNameCardinalityStrategy for available factory methods
+     *
+     * Example:
+     * ```kotlin
+     * setToolNameCardinalityStrategy(
+     *     ToolNameCardinalityStrategy.custom { toolName ->
+     *         toolName.take(10).lowercase()
+     *     }
+     * )
+     * ```
+     */
+    public fun setToolNameCardinalityStrategy(strategy: ToolNameCardinalityStrategy) {
+        toolNameStrategy = strategy
+    }
+
+    /**
      * Restricts tool names in the attributes' metric and sets the fallback tool name when a tool is not allowed.
      * Helps to manage cardinality of the metric.
+     *
+     * This is a convenience method that creates an allowlist strategy using [ToolNameCardinalityStrategy.allowlist].
+     * For more control, use [setToolNameCardinalityStrategy] directly.
      *
      * @param allowedToolNames A set of allowed tool names
      * @param fallbackToolName The fallback / default tool name if not in the allowed set
@@ -185,7 +209,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
         allowedToolNames: Set<String>,
         fallbackToolName: String = FALLBACK_TOOL_NAME,
     ) {
-        toolNameMapper = AllowlistToolNameMapper(allowedToolNames, fallbackToolName)
+        toolNameStrategy = ToolNameCardinalityStrategy.allowlist(allowedToolNames, fallbackToolName)
     }
 
     /**

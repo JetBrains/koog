@@ -170,11 +170,40 @@ retained for a specific metric during telemetry data processing. Takes the follo
 | `metricName`   | `String`      | Yes      |               | The name of the metric to which the filter will be applied.               |
 | `keysToRetain` | `Set<String>` | Yes      |               | A set of attribute keys that should be retained for the specified metric. |
 
+#### setToolNameCardinalityStrategy
+
+Sets a custom strategy for controlling cardinality of tool names in metrics. Tool names are used as attribute values in OpenTelemetry metrics (`gen_ai.tool.name`). Since high cardinality can impact performance and storage, this method allows you to apply transformation logic to tool names before they're recorded.
+
+Use the `ToolNameCardinalityStrategy` companion object factory methods to create strategies:
+- `passthrough()` - No transformation (default)
+- `allowlist(allowed, fallback)` - Only permit specific tool names, map others to fallback
+- `denylist(denied, fallback)` - Block specific tool names, map them to fallback
+- `custom(transform)` - Provide custom transformation lambda
+
+| Name       | Data type                     | Required | Default value | Description                                           |
+|------------|-------------------------------|----------|---------------|-------------------------------------------------------|
+| `strategy` | `ToolNameCardinalityStrategy` | Yes      |               | The cardinality control strategy to apply to metrics. |
+
+**Example:**
+```kotlin
+// Custom transformation
+setToolNameCardinalityStrategy(
+    ToolNameCardinalityStrategy.custom { toolName ->
+        toolName.take(10).lowercase()
+    }
+)
+
+// Using lambda syntax (since it's a fun interface)
+setToolNameCardinalityStrategy { toolName ->
+    if (toolName.startsWith("internal_")) "internal" else toolName
+}
+```
+
 #### restrictToolNameCardinality
 
-Adds a configuration that maps tool names to the `gen_ai.tool.name` attribute value.
-Tool names in the allowlist are used as-is. All other tool names are replaced with a single fallback value.
-This reduces attribute cardinality and helps control overall metric cardinality.
+Convenience method that restricts tool names using an allowlist strategy. Tool names in the allowlist are used as-is, while all other tool names are replaced with a fallback value. This reduces attribute cardinality and helps control overall metric cardinality.
+
+This is equivalent to calling `setToolNameCardinalityStrategy(ToolNameCardinalityStrategy.allowlist(...))`.
 
 | Name                | Data type     | Required | Default value | Description                                                   |
 |---------------------|---------------|----------|---------------|---------------------------------------------------------------|

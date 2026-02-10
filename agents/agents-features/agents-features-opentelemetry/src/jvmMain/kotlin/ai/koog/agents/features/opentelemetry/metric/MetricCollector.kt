@@ -10,7 +10,7 @@ import ai.koog.agents.features.opentelemetry.metric.MetricsFactory.createToolCal
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.metrics.Meter
 
-internal class MetricCollector(meter: Meter, private val toolNameMapper: ToolNameMapper) {
+internal class MetricCollector(meter: Meter, private val toolNameStrategy: ToolNameCardinalityStrategy) {
     private val metricEventStorage = MetricEventStorage()
 
     private val toolCallsCounter = createToolCallCounter(meter)
@@ -68,7 +68,7 @@ internal class MetricCollector(meter: Meter, private val toolNameMapper: ToolNam
 
     private fun handleToolCallEnded(metricEvent: ToolCallEnded, isVerbose: Boolean) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
-            val toolName = toolNameMapper.map(metricEvent.toolName)
+            val toolName = toolNameStrategy.apply(metricEvent.toolName)
 
             val status = when (metricEvent.status) {
                 ToolCallStatus.VALIDATION_FAILED -> KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
