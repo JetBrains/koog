@@ -137,7 +137,7 @@ fun processTool(
 
 ### 1. Implement the ToolSet interface
 
-Create a class that implements the [`ToolSet`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.reflect/-tool-set/index.html) interface.
+Create a class that implements the [`ToolSet`](api:agents-tools::ai.koog.agents.core.tools.reflect.ToolSet) interface.
 This interface marks your class as a container for tools.
 
 <!--- INCLUDE

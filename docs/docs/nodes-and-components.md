@@ -40,13 +40,13 @@ val nodeLength by node<String, Int> { input ->
 ```
 <!--- KNIT example-nodes-and-component-01.kt -->
 
-For more information, see [`node()`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/-a-i-agent-subgraph-builder-base/node.html).
+For more information, see [`node()`](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase.node).
 
 ## Utility nodes
 
 ### nodeDoNothing
 
-A simple pass-through node that does nothing and returns the input as output. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-do-nothing.html).
+A simple pass-through node that does nothing and returns the input as output. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeDoNothing).
 
 ```mermaid
 graph LR
@@ -92,7 +92,7 @@ edge(passthrough forwardTo nodeFinish)
 ### nodeAppendPrompt
 
 A node that adds messages to the LLM prompt using the provided prompt builder.
-This is useful for modifying the conversation context before making an actual LLM request. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-update-prompt.html).
+This is useful for modifying the conversation context before making an actual LLM request. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeUpdatePrompt).
 
 ```mermaid
 graph LR
@@ -151,7 +151,7 @@ edge(setupContext forwardTo secondNode)
 
 ### nodeLLMSendMessageOnlyCallingTools
 
-A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-message-only-calling-tools.html).
+A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageOnlyCallingTools).
 
 ```mermaid
 graph LR
@@ -169,7 +169,7 @@ graph LR
 
 ### nodeLLMSendMessageForceOneTool
 
-A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-message-force-one-tool.html).
+A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageForceOneTool).
 
 ```mermaid
 graph LR
@@ -188,7 +188,7 @@ graph LR
 ### nodeLLMRequest
 
 A node that appends a user message to the LLM prompt and gets a response with optional tool usage. The node configuration determines whether
-tool calls are allowed during the processing of the message. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-request.html).
+tool calls are allowed during the processing of the message. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequest).
 
 ```mermaid
 graph LR
@@ -230,7 +230,7 @@ edge(getUserQuestion forwardTo requestLLM)
 
 ### nodeLLMRequestStructured
 
-A node that appends a user message to the LLM prompt and requests structured data from the LLM with error correction capabilities. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-request-structured.html).
+A node that appends a user message to the LLM prompt and requests structured data from the LLM with error correction capabilities. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured).
 
 ```mermaid
 graph LR
@@ -248,7 +248,7 @@ graph LR
 
 ### nodeLLMRequestStreaming
 
-A node that appends a user message to the LLM prompt and streams LLM response with or without stream data transformation. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-request-streaming.html).
+A node that appends a user message to the LLM prompt and streams LLM response with or without stream data transformation. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming).
 
 ```mermaid
 graph LR
@@ -266,7 +266,7 @@ graph LR
 
 ### nodeLLMRequestMultiple
 
-A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-request-multiple.html).
+A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple).
 
 ```mermaid
 graph LR
@@ -310,7 +310,7 @@ edge(getComplexUserQuestion forwardTo requestLLMMultipleTools)
 
 ### nodeLLMCompressHistory
 
-A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a concise summary (TL;DR). For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-compress-history.html).
+A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a concise summary (TL;DR). For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory).
 This is useful for managing long conversations by compressing the history to reduce token usage.
 
 ```mermaid
@@ -364,7 +364,7 @@ edge(generateHugeHistory forwardTo compressHistory)
 
 ### nodeExecuteTool
 
-A node that executes a single tool call and returns its result. This node is used to handle tool calls made by the LLM. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-execute-tool.html).
+A node that executes a single tool call and returns its result. This node is used to handle tool calls made by the LLM. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteTool).
 
 ```mermaid
 graph LR
@@ -409,7 +409,7 @@ edge(requestLLM forwardTo executeTool onToolCall { true })
 
 ### nodeLLMSendToolResult
 
-A node that adds a tool result to the prompt and requests an LLM response. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-tool-result.html).
+A node that adds a tool result to the prompt and requests an LLM response. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult).
 
 ```mermaid
 graph LR
@@ -453,7 +453,7 @@ edge(executeTool forwardTo sendToolResultToLLM)
 
 ### nodeExecuteMultipleTools
 
-A node that executes multiple tool calls. These calls can optionally be executed in parallel. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-execute-multiple-tools.html).
+A node that executes multiple tool calls. These calls can optionally be executed in parallel. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools).
 
 ```mermaid
 graph LR
@@ -498,7 +498,7 @@ edge(requestLLMMultipleTools forwardTo executeMultipleTools onMultipleToolCalls 
 
 ### nodeLLMSendMultipleToolResults
 
-A node that adds multiple tool results to the prompt and gets multiple LLM responses. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-multiple-tool-results.html).
+A node that adds multiple tool results to the prompt and gets multiple LLM responses. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults).
 
 ```mermaid
 graph LR
@@ -565,7 +565,7 @@ graph LR
 
 ### transform
 
-The [`transform()`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/-a-i-agent-node-delegate/transform.html) function creates a new `AIAgentNodeDelegate` that wraps the original node and applies a transformation function to its output.
+The [`transform()`](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate.transform) function creates a new `AIAgentNodeDelegate` that wraps the original node and applies a transformation function to its output.
 
 <!--- INCLUDE
 /**
@@ -641,7 +641,7 @@ By using the predefined subgraphs, you can implement various popular pipelines. 
 
 ### subgraphWithTask
 
-A subgraph that performs a specific task using provided tools and returns a structured result. It supports multi-response LLM interactions (the assistant may produce several responses interleaved with tool calls) and lets you control how tool calls are executed. For details, see [API reference](https://api.koog.ai/agents/agents-ext/ai.koog.agents.ext.agent/subgraph-with-task.html).
+A subgraph that performs a specific task using provided tools and returns a structured result. It supports multi-response LLM interactions (the assistant may produce several responses interleaved with tool calls) and lets you control how tool calls are executed. For details, see [API reference](api:agents-ext::ai.koog.agents.ext.agent.subgraphWithTask).
 
 You can use this subgraph for the following purposes:
 
@@ -693,7 +693,7 @@ val processQuery by subgraphWithTask<String, String>(
 
 ### subgraphWithVerification
 
-A special version of `subgraphWithTask` that verifies whether a task was performed correctly and provides details about any issues encountered. This subgraph is useful for workflows that require validation or quality checks. For details, see [API reference](https://api.koog.ai/agents/agents-ext/ai.koog.agents.ext.agent/subgraph-with-verification.html).
+A special version of `subgraphWithTask` that verifies whether a task was performed correctly and provides details about any issues encountered. This subgraph is useful for workflows that require validation or quality checks. For details, see [API reference](api:agents-ext::ai.koog.agents.ext.agent.subgraphWithVerification).
 
 You can use this subgraph for the following purposes:
 

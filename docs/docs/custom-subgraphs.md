@@ -62,7 +62,7 @@ strategy<StrategyInput, StrategyOutput>("strategy-name") {
 ```
 <!--- KNIT example-custom-subgraphs-02.kt -->
 
-For more information about parameters and parameter values, see the `subgraph` [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/-a-i-agent-subgraph-builder-base/subgraph.html). For more
+For more information about parameters and parameter values, see the `subgraph` [API reference](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase.subgraph). For more
 information about tools, see [Tools](tools-overview.md).
 
 The following code sample shows an actual implementation of a custom subgraph:

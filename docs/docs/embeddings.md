@@ -264,6 +264,6 @@ suspend fun compareCodeToCode(embedder: Embedder) { // Embedder type
 
 For a complete API reference related to embeddings, see the reference documentation for the following modules:
 
-- [embeddings-base](https://api.koog.ai/embeddings/embeddings-base/ai.koog.embeddings.base/index.html): Provides core interfaces and data structures for representing and comparing text 
+- [embeddings-base](api:embeddings-base::ai.koog.embeddings.base): Provides core interfaces and data structures for representing and comparing text 
 and code embeddings.
-- [embeddings-llm](https://api.koog.ai/embeddings/embeddings-llm/index.html): Includes implementations for working with local embedding models.
+- [embeddings-llm](api:embeddings-llm::): Includes implementations for working with local embedding models.
