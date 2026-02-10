@@ -1,6 +1,7 @@
 # Outline
 -Koog Graph Strategy ~ dspy program
 - Koog GraphAIAgent node ~ dsyp predictor
+(- subgraph ~ predictor ???)
 
 We introduce a `optimizableNode` that is like a `node`, with two additional fields that get optimized:
 - instruction: 
@@ -30,6 +31,11 @@ Output has to be work with Koog structued output (i.e. JSON serializable and sch
 
 
 # Open Questions
-- GraphAiAgent = Strategy + PromptExecutor
+## 
+- GraphAiAgent = Strategy + PromptExecutor + ToolSetRegistry
 
 - Trace collection: Vibe-coded `TraceCollectionFeature` to intercept NodeExecutionCompleted
+
+- In OptimizableNode, can we subsume instruction and demonstrations somehow?
+
+- hook into subgraph primitive somehow?
