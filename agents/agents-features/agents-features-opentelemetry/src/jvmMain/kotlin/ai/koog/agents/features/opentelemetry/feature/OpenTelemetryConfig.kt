@@ -20,6 +20,7 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.InstrumentSelector
 import io.opentelemetry.sdk.metrics.SdkMeterProvider
+import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder
 import io.opentelemetry.sdk.metrics.View
 import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader
@@ -142,7 +143,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
         get() = sdk.getTracer(_instrumentationScopeName, _instrumentationScopeVersion)
 
     /**
-     * The `Meter` can be utilized to create metric instruments such as counters, histograms, and gauges,
+     * The `Meter` can be used to create metric instruments such as counters, histograms, and gauges,
      * which can then be used to track application-specific metrics.
      */
     public val meter: Meter
@@ -317,7 +318,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
             traceProviderBuilder.addProcessors(exporter)
         }
 
-        val metricProvider = SdkMeterProvider.builder()
+        val meterProviderBuilder = SdkMeterProvider.builder()
             .setResource(resource)
 
         val metricExporters = createMetricExporters()
@@ -328,21 +329,14 @@ public class OpenTelemetryConfig : FeatureConfig() {
                 .setInterval(meterInterval)
                 .build()
 
-            metricProvider.registerMetricReader(reader)
+            meterProviderBuilder.registerMetricReader(reader)
         }
 
-        metricFilters.forEach { filter ->
-            val (instrumentSelector, view) = convertToInstrumentAndViewPair(
-                filter.metricName,
-                filter.attributesKeysToRetain
-            )
-
-            metricProvider.registerView(instrumentSelector, view)
-        }
+        metricFilters.forEach { meterProviderBuilder.registerView(it) }
 
         val sdk = builder
             .setTracerProvider(traceProviderBuilder.build())
-            .setMeterProvider(metricProvider.build())
+            .setMeterProvider(meterProviderBuilder.build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .build()
 
@@ -400,10 +394,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
         }
     }
 
-    private fun convertToInstrumentAndViewPair(metricName: String, keysToRetain: Set<String>) =
-        InstrumentSelector.builder().setName(metricName).build() to
-            View.builder().setAttributeFilter(keysToRetain).build()
-
     private fun SdkTracerProviderBuilder.addProcessors(exporter: SpanExporter) {
         if (customSpanProcessorsCreator.isEmpty()) {
             logger.debug {
@@ -418,6 +408,13 @@ public class OpenTelemetryConfig : FeatureConfig() {
             logger.debug { "Adding span processor: ${spanProcessor::class.simpleName}" }
             addSpanProcessor(spanProcessor)
         }
+    }
+
+    private fun SdkMeterProviderBuilder.registerView(filter: MetricFilter) {
+        val selector = InstrumentSelector.builder().setName(filter.metricName).build()
+        val view = View.builder().setAttributeFilter(filter.attributesKeysToRetain).build()
+
+        this.registerView(selector, view)
     }
 
     //endregion Private Methods

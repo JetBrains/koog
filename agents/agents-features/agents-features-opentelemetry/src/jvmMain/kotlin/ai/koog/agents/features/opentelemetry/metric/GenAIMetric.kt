@@ -1,6 +1,6 @@
 package ai.koog.agents.features.opentelemetry.metric
 
-internal sealed interface KoogMetricName : MetricName {
+internal sealed interface GenAIMetric : Metric {
     override val name: String
-        get() = "koog"
+        get() = "gen_ai"
 }

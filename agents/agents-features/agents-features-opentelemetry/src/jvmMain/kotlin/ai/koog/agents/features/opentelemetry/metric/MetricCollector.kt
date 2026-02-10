@@ -4,6 +4,9 @@ import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
 import ai.koog.agents.features.opentelemetry.extension.getPositiveDurationSec
+import ai.koog.agents.features.opentelemetry.metric.MetricsFactory.createOperationDurationHistogram
+import ai.koog.agents.features.opentelemetry.metric.MetricsFactory.createTokenCounter
+import ai.koog.agents.features.opentelemetry.metric.MetricsFactory.createToolCallCounter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.metrics.Meter
 
@@ -19,17 +22,11 @@ internal class MetricCollector(meter: Meter, private val toolNameMapper: ToolNam
     }
 
     internal fun recordEvent(metricEvent: MetricEvent, isVerbose: Boolean) = when (metricEvent) {
-        is LLMCallStarted -> handleLlmCallStarted(metricEvent)
         is LLMCallEnded -> handleLlmCallEnded(metricEvent, isVerbose)
-        is ToolCallStarted -> handleToolCallStarted(metricEvent)
         is ToolCallEnded -> handleToolCallEnded(metricEvent, isVerbose)
         else -> {
             logger.warn { "Unknown metric event type: ${metricEvent::class.simpleName}" }
         }
-    }
-
-    private fun handleLlmCallStarted(metricEvent: LLMCallStarted) {
-        metricEventStorage.startEvent(metricEvent)
     }
 
     private fun handleLlmCallEnded(metricEvent: LLMCallEnded, isVerbose: Boolean) =
@@ -68,10 +65,6 @@ internal class MetricCollector(meter: Meter, private val toolNameMapper: ToolNam
                 ).toSdkAttributes(isVerbose)
             )
         }
-
-    private fun handleToolCallStarted(metricEvent: ToolCallStarted) {
-        metricEventStorage.startEvent(metricEvent)
-    }
 
     private fun handleToolCallEnded(metricEvent: ToolCallEnded, isVerbose: Boolean) =
         metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->

@@ -67,14 +67,11 @@ public class OpenTelemetry {
             pipeline: AIAgentGraphPipeline,
         ): OpenTelemetry {
             val openTelemetry = OpenTelemetry()
+
             val spanCollector = SpanCollector()
+            val metricCollector = MetricCollector(config.meter, config.toolNameMapper)
             val spanAdapter = config.spanAdapter
-
             val tracer = config.tracer
-            val meter = config.meter
-            val toolNameMapper = config.toolNameMapper
-
-            val metricCollector = MetricCollector(meter, toolNameMapper)
 
             //region Agent
 

@@ -1,6 +1,6 @@
 package ai.koog.agents.features.opentelemetry.metric
 
-internal sealed interface MetricName {
+internal sealed interface Metric {
     val name: String
     val description: String
     val unit: String
