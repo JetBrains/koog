@@ -84,11 +84,7 @@ class InstructionProposerTest {
      * @param trackCalls If non-null, appends prompt names to this list for call tracking
      */
     private fun createMockExecutor(trackCalls: MutableList<String>? = null): PromptExecutor {
-        val baseExecutor = getMockExecutor {
-            mockLLMAnswer("unused")
-        }
-
-        return object : PromptExecutor by baseExecutor {
+        return object : PromptExecutor by getMockExecutor(init = { }) {
             private fun respond(prompt: Prompt): List<Message.Response> {
                 val systemContent = prompt.messages.firstOrNull()?.content ?: ""
                 val userContent = prompt.messages.lastOrNull()?.content ?: ""
@@ -481,11 +477,7 @@ class InstructionProposerTest {
         capturedPrompts: MutableList<Pair<String, String>>,
         trackCalls: MutableList<String>? = null,
     ): PromptExecutor {
-        val baseExecutor = getMockExecutor {
-            mockLLMAnswer("unused")
-        }
-
-        return object : PromptExecutor by baseExecutor {
+        return object : PromptExecutor by getMockExecutor(init = { }) {
             private fun respond(prompt: Prompt): List<Message.Response> {
                 val systemContent = prompt.messages.firstOrNull()?.content ?: ""
                 val userContent = prompt.messages.lastOrNull()?.content ?: ""
