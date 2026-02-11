@@ -43,6 +43,8 @@ public data class InstructionProposerConfig(
     val numDemosInContext: Int = 3,
     val useTip: Boolean = true,
     val setTipRandomly: Boolean = true,
+    val useInstructHistory: Boolean = false,
+    val setHistoryRandomly: Boolean = false,
 )
 
 /**
@@ -73,21 +75,22 @@ public class InstructionProposer(
     private val random: Random = Random.Default,
     programDescription: String? = null,
 ) {
+    private companion object {
+        private const val MAX_INSTRUCT_IN_HISTORY = 5
+    }
+
     private var datasetSummary: String? = null
     private var programCode: String? = null
-    private var programDescription: String? = programDescription
-    private val moduleDescriptions: MutableMap<String, String> = mutableMapOf()
+    private val userProgramDescription: String? = programDescription
 
     /**
-     * Initialize the proposer by generating dataset summary, program description,
-     * and per-module descriptions.
+     * Initialize the proposer by generating dataset summary and computing program code.
      *
-     * If a [programDescription] was provided in the constructor, it is used as-is.
-     * Otherwise, if [InstructionProposerConfig.programAware] is true, the LLM generates one.
+     * Program and module descriptions are now generated per-call in [proposeInstructionForModule]
+     * to adapt to varying task demo context (matching DSPy's GroundedProposer.forward()).
      *
-     * Similarly, if an [OptimizableNode] has a non-null [OptimizableNode.description],
-     * it is used directly. Otherwise, if programAware, the LLM generates a description
-     * of the module's role.
+     * User-provided descriptions (constructor [programDescription] and [OptimizableNode.description])
+     * always skip LLM generation.
      *
      * Call this before [proposeInstructionsForProgram].
      */
@@ -109,42 +112,6 @@ public class InstructionProposer(
                 programCode = strategy.describeForOptimization()
             } catch (_: Exception) {
                 // Continue without program code
-            }
-        }
-
-        // Generate program description via LLM if not user-provided
-        if (programDescription == null && config.programAware && programCode != null) {
-            try {
-                val programExample = formatTrainsetExample()
-                val prompt = describeProgramPrompt(programCode!!, programExample)
-                val responses = promptExecutor.execute(prompt, llModel)
-                programDescription = extractAssistantContent(responses).ifBlank { null }
-            } catch (_: Exception) {
-                // Continue without program description
-            }
-        }
-
-        // Generate per-module descriptions
-        if (config.programAware) {
-            val modules = strategy.findOptimizableModules()
-            for (module in modules) {
-                if (module.description != null) {
-                    // User-provided description on the node
-                    moduleDescriptions[module.name] = module.description
-                } else if (programCode != null && programDescription != null) {
-                    // LLM-generated description
-                    try {
-                        val moduleCode = buildModuleCodeString(module.name, module)
-                        val prompt = describeModulePrompt(programCode!!, programDescription!!, moduleCode)
-                        val responses = promptExecutor.execute(prompt, llModel)
-                        val desc = extractAssistantContent(responses).ifBlank { null }
-                        if (desc != null) {
-                            moduleDescriptions[module.name] = desc
-                        }
-                    } catch (_: Exception) {
-                        // Continue without this module's description
-                    }
-                }
             }
         }
     }
@@ -174,9 +141,13 @@ public class InstructionProposer(
     public suspend fun proposeInstructionsForProgram(
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
         numCandidates: Int,
+        previousInstructions: Map<String, List<Pair<String, Double>>> = emptyMap(),
     ): Map<String, List<String>> {
         val modules = strategy.findOptimizableModules()
         val proposedInstructions = mutableMapOf<String, MutableList<String>>()
+
+        // Gap 3: 50/50 coin flip to toggle instruction history for this round
+        val effectiveUseHistory = if (config.setHistoryRandomly) random.nextBoolean() else config.useInstructHistory
 
         // Determine how many demo sets we have (or default to numCandidates if no demos)
         val numDemoSets = if (demoCandidates.isNullOrEmpty() || !config.useTaskDemos) {
@@ -199,6 +170,8 @@ public class InstructionProposer(
                     demoCandidates = demoCandidates,
                     demoSetIndex = demoSetIndex,
                     tip = tip,
+                    effectiveUseHistory = effectiveUseHistory,
+                    previousInstructions = previousInstructions,
                 )
 
                 proposedInstructions[moduleName]!!.add(instruction)
@@ -210,6 +183,9 @@ public class InstructionProposer(
 
     /**
      * Generate a single instruction for a specific node.
+     *
+     * Program and module descriptions are generated fresh per-call to adapt to
+     * the varying task demo context (Gap 4). User-provided descriptions skip LLM.
      */
     private suspend fun proposeInstructionForModule(
         moduleName: String,
@@ -217,17 +193,59 @@ public class InstructionProposer(
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
         demoSetIndex: Int,
         tip: String?,
+        effectiveUseHistory: Boolean,
+        previousInstructions: Map<String, List<Pair<String, Double>>>,
     ): String {
         val moduleCodeString = buildModuleCodeString(moduleName, module)
         val taskDemos = gatherTaskDemos(moduleName, demoCandidates, demoSetIndex)
         val basicInstruction = module.instruction
 
+        // Gap 4: Per-call program description
+        val currentProgramDescription = if (userProgramDescription != null) {
+            userProgramDescription
+        } else if (config.programAware && programCode != null) {
+            try {
+                val prompt = describeProgramPrompt(programCode!!, taskDemos)
+                val responses = promptExecutor.execute(prompt, llModel)
+                extractAssistantContent(responses).ifBlank { null }
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+
+        // Gap 4: Per-call module description
+        val currentModuleDescription = if (module.description != null) {
+            module.description
+        } else if (config.programAware && programCode != null && currentProgramDescription != null) {
+            try {
+                // Gap 5: Pass taskDemos as programExample
+                val prompt = describeModulePrompt(programCode!!, currentProgramDescription, taskDemos, moduleCodeString)
+                val responses = promptExecutor.execute(prompt, llModel)
+                extractAssistantContent(responses).ifBlank { null }
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+
+        // Gap 2: Format instruction history if enabled
+        val historyString = if (effectiveUseHistory) {
+            formatInstructionHistory(moduleName, previousInstructions)
+        } else {
+            null
+        }
+
         val promptConfig = GenerateInstructionPromptConfig(
             datasetSummary = datasetSummary,
-            programDescription = programDescription,
+            programCode = programCode,
+            programDescription = currentProgramDescription,
             moduleCodeString = moduleCodeString,
-            moduleDescription = moduleDescriptions[moduleName],
+            moduleDescription = currentModuleDescription,
             taskDemos = taskDemos,
+            previousInstructions = historyString,
             basicInstruction = basicInstruction,
             tip = if (config.useTip) tip else null,
         )
@@ -240,6 +258,29 @@ public class InstructionProposer(
             stripInstructionPrefixes(proposedInstruction).ifBlank { basicInstruction }
         } catch (_: Exception) {
             basicInstruction
+        }
+    }
+
+    /**
+     * Format instruction history for a module, sorted by score descending, taking top N, reversed.
+     *
+     * Matches DSPy's format: `"instruction text" | Score: X.XX`
+     */
+    private fun formatInstructionHistory(
+        moduleName: String,
+        previousInstructions: Map<String, List<Pair<String, Double>>>,
+        maxHistory: Int = MAX_INSTRUCT_IN_HISTORY,
+    ): String? {
+        val history = previousInstructions[moduleName] ?: return null
+        if (history.isEmpty()) return null
+
+        val topEntries = history
+            .sortedByDescending { it.second }
+            .take(maxHistory)
+            .reversed()
+
+        return topEntries.joinToString("\n") { (instruction, score) ->
+            "\"$instruction\" | Score: ${"%.2f".format(score)}"
         }
     }
 

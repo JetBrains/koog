@@ -123,6 +123,7 @@ Please describe what this program does and how it works."""
 internal fun describeModulePrompt(
     programCode: String,
     programDescription: String,
+    programExample: String,
     moduleCode: String,
 ): Prompt = prompt("describe-module") {
     system(
@@ -136,6 +137,9 @@ $programCode
 PROGRAM DESCRIPTION:
 $programDescription
 
+EXAMPLE OF PROGRAM IN USE:
+$programExample
+
 MODULE:
 $moduleCode
 
@@ -148,10 +152,12 @@ Please describe this module's role in the program."""
  */
 internal data class GenerateInstructionPromptConfig(
     val datasetSummary: String?,
+    val programCode: String?,
     val programDescription: String?,
     val moduleCodeString: String,
     val moduleDescription: String?,
     val taskDemos: String,
+    val previousInstructions: String?,
     val basicInstruction: String,
     val tip: String?,
 )
@@ -175,13 +181,19 @@ internal fun generateModuleInstructionPrompt(config: GenerateInstructionPromptCo
                 appendLine()
             }
 
+            if (config.programCode != null) {
+                appendLine("PROGRAM CODE:")
+                appendLine(config.programCode)
+                appendLine()
+            }
+
             if (config.programDescription != null) {
-                appendLine("PROGRAM STRUCTURE:")
+                appendLine("PROGRAM DESCRIPTION:")
                 appendLine(config.programDescription)
                 appendLine()
             }
 
-            appendLine("MODULE TO OPTIMIZE:")
+            appendLine("MODULE:")
             appendLine(config.moduleCodeString)
             appendLine()
 
@@ -194,6 +206,12 @@ internal fun generateModuleInstructionPrompt(config: GenerateInstructionPromptCo
             appendLine("TASK DEMO(S):")
             appendLine(config.taskDemos)
             appendLine()
+
+            if (config.previousInstructions != null && config.previousInstructions.isNotBlank()) {
+                appendLine("PREVIOUS INSTRUCTIONS:")
+                appendLine(config.previousInstructions)
+                appendLine()
+            }
 
             appendLine("BASIC INSTRUCTION:")
             appendLine(config.basicInstruction)
