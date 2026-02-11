@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaInteropUtils;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.llm.LLModel;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -64,8 +64,8 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
     public void integration_BuilderWithToolRegistry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaInteropUtils.createToolRegistry(calculator);
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
+        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
@@ -90,8 +90,8 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
         AtomicBoolean agentCompleted = new AtomicBoolean(false);
         AtomicInteger llmCallsCount = new AtomicInteger(0);
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaInteropUtils.createToolRegistry(calculator);
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
+        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
@@ -120,8 +120,8 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
     public void integration_BuilderWithMaxIterations(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaInteropUtils.createToolRegistry(calculator);
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
+        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))

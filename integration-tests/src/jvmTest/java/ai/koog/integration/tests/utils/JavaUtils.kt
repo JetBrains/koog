@@ -25,13 +25,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.util.function.Function
 
-/**
- *
- * The object is necessary to bridge the gap between Kotlin coroutines/DSL and Java.
- * It's necessary because Java doesn't natively support some used Kotlin concepts like runBlocking.
- */
-
-object JavaInteropUtils {
+object JavaUtils {
     @JvmStatic
     fun createOpenAIClient(apiKey: String): OpenAILLMClient = OpenAILLMClient(apiKey)
 
@@ -92,8 +86,8 @@ object JavaInteropUtils {
     fun requestLLM(
         context: AIAgentFunctionalContext,
         input: String,
-        includeHistory: Boolean = true
-    ): Message.Response = context.requestLLM(input, includeHistory, null)
+        allowToolCalls: Boolean = true
+    ): Message.Response = context.requestLLM(input, allowToolCalls, null)
 
     @JvmStatic
     fun sendToolResult(
