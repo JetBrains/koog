@@ -6,7 +6,7 @@ import ai.koog.agents.planner.llm.SimpleLLMPlanner
 import ai.koog.agents.planner.llm.SimplePlan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.text.text
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json

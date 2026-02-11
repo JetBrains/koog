@@ -44,7 +44,7 @@ This sequence of steps represents a *relevance search* flow that returns the mos
 
 <!--- INCLUDE
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.mostRelevantDocuments
 import ai.koog.rag.vector.EmbeddingBasedDocumentStorage
@@ -62,7 +62,7 @@ fun main() {
 -->
 ```kotlin
 // Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 // You may also use OpenAI embeddings with:
 // val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
 
@@ -102,7 +102,7 @@ Here is an example of how to implement the defined RAG system for an AI agent to
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -114,7 +114,7 @@ import ai.koog.rag.vector.JVMTextDocumentEmbedder
 import kotlin.io.path.pathString
 
 // Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 // You may also use OpenAI embeddings with:
 // val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
 
@@ -176,7 +176,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
@@ -188,7 +188,7 @@ import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
 
 // Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 // You may also use OpenAI embeddings with:
 // val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
 
@@ -335,13 +335,13 @@ A JVM-specific implementation that works with `java.nio.file.Path`.
 
 <!--- INCLUDE
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.vector.JVMTextDocumentEmbedder
 
 -->
 ```kotlin
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 val jvmTextEmbedder = JVMTextDocumentEmbedder(embedder = embedder)
 ```
 <!--- KNIT example-ranked-document-storage-08.kt -->
@@ -466,7 +466,7 @@ Here's an example of implementing a custom document embedder for PDF documents:
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.RankedDocument
 import ai.koog.rag.base.RankedDocumentStorage
@@ -560,7 +560,7 @@ class PDFVectorStorage(
 // Usage example
 suspend fun main() {
     val pdfProvider = PDFDocumentProvider()
-    val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+    val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
     val pdfEmbedder = PDFDocumentEmbedder(embedder)
     val storage = InMemoryVectorStorage<PDFDocument>()
     val pdfStorage = PDFVectorStorage(pdfProvider, pdfEmbedder, storage)
