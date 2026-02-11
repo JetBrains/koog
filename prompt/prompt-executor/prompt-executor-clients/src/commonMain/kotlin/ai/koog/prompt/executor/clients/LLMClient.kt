@@ -98,7 +98,7 @@ public interface LLMClient : AutoCloseable {
      *
      * @return A list of model ids instances representing the available LLMs.
      */
-    public suspend fun models(): List<String> {
+    public suspend fun models(): List<LLModel> {
         throw UnsupportedOperationException("Not implemented for this client")
     }
 

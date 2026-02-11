@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -13,6 +14,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.integration.tests.InjectOllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixture
@@ -33,9 +35,11 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.LLMBasedToolCallFixProcessor
 import ai.koog.prompt.processor.ResponseProcessor
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
@@ -60,6 +64,9 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         private fun modelsWithHallucinations(): Stream<LLModel> =
             Stream.of(*modelsWithHallucinations.toTypedArray())
     }
+
+    @Serializable
+    private data class Summary(val summary: String)
 
     @BeforeTest
     fun clearToolCalls() {
@@ -271,5 +278,33 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
                 assertEquals(2, fileTools.fileContentsByPath.size, "A script with average score should be created")
             }
         }
+    }
+
+    @Retry
+    @Test
+    fun ollama_testSubgraphWithTask() = runTest(timeout = 600.seconds) {
+        val fileTools = FileOperationsTools()
+        val toolRegistry = ToolRegistry {
+            tool(fileTools.createNewFileWithTextTool)
+        }
+
+        val strategy = strategy<String, String>("ollama-subgraph-with-task") {
+            val task by subgraphWithTask<String, Summary>(
+                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+            ) { it }
+
+            nodeStart then task
+            edge(task forwardTo nodeFinish transformed { it.summary })
+        }
+        val prompt = prompt("ollama-subgraph-with-task", LLMParams(temperature = 0.1)) {
+            system(systemPrompt)
+        }
+        val responseProcessor = LLMBasedToolCallFixProcessor(toolRegistry)
+
+        val agent = createAgent(executor, strategy, toolRegistry, model, prompt, responseProcessor)
+
+        agent.run("Create a file \"hello_world.py\"")
+
+        toolCalls.shouldContain(fileTools.createNewFileWithTextTool.name)
     }
 }

@@ -42,7 +42,7 @@ class LLMWriteSessionJavaApiTest {
             .promptExecutor(executor)
             .build()
 
-        val result = agent.run("hello", null)
+        val result = agent.javaRun("hello", null, null)
         assertEquals("mutated:hello", result)
     }
 }

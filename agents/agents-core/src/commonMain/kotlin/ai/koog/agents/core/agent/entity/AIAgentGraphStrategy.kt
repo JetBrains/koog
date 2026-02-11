@@ -98,7 +98,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
             data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput)
             data.lastOutput != null -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
 
-            // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpiints:
+            // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpoints:
             else -> {}
         }
 

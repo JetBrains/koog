@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
 import kotlin.jvm.JvmField
 
 /**
@@ -16,7 +17,6 @@ import kotlin.jvm.JvmField
  * - [Moderation]: Content safety models
  */
 public object MistralAIModels : LLModelDefinitions {
-
     /**
      * Object containing general purpose chat models for conversations and various tasks.
      * Includes both premier and open-source models with different capabilities and sizes.
@@ -244,5 +244,33 @@ public object MistralAIModels : LLModelDefinitions {
             ),
             contextLength = 8_000
         )
+    }
+
+    /**
+     * List of the supported models by the Mistral AI provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        Chat.MistralMedium31,
+        Chat.MistralLarge21,
+        Chat.MistralSmall2,
+        Chat.MagistralMedium12,
+        Chat.Codestral,
+        Chat.DevstralMedium,
+        Embeddings.MistralEmbed,
+        Embeddings.CodestralEmbed,
+        Moderation.MistralModeration
+    )
+
+    /**
+     * List of custom models added to the Mistral AI provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.MistralAI) { "Model provider must be MistralAI" }
+        customModels.add(model)
     }
 }

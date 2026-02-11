@@ -364,6 +364,30 @@ install(MyFeature) {
 
 ## Implementing Custom Features
 
+### Multiple Handlers for the Same Event
+
+Features can register multiple handlers for the same event type. All handlers will be called in the order they were registered:
+
+```kotlin
+override fun install(config: Config, pipeline: AIAgentGraphPipeline): MyFeature {
+    val feature = MyFeature()
+
+    // Register multiple handlers for the same event
+    pipeline.interceptAgentStarting(this) { eventContext ->
+        feature.logger.info("Handler 1: Agent starting")
+    }
+
+    pipeline.interceptAgentStarting(this) { eventContext ->
+        feature.logger.info("Handler 2: Agent starting")
+    }
+
+    // Both handlers will be called in order when the agent starts
+    return feature
+}
+```
+
+This is particularly useful when you need to perform multiple independent operations in response to the same event.
+
 ### Basic Feature Structure
 
 To implement a custom feature, you need to:
@@ -423,7 +447,17 @@ Features can intercept various points in the agent execution pipeline:
    }
    ```
 
-3. **Agent Starting Interception**: Execute code when an agent starts
+3. **Environment Transformation**: Transform the agent environment when it's created
+   ```kotlin
+   pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
+       // Wrap or modify the environment
+       MyCustomEnvironment(delegate = environment)
+   }
+   ```
+
+   Multiple environment transformers can be registered and will be applied in order, with each transformer receiving the result of the previous one.
+
+4. **Agent Starting Interception**: Execute code when an agent starts
    ```kotlin
    val interceptContext = InterceptContext(this, feature)
    pipeline.interceptAgentStarting(interceptContext) { event ->
@@ -432,70 +466,70 @@ Features can intercept various points in the agent execution pipeline:
    }
    ```
 
-4. **Strategy Starting Interception**: Execute code when a strategy starts
+5. **Strategy Starting Interception**: Execute code when a strategy starts
    ```kotlin
    pipeline.interceptStrategyStarting(interceptContext) { event ->
        // Inspect agent or context when strategy starts
    }
    ```
 
-5. **Before Node Execution**: Execute code before a node runs
+6. **Before Node Execution**: Execute code before a node runs
    ```kotlin
    pipeline.interceptNodeExecutionStarting(interceptContext) { event ->
        logger.info("Node ${event.node.name} is about to execute with input: ${event.input}")
    }
    ```
 
-6. **After Node Execution**: Execute code after a node completes
+7. **After Node Execution**: Execute code after a node completes
    ```kotlin
    pipeline.interceptNodeExecutionCompleted(interceptContext) { event ->
        logger.info("Node ${event.node.name} executed with input: ${event.input} and produced output: ${event.output}")
    }
    ```
 
-7. **LLM Call Starting**: Execute code before a call to the language model
+8. **LLM Call Starting**: Execute code before a call to the language model
    ```kotlin
    pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
        logger.info("About to make LLM call with prompt: ${eventContext.prompt.messages.last().content}")
    }
    ```
 
-8. **LLM Call Starting (with tools)**: Tools are available via the event context
+9. **LLM Call Starting (with tools)**: Tools are available via the event context
    ```kotlin
    pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
        logger.info("About to make LLM call with ${eventContext.tools.size} tools")
    }
    ```
 
-9. **LLM Call Completed**: Execute code after a call to the language model
-   ```kotlin
-   pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
-       logger.info("Received LLM responses: ${eventContext.responses}")
-   }
-   ```
+10. **LLM Call Completed**: Execute code after a call to the language model
+    ```kotlin
+    pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+        logger.info("Received LLM responses: ${eventContext.responses}")
+    }
+    ```
 
-10. **LLM Call Completed (with tools)**: Access responses and tools via the event context
+11. **LLM Call Completed (with tools)**: Access responses and tools via the event context
     ```kotlin
     pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
         logger.info("Received ${eventContext.responses.size} responses (tools used: ${eventContext.tools.size})")
     }
     ```
 
-11. **Subgraph Execution Starting**: Execute code before a subgraph runs
+12. **Subgraph Execution Starting**: Execute code before a subgraph runs
     ```kotlin
     pipeline.interceptSubgraphExecutionStarting(interceptContext) { eventContext ->
         logger.info("Subgraph ${eventContext.subgraph.name} is about to execute with input: ${eventContext.input}")
     }
     ```
 
-12. **Subgraph Execution Completed**: Execute code after a subgraph completes
+13. **Subgraph Execution Completed**: Execute code after a subgraph completes
     ```kotlin
     pipeline.interceptSubgraphExecutionCompleted(interceptContext) { eventContext ->
         logger.info("Subgraph ${eventContext.subgraph.name} executed with input: ${eventContext.input} and produced output: ${eventContext.output}")
     }
     ```
 
-13. **Subgraph Execution Failed**: Handle errors when a subgraph execution fails
+14. **Subgraph Execution Failed**: Handle errors when a subgraph execution fails
     ```kotlin
     pipeline.interceptSubgraphExecutionFailed(interceptContext) { eventContext ->
         logger.error("Subgraph ${eventContext.subgraph.name} execution failed with error: ${eventContext.throwable}")

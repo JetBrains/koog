@@ -1,37 +1,28 @@
 <!--
-Thank you for opening a pull request!
+PR title should follow Conventional Commits format:
+  type(scope): description
 
-Please add a brief description of the proposed change here.
-Also, please tick the appropriate points in the checklist below.
+For breaking changes, append ! after type/scope:
+  type(scope)!: description
+
+Examples:
+  feat(agents): add streaming response node
+  fix(prompt): handle null responses in PromptExecutor
+  refactor(agents)!: remove deprecated methods from Tool
+
+See CONTRIBUTING.md for more details
 -->
 
-## Motivation and Context
-<!-- Why is this change needed? What problem does it solve? -->
+Describe what this PR changes and why.
 
-## Breaking Changes
-<!-- Will users need to update their code or configurations? -->
 
----
+<!-- Include BREAKING section below only if this PR introduces breaking changes. Otherwise, delete it. -->
+BREAKING:
+*
 
-#### Type of the changes
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Documentation update
-- [ ] Tests improvement
-- [ ] Refactoring
-- [ ] CI/CD changes
-- [ ] Dependencies update
+<!-- Include DEPRECATED section below only if this PR deprecates any public APIs. Otherwise, delete it. -->
+DEPRECATED:
+*
 
-#### Checklist
-- [ ] The pull request has a description of the proposed change
-- [ ] I read the [Contributing Guidelines](https://github.com/JetBrains/koog/blob/main/CONTRIBUTING.md) before opening the pull request
-- [ ] The pull request uses **`develop`** as the base branch
-- [ ] Tests for the changes have been added
-- [ ] All new and existing tests passed
-
-##### Additional steps for pull requests adding a new feature
-- [ ] An issue describing the proposed change exists
-- [ ] The pull request includes a link to the issue
-- [ ] The change was discussed and approved in the issue
-- [ ] Docs have been added / updated
+<!-- Include references to related issues below, e.g., closes #1, closes KG-1. Otherwise, delete it. -->
+closes

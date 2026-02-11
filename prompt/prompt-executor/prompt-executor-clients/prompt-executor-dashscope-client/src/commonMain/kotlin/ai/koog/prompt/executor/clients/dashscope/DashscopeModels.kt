@@ -160,4 +160,30 @@ public object DashscopeModels : LLModelDefinitions {
         contextLength = 262_144,
         maxOutputTokens = 65_536
     )
+
+    /**
+     * List of the supported models by the Dashscope provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        QWEN_FLASH,
+        QWEN3_OMNI_FLASH,
+        QWEN_PLUS,
+        QWEN_PLUS_LATEST,
+        QWEN3_CODER_PLUS,
+        QWEN3_CODER_FLASH,
+        QWEN3_MAX
+    )
+
+    /**
+     * Custom models added to the Dashscope provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Alibaba) { "Model provider must be Alibaba" }
+        customModels.add(model)
+    }
 }

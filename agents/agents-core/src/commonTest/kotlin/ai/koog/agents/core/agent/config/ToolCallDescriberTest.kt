@@ -7,7 +7,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant.Companion.fromEpochMilliseconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ToolCallDescriberTest {
@@ -162,9 +161,12 @@ class ToolCallDescriberTest {
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        assertFailsWith<Exception> {
-            describer.describeToolCall(invalidJsonToolCall)
-        }
+        val result = describer.describeToolCall(invalidJsonToolCall)
+
+        assertTrue(result.content.contains("\"tool_call_id\":\"test-call-id\""))
+        assertTrue(result.content.contains("\"tool_name\":\"test-tool\""))
+        assertTrue(result.content.contains("\"tool_args_error\":\"Failed to parse tool arguments:"))
+        assertEquals(invalidJsonToolCall.metaInfo, result.metaInfo)
     }
 
     @Test
@@ -227,9 +229,13 @@ class ToolCallDescriberTest {
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        assertFailsWith<IllegalArgumentException> {
-            describer.describeToolCall(nullContentToolCall)
-        }
+        val result = describer.describeToolCall(nullContentToolCall)
+
+        assertTrue(result.content.contains("\"tool_call_id\":\"test-call-id\""))
+        assertTrue(result.content.contains("\"tool_name\":\"test-tool\""))
+        assertTrue(result.content.contains("\"tool_args_error\":\"Failed to parse tool arguments:"))
+        assertTrue(result.content.contains("IllegalArgumentException"))
+        assertEquals(nullContentToolCall.metaInfo, result.metaInfo)
     }
 
     @Test
@@ -281,9 +287,12 @@ class ToolCallDescriberTest {
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        assertFailsWith<Exception> {
-            describer.describeToolCall(nonJsonToolCall)
-        }
+        val result = describer.describeToolCall(nonJsonToolCall)
+
+        assertTrue(result.content.contains("\"tool_call_id\":\"test-call-id\""))
+        assertTrue(result.content.contains("\"tool_name\":\"test-tool\""))
+        assertTrue(result.content.contains("\"tool_args_error\":\"Failed to parse tool arguments:"))
+        assertEquals(nonJsonToolCall.metaInfo, result.metaInfo)
     }
 
     @Test

@@ -68,7 +68,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("Solve task")
+        val result = agent.run("Solve task", null)
 
         assertEquals(3, actualToolCalls.size)
         assertEquals(assistantResponse, result)
@@ -108,7 +108,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("Solve task")
+        val result = agent.run("Solve task", null)
 
         assertEquals(0, actualToolCalls.size)
         assertEquals("Task solved!!", result)
@@ -152,7 +152,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("Solve task")
+        val result = agent.run("Solve task", null)
 
         assertEquals(1, actualToolCalls.size)
         assertEquals("Tools called!", result)
@@ -518,7 +518,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("Solve task")
+        val result = agent.run("Solve task", null)
 
         // Since finish tool calls are handled internally, no external tool executions are expected
         assertEquals(0, actualToolCalls.size)
@@ -597,7 +597,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("input-1")
+        val result = agent.run("input-1", null)
         assertEquals("done-seq", result.value)
         // finish tool is executed internally, so external tool executions list should be empty
         assertEquals(0, actualToolCalls.size)
@@ -645,7 +645,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("seed-X")
+        val result = agent.run("seed-X", null)
         assertEquals("final-from-finish", result.value)
         // Only the normal tool goes through environment, finish tool is internal
         assertEquals(1, actualToolCalls.size)
@@ -720,7 +720,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("input-3")
+        val result = agent.run("input-3", null)
         assertEquals("done-single", result.value)
         assertEquals(0, actualToolCalls.size)
     }
@@ -757,7 +757,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        val result = agent.run("case-A")
+        val result = agent.run("case-A", null)
         assertEquals(true, result.successful)
         assertEquals("OK", result.feedback)
         assertEquals("case-A", result.input)
@@ -782,7 +782,7 @@ class FunctionalAIAgentTest {
             }
         }
 
-        agent.run("Test input")
+        agent.run("Test input", null)
         assertFalse(
             testFeatureMessageProcessor.isOpen.value,
             "Feature processors should be closed after run"

@@ -162,7 +162,7 @@ class AIAgentPipelineJvmTest {
         }.use { agent ->
             agentPipeline = agent.exposedPipeline
             // Run agent to make sure the prepareFeatures() api is called
-            agent.run("test")
+            agent.run("test", null)
         }
 
         // Assert pipeline features

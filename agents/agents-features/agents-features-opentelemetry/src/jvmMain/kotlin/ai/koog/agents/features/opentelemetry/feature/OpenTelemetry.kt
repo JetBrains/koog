@@ -4,23 +4,28 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
+import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
-import ai.koog.agents.features.opentelemetry.metric.LLMCallEnded
-import ai.koog.agents.features.opentelemetry.metric.LLMCallStarted
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
-import ai.koog.agents.features.opentelemetry.metric.ToolCallEnded
-import ai.koog.agents.features.opentelemetry.metric.ToolCallStarted
-import ai.koog.agents.features.opentelemetry.metric.ToolCallStatus
+import ai.koog.agents.features.opentelemetry.metric.events.createExecuteToolDurationHistogramMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDurationHistogramMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMOutputTokensMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createToolCallCounterMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.toMetricEvent
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
 import ai.koog.agents.features.opentelemetry.span.SpanType
@@ -40,6 +45,7 @@ import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.Clock
 import kotlin.reflect.KType
 
 /**
@@ -52,7 +58,9 @@ public class OpenTelemetry {
     /**
      * Companion object implementing agent feature, handling [OpenTelemetry] creation and installation.
      */
-    public companion object Feature : AIAgentGraphFeature<OpenTelemetryConfig, OpenTelemetry> {
+    public companion object Feature :
+        AIAgentGraphFeature<OpenTelemetryConfig, OpenTelemetry>,
+        AIAgentFunctionalFeature<OpenTelemetryConfig, OpenTelemetry> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -64,17 +72,203 @@ public class OpenTelemetry {
 
         override fun install(
             config: OpenTelemetryConfig,
-            pipeline: AIAgentGraphPipeline,
+            pipeline: AIAgentGraphPipeline
         ): OpenTelemetry {
             val openTelemetry = OpenTelemetry()
             val spanCollector = SpanCollector()
             val spanAdapter = config.spanAdapter
+            val tracer = config.tracer
 
+            installCommon(config, pipeline, spanCollector)
+
+            //region Node
+
+            pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry node starting handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val parentSpan = spanCollector.getParentSpanForEvent(
+                    executionInfo = patchedExecutionInfo,
+                ) ?: run {
+                    logger.warn { "Failed to find parent span for node: ${eventContext.node.id}. Path: ${patchedExecutionInfo.path()}" }
+                    return@intercept
+                }
+
+                val nodeInput = nodeDataToString(eventContext.input, eventContext.inputType)
+
+                val nodeExecuteSpan = startNodeExecuteSpan(
+                    tracer = tracer,
+                    parentSpan = parentSpan,
+                    id = eventContext.eventId,
+                    runId = eventContext.context.runId,
+                    nodeId = eventContext.node.id,
+                    nodeInput = nodeInput
+                )
+
+                spanAdapter?.onBeforeSpanStarted(nodeExecuteSpan)
+                spanCollector.collectSpan(
+                    span = nodeExecuteSpan,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry node completed handler" }
+
+                // Find existing span (Node Execute Span)
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val nodeExecuteSpan = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.NODE
+                ) ?: return@intercept
+
+                val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType)
+
+                spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
+                endNodeExecuteSpan(
+                    span = nodeExecuteSpan,
+                    nodeOutput = nodeOutput,
+                    verbose = config.isVerbose
+                )
+                spanCollector.removeSpan(
+                    span = nodeExecuteSpan,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry node execution failed handler" }
+
+                // Find existing span (Node Execute Span)
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val nodeExecuteSpan = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.NODE
+                ) ?: return@intercept
+
+                spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
+                endNodeExecuteSpan(
+                    span = nodeExecuteSpan,
+                    nodeOutput = null,
+                    error = eventContext.throwable,
+                    verbose = config.isVerbose
+                )
+                spanCollector.removeSpan(
+                    span = nodeExecuteSpan,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            //endregion Node
+
+            //region Subgraph
+
+            pipeline.interceptSubgraphExecutionStarting(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry before subgraph handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val parentSpan = spanCollector.getParentSpanForEvent(
+                    executionInfo = patchedExecutionInfo,
+                ) ?: return@intercept
+
+                val subgraphInput = nodeDataToString(eventContext.input, eventContext.inputType)
+
+                val subgraphExecuteSpan = startSubgraphExecuteSpan(
+                    tracer = tracer,
+                    parentSpan = parentSpan,
+                    id = eventContext.eventId,
+                    runId = eventContext.context.runId,
+                    subgraphId = eventContext.subgraph.id,
+                    subgraphInput = subgraphInput
+                )
+
+                spanAdapter?.onBeforeSpanStarted(subgraphExecuteSpan)
+                spanCollector.collectSpan(
+                    span = subgraphExecuteSpan,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            pipeline.interceptSubgraphExecutionCompleted(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry after subgraph handler" }
+
+                // Find the existing span (Subgraph Execute Span)
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val subgraphExecuteSpan = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.SUBGRAPH
+                ) ?: return@intercept
+
+                val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType)
+
+                spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
+                endSubgraphExecuteSpan(
+                    span = subgraphExecuteSpan,
+                    subgraphOutput = subgraphOutput,
+                    verbose = config.isVerbose
+                )
+                spanCollector.removeSpan(
+                    span = subgraphExecuteSpan,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            pipeline.interceptSubgraphExecutionFailed(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry subgraph execution error handler" }
+
+                // Find the existing span (Subgraph Execute Span)
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val subgraphExecuteSpan = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.SUBGRAPH
+                ) ?: return@intercept
+
+                spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
+                endSubgraphExecuteSpan(
+                    span = subgraphExecuteSpan,
+                    subgraphOutput = null,
+                    error = eventContext.throwable,
+                    verbose = config.isVerbose
+                )
+                spanCollector.removeSpan(
+                    span = subgraphExecuteSpan,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            //endregion Subgraph
+
+            return openTelemetry
+        }
+
+        override fun install(
+            config: OpenTelemetryConfig,
+            pipeline: AIAgentFunctionalPipeline
+        ): OpenTelemetry {
+            val openTelemetry = OpenTelemetry()
+            val spanCollector = SpanCollector()
+
+            installCommon(config, pipeline, spanCollector)
+
+            return openTelemetry
+        }
+
+        //region Private Methods
+
+        private fun installCommon(
+            config: OpenTelemetryConfig,
+            pipeline: AIAgentPipeline,
+            spanCollector: SpanCollector,
+        ) {
+            val spanAdapter = config.spanAdapter
             val tracer = config.tracer
             val meter = config.meter
-            val toolNameMapper = config.toolNameMapper
 
-            val metricCollector = MetricCollector(meter, toolNameMapper)
+            val metricCollector = MetricCollector(meter, config)
 
             //region Agent
 
@@ -265,167 +459,6 @@ public class OpenTelemetry {
 
             //endregion Strategy
 
-            //region Node
-
-            pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext ->
-                logger.debug { "Execute OpenTelemetry node starting handler" }
-
-                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
-                val parentSpan = spanCollector.getParentSpanForEvent(
-                    executionInfo = patchedExecutionInfo,
-                ) ?: run {
-                    logger.warn { "Failed to find parent span for node: ${eventContext.node.id}. Path: ${patchedExecutionInfo.path()}" }
-                    return@intercept
-                }
-
-                val nodeInput = nodeDataToString(eventContext.input, eventContext.inputType)
-
-                val nodeExecuteSpan = startNodeExecuteSpan(
-                    tracer = tracer,
-                    parentSpan = parentSpan,
-                    id = eventContext.eventId,
-                    runId = eventContext.context.runId,
-                    nodeId = eventContext.node.id,
-                    nodeInput = nodeInput
-                )
-
-                spanAdapter?.onBeforeSpanStarted(nodeExecuteSpan)
-                spanCollector.collectSpan(
-                    span = nodeExecuteSpan,
-                    path = patchedExecutionInfo
-                )
-            }
-
-            pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext ->
-                logger.debug { "Execute OpenTelemetry node completed handler" }
-
-                // Find existing span (Node Execute Span)
-                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
-                val nodeExecuteSpan = spanCollector.getStartedSpan(
-                    executionInfo = patchedExecutionInfo,
-                    eventId = eventContext.eventId,
-                    spanType = SpanType.NODE
-                ) ?: return@intercept
-
-                val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType)
-
-                spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
-                endNodeExecuteSpan(
-                    span = nodeExecuteSpan,
-                    nodeOutput = nodeOutput,
-                    verbose = config.isVerbose
-                )
-                spanCollector.removeSpan(
-                    span = nodeExecuteSpan,
-                    path = patchedExecutionInfo
-                )
-            }
-
-            pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext ->
-                logger.debug { "Execute OpenTelemetry node execution failed handler" }
-
-                // Find existing span (Node Execute Span)
-                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
-                val nodeExecuteSpan = spanCollector.getStartedSpan(
-                    executionInfo = patchedExecutionInfo,
-                    eventId = eventContext.eventId,
-                    spanType = SpanType.NODE
-                ) ?: return@intercept
-
-                spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
-                endNodeExecuteSpan(
-                    span = nodeExecuteSpan,
-                    nodeOutput = null,
-                    error = eventContext.throwable,
-                    verbose = config.isVerbose
-                )
-                spanCollector.removeSpan(
-                    span = nodeExecuteSpan,
-                    path = patchedExecutionInfo
-                )
-            }
-
-            //endregion Node
-
-            //region Subgraph
-
-            pipeline.interceptSubgraphExecutionStarting(this) intercept@{ eventContext ->
-                logger.debug { "Execute OpenTelemetry before subgraph handler" }
-
-                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
-                val parentSpan = spanCollector.getParentSpanForEvent(
-                    executionInfo = patchedExecutionInfo,
-                ) ?: return@intercept
-
-                val subgraphInput = nodeDataToString(eventContext.input, eventContext.inputType)
-
-                val subgraphExecuteSpan = startSubgraphExecuteSpan(
-                    tracer = tracer,
-                    parentSpan = parentSpan,
-                    id = eventContext.eventId,
-                    runId = eventContext.context.runId,
-                    subgraphId = eventContext.subgraph.id,
-                    subgraphInput = subgraphInput
-                )
-
-                spanAdapter?.onBeforeSpanStarted(subgraphExecuteSpan)
-                spanCollector.collectSpan(
-                    span = subgraphExecuteSpan,
-                    path = patchedExecutionInfo
-                )
-            }
-
-            pipeline.interceptSubgraphExecutionCompleted(this) intercept@{ eventContext ->
-                logger.debug { "Execute OpenTelemetry after subgraph handler" }
-
-                // Find the existing span (Subgraph Execute Span)
-                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
-                val subgraphExecuteSpan = spanCollector.getStartedSpan(
-                    executionInfo = patchedExecutionInfo,
-                    eventId = eventContext.eventId,
-                    spanType = SpanType.SUBGRAPH
-                ) ?: return@intercept
-
-                val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType)
-
-                spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
-                endSubgraphExecuteSpan(
-                    span = subgraphExecuteSpan,
-                    subgraphOutput = subgraphOutput,
-                    verbose = config.isVerbose
-                )
-                spanCollector.removeSpan(
-                    span = subgraphExecuteSpan,
-                    path = patchedExecutionInfo
-                )
-            }
-
-            pipeline.interceptSubgraphExecutionFailed(this) intercept@{ eventContext ->
-                logger.debug { "Execute OpenTelemetry subgraph execution error handler" }
-
-                // Find the existing span (Subgraph Execute Span)
-                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
-                val subgraphExecuteSpan = spanCollector.getStartedSpan(
-                    executionInfo = patchedExecutionInfo,
-                    eventId = eventContext.eventId,
-                    spanType = SpanType.SUBGRAPH
-                ) ?: return@intercept
-
-                spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
-                endSubgraphExecuteSpan(
-                    span = subgraphExecuteSpan,
-                    subgraphOutput = null,
-                    error = eventContext.throwable,
-                    verbose = config.isVerbose
-                )
-                spanCollector.removeSpan(
-                    span = subgraphExecuteSpan,
-                    path = patchedExecutionInfo
-                )
-            }
-
-            //endregion Subgraph
-
             //region LLM Call
 
             pipeline.interceptLLMCallStarting(this) intercept@{ eventContext ->
@@ -470,7 +503,7 @@ public class OpenTelemetry {
                         }
 
                         is Message.Tool.Call -> {
-                            ChoiceEvent(provider, message, arguments = message.contentJson)
+                            ChoiceEvent(provider, message, arguments = message.contentJsonResult.getOrNull())
                         }
 
                         is Message.Tool.Result -> {
@@ -492,15 +525,8 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                metricCollector.recordEvent(
-                    LLMCallStarted(
-                        id = eventContext.eventId,
-                        timestamp = System.currentTimeMillis(),
-                        model = eventContext.model,
-                        modelProvider = eventContext.model.provider
-                    ),
-                    config.isVerbose
-                )
+                // Metrics
+                metricCollector.storeMetricEvent(eventContext.toMetricEvent())
             }
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
@@ -528,7 +554,7 @@ public class OpenTelemetry {
                             }
 
                             is Message.Tool.Call -> {
-                                add(ChoiceEvent(provider, message, arguments = message.contentJson, index = index))
+                                add(ChoiceEvent(provider, message, arguments = message.contentJsonResult.getOrNull(), index = index))
                             }
                         }
                     }
@@ -568,17 +594,36 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                metricCollector.recordEvent(
-                    LLMCallEnded(
-                        id = eventContext.eventId,
-                        timestamp = System.currentTimeMillis(),
-                        model = eventContext.model,
-                        modelProvider = eventContext.model.provider,
-                        inputTokenSpend = eventContext.responses.lastOrNull()?.metaInfo?.inputTokensCount?.toLong(),
-                        outputTokenSpend = eventContext.responses.lastOrNull()?.metaInfo?.outputTokensCount?.toLong()
-                    ),
-                    config.isVerbose
-                )
+                eventContext.responses.lastOrNull()?.metaInfo?.inputTokensCount?.toLong()?.let { inputTokens ->
+                    metricCollector.addCounterMetricEvent(
+                        metricEvent = createLLMInputTokensMetricEvent(
+                            id = eventContext.eventId,
+                            model = eventContext.model,
+                            inputTokens = inputTokens,
+                        )
+                    )
+                }
+
+                eventContext.responses.lastOrNull()?.metaInfo?.outputTokensCount?.toLong()?.let { outputTokens ->
+                    metricCollector.addCounterMetricEvent(
+                        metricEvent = createLLMOutputTokensMetricEvent(
+                            id = eventContext.eventId,
+                            model = eventContext.model,
+                            outputTokens = outputTokens,
+                        )
+                    )
+                }
+
+                // Metrics
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createLLMCallDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            model = eventContext.model,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp
+                        )
+                    )
+                }
             }
 
             //endregion LLM Call
@@ -609,14 +654,8 @@ public class OpenTelemetry {
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, patchedExecutionInfo)
 
-                metricCollector.recordEvent(
-                    ToolCallStarted(
-                        id = eventContext.eventId,
-                        timestamp = System.currentTimeMillis(),
-                        toolName = eventContext.toolName
-                    ),
-                    config.isVerbose
-                )
+                // Metrics
+                metricCollector.storeMetricEvent(eventContext.toMetricEvent())
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
@@ -653,15 +692,25 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                metricCollector.recordEvent(
-                    ToolCallEnded(
+                // Metrics
+                metricCollector.addCounterMetricEvent(
+                    metricEvent = createToolCallCounterMetricEvent(
                         id = eventContext.eventId,
-                        timestamp = System.currentTimeMillis(),
                         toolName = eventContext.toolName,
-                        status = ToolCallStatus.SUCCESS
-                    ),
-                    config.isVerbose
+                        toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
+                    )
                 )
+
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createExecuteToolDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            toolName = eventContext.toolName,
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                        )
+                    )
+                }
             }
 
             pipeline.interceptToolCallFailed(this) intercept@{ eventContext ->
@@ -703,15 +752,25 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                metricCollector.recordEvent(
-                    ToolCallEnded(
+                // Metrics
+                metricCollector.addCounterMetricEvent(
+                    metricEvent = createToolCallCounterMetricEvent(
                         id = eventContext.eventId,
-                        timestamp = System.currentTimeMillis(),
                         toolName = eventContext.toolName,
-                        status = ToolCallStatus.FAILED
-                    ),
-                    config.isVerbose
+                        toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR
+                    )
                 )
+
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createExecuteToolDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            toolName = eventContext.toolName,
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                        )
+                    )
+                }
             }
 
             pipeline.interceptToolValidationFailed(this) intercept@{ eventContext ->
@@ -752,23 +811,29 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                metricCollector.recordEvent(
-                    ToolCallEnded(
+                // Metrics
+                metricCollector.addCounterMetricEvent(
+                    metricEvent = createToolCallCounterMetricEvent(
                         id = eventContext.eventId,
-                        timestamp = System.currentTimeMillis(),
                         toolName = eventContext.toolName,
-                        status = ToolCallStatus.VALIDATION_FAILED
-                    ),
-                    config.isVerbose
+                        toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                    )
                 )
+
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createExecuteToolDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            toolName = eventContext.toolName,
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                        )
+                    )
+                }
             }
 
             //endregion Tool Call
-
-            return openTelemetry
         }
-
-        //region Private Methods
 
         /**
          * Retrieves the [String] representation of the given data based on its type.

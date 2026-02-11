@@ -52,7 +52,7 @@ class ParallelNodesMergeContextTest {
             }
         )
 
-        return agent.run("")
+        return agent.run("", null)
     }
 
     @Test

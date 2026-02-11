@@ -61,7 +61,7 @@ class AIAgentNodesTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("")
+            agent.run("", null)
         }
 
         // After compression, we should have one result
@@ -126,7 +126,7 @@ class AIAgentNodesTest {
             }
         }.use { agent ->
 
-            val executionResult = agent.run("Heeeey")
+            val executionResult = agent.run("Heeeey", null)
 
             assertEquals("Done", executionResult, "Agent execution should return 'Done'")
             assertEquals(1, results.size, "Should have exactly one result")

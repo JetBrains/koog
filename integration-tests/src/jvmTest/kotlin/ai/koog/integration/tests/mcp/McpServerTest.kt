@@ -11,7 +11,7 @@ import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -35,8 +35,6 @@ class McpServerTest {
         @JvmStatic
         fun getModels() = listOf(
             OpenAIModels.Chat.GPT4o,
-            // Enable when fixed: KG-588 singleRunStrategy outputs empty response when using an MCP server
-            // GoogleModels.Gemini2_5FlashLite
         )
     }
 
@@ -71,7 +69,7 @@ class McpServerTest {
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(40.seconds) {
                     AIAgent(
-                        promptExecutor = SingleLLMPromptExecutor(getLLMClientForProvider(model.provider)),
+                        promptExecutor = MultiLLMPromptExecutor(getLLMClientForProvider(model.provider)),
                         strategy = singleRunStrategy(),
                         llmModel = model,
                         toolRegistry = toolRegistry,

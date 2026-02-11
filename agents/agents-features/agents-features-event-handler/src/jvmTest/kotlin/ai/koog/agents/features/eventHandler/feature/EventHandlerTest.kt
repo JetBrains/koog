@@ -53,7 +53,7 @@ class EventHandlerTest {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
         ).use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val runId = eventsCollector.runId
@@ -113,7 +113,7 @@ class EventHandlerTest {
         )
 
         val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
+        agent.run(agentInput, null)
         agent.close()
 
         val runId = eventsCollector.runId
@@ -203,7 +203,7 @@ class EventHandlerTest {
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            agent.run(userPrompt)
+            agent.run(userPrompt, null)
         }
 
         val runId = eventsCollector.runId
@@ -322,7 +322,7 @@ class EventHandlerTest {
         )
 
         val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
+        agent.run(agentInput, null)
         agent.close()
 
         val runId = eventsCollector.runId
@@ -405,7 +405,7 @@ class EventHandlerTest {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
         ).use { agent ->
-            val throwable = assertThrows<IllegalStateException> { agent.run(agentInput) }
+            val throwable = assertThrows<IllegalStateException> { agent.run(agentInput, null) }
             assertEquals(testErrorMessage, throwable.message)
         }
 
@@ -466,7 +466,7 @@ class EventHandlerTest {
         )
 
         val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
+        agent.run(agentInput, null)
 
         val expectedEvents = listOf(
             "OnAgentStarting first (agent id: ${agent.id})",
@@ -545,7 +545,7 @@ class EventHandlerTest {
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            agent.run("")
+            agent.run("", null)
         }
 
         val runId = eventsCollector.runId
@@ -630,7 +630,7 @@ class EventHandlerTest {
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            val throwable = assertThrows<IllegalStateException> { agent.run("") }
+            val throwable = assertThrows<IllegalStateException> { agent.run("", null) }
             assertEquals(testStreamingErrorMessage, throwable.message)
         }
 
@@ -683,7 +683,7 @@ class EventHandlerTest {
                 }
             }
         ).use { agent ->
-            agent.run(inputRequest)
+            agent.run(inputRequest, null)
         }
 
         val runId = eventsCollector.runId
@@ -728,7 +728,7 @@ class EventHandlerTest {
                 }
             }
         ).use { agent ->
-            assertFails { agent.run(inputRequest) }
+            assertFails { agent.run(inputRequest, null) }
         }
 
         assertEquals(subgraphNodeErrorMessage, agentThrowable.message)

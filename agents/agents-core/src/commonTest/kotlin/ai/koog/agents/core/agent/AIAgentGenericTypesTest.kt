@@ -11,6 +11,7 @@ import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AIAgentGenericTypesTest {
@@ -47,7 +48,7 @@ class AIAgentGenericTypesTest {
             )
         )
 
-        val result = agent.run(CustomInput(query = "What is the capital of France?"))
+        val result = agent.run(CustomInput(query = "What is the capital of France?"), null)
 
         assertEquals(mockResponse, result.result)
         assertEquals(0.95, result.confidence)
@@ -101,10 +102,10 @@ class AIAgentGenericTypesTest {
             )
         )
 
-        val resultEven = evenAgent.run(42)
-        val resultOdd = oddAgent.run(43)
+        val resultEven = evenAgent.run(42, null)
+        val resultOdd = oddAgent.run(43, null)
 
         assertTrue(resultEven)
-        assertTrue(!resultOdd)
+        assertFalse(resultOdd)
     }
 }

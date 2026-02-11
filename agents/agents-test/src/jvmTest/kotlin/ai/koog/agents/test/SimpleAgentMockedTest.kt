@@ -196,7 +196,7 @@ class SimpleAgentMockedTest {
             }
         )
 
-        agent.run("Write a Kotlin function to calculate factorial.")
+        agent.run("Write a Kotlin function to calculate factorial.", null)
 
         assertTrue(succeedToolCalls.isNotEmpty(), "No tools were called")
         assertTrue(succeedToolCalls.contains(SayToUser.name), "The ${SayToUser.name} tool was not called")
@@ -227,7 +227,7 @@ class SimpleAgentMockedTest {
         // Calling a non-existent tool returns an observation with an error
         // instead of throwing an exception, allowing the agent to handle it gracefully
         try {
-            agent.run(errorTrigger)
+            agent.run(errorTrigger, null)
         } catch (e: Throwable) {
             errors.add(e.toAgentError())
         }
@@ -269,7 +269,7 @@ class SimpleAgentMockedTest {
         )
 
         try {
-            agent.run(errorTrigger)
+            agent.run(errorTrigger, null)
         } catch (e: Throwable) {
             errors.add(e.toAgentError())
         }
@@ -347,7 +347,7 @@ class SimpleAgentMockedTest {
         )
 
         try {
-            agent.run("Make the agent loop.")
+            agent.run("Make the agent loop.", null)
         } catch (e: Throwable) {
             errors.add(e.toAgentError())
         }

@@ -1,104 +1,103 @@
 package ai.koog.agents.features.opentelemetry.metric
 
-import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
-import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
-import ai.koog.agents.features.opentelemetry.extension.getPositiveDurationSec
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.api.metrics.DoubleHistogram
+import io.opentelemetry.api.metrics.LongCounter
 import io.opentelemetry.api.metrics.Meter
+import java.util.concurrent.ConcurrentHashMap
 
-internal class MetricCollector(meter: Meter, private val toolNameMapper: ToolNameMapper) {
-    private val metricEventStorage = MetricEventStorage()
+internal class MetricCollector(private val meter: Meter, private val config: OpenTelemetryConfig) {
 
-    private val toolCallsCounter = createToolCallCounter(meter)
-    private val tokensCounter = createTokenCounter(meter)
-    private val operationDurationHistogram = createOperationDurationHistogram(meter)
+    private val counters = ConcurrentHashMap<String, LongCounter>()
+
+    private val histograms = ConcurrentHashMap<String, DoubleHistogram>()
+
+    private val metricEvents = ConcurrentHashMap<String, MetricEvent>()
 
     companion object {
         private val logger = KotlinLogging.logger { }
     }
 
-    internal fun recordEvent(metricEvent: MetricEvent, isVerbose: Boolean) = when (metricEvent) {
-        is LLMCallStarted -> handleLlmCallStarted(metricEvent)
-        is LLMCallEnded -> handleLlmCallEnded(metricEvent, isVerbose)
-        is ToolCallStarted -> handleToolCallStarted(metricEvent)
-        is ToolCallEnded -> handleToolCallEnded(metricEvent, isVerbose)
-        else -> {
-            logger.warn { "Unknown metric event type: ${metricEvent::class.simpleName}" }
+    init {
+        MetricFactory.createTokenCounterMetric().let {
+            counters[it.name] = addCounterMetric(it)
+        }
+
+        MetricFactory.createToolCallCounterMetric().let {
+            counters[it.name] = addCounterMetric(it)
+        }
+
+        MetricFactory.createOperationDurationHistogramMetric().let {
+            histograms[it.name] = addHistogramMetric(it)
         }
     }
 
-    private fun handleLlmCallStarted(metricEvent: LLMCallStarted) {
-        metricEventStorage.startEvent(metricEvent)
+    fun addCounterMetric(metric: CounterMetric): LongCounter {
+        val counter = meter.counterBuilder(metric.name)
+            .setDescription(metric.description)
+            .setUnit(metric.unit)
+            .build()
+            .also { it.add(0) }
+
+        counters[metric.name] = counter
+
+        return counter
     }
 
-    private fun handleLlmCallEnded(metricEvent: LLMCallEnded, isVerbose: Boolean) =
-        metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
-            val inputTokenSpend = endedEvent.inputTokenSpend
-            val outputTokenSpend = endedEvent.outputTokenSpend
+    fun addHistogramMetric(metric: HistogramMetric): DoubleHistogram {
+        val counter = meter
+            .histogramBuilder(metric.name)
+            .setDescription(metric.description)
+            .setUnit(metric.unit)
+            .setExplicitBucketBoundariesAdvice(metric.boundariesAdvice)
+            .build()
 
-            inputTokenSpend?.let { inputTokens ->
-                tokensCounter.add(
-                    inputTokens,
-                    listOf(
-                        GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
-                        GenAIAttributes.Provider.Name(metricEvent.modelProvider),
-                        GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT),
-                        GenAIAttributes.Response.Model(metricEvent.model)
-                    ).toSdkAttributes(isVerbose)
-                )
-            }
-            outputTokenSpend?.let { outputTokens ->
-                tokensCounter.add(
-                    outputTokens,
-                    listOf(
-                        GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
-                        GenAIAttributes.Provider.Name(metricEvent.modelProvider),
-                        GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT),
-                        GenAIAttributes.Response.Model(metricEvent.model)
-                    ).toSdkAttributes(isVerbose)
-                )
-            }
-            operationDurationHistogram.record(
-                startedEvent.getPositiveDurationSec(endedEvent),
-                listOf(
-                    GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
-                    GenAIAttributes.Provider.Name(metricEvent.modelProvider),
-                    GenAIAttributes.Response.Model(metricEvent.model)
-                ).toSdkAttributes(isVerbose)
-            )
-        }
+        histograms[metric.name] = counter
 
-    private fun handleToolCallStarted(metricEvent: ToolCallStarted) {
-        metricEventStorage.startEvent(metricEvent)
+        return counter
     }
 
-    private fun handleToolCallEnded(metricEvent: ToolCallEnded, isVerbose: Boolean) =
-        metricEventStorage.endEvent(metricEvent)?.let { (startedEvent, endedEvent) ->
-            val toolName = toolNameMapper.map(metricEvent.toolName)
+    internal fun storeMetricEvent(metricEvent: MetricEvent) {
+        val result = metricEvents.putIfAbsent(metricEvent.id, metricEvent)
 
-            val status = when (metricEvent.status) {
-                ToolCallStatus.VALIDATION_FAILED -> KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
-                ToolCallStatus.SUCCESS -> KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
-                ToolCallStatus.FAILED -> KoogAttributes.Koog.Tool.Call.StatusType.ERROR
-            }
-
-            operationDurationHistogram.record(
-                startedEvent.getPositiveDurationSec(endedEvent),
-                listOf(
-                    GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
-                    GenAIAttributes.Tool.Name(toolName),
-                    KoogAttributes.Koog.Tool.Call.Status(status)
-                ).toSdkAttributes(isVerbose)
-            )
-
-            toolCallsCounter.add(
-                1,
-                listOf(
-                    GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
-                    GenAIAttributes.Tool.Name(toolName),
-                    KoogAttributes.Koog.Tool.Call.Status(status)
-                ).toSdkAttributes(isVerbose)
-            )
+        if (result == null) {
+            logger.warn { "Metric event (id: ${metricEvent.id}) is already stored. Unable to store event with the same id." }
         }
+    }
+
+    internal fun getMetricEvent(id: String): MetricEvent? {
+        return metricEvents.remove(id)
+    }
+
+    internal fun addCounterMetricEvent(metricEvent: CounterMetricEvent) {
+        val updatedMetricEvent = config.metricAdapter?.process(metricEvent) ?: metricEvent
+
+        val metric = counters[updatedMetricEvent.metricName]
+        if (metric == null) {
+            logger.warn { "Counter metric (name: ${metricEvent.metricName}) not found. Please make sure you register the counter metric before usage." }
+            return
+        }
+
+        metric.add(
+            updatedMetricEvent.value,
+            updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
+        )
+    }
+
+    internal fun recordHistogramMetricEvent(metricEvent: HistogramMetricEvent) {
+        val updatedMetricEvent = config.metricAdapter?.process(metricEvent) ?: metricEvent
+
+        val metric = histograms[updatedMetricEvent.metricName]
+        if (metric == null) {
+            logger.warn { "Histogram metric (name: ${metricEvent.metricName}) not found. Please make sure you register the histogram metric before usage." }
+            return
+        }
+
+        metric.record(
+            updatedMetricEvent.value,
+            updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
+        )
+    }
 }

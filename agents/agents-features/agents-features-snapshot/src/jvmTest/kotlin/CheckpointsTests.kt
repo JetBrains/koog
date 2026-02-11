@@ -338,9 +338,10 @@ class CheckpointsTests {
 
         val agent = agentService.createAgent()
 
+        val session = agent.createSession()
         val agentResult = async {
             println("agent.run()")
-            agent.run("Input")
+            session.run("Input")
         }
 
         println("before second launch")
@@ -356,7 +357,7 @@ class CheckpointsTests {
             assertContains(databaseMap, "user-2")
             assertContains(databaseMap, "user-3")
 
-            agent.withPersistence { agent ->
+            session.withPersistence { agent ->
                 println("ctx outside: $this")
                 println("ctx outside [hash]: ${this.hashCode()}")
                 rollbackToCheckpoint("ckpt-1", agent)
@@ -383,12 +384,12 @@ class CheckpointsTests {
     fun testRestoreFromSingleCheckpoint() = runTest {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val time = Clock.System.now()
-        val agentId = "testAgentId"
+        val convId = "testAgentId"
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(agentId, "straight-forward", "Node2"),
+            nodePath = path(convId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -397,21 +398,20 @@ class CheckpointsTests {
             version = 0
         )
 
-        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
+        checkpointStorageProvider.saveCheckpoint(convId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
-            id = agentId
         ) {
             install(Persistence) {
                 storage = checkpointStorageProvider
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", convId)
 
         assertEquals(
             "History: User message\n" +
@@ -425,12 +425,12 @@ class CheckpointsTests {
     fun testRestoreFromLatestCheckpoint() = runTest {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val time = Clock.System.now()
-        val agentId = "testAgentId"
+        val sessionId = "testAgentId"
 
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(agentId, "straight-forward", "Node1"),
+            nodePath = path(sessionId, "straight-forward", "Node1"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -442,7 +442,7 @@ class CheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(agentId, "straight-forward", "Node2"),
+            nodePath = path(sessionId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -451,22 +451,21 @@ class CheckpointsTests {
             version = testCheckpoint2.version + 1
         )
 
-        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint2)
-        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
+        checkpointStorageProvider.saveCheckpoint(sessionId, testCheckpoint2)
+        checkpointStorageProvider.saveCheckpoint(sessionId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
-            id = agentId
         ) {
             install(Persistence) {
                 storage = checkpointStorageProvider
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", sessionId = sessionId)
 
         assertEquals(
             "History: User message\n" +
@@ -595,7 +594,7 @@ class CheckpointsTests {
 
         val tracer = TestTracer()
 
-        val agentService: GraphAIAgentService<String, String> = AIAgentService(
+        val agent = AIAgent(
             promptExecutor = getMockExecutor {
                 mockLLMToolCall(askQuestion, "Is the Earth a sphere?") onRequestEquals "Test my Earth knowledge"
                 mockLLMToolCall(askQuestion, "Why?") onRequestEquals "Yes"
@@ -634,12 +633,11 @@ class CheckpointsTests {
             }
         }
 
-        val agent = agentService.createAgent()
-
         println("Running agent first time")
 
+        val convId = "my-conv-id"
         val output = runCatching {
-            agent.run("Test my Earth knowledge")
+            agent.run("Test my Earth knowledge", sessionId = convId)
         }.getOrElse { it.message }
 
         println("Finished first run")
@@ -680,7 +678,7 @@ class CheckpointsTests {
             tracer.traceAsString().trimIndent()
         )
 
-        val lastCheckpoint = checkpointStorage.getLatestCheckpoint(agent.id)!!
+        val lastCheckpoint = checkpointStorage.getLatestCheckpoint(convId)!!
         val lastMessageHistory = lastCheckpoint.messageHistory.joinToString("\n") { msg ->
             when (msg) {
                 is Message.System -> "- system: ${msg.content}"
@@ -719,7 +717,7 @@ class CheckpointsTests {
         isFirstRun = false
         tracer.clear()
 
-        val output2 = agentService.createAgentAndRun("Test my Earth knowledge", id = agent.id)
+        val output2 = agent.run("Test my Earth knowledge", convId)
 
         println("Finished second run")
 
@@ -760,6 +758,7 @@ class CheckpointsTests {
             tool(askQuestion)
         }
 
+        val convId = "my-conv-id"
         var counter = 0
         var isFirstRun = true
 
@@ -769,7 +768,7 @@ class CheckpointsTests {
 
         val tracer = TestTracer()
 
-        val agentService: GraphAIAgentService<String, String> = AIAgentService(
+        val agent = AIAgent(
             promptExecutor = getMockExecutor {
                 mockLLMToolCall(askQuestion, "Is the Earth a sphere?") onRequestEquals "Test my Earth knowledge"
                 mockLLMToolCall(askQuestion, "Why?") onRequestEquals "Yes"
@@ -808,12 +807,10 @@ class CheckpointsTests {
             }
         }
 
-        val agent = agentService.createAgent()
-
         println("Running agent first time")
 
         val output = runCatching {
-            agent.run("Test my Earth knowledge")
+            agent.run("Test my Earth knowledge", sessionId = convId)
         }.getOrElse { it.message }
 
         println("Finished first run")
@@ -854,7 +851,7 @@ class CheckpointsTests {
             tracer.traceAsString().trimIndent()
         )
 
-        val lastCheckpoint = checkpointStorage.getLatestCheckpoint(agent.id)!!
+        val lastCheckpoint = checkpointStorage.getLatestCheckpoint(convId)!!
         val lastMessageHistory = lastCheckpoint.messageHistory.joinToString("\n") { msg ->
             when (msg) {
                 is Message.System -> "- system: ${msg.content}"
@@ -912,7 +909,7 @@ class CheckpointsTests {
         isFirstRun = false
         tracer.clear()
 
-        val output2 = agentService.createAgentAndRun("Test my Earth knowledge", id = agent.id)
+        val output2 = agent.run("Test my Earth knowledge", sessionId = agent.id)
 
         println("Finished second run")
 

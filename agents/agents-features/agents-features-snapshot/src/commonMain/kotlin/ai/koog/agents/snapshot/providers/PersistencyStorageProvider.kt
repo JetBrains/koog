@@ -19,28 +19,28 @@ public typealias PersistencyStorageProvider<Filter> = PersistenceStorageProvider
 public interface PersistenceStorageProvider<Filter> {
 
     /**
-     * Retrieves the list of checkpoints of the AI agent with the given [agentId]
+     * Retrieves the list of checkpoints of the AI agent with the given [sessionId]
      * */
-    public suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> =
-        getCheckpoints(agentId, null)
+    public suspend fun getCheckpoints(sessionId: String): List<AgentCheckpointData> =
+        getCheckpoints(sessionId, null)
 
     /**
-     * Retrieves the list of checkpoints of the AI agent with the given [agentId] that match the provided [filter]
+     * Retrieves the list of checkpoints of the AI agent with the given [sessionId] that match the provided [filter]
      * */
-    public suspend fun getCheckpoints(agentId: String, filter: Filter?): List<AgentCheckpointData>
+    public suspend fun getCheckpoints(sessionId: String, filter: Filter?): List<AgentCheckpointData>
 
     /**
-     * Saves provided checkpoint ([agentCheckpointData]) of the agent with [agentId] to the storage (ex: database, S3, file)
+     * Saves provided checkpoint ([agentCheckpointData]) of the agent with [sessionId] to the storage (ex: database, S3, file)
      * */
-    public suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData)
+    public suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData)
 
     /**
-     * Retrieves the latest checkpoint of the AI agent with [agentId]
+     * Retrieves the latest checkpoint of the AI agent with [sessionId]
      * */
-    public suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? = getLatestCheckpoint(agentId, null)
+    public suspend fun getLatestCheckpoint(sessionId: String): AgentCheckpointData? = getLatestCheckpoint(sessionId, null)
 
     /**
-     * Retrieves the latest checkpoint of the AI agent with [agentId] matching the provided [filter]
+     * Retrieves the latest checkpoint of the AI agent with [sessionId] matching the provided [filter]
      * */
-    public suspend fun getLatestCheckpoint(agentId: String, filter: Filter?): AgentCheckpointData?
+    public suspend fun getLatestCheckpoint(sessionId: String, filter: Filter?): AgentCheckpointData?
 }

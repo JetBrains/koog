@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.anthropic
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.list
 import ai.koog.prompt.llm.LLMProvider
+import io.kotest.matchers.collections.shouldContain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -55,5 +56,18 @@ class AnthropicModelsTest {
             )
         }
         assertEquals("maxTokens must be greater than 0, but was 0", exception.message)
+    }
+
+    @Test
+    fun `AnthropicModels models should return all declared models`() {
+        val reflectionModels = AnthropicModels.list().map { it.id }
+
+        val models = AnthropicModels.models.map { it.id }
+
+        assert(models.size == reflectionModels.size)
+
+        reflectionModels.forEach { model ->
+            models shouldContain model
+        }
     }
 }

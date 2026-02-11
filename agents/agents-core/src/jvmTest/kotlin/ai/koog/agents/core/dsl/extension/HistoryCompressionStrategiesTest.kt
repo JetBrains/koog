@@ -380,7 +380,7 @@ class HistoryCompressionStrategiesTest {
             toolRegistry = createToolRegistry()
         )
 
-        val resultMessages = agent.run("User input")
+        val resultMessages = agent.run("User input", null)
 
         assert(resultMessages.size == compressedMessages.size)
         resultMessages.forEachIndexed { index, message ->

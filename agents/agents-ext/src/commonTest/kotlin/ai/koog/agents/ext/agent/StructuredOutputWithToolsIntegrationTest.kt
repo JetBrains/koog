@@ -173,7 +173,7 @@ class StructuredOutputWithToolsIntegrationTest {
         }
 
         val request = WeatherRequest(city = "New York", country = "USA")
-        val result = agent.run(request)
+        val result = agent.run(request, null)
 
         assertNotNull(result)
         assertEquals(22, result.temperature)
@@ -245,7 +245,7 @@ class StructuredOutputWithToolsIntegrationTest {
         }
 
         val request = WeatherRequest(city = "London", country = "UK")
-        val result = agent.run(request)
+        val result = agent.run(request, null)
 
         assertNotNull(result)
         assertEquals(18, result.temperature)
@@ -298,7 +298,7 @@ class StructuredOutputWithToolsIntegrationTest {
         )
 
         val request = WeatherRequest(city = "Paris", country = "France")
-        val result = agent.run(request)
+        val result = agent.run(request, null)
 
         assertNotNull(result)
         assertEquals(25, result.temperature)

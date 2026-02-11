@@ -2,13 +2,18 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.serializer
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
@@ -109,6 +114,15 @@ class SafeToolTest {
         }
     }
 
+    private object StringEchoTool : Tool<String, String>(
+        argsSerializer = String.serializer(),
+        resultSerializer = String.serializer(),
+        name = "string_echo",
+        description = "String echo tool"
+    ) {
+        override suspend fun execute(args: String): String = args
+    }
+
     @Test
     fun testExecuteSuccess() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
@@ -143,6 +157,26 @@ class SafeToolTest {
         val result = safeTool.executeRaw("test", 123)
 
         assertEquals("Raw result content", result)
+    }
+
+    @Test
+    fun testDecodeFailureReturnsFailure() {
+        val badResult = buildJsonObject {
+            put("value", "not-a-string-result")
+        }
+
+        val toolResult = ReceivedToolResult(
+            id = "1",
+            tool = StringEchoTool.name,
+            toolArgs = JsonObject(emptyMap()),
+            toolDescription = null,
+            content = "Bad result",
+            resultKind = ToolResultKind.Success,
+            result = badResult
+        )
+
+        val safeResult = toolResult.toSafeResult(StringEchoTool)
+        assertTrue(safeResult.isFailure())
     }
 
     @Test

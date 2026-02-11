@@ -11,12 +11,15 @@ import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.environment.toSafeResult
+import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -28,7 +31,9 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
 /**
@@ -491,7 +496,12 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
     val nodeDecide by node<List<Message.Response>, List<Message.Response>> { it }
 
-    val nodeCallLLM by nodeLLMRequestMultiple()
+    val nodeCallLLMDelegate = if (runMode == ToolCalls.SINGLE_RUN_SEQUENTIAL) {
+        nodeLLMRequest().transform { listOf(it) }
+    } else {
+        nodeLLMRequestMultiple()
+    }
+    val nodeCallLLM by nodeCallLLMDelegate
 
     val callToolsHacked by node<List<Message.Tool.Call>, List<ReceivedToolResult>> { toolCalls ->
         val (finishToolCalls, regularToolCalls) = toolCalls.partition { it.tool == finishTool.name }
@@ -521,11 +531,9 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
         }
     }
 
-    val sendToolsResults by nodeLLMSendMultipleToolResults()
-
     @OptIn(DetachedPromptExecutorAPI::class)
     val handleAssistantMessage by node<Message.Assistant, List<Message.Response>> { response ->
-        if (llm.model.capabilities.contains(LLMCapability.ToolChoice)) {
+        if (llm.model.supports(LLMCapability.ToolChoice)) {
             error(
                 "Subgraph with task must always call tools, but no ${Message.Tool.Call::class.simpleName} was generated, " +
                     "got instead: ${response::class.simpleName}"
@@ -586,13 +594,18 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
     edge(
         callToolsHacked forwardTo finalizeTask
-            onCondition { toolResults -> toolResults.firstOrNull()?.let { it.tool == finishTool.name } == true }
+            onCondition { toolResults -> toolResults.firstOrNull()?.let { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success } == true }
             transformed { toolsResults -> toolsResults.first() }
     )
 
-    edge(callToolsHacked forwardTo sendToolsResults)
-
-    edge(sendToolsResults forwardTo nodeDecide)
+    if (runMode == ToolCalls.SINGLE_RUN_SEQUENTIAL) {
+        val sendToolResult by nodeLLMSendToolResult()
+        edge(callToolsHacked forwardTo sendToolResult transformed { it.first() })
+        edge(sendToolResult forwardTo nodeDecide transformed { listOf(it) })
+    } else {
+        val sendToolsResults by nodeLLMSendMultipleToolResults()
+        callToolsHacked then sendToolsResults then nodeDecide
+    }
 
     edge(finalizeTask forwardTo nodeFinish)
 }
@@ -603,11 +616,26 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
     toolCall: Message.Tool.Call,
     finishTool: Tool<Output, OutputTransformed>,
 ): ReceivedToolResult {
+    val toolDescription = finishTool.descriptor.description
     // Execute Finish tool directly and get a result
-    val args = finishTool.decodeArgs(toolCall.contentJson)
-    val toolResult = finishTool.execute(args = args)
+    val encodedResult = try {
+        val args = finishTool.decodeArgs(toolCall.contentJson)
+        val toolResult = finishTool.execute(args = args)
+        finishTool.encodeResult(toolResult)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        return ReceivedToolResult(
+            id = toolCall.id,
+            tool = finishTool.name,
+            toolArgs = toolCall.contentJsonResult.getOrElse { JsonObject(emptyMap()) },
+            toolDescription = toolDescription,
+            content = "Failed to execute '${finishTool.name}' with error: ${e.message}'",
+            resultKind = ToolResultKind.Failure(e.toAgentError()),
+            result = null,
+        )
+    }
 
-    val encodedResult = finishTool.encodeResult(toolResult)
     // Append a final tool call result to the prompt for further LLM calls
     // to see it (otherwise they would fail)
     llm.writeSession {
@@ -624,7 +652,7 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
         toolArgs = toolCall.contentJson,
         content = toolCall.content,
         resultKind = ToolResultKind.Success,
-        toolDescription = finishTool.descriptor.description,
+        toolDescription = toolDescription,
         result = encodedResult
     )
 }

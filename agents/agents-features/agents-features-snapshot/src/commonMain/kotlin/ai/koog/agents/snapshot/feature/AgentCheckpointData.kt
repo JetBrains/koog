@@ -95,7 +95,6 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
  */
 public fun AgentCheckpointData.toAgentContextData(
     rollbackStrategy: RollbackStrategy,
-    agentId: String,
     additionalRollbackAction: suspend (AIAgentContext) -> Unit = {}
 ): AgentContextData {
     @Suppress("DEPRECATION")

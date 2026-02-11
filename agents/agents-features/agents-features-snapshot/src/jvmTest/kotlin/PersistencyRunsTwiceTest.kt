@@ -1,4 +1,4 @@
-import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.Persistence
@@ -22,7 +22,7 @@ class PersistenceRunsTwiceTest {
 
         val testCollector = TestAgentLogsCollector()
 
-        val agentService = AIAgentService(
+        val agent = AIAgent(
             promptExecutor = getMockExecutor {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
@@ -39,11 +39,10 @@ class PersistenceRunsTwiceTest {
             }
         }
 
-        val firstAgent = agentService.createAgent(id = "SAME_ID")
         val agentId1 = "SAME_ID"
 
         // Act: first run
-        firstAgent.run("Start the test")
+        agent.run("Start the test", agentId1)
 
         // Assert
         testCollector.logs() shouldContainExactly listOf(
@@ -60,11 +59,8 @@ class PersistenceRunsTwiceTest {
         }
 
         val firstCheckpoint = provider.getLatestCheckpoint(agentId1)
-
-        val secondAgent = agentService.createAgent(id = "SAME_ID")
-
         // Act: second run with the same storage (should not resume mid-graph)
-        secondAgent.run("Start the test2")
+        agent.run("Start the test2", agentId1)
 
         // And still ends with a tombstone as the latest checkpoint
         await.until {
@@ -81,7 +77,7 @@ class PersistenceRunsTwiceTest {
         val provider = InMemoryPersistenceStorageProvider()
         val testCollector = TestAgentLogsCollector()
 
-        val agentService = AIAgentService(
+        val agent = AIAgent(
             promptExecutor = getMockExecutor {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
@@ -99,10 +95,10 @@ class PersistenceRunsTwiceTest {
             }
         }
 
-        val agentId = "test-agent-id"
+        val sessionId = "test-agent-id"
 
         // Act: first run
-        val result = runCatching { agentService.createAgentAndRun("Start the test", id = agentId) }
+        val result = runCatching { agent.run("Start the test", sessionId = sessionId) }
 
         // Assert: first run fails
         assert(result.isFailure)
@@ -114,16 +110,16 @@ class PersistenceRunsTwiceTest {
 
         await.until {
             runBlocking {
-                val a = provider.getCheckpoints(agentId)
-                println(a)
-                a.size == 2
+                val checkpoints = provider.getCheckpoints(sessionId)
+                println(checkpoints)
+                checkpoints.size == 2
             }
         }
 
         // Clear the collector to isolate the second run
         testCollector.clear()
 
-        agentService.createAgent(id = agentId).run("Start the test")
+        agent.run("Start the test", sessionId = sessionId)
 
         testCollector.logs() shouldContainExactly listOf(
             "Second try successful",
@@ -131,7 +127,7 @@ class PersistenceRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getCheckpoints(agentId).filter { !it.isTombstone() }.size == 3
+                provider.getCheckpoints(sessionId).filter { !it.isTombstone() }.size == 3
             }
         }
     }

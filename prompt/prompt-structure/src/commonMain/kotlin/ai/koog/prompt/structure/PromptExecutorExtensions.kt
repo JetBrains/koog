@@ -77,7 +77,14 @@ public data class StructuredRequestConfig<T>(
 
             // Rely on built-in model capabilities to provide structured response.
             is StructuredRequest.Native -> {
-                prompt.withUpdatedParams { schema = mode.structure.schema }
+                prompt(prompt) {
+                    // If examples are supplied, append them
+                    if (mode.structure.examples.isNotEmpty()) {
+                        user {
+                            mode.structure.examples(this)
+                        }
+                    }
+                }.withUpdatedParams { schema = mode.structure.schema }
             }
         }
     }
@@ -232,7 +239,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
     val id = serializer.descriptor.serialName.substringAfterLast(".")
 
     val structuredRequest = when {
-        LLMCapability.Schema.JSON.Standard in model.capabilities -> StructuredRequest.Native(
+        model.supports(LLMCapability.Schema.JSON.Standard) -> StructuredRequest.Native(
             JsonStructure.create(
                 id = id,
                 serializer = serializer,
@@ -240,7 +247,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
             )
         )
 
-        LLMCapability.Schema.JSON.Basic in model.capabilities -> StructuredRequest.Native(
+        model.supports(LLMCapability.Schema.JSON.Basic) -> StructuredRequest.Native(
             JsonStructure.create(
                 id = id,
                 serializer = serializer,

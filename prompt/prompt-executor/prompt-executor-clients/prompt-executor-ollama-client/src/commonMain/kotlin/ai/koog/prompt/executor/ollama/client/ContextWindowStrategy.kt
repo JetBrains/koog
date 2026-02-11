@@ -74,12 +74,19 @@ public interface ContextWindowStrategy {
             }
 
             override fun computeContextLength(prompt: Prompt, model: LLModel): Long {
-                if (contextLength > model.contextLength) {
+                val modelContextLength = model.contextLength ?: run {
+                    logger.warn {
+                        "Model '${model.id}' does not specify a context length, " +
+                            "continue without context length restriction"
+                    }
+                    return contextLength
+                }
+                if (contextLength > modelContextLength) {
                     logger.warn {
                         "Context length $contextLength was more than what is supported by model '${model.id}'," +
-                            " falling back to the model's maximum context length ${model.contextLength}"
+                            " falling back to the model's maximum context length $modelContextLength"
                     }
-                    return model.contextLength
+                    return modelContextLength
                 }
                 return contextLength
             }
@@ -138,7 +145,17 @@ public interface ContextWindowStrategy {
                     return maximumContextLength
                 }
 
-                if (promptLength > model.contextLength) {
+                val contextLength = (promptLength / contextChunkSize + 1) * contextChunkSize
+
+                val modelContextLength = model.contextLength ?: run {
+                    logger.warn {
+                        "Model '${model.id}' does not specify a context length, " +
+                            "continue without context length restriction"
+                    }
+                    return contextLength
+                }
+
+                if (promptLength > modelContextLength) {
                     logger.warn {
                         "Prompt length $promptLength was more than the maximum context length of model '${model.id}'," +
                             " falling back to the model's maximum context length ${model.contextLength}"
@@ -146,7 +163,7 @@ public interface ContextWindowStrategy {
                     return model.contextLength
                 }
 
-                return (promptLength / contextChunkSize + 1) * contextChunkSize
+                return contextLength
             }
         }
     }

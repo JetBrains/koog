@@ -8,6 +8,7 @@ import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.metric.adapter.restrictToolNameCardinality
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -16,7 +17,7 @@ import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 suspend fun main() {
     val logger = LoggerFactory.getLogger("Calculator")
@@ -75,7 +76,7 @@ suspend fun main() {
                         .setEndpoint("http://localhost:17011")
                         .setTimeout(2, TimeUnit.SECONDS)
                         .build(),
-                    Duration.ofSeconds(1)
+                    1.seconds
                 )
                 restrictToolNameCardinality(
                     setOf("plus", "minus", "multiply", "divide"),

@@ -118,12 +118,12 @@ public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructo
     }
 
     @JvmOverloads
-    override suspend fun getCheckpoints(agentId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(sessionId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
         if (filter == null) {
             val now = Clock.System.now().toEpochMilliseconds()
             return transaction {
                 checkpointsTable.select(checkpointsTable.checkpointJson).where {
-                    (checkpointsTable.persistenceId eq agentId) and
+                    (checkpointsTable.persistenceId eq sessionId) and
                         ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
                 }.mapNotNull { row ->
                     runCatching {
@@ -143,13 +143,13 @@ public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructo
         }
     }
 
-    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
         val checkpointJson = json.encodeToString(agentCheckpointData)
         val ttlTimestamp = calculateTtlTimestamp(agentCheckpointData.createdAt)
 
         transaction {
             checkpointsTable.upsert {
-                it[checkpointsTable.persistenceId] = agentId
+                it[checkpointsTable.persistenceId] = sessionId
                 it[checkpointsTable.checkpointId] = agentCheckpointData.checkpointId
                 it[checkpointsTable.createdAt] = agentCheckpointData.createdAt.toEpochMilliseconds()
                 it[checkpointsTable.checkpointJson] = checkpointJson
@@ -159,14 +159,14 @@ public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructo
         }
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
         if (filter == null) {
             val now = Clock.System.now().toEpochMilliseconds()
             return transaction {
                 checkpointsTable
                     .select(checkpointsTable.checkpointJson)
                     .where {
-                        (checkpointsTable.persistenceId eq agentId) and
+                        (checkpointsTable.persistenceId eq sessionId) and
                             ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
                     }
                     .orderBy(checkpointsTable.version to SortOrder.DESC)

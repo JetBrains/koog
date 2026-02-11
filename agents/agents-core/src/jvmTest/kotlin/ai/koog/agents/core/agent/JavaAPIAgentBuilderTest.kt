@@ -140,7 +140,7 @@ class JavaAPIAgentBuilderTest {
             .promptExecutor(getMockExecutor { })
             .build()
 
-        val result = agent.run("hello", null)
+        val result = agent.javaRun("hello", null, null)
         assertEquals("Echo: hello", result)
     }
 
@@ -170,7 +170,7 @@ class JavaAPIAgentBuilderTest {
             .promptExecutor(getMockExecutor { })
             .build()
 
-        val result = agent.run("data", null)
+        val result = agent.javaRun("data")
         assertEquals("Processed: data", result)
     }
 

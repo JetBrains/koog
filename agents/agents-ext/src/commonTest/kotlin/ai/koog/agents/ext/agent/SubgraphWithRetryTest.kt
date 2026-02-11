@@ -132,7 +132,7 @@ class SubgraphWithRetryTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(1, results.size)
@@ -189,7 +189,7 @@ class SubgraphWithRetryTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(1, results.size)
@@ -243,7 +243,7 @@ class SubgraphWithRetryTest {
             }
         }.use { agent ->
 
-            agent.run("test input")
+            agent.run("test input", null)
 
             assertEquals(1, results.size)
 
@@ -308,7 +308,7 @@ class SubgraphWithRetryTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(1, results.size)
@@ -360,7 +360,7 @@ class SubgraphWithRetryTest {
         }
 
         assertFailsWith<IllegalStateException> {
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(maxAttempts, attemptCount.size)
@@ -410,7 +410,7 @@ class SubgraphWithRetryTest {
             }
         }.use { agent ->
 
-            agent.run("test input")
+            agent.run("test input", null)
 
             assertEquals(1, results.size)
             assertEquals("failure", results.first())
@@ -479,7 +479,7 @@ class SubgraphWithRetryTest {
             },
         )
 
-        agent.run("test input")
+        agent.run("test input", null)
 
         val actualConditionDescriptionMessage = lastMessagesInThePrompt[0]
         assertIs<Message.User>(actualConditionDescriptionMessage)

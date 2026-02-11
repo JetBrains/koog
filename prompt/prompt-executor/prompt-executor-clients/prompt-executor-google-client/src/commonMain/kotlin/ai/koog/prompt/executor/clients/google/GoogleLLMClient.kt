@@ -29,6 +29,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -152,10 +153,10 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+        require(model.supports(LLMCapability.Tools) || tools.isEmpty()) {
             "Model ${model.id} does not support tools"
         }
 
@@ -169,7 +170,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = streamFrameFlow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
 
@@ -226,13 +227,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         tools: List<ToolDescriptor>
     ): List<LLMChoice> {
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+        require(model.supports(LLMCapability.Tools) || tools.isEmpty()) {
             "Model ${model.id} does not support tools"
         }
-        require(model.capabilities.contains(LLMCapability.MultipleChoices)) {
+        require(model.supports(LLMCapability.MultipleChoices)) {
             "Model ${model.id} does not support multiple choices"
         }
 
@@ -418,7 +419,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         val googleParams = prompt.params.toGoogleParams()
 
         val responseFormat: GoogleResponseFormat? = googleParams.schema?.let { schema ->
-            require(schema.capability in model.capabilities) {
+            require(model.supports(schema.capability)) {
                 "Model ${model.id} does not support structured output schema ${schema.name}"
             }
 
@@ -443,8 +444,8 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             responseSchema = responseFormat?.responseSchema,
             responseJsonSchema = responseFormat?.responseJsonSchema,
             maxOutputTokens = googleParams.maxTokens,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) googleParams.temperature else null,
-            candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) googleParams.numberOfChoices else null,
+            temperature = if (model.supports(LLMCapability.Temperature)) googleParams.temperature else null,
+            candidateCount = if (model.supports(LLMCapability.MultipleChoices)) googleParams.numberOfChoices else null,
             topP = googleParams.topP,
             topK = googleParams.topK,
             thinkingConfig = googleParams.thinkingConfig,
@@ -483,7 +484,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     }
 
                     is ContentPart.Image -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                        require(model.supports(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support images"
                         }
 
@@ -498,7 +499,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     }
 
                     is ContentPart.Audio -> {
-                        require(model.capabilities.contains(LLMCapability.Audio)) {
+                        require(model.supports(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
 
@@ -513,7 +514,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     }
 
                     is ContentPart.File -> {
-                        require(model.capabilities.contains(LLMCapability.Document)) {
+                        require(model.supports(LLMCapability.Document)) {
                             "Model ${model.id} does not support documents"
                         }
 
@@ -528,7 +529,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     }
 
                     is ContentPart.Video -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Video)) {
+                        require(model.supports(LLMCapability.Vision.Video)) {
                             "Model ${model.id} does not support video"
                         }
 
@@ -761,7 +762,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
      *
      * @return A list of strings, each representing a model identifier available for use.
      */
-    public override suspend fun models(): List<String> {
+    public override suspend fun models(): List<LLModel> {
         var response: GoogleModelsResponse? = null
         val models = mutableListOf<String>()
 
@@ -783,7 +784,9 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             }
         }
 
-        return models
+        val modelsById = GoogleModels.modelsById()
+
+        return models.map { id -> modelsById[id] ?: LLModel(provider = llmProvider(), id = id) }
     }
 
     override fun close() {
@@ -791,7 +794,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     }
 
     override suspend fun embed(text: String, model: LLModel): List<Double> {
-        require(model.capabilities.contains(LLMCapability.Embed)) {
+        require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
         }
 

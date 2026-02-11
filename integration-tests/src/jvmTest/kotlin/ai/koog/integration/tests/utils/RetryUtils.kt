@@ -12,6 +12,9 @@ object RetryUtils {
     private const val GOOGLE_429_ERROR = "Expected status code 200 but was 429"
     private const val GOOGLE_RESOURCE_EXHAUSTED =
         "You exceeded your current quota, please check your plan and billing details"
+    private const val GOOGLE_QUOTA_EXCEEDED = "Quota exceeded"
+    private const val GOOGLE_RESOURCE_EXHAUSTED_STATUS = "RESOURCE_EXHAUSTED"
+    private const val GOOGLE_429_STATUS = "Status code: 429"
     private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
     private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
     private const val ANTHROPIC_429_ERROR = "Error from Anthropic API: 429 Too Many Requests"
@@ -34,7 +37,10 @@ object RetryUtils {
     private fun isThirdPartyError(e: Throwable): Boolean {
         val errorMessages = listOf(
             GOOGLE_429_ERROR,
+            GOOGLE_429_STATUS,
             GOOGLE_RESOURCE_EXHAUSTED,
+            GOOGLE_QUOTA_EXCEEDED,
+            GOOGLE_RESOURCE_EXHAUSTED_STATUS,
             GOOGLE_500_ERROR,
             GOOGLE_503_ERROR,
             ANTHROPIC_429_ERROR,
@@ -76,7 +82,6 @@ object RetryUtils {
                         false,
                         "Skipping test due to third-party service error: ${throwable.message}"
                     )
-                    return@runBlocking action()
                 }
 
                 if (attempt < times) {

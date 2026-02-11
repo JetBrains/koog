@@ -46,7 +46,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "Start the test\n" +
@@ -73,7 +73,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "History: You are a test agent.\n" +
@@ -100,7 +100,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "History: You are a test agent.\n" +
@@ -128,7 +128,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "History: You are a test agent.\n" +
@@ -166,7 +166,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 
     @Test
@@ -206,6 +206,6 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 }

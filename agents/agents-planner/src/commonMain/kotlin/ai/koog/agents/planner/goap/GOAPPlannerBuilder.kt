@@ -1,17 +1,24 @@
 package ai.koog.agents.planner.goap
 
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import kotlin.jvm.JvmOverloads
 import kotlin.math.exp
 import kotlin.reflect.KType
 
 /**
  * [GOAPPlanner] DSL builder.
  */
-public class GOAPPlannerBuilder<State>(
-    private val stateType: KType,
+public class GOAPPlannerBuilder<State> @JvmOverloads constructor(
+    private val stateType: KType? = null,
 ) {
     private val actions: MutableList<Action<State>> = mutableListOf()
     private val goals: MutableList<Goal<State>> = mutableListOf()
+
+    /**
+     * Defines an action available to the GOAP agent.
+     *
+     * Returns the builder instance for chained calls.
+     */
+    public fun action(action: Action<State>): GOAPPlannerBuilder<State> = apply { actions.add(action) }
 
     /**
      * Defines an action available to the GOAP agent.
@@ -26,13 +33,20 @@ public class GOAPPlannerBuilder<State>(
     public fun action(
         name: String,
         description: String? = null,
-        precondition: (State) -> Boolean,
-        belief: (State) -> State,
-        cost: (State) -> Double = { 1.0 },
-        execute: suspend (AIAgentFunctionalContext, State) -> State
+        precondition: Condition<State>,
+        belief: Belief<State>,
+        cost: Cost<State> = { 1.0 },
+        execute: Execute<State>,
     ) {
-        actions.add(Action(name, description, precondition, belief, cost, execute))
+        action(Action(name, description, precondition, belief, cost, execute))
     }
+
+    /**
+     * Defines a goal for the GOAP agent.
+     *
+     * Returns the builder instance for chained calls.
+     */
+    public fun goal(goal: Goal<State>): GOAPPlannerBuilder<State> = apply { goals.add(goal) }
 
     /**
      * Defines a goal for the GOAP agent.
@@ -47,10 +61,10 @@ public class GOAPPlannerBuilder<State>(
         name: String,
         description: String? = null,
         value: (Double) -> Double = { cost -> exp(-cost) },
-        cost: (State) -> Double = { 1.0 },
-        condition: (State) -> Boolean,
+        cost: Cost<State> = { 1.0 },
+        condition: Condition<State>,
     ) {
-        goals.add(Goal(name, description, value, cost, condition))
+        goal(Goal(name, description, value, cost, condition))
     }
 
     /**

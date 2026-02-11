@@ -13,9 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-core"))
-                api(project(":agents:agents-ext"))
                 api(project(":agents:agents-features:agents-features-memory"))
-                api(project(":agents:agents-utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-structure"))
 
@@ -26,6 +24,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.kotest.assertions.core)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-test"))
             }

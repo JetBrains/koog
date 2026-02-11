@@ -37,11 +37,18 @@ public sealed interface StreamFrame {
     ) : StreamFrame {
 
         /**
-         * Lazily parses the content of the tool call as a JSON object.
+         * Lazily parses and caches the result of parsing [content] as a JSON object.
          */
-        val contentJson: JsonObject by lazy {
-            Json.parseToJsonElement(content).jsonObject
+        val contentJsonResult: Result<JsonObject> by lazy {
+            runCatching { Json.parseToJsonElement(content).jsonObject }
         }
+
+        /**
+         * Lazily parses the content of the tool call as a JSON object.
+         * Can throw an exception when parsing fails.
+         */
+        val contentJson: JsonObject
+            get() = contentJsonResult.getOrThrow()
     }
 
     /**

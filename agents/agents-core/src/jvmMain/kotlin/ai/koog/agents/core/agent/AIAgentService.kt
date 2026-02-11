@@ -37,11 +37,6 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public actual abstract suspend fun removeAgent(agent: TAgent): Boolean
     public actual abstract suspend fun removeAgentWithId(id: String): Boolean
     public actual abstract suspend fun agentById(id: String): TAgent?
-    public actual abstract suspend fun listAllAgents(): List<TAgent>
-    public actual abstract suspend fun listActiveAgents(): List<TAgent>
-    public actual abstract suspend fun listInactiveAgents(): List<TAgent>
-    public actual abstract suspend fun listFinishedAgents(): List<TAgent>
-    public actual abstract suspend fun closeAll()
 
     /**
      * Creates a new agent with the specified configuration and settings.
@@ -86,7 +81,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         executorService: ExecutorService? = null,
         clock: Clock
     ): Output = createAgent(id, additionalToolRegistry, agentConfig, executorService, clock)
-        .run(agentInput, executorService)
+        .javaRun(agentInput, null, executorService)
 
     /**
      * Removes the specified agent from the system.
@@ -143,21 +138,6 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     }
 
     /**
-     * Retrieves a list of all agents managed by the system.
-     *
-     * @param executorService An optional `ExecutorService` to be used for dispatching the operation.
-     * If null, a default executor service or dispatcher will be utilized.
-     * @return A list of `TAgent` objects representing all agents.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun listAllAgents(
-        executorService: ExecutorService? = null
-    ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
-        listAllAgents()
-    }
-
-    /**
      * Lists all currently active agents using the configured strategy dispatcher.
      *
      * If an optional `executorService` is provided, it will be used as the execution context
@@ -204,25 +184,6 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         executorService: ExecutorService? = null
     ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
         listFinishedAgents()
-    }
-
-    /**
-     * Closes all active agents and releases any resources associated with them.
-     *
-     * This method ensures that all agents managed by the service are properly terminated. It can be executed
-     * either on the default execution environment or a custom one provided via the optional `executorService` parameter.
-     *
-     * @param executorService An optional `ExecutorService` to execute the method. If provided, the operation
-     * will use the specified executor service; otherwise, the default execution mechanism will be used.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun closeAll(
-        executorService: ExecutorService? = null
-    ) {
-        agentConfig.runOnStrategyDispatcher(executorService) {
-            closeAll()
-        }
     }
 
     public actual companion object {

@@ -826,4 +826,65 @@ public object OpenAIModels : LLModelDefinitions {
             contextLength = 8_191,
         )
     }
+
+    /**
+     * List of the supported models by the OpenAI provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        // Chat Models - GPT-4 Series
+        Chat.GPT4o,
+        Chat.GPT4oMini,
+
+        // Chat Models - GPT-4.1 Series
+        Chat.GPT4_1,
+        Chat.GPT4_1Nano,
+        Chat.GPT4_1Mini,
+
+        // Chat Models - O Series (Reasoning)
+        Chat.O1,
+        Chat.O3,
+        Chat.O3Mini,
+        Chat.O4Mini,
+
+        // Chat Models - GPT-5 Series
+        Chat.GPT5,
+        Chat.GPT5Mini,
+        Chat.GPT5Nano,
+        Chat.GPT5Codex,
+        Chat.GPT5Pro,
+
+        // Chat Models - GPT-5.1 Series
+        Chat.GPT5_1,
+        Chat.GPT5_1Codex,
+
+        // Chat Models - GPT-5.2 Series
+        Chat.GPT5_2,
+        Chat.GPT5_2Pro,
+
+        // Audio Models
+        Audio.GptAudio,
+        Audio.GPT4oMiniAudio,
+        Audio.GPT4oAudio,
+
+        // Embedding Models
+        Embeddings.TextEmbedding3Small,
+        Embeddings.TextEmbedding3Large,
+        Embeddings.TextEmbeddingAda002,
+
+        // Moderation Models
+        Moderation.Omni,
+    )
+
+    /**
+     * List of custom models added to the OpenAI provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.OpenAI) { "Model provider must be OpenAI" }
+        customModels.add(model)
+    }
 }

@@ -13,7 +13,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext
@@ -67,6 +66,9 @@ public interface AIAgentPipelineAPI {
     public suspend fun uninstall(featureKey: AIAgentStorageKey<*>)
 
     //region Trigger Agent Handlers
+
+    // TODO: SD -- delete from public API
+    //  this should be an internal methods
     public suspend fun <TInput, TOutput> onAgentStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -105,9 +107,11 @@ public interface AIAgentPipelineAPI {
         agent: GraphAIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment
+
     //endregion
 
     //region Trigger Strategy Handlers
+
     public suspend fun onStrategyStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -126,6 +130,7 @@ public interface AIAgentPipelineAPI {
     //endregion
 
     //region Trigger LLM Handlers
+
     public suspend fun onLLMCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -147,6 +152,7 @@ public interface AIAgentPipelineAPI {
         moderationResponse: ModerationResult? = null,
         context: AIAgentContext
     )
+
     //endregion
 
     //region Trigger Tool Handlers
@@ -198,9 +204,11 @@ public interface AIAgentPipelineAPI {
         toolResult: JsonElement?,
         context: AIAgentContext
     )
+
     //endregion
 
     //region Trigger Streaming Handlers
+
     public suspend fun onLLMStreamingStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -240,12 +248,14 @@ public interface AIAgentPipelineAPI {
         tools: List<ToolDescriptor>,
         context: AIAgentContext
     )
+
     //endregion
 
     //region Interceptors
+
     public fun interceptEnvironmentCreated(
         feature: AIAgentFeature<*, *>,
-        transform: suspend AgentEnvironmentTransformingContext.(AIAgentEnvironment) -> AIAgentEnvironment
+        handle: suspend (eventContext: AgentEnvironmentTransformingContext, environment: AIAgentEnvironment) -> AIAgentEnvironment
     )
 
     public fun interceptAgentStarting(feature: AIAgentFeature<*, *>, handle: suspend (AgentStartingContext) -> Unit)
@@ -325,6 +335,7 @@ public interface AIAgentPipelineAPI {
     )
 
     // Short aliases
+
     public fun interceptBeforeAgentStarted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (AgentStartingContext) -> Unit
@@ -341,7 +352,9 @@ public interface AIAgentPipelineAPI {
     )
 
     public fun interceptAgentBeforeClose(feature: AIAgentFeature<*, *>, handle: suspend (AgentClosingContext) -> Unit)
+
     public fun interceptStrategyStart(feature: AIAgentFeature<*, *>, handle: suspend (StrategyStartingContext) -> Unit)
+
     public fun interceptStrategyFinished(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StrategyCompletedContext) -> Unit
@@ -377,19 +390,6 @@ public interface AIAgentPipelineAPI {
         handle: suspend (eventContext: ToolValidationFailedContext) -> Unit
     )
 
-    @InternalAgentsApi
-    public fun <TContext : AgentLifecycleEventContext> createConditionalHandler(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (TContext) -> Unit
-    ): suspend (TContext) -> Unit
-
-    @InternalAgentsApi
-    public fun createConditionalHandler(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend AgentEnvironmentTransformingContext.(AIAgentEnvironment) -> AIAgentEnvironment
-    ): suspend (AgentEnvironmentTransformingContext, AIAgentEnvironment) -> AIAgentEnvironment
-
-    public fun FeatureConfig.isAccepted(eventContext: AgentLifecycleEventContext): Boolean
     //endregion
 
     @InternalAgentsApi

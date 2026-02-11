@@ -16,6 +16,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.prompt.processor.executeProcessed
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -64,7 +65,7 @@ public open class AIAgentLLMSession(
     @InternalAgentsApi
     public open override suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.execute(preparedPrompt, model, tools)
+        return executor.executeProcessed(preparedPrompt, model, tools, responseProcessor)
     }
 
     @InternalAgentsApi
@@ -96,11 +97,15 @@ public open class AIAgentLLMSession(
 
     public open override suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
-        // We use the multiple-response method to ensure we capture all context (e.g. thinking)
-        // even though we only return the specific tool call.
-        val responses = requestLLMMultipleOnlyCallingTools()
+        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
+            toolChoice = LLMParams.ToolChoice.Required
+        }
+        val responses = executeMultiple(promptWithOnlyCallingTools, tools)
+
+        // some models might fail to produce a tool call
+        // it's better to not fail here and allow the user to handle that
         return responses.firstOrNull { it is Message.Tool.Call }
-            ?: error("requestLLMOnlyCallingTools expected at least one Tool.Call but received: ${responses.map { it::class.simpleName }}")
+            ?: responses.first { it is Message.Assistant }
     }
 
     public open override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {

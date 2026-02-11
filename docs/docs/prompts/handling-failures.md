@@ -101,9 +101,9 @@ val customClient = RetryingLLMClient(
 ### Retry error patterns
 
 By default, the `RetryingLLMClient` recognizes common transient errors.
-This behavior is controlled by the [`RetryConfig.retryablePatterns`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients.retry/-retry-config/retryable-patterns.html) patterns.
+This behavior is controlled by the [`RetryConfig.retryablePatterns`](api:prompt-executor-clients::ai.koog.prompt.executor.clients.retry.RetryConfig.retryablePatterns) patterns.
 Each pattern is represented by
-[`RetryablePattern`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients.retry/-retryable-pattern/index.html)
+[`RetryablePattern`](api:prompt-executor-clients::ai.koog.prompt.executor.clients.retry.RetryablePattern)
 that checks the error message from a failed request and determines whether it should be retried.
 
 Koog provides the predefined retry configurations and patterns that work across all the supported LLM providers.
@@ -144,7 +144,7 @@ Unless you customize the retry configuration, the following patterns are used by
     * temporarily unavailable
     * service unavailable
 
-These default patterns are defined in Koog as [`RetryConfig.DEFAULT_PATTERNS`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients.retry/-retry-config/-companion/-d-e-f-a-u-l-t_-p-a-t-t-e-r-n-s.html).
+These default patterns are defined in Koog as [`RetryConfig.DEFAULT_PATTERNS`](api:prompt-executor-clients::ai.koog.prompt.executor.clients.retry.RetryConfig.Companion.DEFAULT_PATTERNS).
 
 #### Custom patterns
 
@@ -272,7 +272,7 @@ val multiExecutor = MultiLLMPromptExecutor(
 
 All LLM clients support timeout configuration to prevent hanging requests.
 You can specify timeout values for network connections when creating the client using
-the [`ConnectionTimeoutConfig`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/ai.koog.prompt.executor.clients/-connection-timeout-config/index.html) class.
+the [`ConnectionTimeoutConfig`](api:prompt-executor-clients::ai.koog.prompt.executor.clients.ConnectionTimeoutConfig) class.
 
 `ConnectionTimeoutConfig` has the following properties:
 

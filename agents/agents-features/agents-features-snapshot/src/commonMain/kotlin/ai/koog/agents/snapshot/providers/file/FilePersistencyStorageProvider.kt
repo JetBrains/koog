@@ -67,8 +67,8 @@ public open class FilePersistenceStorageProvider<Path> @JvmOverloads constructor
         return fs.joinPath(agentDir, checkpointId)
     }
 
-    override suspend fun getCheckpoints(agentId: String, filter: AgentCheckpointPredicateFilter?): List<AgentCheckpointData> {
-        val agentDir = agentCheckpointsDir(agentId)
+    override suspend fun getCheckpoints(sessionId: String, filter: AgentCheckpointPredicateFilter?): List<AgentCheckpointData> {
+        val agentDir = agentCheckpointsDir(sessionId)
 
         if (!fs.exists(agentDir)) {
             return emptyList()
@@ -90,13 +90,13 @@ public open class FilePersistenceStorageProvider<Path> @JvmOverloads constructor
         return checkpoints
     }
 
-    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
-        val checkpointPath = checkpointPath(agentId, agentCheckpointData.checkpointId)
+    override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
+        val checkpointPath = checkpointPath(sessionId, agentCheckpointData.checkpointId)
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
         fs.writeText(checkpointPath, serialized)
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String, filter: AgentCheckpointPredicateFilter?): AgentCheckpointData? =
-        getCheckpoints(agentId, filter)
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: AgentCheckpointPredicateFilter?): AgentCheckpointData? =
+        getCheckpoints(sessionId, filter)
             .maxByOrNull { it.createdAt }
 }

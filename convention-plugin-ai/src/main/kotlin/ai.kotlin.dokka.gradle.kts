@@ -13,7 +13,15 @@ dokka {
 
             sourceLink {
                 localDirectory = rootDir
-                remoteUrl("https://github.com/JetBrains/koog/tree/main")
+                // Point to git tag for releases, develop branch for snapshots
+                val versionString = project.version.toString()
+                val sourceRef = if (versionString.contains("-")) {
+                    // most likely source ref is smth like 0.7.0-SNAPSHOT
+                    "develop"
+                } else {
+                    versionString
+                }
+                remoteUrl("https://github.com/JetBrains/koog/tree/$sourceRef")
                 remoteLineSuffix = "#L"
             }
 

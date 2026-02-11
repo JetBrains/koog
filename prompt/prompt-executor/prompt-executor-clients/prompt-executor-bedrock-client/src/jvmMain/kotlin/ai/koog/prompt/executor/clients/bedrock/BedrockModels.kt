@@ -145,7 +145,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_3.withoutMultimodalCapabilities(),
+        AnthropicModels.Opus_3,
         "anthropic.claude-3-opus-20240229-v1:0",
     ).effectiveModel
 
@@ -162,7 +162,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude4Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4.withoutMultimodalCapabilities(),
+        AnthropicModels.Opus_4,
         "anthropic.claude-opus-4-20250514-v1:0",
     ).effectiveModel
 
@@ -177,7 +177,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude41Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4_1.withoutMultimodalCapabilities(),
+        AnthropicModels.Opus_4_1,
         "anthropic.claude-opus-4-1-20250805-v1:0",
     ).effectiveModel
 
@@ -189,7 +189,7 @@ public object BedrockModels : LLModelDefinitions {
      *
      */
     public val AnthropicClaude45Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Opus_4_5,
         "anthropic.claude-opus-4-5-20251101-v1:0",
     ).effectiveModel
 
@@ -206,7 +206,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Precise instruction following
      */
     public val AnthropicClaude4Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4.withoutMultimodalCapabilities(),
+        AnthropicModels.Sonnet_4,
         "anthropic.claude-sonnet-4-20250514-v1:0",
     ).effectiveModel
 
@@ -222,7 +222,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Optimized for both quality and efficiency
      */
     public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Sonnet_4_5,
         "anthropic.claude-sonnet-4-5-20250929-v1:0",
     ).effectiveModel
 
@@ -235,7 +235,7 @@ public object BedrockModels : LLModelDefinitions {
      * and high-volume user experiences.
      */
     public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_4_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Haiku_4_5,
         "anthropic.claude-haiku-4-5-20251001-v1:0",
     ).effectiveModel
 
@@ -271,7 +271,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Multimodal understanding with vision
      */
     public val AnthropicClaude35SonnetV2: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_3_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Sonnet_3_5,
         "anthropic.claude-3-5-sonnet-20241022-v2:0",
     ).effectiveModel
 
@@ -288,7 +288,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Processing large volumes of data
      */
     public val AnthropicClaude35Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3_5.withoutMultimodalCapabilities(),
+        AnthropicModels.Haiku_3_5,
         "anthropic.claude-3-5-haiku-20241022-v1:0",
     ).effectiveModel
 
@@ -303,7 +303,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3.withoutMultimodalCapabilities(),
+        AnthropicModels.Haiku_3,
         "anthropic.claude-3-haiku-20240307-v1:0",
     ).effectiveModel
 
@@ -740,20 +740,79 @@ public object BedrockModels : LLModelDefinitions {
             inferenceProfilePrefix = null
         ).effectiveModel
     }
-}
 
-/**
- * Multimodality is currently not supported by Bedrock client.
- * This is a helper function to copy existing model definitions while removing multimodal capabilities.
- */
-private fun LLModel.withoutMultimodalCapabilities(): LLModel {
-    return copy(
-        capabilities = capabilities.filter {
-            it !is LLMCapability.Vision &&
-                it !is LLMCapability.Audio &&
-                it !is LLMCapability.Document
-        }
+    /**
+     * List of the supported models by the Bedrock provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        // Claude 3 Series
+        AnthropicClaude3Opus,
+        AnthropicClaude3Sonnet,
+        AnthropicClaude3Haiku,
+
+        // Claude 3.5 Series
+        AnthropicClaude35SonnetV2,
+        AnthropicClaude35Haiku,
+
+        // Claude 4 Series
+        AnthropicClaude4Opus,
+        AnthropicClaude41Opus,
+        AnthropicClaude45Opus,
+        AnthropicClaude4Sonnet,
+        AnthropicClaude4_5Sonnet,
+        AnthropicClaude4_5Haiku,
+
+        // Claude Legacy
+        AnthropicClaude21,
+        AnthropicClaudeInstant,
+
+        // Amazon Nova Series
+        AmazonNovaMicro,
+        AmazonNovaLite,
+        AmazonNovaPro,
+        AmazonNovaPremier,
+
+        // AI21 Jamba Series
+        AI21JambaLarge,
+        AI21JambaMini,
+
+        // Meta Llama 3.0 Series
+        MetaLlama3_0_8BInstruct,
+        MetaLlama3_0_70BInstruct,
+
+        // Meta Llama 3.1 Series
+        MetaLlama3_1_8BInstruct,
+        MetaLlama3_1_70BInstruct,
+        MetaLlama3_1_405BInstruct,
+
+        // Meta Llama 3.2 Series
+        MetaLlama3_2_1BInstruct,
+        MetaLlama3_2_3BInstruct,
+        MetaLlama3_2_11BInstruct,
+        MetaLlama3_2_90BInstruct,
+
+        // Meta Llama 3.3 Series
+        MetaLlama3_3_70BInstruct,
+
+        // Embedding Models
+        Embeddings.AmazonTitanEmbedText,
+        Embeddings.AmazonTitanEmbedTextV2,
+        Embeddings.CohereEmbedEnglishV3,
+        Embeddings.CohereEmbedMultilingualV3,
     )
+
+    /**
+     * List of custom models added to the Bedrock provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Bedrock) { "Model provider must be Bedrock" }
+        customModels.add(model)
+    }
 }
 
 /**

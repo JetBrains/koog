@@ -144,7 +144,7 @@ class DebuggerStreamingTest {
                     }
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
         }
 
@@ -341,7 +341,7 @@ class DebuggerStreamingTest {
                 }
             }.use { agent ->
                 assertFailsWith<IllegalStateException> {
-                    agent.run(userPrompt)
+                    agent.run(userPrompt, null)
                 }
             }
 

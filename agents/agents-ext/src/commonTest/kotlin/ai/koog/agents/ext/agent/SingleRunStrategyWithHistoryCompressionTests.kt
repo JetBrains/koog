@@ -54,7 +54,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        agent.run("Solve task")
+        agent.run("Solve task", null)
         assertTrue(compressionRequested)
     }
 
@@ -78,7 +78,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        val result = agent.run("Solve task")
+        val result = agent.run("Solve task", null)
         assertEquals("Tools called!", result)
     }
 
@@ -107,7 +107,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        agent.run("Solve task")
+        agent.run("Solve task", null)
         assertTrue(compressionRequested)
     }
 
@@ -136,7 +136,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        agent.run("Solve task")
+        agent.run("Solve task", null)
         assertTrue(compressionRequested)
     }
 }

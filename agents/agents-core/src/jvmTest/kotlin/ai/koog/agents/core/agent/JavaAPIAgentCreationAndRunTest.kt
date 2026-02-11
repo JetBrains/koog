@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 import java.util.function.BiFunction
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 
 class JavaAPIAgentCreationAndRunTest {
 
@@ -40,12 +39,8 @@ class JavaAPIAgentCreationAndRunTest {
         val pool = Executors.newSingleThreadExecutor()
         try {
             // Use Java-facing overloads
-            val result = agent.run("xyz", pool)
+            val result = agent.javaRun("xyz", null, pool)
             assertEquals("Echo: xyz", result)
-
-            val state = agent.getState(pool)
-            assertIs<AIAgentState.Finished<String>>(state)
-            assertEquals("Echo: xyz", state.result)
         } finally {
             pool.shutdownNow()
         }

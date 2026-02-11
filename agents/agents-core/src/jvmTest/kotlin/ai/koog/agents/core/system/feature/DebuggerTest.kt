@@ -188,7 +188,7 @@ class DebuggerTest {
                     }
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
         }
 

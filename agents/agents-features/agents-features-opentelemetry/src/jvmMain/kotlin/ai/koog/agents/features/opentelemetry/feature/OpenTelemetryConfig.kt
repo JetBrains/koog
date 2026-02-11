@@ -4,10 +4,8 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
-import ai.koog.agents.features.opentelemetry.metric.AllowlistToolNameMapper
 import ai.koog.agents.features.opentelemetry.metric.MetricFilter
-import ai.koog.agents.features.opentelemetry.metric.NoopToolNameMapper
-import ai.koog.agents.features.opentelemetry.metric.ToolNameMapper
+import ai.koog.agents.features.opentelemetry.metric.adapter.MetricAdapter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -20,6 +18,7 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.InstrumentSelector
 import io.opentelemetry.sdk.metrics.SdkMeterProvider
+import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder
 import io.opentelemetry.sdk.metrics.View
 import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader
@@ -30,10 +29,12 @@ import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import io.opentelemetry.sdk.trace.samplers.Sampler
-import java.time.Duration
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Properties
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 /**
  * Configuration class for OpenTelemetry integration.
@@ -56,9 +57,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
         /**
          * The default interval for metric reading, which can be overridden when adding a custom exporter.
          */
-        val DEFAULT_METER_INTERVAL: Duration = Duration.ofSeconds(1)
-
-        private const val FALLBACK_TOOL_NAME: String = "filtered"
+        val DEFAULT_METER_INTERVAL: Duration = 1.seconds
     }
 
     private val productProperties = run {
@@ -92,6 +91,10 @@ public class OpenTelemetryConfig : FeatureConfig() {
     private var _verbose: Boolean = false
 
     private var _spanAdapter: SpanAdapter? = null
+
+    private var _metricAdapter: MetricAdapter? = null
+
+    private val _metricFilters = mutableListOf<MetricFilter>()
 
     override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
         // Do not allow events filtering for the OpenTelemetry feature
@@ -148,10 +151,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
     public val meter: Meter
         get() = sdk.getMeter(_instrumentationScopeName)
 
-    private val metricFilters = mutableListOf<MetricFilter>()
-
-    internal var toolNameMapper: ToolNameMapper = NoopToolNameMapper()
-
     /**
      * Adds a MetricExporter to the OpenTelemetry configuration.
      * This exporter will be used to export metrics collected during the application's execution.
@@ -170,21 +169,18 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * @param keysToRetain A set of attribute keys that should be retained for the specified metric.
      */
     public fun addMetricFilter(metricName: String, keysToRetain: Set<String>) {
-        metricFilters.add(MetricFilter(metricName, keysToRetain))
+        _metricFilters.add(MetricFilter(metricName, keysToRetain))
     }
 
     /**
-     * Restricts tool names in the attributes' metric and sets the fallback tool name when a tool is not allowed.
-     * Helps to manage cardinality of the metric.
+     * Adds a custom metric adapter to the OpenTelemetry configuration.
+     * The adapter can be used to process or modify metric events during telemetry data handling.
      *
-     * @param allowedToolNames A set of allowed tool names
-     * @param fallbackToolName The fallback / default tool name if not in the allowed set
+     * @param adapter The MetricAdapter implementation that will handle
+     *                processing of metric events.
      */
-    public fun restrictToolNameCardinality(
-        allowedToolNames: Set<String>,
-        fallbackToolName: String = FALLBACK_TOOL_NAME,
-    ) {
-        toolNameMapper = AllowlistToolNameMapper(allowedToolNames, fallbackToolName)
+    internal fun addMetricAdapter(adapter: MetricAdapter) {
+        _metricAdapter = adapter
     }
 
     /**
@@ -201,6 +197,9 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     internal val spanAdapter: SpanAdapter?
         get() = _spanAdapter
+
+    internal val metricAdapter: MetricAdapter?
+        get() = _metricAdapter
 
     /**
      * Sets the service information for the OpenTelemetry configuration.
@@ -325,20 +324,13 @@ public class OpenTelemetryConfig : FeatureConfig() {
         metricExporters.forEach { (exporter, meterInterval) ->
             val reader = PeriodicMetricReader
                 .builder(exporter)
-                .setInterval(meterInterval)
+                .setInterval(meterInterval.toJavaDuration())
                 .build()
 
             metricProvider.registerMetricReader(reader)
         }
 
-        metricFilters.forEach { filter ->
-            val (instrumentSelector, view) = convertToInstrumentAndViewPair(
-                filter.metricName,
-                filter.attributesKeysToRetain
-            )
-
-            metricProvider.registerView(instrumentSelector, view)
-        }
+        _metricFilters.forEach { filter -> metricProvider.registerView(filter) }
 
         val sdk = builder
             .setTracerProvider(traceProviderBuilder.build())
@@ -400,10 +392,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
         }
     }
 
-    private fun convertToInstrumentAndViewPair(metricName: String, keysToRetain: Set<String>) =
-        InstrumentSelector.builder().setName(metricName).build() to
-            View.builder().setAttributeFilter(keysToRetain).build()
-
     private fun SdkTracerProviderBuilder.addProcessors(exporter: SpanExporter) {
         if (customSpanProcessorsCreator.isEmpty()) {
             logger.debug {
@@ -418,6 +406,13 @@ public class OpenTelemetryConfig : FeatureConfig() {
             logger.debug { "Adding span processor: ${spanProcessor::class.simpleName}" }
             addSpanProcessor(spanProcessor)
         }
+    }
+
+    private fun SdkMeterProviderBuilder.registerView(filter: MetricFilter) {
+        val selector = InstrumentSelector.builder().setName(filter.metricName).build()
+        val view = View.builder().setAttributeFilter(filter.attributesKeysToRetain).build()
+
+        this.registerView(selector, view)
     }
 
     //endregion Private Methods

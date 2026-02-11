@@ -25,7 +25,7 @@ The EventHandler entity consists of five main handler types:
 ### Installation and configuration
 
 The EventHandler feature integrates with the agent workflow through the `EventHandler` class,
-which provides a way to register callbacks for different agent events, and can be installed as a feature in the agent configuration. For details, see [API reference](https://api.koog.ai/agents/agents-features/agents-features-event-handler/ai.koog.agents.features.eventHandler.feature/-event-handler/index.html).
+which provides a way to register callbacks for different agent events, and can be installed as a feature in the agent configuration. For details, see [API reference](api:agents-features-event-handler::ai.koog.agents.features.eventHandler.feature.EventHandler).
 
 To install the feature and configure event handlers for the agent, do the following:
 
@@ -60,7 +60,7 @@ handleEvents {
 ```
 <!--- KNIT example-event-handlers-01.kt -->
 
-For more details about event handler configuration, see [API reference](https://api.koog.ai/agents/agents-features/agents-features-event-handler/ai.koog.agents.features.eventHandler.feature/-event-handler-config/index.html).
+For more details about event handler configuration, see [API reference](api:agents-features-event-handler::ai.koog.agents.features.eventHandler.feature.EventHandlerConfig).
 
 You can also set up event handlers using the `handleEvents` extension function when creating an agent.
 This function also installs the event handler feature and configures event handlers for the agent. Here is an example:

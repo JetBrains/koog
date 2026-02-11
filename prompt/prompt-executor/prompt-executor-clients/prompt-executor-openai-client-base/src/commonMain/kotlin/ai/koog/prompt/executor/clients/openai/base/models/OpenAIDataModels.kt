@@ -479,6 +479,13 @@ public enum class ReasoningEffort {
     NONE,
 
     /**
+     * Allows very limited reasoning while strongly prioritizing speed and cost.
+     * Serialized as `"minimal"`.
+     */
+    @SerialName("minimal")
+    MINIMAL,
+
+    /**
      * Allows a small amount of reasoning while prioritizing speed and efficiency.
      * Suitable for straightforward prompts with occasional light chaining.
      * Serialized as `"low"`.
