@@ -196,7 +196,7 @@ class DebuggerStreamingTest {
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
-                            frame = StreamFrame.Append(testLLMResponse),
+                            frame = StreamFrame.TextDelta(testLLMResponse),
                             timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         LLMStreamingCompletedEvent(

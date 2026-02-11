@@ -231,7 +231,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
             with(StringBuilder()) {
                 val endMessages = mutableListOf<StreamFrame.End>()
-                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+                val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
 
                 executor.executeStreamAndCollect(
                     prompt = prompt,
@@ -1159,7 +1159,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
             with(StringBuilder()) {
                 val endMessages = mutableListOf<StreamFrame.End>()
-                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+                val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
 
                 executor.executeStreamAndCollect(
                     prompt = prompt,
@@ -1188,13 +1188,13 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
     tools: List<ToolDescriptor> = emptyList(),
     appendable: Appendable,
     endMessages: MutableList<StreamFrame.End>,
-    toolMessages: MutableList<StreamFrame.ToolCall>
+    toolMessages: MutableList<StreamFrame.ToolCallDelta>
 ) {
     this.executeStreaming(prompt, model, tools).collect { frame ->
         when (frame) {
-            is StreamFrame.Append -> appendable.append(frame.text)
+            is StreamFrame.TextDelta -> appendable.append(frame.text)
             is StreamFrame.End -> endMessages.add(frame)
-            is StreamFrame.ToolCall -> toolMessages.add(frame)
+            is StreamFrame.ToolCallDelta -> toolMessages.add(frame)
         }
     }
 }

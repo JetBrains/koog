@@ -31,10 +31,10 @@ class StreamFrameFlowBuilderTest {
     fun `combine partial tool calls and automatically emit on append text`() = runTest {
         buildStreamFrameFlow {
             upsertWeatherToolCallParts(0)
-            emitAppend("emitted tool?")
+            emitTextDelta("emitted tool?")
         } assertContentEquals {
             emitWeatherToolCall()
-            emitAppend("emitted tool?")
+            emitTextDelta("emitted tool?")
         }
     }
 
@@ -52,11 +52,11 @@ class StreamFrameFlowBuilderTest {
     @Test
     fun `combine partial tool calls and automatically emit on other tool call`() = runTest {
         buildStreamFrameFlow {
-            upsertToolCall(index = 0, id = "some_other_id", name = "some_other_tool", args = "")
+            emitToolCallDelta(index = 0, id = "some_other_id", name = "some_other_tool", args = "")
             upsertWeatherToolCallParts(index = 1)
             tryEmitPendingToolCall()
         } assertContentEquals {
-            emitToolCall(id = "some_other_id", name = "some_other_tool", content = "")
+            emitToolCallComplete(id = "some_other_id", name = "some_other_tool", content = "")
             emitWeatherToolCall()
         }
     }
@@ -65,7 +65,7 @@ class StreamFrameFlowBuilderTest {
     fun `throw when upserting partial tool call without an id`() = runTest {
         assertFailsWith<StreamFrameFlowBuilderError.NoPartialToolCallToComplete> {
             buildStreamFrameFlow {
-                upsertToolCall(index = 0, id = null, name = "test_error", "")
+                emitToolCallDelta(index = 0, id = null, name = "test_error", "")
             }.collect()
         }
     }
@@ -74,21 +74,21 @@ class StreamFrameFlowBuilderTest {
     fun `throw when upserting partial tool call with index mismatch`() = runTest {
         assertFailsWith<StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex> {
             buildStreamFrameFlow {
-                upsertToolCall(index = 0, id = "test", name = "test_error", "")
-                upsertToolCall(index = 1, id = null, name = "test_error", "")
+                emitToolCallDelta(index = 0, id = "test", name = "test_error", "")
+                emitToolCallDelta(index = 1, id = null, name = "test_error", "")
             }.collect()
         }
     }
 
     private suspend fun StreamFrameFlowBuilder.upsertWeatherToolCallParts(index: Int) {
-        upsertToolCall(index = index, id = weatherCallId, name = weatherFunName, args = "")
+        emitToolCallDelta(index = index, id = weatherCallId, name = weatherFunName, args = "")
         weatherArgList.forEach {
-            upsertToolCall(index = index, args = it)
+            emitToolCallDelta(index = index, args = it)
         }
     }
 
     private suspend fun FlowCollector<StreamFrame>.emitWeatherToolCall() =
-        emitToolCall(id = weatherCallId, name = weatherFunName, content = weatherArgString)
+        emitToolCallComplete(id = weatherCallId, name = weatherFunName, content = weatherArgString)
 }
 
 private suspend infix fun Flow<StreamFrame>.assertContentEquals(expected: suspend FlowCollector<StreamFrame>.() -> Unit) =

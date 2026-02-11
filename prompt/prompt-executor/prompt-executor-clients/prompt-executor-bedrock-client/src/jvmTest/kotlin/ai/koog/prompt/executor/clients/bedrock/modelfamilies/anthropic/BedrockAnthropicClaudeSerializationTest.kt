@@ -327,8 +327,8 @@ class BedrockAnthropicClaudeSerializationTest {
         val content =
             BedrockAnthropicClaudeSerialization.transformAnthropicStreamChunks(chunkJsonStringFlow, mockClock).toList()
         val expected = listOf(
-            StreamFrame.Append("hello"),
-            StreamFrame.Append("world"),
+            StreamFrame.TextDelta("hello"),
+            StreamFrame.TextDelta("world"),
         )
         assertEquals(expected, content)
     }
@@ -444,7 +444,7 @@ class BedrockAnthropicClaudeSerializationTest {
         val content =
             BedrockAnthropicClaudeSerialization.transformAnthropicStreamChunks(chunkJsonStringFlow, mockClock).toList()
         val expected = listOf(
-            StreamFrame.ToolCall(
+            StreamFrame.ToolCallDelta(
                 id = toolId,
                 name = toolName,
                 content = "{\"location\":\"Paris\"}"

@@ -343,7 +343,7 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals(listOf("Paris is ").map(StreamFrame::Append), content)
+        assertEquals(listOf("Paris is ").map(StreamFrame::TextDelta), content)
     }
 
     @Test
@@ -363,7 +363,7 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals(listOf("").map(StreamFrame::Append), content)
+        assertEquals(listOf("").map(StreamFrame::TextDelta), content)
     }
 
     @Test

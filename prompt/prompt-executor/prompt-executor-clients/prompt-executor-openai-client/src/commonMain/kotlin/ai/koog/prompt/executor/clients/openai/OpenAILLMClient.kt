@@ -272,14 +272,14 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
-                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.content?.let { emitTextDelta(it, choice.index) }
 
                 choice.delta.toolCalls?.forEach { openAIToolCall ->
                     val index = openAIToolCall.index
                     val id = openAIToolCall.id
                     val functionName = openAIToolCall.function?.name
                     val functionArgs = openAIToolCall.function?.arguments
-                    upsertToolCall(index, id, functionName, functionArgs)
+                    emitToolCallDelta(id, functionName, functionArgs, index)
                 }
 
                 choice.finishReason?.let { finishReason = it }
@@ -347,11 +347,31 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 request = request,
                 requestBodyType = String::class,
                 decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
-                processStreamingChunk = {
+                processStreamingChunk = { it ->
                     when (it) {
+                        is OpenAIStreamEvent.ResponseOutputTextDelta -> {
+                            StreamFrame.TextDelta(it.delta)
+                        }
+
+                        is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
+                            StreamFrame.ReasoningDelta(it.delta)
+                        }
+
+                        is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
+                            StreamFrame.ReasoningDelta(it.delta)
+                        }
+
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
                             when (val item = it.item) {
-                                is Item.FunctionToolCall -> StreamFrame.ToolCall(item.id, item.name, item.arguments)
+                                is Item.Text -> StreamFrame.TextComplete(item.value)
+                                is Item.Reasoning -> {
+                                    StreamFrame.ReasoningComplete(
+                                        item.content?.map { content -> content.text } ?: emptyList(),
+                                        encrypted = item.encryptedContent
+                                    )
+                                }
+                                is Item.FunctionToolCall -> StreamFrame.ToolCallDelta(item.id, item.name, item.arguments)
+
                                 else -> null
                             }
                         }
@@ -368,10 +388,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                     )
                                 }
                             )
-                        }
-
-                        is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                            StreamFrame.Append(it.delta)
                         }
 
                         else -> null

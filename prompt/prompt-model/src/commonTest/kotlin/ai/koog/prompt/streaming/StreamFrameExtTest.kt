@@ -84,10 +84,10 @@ internal class StreamFrameExtTest {
 }
 
 private fun toolCallFrame(id: String, name: String, content: String) =
-    StreamFrame.ToolCall(id, name, content)
+    StreamFrame.ToolCallDelta(id, name, content)
 
 private fun appendFrame(content: String) =
-    StreamFrame.Append(content)
+    StreamFrame.TextDelta(content)
 
 private fun endFrame(finishReason: String? = null, metaInfo: ResponseMetaInfo = ResponseMetaInfo.Empty) =
     StreamFrame.End(finishReason, metaInfo)
@@ -97,3 +97,6 @@ private fun toolCallMessage(id: String, name: String, content: String, info: Res
 
 private fun assistantMessage(content: String, finishReason: String? = null, metaInfo: ResponseMetaInfo = ResponseMetaInfo.Empty) =
     Message.Assistant(content, metaInfo, finishReason = finishReason)
+
+private fun reasoningMessage(encrypted: String?, summary: String? = null, content: String, metaInfo: ResponseMetaInfo = ResponseMetaInfo.Empty) =
+    Message.Reasoning(id = null, encrypted, summary, content, metaInfo)

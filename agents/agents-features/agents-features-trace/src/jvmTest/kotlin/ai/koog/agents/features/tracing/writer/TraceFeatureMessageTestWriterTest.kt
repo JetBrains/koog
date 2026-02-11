@@ -414,7 +414,7 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
-                        frame = StreamFrame.Append(testLLMResponse),
+                        frame = StreamFrame.TextDelta(testLLMResponse),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(

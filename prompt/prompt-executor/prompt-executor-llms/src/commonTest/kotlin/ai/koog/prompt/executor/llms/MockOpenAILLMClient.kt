@@ -45,7 +45,7 @@ internal class MockOpenAILLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> =
-        flowOf("OpenAI", " streaming", " response").map(StreamFrame::Append)
+        flowOf("OpenAI", " streaming", " response").map(StreamFrame::TextDelta)
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         throw UnsupportedOperationException("Moderation is not supported by mock client.")

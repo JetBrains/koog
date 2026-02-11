@@ -34,8 +34,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
-import ai.koog.prompt.streaming.emitToolCall
+import ai.koog.prompt.streaming.emitTextDelta
+import ai.koog.prompt.streaming.emitToolCallComplete
 import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -303,9 +303,9 @@ public class OllamaClient @JvmOverloads constructor(
                 try {
                     val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                     chunk.message?.let { message ->
-                        emitAppend(message.content)
+                        emitTextDelta(message.content)
                         message.toolCalls?.forEach { toolCall ->
-                            emitToolCall(
+                            emitToolCallComplete(
                                 id = null,
                                 name = toolCall.function.name,
                                 content = toolCall.function.arguments.toString()
@@ -314,6 +314,7 @@ public class OllamaClient @JvmOverloads constructor(
                     }
                 } catch (_: Exception) {
                     // Skip malformed JSON lines
+                    continue
                 }
             }
         }

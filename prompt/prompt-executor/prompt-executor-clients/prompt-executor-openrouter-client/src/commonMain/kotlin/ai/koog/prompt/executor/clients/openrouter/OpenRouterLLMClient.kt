@@ -164,13 +164,13 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
 
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
-                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.content?.let { emitTextDelta(it) }
 
                 choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
                     val id = openAIToolCall.id
                     val name = openAIToolCall.function.name
                     val arguments = openAIToolCall.function.arguments
-                    upsertToolCall(index, id, name, arguments)
+                    emitToolCallDelta(index, id, name, arguments)
                 }
 
                 choice.finishReason?.let { finishReason = it }

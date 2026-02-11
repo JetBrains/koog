@@ -214,11 +214,11 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                         AnthropicStreamEventType.CONTENT_BLOCK_START.value -> {
                             when (val contentBlock = response.contentBlock) {
                                 is AnthropicContent.Text -> {
-                                    emitAppend(contentBlock.text)
+                                    emitTextDelta(contentBlock.text)
                                 }
 
                                 is AnthropicContent.ToolUse -> {
-                                    upsertToolCall(
+                                    emitToolCallDelta(
                                         index = response.index
                                             ?: throw LLMClientException(clientName, "Tool index is missing"),
                                         id = contentBlock.id,
@@ -239,7 +239,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
                                 when (delta.type) {
                                     AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
-                                        upsertToolCall(
+                                        emitToolCallDelta(
                                             index = response.index
                                                 ?: throw LLMClientException(clientName, "Tool index is missing"),
                                             args = delta.partialJson
@@ -248,7 +248,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                     }
 
                                     AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
-                                        emitAppend(
+                                        emitTextDelta(
                                             delta.text
                                                 ?: throw LLMClientException(clientName, "Text delta is missing")
                                         )

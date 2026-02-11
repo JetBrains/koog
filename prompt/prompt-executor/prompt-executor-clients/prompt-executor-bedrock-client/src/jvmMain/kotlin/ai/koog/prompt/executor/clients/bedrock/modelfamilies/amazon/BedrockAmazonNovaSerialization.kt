@@ -142,7 +142,7 @@ internal object BedrockAmazonNovaSerialization {
     internal fun parseNovaStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val chunk = json.decodeFromString<NovaStreamChunk>(chunkJsonString)
         return buildList {
-            chunk.contentBlockDelta?.delta?.text?.let(StreamFrame::Append)?.let(::add)
+            chunk.contentBlockDelta?.delta?.text?.let(StreamFrame::TextDelta)?.let(::add)
             chunk.messageStop?.let { stop ->
                 add(
                     StreamFrame.End(

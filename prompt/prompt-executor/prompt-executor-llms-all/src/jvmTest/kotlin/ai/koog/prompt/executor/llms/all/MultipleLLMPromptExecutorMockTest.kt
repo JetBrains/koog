@@ -49,7 +49,7 @@ class MultipleLLMPromptExecutorMockTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Flow<StreamFrame> =
-            flowOf("OpenAI", " streaming", " response").map(StreamFrame::Append)
+            flowOf("OpenAI", " streaming", " response").map(StreamFrame::TextDelta)
     }
 
     // Mock client for Anthropic
@@ -67,7 +67,7 @@ class MultipleLLMPromptExecutorMockTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Flow<StreamFrame> =
-            flowOf("Anthropic", " streaming", " response").map(StreamFrame::Append)
+            flowOf("Anthropic", " streaming", " response").map(StreamFrame::TextDelta)
     }
 
     // Mock client for Anthropic
@@ -85,7 +85,7 @@ class MultipleLLMPromptExecutorMockTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Flow<StreamFrame> =
-            flowOf("Gemini", " streaming", " response").map(StreamFrame::Append)
+            flowOf("Gemini", " streaming", " response").map(StreamFrame::TextDelta)
     }
 
     private lateinit var executor: DefaultMultiLLMPromptExecutor
