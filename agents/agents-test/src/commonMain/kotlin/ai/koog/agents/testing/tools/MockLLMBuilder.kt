@@ -8,8 +8,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlin.time.Clock
 import kotlin.jvm.JvmName
+import kotlin.time.Clock
 
 /**
  * Represents a condition for a tool call and its corresponding result.

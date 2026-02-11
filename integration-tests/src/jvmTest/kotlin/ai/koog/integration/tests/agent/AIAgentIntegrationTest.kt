@@ -57,7 +57,6 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
-import kotlin.time.Clock
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
@@ -71,6 +70,7 @@ import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
 import kotlin.test.Test
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 

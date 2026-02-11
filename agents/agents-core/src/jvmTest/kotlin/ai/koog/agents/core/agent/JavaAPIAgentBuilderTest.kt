@@ -7,12 +7,12 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import junit.framework.TestCase.assertTrue
-import kotlin.time.Clock
-import kotlin.time.Instant
 import org.junit.jupiter.api.Test
 import java.util.function.BiFunction
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Tests for Java API patterns in AIAgent builder.
