@@ -191,14 +191,13 @@ class InstructionProposerTest {
     @Test
     fun testCorrectNumberOfCandidatesPerModule() = runBlocking {
         val executor = createMockExecutor()
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
 
         val numCandidates = 4
         val result = proposer.proposeInstructionsForProgram(
@@ -219,14 +218,13 @@ class InstructionProposerTest {
     @Test
     fun testWithDemoCandidatesProducesNonBlankInstructions() = runBlocking {
         val executor = createMockExecutor()
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
 
         val demoCandidates = mapOf(
             "thinking" to listOf(
@@ -259,14 +257,13 @@ class InstructionProposerTest {
     @Test
     fun testRespectsDemoSetCountLimit() = runBlocking {
         val executor = createMockExecutor()
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
 
         // Only 2 demo sets available
         val demoCandidates = mapOf(
@@ -299,7 +296,7 @@ class InstructionProposerTest {
             useTaskDemos = false,
             useTip = false,
         )
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -307,7 +304,6 @@ class InstructionProposerTest {
             config = config,
         )
 
-        proposer.initialize()
 
         val result = proposer.proposeInstructionsForProgram(
             demoCandidates = null,
@@ -340,7 +336,7 @@ class InstructionProposerTest {
     fun testUserProvidedProgramDescriptionSkipsLLMCall() = runBlocking {
         val calls = mutableListOf<String>()
         val executor = createMockExecutor(trackCalls = calls)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -348,7 +344,6 @@ class InstructionProposerTest {
             programDescription = "User-provided program description",
         )
 
-        proposer.initialize()
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 1)
 
         // Should NOT have called describe-program since we provided a description
@@ -363,14 +358,13 @@ class InstructionProposerTest {
         // twoNodeStrategy has descriptions on both nodes ("Reasoning node", "Answer node")
         val calls = mutableListOf<String>()
         val executor = createMockExecutor(trackCalls = calls)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 1)
 
         // Should NOT have called describe-module since both nodes have descriptions
@@ -385,19 +379,18 @@ class InstructionProposerTest {
         // noDescriptionStrategy has no descriptions on nodes
         val calls = mutableListOf<String>()
         val executor = createMockExecutor(trackCalls = calls)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
 
-        // Descriptions are now generated per-call (Gap 4), not during initialize
+        // Descriptions are now generated per-call (Gap 4), not during create()
         assertTrue(
             "describe-program" !in calls,
-            "Should not call DescribeProgram during initialize (now per-call)"
+            "Should not call DescribeProgram during create() (now per-call)"
         )
 
         // Generate 1 candidate to trigger per-call describe calls
@@ -419,14 +412,13 @@ class InstructionProposerTest {
         val calls = mutableListOf<String>()
         val executor = createMockExecutor(trackCalls = calls)
         // Use noDescriptionStrategy so LLM generates module descriptions
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
 
         val result = proposer.proposeInstructionsForProgram(
             demoCandidates = null,
@@ -455,7 +447,7 @@ class InstructionProposerTest {
             programAware = false,
             useDatasetSummary = false,
         )
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -463,7 +455,6 @@ class InstructionProposerTest {
             config = config,
         )
 
-        proposer.initialize()
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 1)
 
         assertTrue("describe-program" !in calls, "Should not call DescribeProgram when programAware=false")
@@ -538,14 +529,13 @@ class InstructionProposerTest {
     fun testPromptContainsProgramCodeAndProgramDescriptionSections() = runBlocking {
         val capturedPrompts = mutableListOf<Pair<String, String>>()
         val executor = createPromptCapturingExecutor(capturedPrompts)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 1)
 
         // Find instruction generation prompts
@@ -569,14 +559,13 @@ class InstructionProposerTest {
     fun testPromptUsesModuleSectionName() = runBlocking {
         val capturedPrompts = mutableListOf<Pair<String, String>>()
         val executor = createPromptCapturingExecutor(capturedPrompts)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 1)
 
         val instructionPrompts = capturedPrompts.filter { (sys, _) ->
@@ -603,7 +592,7 @@ class InstructionProposerTest {
             useDatasetSummary = false,
             programAware = false,
         )
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -611,7 +600,6 @@ class InstructionProposerTest {
             config = config,
         )
 
-        proposer.initialize()
 
         val previousInstructions = mapOf(
             "thinking" to listOf(
@@ -654,7 +642,7 @@ class InstructionProposerTest {
             useDatasetSummary = false,
             programAware = false,
         )
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -662,7 +650,6 @@ class InstructionProposerTest {
             config = config,
         )
 
-        proposer.initialize()
 
         val previousInstructions = mapOf(
             "thinking" to listOf("Think carefully" to 0.80),
@@ -695,7 +682,7 @@ class InstructionProposerTest {
             useDatasetSummary = false,
             programAware = false,
         )
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -703,7 +690,6 @@ class InstructionProposerTest {
             config = config,
         )
 
-        proposer.initialize()
 
         // Empty history
         proposer.proposeInstructionsForProgram(
@@ -733,7 +719,7 @@ class InstructionProposerTest {
             useDatasetSummary = false,
             programAware = false,
         )
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -741,7 +727,6 @@ class InstructionProposerTest {
             config = config,
         )
 
-        proposer.initialize()
 
         val previousInstructions = mapOf(
             "thinking" to listOf(
@@ -794,7 +779,7 @@ class InstructionProposerTest {
             useDatasetSummary = false,
             programAware = false,
         )
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy,
             trainset = trainset,
             promptExecutor = executor,
@@ -803,7 +788,6 @@ class InstructionProposerTest {
             random = Random(seed),
         )
 
-        proposer.initialize()
 
         val previousInstructions = mapOf(
             "thinking" to listOf("Some instruction" to 0.75),
@@ -837,23 +821,22 @@ class InstructionProposerTest {
     fun testDescriptionsGeneratedPerCallNotDuringInitialize() = runBlocking {
         val calls = mutableListOf<String>()
         val executor = createMockExecutor(trackCalls = calls)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
 
-        // After initialize, no describe calls should have been made
+        // After create(), no describe calls should have been made
         assertFalse(
             "describe-program" in calls,
-            "describe-program should not be called during initialize"
+            "describe-program should not be called during create()"
         )
         assertFalse(
             "describe-module" in calls,
-            "describe-module should not be called during initialize"
+            "describe-module should not be called during create()"
         )
 
         // Now generate instructions — this should trigger describe calls
@@ -873,14 +856,13 @@ class InstructionProposerTest {
     fun testPerCallDescribeCalledPerInstruction() = runBlocking {
         val calls = mutableListOf<String>()
         val executor = createMockExecutor(trackCalls = calls)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
 
         // Generate 3 candidates → 3 calls per module × 2 modules = 6 describe-program, 6 describe-module
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 3)
@@ -898,7 +880,7 @@ class InstructionProposerTest {
     fun testUserProvidedDescriptionsSkipLLMEvenPerCall() = runBlocking {
         val calls = mutableListOf<String>()
         val executor = createMockExecutor(trackCalls = calls)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = twoNodeStrategy, // has node descriptions
             trainset = trainset,
             promptExecutor = executor,
@@ -906,7 +888,6 @@ class InstructionProposerTest {
             programDescription = "User-provided description", // skips describe-program
         )
 
-        proposer.initialize()
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 3)
 
         assertFalse("describe-program" in calls, "User-provided programDescription should skip describe-program per-call")
@@ -919,14 +900,13 @@ class InstructionProposerTest {
     fun testDescribeModulePromptContainsProgramExample() = runBlocking {
         val capturedPrompts = mutableListOf<Pair<String, String>>()
         val executor = createPromptCapturingExecutor(capturedPrompts)
-        val proposer = InstructionProposer(
+        val proposer = InstructionProposer.create(
             strategy = noDescriptionStrategy,
             trainset = trainset,
             promptExecutor = executor,
             llModel = llModel,
         )
 
-        proposer.initialize()
         proposer.proposeInstructionsForProgram(demoCandidates = null, numCandidates = 1)
 
         // Find describe-module prompts

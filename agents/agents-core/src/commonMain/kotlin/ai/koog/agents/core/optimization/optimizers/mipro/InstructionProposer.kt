@@ -66,53 +66,65 @@ public data class InstructionProposerConfig(
  * @param config Configuration options
  * @param random Random instance for reproducibility
  */
-public class InstructionProposer(
+public class InstructionProposer private constructor(
     private val strategy: AIAgentGraphStrategy<*, *>,
     private val trainset: Dataset,
     private val promptExecutor: PromptExecutor,
     private val llModel: LLModel,
-    private val config: InstructionProposerConfig = InstructionProposerConfig(),
-    private val random: Random = Random.Default,
-    programDescription: String? = null,
+    private val config: InstructionProposerConfig,
+    private val random: Random,
+    private val userProgramDescription: String?,
+    private val datasetSummary: String?,
+    private val programCode: String?,
 ) {
-    private companion object {
+    public companion object {
         private const val MAX_INSTRUCT_IN_HISTORY = 5
-    }
 
-    private var datasetSummary: String? = null
-    private var programCode: String? = null
-    private val userProgramDescription: String? = programDescription
+        /**
+         * Create an [InstructionProposer], generating dataset summary and program code upfront.
+         *
+         * Program and module descriptions are generated per-call in [proposeInstructionForNode]
+         * to adapt to varying task demo context (matching DSPy's GroundedProposer.forward()).
+         *
+         * User-provided descriptions ([programDescription] and [OptimizableNode.description])
+         * always skip LLM generation.
+         */
+        public suspend fun create(
+            strategy: AIAgentGraphStrategy<*, *>,
+            trainset: Dataset,
+            promptExecutor: PromptExecutor,
+            llModel: LLModel,
+            config: InstructionProposerConfig = InstructionProposerConfig(),
+            random: Random = Random.Default,
+            programDescription: String? = null,
+        ): InstructionProposer {
+            val datasetSummary = if (config.useDatasetSummary) {
+                try {
+                    createDatasetSummary(trainset, promptExecutor, llModel)
+                } catch (_: Exception) {
+                    null
+                }
+            } else null
 
-    /**
-     * Initialize the proposer by generating dataset summary and computing program code.
-     *
-     * Program and module descriptions are now generated per-call in [proposeInstructionForModule]
-     * to adapt to varying task demo context (matching DSPy's GroundedProposer.forward()).
-     *
-     * User-provided descriptions (constructor [programDescription] and [OptimizableNode.description])
-     * always skip LLM generation.
-     *
-     * Call this before [proposeInstructionsForProgram].
-     */
-    public suspend fun initialize() {
-        if (config.useDatasetSummary) {
-            try {
-                datasetSummary = createDatasetSummary(
-                    trainset = trainset,
-                    promptExecutor = promptExecutor,
-                    llModel = llModel,
-                )
-            } catch (_: Exception) {
-                // Continue without dataset summary
-            }
-        }
+            val programCode = if (config.programAware) {
+                try {
+                    strategy.describeForOptimization()
+                } catch (_: Exception) {
+                    null
+                }
+            } else null
 
-        if (config.programAware) {
-            try {
-                programCode = strategy.describeForOptimization()
-            } catch (_: Exception) {
-                // Continue without program code
-            }
+            return InstructionProposer(
+                strategy = strategy,
+                trainset = trainset,
+                promptExecutor = promptExecutor,
+                llModel = llModel,
+                config = config,
+                random = random,
+                userProgramDescription = programDescription,
+                datasetSummary = datasetSummary,
+                programCode = programCode,
+            )
         }
     }
 
@@ -164,9 +176,8 @@ public class InstructionProposer(
             for (demoSetIndex in 0 until numDemoSets) {
                 val tip = selectTip()
 
-                val instruction = proposeInstructionForModule(
-                    moduleName = moduleName,
-                    module = module,
+                val instruction = proposeInstructionForNode(
+                    node = module,
                     demoCandidates = demoCandidates,
                     demoSetIndex = demoSetIndex,
                     tip = tip,
@@ -187,18 +198,18 @@ public class InstructionProposer(
      * Program and module descriptions are generated fresh per-call to adapt to
      * the varying task demo context (Gap 4). User-provided descriptions skip LLM.
      */
-    private suspend fun proposeInstructionForModule(
-        moduleName: String,
-        module: OptimizableNode<*, *>,
+    private suspend fun proposeInstructionForNode(
+        node: OptimizableNode<*, *>,
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
         demoSetIndex: Int,
         tip: String?,
         effectiveUseHistory: Boolean,
         previousInstructions: Map<String, List<Pair<String, Double>>>,
     ): String {
-        val moduleCodeString = buildModuleCodeString(moduleName, module)
-        val taskDemos = gatherTaskDemos(moduleName, demoCandidates, demoSetIndex)
-        val basicInstruction = module.instruction
+        val nodeName = node.name
+        val moduleCodeString = buildModuleCodeString(nodeName, node)
+        val taskDemos = gatherTaskDemos(nodeName, demoCandidates, demoSetIndex)
+        val basicInstruction = node.instruction
 
         // Gap 4: Per-call program description
         val currentProgramDescription = if (userProgramDescription != null) {
@@ -216,8 +227,8 @@ public class InstructionProposer(
         }
 
         // Gap 4: Per-call module description
-        val currentModuleDescription = if (module.description != null) {
-            module.description
+        val currentModuleDescription = if (node.description != null) {
+            node.description
         } else if (config.programAware && programCode != null && currentProgramDescription != null) {
             try {
                 // Gap 5: Pass taskDemos as programExample
@@ -233,7 +244,7 @@ public class InstructionProposer(
 
         // Gap 2: Format instruction history if enabled
         val historyString = if (effectiveUseHistory) {
-            formatInstructionHistory(moduleName, previousInstructions)
+            formatInstructionHistory(nodeName, previousInstructions)
         } else {
             null
         }
@@ -280,7 +291,9 @@ public class InstructionProposer(
             .reversed()
 
         return topEntries.joinToString("\n") { (instruction, score) ->
-            "\"$instruction\" | Score: ${"%.2f".format(score)}"
+            val whole = score.toInt()
+            val frac = ((score - whole) * 100 + 0.5).toInt()
+            "\"$instruction\" | Score: $whole.${frac.toString().padStart(2, '0')}"
         }
     }
 
