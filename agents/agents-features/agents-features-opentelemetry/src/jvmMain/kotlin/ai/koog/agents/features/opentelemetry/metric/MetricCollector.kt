@@ -81,7 +81,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
 
         metric.add(
-            updatedMetricEvent.value,
+            metricEvent.value,
             updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
         )
     }
@@ -96,7 +96,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
 
         metric.record(
-            updatedMetricEvent.value,
+            metricEvent.value,
             updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
         )
     }
