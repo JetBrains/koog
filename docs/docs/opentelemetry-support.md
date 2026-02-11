@@ -246,7 +246,8 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.sdk.trace.samplers.Sampler
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 const val apiKey = ""
 
@@ -271,7 +272,7 @@ install(OpenTelemetry) {
     // Add the Metric exporter
     addMetricExporter(
         exporter = LoggingMetricExporter.create(),
-        meterInterval = Duration.ofSeconds(30)
+        meterInterval = 30.seconds
     )
 
     // Add metric filter
