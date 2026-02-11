@@ -60,11 +60,15 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
     }
 
     internal fun storeMetricEvent(metricEvent: MetricEvent) {
-        metricEvents[metricEvent.id] = metricEvent
+        val result = metricEvents.putIfAbsent(metricEvent.id, metricEvent)
+
+        if (result == null) {
+            logger.warn { "Metric event (id: ${metricEvent.id}) is already stored. Unable to store event with the same id." }
+        }
     }
 
     internal fun getMetricEvent(id: String): MetricEvent? {
-        return metricEvents[id]
+        return metricEvents.remove(id)
     }
 
     internal fun addCounterMetricEvent(metricEvent: CounterMetricEvent) {
@@ -77,8 +81,8 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
 
         metric.add(
-            metricEvent.value,
-            metricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
+            updatedMetricEvent.value,
+            updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
         )
     }
 
@@ -92,8 +96,8 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
 
         metric.record(
-            metricEvent.value,
-            metricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
+            updatedMetricEvent.value,
+            updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
         )
     }
 }

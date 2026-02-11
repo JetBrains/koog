@@ -12,12 +12,16 @@ internal sealed interface MetricEvent {
     fun withAttributes(attributes: List<Attribute>): MetricEvent
 }
 
-internal sealed class BaseMetricEvent(
+internal open class BaseMetricEvent(
     override val id: String,
     override val timestamp: Instant,
     override val metricName: String,
     override val attributes: List<Attribute>
-) : MetricEvent
+) : MetricEvent {
+    override fun withAttributes(attributes: List<Attribute>): MetricEvent {
+        return BaseMetricEvent(id, timestamp, metricName, attributes)
+    }
+}
 
 internal data class CounterMetricEvent(
     override val id: String,

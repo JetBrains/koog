@@ -1,25 +1,24 @@
 package ai.koog.agents.features.opentelemetry.metric.events
 
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.metric.BaseMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
 import ai.koog.agents.features.opentelemetry.metric.HistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.MetricEvent
 import ai.koog.prompt.llm.LLModel
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
 internal fun AgentLifecycleEventContext.toMetricEvent(): MetricEvent {
-    return object : MetricEvent() {
-        override val id: String = this@toMetricEvent.eventId
-        override val timestamp: Instant = Clock.System.now()
-        override val metricName: String = GenAIMetrics.Client.Operation.Duration.name
-        override val attributes: List<Attribute> = emptyList()
-    }
+    return BaseMetricEvent(
+        id = this@toMetricEvent.eventId,
+        timestamp = Clock.System.now(),
+        metricName = GenAIMetrics.Client.Operation.Duration.name,
+        attributes = emptyList()
+    )
 }
 
 internal fun createLLMCallDurationHistogramMetricEvent(

@@ -37,7 +37,7 @@ class MetricFactoryTest {
         // Verify boundaries advice is set according to OpenTelemetry semantic conventions
         assertNotNull(metric.boundariesAdvice)
         assertTrue(metric.boundariesAdvice.isNotEmpty())
-        
+
         val expectedBoundaries = listOf(
             0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12, 10.24, 20.48, 40.96, 81.92
         )
@@ -49,11 +49,13 @@ class MetricFactoryTest {
         val metric = MetricFactory.createOperationDurationHistogramMetric()
 
         val boundaries = metric.boundariesAdvice
-        
+
         // Verify boundaries are in ascending order
         for (i in 0 until boundaries.size - 1) {
-            assertTrue(boundaries[i] < boundaries[i + 1], 
-                "Boundaries should be in ascending order: ${boundaries[i]} should be less than ${boundaries[i + 1]}")
+            assertTrue(
+                boundaries[i] < boundaries[i + 1],
+                "Boundaries should be in ascending order: ${boundaries[i]} should be less than ${boundaries[i + 1]}"
+            )
         }
     }
 
@@ -62,7 +64,7 @@ class MetricFactoryTest {
         val metric = MetricFactory.createOperationDurationHistogramMetric()
 
         val boundaries = metric.boundariesAdvice
-        
+
         // Verify the range covers from 10ms to ~82 seconds
         assertTrue(boundaries.first() >= 0.01, "First boundary should be at least 10ms")
         assertTrue(boundaries.last() <= 100.0, "Last boundary should be at most 100s")

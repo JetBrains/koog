@@ -12,8 +12,7 @@ internal fun createLLMInputTokensMetricEvent(
     id: String,
     inputTokens: Long,
     model: LLModel
-) : CounterMetricEvent {
-
+): CounterMetricEvent {
     val attributes = listOf(
         GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
         GenAIAttributes.Provider.Name(model.provider),
@@ -34,8 +33,7 @@ internal fun createLLMOutputTokensMetricEvent(
     id: String,
     outputTokens: Long,
     model: LLModel
-) : CounterMetricEvent {
-
+): CounterMetricEvent {
     val attributes = listOf(
         GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
         GenAIAttributes.Provider.Name(model.provider),
@@ -56,8 +54,7 @@ internal fun createToolCallCounterMetricEvent(
     id: String,
     toolName: String,
     toolCallStatus: KoogAttributes.Koog.Tool.Call.StatusType,
-) : CounterMetricEvent {
-
+): CounterMetricEvent {
     val attributes = listOf(
         GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
         GenAIAttributes.Tool.Name(toolName),
