@@ -5,8 +5,8 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo

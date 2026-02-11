@@ -3,7 +3,7 @@ package ai.koog.agents.testing.tools
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable

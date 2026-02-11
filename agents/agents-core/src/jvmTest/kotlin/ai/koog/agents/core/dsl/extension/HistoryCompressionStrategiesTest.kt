@@ -8,7 +8,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
