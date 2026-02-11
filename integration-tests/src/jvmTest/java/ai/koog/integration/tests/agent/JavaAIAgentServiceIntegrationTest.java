@@ -95,7 +95,7 @@ public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
 
         ToolRegistry emptyRegistry = ToolRegistry.builder().build();
         String result = service.createAgentAndRun("What is 2+2?", "one-shot-agent",
-            emptyRegistry, service.getAgentConfig(), null, kotlinx.datetime.Clock.System.INSTANCE);
+            emptyRegistry, service.getAgentConfig(), null, kotlin.time.Clock.System.INSTANCE);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
