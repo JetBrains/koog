@@ -9,8 +9,8 @@ public class Application {
 
     // TODO: Make it work without requiring Kotlin Clock
     @Bean
-    kotlin.time.Clock kotlinClock() {
-        return kotlin.time.Clock.System.INSTANCE;
+    kotlinx.datetime.Clock kotlinClock() {
+        return kotlinx.datetime.Clock.System.INSTANCE;
     }
 
     public static void main(String[] args) {
