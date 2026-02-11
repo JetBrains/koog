@@ -2,10 +2,6 @@ package ai.koog.agents.features.opentelemetry.metric.adapter
 
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
-import ai.koog.agents.features.opentelemetry.metric.CounterMetricEvent
-import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
-import ai.koog.agents.features.opentelemetry.metric.HistogramMetricEvent
-import ai.koog.agents.features.opentelemetry.metric.KoogMetrics
 import ai.koog.agents.features.opentelemetry.metric.MetricEvent
 
 private const val FALLBACK_TOOL_NAME = "filtered"
@@ -23,34 +19,22 @@ public fun OpenTelemetryConfig.restrictToolNameCardinality(
 ) {
     addMetricAdapter(object : MetricAdapter() {
         override fun process(metricEvent: MetricEvent): MetricEvent {
-            if (metricEvent.metricName == KoogMetrics.Tool.Count.name ||
-                metricEvent.metricName == GenAIMetrics.Client.Operation.Duration.name
-            ) {
-                val expectedAttributeKey = GenAIAttributes.Tool.Name("").key
-                val toolNameAttribute = metricEvent.attributes.find { attribute -> attribute.key == expectedAttributeKey }
+            val toolNameKey = GenAIAttributes.Tool.Name("").key
+            val toolName = metricEvent.attributes.find { it.key == toolNameKey }
 
-                if (toolNameAttribute != null && toolNameAttribute.value !in allowedToolNames) {
-                    val updatedAttributes = metricEvent.attributes.map { attribute ->
-                        if (attribute.key == expectedAttributeKey) {
-                            GenAIAttributes.Tool.Name(fallbackToolName)
-                        } else {
-                            attribute
-                        }
-                    }
-
-                    when (metricEvent) {
-                        is CounterMetricEvent -> {
-                            return metricEvent.copy(attributes = updatedAttributes)
-                        }
-
-                        is HistogramMetricEvent -> {
-                            return metricEvent.copy(attributes = updatedAttributes)
-                        }
-                    }
-                }
+            if (toolName == null || toolName.value in allowedToolNames) {
+                return metricEvent
             }
 
-            return metricEvent
+            return metricEvent.withAttributes(
+                metricEvent.attributes.map {
+                    if (it.key == toolNameKey) {
+                        GenAIAttributes.Tool.Name(fallbackToolName)
+                    } else {
+                        it
+                    }
+                }
+            )
         }
     })
 }
