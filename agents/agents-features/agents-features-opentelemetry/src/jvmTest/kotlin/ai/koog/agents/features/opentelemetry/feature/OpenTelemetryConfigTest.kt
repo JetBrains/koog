@@ -20,7 +20,7 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
 import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
