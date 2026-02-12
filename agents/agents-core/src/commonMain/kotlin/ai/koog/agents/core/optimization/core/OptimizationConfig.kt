@@ -37,6 +37,7 @@ public class OptimizationConfig(
 
     override val key: CoroutineContext.Key<OptimizationConfig> get() = Key
 
+    /** Coroutine context key for [OptimizationConfig]. */
     public companion object Key : CoroutineContext.Key<OptimizationConfig>
 
     /**

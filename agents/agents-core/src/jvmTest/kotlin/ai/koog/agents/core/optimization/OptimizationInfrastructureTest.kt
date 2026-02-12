@@ -4,10 +4,10 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
-import ai.koog.agents.core.optimization.util.findOptimizableModules
+import ai.koog.agents.core.optimization.core.optimizableNode
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.coroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -22,11 +22,11 @@ import kotlin.test.assertEquals
 class OptimizationInfrastructureTest {
 
     /**
-     * Test that findOptimizableModules() discovers OptimizableNode instances
+     * Test that findOptimizableNodes() discovers OptimizableNode instances
      * and ignores regular nodes.
      */
     @Test
-    fun testFindOptimizableModules() {
+    fun testFindOptimizableNodes() {
         val testStrategy = strategy("test") {
             val optimizable by optimizableNode(
                 instruction = "This node is optimizable",
@@ -41,11 +41,11 @@ class OptimizationInfrastructureTest {
             edge(notOptimizable forwardTo nodeFinish)
         }
 
-        val modules = testStrategy.findOptimizableModules()
+        val nodes = testStrategy.findOptimizableNodes()
 
-        assertEquals(1, modules.size)
-        assertEquals("optimizable", modules[0].name)
-        assertEquals("This node is optimizable", modules[0].instruction)
+        assertEquals(1, nodes.size)
+        assertEquals("optimizable", nodes[0].name)
+        assertEquals("This node is optimizable", nodes[0].instruction)
     }
 
     /**
@@ -81,16 +81,16 @@ class OptimizationInfrastructureTest {
             edge(myNode forwardTo nodeFinish)
         }
 
-        val modules = testStrategy.findOptimizableModules()
-        assertEquals(1, modules.size)
+        val nodes = testStrategy.findOptimizableNodes()
+        assertEquals(1, nodes.size)
 
-        val module = modules[0]
-        assertEquals("myNode", module.name)
-        assertEquals("My instruction", module.instruction)
-        assertEquals("My description", module.description)
-        assertEquals(1, module.demonstrations.size)
-        assertEquals("example in", module.demonstrations[0].input)
-        assertEquals("example out", module.demonstrations[0].output)
+        val node =nodes[0]
+        assertEquals("myNode", node.name)
+        assertEquals("My instruction", node.instruction)
+        assertEquals("My description", node.description)
+        assertEquals(1, node.demonstrations.size)
+        assertEquals("example in", node.demonstrations[0].input)
+        assertEquals("example out", node.demonstrations[0].output)
     }
 
     /**
@@ -108,11 +108,11 @@ class OptimizationInfrastructureTest {
             edge(myNode forwardTo nodeFinish)
         }
 
-        val modules = testStrategy.findOptimizableModules()
-        assertEquals(1, modules.size)
+        val nodes = testStrategy.findOptimizableNodes()
+        assertEquals(1, nodes.size)
 
-        val module = modules[0]
-        assertEquals(1, module.demonstrations.size)
+        val node =nodes[0]
+        assertEquals(1, node.demonstrations.size)
     }
 
     /**

@@ -1,11 +1,11 @@
 package ai.koog.agents.core.optimization.optimizers.mipro
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.optimization.OptimizableNode
+import ai.koog.agents.core.optimization.core.OptimizableNode
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
-import ai.koog.agents.core.optimization.util.describeForOptimization
-import ai.koog.agents.core.optimization.util.findOptimizableModules
+import ai.koog.agents.core.optimization.optimizers.utils.describeForOptimization
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -168,7 +168,7 @@ public class InstructionProposer private constructor(
         numCandidates: Int,
         previousInstructions: Map<String, List<Pair<String, Double>>> = emptyMap(),
     ): Map<String, List<String>> {
-        val modules = strategy.findOptimizableModules()
+        val modules = strategy.findOptimizableNodes()
         val proposedInstructions = mutableMapOf<String, MutableList<String>>()
 
         // Gap 3: 50/50 coin flip to toggle instruction history for this round
