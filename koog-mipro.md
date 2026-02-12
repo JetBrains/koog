@@ -35,7 +35,7 @@ Support automatic prompt optimization (MIPRO v2) within Koog's agent framework. 
 | `AgentModule` | `OptimizableNode<TInput, TOutput>` (subclass of `AIAgentNode`) |
 | `Signature.instruction` | `OptimizableNode.instruction: String` |
 | `Trace` | `Demonstration<TInput, TOutput>` (labeled = from training data, bootstrapped = from teacher execution) |
-| `Example` | `Example(data: Map<String, Any>, labelKey)` |
+| `Example` | `Example<TInput, TOutput>(input: TInput, label: TOutput?)` |
 | `Optimizer` | Standalone classes (`LabeledFewShot`, `BootstrapFewShot`) returning `OptimizationResult` |
 
 ### OptimizableNode
@@ -168,11 +168,12 @@ There is no shared optimizer interface — each optimizer has its own `optimize(
 ### Example and Metric Types
 
 ```kotlin
-// Training data — values can be any type matching node I/O
-data class Example(
-    val data: Map<String, Any>,
-    val labelKey: String? = null,
+// Training data — typed input and optional label
+data class Example<TInput, TOutput>(
+    val input: TInput,
+    val label: TOutput? = null,
 )
+typealias Dataset<TInput, TOutput> = List<Example<TInput, TOutput>>
 
 // Typed metric — T matches the strategy's output type
 typealias Metric<T> = (expected: T, actual: T) -> Double
@@ -292,7 +293,7 @@ agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/
     │   ├── Demonstration.kt                 # DONE: Typed input-output pair
     │   ├── OptimizationConfig.kt            # DONE: Coroutine context element for trial configs
     │   ├── OptimizationResult.kt            # DONE: OptimizationResult data class
-    │   └── Example.kt                       # DONE: Training data type (Map<String, Any>) + Metric<T> + Dataset
+    │   └── Example.kt                       # DONE: Example<TInput, TOutput> + Metric<T> + Dataset<TInput, TOutput>
     │
     ├── features/
     │   └── TraceCollectionFeature.kt        # DONE: Pipeline feature for capturing node I/O
@@ -338,7 +339,7 @@ No Koog core files are modified — `AIAgentNode`, `AIAgentNodeDelegate`, and `A
 - [x] `TraceCollectionFeature` with `collectTraces {}` DSL
 - [x] Context helpers (`getNodeInstruction`, `getNodeDemonstrations`, etc.)
 - [x] `OptimizationResult` data class
-- [x] `Example` (with `Map<String, Any>`) and `Metric<T>` types
+- [x] `Example<TInput, TOutput>` (typed input + optional label) and `Metric<T>` types
 - [x] Strategy utilities (`findOptimizableModules`, `validateOptimizationConfig`, `describeForOptimization`)
 - [x] `LabeledFewShot` optimizer
 - [x] Infrastructure tests (`OptimizationInfrastructureTest`)

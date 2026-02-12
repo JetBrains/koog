@@ -25,6 +25,9 @@ The demonstrations given to optimizableNode during strategy construction are use
 In the original dspy implementation, this is handled by the `LabeledFewShot` class. We also need machinery to link examples in training data to the right nodes.
 Our implementation does away with that in order to simplify the API and DSL.
 
+## How are Examples/Demonstrations formatted?
+Sometimes as JSON, sometimes using kotlin dataclass toString?
+
 ## Optimization Config
 Holds one optimization parameter configuration per optimizableNode
 
@@ -48,6 +51,9 @@ Modify subgraph primitive, or use subgraph with task thingy?
 
 ## Assemble the optimized agent
 - GraphAiAgent = Strategy + PromptExecutor + ToolSetRegistry
+
+## Saving optimization results, serialization
+TODO
 
 ## In OptimizableNode, can we subsume instruction and demonstrations somehow?
 
