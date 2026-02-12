@@ -208,7 +208,7 @@ class DemoSetGeneratorTest {
     }
 
     @Test
-    fun testAllModulesRepresented() = runBlocking {
+    fun testAllNodesRepresented() = runBlocking {
         val executor = createMockExecutor()
         val result = generateDemoSets(
             promptExecutor = executor,
@@ -228,7 +228,7 @@ class DemoSetGeneratorTest {
         // Both nodes should be present in the result
         assertTrue("thinking" in result, "Result should contain 'thinking' node")
         assertTrue("answer" in result, "Result should contain 'answer' node")
-        assertEquals(2, result.size, "Result should have exactly 2 modules")
+        assertEquals(2, result.size, "Result should have exactly 2 nodes")
     }
 
     @Test

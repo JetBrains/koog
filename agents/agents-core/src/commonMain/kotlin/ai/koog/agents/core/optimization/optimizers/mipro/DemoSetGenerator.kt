@@ -7,7 +7,7 @@ import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
-import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableModules
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
 import ai.koog.agents.core.optimization.optimizers.utils.sampleLabeledDemonstrations
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -73,7 +73,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
         return null
     }
 
-    val modules = strategy.findOptimizableModules()
+    val modules = strategy.findOptimizableNodes()
     if (modules.isEmpty()) return null
 
     // Output map: node name → mutable list of demo sets

@@ -9,7 +9,7 @@ import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
-import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableModules
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -238,7 +238,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         inputFromExample: (Example) -> TInput,
         random: Random,
     ): OptimizationResult {
-        val moduleNames = strategy.findOptimizableModules().map { it.name }
+        val moduleNames = strategy.findOptimizableNodes().map { it.name }
 
         // Evaluate baseline (empty config)
         val baselineConfig = OptimizationConfig()
@@ -261,7 +261,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             val instructions = moduleNames.associate { name ->
                 val candidates = instructionCandidates[name]
                 if (candidates.isNullOrEmpty()) {
-                    name to (strategy.findOptimizableModules().first { it.name == name }.instruction)
+                    name to (strategy.findOptimizableNodes().first { it.name == name }.instruction)
                 } else {
                     name to candidates[random.nextInt(candidates.size)]
                 }
@@ -477,7 +477,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         zeroShotMode: Boolean,
         numCandidates: Int,
     ): Int {
-        var numVars = strategy.findOptimizableModules().size
+        var numVars = strategy.findOptimizableNodes().size
         if (!zeroShotMode) {
             numVars *= 2
         }

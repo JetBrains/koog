@@ -16,7 +16,7 @@ import ai.koog.agents.core.optimization.core.OptimizableNode
  *
  * @return A list of all [OptimizableNode] instances in the strategy.
  */
-public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizableModules(): List<OptimizableNode<*, *>> {
+public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizableNodes(): List<OptimizableNode<*, *>> {
     return findAllNodes().filterIsInstance<OptimizableNode<*, *>>()
 }
 
@@ -30,17 +30,17 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findOptimizab
  * @return A text description of the strategy.
  */
 public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.describeForOptimization(): String {
-    val modules = findOptimizableModules()
+    val nodes = findOptimizableNodes()
 
     return buildString {
         appendLine("Strategy: $name")
         appendLine()
 
-        if (modules.isEmpty()) {
+        if (nodes.isEmpty()) {
             appendLine("No optimizable nodes found.")
         } else {
-            appendLine("Optimizable Nodes (${modules.size}):")
-            for (node in modules) {
+            appendLine("Optimizable Nodes (${nodes.size}):")
+            for (node in nodes) {
                 appendLine("  - ${node.name}")
                 node.description?.let { desc ->
                     appendLine("    Description: $desc")
