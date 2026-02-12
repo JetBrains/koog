@@ -11,7 +11,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
@@ -61,7 +61,7 @@ class AIAgentNodesTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("")
+            agent.run("", null)
         }
 
         // After compression, we should have one result
@@ -126,7 +126,7 @@ class AIAgentNodesTest {
             }
         }.use { agent ->
 
-            val executionResult = agent.run("Heeeey")
+            val executionResult = agent.run("Heeeey", null)
 
             assertEquals("Done", executionResult, "Agent execution should return 'Done'")
             assertEquals(1, results.size, "Should have exactly one result")

@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Pro
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
 import kotlin.jvm.JvmField
 
 /**
@@ -196,5 +197,33 @@ public object GoogleModels : LLModelDefinitions {
             capabilities = listOf(LLMCapability.Embed),
             contextLength = 2048,
         )
+    }
+
+    /**
+     * List of the supported models by the Google provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        Gemini2_0Flash,
+        Gemini2_0Flash001,
+        Gemini2_0FlashLite,
+        Gemini2_0FlashLite001,
+        Gemini2_5Pro,
+        Gemini2_5Flash,
+        Gemini2_5FlashLite,
+        Gemini3_Pro_Preview,
+        Embeddings.GeminiEmbedding001,
+    )
+
+    /**
+     * List of custom models added to the Google provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Google) { "Model provider must be Google" }
+        customModels.add(model)
     }
 }

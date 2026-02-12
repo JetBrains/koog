@@ -86,43 +86,6 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public abstract suspend fun agentById(id: String): TAgent?
 
     /**
-     * Retrieves a comprehensive list of all AI agents currently managed by the service,
-     * regardless of their state (active, inactive, or finished).
-     *
-     * @return A list of all AI agents managed by the service.
-     */
-    public abstract suspend fun listAllAgents(): List<TAgent>
-
-    /**
-     * Retrieves a list of active AI agents currently managed by the service.
-     *
-     * @return A list containing the currently active AI agents.
-     */
-    public abstract suspend fun listActiveAgents(): List<TAgent>
-
-    /**
-     * Retrieves a list of inactive AI agents currently managed by the service.
-     *
-     * @return A list of AI agents that are marked as inactive.
-     */
-    public abstract suspend fun listInactiveAgents(): List<TAgent>
-
-    /**
-     * Retrieves a list of AI agents that have completed their tasks and are marked as finished.
-     *
-     * @return A list of finished AI agents.
-     */
-    public abstract suspend fun listFinishedAgents(): List<TAgent>
-
-    /**
-     * Closes all AI agents currently managed by the service.
-     *
-     * This method retrieves the list of all agents, regardless of their state (active, inactive, or finished),
-     * and invokes the [AIAgent.close] function on each of them, releasing any underlying resources.
-     */
-    public abstract suspend fun closeAll()
-
-    /**
      * Companion object that provides factory methods for creating instances of
      * GraphAIAgentService with various configurations.
      */
@@ -279,17 +242,13 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
     private val managedAgents: MutableMap<String, TAgent> = mutableMapOf()
     private val managedAgentsMutex = Mutex()
 
-    override suspend fun closeAll() {
-        listAllAgents().forEach { it.close() }
-    }
-
     override suspend fun createAgentAndRun(
         agentInput: Input,
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
         clock: Clock
-    ): Output = createAgent(id, additionalToolRegistry, agentConfig, clock).run(agentInput)
+    ): Output = createAgent(id, additionalToolRegistry, agentConfig, clock).run(agentInput, null)
 
     /**
      * Creates and registers a new managed AI agent with the specified configuration and tool registry.
@@ -355,46 +314,6 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
      */
     final override suspend fun agentById(id: String): TAgent? = managedAgentsMutex.withLock {
         managedAgents[id]
-    }
-
-    /**
-     * Retrieves a list of all currently active AI agents managed by the service.
-     *
-     *
-     * @return A list of active AI agents of type `AIAgent<Input, Output>`.
-     */
-    final override suspend fun listActiveAgents(): List<TAgent> = managedAgentsMutex.withLock {
-        managedAgents.filterValues { it.isRunning() }.values.toList()
-    }
-
-    /**
-     * Retrieves a list of inactive AI agents managed by this service.
-     *
-     * An agent is considered inactive if it is not currently running.
-     *
-     * @return A list of AI agents that are inactive.
-     */
-    final override suspend fun listInactiveAgents(): List<TAgent> = managedAgentsMutex.withLock {
-        managedAgents.filterValues { !it.isRunning() }.values.toList()
-    }
-
-    /**
-     * Retrieves a list of all agents that have already finished their task.
-     *
-     * @return A list of finished agents managed by this service.
-     */
-    final override suspend fun listFinishedAgents(): List<TAgent> = managedAgentsMutex.withLock {
-        managedAgents.filterValues { it.isFinished() }.values.toList()
-    }
-
-    /**
-     * Retrieves a list of all AI agents currently managed by the service, regardless of their state
-     * (e.g., active, inactive, or finished).
-     *
-     * @return A list of all AI agents of type `AIAgent<Input, Output>` managed by this service.
-     */
-    override suspend fun listAllAgents(): List<TAgent> = managedAgentsMutex.withLock {
-        managedAgents.values.toList()
     }
 }
 

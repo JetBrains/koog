@@ -115,7 +115,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
         delegate.moderate(prompt, model)
     }
 
-    override suspend fun models(): List<String> = withRetry("models") {
+    override suspend fun models(): List<LLModel> = withRetry("models") {
         delegate.models()
     }
 

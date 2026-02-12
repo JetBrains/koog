@@ -143,7 +143,6 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testTextProcessingBasic(scenario, model)
     }
 
-    @Disabled("Converse API does not support audio processing")
     @ParameterizedTest
     @MethodSource("audioScenarioModelCombinations")
     override fun integration_testAudioProcessingBasic(scenario: AudioTestScenario, model: LLModel) {
@@ -229,7 +228,6 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testToolChoiceRequired(model)
     }
 
-    @Disabled("Converse API does not support tool choice none")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testToolChoiceNone(model: LLModel) {
@@ -255,14 +253,12 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testUrlBasedAttachment(model)
     }
 
-    @Disabled("Converse API does ot support native structured output")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNative(model: LLModel) {
         super.integration_testStructuredOutputNative(model)
     }
 
-    @Disabled("Converse API does ot support native structured output")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) {

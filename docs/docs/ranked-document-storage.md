@@ -44,7 +44,7 @@ This sequence of steps represents a *relevance search* flow that returns the mos
 
 <!--- INCLUDE
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.mostRelevantDocuments
 import ai.koog.rag.vector.EmbeddingBasedDocumentStorage
@@ -62,7 +62,7 @@ fun main() {
 -->
 ```kotlin
 // Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 // You may also use OpenAI embeddings with:
 // val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
 
@@ -102,7 +102,7 @@ Here is an example of how to implement the defined RAG system for an AI agent to
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -114,7 +114,7 @@ import ai.koog.rag.vector.JVMTextDocumentEmbedder
 import kotlin.io.path.pathString
 
 // Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 // You may also use OpenAI embeddings with:
 // val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
 
@@ -176,7 +176,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
@@ -188,7 +188,7 @@ import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
 
 // Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 // You may also use OpenAI embeddings with:
 // val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
 
@@ -269,7 +269,7 @@ val inMemoryStorage = InMemoryVectorStorage<Path>()
 ```
 <!--- KNIT example-ranked-document-storage-04.kt -->
 
-For more information, see the [InMemoryVectorStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-in-memory-vector-storage/index.html) reference.
+For more information, see the [InMemoryVectorStorage](api:vector-storage::ai.koog.rag.vector.InMemoryVectorStorage) reference.
 
 #### FileVectorStorage
 
@@ -290,7 +290,7 @@ val fileStorage = FileVectorStorage<Document, Path>(
 ```
 <!--- KNIT example-ranked-document-storage-05.kt -->
 
-For more information, see the [FileVectorStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-file-vector-storage/index.html) reference.
+For more information, see the [FileVectorStorage](api:vector-storage::ai.koog.rag.vector.FileVectorStorage) reference.
 
 #### JVMFileVectorStorage
 
@@ -305,7 +305,7 @@ val jvmFileStorage = JVMFileVectorStorage(root = Path.of("/path/to/storage"))
 ```
 <!--- KNIT example-ranked-document-storage-06.kt -->
 
-For more information, see the [JVMFileVectorStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-j-v-m-file-vector-storage/index.html) reference.
+For more information, see the [JVMFileVectorStorage](api:vector-storage::ai.koog.rag.vector.JVMFileVectorStorage) reference.
 
 ### Document embedder
 
@@ -327,7 +327,7 @@ val textEmbedder = TextDocumentEmbedder<Document, Path>(
 ```
 <!--- KNIT example-ranked-document-storage-07.kt -->
 
-For more information, see the [TextDocumentEmbedder](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-text-document-embedder/index.html) reference.
+For more information, see the [TextDocumentEmbedder](api:vector-storage::ai.koog.rag.vector.TextDocumentEmbedder) reference.
 
 #### JVMTextDocumentEmbedder
 
@@ -335,18 +335,18 @@ A JVM-specific implementation that works with `java.nio.file.Path`.
 
 <!--- INCLUDE
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.vector.JVMTextDocumentEmbedder
 
 -->
 ```kotlin
-val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 val jvmTextEmbedder = JVMTextDocumentEmbedder(embedder = embedder)
 ```
 <!--- KNIT example-ranked-document-storage-08.kt -->
 
-For more information, see the [JVMTextDocumentEmbedder](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-j-v-m-text-document-embedder/index.html) reference.
+For more information, see the [JVMTextDocumentEmbedder](api:vector-storage::ai.koog.rag.vector.JVMTextDocumentEmbedder) reference.
 
 ### Combined storage implementations
 
@@ -371,7 +371,7 @@ val embeddingStorage = EmbeddingBasedDocumentStorage(
 ```
 <!--- KNIT example-ranked-document-storage-09.kt -->
 
-For more information, see the [EmbeddingBasedDocumentStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-embedding-based-document-storage/index.html) reference.
+For more information, see the [EmbeddingBasedDocumentStorage](api:vector-storage::ai.koog.rag.vector.EmbeddingBasedDocumentStorage) reference.
 
 #### InMemoryDocumentEmbeddingStorage
 
@@ -392,7 +392,7 @@ val inMemoryEmbeddingStorage = InMemoryDocumentEmbeddingStorage<Document>(
 ```
 <!--- KNIT example-ranked-document-storage-10.kt -->
 
-For more information, see the [InMemoryDocumentEmbeddingStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-in-memory-document-embedding-storage/index.html) reference.
+For more information, see the [InMemoryDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.InMemoryDocumentEmbeddingStorage) reference.
 
 #### FileDocumentEmbeddingStorage
 
@@ -414,7 +414,7 @@ val fileEmbeddingStorage = FileDocumentEmbeddingStorage<Document, Path>(
 ```
 <!--- KNIT example-ranked-document-storage-11.kt -->
 
-For more information, see the [FileDocumentEmbeddingStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-file-document-embedding-storage/index.html) reference.
+For more information, see the [FileDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.FileDocumentEmbeddingStorage) reference.
 
 #### JVMFileDocumentEmbeddingStorage
 
@@ -433,7 +433,7 @@ val jvmFileEmbeddingStorage = JVMFileDocumentEmbeddingStorage(
 ```
 <!--- KNIT example-ranked-document-storage-12.kt -->
 
-For more information, see the [JVMFileDocumentEmbeddingStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-j-v-m-file-document-embedding-storage/index.html) reference.
+For more information, see the [JVMFileDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.JVMFileDocumentEmbeddingStorage) reference.
 
 #### JVMTextFileDocumentEmbeddingStorage
 
@@ -452,7 +452,7 @@ val jvmTextFileEmbeddingStorage = JVMTextFileDocumentEmbeddingStorage(
 ```
 <!--- KNIT example-ranked-document-storage-13.kt -->
 
-For more information, see the [JVMTextFileDocumentEmbeddingStorage](https://api.koog.ai/rag/vector-storage/ai.koog.rag.vector/-j-v-m-text-file-document-embedding-storage/index.html) reference.
+For more information, see the [JVMTextFileDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.JVMTextFileDocumentEmbeddingStorage) reference.
 
 These implementations provide a flexible and extensible framework for working with document embeddings and vector storage in various environments.
 
@@ -466,7 +466,7 @@ Here's an example of implementing a custom document embedder for PDF documents:
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.RankedDocument
 import ai.koog.rag.base.RankedDocumentStorage
@@ -560,7 +560,7 @@ class PDFVectorStorage(
 // Usage example
 suspend fun main() {
     val pdfProvider = PDFDocumentProvider()
-    val embedder = LLMEmbedder(OllamaClient(), OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+    val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
     val pdfEmbedder = PDFDocumentEmbedder(embedder)
     val storage = InMemoryVectorStorage<PDFDocument>()
     val pdfStorage = PDFVectorStorage(pdfProvider, pdfEmbedder, storage)

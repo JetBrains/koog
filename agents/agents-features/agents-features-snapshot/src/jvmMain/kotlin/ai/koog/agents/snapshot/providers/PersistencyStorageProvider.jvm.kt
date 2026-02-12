@@ -38,21 +38,21 @@ public abstract class AsyncPersistenceStorageProvider<Filter> : PersistenceStora
     // ------- implementations ----------
 
     /**
-     * Retrieves the list of checkpoints of the AI agent with the given [agentId] that match the provided [filter]
+     * Retrieves the list of checkpoints of the AI agent with the given [sessionId] that match the provided [filter]
      * */
-    public final override suspend fun getCheckpoints(agentId: String, filter: Filter?): List<AgentCheckpointData> =
-        getCheckpointsAsync(agentId, filter).await()
+    public final override suspend fun getCheckpoints(sessionId: String, filter: Filter?): List<AgentCheckpointData> =
+        getCheckpointsAsync(sessionId, filter).await()
 
     /**
-     * Saves provided checkpoint ([agentCheckpointData]) of the agent with [agentId] to the storage (ex: database, S3, file)
+     * Saves provided checkpoint ([agentCheckpointData]) of the agent with [sessionId] to the storage (ex: database, S3, file)
      * */
-    public final override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
-        saveCheckpointAsync(agentId, agentCheckpointData).await()
+    public final override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
+        saveCheckpointAsync(sessionId, agentCheckpointData).await()
     }
 
     /**
-     * Retrieves the latest checkpoint of the AI agent with [agentId] matching the provided [filter]
+     * Retrieves the latest checkpoint of the AI agent with [sessionId] matching the provided [filter]
      * */
-    public final override suspend fun getLatestCheckpoint(agentId: String, filter: Filter?): AgentCheckpointData? =
-        getLatestCheckpointAsync(agentId, filter).await()
+    public final override suspend fun getLatestCheckpoint(sessionId: String, filter: Filter?): AgentCheckpointData? =
+        getLatestCheckpointAsync(sessionId, filter).await()
 }

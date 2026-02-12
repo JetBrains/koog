@@ -52,10 +52,12 @@ private fun buildContent(
     endLine: Int,
     onEndLineExceedsFileLength: ((requestedEndLine: Int, fileLineCount: Int) -> Unit)?
 ): FileSystemEntry.File.Content {
-    val lineCount = content.lineSequence().count()
+    val lineCount = if (content.isEmpty()) 0 else content.lineSequence().count()
 
     require(startLine >= 0) { "startLine=$startLine must be >= 0" }
-    require(startLine < lineCount) { "startLine=$startLine must be < lineCount=$lineCount" }
+    if (lineCount > 0) {
+        require(startLine < lineCount) { "startLine=$startLine must be < lineCount=$lineCount" }
+    }
 
     require(endLine >= -1) { "endLine=$endLine must be >= -1" }
     require(endLine == -1 || endLine > startLine) { "endLine=$endLine must be > startLine=$startLine or -1" }

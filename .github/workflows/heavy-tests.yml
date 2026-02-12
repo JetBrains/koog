@@ -33,8 +33,12 @@ jobs:
     strategy:
       matrix:
         include:
+          - job-name: "java-api-tests"
+            test-group: "ai.koog.integration.tests.agent.Java*"
+            artifact-name: "java-api-tests"
+            os: ubuntu-latest
           - job-name: "agent-tests"
-            test-group: "ai.koog.integration.tests.agent.*"
+            test-group: "ai.koog.integration.tests.agent.* --exclude-tests ai.koog.integration.tests.agent.Java*"
             artifact-name: "agent-tests"
             os: ubuntu-latest
           - job-name: "single-llm-executor-tests"

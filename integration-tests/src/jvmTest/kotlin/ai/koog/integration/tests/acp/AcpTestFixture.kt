@@ -148,7 +148,7 @@ suspend fun setupAcpClient(
     agentInfo.authMethods shouldBe authMethods
 
     if (authenticate && authMethods.isNotEmpty()) {
-        clientProtocol.sendRequest<AuthenticateRequest, AuthenticateResponse>(
+        clientProtocol.sendRequest(
             AcpMethod.AgentMethods.Authenticate,
             AuthenticateRequest(authMethods.first().id)
         )

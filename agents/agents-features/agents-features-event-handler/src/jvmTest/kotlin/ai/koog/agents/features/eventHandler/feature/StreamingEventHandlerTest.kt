@@ -28,7 +28,7 @@ class StreamingEventHandlerTest {
             strategy = streamTextStrategy("streaming-test-strategy"),
             buildLlmMock = { mockLLMAnswer(assistantResponse) onRequestContains userMessage }
         ) { agent ->
-            agent.run(userMessage)
+            agent.run(userMessage, null)
         }
 
         // Verify events are captured
@@ -57,7 +57,7 @@ class StreamingEventHandlerTest {
             strategy = streamTextStrategy("streaming-test-strategy-2"),
             buildLlmMock = { mockLLMAnswer(testResponse) onRequestContains testMessage }
         ) { agent ->
-            agent.run(testMessage)
+            agent.run(testMessage, null)
         }
         // Verify the overall event collection is working
         assertEventsCollected(eventsCollector)

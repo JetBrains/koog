@@ -740,6 +740,79 @@ public object BedrockModels : LLModelDefinitions {
             inferenceProfilePrefix = null
         ).effectiveModel
     }
+
+    /**
+     * List of the supported models by the Bedrock provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        // Claude 3 Series
+        AnthropicClaude3Opus,
+        AnthropicClaude3Sonnet,
+        AnthropicClaude3Haiku,
+
+        // Claude 3.5 Series
+        AnthropicClaude35SonnetV2,
+        AnthropicClaude35Haiku,
+
+        // Claude 4 Series
+        AnthropicClaude4Opus,
+        AnthropicClaude41Opus,
+        AnthropicClaude45Opus,
+        AnthropicClaude4Sonnet,
+        AnthropicClaude4_5Sonnet,
+        AnthropicClaude4_5Haiku,
+
+        // Claude Legacy
+        AnthropicClaude21,
+        AnthropicClaudeInstant,
+
+        // Amazon Nova Series
+        AmazonNovaMicro,
+        AmazonNovaLite,
+        AmazonNovaPro,
+        AmazonNovaPremier,
+
+        // AI21 Jamba Series
+        AI21JambaLarge,
+        AI21JambaMini,
+
+        // Meta Llama 3.0 Series
+        MetaLlama3_0_8BInstruct,
+        MetaLlama3_0_70BInstruct,
+
+        // Meta Llama 3.1 Series
+        MetaLlama3_1_8BInstruct,
+        MetaLlama3_1_70BInstruct,
+        MetaLlama3_1_405BInstruct,
+
+        // Meta Llama 3.2 Series
+        MetaLlama3_2_1BInstruct,
+        MetaLlama3_2_3BInstruct,
+        MetaLlama3_2_11BInstruct,
+        MetaLlama3_2_90BInstruct,
+
+        // Meta Llama 3.3 Series
+        MetaLlama3_3_70BInstruct,
+
+        // Embedding Models
+        Embeddings.AmazonTitanEmbedText,
+        Embeddings.AmazonTitanEmbedTextV2,
+        Embeddings.CohereEmbedEnglishV3,
+        Embeddings.CohereEmbedMultilingualV3,
+    )
+
+    /**
+     * List of custom models added to the Bedrock provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Bedrock) { "Model provider must be Bedrock" }
+        customModels.add(model)
+    }
 }
 
 /**

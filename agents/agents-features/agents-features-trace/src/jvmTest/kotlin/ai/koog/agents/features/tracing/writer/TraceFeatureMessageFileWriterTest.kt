@@ -158,7 +158,7 @@ class TraceFeatureMessageFileWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
 
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
@@ -390,7 +390,7 @@ class TraceFeatureMessageFileWriterTest {
                 }
             }
 
-            agent.run("")
+            agent.run("", null)
             agent.close()
 
             val actualMessages = writer.targetPath.readLines()
@@ -419,7 +419,7 @@ class TraceFeatureMessageFileWriterTest {
                 install(Tracing)
             }
 
-            agent.run("")
+            agent.run("", null)
             agent.close()
 
             assertEquals(listOf(logFile), tempDir.listDirectoryEntries())
@@ -517,7 +517,7 @@ class TraceFeatureMessageFileWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
 
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))

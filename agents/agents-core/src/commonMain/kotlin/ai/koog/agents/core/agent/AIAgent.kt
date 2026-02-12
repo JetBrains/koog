@@ -2,11 +2,11 @@
 
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.AIAgentState.Finished
-import ai.koog.agents.core.agent.AIAgentState.Running
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -32,31 +32,23 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
     public abstract val agentConfig: AIAgentConfig
 
     /**
-     * Retrieves the current state of the AI agent during its lifecycle.
-     *
-     * This method provides the current [AIAgentState] of the agent, which can
-     * be one of the defined states: [AIAgentState.NotStarted], [AIAgentState.Running], [AIAgentState.Finished], or [AIAgentState.Failed].
-     *
-     * @return The current state of the AI agent.
-     */
-    public abstract suspend fun getState(): AIAgentState<Output>
-
-    /**
-     * Retrieves the result of the operation if the current state is [AIAgentState.Finished].
-     * Throws an `IllegalStateException` if the operation is not in a finished state.
-     *
-     * @return The result of type `Output` when the operation is completed successfully.
-     * @throws IllegalStateException if the operation's state is not [AIAgentState.Finished].
-     */
-    public open suspend fun result(): Output
-
-    /**
      * Executes the AI agent with the given input and retrieves the resulting output.
      *
      * @param agentInput The input for the agent.
      * @return The output produced by the agent.
      */
-    public abstract suspend fun run(agentInput: Input): Output
+    public abstract suspend fun run(agentInput: Input, sessionId: String? = null): Output
+
+    /**
+     * Creates a new session for executing the agent with the given input.
+     *
+     * This method provides a way to get a session object that can be used to execute
+     * the agent independently. The session manages the complete execution lifecycle, including
+     * state tracking, pipeline coordination, and strategy execution.
+     *
+     * @return A session instance that can be used to run the agent with specific input and context.
+     */
+    public abstract fun createSession(sessionId: String? = null): AIAgentRunSession<Input, Output, out AIAgentContext>
 
     /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent
@@ -243,17 +235,3 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
         ): AIAgent<Input, Output>
     }
 }
-
-/**
- * Checks whether the AI agent is currently in a running state.
- *
- * @return `true` if the AI agent's state is `Running`, otherwise `false`.
- */
-public suspend fun AIAgent<*, *>.isRunning(): Boolean = this.getState() is Running
-
-/**
- * Checks whether the AI agent has reached a finished state.
- *
- * @return true if the current state of the AI agent is of type `Finished`, false otherwise.
- */
-public suspend fun AIAgent<*, *>.isFinished(): Boolean = this.getState() is Finished

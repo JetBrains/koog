@@ -9,18 +9,18 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 public class NoPersistencyStorageProvider : PersistenceStorageProvider<Unit> {
     private val logger = KotlinLogging.logger { }
 
-    override suspend fun getCheckpoints(agentId: String, filter: Unit?): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(sessionId: String, filter: Unit?): List<AgentCheckpointData> {
         return emptyList()
     }
 
     override suspend fun saveCheckpoint(
-        agentId: String,
+        sessionId: String,
         agentCheckpointData: AgentCheckpointData
     ) {
         logger.info { "Snapshot feature is not enabled in the agent. Snapshot will not be saved: $agentCheckpointData" }
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String, filter: Unit?): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: Unit?): AgentCheckpointData? {
         return null
     }
 }

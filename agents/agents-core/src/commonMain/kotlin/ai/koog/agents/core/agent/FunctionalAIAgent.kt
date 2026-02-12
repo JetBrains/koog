@@ -45,7 +45,7 @@ public class FunctionalAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<Input, Output, AIAgentFunctionalContext>(
+) : AIAgentBase<Input, Output, AIAgentFunctionalContext>(
     logger = logger,
     id = id,
 ) {

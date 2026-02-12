@@ -12,7 +12,7 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -108,7 +108,7 @@ class NodeUniquenessCheckpointTest {
             }
         }
 
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 
     /**
@@ -144,6 +144,6 @@ class NodeUniquenessCheckpointTest {
         )
 
         // Run the agent to verify it works without the AgentCheckpoint feature
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 }

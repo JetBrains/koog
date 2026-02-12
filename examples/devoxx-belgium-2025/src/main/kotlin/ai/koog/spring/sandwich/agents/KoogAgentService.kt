@@ -87,7 +87,7 @@ class KoogAgentService(
 
     suspend fun launchSupportAgent(userId: String, question: String): String {
         val agent = createAgent(userId)
-        parallelScope.launch { agent.run(question) }
+        parallelScope.launch { agent.run(question, null) }
         return agent.id
     }
 
@@ -117,7 +117,8 @@ class KoogAgentService(
 
     suspend fun rollback(agentId: String, checkpointId: String) {
         val agent = agentsById[agentId] ?: throw Exception("Agent with id = `$agentId` not found")
-        agent.withPersistence { ctx ->
+        val session = agent.getSession() ?: throw Exception("Agent session not available")
+        session.withPersistence { ctx ->
             rollbackToCheckpoint(checkpointId, ctx)
         }
     }

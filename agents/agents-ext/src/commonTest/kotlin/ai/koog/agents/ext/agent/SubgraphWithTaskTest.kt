@@ -18,8 +18,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -91,7 +91,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val agentResult = agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest, null)
             logger.info { "Agent is finished with result: $agentResult" }
         }
 
@@ -118,7 +118,7 @@ class SubgraphWithTaskTest {
             executor = mockExecutor,
             toolRegistry = toolRegistry,
         ).use { agent ->
-            val throwable = assertFails { agent.run(inputRequest) }
+            val throwable = assertFails { agent.run(inputRequest, null) }
 
             val expectedMessage =
                 "Subgraph with task must always call tools, but no ${Message.Tool.Call::class.simpleName} was generated, " +
@@ -188,7 +188,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val agentResult = agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest, null)
             logger.info { "Agent is finished with result: $agentResult" }
         }
 
@@ -216,7 +216,7 @@ class SubgraphWithTaskTest {
             runMode = ToolCalls.PARALLEL,
             executor = mockExecutor,
         ).use { agent ->
-            val throwable = assertFails { agent.run(inputRequest) }
+            val throwable = assertFails { agent.run(inputRequest, null) }
 
             val expectedMessage =
                 "Subgraph with task must always call tools, but no ${Message.Tool.Call::class.simpleName} was generated, " +
@@ -277,7 +277,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val agentResult = agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest, null)
             logger.info { "Agent is finished with result: $agentResult" }
         }
 
@@ -334,7 +334,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val agentResult = agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest, null)
             logger.info { "Agent is finished with result: $agentResult" }
         }
 
@@ -408,7 +408,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val agentResult = agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest, null)
             logger.info { "Agent is finished with result: $agentResult" }
         }
 
@@ -472,7 +472,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val throwable = assertFails { agent.run(inputRequest) }
+            val throwable = assertFails { agent.run(inputRequest, null) }
 
             val expectedErrorMessage =
                 "Unable to finish subgraph with task. Reason: the model '${model.id}' does not support tool choice, " +
@@ -545,7 +545,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val agentResult = agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest, null)
             logger.info { "Agent is finished with result: $agentResult" }
         }
 
@@ -622,7 +622,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val agentResult = agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest, null)
             logger.info { "Agent is finished with result: $agentResult" }
         }
 
@@ -689,7 +689,7 @@ class SubgraphWithTaskTest {
                 installEventHandlerCaptureEvents(actualExecutionResult)
             }
         ).use { agent ->
-            val throwable = assertFails { agent.run(inputRequest) }
+            val throwable = assertFails { agent.run(inputRequest, null) }
 
             val expectedErrorMessage =
                 "Unable to finish subgraph with task. Reason: the model '${model.id}' does not support tool choice, " +

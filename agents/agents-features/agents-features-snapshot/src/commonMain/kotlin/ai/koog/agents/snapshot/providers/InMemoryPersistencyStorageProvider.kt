@@ -13,9 +13,9 @@ public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider<A
     private val mutex = Mutex()
     private val snapshotMap = mutableMapOf<String, List<AgentCheckpointData>>()
 
-    override suspend fun getCheckpoints(agentId: String, filter: AgentCheckpointPredicateFilter?): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(sessionId: String, filter: AgentCheckpointPredicateFilter?): List<AgentCheckpointData> {
         mutex.withLock {
-            val allCheckpoints = snapshotMap[agentId] ?: emptyList()
+            val allCheckpoints = snapshotMap[sessionId] ?: emptyList()
             if (filter != null) {
                 return allCheckpoints.filter { filter.check(it) }
             }
@@ -23,19 +23,19 @@ public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider<A
         }
     }
 
-    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
         mutex.withLock {
-            snapshotMap[agentId] = (snapshotMap[agentId] ?: emptyList()) + agentCheckpointData
+            snapshotMap[sessionId] = (snapshotMap[sessionId] ?: emptyList()) + agentCheckpointData
         }
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String, filter: AgentCheckpointPredicateFilter?): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: AgentCheckpointPredicateFilter?): AgentCheckpointData? {
         mutex.withLock {
             if (filter != null) {
-                return snapshotMap[agentId]?.filter { filter.check(it) }?.maxByOrNull { it.createdAt }
+                return snapshotMap[sessionId]?.filter { filter.check(it) }?.maxByOrNull { it.createdAt }
             }
 
-            return snapshotMap[agentId]?.maxBy { it.version }
+            return snapshotMap[sessionId]?.maxBy { it.version }
         }
     }
 

@@ -1,7 +1,5 @@
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.core.agent.AIAgentState.Running
-import ai.koog.agents.core.agent.StatefulSingleUseAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
@@ -11,7 +9,8 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
-import ai.koog.agents.core.agent.featureOrThrow
+import ai.koog.agents.core.agent.session.AIAgentRunSession
+import ai.koog.agents.core.agent.session.feature
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
@@ -51,7 +50,6 @@ public typealias Persistency = Persistence
  * using the [PersistenceFeatureConfig.enableAutomaticPersistence] option.
  *
  * @property persistenceStorageProvider The provider responsible for storing and retrieving checkpoints
- * @property currentNodeId The ID of the node currently being executed
  */
 @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
 public class Persistence(
@@ -122,7 +120,7 @@ public class Persistence(
                 }
 
                 if (config.enableAutomaticPersistence) {
-                    val parent = persistence.getLatestCheckpoint(eventCtx.context.agentId)
+                    val parent = persistence.getLatestCheckpoint(eventCtx.context.runId)
                     persistence.createCheckpointAfterNode(
                         agentContext = eventCtx.context,
                         nodePath = eventCtx.context.executionInfo.path(),
@@ -135,9 +133,9 @@ public class Persistence(
 
             pipeline.interceptStrategyCompleted(this) { ctx ->
                 if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
-                    val parent = persistence.getLatestCheckpoint(ctx.context.agentId)
+                    val parent = persistence.getLatestCheckpoint(ctx.context.runId)
                     persistence.createTombstoneCheckpoint(
-                        ctx.context.agentId,
+                        ctx.context.runId,
                         persistence.clock.now(),
                         parent?.version?.plus(1) ?: 0L
                     )
@@ -159,7 +157,7 @@ public class Persistence(
      * and stores it as a checkpoint using the configured storage provider.
      *
      * @param agentContext The context of the agent containing the state to checkpoint
-     * @param nodeId The ID of the node where the checkpoint is created
+     * @param nodePath The path to the node where the checkpoint is created
      * @param lastInput The latest node input data to include in the checkpoint
      * @param checkpointId Optional ID for the checkpoint; a random UUID is generated if not provided
      * @return The created checkpoint data
@@ -193,7 +191,7 @@ public class Persistence(
             )
         }
 
-        saveCheckpoint(agentContext.agentId, checkpoint)
+        saveCheckpoint(agentContext.runId, checkpoint)
         return checkpoint
     }
 
@@ -204,7 +202,7 @@ public class Persistence(
      * and stores it as a checkpoint using the configured storage provider.
      *
      * @param agentContext The context of the agent containing the state to checkpoint
-     * @param nodeId The ID of the node where the checkpoint is created
+     * @param nodePath The path to the node where the checkpoint is created
      * @param lastOutput The latest node output data to include in the checkpoint
      * @param checkpointId Optional ID for the checkpoint; a random UUID is generated if not provided
      * @return The created checkpoint data
@@ -237,7 +235,7 @@ public class Persistence(
             )
         }
 
-        saveCheckpoint(agentContext.agentId, checkpoint)
+        saveCheckpoint(agentContext.runId, checkpoint)
         return checkpoint
     }
 
@@ -251,9 +249,9 @@ public class Persistence(
      * @return The created tombstone checkpoint data.
      */
     @InternalAgentsApi
-    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant, parentId: Long): AgentCheckpointData {
+    public suspend fun createTombstoneCheckpoint(runId: String, time: Instant, parentId: Long): AgentCheckpointData {
         val checkpoint = tombstoneCheckpoint(time, parentId)
-        saveCheckpoint(agentId, checkpoint)
+        saveCheckpoint(runId, checkpoint)
         return checkpoint
     }
 
@@ -262,8 +260,8 @@ public class Persistence(
      *
      * @param checkpointData The checkpoint data to save
      */
-    public suspend fun saveCheckpoint(agentId: String, checkpointData: AgentCheckpointData) {
-        persistenceStorageProvider.saveCheckpoint(agentId, checkpointData)
+    public suspend fun saveCheckpoint(runId: String, checkpointData: AgentCheckpointData) {
+        persistenceStorageProvider.saveCheckpoint(runId, checkpointData)
     }
 
     /**
@@ -271,8 +269,8 @@ public class Persistence(
      *
      * @return The latest checkpoint data, or null if no checkpoint exists
      */
-    public suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? =
-        persistenceStorageProvider.getLatestCheckpoint(agentId)
+    public suspend fun getLatestCheckpoint(runId: String): AgentCheckpointData? =
+        persistenceStorageProvider.getLatestCheckpoint(runId)
 
     /**
      * Retrieves a specific checkpoint by ID for the specified agent.
@@ -280,8 +278,8 @@ public class Persistence(
      * @param checkpointId The ID of the checkpoint to retrieve
      * @return The checkpoint data with the specified ID, or null if not found
      */
-    public suspend fun getCheckpointById(agentId: String, checkpointId: String): AgentCheckpointData? {
-        val allCps = persistenceStorageProvider.getCheckpoints(agentId)
+    public suspend fun getCheckpointById(runId: String, checkpointId: String): AgentCheckpointData? {
+        val allCps = persistenceStorageProvider.getCheckpoints(runId)
         return allCps.firstOrNull { it.checkpointId == checkpointId }
     }
 
@@ -357,10 +355,10 @@ public class Persistence(
         checkpointId: String,
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getCheckpointById(agentContext.agentId, checkpointId)
+        val checkpoint: AgentCheckpointData? = getCheckpointById(agentContext.runId, checkpointId)
         if (checkpoint != null) {
             agentContext.store(
-                checkpoint.toAgentContextData(rollbackStrategy, agentContext.agentId) { context ->
+                checkpoint.toAgentContextData(rollbackStrategy) { context ->
                     messageHistoryDiff(
                         currentMessages = context.llm.prompt.messages,
                         checkpointMessages = checkpoint.messageHistory
@@ -376,7 +374,6 @@ public class Persistence(
                                 } catch (_: Exception) {
                                     null
                                 }
-
                                 rollbackTool.executeUnsafe(toolArgs)
                             }
                         }
@@ -391,8 +388,8 @@ public class Persistence(
      * Returns the difference only.
      * ex: current messages: [1, 2, 3, 4, 5, 6, 7], checkpoint messages: [1, 2, 3, 4, 5] -> diff messages: 6, 7
      *
-     * Only works for the scenario when current chat histor is AHEAD of the checkpoint (i.e. we are restoring BACKWARDS in time),
-     * otherwise will return an empty list!
+     * Only works for the scenario when the current chat history is AHEAD of the checkpoint (i.e. we are restoring BACKWARDS in time),
+     *  otherwise it will return an empty list!
      * */
     private fun messageHistoryDiff(currentMessages: List<Message>, checkpointMessages: List<Message>): List<Message> {
         if (checkpointMessages.size > currentMessages.size) {
@@ -420,12 +417,12 @@ public class Persistence(
     public suspend fun rollbackToLatestCheckpoint(
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getLatestCheckpoint(agentContext.agentId)
+        val checkpoint: AgentCheckpointData? = getLatestCheckpoint(agentContext.runId)
         if (checkpoint?.isTombstone() ?: true) {
             return null
         }
 
-        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy, agentContext.agentId))
+        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
         return checkpoint
     }
 }
@@ -454,28 +451,27 @@ public suspend fun <T> AIAgentContext.withPersistence(
 ): T = this.persistence().action(this)
 
 /**
- * Extension function to access the checkpoint feature from an agent.
+ * Extension function to access the checkpoint feature from a session.
  *
- * @return The [Persistence] feature instance for this agent
+ * @return The [Persistence] feature instance for this session
  * @throws IllegalStateException if the checkpoint feature is not installed
  */
-public fun StatefulSingleUseAIAgent<*, *, *>.persistence(): Persistence = featureOrThrow(Persistence)
+public fun <Input, Output, TContext : AIAgentContext> AIAgentRunSession<Input, Output, TContext>.persistence(): Persistence =
+    feature(Persistence::class, Persistence)
+        ?: throw NoSuchElementException("Feature ${Persistence.key} is not found.")
 
 /**
- * Executes the provided action within the context of the agent's persistence layer if the agent is in a running state.
+ * Executes the provided action within the context of the session's persistence layer if the session is in a running state.
  *
- * This function allows interaction with the persistence mechanism associated with the agent, ensuring that
+ * This function allows interaction with the persistence mechanism associated with the session, ensuring that
  * the operation is carried out in the correct execution context.
  *
- * @param action A suspending function defining operations to perform using the agent's persistence mechanism
+ * @param action A suspending function defining operations to perform using the session's persistence mechanism
  *               and the current agent context.
  * @return The result of the execution of the provided action.
- * @throws IllegalStateException If the agent is not in a running state when this function is called.
+ * @throws IllegalStateException If the session is not in a running state when this function is called.
  */
 @OptIn(InternalAgentsApi::class)
-public suspend fun <T> StatefulSingleUseAIAgent<*, *, *>.withPersistence(
+public suspend fun <Input, Output, TContext : AIAgentContext, T> AIAgentRunSession<Input, Output, TContext>.withPersistence(
     action: suspend Persistence.(AIAgentContext) -> T
-): T = when (val state = getState()) {
-    is Running<*> -> this.persistence().action(state.rootContext)
-    else -> throw IllegalStateException("Agent is not running. Current agents's state: $state")
-}
+): T = this.persistence().action(this.context())

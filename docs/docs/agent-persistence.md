@@ -29,7 +29,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.agents.core.agent.context.RollbackStrategy
 
 val executor = simpleOllamaAIExecutor()
@@ -83,7 +83,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 val agent = AIAgent(
     promptExecutor = simpleOllamaAIExecutor(),
@@ -122,7 +122,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 val agent = AIAgent(
     promptExecutor = simpleOllamaAIExecutor(),
@@ -155,7 +155,7 @@ import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 val agent = AIAgent(
     promptExecutor = simpleOllamaAIExecutor(),
@@ -201,7 +201,7 @@ import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 val agent = AIAgent(
     promptExecutor = simpleOllamaAIExecutor(),
@@ -302,7 +302,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
 
 fun createUser(name: String) {}
@@ -384,15 +384,15 @@ import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 -->
 ```kotlin
 class MyCustomStorageProvider<MyFilterType> : PersistenceStorageProvider<MyFilterType> {
-    override suspend fun getCheckpoints(agentId: String, filter: MyFilterType?): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(sessionId: String, filter: MyFilterType?): List<AgentCheckpointData> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String, filter: MyFilterType?): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: MyFilterType?): AgentCheckpointData? {
         TODO("Not yet implemented")
     }
 }
@@ -410,18 +410,18 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 class MyCustomStorageProvider<MyFilterType> : PersistenceStorageProvider<MyFilterType> {
-    override suspend fun getCheckpoints(agentId: String, filter: MyFilterType?): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(sessionId: String, filter: MyFilterType?): List<AgentCheckpointData> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String, filter: MyFilterType?): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: MyFilterType?): AgentCheckpointData? {
         TODO("Not yet implemented")
     }
 }

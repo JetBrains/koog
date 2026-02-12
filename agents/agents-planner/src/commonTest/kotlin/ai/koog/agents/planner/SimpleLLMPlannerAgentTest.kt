@@ -6,7 +6,7 @@ import ai.koog.agents.planner.llm.SimpleLLMPlanner
 import ai.koog.agents.planner.llm.SimplePlan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.text.text
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -93,7 +93,7 @@ class SimpleLLMPlannerAgentTest {
             agentConfig = agentConfig
         )
 
-        val result = agent.run(initialState)
+        val result = agent.run(initialState, null)
 
         // Verify that we got a final state back (should contain results from step executions)
         assertTrue(

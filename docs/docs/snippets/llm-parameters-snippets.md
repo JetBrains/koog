@@ -45,7 +45,7 @@ search:
 # --8<-- [end:safetyIdentifier]
 
 # --8<-- [start:serviceTier]
-| `serviceTier` | ServiceTier | OpenAI processing tier selection that lets you prioritize performance over cost or vice versa. For more information, see the API documentation for [ServiceTier](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-service-tier/index.html). |
+| `serviceTier` | ServiceTier | OpenAI processing tier selection that lets you prioritize performance over cost or vice versa. For more information, see the API documentation for [ServiceTier](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.ServiceTier). |
 # --8<-- [end:serviceTier]
 
 # --8<-- [start:store]
@@ -53,15 +53,15 @@ search:
 # --8<-- [end:store]
 
 # --8<-- [start:audio]
-| `audio` | OpenAIAudioConfig | Audio output configuration when using audio-capable models. For more information, see the API documentation for [OpenAIAudioConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-open-a-i-audio-config/index.html). |
+| `audio` | OpenAIAudioConfig | Audio output configuration when using audio-capable models. For more information, see the API documentation for [OpenAIAudioConfig](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig). |
 # --8<-- [end:audio]
 
 # --8<-- [start:reasoningEffort]
-| `reasoningEffort` | ReasoningEffort | Specifies the level of reasoning effort that the model will use. For more information and available values, see the API documentation for [ReasoningEffort](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-reasoning-effort/index.html). |
+| `reasoningEffort` | ReasoningEffort | Specifies the level of reasoning effort that the model will use. For more information and available values, see the API documentation for [ReasoningEffort](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort). |
 # --8<-- [end:reasoningEffort]
 
 # --8<-- [start:webSearchOptions]
-| `webSearchOptions` | OpenAIWebSearchOptions | Configure web search tool usage (if supported). For more information, see the API documentation for [OpenAIWebSearchOptions](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-open-a-i-web-search-options/index.html). |
+| `webSearchOptions` | OpenAIWebSearchOptions | Configure web search tool usage (if supported). For more information, see the API documentation for [OpenAIWebSearchOptions](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions). |
 # --8<-- [end:webSearchOptions]
 
 # --8<-- [start:background]
@@ -69,7 +69,7 @@ search:
 # --8<-- [end:background]
 
 # --8<-- [start:include]
-| `include` | List&lt;OpenAIInclude&gt; | Additional data to include in the model's response, such as sources of web search tool call or search results of a file search tool call. For detailed reference information, see [OpenAIInclude](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-open-a-i-include/index.html) in the Koog API reference. To learn more about the `include` parameter, see [OpenAI's documentation](https://platform.openai.com/docs/api-reference/responses/create#responses-create-include). |
+| `include` | List&lt;OpenAIInclude&gt; | Additional data to include in the model's response, such as sources of web search tool call or search results of a file search tool call. For detailed reference information, see [OpenAIInclude](api:prompt-executor-openai-client::ai.koog.prompt.executor.clients.openai.models.OpenAIInclude) in the Koog API reference. To learn more about the `include` parameter, see [OpenAI's documentation](https://platform.openai.com/docs/api-reference/responses/create#responses-create-include). |
 # --8<-- [end:include]
 
 # --8<-- [start:maxToolCalls]
@@ -77,11 +77,11 @@ search:
 # --8<-- [end:maxToolCalls]
 
 # --8<-- [start:reasoning]
-| `reasoning` | ReasoningConfig | Reasoning configuration for reasoning-capable models. For more information, see the API documentation for [ReasoningConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-reasoning-config/index.html). |
+| `reasoning` | ReasoningConfig | Reasoning configuration for reasoning-capable models. For more information, see the API documentation for [ReasoningConfig](api:prompt-executor-openai-client::ai.koog.prompt.executor.clients.openai.models.ReasoningConfig). |
 # --8<-- [end:reasoning]
 
 # --8<-- [start:truncation]
-| `truncation` | Truncation | Truncation strategy when nearing the context window. For more information, see the API documentation for [Truncation](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-truncation/index.html). |
+| `truncation` | Truncation | Truncation strategy when nearing the context window. For more information, see the API documentation for [Truncation](api:prompt-executor-openai-client::ai.koog.prompt.executor.clients.openai.models.Truncation). |
 # --8<-- [end:truncation]
 
 # --8<-- [start:topK]
@@ -113,7 +113,7 @@ search:
 # --8<-- [end:route]
 
 # --8<-- [start:provider]
-| `provider` | ProviderPreferences | Includes a range of parameters that let you explicitly control how OpenRouter chooses which LLM provider to use. For more information, see the API documentation on [ProviderPreferences](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client/ai.koog.prompt.executor.clients.openrouter.models/-provider-preferences/index.html). |
+| `provider` | ProviderPreferences | Includes a range of parameters that let you explicitly control how OpenRouter chooses which LLM provider to use. For more information, see the API documentation on [ProviderPreferences](api:prompt-executor-openrouter-client::ai.koog.prompt.executor.clients.openrouter.models.ProviderPreferences). |
 # --8<-- [end:provider]
 
 # --8<-- [start:stopSequences]
@@ -125,19 +125,19 @@ search:
 # --8<-- [end:container]
 
 # --8<-- [start:mcpServers]
-| `mcpServers` | List&lt;AnthropicMCPServerURLDefinition&gt; | Definitions of MCP servers to be used in the request. Supports at most 20 servers. For more information, see the API reference for [AnthropicMCPServerURLDefinition](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic.models/-anthropic-m-c-p-server-u-r-l-definition/index.html). |
+| `mcpServers` | List&lt;AnthropicMCPServerURLDefinition&gt; | Definitions of MCP servers to be used in the request. Supports at most 20 servers. For more information, see the API reference for [AnthropicMCPServerURLDefinition](api:prompt-executor-anthropic-client::ai.koog.prompt.executor.clients.anthropic.models.AnthropicMCPServerURLDefinition). |
 # --8<-- [end:mcpServers]
 
 # --8<-- [start:serviceTier]
-| `serviceTier` | AnthropicServiceTier | Determines whether to use priority capacity (if available) or standard capacity for the request. For more information, see the API reference for [AnthropicServiceTier](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic.models/-anthropic-service-tier/index.html) and Anthropic's [Service tiers](https://platform.claude.com/docs/en/api/service-tiers) documentation. |
+| `serviceTier` | AnthropicServiceTier | Determines whether to use priority capacity (if available) or standard capacity for the request. For more information, see the API reference for [AnthropicServiceTier](api:prompt-executor-anthropic-client::ai.koog.prompt.executor.clients.anthropic.models.AnthropicServiceTier) and Anthropic's [Service tiers](https://platform.claude.com/docs/en/api/service-tiers) documentation. |
 # --8<-- [end:serviceTier]
 
 # --8<-- [start:thinking]
-| `thinking` | AnthropicThinking | Configuration for activating Claude's extended thinking. When activated, responses also include thinking content blocks. For more information, see the API reference for [AnthropicThinking](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic.models/-anthropic-thinking/index.html). |
+| `thinking` | AnthropicThinking | Configuration for activating Claude's extended thinking. When activated, responses also include thinking content blocks. For more information, see the API reference for [AnthropicThinking](api:prompt-executor-anthropic-client::ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking). |
 # --8<-- [end:thinking]
 
 # --8<-- [start:thinkingConfig]
-| `thinkingConfig` | GoogleThinkingConfig | Controls whether the model should expose its chain-of-thought and how many tokens it may spend on it. For more information, see the API reference for [GoogleThinkingConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-google-client/ai.koog.prompt.executor.clients.google.models/-google-thinking-config/index.html). |
+| `thinkingConfig` | GoogleThinkingConfig | Controls whether the model should expose its chain-of-thought and how many tokens it may spend on it. For more information, see the API reference for [GoogleThinkingConfig](api:prompt-executor-google-client::ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig). |
 # --8<-- [end:thinkingConfig]
 
 # --8<-- [start:enableSearch]

@@ -3,7 +3,9 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -17,11 +19,9 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
     public actual abstract val id: String
     public actual abstract val agentConfig: AIAgentConfig
 
-    public actual abstract suspend fun getState(): AIAgentState<Output>
+    public actual abstract suspend fun run(agentInput: Input, sessionId: String?): Output
 
-    public actual open suspend fun result(): Output = AIAgentHelper.result(this)
-
-    public actual abstract suspend fun run(agentInput: Input): Output
+    public actual abstract fun createSession(sessionId: String?): AIAgentRunSession<Input, Output, out AIAgentContext>
 
     public actual companion object {
         @OptIn(markerClass = [ExperimentalUuidApi::class])

@@ -17,7 +17,7 @@ import kotlin.reflect.KType
 public open class GOAPPlanner<State> internal constructor(
     private val actions: List<Action<State>>,
     private val goals: List<Goal<State>>,
-    stateType: KType,
+    stateType: KType? = null,
 ) : AIAgentPlanner<State, GOAPPlan<State>>(
     stateType = stateType,
 ) {
@@ -26,7 +26,7 @@ public open class GOAPPlanner<State> internal constructor(
         state: State,
         plan: GOAPPlan<State>?
     ): GOAPPlan<State> = goals
-        .mapNotNull { goal -> buildPlanForGoal(state, goal, actions) }
+        .mapNotNull { goal -> buildPlanForGoal(state, goal) }
         .minByOrNull { plan -> plan.value }
         ?: throw IllegalStateException("No valid plan found for state: $state")
 
@@ -57,10 +57,9 @@ public open class GOAPPlanner<State> internal constructor(
     /**
      * Implements A-star search algorithm to find a plan for a given goal.
      */
-    private fun <State> buildPlanForGoal(
+    private fun buildPlanForGoal(
         state: State,
         goal: Goal<State>,
-        actions: List<Action<State>>,
     ): GOAPPlan<State>? {
         val gScore = mutableMapOf<State, Double>().withDefault { Double.MAX_VALUE }
         val fScore = mutableMapOf<State, Double>().withDefault { Double.MAX_VALUE }

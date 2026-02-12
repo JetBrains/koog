@@ -10,7 +10,7 @@ import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.mcp.McpToolRegistryProvider
-import ai.koog.agents.mcp.defaultStdioTransport
+import ai.koog.agents.mcp.fromProcess
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -56,9 +56,7 @@ fun main() {
     try {
         runBlocking {
             // Create the ToolRegistry with tools from the MCP server
-            val toolRegistry = McpToolRegistryProvider.fromTransport(
-                transport = McpToolRegistryProvider.defaultStdioTransport(process)
-            )
+            val toolRegistry = McpToolRegistryProvider.fromProcess(process)
 
             toolRegistry.tools.forEach {
                 println(it.name)
@@ -68,7 +66,7 @@ fun main() {
             val agentConfig = AIAgentConfig(
                 prompt = prompt("cook_agent_system_prompt") {
                     system {
-                        "Your are a unity assistant. You can exucute different tasks by interacting with the tools from Unity3d engine."
+                        text("Your are a unity assistant. You can exucute different tasks by interacting with the tools from Unity3d engine.")
                     }
                 },
                 model = OpenAIModels.Chat.GPT4o,

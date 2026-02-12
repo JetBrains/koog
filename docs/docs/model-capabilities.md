@@ -194,7 +194,7 @@ collection of predefined models and their configurations with supported capabili
 To use a predefined Ollama model, specify it as follows:
 
 <!--- INCLUDE
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 -->
 
@@ -210,7 +210,7 @@ capability in the `capabilities` list:
 
 <!--- INCLUDE
 import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 val basicModel = OllamaModels.Meta.LLAMA_3_2
 val visionModel = OllamaModels.Meta.LLAMA_3_2
@@ -219,11 +219,11 @@ val visionModel = OllamaModels.Meta.LLAMA_3_2
 
 ```kotlin
 // Check if models support specific capabilities
-val supportsTools = basicModel.capabilities.contains(LLMCapability.Tools) // true
-val supportsVideo = visionModel.capabilities.contains(LLMCapability.Vision.Video) // false
+val supportsTools = basicModel.supports(LLMCapability.Tools) // true
+val supportsVideo = visionModel.supports(LLMCapability.Vision.Video) // false
 
 // Check for schema capabilities
-val jsonCapability = basicModel.capabilities.filterIsInstance<LLMCapability.Schema.JSON>().firstOrNull()
+val jsonCapability = basicModel.capabilities?.filterIsInstance<LLMCapability.Schema.JSON>()?.firstOrNull()
 val hasFullJsonSupport = jsonCapability is LLMCapability.Schema.JSON.Standard // true
 ```
 

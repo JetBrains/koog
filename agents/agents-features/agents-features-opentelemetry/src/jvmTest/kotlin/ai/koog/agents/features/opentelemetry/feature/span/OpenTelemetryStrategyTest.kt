@@ -1,27 +1,26 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
-import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.features.opentelemetry.AgentType
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_STRATEGY_NAME
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSimpleStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
 import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.assertTrue
 
 class OpenTelemetryStrategyTest : OpenTelemetryTestBase() {
 
-    @Test
-    fun `test strategy spans are collected`() = runTest {
+    @ParameterizedTest
+    @EnumSource(AgentType::class)
+    fun `test strategy spans are collected`(agentType: AgentType) = runTest {
         val userInput = USER_PROMPT_PARIS
-        val strategyName = "test-strategy"
-        val nodeName = "test-node"
-        val nodeOutput = "$userInput (node)"
+        val strategyName = DEFAULT_STRATEGY_NAME
 
-        val strategy = strategy<String, String>(strategyName) {
-            val nodeBlank by node<String, String>(nodeName) { nodeOutput }
-            nodeStart then nodeBlank then nodeFinish
-        }
+        val strategy = getSimpleStrategy(agentType)
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
@@ -50,17 +49,13 @@ class OpenTelemetryStrategyTest : OpenTelemetryTestBase() {
         assertSpans(expectedSpans, strategySpans)
     }
 
-    @Test
-    fun `test strategy spans with verbose logging disabled`() = runTest {
+    @ParameterizedTest
+    @EnumSource(AgentType::class)
+    fun `test strategy spans with verbose logging disabled`(agentType: AgentType) = runTest {
         val userInput = USER_PROMPT_PARIS
-        val strategyName = "test-strategy"
-        val nodeName = "test-node"
-        val nodeOutput = "$userInput (node)"
+        val strategyName = DEFAULT_STRATEGY_NAME
 
-        val strategy = strategy<String, String>(strategyName) {
-            val nodeBlank by node<String, String>(nodeName) { nodeOutput }
-            nodeStart then nodeBlank then nodeFinish
-        }
+        val strategy = getSimpleStrategy(agentType)
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,

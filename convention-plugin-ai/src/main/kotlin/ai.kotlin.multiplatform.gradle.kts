@@ -47,8 +47,70 @@ kotlin {
         binaries.library()
     }
 
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
+        /*
+         Source set to share the code that is common to all non-JVM targets.
+         */
+        val nonJvmCommonMain by creating {
+            dependsOn(commonMain.get())
+        }
+
+        val nonJvmCommonTest by creating {
+            dependsOn(commonTest.get())
+        }
+
+        /*
+          Source set to share the code between JVM and Android targets, since they both support certain JVM features.
+         */
+        val jvmCommonMain by creating {
+            dependsOn(commonMain.get())
+        }
+
+        val jvmCommonTest by creating {
+            dependsOn(commonTest.get())
+        }
+
+        appleMain {
+            dependsOn(nonJvmCommonMain)
+        }
+
+        appleTest {
+            dependsOn(nonJvmCommonTest)
+        }
+
+        jsMain {
+            dependsOn(nonJvmCommonMain)
+        }
+
+        jsTest {
+            dependsOn(nonJvmCommonTest)
+        }
+
+        wasmJsMain {
+            dependsOn(nonJvmCommonMain)
+        }
+
+        wasmJsTest {
+            dependsOn(nonJvmCommonTest)
+        }
+
+        jvmMain {
+            dependsOn(jvmCommonMain)
+        }
+
+        jvmTest {
+            dependsOn(jvmCommonTest)
+        }
+
+        androidMain {
+            dependsOn(jvmCommonMain)
+        }
+
         androidUnitTest {
+            dependsOn(jvmCommonTest)
+
             dependencies {
                 implementation(kotlin("test-junit"))
             }

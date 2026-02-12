@@ -118,5 +118,7 @@ public suspend fun <Path> buildFileSize(
         return listOf(bytes)
     }
 
-    return listOf(bytes, FileSize.Lines(fs.readText(path).lineSequence().count()))
+    val text = fs.readText(path)
+    val lineCount = if (text.isEmpty()) 0 else text.lineSequence().count()
+    return listOf(bytes, FileSize.Lines(lineCount))
 }

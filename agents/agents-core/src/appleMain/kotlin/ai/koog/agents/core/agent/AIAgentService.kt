@@ -33,11 +33,6 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public actual abstract suspend fun removeAgent(agent: TAgent): Boolean
     public actual abstract suspend fun removeAgentWithId(id: String): Boolean
     public actual abstract suspend fun agentById(id: String): TAgent?
-    public actual abstract suspend fun listAllAgents(): List<TAgent>
-    public actual abstract suspend fun listActiveAgents(): List<TAgent>
-    public actual abstract suspend fun listInactiveAgents(): List<TAgent>
-    public actual abstract suspend fun listFinishedAgents(): List<TAgent>
-    public actual abstract suspend fun closeAll()
 
     @Suppress("ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT")
     public actual companion object {

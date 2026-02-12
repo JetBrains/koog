@@ -5,7 +5,9 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
@@ -28,44 +30,24 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
      * Executes the AI agent task based on the provided input and an optional executor service.
      *
      * @param agentInput The input data required for the AI agent to perform its task.
+     * @param sessionId An optional session ID for the agent run.
      * @param executorService An optional [ExecutorService] to provide a coroutine context for execution.
      *                        If not provided, the default coroutine context is used.
      * @return The output resulting from the execution of the AI agent with the given input.
      */
     @JavaAPI
     @JvmOverloads
-    public final fun run(
+    @JvmName("run")
+    public final fun javaRun(
         agentInput: Input,
+        sessionId: String? = null,
         executorService: ExecutorService? = null
-    ): Output = agentConfig.runOnStrategyDispatcher(executorService) { run(agentInput) }
-
-    /**
-     * Retrieves the current state of the AI agent asynchronously.
-     *
-     * This method is designed for Java interoperability and returns a `CompletableFuture`
-     * that asynchronously provides the agent's current state.
-     *
-     * If an `ExecutorService` is provided, it will be used as the coroutine context
-     * for this operation. Otherwise, the default coroutine dispatcher is used.
-     *
-     * @param executorService The `ExecutorService` to use as the coroutine context for this operation.
-     *                        If null, a default coroutine dispatcher will be used.
-     * @return A `CompletableFuture` containing the current state of the AI agent, represented
-     *         as an instance of `AIAgentState<Output>`.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public final fun getState(
-        executorService: ExecutorService? = null,
-    ): AIAgentState<Output> = agentConfig.runOnStrategyDispatcher(executorService) { getState() }
+    ): Output = agentConfig.runOnStrategyDispatcher(executorService) { run(agentInput, sessionId) }
 
     // Common (multiplatform) methods:
+    public actual abstract suspend fun run(agentInput: Input, sessionId: String?): Output
 
-    public actual abstract suspend fun getState(): AIAgentState<Output>
-
-    public actual open suspend fun result(): Output = AIAgentHelper.result(this)
-
-    public actual abstract suspend fun run(agentInput: Input): Output
+    public actual abstract fun createSession(sessionId: String?): AIAgentRunSession<Input, Output, out AIAgentContext>
 
     public actual companion object {
         @OptIn(markerClass = [ExperimentalUuidApi::class])

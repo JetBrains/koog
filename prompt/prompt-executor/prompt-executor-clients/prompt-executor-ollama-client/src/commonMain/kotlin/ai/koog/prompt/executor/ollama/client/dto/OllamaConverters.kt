@@ -67,7 +67,7 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
                     text.append(part.text)
                 }
                 is ContentPart.Image -> {
-                    require(LLMCapability.Vision.Image in model.capabilities) {
+                    require(model.supports(LLMCapability.Vision.Image)) {
                         "Model ${model.id} doesn't support images"
                     }
 

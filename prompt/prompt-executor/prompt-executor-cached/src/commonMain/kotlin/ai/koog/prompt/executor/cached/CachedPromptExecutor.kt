@@ -62,7 +62,7 @@ public class CachedPromptExecutor(
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = nested.moderate(prompt, model)
 
-    override suspend fun models(): List<String> = nested.models()
+    override suspend fun models(): List<LLModel> = nested.models()
 
     override fun close() {
         nested.close()

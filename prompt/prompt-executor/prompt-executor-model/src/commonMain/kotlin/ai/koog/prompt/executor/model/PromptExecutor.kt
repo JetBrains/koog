@@ -111,7 +111,7 @@ public interface PromptExecutor : AutoCloseable {
      *
      * @return A list of [LLModel] instances representing all available models.
      */
-    public suspend fun models(): List<String> {
+    public suspend fun models(): List<LLModel> {
         throw UnsupportedOperationException("Not implemented for this executor")
     }
 }

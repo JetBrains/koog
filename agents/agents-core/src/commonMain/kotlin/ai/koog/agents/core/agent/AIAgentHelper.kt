@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.AIAgentState.Finished
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -17,10 +16,6 @@ import kotlin.uuid.ExperimentalUuidApi
 
 @PublishedApi
 internal object AIAgentHelper {
-    suspend fun <Output> result(agent: AIAgent<*, Output>): Output = when (val state = agent.getState()) {
-        is Finished<Output> -> state.result
-        else -> throw IllegalStateException("Output is not ready, agent's state is: $state")
-    }
 
     /**
      * Creates and returns a new instance of the `Builder` class to configure and construct an AI agent.

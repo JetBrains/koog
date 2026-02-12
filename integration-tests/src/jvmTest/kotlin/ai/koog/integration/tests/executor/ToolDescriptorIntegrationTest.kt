@@ -311,7 +311,7 @@ class ToolDescriptorIntegrationTest {
     fun integration_testPrimitiveTools(tool: Tool<*, *>, model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(
-            model.capabilities.containsAll(listOf(LLMCapability.Tools, LLMCapability.ToolChoice)),
+            model.capabilities?.containsAll(listOf(LLMCapability.Tools, LLMCapability.ToolChoice)) ?: false,
             "Model $model does not support tools and tool choice"
         )
 

@@ -15,7 +15,7 @@ import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType

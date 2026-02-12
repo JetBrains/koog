@@ -223,7 +223,7 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         return client.moderate(prompt, model)
     }
 
-    override suspend fun models(): List<String> {
+    override suspend fun models(): List<LLModel> {
         logger.debug { "Fetching available models from all clients" }
 
         return llmClients.values.flatMap { client ->

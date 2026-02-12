@@ -13,6 +13,7 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicModelsResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamDeltaContentType
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamEventType
@@ -24,6 +25,7 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicUsage
 import ai.koog.prompt.executor.clients.anthropic.models.DocumentSource
 import ai.koog.prompt.executor.clients.anthropic.models.ImageSource
 import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -71,6 +73,7 @@ public class AnthropicClientSettings(
     public val baseUrl: String = "https://api.anthropic.com",
     public val apiVersion: String = "2023-06-01",
     public val messagesPath: String = "v1/messages",
+    public val modelsPath: String = "v1/models",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
@@ -141,10 +144,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.capabilities.contains(LLMCapability.Tools)) {
+        require(model.supports(LLMCapability.Tools)) {
             "Model ${model.id} does not support tools"
         }
 
@@ -174,7 +177,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model with tools: ${tools.map { it.name }}" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
 
@@ -452,7 +455,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                     is ContentPart.Text -> add(AnthropicContent.Text(part.text))
 
                     is ContentPart.Image -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                        require(model.supports(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support images"
                         }
 
@@ -469,7 +472,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                     }
 
                     is ContentPart.File -> {
-                        require(model.capabilities.contains(LLMCapability.Document)) {
+                        require(model.supports(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
@@ -631,6 +634,19 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 "AnyOf type is not supported"
             )
         }
+    }
+
+    public override suspend fun models(): List<LLModel> {
+        logger.debug { "Fetching available models from Anthropic" }
+
+        val response = httpClient.get(
+            path = settings.modelsPath,
+            responseType = AnthropicModelsResponse::class
+        )
+
+        val modelsById = AnthropicModels.modelsById()
+
+        return response.data.map { modelsById[it.id] ?: LLModel(id = it.id, provider = LLMProvider.Anthropic) }
     }
 
     /**

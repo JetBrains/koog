@@ -533,7 +533,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
     @OptIn(DetachedPromptExecutorAPI::class)
     val handleAssistantMessage by node<Message.Assistant, List<Message.Response>> { response ->
-        if (llm.model.capabilities.contains(LLMCapability.ToolChoice)) {
+        if (llm.model.supports(LLMCapability.ToolChoice)) {
             error(
                 "Subgraph with task must always call tools, but no ${Message.Tool.Call::class.simpleName} was generated, " +
                     "got instead: ${response::class.simpleName}"
