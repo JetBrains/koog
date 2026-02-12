@@ -1,18 +1,26 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.AIAgentSimpleStrategiesKt;
+import ai.koog.agents.core.agent.ToolCalls;
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
+import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLModel;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static ai.koog.agents.core.agent.AIAgentSimpleStrategiesKt.singleRunStrategy;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -54,5 +62,48 @@ public class JavaAIAgentAdvancedFeaturesIntegrationTest extends KoogJavaTestBase
         assertTrue(agentStarted.get(), "Agent should have started");
         assertTrue(agentCompleted.get(), "Agent should have completed");
         assertTrue(llmInterceptCount.get() > 0, "LLM interceptor should have been called");
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    public void integration_MultipleHandlersForToolCallEvents(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+        Assumptions.assumeTrue(
+            model.supports(LLMCapability.Tools.INSTANCE),
+            "Model " + model + " does not support tools"
+        );
+
+        List<String> toolStartingCallOrder = new ArrayList<>();
+
+        JavaUtils.CalculatorTools calculatorTools = new JavaUtils.CalculatorTools();
+        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculatorTools);
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .graphStrategy(singleRunStrategy(ToolCalls.SEQUENTIAL))
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant. JUST CALL THE TOOLS, NO QUESTIONS ASKED.")
+            .toolRegistry(toolRegistry)
+            .maxIterations(10)
+            .install(EventHandler.Feature, eventConfig -> {
+                eventConfig.onToolCallStarting(context -> {
+                    toolStartingCallOrder.add("Tool Starting Handler 1: " + context.getToolName());
+                });
+                eventConfig.onToolCallStarting(context -> {
+                    toolStartingCallOrder.add("Tool Starting Handler 2: " + context.getToolName());
+                });
+                eventConfig.onToolCallStarting(context -> {
+                    toolStartingCallOrder.add("Tool Starting Handler 3: " + context.getToolName());
+                });
+            })
+            .build();
+
+        String result = runBlocking(continuation -> agent.run("Calculate 7 times 8", null, continuation));
+
+        assertNotNull(result, "Result should not be null");
+        assertEquals(3, toolStartingCallOrder.size(), "Three starting handlers should be called");
+        assertTrue(toolStartingCallOrder.get(0).contains("Tool Starting Handler 1"), "First handler should be Handler 1");
+        assertTrue(toolStartingCallOrder.get(1).contains("Tool Starting Handler 2"), "Second handler should be Handler 2");
+        assertTrue(toolStartingCallOrder.get(2).contains("Tool Starting Handler 3"), "Third handler should be Handler 3");
     }
 }

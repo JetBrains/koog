@@ -1326,7 +1326,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 systemPrompt = "$systemPrompt JUST CALL THE TOOLS, NO QUESTIONS ASKED.",
                 strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
                 llmModel = model,
-                temperature = 1.0,
                 toolRegistry = toolRegistry,
                 maxIterations = 10
             ) {
