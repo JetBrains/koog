@@ -15,8 +15,8 @@ Koog provides two interfaces that you can extend to implement custom features:
 - [AIAgentFunctionalFeature](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature/-a-i-agent-functional-feature/index.html): Represents a feature that can be used with [functional agents](functional-agents.md).
 
 !!! note
-    To create a custom feature that can be installed in both graph-based and functional agents, you need to extend both 
-    interfaces.
+    To create a custom feature that can be installed in both graph-based and functional agents, you need to implement
+    both interfaces.
 
 ## Implementing custom features
 
@@ -24,8 +24,9 @@ To implement a custom feature, you need to create a feature structure according 
 
 1. Create a feature class.
 2. Define a configuration class. The configuration class is an extension of the [FeatureConfig](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature.config/-feature-config/index.html) class.
-3. Create a companion object that implements `AIAgentGraphFeature`, `AIAgentFunctionalFeature`, or both.
-4. Give your feature a stable storage key so it can be retrieved in contexts.
+3. Create a companion object that implements [AIAgentGraphFeature](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature/-a-i-agent-graph-feature/index.html), [AIAgentFunctionalFeature](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature/-a-i-agent-functional-feature/index.html), or both.
+4. Give your feature a stable storage key that is used for feature identification and retrieval in agent pipelines. The
+   key is used inside the internal map in an agent pipeline that includes all registered features for an agent. When you run an agent, it needs to process all registered features, and the key is used to retrieve the feature from this map.
 5. Implement the required methods.
 
 The code sample below shows the general pattern for implementing a custom feature that can be installed in both graph-based and functional agents:
