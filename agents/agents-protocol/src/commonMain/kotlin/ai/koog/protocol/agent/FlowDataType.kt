@@ -69,6 +69,25 @@ public sealed interface FlowDataType {
         override val type: String = "critique"
     }
 
+    /**
+     * Represents the result of a parallel execution in a flow processing context.
+     *
+     * This data type is used to encapsulate the outcome of parallel operations, including
+     * the name of the operation, the input data type, and the resulting output data type.
+     *
+     * @property name The name of the parallel execution operation that produced this result.
+     * @property input The input data type provided to the parallel execution operation.
+     * @property output The output data type produced by the parallel execution operation.
+     */
+    @Serializable
+    public data class ParallelExecutionResult(
+        val name: String,
+        val input: FlowDataType,
+        val output: FlowDataType,
+    ) : FlowDataType {
+        override val type: String = "parallel_result"
+    }
+
 //endregion Entities
 
 //region Arrays

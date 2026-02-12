@@ -8,7 +8,6 @@ import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
-import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -250,7 +249,10 @@ public object KoogStrategyFactory {
                 name = agent.name,
                 nodes = parallelAgents,
                 merge = {
-                    // Return the first result (all parallel nodes should produce compatible outputs)
+                    // TODO: Here, the JSON should define the defined accessors for a result, e.g., use the 'results' keyword
+                    //  results.1.output
+                    //  results.2.name
+                    //  results.3.input
                     results.first().nodeResult
                 }
             )
