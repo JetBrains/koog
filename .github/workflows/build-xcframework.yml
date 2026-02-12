@@ -4,9 +4,6 @@ on:
   release:
     types: [published]
   workflow_dispatch: # Manual trigger
-  push:
-    branches:
-      - amanowicz/KG-682_spm_support
 
 jobs:
   build-xcframework:
