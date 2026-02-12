@@ -266,14 +266,14 @@ public sealed interface Message {
         public data class Result(
             override val id: String?,
             override val tool: String,
-            override val parts: List<ContentPart.Text>,
+            override val parts: List<ContentPart>,
             override val metaInfo: RequestMetaInfo
         ) : Tool, Request {
 
             /**
              * Single content part tool result message constructor
              */
-            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo) :
+            public constructor(id: String?, tool: String, part: ContentPart, metaInfo: RequestMetaInfo) :
                 this(id, tool, listOf(part), metaInfo)
 
             /**

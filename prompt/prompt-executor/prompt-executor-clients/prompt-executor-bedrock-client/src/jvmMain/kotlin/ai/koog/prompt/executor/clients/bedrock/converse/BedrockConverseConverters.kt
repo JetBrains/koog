@@ -154,8 +154,7 @@ internal object BedrockConverseConverters {
                             ContentBlock.ToolResult(
                                 ToolResultBlock {
                                     this.toolUseId = message.id
-                                    // only text results are currently supported
-                                    this.content = message.parts.map { ToolResultContentBlock.Text(it.text) }
+                                    this.content = message.parts.map { it.toConverseToolResultContentBlock() }
                                 }
                             )
                         )
@@ -214,6 +213,29 @@ internal object BedrockConverseConverters {
             system = systemMessages,
             messages = messages,
         )
+    }
+
+    private fun ContentPart.toConverseToolResultContentBlock(): ToolResultContentBlock = when (val part = this) {
+        is ContentPart.Audio ->
+            throw IllegalArgumentException("Bedrock Converse API doesn't support audio tool result content.")
+
+        is ContentPart.File ->
+            ToolResultContentBlock.Document(
+                part.toConverseDocumentBlock()
+            )
+
+        is ContentPart.Image ->
+            ToolResultContentBlock.Image(
+                part.toConverseImageBlock()
+            )
+
+        is ContentPart.Video ->
+            ToolResultContentBlock.Video(
+                part.toConverseVideoBlock()
+            )
+
+        is ContentPart.Text ->
+            ToolResultContentBlock.Text(part.text)
     }
 
     /**
@@ -453,23 +475,7 @@ internal object BedrockConverseConverters {
                 }
 
                 ContentBlock.Document(
-                    DocumentBlock {
-                        this.format = DocumentFormat.fromValue(part.format)
-                        // Converse API requires no extension in file names
-                        this.name = part.fileName?.substringBefore('.')
-
-                        this.source = when (val content = part.content) {
-                            is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                DocumentSource.Bytes(content.asBytes())
-
-                            is AttachmentContent.URL ->
-                                DocumentSource.S3Location(content.toS3Location())
-
-                            is AttachmentContent.PlainText ->
-                                // Even though DocumentSource.Text exists, Converse API requires bytes or s3 uri here
-                                DocumentSource.Bytes(content.text.encodeToByteArray())
-                        }
-                    }
+                    part.toConverseDocumentBlock()
                 )
             }
 
@@ -479,20 +485,7 @@ internal object BedrockConverseConverters {
                 }
 
                 ContentBlock.Image(
-                    ImageBlock {
-                        this.format = ImageFormat.fromValue(part.format)
-
-                        this.source = when (val content = part.content) {
-                            is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                ImageSource.Bytes(content.asBytes())
-
-                            is AttachmentContent.URL ->
-                                ImageSource.S3Location(content.toS3Location())
-
-                            is AttachmentContent.PlainText ->
-                                throw IllegalArgumentException("Image can't have plain text content")
-                        }
-                    }
+                    part.toConverseImageBlock()
                 )
             }
 
@@ -502,24 +495,68 @@ internal object BedrockConverseConverters {
                 }
 
                 ContentBlock.Video(
-                    VideoBlock {
-                        this.format = VideoFormat.fromValue(part.format)
-
-                        this.source = when (val content = part.content) {
-                            is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                VideoSource.Bytes(content.asBytes())
-
-                            is AttachmentContent.URL ->
-                                VideoSource.S3Location(content.toS3Location())
-
-                            is AttachmentContent.PlainText ->
-                                throw IllegalArgumentException("Video can't have plain text content")
-                        }
-                    }
+                    part.toConverseVideoBlock()
                 )
             }
         }
     }
+
+    private fun ContentPart.File.toConverseDocumentBlock(): DocumentBlock =
+        DocumentBlock {
+            this.format = DocumentFormat.fromValue(this@toConverseDocumentBlock.format)
+            // Converse API requires no extension in file names
+            this.name = this@toConverseDocumentBlock.fileName?.substringBefore('.')
+            this.source = this@toConverseDocumentBlock.content.toConverseDocumentSource()
+        }
+
+    private fun ContentPart.Image.toConverseImageBlock(): ImageBlock =
+        ImageBlock {
+            this.format = ImageFormat.fromValue(this@toConverseImageBlock.format)
+            this.source = this@toConverseImageBlock.content.toConverseImageSource()
+        }
+
+    private fun ContentPart.Video.toConverseVideoBlock(): VideoBlock =
+        VideoBlock {
+            this.format = VideoFormat.fromValue(this@toConverseVideoBlock.format)
+            this.source = this@toConverseVideoBlock.content.toConverseVideoSource()
+        }
+
+    private fun AttachmentContent.toConverseDocumentSource(): DocumentSource =
+        when (this) {
+            is AttachmentContent.Binary ->
+                DocumentSource.Bytes(asBytes())
+
+            is AttachmentContent.URL ->
+                DocumentSource.S3Location(toS3Location())
+
+            is AttachmentContent.PlainText ->
+                // Even though DocumentSource.Text exists, Converse API requires bytes or s3 uri here
+                DocumentSource.Bytes(text.encodeToByteArray())
+        }
+
+    private fun AttachmentContent.toConverseImageSource(): ImageSource =
+        when (this) {
+            is AttachmentContent.Binary ->
+                ImageSource.Bytes(asBytes())
+
+            is AttachmentContent.URL ->
+                ImageSource.S3Location(toS3Location())
+
+            is AttachmentContent.PlainText ->
+                throw IllegalArgumentException("Image can't have plain text content")
+        }
+
+    private fun AttachmentContent.toConverseVideoSource(): VideoSource =
+        when (this) {
+            is AttachmentContent.Binary ->
+                VideoSource.Bytes(asBytes())
+
+            is AttachmentContent.URL ->
+                VideoSource.S3Location(toS3Location())
+
+            is AttachmentContent.PlainText ->
+                throw IllegalArgumentException("Video can't have plain text content")
+        }
 
     /**
      * Converts a [ContentBlock] from Bedrock Converse API to [ContentPart].
