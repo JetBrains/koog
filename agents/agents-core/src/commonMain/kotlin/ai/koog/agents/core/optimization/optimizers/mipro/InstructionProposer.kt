@@ -9,6 +9,11 @@ import ai.koog.agents.core.optimization.util.findOptimizableModules
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -161,12 +166,15 @@ public class InstructionProposer private constructor(
      * @param demoCandidates Map from node name to list of demo sets (from Step 1).
      *  Each demo set is a list of [Demonstration]s with typed input/output.
      * @param numCandidates Number of instruction candidates to generate per node
+     * @param parallelism Maximum number of concurrent instruction proposals per module.
+     *  Set to 1 (default) for sequential execution.
      * @return Map from node name to list of N instruction candidates
      */
     public suspend fun proposeInstructionsForProgram(
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
         numCandidates: Int,
         previousInstructions: Map<String, List<Pair<String, Double>>> = emptyMap(),
+        parallelism: Int = 1,
     ): Map<String, List<String>> {
         val modules = strategy.findOptimizableModules()
         val proposedInstructions = mutableMapOf<String, MutableList<String>>()
@@ -182,25 +190,51 @@ public class InstructionProposer private constructor(
             minOf(firstModuleDemos, numCandidates)
         }
 
+        // Pre-select tips from parent random before launching (for determinism)
+        val preSelectedTips = (0 until numDemoSets).map { selectTip() }
+
         for ((moduleIdx, module) in modules.withIndex()) {
             val moduleName = module.name
-            proposedInstructions[moduleName] = mutableListOf()
             logger.info { "Proposing instructions for module '${moduleName}' (${moduleIdx + 1}/${modules.size})..." }
 
-            for (demoSetIndex in 0 until numDemoSets) {
-                val tip = selectTip()
-
-                val instruction = proposeInstructionForNode(
-                    node = module,
-                    demoCandidates = demoCandidates,
-                    demoSetIndex = demoSetIndex,
-                    tip = tip,
-                    effectiveUseHistory = effectiveUseHistory,
-                    previousInstructions = previousInstructions,
-                )
-
-                proposedInstructions[moduleName]!!.add(instruction)
-                logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated" }
+            if (parallelism <= 1 || numDemoSets <= 1) {
+                // Sequential path
+                val instructions = mutableListOf<String>()
+                for (demoSetIndex in 0 until numDemoSets) {
+                    val instruction = proposeInstructionForNode(
+                        node = module,
+                        demoCandidates = demoCandidates,
+                        demoSetIndex = demoSetIndex,
+                        tip = preSelectedTips[demoSetIndex],
+                        effectiveUseHistory = effectiveUseHistory,
+                        previousInstructions = previousInstructions,
+                    )
+                    instructions.add(instruction)
+                    logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated" }
+                }
+                proposedInstructions[moduleName] = instructions
+            } else {
+                // Parallel path
+                val semaphore = Semaphore(parallelism)
+                val instructions = coroutineScope {
+                    (0 until numDemoSets).map { demoSetIndex ->
+                        async {
+                            semaphore.withPermit {
+                                val instruction = proposeInstructionForNode(
+                                    node = module,
+                                    demoCandidates = demoCandidates,
+                                    demoSetIndex = demoSetIndex,
+                                    tip = preSelectedTips[demoSetIndex],
+                                    effectiveUseHistory = effectiveUseHistory,
+                                    previousInstructions = previousInstructions,
+                                )
+                                logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated for '$moduleName'" }
+                                instruction
+                            }
+                        }
+                    }.awaitAll()
+                }
+                proposedInstructions[moduleName] = instructions.toMutableList()
             }
         }
 

@@ -105,7 +105,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            strategy = simpleStrategy,
+            createStrategy = { simpleStrategy },
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -141,7 +141,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            strategy = simpleStrategy,
+            createStrategy = { simpleStrategy },
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -199,7 +199,7 @@ class MIPROv2Test {
             mipro.optimize(
                 promptExecutor = executor,
                 agentConfig = agentConfig,
-                strategy = simpleStrategy,
+                createStrategy = { simpleStrategy },
                 trainset = trainset,
                 metric = exactMatch,
                 valset = valset,
@@ -230,7 +230,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            strategy = simpleStrategy,
+            createStrategy = { simpleStrategy },
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -267,7 +267,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            strategy = simpleStrategy,
+            createStrategy = { simpleStrategy },
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -304,7 +304,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            strategy = simpleStrategy,
+            createStrategy = { simpleStrategy },
             trainset = trainset,
             metric = exactMatch,
             valset = null,
@@ -312,5 +312,41 @@ class MIPROv2Test {
 
         assertNotNull(result.config, "Should succeed with null valset (auto-split from trainset)")
         assertTrue(result.iterations > 0)
+    }
+
+    @Test
+    fun testParallelEvaluation() = runBlocking {
+        val executor = createMockExecutor()
+        val mipro = MIPROv2(
+            MIPROv2Config(
+                promptModel = OpenAIModels.Chat.GPT5Nano,
+                auto = null,
+                numCandidates = 3,
+                numTrials = 3,
+                maxBootstrappedDemos = 2,
+                maxLabeledDemos = 2,
+                seed = 42L,
+                minibatch = false,
+                evalParallelism = 4,
+                proposerConfig = InstructionProposerConfig(
+                    useDatasetSummary = false,
+                    programAware = false,
+                ),
+            )
+        )
+
+        val result = mipro.optimize(
+            promptExecutor = executor,
+            agentConfig = agentConfig,
+            createStrategy = { simpleStrategy },
+            trainset = trainset,
+            metric = exactMatch,
+            valset = valset,
+        )
+
+        assertNotNull(result.config, "Parallel evaluation should produce a result")
+        assertTrue(result.iterations > 0, "Should have performed at least one trial")
+        assertTrue(result.score >= 0.0, "Score should be non-negative")
+        assertEquals("MIPROv2", result.metadata["optimizer"])
     }
 }

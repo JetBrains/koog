@@ -11,6 +11,13 @@ import ai.koog.agents.core.optimization.util.sampleLabeledDemonstrations
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlin.random.Random
 
 private val logger = KotlinLogging.logger {}
@@ -48,6 +55,8 @@ private val logger = KotlinLogging.logger {}
  * @param includeNonBootstrapped If true, includes zero-shot and labeled-only demo sets.
  *  If false, all slots are filled with bootstrap sets.
  * @param random Random instance for reproducibility.
+ * @param parallelism Maximum number of concurrent shuffled bootstrap runs. Set to 1 (default)
+ *  for sequential execution.
  * @return Map from node name to list of candidate demo sets (each set is a list of [Demonstration]s),
  *  or null if zero-shot mode (both maxBootstrappedDemos and maxLabeledDemos are 0).
  */
@@ -66,6 +75,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     includeNonBootstrapped: Boolean = true,
     random: Random = Random(42L),
+    parallelism: Int = 1,
 ): Map<String, List<List<Demonstration<*, *>>>>? {
 
     // Zero-shot mode: no demos at all
@@ -140,28 +150,84 @@ public suspend fun <TInput, TOutput> generateDemoSets(
 
     // 4. Shuffled bootstraps: fill remaining slots with shuffled trainset + random demo count
     val shuffledTotal = maxOf(0, adjustedCount)
-    repeat(shuffledTotal) { i ->
-        logger.info { "Demo set generation: running shuffled bootstrap ${i + 1}/$shuffledTotal..." }
-        val shuffledTrainset = trainset.shuffled(random)
-        val numDemos = random.nextInt(1, maxBootstrappedDemos + 1)
 
-        val shuffledOptimizer = BootstrapFewShot(
-            maxBootstrappedDemos = numDemos,
-            maxLabeledDemos = maxLabeledDemos,
-            maxRounds = maxRounds,
-            maxErrors = maxErrors,
-            metricThreshold = metricThreshold ?: 1.0,
-            random = random,
+    // Pre-generate seeds and per-iteration random values from parent random for determinism
+    data class ShuffledBootstrapParams(val seed: Long, val numDemos: Int)
+    val shuffledParams = (0 until shuffledTotal).map {
+        ShuffledBootstrapParams(
+            seed = random.nextLong(),
+            numDemos = random.nextInt(1, maxBootstrappedDemos + 1),
         )
-        val shuffledResult = shuffledOptimizer.optimize(
-            promptExecutor = promptExecutor,
-            agentConfig = agentConfig,
-            strategy = strategy,
-            trainset = shuffledTrainset,
-            toolRegistry = toolRegistry,
-            metric = metric,
-        )
-        addFromBootstrapResult(shuffledResult.config.demonstrations)
+    }
+
+    if (parallelism <= 1 || shuffledTotal <= 1) {
+        // Sequential path
+        for ((i, params) in shuffledParams.withIndex()) {
+            logger.info { "Demo set generation: running shuffled bootstrap ${i + 1}/$shuffledTotal..." }
+            val iterRandom = Random(params.seed)
+            val shuffledTrainset = trainset.shuffled(iterRandom)
+
+            val shuffledOptimizer = BootstrapFewShot(
+                maxBootstrappedDemos = params.numDemos,
+                maxLabeledDemos = maxLabeledDemos,
+                maxRounds = maxRounds,
+                maxErrors = maxErrors,
+                metricThreshold = metricThreshold ?: 1.0,
+                random = iterRandom,
+            )
+            val shuffledResult = shuffledOptimizer.optimize(
+                promptExecutor = promptExecutor,
+                agentConfig = agentConfig,
+                strategy = strategy,
+                trainset = shuffledTrainset,
+                toolRegistry = toolRegistry,
+                metric = metric,
+            )
+            addFromBootstrapResult(shuffledResult.config.demonstrations)
+        }
+    } else {
+        // Parallel path
+        val semaphore = Semaphore(parallelism)
+        val completedMutex = Mutex()
+        var completed = 0
+
+        val results = coroutineScope {
+            shuffledParams.mapIndexed { i, params ->
+                async {
+                    semaphore.withPermit {
+                        val iterRandom = Random(params.seed)
+                        val shuffledTrainset = trainset.shuffled(iterRandom)
+
+                        val shuffledOptimizer = BootstrapFewShot(
+                            maxBootstrappedDemos = params.numDemos,
+                            maxLabeledDemos = maxLabeledDemos,
+                            maxRounds = maxRounds,
+                            maxErrors = maxErrors,
+                            metricThreshold = metricThreshold ?: 1.0,
+                            random = iterRandom,
+                        )
+                        val shuffledResult = shuffledOptimizer.optimize(
+                            promptExecutor = promptExecutor,
+                            agentConfig = agentConfig,
+                            strategy = strategy,
+                            trainset = shuffledTrainset,
+                            toolRegistry = toolRegistry,
+                            metric = metric,
+                        )
+
+                        val current = completedMutex.withLock { ++completed }
+                        logger.info { "Demo set generation: shuffled bootstrap $current/$shuffledTotal completed" }
+
+                        shuffledResult
+                    }
+                }
+            }.awaitAll()
+        }
+
+        // Merge results sequentially to preserve deterministic ordering
+        for (result in results) {
+            addFromBootstrapResult(result.config.demonstrations)
+        }
     }
 
     return out.mapValues { (_, v) -> v.toList() }

@@ -13,6 +13,13 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlin.math.log2
 import kotlin.math.max
@@ -54,6 +61,9 @@ public enum class AutoRunMode(public val numCandidates: Int, public val valSize:
  * @property minibatchSize Size of minibatch for evaluation.
  * @property minibatchFullEvalSteps How often to perform full evaluation during minibatch optimization.
  * @property proposerConfig Configuration for the [InstructionProposer].
+ * @property evalParallelism Maximum number of concurrent evaluations during grid search, demo generation,
+ *  and instruction proposal. Set to 1 (default) for sequential execution; higher values require
+ *  a [createStrategy][MIPROv2.optimize] factory that produces independent strategy instances.
  */
 public data class MIPROv2Config(
     val promptModel: LLModel,
@@ -69,6 +79,7 @@ public data class MIPROv2Config(
     val minibatchSize: Int = 35,
     val minibatchFullEvalSteps: Int = 5,
     val proposerConfig: InstructionProposerConfig = InstructionProposerConfig(),
+    val evalParallelism: Int = 1,
 )
 
 /**
@@ -101,7 +112,7 @@ public data class MIPROv2Config(
  * val result = mipro.optimize(
  *     promptExecutor = executor,
  *     agentConfig = agentConfig,
- *     strategy = myStrategy,
+ *     createStrategy = { myStrategy },
  *     trainset = trainingExamples,
  *     metric = { expected, actual -> if (expected == actual) 1.0 else 0.0 },
  * )
@@ -131,7 +142,10 @@ public class MIPROv2(private val config: MIPROv2Config) {
      * @param TOutput The strategy's output type.
      * @param promptExecutor The executor for LLM calls (both task execution and meta-prompting).
      * @param agentConfig The agent configuration.
-     * @param strategy The strategy to optimize. Must contain optimizable nodes.
+     * @param createStrategy Factory that creates fresh strategy instances. Called once upfront for
+     *  inspection (node discovery, description generation) and once per concurrent evaluation when
+     *  [MIPROv2Config.evalParallelism] > 1. For stateless strategies, `{ myStrategy }` is fine;
+     *  for strategies with mutable closure state, return a new instance each time.
      * @param trainset Training examples.
      * @param metric Metric to evaluate candidate configurations.
      * @param valset Optional validation set. If null, split from [trainset].
@@ -143,7 +157,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
     public suspend fun <TInput, TOutput> optimize(
         promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
-        strategy: AIAgentGraphStrategy<TInput, TOutput>,
+        createStrategy: () -> AIAgentGraphStrategy<TInput, TOutput>,
         trainset: Dataset<TInput, TOutput>,
         metric: Metric<TOutput>,
         valset: Dataset<TInput, TOutput>? = null,
@@ -151,6 +165,8 @@ public class MIPROv2(private val config: MIPROv2Config) {
         describeInput: (TInput) -> String = { it.toString() },
     ): OptimizationResult {
         val random = Random(config.seed)
+        // Create one strategy upfront for inspection (node discovery, descriptions, etc.)
+        val strategy = createStrategy()
 
         val zeroShotMode = config.maxBootstrappedDemos == 0 && config.maxLabeledDemos == 0
 
@@ -184,6 +200,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             maxErrors = config.maxErrors,
             toolRegistry = toolRegistry,
             random = random,
+            parallelism = config.evalParallelism,
         )
 
         // Step 2: Propose instruction candidates
@@ -200,6 +217,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         val instructionCandidates = proposer.proposeInstructionsForProgram(
             demoCandidates = demoCandidates,
             numCandidates = hyperparams.numInstructCandidates,
+            parallelism = config.evalParallelism,
         )
 
         // Discard demos if zero-shot mode
@@ -210,7 +228,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         return randomGridSearch(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
-            strategy = strategy,
+            createStrategy = createStrategy,
             toolRegistry = toolRegistry,
             instructionCandidates = instructionCandidates,
             demoCandidates = finalDemoCandidates,
@@ -231,7 +249,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
     private suspend fun <TInput, TOutput> randomGridSearch(
         promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
-        strategy: AIAgentGraphStrategy<TInput, TOutput>,
+        createStrategy: () -> AIAgentGraphStrategy<TInput, TOutput>,
         toolRegistry: ToolRegistry,
         instructionCandidates: Map<String, List<String>>,
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
@@ -241,7 +259,8 @@ public class MIPROv2(private val config: MIPROv2Config) {
         metric: Metric<TOutput>,
         random: Random,
     ): OptimizationResult {
-        val moduleNames = strategy.findOptimizableModules().map { it.name }
+        val inspectionStrategy = createStrategy()
+        val moduleNames = inspectionStrategy.findOptimizableModules().map { it.name }
 
         // Evaluate baseline (empty config)
         logger.info { "Evaluating baseline on ${valset.size} examples..." }
@@ -250,7 +269,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             config = baselineConfig,
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
-            strategy = strategy,
+            createStrategy = createStrategy,
             toolRegistry = toolRegistry,
             dataset = valset,
             metric = metric,
@@ -265,7 +284,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             val instructions = moduleNames.associate { name ->
                 val candidates = instructionCandidates[name]
                 if (candidates.isNullOrEmpty()) {
-                    name to (strategy.findOptimizableModules().first { it.name == name }.instruction)
+                    name to (inspectionStrategy.findOptimizableModules().first { it.name == name }.instruction)
                 } else {
                     name to candidates[random.nextInt(candidates.size)]
                 }
@@ -301,7 +320,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
                 config = trialConfig,
                 promptExecutor = promptExecutor,
                 agentConfig = agentConfig,
-                strategy = strategy,
+                createStrategy = createStrategy,
                 toolRegistry = toolRegistry,
                 dataset = evalSet,
                 metric = metric,
@@ -321,11 +340,11 @@ public class MIPROv2(private val config: MIPROv2Config) {
                     config = bestConfig,
                     promptExecutor = promptExecutor,
                     agentConfig = agentConfig,
-                    strategy = strategy,
+                    createStrategy = createStrategy,
                     toolRegistry = toolRegistry,
                     dataset = valset,
                     metric = metric,
-                    )
+                )
             }
         }
 
@@ -334,7 +353,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             config = bestConfig,
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
-            strategy = strategy,
+            createStrategy = createStrategy,
             toolRegistry = toolRegistry,
             dataset = valset,
             metric = metric,
@@ -357,9 +376,33 @@ public class MIPROv2(private val config: MIPROv2Config) {
      * Evaluates an [OptimizationConfig] on a dataset by running the strategy for each example
      * and scoring with the metric. Returns the average score across all examples.
      *
+     * When [MIPROv2Config.evalParallelism] > 1, creates a fresh strategy and agent per concurrent
+     * evaluation via [createStrategy] to isolate mutable closure state. Otherwise, reuses a single
+     * strategy/agent instance sequentially.
+     *
      * Exceptions during individual example evaluation are counted as score 0.
      */
     private suspend fun <TInput, TOutput> evaluateConfig(
+        config: OptimizationConfig,
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        createStrategy: () -> AIAgentGraphStrategy<TInput, TOutput>,
+        toolRegistry: ToolRegistry,
+        dataset: Dataset<TInput, TOutput>,
+        metric: Metric<TOutput>,
+    ): Double {
+        if (dataset.isEmpty()) return 0.0
+
+        val parallelism = this.config.evalParallelism
+        return if (parallelism <= 1) {
+            evaluateConfigSequential(config, promptExecutor, agentConfig, createStrategy(), toolRegistry, dataset, metric)
+        } else {
+            evaluateConfigParallel(config, promptExecutor, agentConfig, createStrategy, toolRegistry, dataset, metric, parallelism)
+        }
+    }
+
+    /** Sequential evaluation: single strategy+agent reused across all examples. */
+    private suspend fun <TInput, TOutput> evaluateConfigSequential(
         config: OptimizationConfig,
         promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
@@ -368,8 +411,6 @@ public class MIPROv2(private val config: MIPROv2Config) {
         dataset: Dataset<TInput, TOutput>,
         metric: Metric<TOutput>,
     ): Double {
-        if (dataset.isEmpty()) return 0.0
-
         val agent = GraphAIAgent(
             inputType = strategy.inputType,
             outputType = strategy.outputType,
@@ -400,6 +441,61 @@ public class MIPROv2(private val config: MIPROv2Config) {
         }
 
         return totalScore / dataset.size
+    }
+
+    /** Parallel evaluation: fresh strategy+agent per concurrent eval, Semaphore-bounded. */
+    private suspend fun <TInput, TOutput> evaluateConfigParallel(
+        config: OptimizationConfig,
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        createStrategy: () -> AIAgentGraphStrategy<TInput, TOutput>,
+        toolRegistry: ToolRegistry,
+        dataset: Dataset<TInput, TOutput>,
+        metric: Metric<TOutput>,
+        parallelism: Int,
+    ): Double {
+        val semaphore = Semaphore(parallelism)
+        val completedMutex = Mutex()
+        var completed = 0
+
+        val scores = coroutineScope {
+            dataset.map { example ->
+                async {
+                    semaphore.withPermit {
+                        val score = try {
+                            val strategy = createStrategy()
+                            val agent = GraphAIAgent(
+                                inputType = strategy.inputType,
+                                outputType = strategy.outputType,
+                                promptExecutor = promptExecutor,
+                                agentConfig = agentConfig,
+                                strategy = strategy,
+                                toolRegistry = toolRegistry,
+                            )
+                            val output = withContext(config) {
+                                agent.run(example.input)
+                            }
+                            if (example.hasLabel) {
+                                metric(example.label!!, output)
+                            } else {
+                                0.0
+                            }
+                        } catch (_: Exception) {
+                            0.0
+                        }
+
+                        val current = completedMutex.withLock { ++completed }
+                        if (current % 10 == 0 || current == dataset.size) {
+                            logger.info { "  Eval $current/${dataset.size} completed" }
+                        }
+
+                        score
+                    }
+                }
+            }.awaitAll()
+        }
+
+        return scores.sum() / dataset.size
     }
 
     /**
