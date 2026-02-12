@@ -51,6 +51,7 @@ Welcome to the **Koog Framework Simple Examples** collection! This project showc
 | **Calculator V2**           | Enhanced calculator with improved functionality                   | `runExampleCalculatorV2`            | -                                                    |
 | **Calculator Local**        | Calculator using local LLM models                                 | `runExampleCalculatorLocal`         | -                                                    |
 | **Streaming with Tools**    | Agent demonstrating streaming responses while using tools         | `runExampleStreamingWithTools`      | -                                                    |
+| **Streaming Ktor Server**   | HTTP server streaming LLM responses in real-time via Ktor         | `runExampleStreamingKtorServer`     | -                                                    |
 | **Banking Routing**         | Comprehensive AI banking assistant with routing capabilities      | `runExampleRoutingViaGraph`         | [📓 Banking.ipynb](../notebooks/Banking.ipynb)       |
 | **Banking Agents as Tools** | Banking routing using agents as tools pattern                     | `runExampleRoutingViaAgentsAsTools` | -                                                    |
 | **Chess**                   | Intelligent chess-playing agent with interactive choice selection | -                                   | [📓 Chess.ipynb](../notebooks/Chess.ipynb)           |
@@ -131,6 +132,7 @@ Run any example using:
 - `runExampleCalculatorV2` - Enhanced calculator
 - `runExampleCalculatorLocal` - Calculator with local LLM
 - `runExampleStreamingWithTools` - Streaming responses with tool usage
+- `runExampleStreamingKtorServer` - HTTP server with real-time streaming
 - `runExampleGuesser` - Number guessing game agent
 - `runExampleEssay` - Essay writing agent
 
