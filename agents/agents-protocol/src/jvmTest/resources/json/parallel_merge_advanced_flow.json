@@ -1,0 +1,146 @@
+{
+  "id": "parallel-merge-advanced-flow",
+  "version": "1.0",
+  "description": "Advanced flow demonstrating various merge condition operations: accessing output, input, and name properties.",
+  "defaultModel": "openai/gpt4o",
+  "agents": [
+    {
+      "name": "task_distributor",
+      "type": "task",
+      "prompt": {
+        "system": "You distribute tasks to parallel workers."
+      },
+      "params": {
+        "task": "Prepare and distribute the task to parallel workers."
+      }
+    },
+    {
+      "name": "parallel_workers_output_check",
+      "type": "parallel",
+      "params": {
+        "agents": ["worker_fast", "worker_accurate", "worker_balanced"],
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "verified"
+          }
+        }
+      },
+      "description": "Example: Select result where output equals 'verified'"
+    },
+    {
+      "name": "parallel_workers_input_check",
+      "type": "parallel",
+      "params": {
+        "agents": ["analyzer_a", "analyzer_b", "analyzer_c"],
+        "merge": {
+          "variable": "results.0.input",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "high_priority"
+          }
+        }
+      },
+      "description": "Example: Select result where input equals 'high_priority'"
+    },
+    {
+      "name": "parallel_workers_name_check",
+      "type": "parallel",
+      "params": {
+        "agents": ["specialist_math", "specialist_text", "specialist_general"],
+        "merge": {
+          "variable": "results.0.name",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "specialist_math"
+          }
+        }
+      },
+      "description": "Example: Select result from agent named 'specialist_math'"
+    },
+    {
+      "name": "worker_fast",
+      "type": "task",
+      "params": {
+        "task": "Process quickly and return 'verified' if successful."
+      }
+    },
+    {
+      "name": "worker_accurate",
+      "type": "task",
+      "params": {
+        "task": "Process accurately and return 'verified' if successful."
+      }
+    },
+    {
+      "name": "worker_balanced",
+      "type": "task",
+      "params": {
+        "task": "Process with balance and return 'verified' if successful."
+      }
+    },
+    {
+      "name": "analyzer_a",
+      "type": "task",
+      "params": {
+        "task": "Analyze the input data using method A."
+      }
+    },
+    {
+      "name": "analyzer_b",
+      "type": "task",
+      "params": {
+        "task": "Analyze the input data using method B."
+      }
+    },
+    {
+      "name": "analyzer_c",
+      "type": "task",
+      "params": {
+        "task": "Analyze the input data using method C."
+      }
+    },
+    {
+      "name": "specialist_math",
+      "type": "task",
+      "params": {
+        "task": "Solve mathematical problems."
+      }
+    },
+    {
+      "name": "specialist_text",
+      "type": "task",
+      "params": {
+        "task": "Process text and natural language."
+      }
+    },
+    {
+      "name": "specialist_general",
+      "type": "task",
+      "params": {
+        "task": "Handle general purpose tasks."
+      }
+    },
+    {
+      "name": "result_aggregator",
+      "type": "task",
+      "params": {
+        "task": "Aggregate and format the final result."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "task_distributor",
+      "to": "parallel_workers_output_check"
+    },
+    {
+      "from": "parallel_workers_output_check",
+      "to": "result_aggregator"
+    }
+  ]
+}

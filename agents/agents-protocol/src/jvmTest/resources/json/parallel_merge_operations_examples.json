@@ -1,0 +1,200 @@
+{
+  "id": "parallel-merge-operations-examples",
+  "version": "1.0",
+  "description": "Comprehensive examples of all merge condition operations with different data types.",
+  "defaultModel": "openai/gpt4o",
+  "examples": {
+    "string_operations": {
+      "equals": {
+        "merge": {
+          "variable": "results.0.output",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "completed"
+          }
+        },
+        "description": "Select result where output equals 'completed'"
+      },
+      "not_equals": {
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "not_equals",
+          "value": {
+            "type": "string",
+            "data": "failed"
+          }
+        },
+        "description": "Select result where output does not equal 'failed'"
+      }
+    },
+    "numeric_operations_integer": {
+      "more": {
+        "merge": {
+          "variable": "results.2.output",
+          "operation": "more",
+          "value": {
+            "type": "int",
+            "data": 90
+          }
+        },
+        "description": "Select result where output score is greater than 90"
+      },
+      "less": {
+        "merge": {
+          "variable": "results.0.output",
+          "operation": "less",
+          "value": {
+            "type": "int",
+            "data": 50
+          }
+        },
+        "description": "Select result where output score is less than 50"
+      },
+      "more_or_equal": {
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "more_or_equal",
+          "value": {
+            "type": "int",
+            "data": 75
+          }
+        },
+        "description": "Select result where output score is 75 or higher"
+      },
+      "less_or_equal": {
+        "merge": {
+          "variable": "results.0.output",
+          "operation": "less_or_equal",
+          "value": {
+            "type": "int",
+            "data": 100
+          }
+        },
+        "description": "Select result where output score is 100 or lower"
+      }
+    },
+    "numeric_operations_double": {
+      "more": {
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "more",
+          "value": {
+            "type": "double",
+            "data": 0.85
+          }
+        },
+        "description": "Select result where confidence is greater than 0.85"
+      },
+      "less_or_equal": {
+        "merge": {
+          "variable": "results.2.output",
+          "operation": "less_or_equal",
+          "value": {
+            "type": "double",
+            "data": 0.95
+          }
+        },
+        "description": "Select result where error rate is 0.95 or lower"
+      }
+    },
+    "boolean_operations": {
+      "equals_true": {
+        "merge": {
+          "variable": "results.0.output",
+          "operation": "equals",
+          "value": {
+            "type": "boolean",
+            "data": true
+          }
+        },
+        "description": "Select result where output is true"
+      },
+      "not_equals_false": {
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "not_equals",
+          "value": {
+            "type": "boolean",
+            "data": false
+          }
+        },
+        "description": "Select result where output is not false (i.e., true)"
+      }
+    },
+    "property_access_examples": {
+      "output_property": {
+        "merge": {
+          "variable": "results.0.output",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "success"
+          }
+        },
+        "description": "Access the output of result at index 0"
+      },
+      "input_property": {
+        "merge": {
+          "variable": "results.1.input",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "priority_task"
+          }
+        },
+        "description": "Access the input of result at index 1"
+      },
+      "name_property": {
+        "merge": {
+          "variable": "results.2.name",
+          "operation": "equals",
+          "value": {
+            "type": "string",
+            "data": "best_agent"
+          }
+        },
+        "description": "Access the agent name of result at index 2"
+      }
+    }
+  },
+  "agents": [
+    {
+      "name": "example_parallel",
+      "type": "parallel",
+      "params": {
+        "agents": ["agent1", "agent2", "agent3"],
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "more",
+          "value": {
+            "type": "int",
+            "data": 85
+          }
+        }
+      }
+    },
+    {
+      "name": "agent1",
+      "type": "task",
+      "params": {
+        "task": "Process with method 1"
+      }
+    },
+    {
+      "name": "agent2",
+      "type": "task",
+      "params": {
+        "task": "Process with method 2"
+      }
+    },
+    {
+      "name": "agent3",
+      "type": "task",
+      "params": {
+        "task": "Process with method 3"
+      }
+    }
+  ],
+  "transitions": []
+}

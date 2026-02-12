@@ -28,6 +28,7 @@ import ai.koog.protocol.agent.agents.transform.FlowInputTransformation
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
 import ai.koog.protocol.transition.FlowTransition
 import ai.koog.protocol.transition.FlowTransitionCondition
+import kotlin.error
 
 /**
  * Factory for creating AI agent graph strategies from flow configurations.
@@ -472,25 +473,25 @@ public object KoogStrategyFactory {
             error("Index out of bounds in merge condition: $index (available: 0..${results.size - 1})")
         }
 
-        val property = parts[2]
+        val property: String = parts[2]
 
-        // Get the result at the specified index
+        // Take the Koog parallel nodes execution result by index
         val result = results[index]
 
-        // Extract the FlowDataType based on the property
-        val flowDataType = extractPropertyFromParallelResult(result, property, index)
+        // Extract the value from an actual Koog parallel nodes result based on the property name.
+        val flowDataType = extractPropertyFromParallelResult(result, property)
+            ?: error("Failed to get an actual parallel nodes execution result by the property (index: $index, property: $property)")
 
-        // Extract the primitive value for comparison
+        // Extract the primitive value for condition matching
         val primitiveValue = extractPrimitiveValue(flowDataType)
 
         // Extract condition value
         val conditionValue = extractPrimitiveValue(condition.value)
 
-        // Evaluate the condition using the shared comparison logic
-        val matches = compareValues(primitiveValue, conditionValue, condition.operation)
+        val isMatches = compareValues(primitiveValue, conditionValue, condition.operation)
 
-        if (!matches) {
-            error("Merge condition not satisfied: ${condition.variable} ${condition.operation} $conditionValue")
+        if (!isMatches) {
+            error("Merge condition not satisfied (condition: ${condition.variable} ${condition.operation} $conditionValue)")
         }
 
         // Return the full output FlowDataType from the result
@@ -502,21 +503,17 @@ public object KoogStrategyFactory {
      *
      * @param result The parallel execution result
      * @param property The property name to extract (output, input, or name)
-     * @param index The result index (for error messages)
      * @return The FlowDataType representing the requested property
      */
     private fun extractPropertyFromParallelResult(
         result: ParallelResult<*, *>,
         property: String,
-        index: Int
-    ): FlowDataType {
+    ): FlowDataType? {
         return when (property) {
             "output" -> result.nodeResult.output as? FlowDataType
-                ?: error("Result output at index $index is not a FlowDataType")
             "input" -> result.nodeInput as? FlowDataType
-                ?: error("Result input at index $index is not a FlowDataType")
             "name" -> FlowDataType.FlowString(result.nodeName)
-            else -> error("Unsupported property in merge condition: $property (supported: output, input, name)")
+            else -> error("Unsupported property in merge condition: $property (supported values: 'output', 'input', 'name')")
         }
     }
 
