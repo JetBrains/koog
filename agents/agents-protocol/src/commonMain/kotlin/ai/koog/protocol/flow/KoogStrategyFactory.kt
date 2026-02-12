@@ -2,8 +2,10 @@ package ai.koog.protocol.flow
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
+import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -15,6 +17,7 @@ import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.agent.FlowDataType
+import ai.koog.protocol.agent.agents.parallel.FlowParallelAgent
 import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
@@ -36,46 +39,21 @@ public object KoogStrategyFactory {
         agents: List<FlowAgent>,
         transitions: List<FlowTransition>,
         toolRegistry: ToolRegistry,
-    ): AIAgentGraphStrategy<FlowDataType, FlowDataType> {
-        // No agents - create an empty strategy
-        if (agents.isEmpty()) {
-            return createEmptyStrategy(id)
-        }
-
-        // No transitions - chain agents sequentially
-        if (transitions.isEmpty()) {
-            return createSequentialStrategy(id, agents, toolRegistry)
-        }
-
-        return strategy(id) {
+    ): AIAgentGraphStrategy<FlowDataType, FlowDataType> =
+        strategy(id) {
             // Nodes
             val collectedNodes = agents.map { agent ->
                 val node by convertFlowAgentToKoogNode(agent, toolRegistry)
                 node
             }
 
-            val firstAgentName = FlowUtil.getFirstAgent(agents, transitions).name
-            val firstNode = collectedNodes.find { it.name == firstAgentName }
-                ?: error("First agent not found: $firstAgentName")
-
-            // Edges
-            // Connect the koog system start node to the first flow node
-            edge(nodeStart forwardTo firstNode)
-
-            // Process the rest of transitions and create edges
-            transitions.forEach { transition -> transitionToEdge(collectedNodes, transition) }
-
-            // Connect all agents without outgoing transitions to finish
-            val agentsWithOutgoingTransitions = transitions.map { it.from }.toSet()
-            val nodesWithoutFinish = collectedNodes.filter { node ->
-                node.name !in agentsWithOutgoingTransitions
+            if (agents.isEmpty() || transitions.isEmpty()) {
+                connectNodesSequentially(collectedNodes)
+                return@strategy
             }
 
-            nodesWithoutFinish.forEach { nodeWithoutFinish ->
-                createEdgeToFinish(nodeWithoutFinish, null)
-            }
+            connectNodesWithTransitions(collectedNodes, agents, transitions)
         }
-    }
 
     //region Private Methods
 
@@ -130,6 +108,7 @@ public object KoogStrategyFactory {
      */
     private fun AIAgentSubgraphBuilderBase<*, *>.convertFlowAgentToKoogNode(
         agent: FlowAgent,
+        agents: List<FlowAgent>,
         toolRegistry: ToolRegistry,
     ): AIAgentSubgraphDelegate<FlowDataType, FlowDataType> {
         return when (agent) {
@@ -137,13 +116,10 @@ public object KoogStrategyFactory {
             is FlowVerifyAgent -> nodeVerify(agent, toolRegistry)
             is FlowInputTransformAgent -> nodeTransform(agent)
             is FlowReActAgent -> nodeReAct(agent, toolRegistry)
-            else -> error("Parallel agent type is not yet supported")
+            is FlowParallelAgent -> nodeParallel(agent, agents, toolRegistry)
+            else -> error("Agent type '${agent::type}' is not yet supported")
         }
     }
-
-    //endregion Nodes
-
-    //region Task
 
     /**
      * Creates a task node which is executed as a subgraphWithTask strategy.
@@ -165,10 +141,6 @@ public object KoogStrategyFactory {
             agent.parameters.task
         }
     }
-
-    //endregion Task
-
-    //region ReAct
 
     /**
      * Creates a subgraph with 'ReAct' strategy.
@@ -212,10 +184,6 @@ public object KoogStrategyFactory {
         }
     }
 
-    //endregion ReAct
-
-    //region Verify
-
     /**
      * Creates a node that checks/validates using LLM with structured verification output.
      */
@@ -244,10 +212,6 @@ public object KoogStrategyFactory {
         }
     }
 
-    //endregion Verify
-
-    //region Transformation
-
     /**
      * Creates a transform node that applies transformations without LLM.
      * The transformation converts input from one FlowDataType type to another based on defined rules.
@@ -256,95 +220,75 @@ public object KoogStrategyFactory {
         agent: FlowInputTransformAgent
     ): AIAgentSubgraphDelegate<FlowDataType, FlowDataType> {
         return subgraph(name = agent.name) {
-            val transform by node<FlowDataType, FlowDataType> { runtimeInput ->
+            val nodeTransform by node<FlowDataType, FlowDataType> { runtimeInput ->
                 transformFlowDataType(runtimeInput, agent.parameters.transformations)
             }
 
-            nodeStart then transform then nodeFinish
+            nodeStart then nodeTransform then nodeFinish
         }
     }
 
-    /**
-     * Transforms a FlowDataType based on the provided transformation configuration.
-     *
-     * @param input The input to transform
-     * @param transformations The list of transformations to apply.
-     *
-     * @return Transformed input, or original input if no matching transformation found
-     */
-    private fun transformFlowDataType(
-        input: FlowDataType,
-        transformations: List<FlowInputTransformation>
-    ): FlowDataType {
-        if (transformations.isEmpty()) {
-            return input
-        }
+    private fun AIAgentSubgraphBuilderBase<*, *>.nodeParallel(
+        agent: FlowParallelAgent,
+        agents: List<FlowAgent>,
+        toolRegistry: ToolRegistry,
+    ): AIAgentSubgraphDelegate<FlowDataType, FlowDataType> {
+        return subgraph(name = agent.name) {
 
-        val transformation = transformations.singleOrNull()?.value
-            ?: error("Unsupported transformation configuration")
+            val parallelNodes = agents
+                .filter { flowAgent -> flowAgent.name in agent.parameters.agents }
+                .map { flowAgent -> convertFlowAgentToKoogNode(flowAgent, agents, toolRegistry) }
 
-        // Drop the "input." prefix from the condition variable
-        val valueString = transformation.split(".").lastOrNull() ?: ""
-
-        if (valueString.isBlank()) {
-            return input
-        }
-
-        return when (valueString) {
-            "success" -> {
-                val value = (input as? FlowDataType.FlowCritiqueResult)?.success
-                    ?: error("Unexpected value string: $valueString")
-
-                FlowDataType.FlowBoolean(value)
-            }
-            "feedback" -> {
-                val value = (input as? FlowDataType.FlowCritiqueResult)?.feedback
-                    ?: error("Unexpected value string: $valueString")
-
-                FlowDataType.FlowString(value)
-            }
-            else -> error("Not primitive types are not yet supported")
+            val nodeParallel = parallel(parallelNodes)
         }
     }
 
-    //endregion Transformation
+    //endregion Nodes
 
     //region Strategy
 
-    /**
-     * Creates an empty strategy that immediately finishes.
-     */
-    private fun createEmptyStrategy(id: String): AIAgentGraphStrategy<FlowDataType, FlowDataType> {
-        return strategy(id) {
+    private fun AIAgentGraphStrategyBuilder<FlowDataType, FlowDataType>.connectNodesSequentially(
+        nodes: List<AIAgentSubgraph<FlowDataType, FlowDataType>>,
+    ) {
+        if (nodes.isEmpty()) {
             edge(nodeStart forwardTo nodeFinish)
+            return
         }
+
+        // Get the first agent to connect to a start node
+        edge(nodeStart forwardTo nodes.first())
+
+        // Collect each other agent in a chain.
+        nodes.zipWithNext { current, next ->
+            edge(current forwardTo next)
+        }
+
+        edge(nodes.last() forwardTo nodeFinish)
     }
 
-    /**
-     * Creates a sequential strategy that chains all agents one after another.
-     * Agents are connected in order: start → agent1 → agent2 → ... → finish
-     */
-    private fun createSequentialStrategy(
-        id: String,
+    private fun AIAgentGraphStrategyBuilder<FlowDataType, FlowDataType>.connectNodesWithTransitions(
+        nodes: List<AIAgentSubgraph<FlowDataType, FlowDataType>>,
         agents: List<FlowAgent>,
-        toolRegistry: ToolRegistry,
-    ): AIAgentGraphStrategy<FlowDataType, FlowDataType> {
-        return strategy(id) {
-            val collectedNodes = agents.map { agent ->
-                val node by convertFlowAgentToKoogNode(agent, toolRegistry)
-                node
-            }
+        transitions: List<FlowTransition>,
+    ) {
+        val firstAgentName = FlowUtil.getFirstAgent(agents, transitions).name
+        val firstNode = nodes.find { it.name == firstAgentName }
+            ?: error("First agent not found: $firstAgentName")
 
-            // Chain: start → first agent
-            edge(nodeStart forwardTo collectedNodes.first())
+        // Connect the koog system start node to the first flow node
+        edge(nodeStart forwardTo firstNode)
 
-            // Chain agents sequentially: agent[i] → agent[i+1]
-            collectedNodes.zipWithNext { current, next ->
-                edge(current forwardTo next)
-            }
+        // Process the rest of transitions and create edges
+        transitions.forEach { transition -> transitionToEdge(nodes, transition) }
 
-            // Chain: last agent → finish
-            edge(collectedNodes.last() forwardTo nodeFinish)
+        // Connect all agents without outgoing transitions to finish
+        val agentsWithOutgoingTransitions = transitions.map { it.from }.toSet()
+        val nodesWithoutFinish = nodes.filter { node ->
+            node.name !in agentsWithOutgoingTransitions
+        }
+
+        nodesWithoutFinish.forEach { nodeWithoutFinish ->
+            createEdgeToFinish(nodeWithoutFinish, null)
         }
     }
 
@@ -485,6 +429,49 @@ public object KoogStrategyFactory {
         }
 
         return outputParts[1]
+    }
+
+    /**
+     * Transforms a FlowDataType based on the provided transformation configuration.
+     *
+     * @param input The input to transform
+     * @param transformations The list of transformations to apply.
+     *
+     * @return Transformed input, or original input if no matching transformation found
+     */
+    private fun transformFlowDataType(
+        input: FlowDataType,
+        transformations: List<FlowInputTransformation>
+    ): FlowDataType {
+        if (transformations.isEmpty()) {
+            return input
+        }
+
+        val transformation = transformations.singleOrNull()?.value
+            ?: error("Unsupported transformation configuration")
+
+        // Drop the "input." prefix from the condition variable
+        val valueString = transformation.split(".").lastOrNull() ?: ""
+
+        if (valueString.isBlank()) {
+            return input
+        }
+
+        return when (valueString) {
+            "success" -> {
+                val value = (input as? FlowDataType.FlowCritiqueResult)?.success
+                    ?: error("Unexpected value string: $valueString")
+
+                FlowDataType.FlowBoolean(value)
+            }
+            "feedback" -> {
+                val value = (input as? FlowDataType.FlowCritiqueResult)?.feedback
+                    ?: error("Unexpected value string: $valueString")
+
+                FlowDataType.FlowString(value)
+            }
+            else -> error("Not primitive types are not yet supported")
+        }
     }
 
     //endregion Private Methods

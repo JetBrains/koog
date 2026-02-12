@@ -90,15 +90,11 @@ public class KoogFlow(
                 }
 
                 onToolCallStarting { ctx ->
-                    println(
-                        "> Tool start\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}"
-                    )
+                    println("> Tool start\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}")
                 }
 
                 onToolCallCompleted { ctx ->
-                    println(
-                        "> Tool completed\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}"
-                    )
+                    println("> Tool completed\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}")
                 }
 
                 onLLMCallStarting { ctx ->
