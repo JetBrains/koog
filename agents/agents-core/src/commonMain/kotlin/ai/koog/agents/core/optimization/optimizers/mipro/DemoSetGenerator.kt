@@ -11,7 +11,10 @@ import ai.koog.agents.core.optimization.util.findOptimizableModules
 import ai.koog.agents.core.optimization.util.sampleLabeledDemonstrations
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.random.Random
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Generates N diverse demo candidate sets for each optimizable node in a strategy.
@@ -118,6 +121,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     }
 
     // 3. Unshuffled bootstrap: no metric filtering (accept all traces)
+    logger.info { "Demo set generation: running unshuffled bootstrap (1/${numCandidateSets} sets)..." }
     adjustedCount--
     val unshuffledOptimizer = BootstrapFewShot(
         maxBootstrappedDemos = maxBootstrappedDemos,
@@ -139,7 +143,9 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     addFromBootstrapResult(unshuffledResult.config.demonstrations)
 
     // 4. Shuffled bootstraps: fill remaining slots with shuffled trainset + random demo count
-    repeat(maxOf(0, adjustedCount)) {
+    val shuffledTotal = maxOf(0, adjustedCount)
+    repeat(shuffledTotal) { i ->
+        logger.info { "Demo set generation: running shuffled bootstrap ${i + 1}/$shuffledTotal..." }
         val shuffledTrainset = trainset.shuffled(random)
         val numDemos = random.nextInt(1, maxBootstrappedDemos + 1)
 

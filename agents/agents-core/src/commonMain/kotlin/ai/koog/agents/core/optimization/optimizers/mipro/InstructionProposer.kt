@@ -8,9 +8,12 @@ import ai.koog.agents.core.optimization.util.describeForOptimization
 import ai.koog.agents.core.optimization.util.findOptimizableModules
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Tips for instruction generation, randomly selected to encourage diversity.
@@ -169,9 +172,10 @@ public class InstructionProposer private constructor(
             minOf(firstModuleDemos, numCandidates)
         }
 
-        for (module in modules) {
+        for ((moduleIdx, module) in modules.withIndex()) {
             val moduleName = module.name
             proposedInstructions[moduleName] = mutableListOf()
+            logger.info { "Proposing instructions for module '${moduleName}' (${moduleIdx + 1}/${modules.size})..." }
 
             for (demoSetIndex in 0 until numDemoSets) {
                 val tip = selectTip()
@@ -186,6 +190,7 @@ public class InstructionProposer private constructor(
                 )
 
                 proposedInstructions[moduleName]!!.add(instruction)
+                logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated" }
             }
         }
 

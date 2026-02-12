@@ -13,10 +13,13 @@ import ai.koog.agents.core.optimization.util.findOptimizableModules
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.withContext
 import kotlin.math.log2
 import kotlin.math.max
 import kotlin.random.Random
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Auto run mode presets for [MIPROv2].
@@ -168,6 +171,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         val hyperparams = computeHyperparameters(strategy, effectiveValset, zeroShotMode, random)
 
         // Step 1: Generate demo candidate sets
+        logger.info { "=== MIPROv2 Step 1: Generating demo candidate sets ===" }
         val demoCandidates = generateDemoSets(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
@@ -185,6 +189,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         )
 
         // Step 2: Propose instruction candidates
+        logger.info { "=== MIPROv2 Step 2: Proposing instruction candidates ===" }
         val proposer = InstructionProposer.create(
             strategy = strategy,
             trainset = effectiveTrainset,
@@ -202,6 +207,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         val finalDemoCandidates = if (zeroShotMode) null else demoCandidates
 
         // Step 3: Random grid search
+        logger.info { "=== MIPROv2 Step 3: Random grid search (${hyperparams.numTrials} trials) ===" }
         return randomGridSearch(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
@@ -241,6 +247,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         val moduleNames = strategy.findOptimizableModules().map { it.name }
 
         // Evaluate baseline (empty config)
+        logger.info { "Evaluating baseline on ${valset.size} examples..." }
         val baselineConfig = OptimizationConfig()
         val baselineScore = evaluateConfig(
             config = baselineConfig,
@@ -255,6 +262,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
 
         var bestScore = baselineScore
         var bestConfig = baselineConfig
+        logger.info { "Baseline score: ${fmt(baselineScore)}" }
 
         for (trial in 1..numTrials) {
             // Sample random instruction index per node
@@ -305,8 +313,11 @@ public class MIPROv2(private val config: MIPROv2Config) {
             )
 
             if (score > bestScore) {
+                logger.info { "Trial $trial/$numTrials: new best ${fmt(score)} (was ${fmt(bestScore)})" }
                 bestScore = score
                 bestConfig = trialConfig
+            } else {
+                logger.info { "Trial $trial/$numTrials: ${fmt(score)} (best=${fmt(bestScore)})" }
             }
 
             // Periodic full evaluation when using minibatch
@@ -378,7 +389,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         )
 
         var totalScore = 0.0
-        for (example in dataset) {
+        for ((i, example) in dataset.withIndex()) {
             val score = try {
                 val input = inputFromExample(example)
                 val output = withContext(config) {
@@ -393,6 +404,9 @@ public class MIPROv2(private val config: MIPROv2Config) {
                 0.0
             }
             totalScore += score
+            if ((i + 1) % 10 == 0 || i + 1 == dataset.size) {
+                logger.info { "  Eval ${i + 1}/${dataset.size} (running avg=${fmt(totalScore / (i + 1))})" }
+            }
         }
 
         return totalScore / dataset.size
@@ -507,5 +521,12 @@ public class MIPROv2(private val config: MIPROv2Config) {
         const val MIN_MINIBATCH_SIZE = 50
         const val BOOTSTRAPPED_FEWSHOT_EXAMPLES_IN_CONTEXT = 3
         const val LABELED_FEWSHOT_EXAMPLES_IN_CONTEXT = 0
+
+        /** Format a Double to 3 decimal places (commonMain-compatible). */
+        fun fmt(d: Double): String {
+            val whole = d.toLong()
+            val frac = ((d - whole) * 1000 + 0.5).toLong()
+            return "$whole.${frac.toString().padStart(3, '0')}"
+        }
     }
 }

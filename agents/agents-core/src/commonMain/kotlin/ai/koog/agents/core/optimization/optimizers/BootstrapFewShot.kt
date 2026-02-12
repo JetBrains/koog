@@ -17,8 +17,11 @@ import ai.koog.agents.core.optimization.util.sampleLabeledDemonstrations
 import ai.koog.agents.core.optimization.util.findOptimizableModules
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Outcome of bootstrapping a single example.
@@ -208,6 +211,8 @@ public class BootstrapFewShot(
             // Check error budget
             if (maxErrors != null && errorCount >= maxErrors) break
 
+            logger.info { "Bootstrapping example ${index + 1}/${trainset.size} (${bootstrappedIndices.size}/$maxBootstrappedDemos successful, $errorCount errors)" }
+
             for (round in 0 until maxRounds) {
                 val outcome = bootstrapOneExample(
                     promptExecutor = promptExecutor,
@@ -228,19 +233,23 @@ public class BootstrapFewShot(
                             name2traces.getOrPut(nodeName) { mutableListOf() }.add(demo)
                         }
                         bootstrappedIndices.add(index)
+                        logger.info { "  -> Success (${bootstrappedIndices.size}/$maxBootstrappedDemos)" }
                         break // Move to next example
                     }
                     is BootstrapOutcome.Failure.MetricNotPassed -> {
+                        logger.info { "  -> Metric not passed (round ${round + 1}/$maxRounds)" }
                         continue // Try next round
                     }
                     is BootstrapOutcome.Failure.ExceptionRaised -> {
                         errorCount++
+                        logger.warn { "  -> Error (${errorCount}${if (maxErrors != null) "/$maxErrors" else ""}): ${outcome.exception.message}" }
                         if (maxErrors != null && errorCount >= maxErrors) break
                         continue
                     }
                 }
             }
         }
+        logger.info { "Bootstrap complete: ${bootstrappedIndices.size} successful out of ${trainset.size} examples" }
 
         // Training examples that were NOT bootstrapped remain ordinary examples, i.e. labeled few shot examples
         // Our optimizer shuffles them
