@@ -160,74 +160,45 @@ public suspend fun <TInput, TOutput> generateDemoSets(
         )
     }
 
-    if (parallelism <= 1 || shuffledTotal <= 1) {
-        // Sequential path
-        for ((i, params) in shuffledParams.withIndex()) {
-            logger.info { "Demo set generation: running shuffled bootstrap ${i + 1}/$shuffledTotal..." }
-            val iterRandom = Random(params.seed)
-            val shuffledTrainset = trainset.shuffled(iterRandom)
+    val semaphore = Semaphore(maxOf(1, parallelism))
+    val completedMutex = Mutex()
+    var completed = 0
 
-            val shuffledOptimizer = BootstrapFewShot(
-                maxBootstrappedDemos = params.numDemos,
-                maxLabeledDemos = maxLabeledDemos,
-                maxRounds = maxRounds,
-                maxErrors = maxErrors,
-                metricThreshold = metricThreshold ?: 1.0,
-                random = iterRandom,
-            )
-            val shuffledResult = shuffledOptimizer.optimize(
-                promptExecutor = promptExecutor,
-                agentConfig = agentConfig,
-                strategy = strategy,
-                trainset = shuffledTrainset,
-                toolRegistry = toolRegistry,
-                metric = metric,
-            )
-            addFromBootstrapResult(shuffledResult.config.demonstrations)
-        }
-    } else {
-        // Parallel path
-        val semaphore = Semaphore(parallelism)
-        val completedMutex = Mutex()
-        var completed = 0
+    val results = coroutineScope {
+        shuffledParams.map { params ->
+            async {
+                semaphore.withPermit {
+                    val iterRandom = Random(params.seed)
+                    val shuffledTrainset = trainset.shuffled(iterRandom)
 
-        val results = coroutineScope {
-            shuffledParams.mapIndexed { i, params ->
-                async {
-                    semaphore.withPermit {
-                        val iterRandom = Random(params.seed)
-                        val shuffledTrainset = trainset.shuffled(iterRandom)
+                    val shuffledOptimizer = BootstrapFewShot(
+                        maxBootstrappedDemos = params.numDemos,
+                        maxLabeledDemos = maxLabeledDemos,
+                        maxRounds = maxRounds,
+                        maxErrors = maxErrors,
+                        metricThreshold = metricThreshold ?: 1.0,
+                        random = iterRandom,
+                    )
+                    val shuffledResult = shuffledOptimizer.optimize(
+                        promptExecutor = promptExecutor,
+                        agentConfig = agentConfig,
+                        strategy = strategy,
+                        trainset = shuffledTrainset,
+                        toolRegistry = toolRegistry,
+                        metric = metric,
+                    )
 
-                        val shuffledOptimizer = BootstrapFewShot(
-                            maxBootstrappedDemos = params.numDemos,
-                            maxLabeledDemos = maxLabeledDemos,
-                            maxRounds = maxRounds,
-                            maxErrors = maxErrors,
-                            metricThreshold = metricThreshold ?: 1.0,
-                            random = iterRandom,
-                        )
-                        val shuffledResult = shuffledOptimizer.optimize(
-                            promptExecutor = promptExecutor,
-                            agentConfig = agentConfig,
-                            strategy = strategy,
-                            trainset = shuffledTrainset,
-                            toolRegistry = toolRegistry,
-                            metric = metric,
-                        )
+                    val current = completedMutex.withLock { ++completed }
+                    logger.info { "Demo set generation: shuffled bootstrap $current/$shuffledTotal completed" }
 
-                        val current = completedMutex.withLock { ++completed }
-                        logger.info { "Demo set generation: shuffled bootstrap $current/$shuffledTotal completed" }
-
-                        shuffledResult
-                    }
+                    shuffledResult
                 }
-            }.awaitAll()
-        }
+            }
+        }.awaitAll()
+    }
 
-        // Merge results sequentially to preserve deterministic ordering
-        for (result in results) {
-            addFromBootstrapResult(result.config.demonstrations)
-        }
+    for (result in results) {
+        addFromBootstrapResult(result.config.demonstrations)
     }
 
     return out.mapValues { (_, v) -> v.toList() }

@@ -61,9 +61,9 @@ public enum class AutoRunMode(public val numCandidates: Int, public val valSize:
  * @property minibatchSize Size of minibatch for evaluation.
  * @property minibatchFullEvalSteps How often to perform full evaluation during minibatch optimization.
  * @property proposerConfig Configuration for the [InstructionProposer].
- * @property evalParallelism Maximum number of concurrent evaluations during grid search, demo generation,
- *  and instruction proposal. Set to 1 (default) for sequential execution; higher values require
- *  a [createStrategy][MIPROv2.optimize] factory that produces independent strategy instances.
+ * @property parallelism Maximum concurrency for demo generation, instruction proposal, and
+ *  evaluation during grid search. Set to 1 (default) for sequential execution; higher values
+ *  require a [createStrategy][MIPROv2.optimize] factory that produces independent strategy instances.
  */
 public data class MIPROv2Config(
     val promptModel: LLModel,
@@ -79,7 +79,7 @@ public data class MIPROv2Config(
     val minibatchSize: Int = 35,
     val minibatchFullEvalSteps: Int = 5,
     val proposerConfig: InstructionProposerConfig = InstructionProposerConfig(),
-    val evalParallelism: Int = 1,
+    val parallelism: Int = 1,
 )
 
 /**
@@ -144,7 +144,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
      * @param agentConfig The agent configuration.
      * @param createStrategy Factory that creates fresh strategy instances. Called once upfront for
      *  inspection (node discovery, description generation) and once per concurrent evaluation when
-     *  [MIPROv2Config.evalParallelism] > 1. For stateless strategies, `{ myStrategy }` is fine;
+     *  [MIPROv2Config.parallelism] > 1. For stateless strategies, `{ myStrategy }` is fine;
      *  for strategies with mutable closure state, return a new instance each time.
      * @param trainset Training examples.
      * @param metric Metric to evaluate candidate configurations.
@@ -200,7 +200,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             maxErrors = config.maxErrors,
             toolRegistry = toolRegistry,
             random = random,
-            parallelism = config.evalParallelism,
+            parallelism = config.parallelism,
         )
 
         // Step 2: Propose instruction candidates
@@ -217,7 +217,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         val instructionCandidates = proposer.proposeInstructionsForProgram(
             demoCandidates = demoCandidates,
             numCandidates = hyperparams.numInstructCandidates,
-            parallelism = config.evalParallelism,
+            parallelism = config.parallelism,
         )
 
         // Discard demos if zero-shot mode
@@ -376,9 +376,9 @@ public class MIPROv2(private val config: MIPROv2Config) {
      * Evaluates an [OptimizationConfig] on a dataset by running the strategy for each example
      * and scoring with the metric. Returns the average score across all examples.
      *
-     * When [MIPROv2Config.evalParallelism] > 1, creates a fresh strategy and agent per concurrent
-     * evaluation via [createStrategy] to isolate mutable closure state. Otherwise, reuses a single
-     * strategy/agent instance sequentially.
+     * Creates a fresh strategy and agent per evaluation via [createStrategy] to isolate mutable
+     * closure state. Concurrency is bounded by [MIPROv2Config.parallelism] via a [Semaphore];
+     * when parallelism is 1, execution is effectively sequential.
      *
      * Exceptions during individual example evaluation are counted as score 0.
      */
@@ -393,68 +393,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
     ): Double {
         if (dataset.isEmpty()) return 0.0
 
-        val parallelism = this.config.evalParallelism
-        return if (parallelism <= 1) {
-            evaluateConfigSequential(config, promptExecutor, agentConfig, createStrategy(), toolRegistry, dataset, metric)
-        } else {
-            evaluateConfigParallel(config, promptExecutor, agentConfig, createStrategy, toolRegistry, dataset, metric, parallelism)
-        }
-    }
-
-    /** Sequential evaluation: single strategy+agent reused across all examples. */
-    private suspend fun <TInput, TOutput> evaluateConfigSequential(
-        config: OptimizationConfig,
-        promptExecutor: PromptExecutor,
-        agentConfig: AIAgentConfig,
-        strategy: AIAgentGraphStrategy<TInput, TOutput>,
-        toolRegistry: ToolRegistry,
-        dataset: Dataset<TInput, TOutput>,
-        metric: Metric<TOutput>,
-    ): Double {
-        val agent = GraphAIAgent(
-            inputType = strategy.inputType,
-            outputType = strategy.outputType,
-            promptExecutor = promptExecutor,
-            agentConfig = agentConfig,
-            strategy = strategy,
-            toolRegistry = toolRegistry,
-        )
-
-        var totalScore = 0.0
-        for ((i, example) in dataset.withIndex()) {
-            val score = try {
-                val output = withContext(config) {
-                    agent.run(example.input)
-                }
-                if (example.hasLabel) {
-                    metric(example.label!!, output)
-                } else {
-                    0.0
-                }
-            } catch (_: Exception) {
-                0.0
-            }
-            totalScore += score
-            if ((i + 1) % 10 == 0 || i + 1 == dataset.size) {
-                logger.info { "  Eval ${i + 1}/${dataset.size} (running avg=${fmt(totalScore / (i + 1))})" }
-            }
-        }
-
-        return totalScore / dataset.size
-    }
-
-    /** Parallel evaluation: fresh strategy+agent per concurrent eval, Semaphore-bounded. */
-    private suspend fun <TInput, TOutput> evaluateConfigParallel(
-        config: OptimizationConfig,
-        promptExecutor: PromptExecutor,
-        agentConfig: AIAgentConfig,
-        createStrategy: () -> AIAgentGraphStrategy<TInput, TOutput>,
-        toolRegistry: ToolRegistry,
-        dataset: Dataset<TInput, TOutput>,
-        metric: Metric<TOutput>,
-        parallelism: Int,
-    ): Double {
-        val semaphore = Semaphore(parallelism)
+        val semaphore = Semaphore(maxOf(1, this.config.parallelism))
         val completedMutex = Mutex()
         var completed = 0
 

@@ -197,45 +197,26 @@ public class InstructionProposer private constructor(
             val moduleName = module.name
             logger.info { "Proposing instructions for module '${moduleName}' (${moduleIdx + 1}/${modules.size})..." }
 
-            if (parallelism <= 1 || numDemoSets <= 1) {
-                // Sequential path
-                val instructions = mutableListOf<String>()
-                for (demoSetIndex in 0 until numDemoSets) {
-                    val instruction = proposeInstructionForNode(
-                        node = module,
-                        demoCandidates = demoCandidates,
-                        demoSetIndex = demoSetIndex,
-                        tip = preSelectedTips[demoSetIndex],
-                        effectiveUseHistory = effectiveUseHistory,
-                        previousInstructions = previousInstructions,
-                    )
-                    instructions.add(instruction)
-                    logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated" }
-                }
-                proposedInstructions[moduleName] = instructions
-            } else {
-                // Parallel path
-                val semaphore = Semaphore(parallelism)
-                val instructions = coroutineScope {
-                    (0 until numDemoSets).map { demoSetIndex ->
-                        async {
-                            semaphore.withPermit {
-                                val instruction = proposeInstructionForNode(
-                                    node = module,
-                                    demoCandidates = demoCandidates,
-                                    demoSetIndex = demoSetIndex,
-                                    tip = preSelectedTips[demoSetIndex],
-                                    effectiveUseHistory = effectiveUseHistory,
-                                    previousInstructions = previousInstructions,
-                                )
-                                logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated for '$moduleName'" }
-                                instruction
-                            }
+            val semaphore = Semaphore(maxOf(1, parallelism))
+            val instructions = coroutineScope {
+                (0 until numDemoSets).map { demoSetIndex ->
+                    async {
+                        semaphore.withPermit {
+                            val instruction = proposeInstructionForNode(
+                                node = module,
+                                demoCandidates = demoCandidates,
+                                demoSetIndex = demoSetIndex,
+                                tip = preSelectedTips[demoSetIndex],
+                                effectiveUseHistory = effectiveUseHistory,
+                                previousInstructions = previousInstructions,
+                            )
+                            logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated for '$moduleName'" }
+                            instruction
                         }
-                    }.awaitAll()
-                }
-                proposedInstructions[moduleName] = instructions.toMutableList()
+                    }
+                }.awaitAll()
             }
+            proposedInstructions[moduleName] = instructions.toMutableList()
         }
 
         return proposedInstructions

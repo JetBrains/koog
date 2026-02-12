@@ -327,7 +327,7 @@ class MIPROv2Test {
                 maxLabeledDemos = 2,
                 seed = 42L,
                 minibatch = false,
-                evalParallelism = 4,
+                parallelism = 4,
                 proposerConfig = InstructionProposerConfig(
                     useDatasetSummary = false,
                     programAware = false,
