@@ -280,17 +280,18 @@ public object KoogStrategyFactory {
                 nodes = parallelAgents,
                 merge = {
                     // Evaluate the merge condition to select the appropriate result
-                    val result =
-                    val selectedOutput = agent.parameters.merge?.let {
-                        getParallelNodeResultByCondition(results, agent.parameters.merge)
-//                        evaluateMergeCondition(results, it)
-                    }
-
-
-                    ParallelNodeExecutionResult(
-                        selectedOutput,
+                    agent.parameters.merge?.let { condition ->
+                        getParallelNodeResultByCondition(results, condition).nodeResult.let { result ->
+                        ParallelNodeExecutionResult(
+                            result.output,
+                            result.context
+                        )}
+                    } ?: ParallelNodeExecutionResult(
+                        results.first().nodeResult.output,
                         results.first().nodeResult.context
                     )
+
+                    // TODO: Write a logic to merge parallel execution results
                 }
             )
 
