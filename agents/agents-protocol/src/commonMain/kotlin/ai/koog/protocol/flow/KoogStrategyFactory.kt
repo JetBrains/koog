@@ -8,6 +8,7 @@ import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
+import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -43,7 +44,7 @@ public object KoogStrategyFactory {
         strategy(id) {
             // Nodes
             val collectedNodes = agents.map { agent ->
-                val node by convertFlowAgentToKoogNode(agent, toolRegistry)
+                val node by convertFlowAgentToKoogNode(agent, agents, toolRegistry)
                 node
             }
 
@@ -234,12 +235,28 @@ public object KoogStrategyFactory {
         toolRegistry: ToolRegistry,
     ): AIAgentSubgraphDelegate<FlowDataType, FlowDataType> {
         return subgraph(name = agent.name) {
-
-            val parallelNodes = agents
+            // Get the child agents that should run in parallel
+            val parallelAgents = agents
                 .filter { flowAgent -> flowAgent.name in agent.parameters.agents }
-                .map { flowAgent -> convertFlowAgentToKoogNode(flowAgent, agents, toolRegistry) }
+                .map { flowAgent ->
+                    val nodeDelegate = convertFlowAgentToKoogNode(flowAgent, agents, toolRegistry)
+                    val node by nodeDelegate
+                    node
+                }
+                .toTypedArray()
 
-            val nodeParallel = parallel(parallelNodes)
+            // Create a parallel node with merge logic
+            val nodeParallel by parallel(
+                name = agent.name,
+                nodes = parallelAgents,
+                merge = {
+                    // Return the first result (all parallel nodes should produce compatible outputs)
+                    results.first().nodeResult
+                }
+            )
+
+            // Connect the nodes: start -> parallel -> finish
+            nodeStart then nodeParallel then nodeFinish
         }
     }
 

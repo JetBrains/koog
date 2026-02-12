@@ -5,6 +5,8 @@ import ai.koog.protocol.agent.FlowAgentConfig
 import ai.koog.protocol.agent.FlowAgentKind
 import ai.koog.protocol.agent.FlowAgentPrompt
 import ai.koog.protocol.agent.FlowAgentRuntimeKind
+import ai.koog.protocol.agent.agents.parallel.FlowParallelAgent
+import ai.koog.protocol.agent.agents.parallel.FlowParallelAgentParameters
 import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.react.FlowReActAgentParameters
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
@@ -131,7 +133,17 @@ public class FlowJsonConfigParser : FlowConfigParser {
                 )
             }
 
-            FlowAgentKind.PARALLEL -> error("PARALLEL agent type is not yet supported")
+            FlowAgentKind.PARALLEL -> {
+                val agentNames = params?.get("agents")?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }
+                    ?: error("Missing <agents> parameter for parallel agent")
+                FlowParallelAgent(
+                    name = name,
+                    model = resolvedModel,
+                    config = agentConfig,
+                    prompt = agentPrompt,
+                    parameters = FlowParallelAgentParameters(agentNames)
+                )
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 package ai.koog.protocol
 
 import ai.koog.protocol.agent.FlowAgentKind
+import ai.koog.protocol.agent.agents.parallel.FlowParallelAgent
 import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
@@ -373,6 +374,79 @@ class FlowJsonParserTest : FlowTestBase() {
     }
 
     //endregion ReAct
+
+    //region Parallel
+
+    @Test
+    fun testJsonParsing_parallelFlowJson() {
+        val jsonContent = readFlow("json/parallel_flow.json")
+
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        // Verify flow config
+        assertEquals("parallel-flow", flowConfig.id)
+        assertEquals("1.0", flowConfig.version)
+        assertEquals("openai/gpt4o", flowConfig.defaultModel)
+
+        // Verify agents
+        assertEquals(6, flowConfig.agents.size)
+
+        // preprocessor
+        val preprocessorAgent = flowConfig.agents[0]
+        assertIs<FlowTaskAgent>(preprocessorAgent)
+        assertEquals("preprocessor", preprocessorAgent.name)
+        assertEquals(FlowAgentKind.TASK, preprocessorAgent.type)
+
+        // parallel_analyzer
+        val parallelAgent = flowConfig.agents[1]
+        assertIs<FlowParallelAgent>(parallelAgent)
+        assertEquals("parallel_analyzer", parallelAgent.name)
+        assertEquals(FlowAgentKind.PARALLEL, parallelAgent.type)
+        assertEquals("openai/gpt4o", parallelAgent.model)
+        assertNotNull(parallelAgent.parameters)
+        assertEquals(3, parallelAgent.parameters.agents.size)
+        assertTrue(parallelAgent.parameters.agents.contains("sentiment_analyzer"))
+        assertTrue(parallelAgent.parameters.agents.contains("keyword_extractor"))
+        assertTrue(parallelAgent.parameters.agents.contains("language_detector"))
+
+        // sentiment_analyzer
+        val sentimentAgent = flowConfig.agents[2]
+        assertIs<FlowTaskAgent>(sentimentAgent)
+        assertEquals("sentiment_analyzer", sentimentAgent.name)
+        assertEquals(FlowAgentKind.TASK, sentimentAgent.type)
+
+        // keyword_extractor
+        val keywordAgent = flowConfig.agents[3]
+        assertIs<FlowTaskAgent>(keywordAgent)
+        assertEquals("keyword_extractor", keywordAgent.name)
+        assertEquals(FlowAgentKind.TASK, keywordAgent.type)
+
+        // language_detector
+        val languageAgent = flowConfig.agents[4]
+        assertIs<FlowTaskAgent>(languageAgent)
+        assertEquals("language_detector", languageAgent.name)
+        assertEquals(FlowAgentKind.TASK, languageAgent.type)
+
+        // aggregator
+        val aggregatorAgent = flowConfig.agents[5]
+        assertIs<FlowTaskAgent>(aggregatorAgent)
+        assertEquals("aggregator", aggregatorAgent.name)
+        assertEquals(FlowAgentKind.TASK, aggregatorAgent.type)
+
+        // Verify transitions
+        assertEquals(2, flowConfig.transitions.size)
+
+        val transition1 = flowConfig.transitions[0]
+        assertEquals("preprocessor", transition1.from)
+        assertEquals("parallel_analyzer", transition1.to)
+
+        val transition2 = flowConfig.transitions[1]
+        assertEquals("parallel_analyzer", transition2.from)
+        assertEquals("aggregator", transition2.to)
+    }
+
+    //endregion Parallel
 
     //region Model Validation
 

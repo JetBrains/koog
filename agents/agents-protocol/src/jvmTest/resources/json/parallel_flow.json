@@ -1,0 +1,75 @@
+{
+  "id": "parallel-flow",
+  "version": "1.0",
+  "description": "Flow demonstrating parallel agent execution where multiple agents process the same input concurrently.",
+  "defaultModel": "openai/gpt4o",
+  "agents": [
+    {
+      "name": "preprocessor",
+      "type": "task",
+      "prompt": {
+        "system": "You prepare data for analysis."
+      },
+      "params": {
+        "task": "Clean and normalize the input text for analysis."
+      }
+    },
+    {
+      "name": "parallel_analyzer",
+      "type": "parallel",
+      "params": {
+        "agents": ["sentiment_analyzer", "keyword_extractor", "language_detector"]
+      }
+    },
+    {
+      "name": "sentiment_analyzer",
+      "type": "task",
+      "prompt": {
+        "system": "You analyze sentiment in text."
+      },
+      "params": {
+        "task": "Analyze the sentiment of the input text and return 'positive', 'negative', or 'neutral'."
+      }
+    },
+    {
+      "name": "keyword_extractor",
+      "type": "task",
+      "prompt": {
+        "system": "You extract keywords from text."
+      },
+      "params": {
+        "task": "Extract the top 3 keywords from the input text."
+      }
+    },
+    {
+      "name": "language_detector",
+      "type": "task",
+      "prompt": {
+        "system": "You detect the language of text."
+      },
+      "params": {
+        "task": "Detect the language of the input text and return the ISO 639-1 code."
+      }
+    },
+    {
+      "name": "aggregator",
+      "type": "task",
+      "prompt": {
+        "system": "You combine analysis results."
+      },
+      "params": {
+        "task": "Combine and summarize the analysis results into a final report."
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "from": "preprocessor",
+      "to": "parallel_analyzer"
+    },
+    {
+      "from": "parallel_analyzer",
+      "to": "aggregator"
+    }
+  ]
+}

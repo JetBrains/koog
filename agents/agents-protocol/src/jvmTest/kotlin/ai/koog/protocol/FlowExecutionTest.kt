@@ -620,6 +620,60 @@ class FlowExecutionTest : FlowTestBase() {
     }
 
     @Test
+    fun testParallelFlowExecution() = runTest {
+        val jsonContent = readFlow("json/parallel_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Preprocessor cleans the input
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("Cleaned: I love this product!")) onCondition { request ->
+                request.contains("Clean and normalize", ignoreCase = true)
+            }
+
+            // Sentiment analyzer (runs in parallel)
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("positive")) onCondition { request ->
+                request.contains("Analyze the sentiment", ignoreCase = true) ||
+                    request.contains("sentiment", ignoreCase = true)
+            }
+
+            // Keyword extractor (runs in parallel)
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("love, product, great")) onCondition { request ->
+                request.contains("Extract the top 3 keywords", ignoreCase = true) ||
+                    request.contains("keywords", ignoreCase = true)
+            }
+
+            // Language detector (runs in parallel)
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("en")) onCondition { request ->
+                request.contains("Detect the language", ignoreCase = true) ||
+                    request.contains("language", ignoreCase = true)
+            }
+
+            // Aggregator combines results
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("Analysis complete: positive sentiment, English text")) onCondition { request ->
+                request.contains("Combine and summarize", ignoreCase = true) ||
+                    request.contains("positive", ignoreCase = true)
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowDataType.FlowString("I love this product!"))
+
+        assertIs<FlowDataType.FlowString>(result)
+        assertTrue(
+            result.data.contains("Analysis") || result.data.contains("positive"),
+            "Result should contain analysis summary: ${result.data}"
+        )
+    }
+
+    @Test
     fun testReActFlowExecution() = runTest {
         val jsonContent = readFlow("json/react_flow.json")
         val parser = FlowJsonConfigParser()
