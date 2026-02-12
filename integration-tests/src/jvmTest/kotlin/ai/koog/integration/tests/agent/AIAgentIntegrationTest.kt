@@ -44,6 +44,7 @@ import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -1301,6 +1302,54 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     result = result,
                     promptMessages = promptMessages,
                     strategyName = strategyName
+                )
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("allModels")
+    fun integration_MultipleHandlersForToolCallEvents(model: LLModel) = runTest(timeout = 180.seconds) {
+        val text = "Tool Starting Handler"
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+
+        val toolStartingCallOrder = mutableListOf<String>()
+
+        val toolRegistry = ToolRegistry {
+            tool(SimpleCalculatorTool)
+        }
+
+        withRetry {
+            val agent = AIAgent(
+                promptExecutor = getExecutor(model),
+                systemPrompt = "$systemPrompt JUST CALL THE TOOLS, NO QUESTIONS ASKED.",
+                strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+                llmModel = model,
+                temperature = 1.0,
+                toolRegistry = toolRegistry,
+                maxIterations = 10
+            ) {
+                install(EventHandler.Feature) {
+                    onToolCallStarting { eventContext ->
+                        toolStartingCallOrder.add("$text 1: ${eventContext.toolName}")
+                    }
+                    onToolCallStarting { eventContext ->
+                        toolStartingCallOrder.add("$text 2: ${eventContext.toolName}")
+                    }
+                    onToolCallStarting { eventContext ->
+                        toolStartingCallOrder.add("$text 3: ${eventContext.toolName}")
+                    }
+                }
+            }
+
+            agent.run("Calculate 7 times 8")
+
+            withClue("Three starting handlers should be called for model $model") {
+                toolStartingCallOrder shouldContainExactly listOf(
+                    "$text 1: ${SimpleCalculatorTool.name}",
+                    "$text 2: ${SimpleCalculatorTool.name}",
+                    "$text 3: ${SimpleCalculatorTool.name}"
                 )
             }
         }
