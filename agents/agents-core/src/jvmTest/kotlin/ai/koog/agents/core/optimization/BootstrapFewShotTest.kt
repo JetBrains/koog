@@ -190,19 +190,21 @@ class BootstrapFewShotTest {
         assertTrue(thinkingDemos.isNotEmpty(), "Thinking node should have demos")
         assertTrue(answerDemos.isNotEmpty(), "Answer node should have demos")
 
-        // Labeled demos come from trainset — no "(bootstrapped)" marker
+        // With maxBootstrappedDemos=0, no bootstrapping runs. Labeled demos come from
+        // non-bootstrapped dataset items (Example(input, label)), so every node gets
+        // the same (Question N, Answer N) pairs regardless of the node's role.
         for ((input, output) in thinkingDemos) {
             assertTrue(input.startsWith("Question "),
-                "Thinking labeled demo input should be a question, got: $input")
-            assertTrue(output.startsWith("Thinking ") && "(bootstrapped)" !in output,
-                "Thinking labeled demo output should be from trainset, got: $output")
+                "Labeled demo input should be a question, got: $input")
+            assertTrue(output.startsWith("Answer ") && "(bootstrapped)" !in output,
+                "Labeled demo output should be dataset label (Answer N), got: $output")
         }
 
         for ((input, output) in answerDemos) {
-            assertTrue(input.startsWith("Thinking "),
-                "Answer labeled demo input should be a thinking, got: $input")
+            assertTrue(input.startsWith("Question "),
+                "Labeled demo input should be a question, got: $input")
             assertTrue(output.startsWith("Answer "),
-                "Answer labeled demo output should be from trainset, got: $output")
+                "Labeled demo output should be dataset label (Answer N), got: $output")
         }
     }
 
