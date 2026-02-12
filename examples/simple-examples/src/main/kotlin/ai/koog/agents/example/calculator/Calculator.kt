@@ -16,12 +16,9 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import java.util.concurrent.TimeUnit
-import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.seconds
 
 suspend fun main() {
-    val logger = LoggerFactory.getLogger("Calculator")
-    logger.debug("Starting Calculator example with DEBUG level enabled")
     // Create a tool registry with calculator tools
     val toolRegistry = ToolRegistry {
         // Special tool, required with this type of agent.
@@ -93,6 +90,6 @@ suspend fun main() {
 
         val expression = "(10 + 20) * (5 + 5) / (2 - 11) * 445 / 23 + 2334 / 23 + 3"
         val result = agent.run(expression)
-        logger.info("Agent result: {}", result)
+        println("Agent result: $result")
     }
 }
