@@ -72,7 +72,8 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         numberOfChoices = this.numberOfChoices,
         maxIterations = this.maxIterations,
         missingToolsConversionStrategy = this.missingToolsConversionStrategy,
-        clock = this.clock
+        clock = this.clock,
+        toolRegistry = this.toolRegistry
     )
 
     public override fun <Input, Output> functionalStrategy(
@@ -87,7 +88,8 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         numberOfChoices = this.numberOfChoices,
         maxIterations = this.maxIterations,
         missingToolsConversionStrategy = this.missingToolsConversionStrategy,
-        clock = this.clock
+        clock = this.clock,
+        toolRegistry = this.toolRegistry
     )
 
     public override fun id(id: String?): AIAgentBuilderAPI = apply {
