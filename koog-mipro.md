@@ -360,7 +360,10 @@ No Koog core files are modified — `AIAgentNode`, `AIAgentNodeDelegate`, and `A
 - [ ] Bake-in mechanism: apply `OptimizationConfig` as node defaults for deployment without coroutine context
 - [ ] Bayesian optimization (TPE) as alternative to random grid search in Step 3
 - [ ] End-to-end integration tests with real LLM
-- [ ] Port heart disease example
+
+### Done (recent)
+- [x] Port heart disease example — end-to-end experiment in `koog-auto-agent-optimization` (mod-koog branch) using Koog's native optimization API with 2 typed `OptimizableNode`s: 1 trainee (`PatientData → TraineeOpinion`) looping 3x via `onCondition`/`transformed` edges + 1 vote (`VoteInput → Verdict`) with structured output, parallel evaluation, throttled executor
+- [x] Progress logging in library code — `BootstrapFewShot`, `DemoSetGenerator`, `InstructionProposer`, `MIPROv2` all log step transitions, per-example/trial progress, and running scores via `KotlinLogging` (no external progressbar dependency)
 
 ## Applying Optimization Results
 
