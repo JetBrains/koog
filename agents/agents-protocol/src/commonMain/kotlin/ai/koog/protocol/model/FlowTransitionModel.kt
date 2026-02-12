@@ -1,5 +1,6 @@
 package ai.koog.protocol.model
 
+import ai.koog.protocol.agent.agents.transform.FlowDataTransformation
 import ai.koog.protocol.transition.FlowTransition
 import kotlinx.serialization.Serializable
 
@@ -16,7 +17,8 @@ import kotlinx.serialization.Serializable
 public data class FlowTransitionModel(
     public val from: String,
     public val to: String,
-    public val condition: FlowTransitionConditionModel? = null
+    public val condition: FlowTransitionConditionModel? = null,
+    public val transformation: FlowDataTransformation? = null
 ) {
 
     /**
@@ -25,6 +27,6 @@ public data class FlowTransitionModel(
      * @return A runtime FlowTransition object ready for execution
      */
     public fun toFlowTransition(): FlowTransition {
-        return FlowTransition(from, to, condition?.toFlowTransitionCondition())
+        return FlowTransition(from, to, condition?.toFlowTransitionCondition(), transformation)
     }
 }

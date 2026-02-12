@@ -24,7 +24,7 @@ import ai.koog.protocol.agent.agents.parallel.ParallelMergeCondition
 import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
-import ai.koog.protocol.agent.agents.transform.FlowInputTransformation
+import ai.koog.protocol.agent.agents.transform.FlowDataTransformation
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
 import ai.koog.protocol.transition.FlowTransition
 import ai.koog.protocol.transition.FlowTransitionCondition
@@ -77,13 +77,14 @@ public object KoogStrategyFactory {
         val toNode = collectedNodes.find { it.name == transition.to }
             ?: error("Unable to find 'to' node for transition '${transition.transitionString}': ${transition.to}")
 
-        createEdge(fromNode, toNode, transition.condition)
+        createEdge(fromNode, toNode, transition.condition, transition.transformation)
     }
 
     private fun AIAgentSubgraphBuilderBase<FlowDataType, FlowDataType>.createEdge(
         fromNode: AIAgentNodeBase<FlowDataType, FlowDataType>,
         toNode: AIAgentNodeBase<FlowDataType, FlowDataType>,
-        condition: FlowTransitionCondition?
+        condition: FlowTransitionCondition?,
+        transformation: FlowDataTransformation?,
     ) {
         if (condition == null) {
             edge(fromNode forwardTo toNode)
@@ -404,7 +405,7 @@ public object KoogStrategyFactory {
      */
     private fun transformFlowDataType(
         input: FlowDataType,
-        transformations: List<FlowInputTransformation>
+        transformations: List<FlowDataTransformation>
     ): FlowDataType {
         if (transformations.isEmpty()) {
             return input

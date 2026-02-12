@@ -13,7 +13,7 @@ public data class FlowInputTransformAgent(
     override val model: String,
     override val config: FlowAgentConfig,
     override val prompt: FlowAgentPrompt?,
-    override val parameters: FlowInputTransformParameters
+    override val parameters: FlowTransformParameters
 ) : FlowAgent {
 
     override val type: FlowAgentKind = FlowAgentKind.TRANSFORM

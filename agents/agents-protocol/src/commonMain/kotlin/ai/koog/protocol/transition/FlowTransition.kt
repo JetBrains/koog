@@ -1,5 +1,6 @@
 package ai.koog.protocol.transition
 
+import ai.koog.protocol.agent.agents.transform.FlowDataTransformation
 import kotlinx.serialization.Serializable
 
 /**
@@ -19,6 +20,7 @@ public data class FlowTransition(
     public val from: String,
     public val to: String,
     public val condition: FlowTransitionCondition? = null,
+    public val transformation: FlowDataTransformation? = null
 ) {
     /**
      * Human-readable string representation of this transition for debugging and logging.

@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
  * Parameters for input transformation agents.
  */
 @Serializable
-public data class FlowInputTransformParameters(
-    val transformations: List<FlowInputTransformation>
+public data class FlowTransformParameters(
+    val transformations: List<FlowDataTransformation>
 ) : FlowAgentParameters

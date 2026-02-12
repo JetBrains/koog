@@ -13,8 +13,8 @@ import ai.koog.protocol.agent.agents.react.FlowReActAgentParameters
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgentParameters
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
-import ai.koog.protocol.agent.agents.transform.FlowInputTransformParameters
-import ai.koog.protocol.agent.agents.transform.FlowInputTransformation
+import ai.koog.protocol.agent.agents.transform.FlowTransformParameters
+import ai.koog.protocol.agent.agents.transform.FlowDataTransformation
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgentParameters
 import ai.koog.protocol.flow.ConditionOperationKind
@@ -108,10 +108,10 @@ public class FlowJsonConfigParser : FlowConfigParser {
                     } ?: return@mapNotNull null
 
                     val value = transformation["value"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                    FlowInputTransformation(value)
+                    FlowDataTransformation(value)
                 } ?: emptyList()
 
-                val params = FlowInputTransformParameters(transformations)
+                val params = FlowTransformParameters(transformations)
 
                 FlowInputTransformAgent(
                     name = name,
