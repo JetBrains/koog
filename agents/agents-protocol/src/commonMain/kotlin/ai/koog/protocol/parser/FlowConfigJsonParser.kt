@@ -148,7 +148,7 @@ public class FlowJsonConfigParser : FlowConfigParser {
                     val operation = mergeJson["operation"]?.jsonPrimitive?.content
                         ?: error("Missing <operation> in merge condition")
 
-                    val value = mergeJson["value"]?.jsonPrimitive
+                    val valueElement = mergeJson["value"]
                         ?: error("Missing <value> in merge condition")
 
                     val operationKind = ConditionOperationKind.entries
@@ -158,7 +158,7 @@ public class FlowJsonConfigParser : FlowConfigParser {
                     ParallelMergeCondition(
                         variable = variable,
                         operation = operationKind,
-                        value = value.toPrimitiveFlowDataType()
+                        value = valueElement.toFlowPrimitiveType()
                     )
                 }
 

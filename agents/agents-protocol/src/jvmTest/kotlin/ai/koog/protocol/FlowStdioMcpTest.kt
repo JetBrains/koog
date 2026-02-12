@@ -83,20 +83,14 @@ class FlowStdioMcpTest : FlowTestBase() {
         assertEquals("real-flow", flowConfig.id)
         assertEquals("1.0.0", flowConfig.version)
 
-        // Verify tools are parsed correctly
-        assertEquals(1, flowConfig.tools.size)
-
-        // Verify it's a stdio MCP tool
-        val tool = flowConfig.tools[0]
-        assertTrue(tool is ai.koog.protocol.tool.FlowTool.Mcp.Stdio)
-
-        val stdioTool = tool as ai.koog.protocol.tool.FlowTool.Mcp.Stdio
-        assertEquals("npx", stdioTool.command)
-        assertEquals(listOf("@playwright/mcp@latest", "--port", "8931"), stdioTool.args)
+        // Verify tools are parsed correctly (real_flow.json has no tools)
+        assertEquals(0, flowConfig.tools.size)
 
         // Verify agents are parsed correctly
-        assertEquals(1, flowConfig.agents.size)
-        assertEquals("open-jetbrains-site", flowConfig.agents[0].name)
+        assertEquals(3, flowConfig.agents.size)
+        assertEquals("joke-generator-1", flowConfig.agents[0].name)
+        assertEquals("joke-generator-2", flowConfig.agents[1].name)
+        assertEquals("parallel-joke-generator", flowConfig.agents[2].name)
     }
 
     @Test

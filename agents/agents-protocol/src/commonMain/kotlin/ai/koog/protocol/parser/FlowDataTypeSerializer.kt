@@ -237,3 +237,37 @@ public fun JsonPrimitive.toPrimitiveFlowDataType(): FlowPrimitiveType {
         ?: contentOrNull?.let { FlowString(it) }
         ?: error("Unsupported primitive type: $this")
 }
+
+/**
+ * Converts a JsonElement (primitive or object with type/data fields) to a Primitive FlowDataType.
+ */
+public fun JsonElement.toFlowPrimitiveType(): FlowPrimitiveType {
+    return when (this) {
+        is JsonPrimitive -> toPrimitiveFlowDataType()
+        is JsonObject -> {
+            val type = this["type"]?.jsonPrimitive?.contentOrNull
+                ?: error("Missing <type> field in value object: $this")
+
+            when (type) {
+                "boolean" -> {
+                    this["data"]?.jsonPrimitive?.booleanOrNull?.let { FlowBoolean(it) }
+                        ?: error("Missing or invalid <data> field for boolean type: $this")
+                }
+                "string" -> {
+                    this["data"]?.jsonPrimitive?.contentOrNull?.let { FlowString(it) }
+                        ?: error("Missing or invalid <data> field for string type: $this")
+                }
+                "int" -> {
+                    this["data"]?.jsonPrimitive?.intOrNull?.let { FlowInteger(it) }
+                        ?: error("Missing or invalid <data> field for int type: $this")
+                }
+                "double" -> {
+                    this["data"]?.jsonPrimitive?.doubleOrNull?.let { FlowDouble(it) }
+                        ?: error("Missing or invalid <data> field for double type: $this")
+                }
+                else -> error("Unsupported primitive type in value object: <$type>")
+            }
+        }
+        else -> error("Expected JsonPrimitive or JsonObject with type/data fields, got: $this")
+    }
+}
