@@ -614,21 +614,27 @@ public class OpenTelemetry {
                     toolDescription = eventContext.toolDescription,
                     toolCallId = eventContext.toolCallId
                 )
-                val mcpToolMetaData = eventContext.context.llm.toolRegistry.getMcpToolMeta(eventContext.toolName)
-                if (mcpToolMetaData != null) {
-                    executeToolSpan.enrichExecuteToolSpanWithMcpAttrs(
-                        toolName = eventContext.toolName,
-                        sessionId = mcpToolMetaData[McpMetadataKeys.McpSessionId],
-                        method = McpMethod.TOOLS_CALL,
-                        serverPort = mcpToolMetaData[McpMetadataKeys.ServerPort]?.toIntOrNull(),
-                        serverAddress = mcpToolMetaData[McpMetadataKeys.ServerUrl],
-                        mcpProtocolVersion = requireNotNull(mcpToolMetaData[McpMetadataKeys.McpProtocolVersion]) {
-                            "MCP protocol version is required for MCP tool calls."
-                        },
-                        mcpTransportType = requireNotNull(mcpToolMetaData[McpMetadataKeys.McpTransportType]) {
-                            "MCP transport type is required for MCP tool calls."
-                        },
-                    )
+                val mcpToolMetadata = eventContext.context.llm.toolRegistry.getMcpToolMeta(eventContext.toolName)
+                if (mcpToolMetadata != null) {
+                    val mcpVersion = mcpToolMetadata[McpMetadataKeys.McpProtocolVersion]
+                    val mcpTransportType = mcpToolMetadata[McpMetadataKeys.McpTransportType]
+                    if (mcpVersion != null && mcpTransportType != null) {
+                        executeToolSpan.enrichExecuteToolSpanWithMcpAttrs(
+                            toolName = eventContext.toolName,
+                            sessionId = mcpToolMetadata[McpMetadataKeys.McpSessionId],
+                            method = McpMethod.TOOLS_CALL,
+                            serverPort = mcpToolMetadata[McpMetadataKeys.ServerPort]?.toIntOrNull(),
+                            serverAddress = mcpToolMetadata[McpMetadataKeys.ServerUrl],
+                            mcpProtocolVersion = mcpVersion,
+                            mcpTransportType = mcpTransportType,
+                        )
+                    } else {
+                        logger.error {
+                            "MCP protocol version ($mcpVersion) and transport type ($mcpTransportType) are required " +
+                                "for mcp tool call spans: tool=${eventContext.toolName}, " +
+                                "serverUrl=${mcpToolMetadata[McpMetadataKeys.ServerUrl]}"
+                        }
+                    }
                 }
 
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)

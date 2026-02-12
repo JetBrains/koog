@@ -151,7 +151,7 @@ class McpToolTest {
         )
         val mcpTool = McpTool(
             mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
-            metaData = emptyMap(),
+            metadata = emptyMap(),
             descriptor = toolDescriptor,
         )
         val encodedResult = mcpTool.encodeResultToString(result)
@@ -170,7 +170,7 @@ class McpToolTest {
         )
         val mcpTool = McpTool(
             mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
-            metaData = emptyMap(),
+            metadata = emptyMap(),
             descriptor = toolDescriptor,
         )
         val encodedResult = mcpTool.encodeResultToString(result)

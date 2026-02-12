@@ -24,12 +24,12 @@ import kotlinx.serialization.json.jsonObject
 public class McpTool(
     private val mcpClient: Client,
     descriptor: ToolDescriptor,
-    metaData: Map<String, String>,
+    metadata: Map<String, String>,
 ) : Tool<JsonObject, CallToolResult?>(
     argsSerializer = JsonObject.serializer(),
     resultSerializer = CallToolResult.serializer().nullable,
     descriptor = descriptor,
-    metadata = metaData
+    metadata = metadata
 ) {
 
     /**
