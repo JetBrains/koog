@@ -19,31 +19,22 @@ public data class Example(
     val labelKey: String? = null,
 ) {
     /**
-     * Gets the input data only, excluding the label field.
-     *
-     * Used for inference where we don't want the expected answer in the prompt.
-     *
-     * @return A map containing all data fields except the label.
-     */
-    public fun inputOnly(): Map<String, Any> {
-        return if (labelKey != null) data - labelKey else data
-    }
-
-    /**
      * Gets the label (expected output) value.
      *
-     * @return The label value, or null if this is an unlabeled example.
+     * @return The label value.
+     * @throws IllegalStateException if [labelKey] is null or not present in [data].
      */
-    public val label: Any?
+    public val label: Any
         get() = labelKey?.let { data[it] }
+            ?: error("Example has no labelKey set. Check hasLabel before accessing label.")
 
     /**
-     * Gets a specific field value from the data.
+     * Gets the label (expected output) value, or null if unavailable.
      *
-     * @param key The field name.
-     * @return The field value, or null if not present.
+     * @return The label value, or null if [labelKey] is null or not present in [data].
      */
-    public operator fun get(key: String): Any? = data[key]
+    public val labelOrNull: Any?
+        get() = labelKey?.let { data[it] }
 
     /**
      * Checks if this example has a label.
@@ -51,20 +42,6 @@ public data class Example(
     public val hasLabel: Boolean
         get() = labelKey != null && data.containsKey(labelKey)
 }
-
-/**
- * A metric function that scores how well an actual output matches an expected output.
- *
- * Metrics are used during optimization to evaluate candidate configurations. For example, they may
- * return a score between 0.0 (no match) and 1.0 (perfect match), though other ranges are
- * acceptable depending on the optimization algorithm.
- *
- * The type parameter [T] is tied to the strategy's output type, giving compile-time safety
- * that the metric matches the pipeline being optimized.
- *
- * @param T The type of the values being compared (matches the strategy's output type).
- */
-public typealias Metric<T> = (expected: T, actual: T) -> Double
 
 /**
  * Type alias for a dataset (list of examples).

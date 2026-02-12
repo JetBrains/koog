@@ -70,7 +70,7 @@ public sealed class BootstrapOutcome {
  *     strategy = myStrategy,
  *     trainset = trainingExamples,
  *     metric = { expected, actual -> if (expected == actual) 1.0 else 0.0 },
- *     inputFromExample = { example -> example["question"] as String },
+ *     inputFromExample = { example -> example.data["question"] as String },
  * )
  *
  * // Option 1: Use the result config via coroutine context

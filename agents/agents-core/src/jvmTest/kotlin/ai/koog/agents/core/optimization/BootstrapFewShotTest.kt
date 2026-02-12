@@ -104,7 +104,7 @@ class BootstrapFewShotTest {
             strategy = simpleStrategy,
             trainset = trainset,
             metric = exactMatch,
-            inputFromExample = { it["question"] as String },
+            inputFromExample = { it.data["question"] as String },
         )
     }
 

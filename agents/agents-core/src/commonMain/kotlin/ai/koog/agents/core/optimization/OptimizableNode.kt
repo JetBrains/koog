@@ -1,113 +1,30 @@
-@file:OptIn(DetachedPromptExecutorAPI::class)
-
 package ai.koog.agents.core.optimization
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.structure.executeStructured
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.serialization.serializer
-import kotlin.coroutines.coroutineContext
 import kotlin.jvm.JvmName
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 /**
- * Builds a [Prompt] from instruction, demonstrations, and input.
- *
- * This function is responsible only for constructing the prompt (the list of messages).
- * The LLM call and response parsing are handled separately by [OptimizableNode].
- *
- * @param TInput The type of input the node receives from the graph.
- * @param TOutput The type of output the node produces for the graph.
- */
-public typealias OptimizablePromptFn<TInput, TOutput> = (
-    instruction: String,
-    demos: List<Demonstration<TInput, TOutput>>,
-    input: TInput,
-) -> Prompt
-
-
-/**
- * Default prompt function for `String -> String` nodes.
- */
-public val defaultStringPromptFn: OptimizablePromptFn<String, String> =
-    { instruction, demos, input ->
-        prompt("optimizable-node") {
-            system(instruction)
-            for (demo in demos) {
-                user(demo.input)
-                assistant(demo.output)
-            }
-            user(input)
-        }
-    }
-
-/**
- * Default prompt function for generic typed nodes using JSON serialization.
- *
- * Serializes demonstration inputs/outputs and the node input to JSON for the prompt messages.
- *
- * @param TInput The input type (must be `@Serializable`).
- * @param TOutput The output type (must be `@Serializable`).
- * @param inputSerializer Serializer for input values.
- * @param outputSerializer Serializer for output values.
- */
-public fun <TInput, TOutput> defaultPromptFn(
-    inputSerializer: KSerializer<TInput>,
-    outputSerializer: KSerializer<TOutput>,
-): OptimizablePromptFn<TInput, TOutput> {
-    val json = Json { isLenient = true; ignoreUnknownKeys = true }
-    return { instruction, demos, input ->
-        prompt("optimizable-node") {
-            system(instruction)
-            for (demo in demos) {
-                user(json.encodeToString(inputSerializer, demo.input))
-                assistant(json.encodeToString(outputSerializer, demo.output))
-            }
-            user(json.encodeToString(inputSerializer, input))
-        }
-    }
-}
-
-/**
- * Default LLM execution for String output: calls the LLM and returns response content.
- */
-internal val defaultStringExecutePrompt: suspend AIAgentGraphContextBase.(Prompt) -> String =
-    { builtPrompt ->
-        llm.promptExecutor.execute(builtPrompt, llm.model).first().content
-    }
-
-/**
- * Default LLM execution for typed output: uses structured output to call the LLM and parse
- * the response into [TOutput].
- */
-@PublishedApi internal fun <TOutput> defaultStructuredExecutePrompt(
-    outputSerializer: KSerializer<TOutput>,
-): suspend AIAgentGraphContextBase.(Prompt) -> TOutput =
-    { builtPrompt ->
-        llm.promptExecutor.executeStructured(builtPrompt, llm.model, outputSerializer).getOrThrow().data
-    }
-
-/**
  * A node with built-in optimization support for MIPRO-style prompt optimization.
  *
- * Unlike a regular [AIAgentNode], an [OptimizableNode] declares which fields of an
- * [Example][ai.koog.agents.core.optimization.core.Example] map to its input and output.
- * This allows optimizers like [BootstrapFewShot][ai.koog.agents.core.optimization.optimizers.BootstrapFewShot]
- * to create per-node [Demonstration]s with the correct field values.
+ * Unlike a regular [AIAgentNode], an [OptimizableNode] declares its instruction and
+ * demonstrations as first-class properties that can be overridden at runtime via
+ * [OptimizationConfig] in the coroutine context. This allows optimizers like
+ * [BootstrapFewShot][ai.koog.agents.core.optimization.optimizers.BootstrapFewShot]
+ * to swap in optimized prompts without modifying the graph.
  *
  * The node separates prompt construction from LLM execution:
- * - [promptFn] builds a [Prompt] from instruction + demonstrations + input
+ * - [promptFn] builds a [Prompt] from instruction + demonstrations and input
  * - The node handles the LLM call and response parsing (using structured output for typed nodes)
  *
  * At execution time:
@@ -121,15 +38,11 @@ internal val defaultStringExecutePrompt: suspend AIAgentGraphContextBase.(Prompt
  * // String -> String (default prompt construction):
  * val classify by optimizableNode(
  *     instruction = "Classify the sentiment of the text.",
- *     inputField = "text",
- *     outputField = "sentiment",
  * )
  *
  * // With pre-existing demonstrations:
  * val classify by optimizableNode(
  *     instruction = "Classify the sentiment.",
- *     inputField = "text",
- *     outputField = "sentiment",
  *     demonstrations = listOf(
  *         Demonstration("I love it!", "positive"),
  *         Demonstration("Terrible.", "negative"),
@@ -139,14 +52,11 @@ internal val defaultStringExecutePrompt: suspend AIAgentGraphContextBase.(Prompt
  * // Custom types (uses JSON prompt + structured output by default):
  * val classify by optimizableNode<String, Sentiment>(
  *     instruction = "Classify the sentiment.",
- *     inputField = "text",
- *     outputField = "sentiment",
  * )
  * ```
  *
  * @param TInput The type of input this node receives from the graph.
  * @param TOutput The type of output this node produces for the graph.
- *  that provides this node's expected output. Null if this node doesn't map to Example fields.
  * @property instruction The base instruction for prompt construction. May be overridden at
  *  runtime via [OptimizationConfig] in the coroutine context.
  * @property promptFn The prompt construction function that builds a [Prompt] from instruction,
@@ -158,7 +68,7 @@ internal val defaultStringExecutePrompt: suspend AIAgentGraphContextBase.(Prompt
 public class OptimizableNode<TInput, TOutput> internal constructor(
     name: String,
     public val instruction: String,
-    public val promptFn: OptimizablePromptFn<TInput, TOutput>,
+    public val promptFn: OptimizableNodePromptBuildFn<TInput, TOutput>,
     internal val executePrompt: suspend AIAgentGraphContextBase.(Prompt) -> TOutput,
     inputType: KType,
     outputType: KType,
@@ -168,11 +78,19 @@ public class OptimizableNode<TInput, TOutput> internal constructor(
     name = name,
     inputType = inputType,
     outputType = outputType,
+    // TODO: Currently, if one wants to optimize w/ respect to params other than instruction/demos,
+    //  they must change OptimizableNode + Optimizer + OptimizationConfig.
+    //  We might want the Optimizer to be able to extend OptimizationConfig on demand.
+    //  This however, will over-complicate the API, but we may try, if introducing new optimization
+    //  parameters is a common use case and will be too complex.
     execute = { input ->
-        val config = coroutineContext[OptimizationConfig]
+        // Demonstrations and instruction may be overridden at runtime
+        // via OptimizationConfig passed through coroutine context.
+        val config = currentCoroutineContext()[OptimizationConfig]
+        // Resolve from the coroutine context or fallback to defaults.
         val effectiveInstruction = config?.getInstruction(name) ?: instruction
-        @Suppress("UNCHECKED_CAST")
-        val effectiveDemos = config?.getTypedDemonstrations<TInput, TOutput>(name) ?: demonstrations
+        val effectiveDemos = config?.getTypedDemonstrations(name) ?: demonstrations
+
         val builtPrompt = promptFn(effectiveInstruction, effectiveDemos, input)
         executePrompt(builtPrompt)
     },
@@ -192,7 +110,7 @@ public class OptimizableNodeDelegate<TInput, TOutput>(
     private val instruction: String,
     private val description: String?,
     private val demonstrations: List<Demonstration<TInput, TOutput>>,
-    private val promptFn: OptimizablePromptFn<TInput, TOutput>,
+    private val promptFn: OptimizableNodePromptBuildFn<TInput, TOutput>,
     private val executePrompt: suspend AIAgentGraphContextBase.(Prompt) -> TOutput,
     private val inputType: KType,
     private val outputType: KType,
@@ -203,19 +121,16 @@ public class OptimizableNodeDelegate<TInput, TOutput>(
      * Creates (or returns cached) the [OptimizableNode], deriving the name from [property] if not explicit.
      */
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<TInput, TOutput> {
-        if (optimizableNode == null) {
-            optimizableNode = OptimizableNode(
-                name = name ?: property.name,
-                instruction = instruction,
-                promptFn = promptFn,
-                executePrompt = executePrompt,
-                inputType = inputType,
-                outputType = outputType,
-                description = description,
-                demonstrations = demonstrations,
-            )
-        }
-        return optimizableNode!!
+        return optimizableNode ?: OptimizableNode(
+            name = name ?: property.name,
+            instruction = instruction,
+            promptFn = promptFn,
+            executePrompt = executePrompt,
+            inputType = inputType,
+            outputType = outputType,
+            description = description,
+            demonstrations = demonstrations,
+        ).also { optimizableNode = it }
     }
 }
 
@@ -229,8 +144,6 @@ public class OptimizableNodeDelegate<TInput, TOutput>(
  * ```kotlin
  * val classify by optimizableNode(
  *     instruction = "Classify the sentiment.",
- *     inputField = "text",
- *     outputField = "sentiment",
  * )
  * ```
  *
@@ -241,12 +154,13 @@ public class OptimizableNodeDelegate<TInput, TOutput>(
  * @param promptFn Custom prompt function. Defaults to [defaultStringPromptFn].
  * @return An [OptimizableNodeDelegate] for use with Kotlin property delegation (`by`).
  */
+@Suppress("UnusedReceiverParameter")
 public fun AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
     instruction: String,
     name: String? = null,
     description: String? = null,
     demonstrations: List<Demonstration<String, String>> = emptyList(),
-    promptFn: OptimizablePromptFn<String, String> = defaultStringPromptFn,
+    promptFn: OptimizableNodePromptBuildFn<String, String> = defaultStringPromptFn,
 ): OptimizableNodeDelegate<String, String> {
     return OptimizableNodeDelegate(
         name = name,
@@ -271,15 +185,11 @@ public fun AIAgentSubgraphBuilderBase<*, *>.optimizableNode(
  * // With default JSON prompt + structured output:
  * val classify by optimizableNode<String, Sentiment>(
  *     instruction = "Classify the sentiment.",
- *     inputField = "text",
- *     outputField = "sentiment",
  * )
  *
  * // With custom prompt function:
  * val classify by optimizableNode<String, Sentiment>(
  *     instruction = "Classify the sentiment.",
- *     inputField = "text",
- *     outputField = "sentiment",
  *     promptFn = { instruction, demos, input ->
  *         prompt("classify") {
  *             system(instruction)
@@ -304,7 +214,7 @@ public inline fun <reified TInput, reified TOutput> AIAgentSubgraphBuilderBase<*
     name: String? = null,
     description: String? = null,
     demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),
-    noinline promptFn: OptimizablePromptFn<TInput, TOutput> = defaultPromptFn(serializer<TInput>(), serializer<TOutput>()),
+    noinline promptFn: OptimizableNodePromptBuildFn<TInput, TOutput> = defaultPromptFn(serializer<TInput>(), serializer<TOutput>()),
 ): OptimizableNodeDelegate<TInput, TOutput> {
     return OptimizableNodeDelegate(
         name = name,

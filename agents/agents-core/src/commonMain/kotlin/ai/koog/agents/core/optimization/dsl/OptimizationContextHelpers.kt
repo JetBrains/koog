@@ -1,9 +1,11 @@
+@file:Suppress("UnusedReceiverParameter")
+
 package ai.koog.agents.core.optimization.dsl
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
-import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.currentCoroutineContext
 
 /**
  * Gets the instruction for a node, checking the coroutine context for optimization overrides first.
@@ -12,7 +14,7 @@ import kotlin.coroutines.coroutineContext
  * coroutine context. This helper checks for such overrides before falling back to the default.
  *
  * This is called automatically by [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]'s
- * execute lambda. It can also be used in custom [OptimizablePromptFn][ai.koog.agents.core.optimization.OptimizablePromptFn]
+ * execute lambda. It can also be used in custom [OptimizableNodePromptBuildFn][ai.koog.agents.core.optimization.OptimizableNodePromptBuildFn]
  * implementations, though typically the instruction is already resolved and passed as a parameter.
  *
  * @param nodeName The name of the node.
@@ -24,7 +26,7 @@ public suspend fun AIAgentGraphContextBase.getNodeInstruction(
     nodeName: String,
     default: String?
 ): String {
-    return coroutineContext[OptimizationConfig]?.getInstruction(nodeName)
+    return currentCoroutineContext()[OptimizationConfig]?.getInstruction(nodeName)
         ?: default
         ?: error("No instruction available for node '$nodeName'. Provide a default or ensure OptimizationConfig is set.")
 }
@@ -42,7 +44,7 @@ public suspend fun AIAgentGraphContextBase.getNodeInstructionOrNull(
     nodeName: String,
     default: String?
 ): String? {
-    return coroutineContext[OptimizationConfig]?.getInstruction(nodeName) ?: default
+    return currentCoroutineContext()[OptimizationConfig]?.getInstruction(nodeName) ?: default
 }
 
 /**
@@ -54,7 +56,7 @@ public suspend fun AIAgentGraphContextBase.getNodeInstructionOrNull(
  * Note: Due to type erasure, this performs an unchecked cast. The caller must ensure type compatibility.
  *
  * This is called automatically by [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]'s
- * execute lambda. It can also be used in custom [OptimizablePromptFn][ai.koog.agents.core.optimization.OptimizablePromptFn]
+ * execute lambda. It can also be used in custom [OptimizableNodePromptBuildFn][ai.koog.agents.core.optimization.OptimizableNodePromptBuildFn]
  * implementations, though typically demos are already resolved and passed as a parameter.
  *
  * @param TInput The input type of the demonstrations.
@@ -67,7 +69,7 @@ public suspend inline fun <reified TInput, reified TOutput> AIAgentGraphContextB
     nodeName: String,
     default: List<Demonstration<TInput, TOutput>>
 ): List<Demonstration<TInput, TOutput>> {
-    return coroutineContext[OptimizationConfig]?.getTypedDemonstrations<TInput, TOutput>(nodeName)
+    return currentCoroutineContext()[OptimizationConfig]?.getTypedDemonstrations<TInput, TOutput>(nodeName)
         ?: default
 }
 
@@ -79,7 +81,7 @@ public suspend inline fun <reified TInput, reified TOutput> AIAgentGraphContextB
  * @return True if an [OptimizationConfig] is present in the coroutine context.
  */
 public suspend fun AIAgentGraphContextBase.hasOptimizationConfig(): Boolean {
-    return coroutineContext[OptimizationConfig] != null
+    return currentCoroutineContext()[OptimizationConfig] != null
 }
 
 /**
@@ -88,5 +90,5 @@ public suspend fun AIAgentGraphContextBase.hasOptimizationConfig(): Boolean {
  * @return The current optimization config, or null if not in an optimization context.
  */
 public suspend fun AIAgentGraphContextBase.getOptimizationConfig(): OptimizationConfig? {
-    return coroutineContext[OptimizationConfig]
+    return currentCoroutineContext()[OptimizationConfig]
 }

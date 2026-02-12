@@ -7,7 +7,6 @@ import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.util.findOptimizableModules
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.coroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

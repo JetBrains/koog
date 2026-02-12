@@ -102,7 +102,7 @@ public data class MIPROv2Config(
  *     strategy = myStrategy,
  *     trainset = trainingExamples,
  *     metric = { expected, actual -> if (expected == actual) 1.0 else 0.0 },
- *     inputFromExample = { it["question"] as String },
+ *     inputFromExample = { it.data["question"] as String },
  * )
  *
  * val optimizedAgent = result.toAgent(originalAgent)
