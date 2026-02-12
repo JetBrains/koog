@@ -71,7 +71,7 @@ public object KoogStrategyFactory {
             ?: error("Unable to find 'from' node for transition '${transition.transitionString}': ${transition.from}")
 
         if (transition.to == FINISH_NODE_PREFIX) {
-            createEdgeToFinish(fromNode, transition.condition)
+            createEdgeToFinish(fromNode, transition.condition, transition.transformation)
             return
         }
         val toNode = collectedNodes.find { it.name == transition.to }
@@ -86,23 +86,48 @@ public object KoogStrategyFactory {
         condition: FlowTransitionCondition?,
         transformation: FlowDataTransformation?,
     ) {
-        if (condition == null) {
-            edge(fromNode forwardTo toNode)
-            return
+        when {
+            // No condition, no transformation - simple forward
+            condition == null && transformation == null -> {
+                edge(fromNode forwardTo toNode)
+            }
+            // Only transformation, no condition
+            condition == null && transformation != null -> {
+                edge(
+                    fromNode forwardTo toNode transformed { output ->
+                        transformFlowDataType(output, listOf(transformation))
+                    }
+                )
+            }
+            // Only condition, no transformation
+            condition != null && transformation == null -> {
+                edge(
+                    fromNode forwardTo toNode onCondition { output ->
+                        evaluateCondition(output, condition)
+                    }
+                )
+            }
+            // Both condition and transformation
+            else -> {
+                edge(
+                    fromNode forwardTo toNode onCondition { output ->
+                        evaluateCondition(output, condition!!)
+                    } transformed { output ->
+                        transformFlowDataType(output, listOf(transformation!!))
+                    }
+                )
+            }
         }
-
-        edge(
-            fromNode forwardTo toNode onCondition { output -> evaluateCondition(output, condition) }
-        )
     }
 
     /**
-     * Creates an edge from a node to the finish node, optionally with a condition.
+     * Creates an edge from a node to the finish node, optionally with a condition and transformation.
      */
     private fun AIAgentSubgraphBuilderBase<FlowDataType, FlowDataType>.createEdgeToFinish(
         fromNode: AIAgentNodeBase<FlowDataType, FlowDataType>,
-        condition: FlowTransitionCondition?
-    ) = createEdge(fromNode, nodeFinish, condition)
+        condition: FlowTransitionCondition?,
+        transformation: FlowDataTransformation? = null
+    ) = createEdge(fromNode, nodeFinish, condition, transformation)
 
     //endregion Edges
 

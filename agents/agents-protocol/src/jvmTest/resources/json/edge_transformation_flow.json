@@ -1,0 +1,73 @@
+{
+  "id": "edge-transformation-flow",
+  "version": "1.0",
+  "defaultModel": "openai/gpt4o",
+
+  "agents": [
+    {
+      "name": "verify_greeting",
+      "type": "verify",
+      "prompt": {
+        "system": "You are a verification agent that checks if the input is a valid greeting."
+      },
+      "params": {
+        "task": "Verify that the input contains a greeting message."
+      }
+    },
+    {
+      "name": "process_feedback",
+      "type": "task",
+      "prompt": {
+        "system": "You are a task agent that processes feedback."
+      },
+      "params": {
+        "task": "Process the feedback message."
+      }
+    },
+    {
+      "name": "process_success",
+      "type": "task",
+      "prompt": {
+        "system": "You are a task agent that processes successful verifications."
+      },
+      "params": {
+        "task": "Process the success result."
+      }
+    }
+  ],
+
+  "transitions": [
+    {
+      "from": "verify_greeting",
+      "to": "process_feedback",
+      "condition": {
+        "variable": "output.success",
+        "operation": "equals",
+        "value": false
+      },
+      "transformation": {
+        "value": "input.feedback"
+      }
+    },
+    {
+      "from": "verify_greeting",
+      "to": "process_success",
+      "condition": {
+        "variable": "output.success",
+        "operation": "equals",
+        "value": true
+      },
+      "transformation": {
+        "value": "input.success"
+      }
+    },
+    {
+      "from": "process_feedback",
+      "to": "__finish__"
+    },
+    {
+      "from": "process_success",
+      "to": "__finish__"
+    }
+  ]
+}

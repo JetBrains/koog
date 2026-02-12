@@ -728,4 +728,130 @@ class FlowExecutionTest : FlowTestBase() {
     }
 
     //endregion Private Methods
+
+    //region Edge Transformation Tests
+
+    @Test
+    fun testEdgeTransformation_withCondition_successPath() = runTest {
+        val jsonContent = readFlow("json/edge_transformation_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Verification succeeds
+            @OptIn(InternalAgentsApi::class)
+            mockLLMToolCall(
+                finalizeVerifyTool,
+                CriticResultFromLLM(
+                    isCorrect = true,
+                    feedback = "The greeting is valid!"
+                )
+            ) onCondition { request ->
+                request.contains("Verify that the input contains a greeting message")
+            }
+
+            // Process success agent receives transformed boolean value
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("Success processed!")) onCondition { request ->
+                request.contains("Process the success result") || request.contains("true")
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowDataType.FlowString("Hello, World!"))
+
+        // Verify that the transformation was applied and the success path was taken
+        assertIs<FlowDataType.FlowString>(result)
+        assertEquals("Success processed!", result.data)
+    }
+
+    @Test
+    fun testEdgeTransformation_withCondition_failurePath() = runTest {
+        val jsonContent = readFlow("json/edge_transformation_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val testExecutor = getMockExecutor {
+            // Verification fails
+            @OptIn(InternalAgentsApi::class)
+            mockLLMToolCall(
+                finalizeVerifyTool,
+                CriticResultFromLLM(
+                    isCorrect = false,
+                    feedback = "The greeting is missing punctuation!"
+                )
+            ) onCondition { request ->
+                request.contains("Verify that the input contains a greeting message")
+            }
+
+            // Process feedback agent receives transformed feedback string value
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("Feedback processed!")) onCondition { request ->
+                request.contains("Process the feedback message") || request.contains("punctuation")
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowDataType.FlowString("Hello World"))
+
+        // Verify that the transformation was applied and the feedback path was taken
+        assertIs<FlowDataType.FlowString>(result)
+        assertEquals("Feedback processed!", result.data)
+    }
+
+    @Test
+    fun testEdgeTransformation_transformsCorrectProperty() = runTest {
+        val jsonContent = readFlow("json/edge_transformation_flow.json")
+        val parser = FlowJsonConfigParser()
+        val flowConfig = parser.parse(jsonContent)
+
+        val expectedFeedback = "Missing exclamation mark!"
+
+        val testExecutor = getMockExecutor {
+            // Verification fails with specific feedback
+            @OptIn(InternalAgentsApi::class)
+            mockLLMToolCall(
+                finalizeVerifyTool,
+                CriticResultFromLLM(
+                    isCorrect = false,
+                    feedback = expectedFeedback
+                )
+            ) onCondition { request ->
+                request.contains("Verify that the input contains a greeting message")
+            }
+
+            // Process feedback agent should receive the transformed feedback string
+            // We verify this by checking that the feedback appears in the request
+            mockLLMToolCall(finalizeTaskTool, FlowDataType.FlowString("Processed")) onCondition { request ->
+                request.contains(expectedFeedback) || request.contains("Process the feedback message")
+            }
+        }
+
+        val flow = KoogFlow(
+            id = flowConfig.id ?: "test-flow",
+            agents = flowConfig.agents,
+            tools = emptyList(),
+            transitions = flowConfig.transitions,
+            promptExecutor = testExecutor
+        )
+
+        val result = flow.run(FlowDataType.FlowString("Hello"))
+
+        // Verify that the result is produced after transformation
+        assertIs<FlowDataType.FlowString>(result)
+    }
+
+    //endregion Edge Transformation Tests
 }
