@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.optimization.OptimizableNode
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
-import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
@@ -73,7 +72,6 @@ public sealed class BootstrapOutcome {
  *     strategy = myStrategy,
  *     trainset = trainingExamples,
  *     metric = { expected, actual -> if (expected == actual) 1.0 else 0.0 },
- *     inputFromExample = { example -> example["question"] as String },
  * )
  *
  * // Option 1: Use the result config via coroutine context
@@ -118,18 +116,16 @@ public class BootstrapFewShot(
      * @param toolRegistry Tools available to the agent. Defaults to empty.
      * @param nonTrainSet Dataset to be used for labeled few shot examples. If null, unused training examples become the nonTrainSet set.
      * @param metric Optional metric to evaluate bootstrap quality. If null, all bootstraps are accepted.
-     * @param inputFromExample Maps an [Example] to the strategy's typed input.
      * @return The optimization result with bootstrapped + labeled demonstrations.
      */
     public suspend fun <TInput, TOutput> optimize(
         promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
-        trainset: Dataset,
+        trainset: Dataset<TInput, TOutput>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-        nonTrainSet: Dataset? = null,
+        nonTrainSet: Dataset<TInput, TOutput>? = null,
         metric: Metric<TOutput>? = null,
-        inputFromExample: (Example) -> TInput,
     ): OptimizationResult {
         require(trainset.isNotEmpty()) { "trainset is required for BootstrapFewShot" }
 
@@ -161,7 +157,6 @@ public class BootstrapFewShot(
             trainset = trainset,
             teacherConfig = teacherConfig,
             metric = metric,
-            inputFromExample = inputFromExample,
         )
 
         // Step 3: Train - build student config from bootstrapped + labeled demos
@@ -195,11 +190,10 @@ public class BootstrapFewShot(
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         toolRegistry: ToolRegistry,
         modules: List<OptimizableNode<*, *>>,
-        trainset: Dataset,
+        trainset: Dataset<TInput, TOutput>,
         teacherConfig: OptimizationConfig,
         metric: Metric<TOutput>?,
-        inputFromExample: (Example) -> TInput,
-    ): Pair<Map<String, MutableList<Demonstration<Any?, Any?>>>, Dataset> {
+    ): Pair<Map<String, MutableList<Demonstration<Any?, Any?>>>, Dataset<TInput, TOutput>> {
         val name2traces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
         val bootstrappedIndices = mutableSetOf<Int>()
         var errorCount = 0
@@ -223,7 +217,6 @@ public class BootstrapFewShot(
                     example = example,
                     teacherConfig = teacherConfig,
                     metric = metric,
-                    inputFromExample = inputFromExample,
                 )
 
                 when (outcome) {
@@ -266,17 +259,15 @@ public class BootstrapFewShot(
      * and evaluates the result. Each call gets its own agent and trace storage,
      * making this safe for parallel execution.
      */
-    @Suppress("UNCHECKED_CAST")
     private suspend fun <TInput, TOutput> bootstrapOneExample(
         promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         toolRegistry: ToolRegistry,
         modules: List<OptimizableNode<*, *>>,
-        example: Example,
+        example: ai.koog.agents.core.optimization.core.Example<TInput, TOutput>,
         teacherConfig: OptimizationConfig,
         metric: Metric<TOutput>?,
-        inputFromExample: (Example) -> TInput,
     ): BootstrapOutcome {
         // Build a fresh teacher agent with its own trace collection
         val teacherAgent = GraphAIAgent<TInput, TOutput>(
@@ -297,11 +288,10 @@ public class BootstrapFewShot(
             .feature(TraceCollectionFeatureImpl::class, TraceCollectionFeature)
             ?: error("TraceCollectionFeature should have been installed on teacher agent")
 
-        // Filter teacher demos: remove demos whose input and output both come from the
-        // current example's data, to prevent the teacher from parroting the ground truth.
-        val exampleValues = example.data.values.toSet()
+        // Filter teacher demos: remove demos derived from the current example's input
+        // to prevent the teacher from parroting the ground truth.
         val filteredDemos = teacherConfig.demonstrations.mapValues { (_, demos) ->
-            demos.filterNot { it.input in exampleValues && it.output in exampleValues }
+            demos.filterNot { demo -> demo.input == example.input }
         }
         val filteredConfig = OptimizationConfig(
             instructions = teacherConfig.instructions,
@@ -311,9 +301,8 @@ public class BootstrapFewShot(
         // Run teacher
         val output: TOutput
         try {
-            val input = inputFromExample(example)
             output = withContext(filteredConfig) {
-                teacherAgent.run(input)
+                teacherAgent.run(example.input)
             }
         } catch (e: Exception) {
             return BootstrapOutcome.Failure.ExceptionRaised(e)
@@ -321,7 +310,7 @@ public class BootstrapFewShot(
 
         // Evaluate metric
         if (metric != null && example.hasLabel) {
-            val expected = example.label as TOutput
+            val expected = example.label!!
             val score = metric(expected, output)
             if (score < metricThreshold) {
                 return BootstrapOutcome.Failure.MetricNotPassed
@@ -345,10 +334,10 @@ public class BootstrapFewShot(
      * 1. Takes up to [maxBootstrappedDemos] bootstrapped traces
      * 2. Fills remaining slots (up to [maxLabeledDemos]) with labeled examples from valset
      */
-    private fun train(
+    private fun <TInput, TOutput> train(
         modules: List<OptimizableNode<*, *>>,
         name2traces: Map<String, List<Demonstration<Any?, Any?>>>,
-        labeledExamples: Dataset,
+        labeledExamples: Dataset<TInput, TOutput>,
     ): OptimizationConfig {
         val demonstrations = mutableMapOf<String, List<Demonstration<*, *>>>()
 

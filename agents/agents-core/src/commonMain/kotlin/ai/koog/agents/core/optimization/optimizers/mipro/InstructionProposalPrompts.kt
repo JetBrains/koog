@@ -1,6 +1,5 @@
 package ai.koog.agents.core.optimization.optimizers.mipro
 
-import ai.koog.agents.core.optimization.core.Example
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 
@@ -15,12 +14,11 @@ import ai.koog.prompt.dsl.prompt
  */
 
 /**
- * Formats a batch of examples for display to the LLM.
+ * Formats a batch of pre-rendered example strings for display to the LLM.
  */
-internal fun formatExampleBatch(examples: List<Example>): String {
+internal fun formatExampleBatch(examples: List<String>): String {
     return examples.mapIndexed { index, example ->
-        val fields = example.data.entries.joinToString(", ") { (k, v) -> "$k=$v" }
-        "Example ${index + 1}: {$fields}"
+        "Example ${index + 1}: $example"
     }.joinToString("\n")
 }
 
@@ -29,7 +27,7 @@ internal fun formatExampleBatch(examples: List<Example>): String {
  *
  * Corresponds to dspy's DatasetDescriptor signature.
  */
-internal fun datasetDescriptorPrompt(exampleBatch: List<Example>): Prompt = prompt("dataset-descriptor") {
+internal fun datasetDescriptorPrompt(exampleBatch: List<String>): Prompt = prompt("dataset-descriptor") {
     system(
         """Given several examples from a dataset please write observations about trends that hold for most or all of the samples.
 Some areas you may consider in your observations: topics, content, syntax, conciseness, etc.
@@ -49,7 +47,7 @@ Please write your observations about trends that hold for most or all of the sam
  * Corresponds to dspy's DatasetDescriptorWithPriorObservations signature.
  */
 internal fun datasetDescriptorWithPriorObservationsPrompt(
-    exampleBatch: List<Example>,
+    exampleBatch: List<String>,
     priorObservations: String
 ): Prompt = prompt("dataset-descriptor-with-prior") {
     system(

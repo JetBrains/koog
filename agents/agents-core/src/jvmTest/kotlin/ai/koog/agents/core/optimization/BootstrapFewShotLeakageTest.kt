@@ -40,20 +40,17 @@ import kotlin.test.assertTrue
 class BootstrapFewShotLeakageTest {
 
     private val trainset = listOf(
-        Example(
-            data = mapOf("question" to "Question 0", "thinking" to "Thinking 0", "answer" to "Answer 0"),
-            labelKey = "answer"
-        ),
+        Example(input = "Question 0", label = "Answer 0"),
     )
 
     private val simpleStrategy = strategy("test") {
         val thinking by optimizableNode(
             instruction = "Think about the question",
-            demonstrations = trainset.map { Demonstration(it.data["question"] as String, it.data["thinking"] as String, false) }
+            demonstrations = listOf(Demonstration("Question 0", "Thinking 0", false))
         )
         val answer by optimizableNode(
             instruction = "Answer the question",
-            demonstrations = trainset.map { Demonstration(it.data["thinking"] as String, it.data["answer"] as String, false) }
+            demonstrations = listOf(Demonstration("Thinking 0", "Answer 0", false))
         )
 
         edge(nodeStart forwardTo thinking)
@@ -154,7 +151,6 @@ class BootstrapFewShotLeakageTest {
                 strategy = simpleStrategy,
                 trainset = trainset,
                 metric = exactMatch,
-                inputFromExample = { it["question"] as String },
             )
         }
 
@@ -202,7 +198,6 @@ class BootstrapFewShotLeakageTest {
                 strategy = simpleStrategy,
                 trainset = trainset,
                 metric = exactMatch,
-                inputFromExample = { it["question"] as String },
             )
         }
 

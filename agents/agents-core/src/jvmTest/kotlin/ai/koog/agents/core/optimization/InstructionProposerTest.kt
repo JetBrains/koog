@@ -28,18 +28,9 @@ import kotlin.test.assertTrue
 class InstructionProposerTest {
 
     private val trainset = listOf(
-        Example(
-            data = mapOf("question" to "What is 2+2?", "answer" to "4"),
-            labelKey = "answer"
-        ),
-        Example(
-            data = mapOf("question" to "What is 3+3?", "answer" to "6"),
-            labelKey = "answer"
-        ),
-        Example(
-            data = mapOf("question" to "What is 5+5?", "answer" to "10"),
-            labelKey = "answer"
-        ),
+        Example(input = "What is 2+2?", label = "4"),
+        Example(input = "What is 3+3?", label = "6"),
+        Example(input = "What is 5+5?", label = "10"),
     )
 
     private val twoNodeStrategy = strategy("test-strategy") {

@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
-import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
@@ -105,7 +104,6 @@ public data class MIPROv2Config(
  *     strategy = myStrategy,
  *     trainset = trainingExamples,
  *     metric = { expected, actual -> if (expected == actual) 1.0 else 0.0 },
- *     inputFromExample = { it["question"] as String },
  * )
  *
  * val optimizedAgent = result.toAgent(originalAgent)
@@ -136,20 +134,21 @@ public class MIPROv2(private val config: MIPROv2Config) {
      * @param strategy The strategy to optimize. Must contain optimizable nodes.
      * @param trainset Training examples.
      * @param metric Metric to evaluate candidate configurations.
-     * @param inputFromExample Maps an [Example] to the strategy's typed input.
      * @param valset Optional validation set. If null, split from [trainset].
      * @param toolRegistry Tools available to the agent.
+     * @param describeInput Renders an input value as a human-readable string for dataset
+     *  summarization. Defaults to [toString].
      * @return The best [OptimizationResult] found during search.
      */
     public suspend fun <TInput, TOutput> optimize(
         promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
-        trainset: Dataset,
+        trainset: Dataset<TInput, TOutput>,
         metric: Metric<TOutput>,
-        inputFromExample: (Example) -> TInput,
-        valset: Dataset? = null,
+        valset: Dataset<TInput, TOutput>? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+        describeInput: (TInput) -> String = { it.toString() },
     ): OptimizationResult {
         val random = Random(config.seed)
 
@@ -184,7 +183,6 @@ public class MIPROv2(private val config: MIPROv2Config) {
             metricThreshold = config.metricThreshold,
             maxErrors = config.maxErrors,
             toolRegistry = toolRegistry,
-            inputFromExample = inputFromExample,
             random = random,
         )
 
@@ -197,6 +195,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             llModel = config.promptModel,
             config = config.proposerConfig,
             random = random,
+            describeInput = describeInput,
         )
         val instructionCandidates = proposer.proposeInstructionsForProgram(
             demoCandidates = demoCandidates,
@@ -219,7 +218,6 @@ public class MIPROv2(private val config: MIPROv2Config) {
             numTrials = hyperparams.numTrials,
             minibatch = hyperparams.minibatch,
             metric = metric,
-            inputFromExample = inputFromExample,
             random = random,
         )
     }
@@ -237,11 +235,10 @@ public class MIPROv2(private val config: MIPROv2Config) {
         toolRegistry: ToolRegistry,
         instructionCandidates: Map<String, List<String>>,
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
-        valset: Dataset,
+        valset: Dataset<TInput, TOutput>,
         numTrials: Int,
         minibatch: Boolean,
         metric: Metric<TOutput>,
-        inputFromExample: (Example) -> TInput,
         random: Random,
     ): OptimizationResult {
         val moduleNames = strategy.findOptimizableModules().map { it.name }
@@ -257,7 +254,6 @@ public class MIPROv2(private val config: MIPROv2Config) {
             toolRegistry = toolRegistry,
             dataset = valset,
             metric = metric,
-            inputFromExample = inputFromExample,
         )
 
         var bestScore = baselineScore
@@ -309,7 +305,6 @@ public class MIPROv2(private val config: MIPROv2Config) {
                 toolRegistry = toolRegistry,
                 dataset = evalSet,
                 metric = metric,
-                inputFromExample = inputFromExample,
             )
 
             if (score > bestScore) {
@@ -330,8 +325,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
                     toolRegistry = toolRegistry,
                     dataset = valset,
                     metric = metric,
-                    inputFromExample = inputFromExample,
-                )
+                    )
             }
         }
 
@@ -344,7 +338,6 @@ public class MIPROv2(private val config: MIPROv2Config) {
             toolRegistry = toolRegistry,
             dataset = valset,
             metric = metric,
-            inputFromExample = inputFromExample,
         )
 
         return OptimizationResult(
@@ -366,16 +359,14 @@ public class MIPROv2(private val config: MIPROv2Config) {
      *
      * Exceptions during individual example evaluation are counted as score 0.
      */
-    @Suppress("UNCHECKED_CAST")
     private suspend fun <TInput, TOutput> evaluateConfig(
         config: OptimizationConfig,
         promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
         toolRegistry: ToolRegistry,
-        dataset: Dataset,
+        dataset: Dataset<TInput, TOutput>,
         metric: Metric<TOutput>,
-        inputFromExample: (Example) -> TInput,
     ): Double {
         if (dataset.isEmpty()) return 0.0
 
@@ -391,12 +382,11 @@ public class MIPROv2(private val config: MIPROv2Config) {
         var totalScore = 0.0
         for ((i, example) in dataset.withIndex()) {
             val score = try {
-                val input = inputFromExample(example)
                 val output = withContext(config) {
-                    agent.run(input)
+                    agent.run(example.input)
                 }
                 if (example.hasLabel) {
-                    metric(example.label as TOutput, output)
+                    metric(example.label!!, output)
                 } else {
                     0.0
                 }
@@ -418,10 +408,10 @@ public class MIPROv2(private val config: MIPROv2Config) {
      * If [valset] is null, splits [trainset] into train/val with 80% for validation
      * (matching dspy's hardcoded ratio).
      */
-    private fun validateAndSplitDatasets(
-        trainset: Dataset,
-        valset: Dataset?,
-    ): Pair<Dataset, Dataset> {
+    private fun <TInput, TOutput> validateAndSplitDatasets(
+        trainset: Dataset<TInput, TOutput>,
+        valset: Dataset<TInput, TOutput>?,
+    ): Pair<Dataset<TInput, TOutput>, Dataset<TInput, TOutput>> {
         require(trainset.isNotEmpty()) { "Trainset cannot be empty" }
 
         return if (valset == null) {
@@ -442,10 +432,10 @@ public class MIPROv2(private val config: MIPROv2Config) {
      */
     private fun <TInput, TOutput> computeHyperparameters(
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
-        valset: Dataset,
+        valset: Dataset<TInput, TOutput>,
         zeroShotMode: Boolean,
         random: Random,
-    ): HyperparameterSet {
+    ): HyperparameterSet<TInput, TOutput> {
         if (config.auto == null) {
             val numCandidates = config.numCandidates!!
             return HyperparameterSet(
@@ -501,7 +491,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         )
     }
 
-    private fun createMinibatch(dataset: Dataset, batchSize: Int, random: Random): Dataset {
+    private fun <TInput, TOutput> createMinibatch(dataset: Dataset<TInput, TOutput>, batchSize: Int, random: Random): Dataset<TInput, TOutput> {
         return if (batchSize >= dataset.size) {
             dataset
         } else {
@@ -509,9 +499,9 @@ public class MIPROv2(private val config: MIPROv2Config) {
         }
     }
 
-    private data class HyperparameterSet(
+    private data class HyperparameterSet<TInput, TOutput>(
         val numTrials: Int,
-        val valset: Dataset,
+        val valset: Dataset<TInput, TOutput>,
         val minibatch: Boolean,
         val numInstructCandidates: Int,
         val numFewshotCandidates: Int,

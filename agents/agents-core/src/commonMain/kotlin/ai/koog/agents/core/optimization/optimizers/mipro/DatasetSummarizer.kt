@@ -1,6 +1,5 @@
 package ai.koog.agents.core.optimization.optimizers.mipro
 
-import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -20,22 +19,22 @@ private const val COMPLETE_SKIP_THRESHOLD = 5
  *
  * Corresponds to dspy's create_dataset_summary() function.
  *
- * @param trainset The training dataset to summarize
+ * @param renderedExamples Pre-rendered string representations of training examples
  * @param promptExecutor Executor for running prompts
  * @param llModel The LLM model to use
  * @param batchSize Number of examples to show per batch
  * @return A 2-3 sentence summary of the dataset, or null if summarization fails
  */
 internal suspend fun createDatasetSummary(
-    trainset: Dataset,
+    renderedExamples: List<String>,
     promptExecutor: PromptExecutor,
     llModel: LLModel,
     batchSize: Int = DEFAULT_BATCH_SIZE,
 ): String? {
-    if (trainset.isEmpty()) return null
+    if (renderedExamples.isEmpty()) return null
 
     // Step 1: Get initial observations from first batch
-    val firstBatch = trainset.take(batchSize)
+    val firstBatch = renderedExamples.take(batchSize)
     val initialPrompt = datasetDescriptorPrompt(firstBatch)
 
     val initialObservations = try {
@@ -52,12 +51,12 @@ internal suspend fun createDatasetSummary(
     var skips = 0
     var iterationCount = 0
 
-    for (batchStart in batchSize until trainset.size step batchSize) {
+    for (batchStart in batchSize until renderedExamples.size step batchSize) {
         iterationCount++
         if (iterationCount >= MAX_ITERATIONS) break
 
-        val batchEnd = minOf(batchStart + batchSize, trainset.size)
-        val batch = trainset.subList(batchStart, batchEnd)
+        val batchEnd = minOf(batchStart + batchSize, renderedExamples.size)
+        val batch = renderedExamples.subList(batchStart, batchEnd)
 
         val refinementPrompt = datasetDescriptorWithPriorObservationsPrompt(batch, observations)
 

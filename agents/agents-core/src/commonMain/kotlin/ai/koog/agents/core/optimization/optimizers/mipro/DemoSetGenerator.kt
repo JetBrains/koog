@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
-import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
 import ai.koog.agents.core.optimization.util.findOptimizableModules
@@ -48,7 +47,6 @@ private val logger = KotlinLogging.logger {}
  * @param toolRegistry Tools available to the agent.
  * @param includeNonBootstrapped If true, includes zero-shot and labeled-only demo sets.
  *  If false, all slots are filled with bootstrap sets.
- * @param inputFromExample Maps an [Example] to the strategy's typed input.
  * @param random Random instance for reproducibility.
  * @return Map from node name to list of candidate demo sets (each set is a list of [Demonstration]s),
  *  or null if zero-shot mode (both maxBootstrappedDemos and maxLabeledDemos are 0).
@@ -57,7 +55,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
     strategy: AIAgentGraphStrategy<TInput, TOutput>,
-    trainset: Dataset,
+    trainset: Dataset<TInput, TOutput>,
     numCandidateSets: Int,
     maxBootstrappedDemos: Int,
     maxLabeledDemos: Int,
@@ -67,7 +65,6 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     maxRounds: Int = 1,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     includeNonBootstrapped: Boolean = true,
-    inputFromExample: (Example) -> TInput,
     random: Random = Random(42L),
 ): Map<String, List<List<Demonstration<*, *>>>>? {
 
@@ -138,7 +135,6 @@ public suspend fun <TInput, TOutput> generateDemoSets(
         trainset = trainset,
         toolRegistry = toolRegistry,
         metric = null, // null metric → accept all traces
-        inputFromExample = inputFromExample,
     )
     addFromBootstrapResult(unshuffledResult.config.demonstrations)
 
@@ -164,7 +160,6 @@ public suspend fun <TInput, TOutput> generateDemoSets(
             trainset = shuffledTrainset,
             toolRegistry = toolRegistry,
             metric = metric,
-            inputFromExample = inputFromExample,
         )
         addFromBootstrapResult(shuffledResult.config.demonstrations)
     }

@@ -25,37 +25,18 @@ import kotlin.test.assertTrue
 
 class BootstrapFewShotTest {
 
-    private val trainset = listOf(
-        Example(
-            data = mapOf("question" to "Question 0", "thinking" to "Thinking 0", "answer" to "Answer 0"),
-            labelKey = "answer"
-        ),
-        Example(
-            data = mapOf("question" to "Question 1", "thinking" to "Thinking 1", "answer" to "Answer 1"),
-            labelKey = "answer"
-        ),
-        Example(
-            data = mapOf("question" to "Question 2", "thinking" to "Thinking 2", "answer" to "Answer 2"),
-            labelKey = "answer"
-        ),
-        Example(
-            data = mapOf("question" to "Question 3", "thinking" to "Thinking 3", "answer" to "Answer 3"),
-            labelKey = "answer"
-        ),
-        Example(
-            data = mapOf("question" to "Question 4", "thinking" to "Thinking 4", "answer" to "Answer 4"),
-            labelKey = "answer"
-        ),
-    )
+    private val trainset = (0..4).map { i ->
+        Example(input = "Question $i", label = "Answer $i")
+    }
 
     private val simpleStrategy = strategy("test") {
         val thinking by optimizableNode(
             instruction = "Think about the question",
-            demonstrations = trainset.map { Demonstration(it.data["question"] as String, it.data["thinking"] as String, false) }
+            demonstrations = (0..4).map { Demonstration("Question $it", "Thinking $it", false) }
         )
         val answer by optimizableNode(
             instruction = "Answer the question",
-            demonstrations = trainset.map { Demonstration(it.data["thinking"] as String, it.data["answer"] as String, false) }
+            demonstrations = (0..4).map { Demonstration("Thinking $it", "Answer $it", false) }
         )
 
         edge(nodeStart forwardTo thinking)
@@ -104,7 +85,6 @@ class BootstrapFewShotTest {
             strategy = simpleStrategy,
             trainset = trainset,
             metric = exactMatch,
-            inputFromExample = { it["question"] as String },
         )
     }
 

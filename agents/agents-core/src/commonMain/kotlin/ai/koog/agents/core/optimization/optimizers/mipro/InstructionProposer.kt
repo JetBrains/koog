@@ -71,7 +71,7 @@ public data class InstructionProposerConfig(
  */
 public class InstructionProposer private constructor(
     private val strategy: AIAgentGraphStrategy<*, *>,
-    private val trainset: Dataset,
+    private val renderedExamples: List<String>,
     private val promptExecutor: PromptExecutor,
     private val llModel: LLModel,
     private val config: InstructionProposerConfig,
@@ -91,19 +91,30 @@ public class InstructionProposer private constructor(
          *
          * User-provided descriptions ([programDescription] and [OptimizableNode.description])
          * always skip LLM generation.
+         *
+         * @param describeInput Renders an input value as a human-readable string for dataset
+         *  summarization and example display. Defaults to [toString].
          */
-        public suspend fun create(
+        public suspend fun <TInput, TOutput> create(
             strategy: AIAgentGraphStrategy<*, *>,
-            trainset: Dataset,
+            trainset: Dataset<TInput, TOutput>,
             promptExecutor: PromptExecutor,
             llModel: LLModel,
             config: InstructionProposerConfig = InstructionProposerConfig(),
             random: Random = Random.Default,
             programDescription: String? = null,
+            describeInput: (TInput) -> String = { it.toString() },
         ): InstructionProposer {
+            val renderedExamples = trainset.map { ex ->
+                buildString {
+                    append(describeInput(ex.input))
+                    if (ex.hasLabel) append("\nlabel: ${ex.label}")
+                }
+            }
+
             val datasetSummary = if (config.useDatasetSummary) {
                 try {
-                    createDatasetSummary(trainset, promptExecutor, llModel)
+                    createDatasetSummary(renderedExamples, promptExecutor, llModel)
                 } catch (_: Exception) {
                     null
                 }
@@ -119,7 +130,7 @@ public class InstructionProposer private constructor(
 
             return InstructionProposer(
                 strategy = strategy,
-                trainset = trainset,
+                renderedExamples = renderedExamples,
                 promptExecutor = promptExecutor,
                 llModel = llModel,
                 config = config,
@@ -136,9 +147,8 @@ public class InstructionProposer private constructor(
      * Matches DSPy's use of task_demos as program_example.
      */
     private fun formatTrainsetExample(): String {
-        if (trainset.isEmpty()) return "No examples available."
-        val example = trainset.first()
-        return example.data.entries.joinToString("\n") { (k, v) -> "$k: $v" }
+        if (renderedExamples.isEmpty()) return "No examples available."
+        return renderedExamples.first()
     }
 
     /**
