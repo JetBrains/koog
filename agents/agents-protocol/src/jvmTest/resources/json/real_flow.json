@@ -2,69 +2,27 @@
   "id": "real-flow",
   "version": "1.0.0",
   "description": "Real flow for testing purposes.",
-  "defaultModel": "anthropic/sonnet_4",
+  "defaultModel": "openai/gpt4o",
   "agents": [
     {
-      "name": "generator",
+      "name": "open-jetbrains-site",
       "type": "task",
       "prompt": {
-        "system": "You are a task generator agent. You can generate random numbers from 0 to 100"
+        "system": "You are a Playwright agent. You can open a browser and navigate to sites using tools"
       },
       "params": {
-        "task": "Generate two random numbers between 0 and 100. Output them as a string separated with whitespace."
-      }
-    },
-    {
-      "name": "calculator",
-      "type": "task",
-      "prompt": {
-        "system": "You are a calculator agent. You can perform a sum operation."
-      },
-      "params": {
-        "task": "Calculate the sum of two numbers separated by whitespace. Output the result as a string."
-      }
-    },
-    {
-      "name": "verifier",
-      "type": "verify",
-      "prompt": {
-        "system": "You are a verifier agent. You can verify the result of a task."
-      },
-      "params": {
-        "task": "Verify the result of the task. Output 'CORRECT' if the result is correct, otherwise output 'ERROR'."
-      }
-    },
-    {
-      "name": "success",
-      "type": "transform",
-      "params": {
-        "task": "Output a success message."
+        "task": "Open a browser, navigate to jetbrains.com, accept all cookies, click AI in toolbar"
       }
     }
   ],
-  "transitions": [
+  "tools": [
     {
-      "from": "generator",
-      "to": "calculator"
-    },
-    {
-      "from": "calculator",
-      "to": "verifier"
-    },
-    {
-      "from": "verifier",
-      "to": "success",
-      "condition": {
-        "variable": "output.success",
-        "operation": "equals",
-        "value": true,
-      }
-    },
-    {
-      "from": "verifier",
-      "to": "calculator",
-      "condition": {
-        "variable": "output.success",
+      "name": "Playwright-mcp",
+      "type": "mcp",
+      "parameters": {
+        "transport": "stdio",
+        "command": "npx",
+        "args": ["@playwright/mcp@latest", "--port", "8931"]
       }
     }
   ]

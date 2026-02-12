@@ -46,7 +46,7 @@
         "value": false
       },
       "transformation": {
-        "value": "input.feedback"
+        "value": "output.feedback"
       }
     },
     {
@@ -58,7 +58,7 @@
         "value": true
       },
       "transformation": {
-        "value": "input.success"
+        "value": "output.success"
       }
     },
     {

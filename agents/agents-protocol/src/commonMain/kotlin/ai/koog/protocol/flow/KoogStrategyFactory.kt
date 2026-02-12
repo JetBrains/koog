@@ -439,8 +439,20 @@ public object KoogStrategyFactory {
         val transformation = transformations.singleOrNull()?.value
             ?: error("Unsupported transformation configuration")
 
-        // Drop the "input." prefix from the condition variable
-        val valueString = transformation.split(".").lastOrNull() ?: ""
+        // Parse the transformation string (e.g., "output.success" or "input.feedback")
+        val parts = transformation.split(".")
+
+        if (parts.size != 2) {
+            error("Expected format for transformation: '<input|output>.<variable>', got: $transformation")
+        }
+
+        val keyword = parts[0]
+        val valueString = parts[1]
+
+        // Validate keyword (support both "input" and "output")
+        if (keyword != "input" && keyword != "output") {
+            error("Expected 'input' or 'output' keyword for transformation, got: $keyword")
+        }
 
         if (valueString.isBlank()) {
             return input
@@ -449,17 +461,17 @@ public object KoogStrategyFactory {
         return when (valueString) {
             "success" -> {
                 val value = (input as? FlowDataType.FlowCritiqueResult)?.success
-                    ?: error("Unexpected value string: $valueString")
+                    ?: error("Cannot extract property '$valueString' from ${input::class.simpleName}")
 
                 FlowDataType.FlowBoolean(value)
             }
             "feedback" -> {
                 val value = (input as? FlowDataType.FlowCritiqueResult)?.feedback
-                    ?: error("Unexpected value string: $valueString")
+                    ?: error("Cannot extract property '$valueString' from ${input::class.simpleName}")
 
                 FlowDataType.FlowString(value)
             }
-            else -> error("Not primitive types are not yet supported")
+            else -> error("Property '$valueString' is not yet supported for transformation")
         }
     }
 
