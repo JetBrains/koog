@@ -19,6 +19,8 @@ import kotlinx.coroutines.sync.withLock
  *  (i.e., nodes created with the `optimizableNode` DSL). Default is true.
  * @property maxTracesPerNode Maximum number of traces to collect per node. Once reached, older
  *  traces may be evicted (FIFO). Use 0 or negative for unlimited. Default is 100.
+ * @property nodeNameFilter Node name filter. If non-empty, only nodes whose names are in this set
+ *  will have traces collected. Empty set means collect all (no filtering).
  */
 public class TraceCollectionConfig : FeatureConfig() {
     /**
@@ -32,9 +34,10 @@ public class TraceCollectionConfig : FeatureConfig() {
     public var maxTracesPerNode: Int = 100
 
     /**
-     * Node name filter. If non-null, only nodes whose names are in this set will have traces collected.
+     * Node name filter. If non-empty, only nodes whose names are in this set will have traces collected.
+     * Empty set means collect all (no filtering).
      */
-    public var nodeNameFilter: Set<String>? = null
+    public var nodeNameFilter: Set<String> = emptySet()
 }
 
 /**
@@ -48,13 +51,6 @@ public class TraceCollectionConfig : FeatureConfig() {
 public class CollectedTraces {
     private val _traces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
     private val mutex = Mutex()
-
-    /**
-     * Gets all collected traces as an immutable snapshot.
-     */
-    public suspend fun getTraces(): Map<String, List<Demonstration<Any?, Any?>>> = mutex.withLock {
-        _traces.mapValues { it.value.toList() }
-    }
 
     /**
      * Adds a demonstration for a node.
@@ -80,41 +76,6 @@ public class CollectedTraces {
             _traces[nodeName]?.toList() ?: emptyList()
         }
     }
-
-    /**
-     * Gets typed traces for a specific node.
-     *
-     * Performs unchecked casts - caller must ensure type compatibility.
-     */
-    @Suppress("UNCHECKED_CAST")
-    public suspend fun <TInput, TOutput> getTypedTracesForNode(
-        nodeName: String
-    ): List<Demonstration<TInput, TOutput>> {
-        return getTracesForNode(nodeName) as List<Demonstration<TInput, TOutput>>
-    }
-
-    /**
-     * Clears all collected traces.
-     */
-    public suspend fun clear() {
-        mutex.withLock {
-            _traces.clear()
-        }
-    }
-
-    /**
-     * Gets the total number of traces collected across all nodes.
-     */
-    public suspend fun getTotalTraceCount(): Int = mutex.withLock {
-        _traces.values.sumOf { it.size }
-    }
-
-    /**
-     * Gets the names of nodes that have collected traces.
-     */
-    public suspend fun getNodeNames(): Set<String> = mutex.withLock {
-        _traces.keys.toSet()
-    }
 }
 
 /**
@@ -132,8 +93,7 @@ public class TraceCollectionFeatureImpl(
 
     internal fun shouldCollectForNode(node: AIAgentNode<*, *>): Boolean {
         // Check node name filter
-        val nameFilter = config.nodeNameFilter
-        if (nameFilter != null && node.name !in nameFilter) {
+        if (config.nodeNameFilter.isNotEmpty() && node.name !in config.nodeNameFilter) {
             return false
         }
 

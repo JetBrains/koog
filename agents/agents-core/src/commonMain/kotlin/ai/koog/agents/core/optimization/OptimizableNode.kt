@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
+import ai.koog.agents.core.optimization.dsl.getOptimizationConfig
 import ai.koog.prompt.dsl.Prompt
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.serialization.serializer
@@ -86,7 +87,7 @@ public class OptimizableNode<TInput, TOutput> internal constructor(
     execute = { input ->
         // Demonstrations and instruction may be overridden at runtime
         // via OptimizationConfig passed through coroutine context.
-        val config = currentCoroutineContext()[OptimizationConfig]
+        val config = getOptimizationConfig()
         // Resolve from the coroutine context or fallback to defaults.
         val effectiveInstruction = config?.getInstruction(name) ?: instruction
         val effectiveDemos = config?.getTypedDemonstrations(name) ?: demonstrations
