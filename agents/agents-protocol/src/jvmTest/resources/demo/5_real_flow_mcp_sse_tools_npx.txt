@@ -1,0 +1,22 @@
+// IntelliJ IDEA MCP
+
+Key:
+    OPENAI_API_KEY=
+
+Command:
+    npx -y @jetbrains/mcp-proxy
+
+SSE:
+    http://localhost:64342/sse
+
+
+// Playwrite
+
+Key:
+    OPENAI_API_KEY=
+
+Command:
+    npx @playwright/mcp@latest --port 8931
+
+SSE:
+    http://localhost:8931/sse

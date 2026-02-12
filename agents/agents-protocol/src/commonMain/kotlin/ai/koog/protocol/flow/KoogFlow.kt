@@ -2,6 +2,7 @@ package ai.koog.protocol.flow
 
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
@@ -19,6 +20,28 @@ import ai.koog.protocol.transition.FlowTransition
 import kotlin.reflect.typeOf
 
 /**
+ * Platform-specific implementation for creating a ToolRegistry from a stdio MCP tool.
+ *
+ * @param command The executable command to run
+ * @param args List of command-line arguments to pass to the command
+ * @param processHolder Holder to track the launched process for cleanup
+ * @return A ToolRegistry containing all tools from the MCP server
+ */
+internal expect suspend fun buildStdioToolRegistry(
+    command: String,
+    args: List<String>,
+    processHolder: StdioProcessHolder
+): ToolRegistry
+
+/**
+ * Holder for stdio processes launched by the flow for cleanup purposes.
+ */
+internal expect class StdioProcessHolder() {
+    fun addProcess(command: String, args: List<String>, process: Any)
+    fun cleanup()
+}
+
+/**
  * Koog-specific implementation of the Flow interface with agent orchestration.
  */
 public class KoogFlow(
@@ -29,6 +52,8 @@ public class KoogFlow(
     public val promptExecutor: PromptExecutor? = null
 ) : Flow {
 
+    private val stdioProcesses = StdioProcessHolder()
+
     /**
      * Runs the flow with the provided input.
      *
@@ -36,12 +61,17 @@ public class KoogFlow(
      * @return The output from the final agent in the flow.
      */
     override suspend fun run(input: FlowDataType?): FlowDataType {
-        val agent = buildAgent()
-        val agentInput = input
-            ?: FlowUtil.getFirstAgentOrNull(agents, transitions)?.let { firstAgent -> getInputFromFlowAgent(agent = firstAgent) }
-            ?: error("No agents found")
+        try {
+            val agent = buildAgent()
+            val agentInput = input
+                ?: FlowUtil.getFirstAgentOrNull(agents, transitions)?.let { firstAgent -> getInputFromFlowAgent(agent = firstAgent) }
+                ?: error("No agents found")
 
-        return agent.run(agentInput)
+            return agent.run(agentInput)
+        } finally {
+            // Clean up any stdio processes that were launched
+            stdioProcesses.cleanup()
+        }
     }
 
     //region Private Methods
@@ -54,6 +84,7 @@ public class KoogFlow(
         }
     }
 
+    @OptIn(DetachedPromptExecutorAPI::class)
     private suspend fun buildAgent(): GraphAIAgent<FlowDataType, FlowDataType> {
         val promptExecutor = promptExecutor ?: buildPromptExecutor(agents)
         val toolRegistry = buildToolRegistry()
@@ -99,7 +130,7 @@ public class KoogFlow(
                     if (!ctx.subgraph.name.contains(START_NODE_PREFIX) &&
                         !ctx.subgraph.name.contains(FINISH_NODE_PREFIX)) {
 
-                        println("---\n>>> Subgraph: ${ctx.subgraph.id}\n---")
+                        println("---\n>>> Subgraph: ${ctx.subgraph.id}. Model: ${ctx.context.llm.model.id}\n---")
                     }
                 }
 
@@ -157,10 +188,8 @@ public class KoogFlow(
                     McpToolRegistryProvider.fromTransport(transport)
                 }
                 is FlowTool.Mcp.Stdio -> {
-                    // Stdio transport requires platform-specific implementation (JVM only)
-                    // For now, we skip stdio tools in common code
-                    // The JVM-specific implementation should be provided via expect/actual
-                    ToolRegistry.EMPTY
+                    // Stdio transport uses platform-specific implementation (JVM only)
+                    buildStdioToolRegistry(mcpTool.command, mcpTool.args, stdioProcesses)
                 }
             }
         }

@@ -140,27 +140,27 @@ public class FlowJsonConfigParser : FlowConfigParser {
                     ?: error("Missing <agents> parameter for parallel agent")
 
                 // Parse merge condition
-                val mergeJson = params.get("merge")?.jsonObject
-                    ?: error("Missing <merge> parameter for parallel agent")
+                val mergeCondition = params["merge"]?.jsonObject?.let { mergeJson ->
 
-                val variable = mergeJson["variable"]?.jsonPrimitive?.content
-                    ?: error("Missing <variable> in merge condition")
+                    val variable = mergeJson["variable"]?.jsonPrimitive?.content
+                        ?: error("Missing <variable> in merge condition")
 
-                val operation = mergeJson["operation"]?.jsonPrimitive?.content
-                    ?: error("Missing <operation> in merge condition")
+                    val operation = mergeJson["operation"]?.jsonPrimitive?.content
+                        ?: error("Missing <operation> in merge condition")
 
-                val value = mergeJson["value"]?.jsonPrimitive
-                    ?: error("Missing <value> in merge condition")
+                    val value = mergeJson["value"]?.jsonPrimitive
+                        ?: error("Missing <value> in merge condition")
 
-                val operationKind = ConditionOperationKind.entries
-                    .find { it.id.equals(operation, ignoreCase = true) }
-                    ?: error("Unsupported operation: $operation")
+                    val operationKind = ConditionOperationKind.entries
+                        .find { it.id.equals(operation, ignoreCase = true) }
+                        ?: error("Unsupported operation: $operation")
 
-                val mergeCondition = ParallelMergeCondition(
-                    variable = variable,
-                    operation = operationKind,
-                    value = value.toPrimitiveFlowDataType()
-                )
+                    ParallelMergeCondition(
+                        variable = variable,
+                        operation = operationKind,
+                        value = value.toPrimitiveFlowDataType()
+                    )
+                }
 
                 FlowParallelAgent(
                     name = name,

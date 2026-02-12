@@ -24,7 +24,12 @@
       "name": "parallel-joke-generator",
       "type": "parallel",
       "params": {
-        "agents": ["joke-generator-1", "joke-generator-2"]
+        "agents": ["joke-generator-1", "joke-generator-2"],
+        "merge": {
+          "variable": "results.1.output",
+          "operation": "not_equals",
+          "value": "1"
+        }
       }
     }
   ]

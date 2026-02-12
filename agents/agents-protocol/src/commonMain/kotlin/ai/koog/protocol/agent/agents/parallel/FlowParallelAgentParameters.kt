@@ -9,5 +9,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class FlowParallelAgentParameters(
     val agents: List<String>,
-    val merge: ParallelMergeCondition
+    val merge: ParallelMergeCondition?
 ) : FlowAgentParameters

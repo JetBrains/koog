@@ -3,6 +3,7 @@ package ai.koog.protocol
 import ai.koog.protocol.flow.toKoogFlow
 import ai.koog.protocol.parser.FlowJsonConfigParser
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
@@ -44,7 +45,7 @@ class FlowIntegrationTestType : FlowTestBase() {
     }
 
     @Test
-    fun testRunRealFlow_Verify(): Unit = runTest {
+    fun testRunRealFlow_Verify(): Unit = runBlocking {
         val jsonContent = readFlow("json/real_flow.json")
 
         val parser = FlowJsonConfigParser()

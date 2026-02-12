@@ -280,7 +280,12 @@ public object KoogStrategyFactory {
                 nodes = parallelAgents,
                 merge = {
                     // Evaluate the merge condition to select the appropriate result
-                    val selectedOutput = evaluateMergeCondition(results, agent.parameters.merge)
+                    val result =
+                    val selectedOutput = agent.parameters.merge?.let {
+                        getParallelNodeResultByCondition(results, agent.parameters.merge)
+//                        evaluateMergeCondition(results, it)
+                    }
+
 
                     ParallelNodeExecutionResult(
                         selectedOutput,
@@ -475,24 +480,10 @@ public object KoogStrategyFactory {
         }
     }
 
-    /**
-     * Evaluates a merge condition for parallel execution results.
-     *
-     * Parses the variable notation (e.g., "results.1.output") to:
-     * 1. Extract the index and property path
-     * 2. Navigate to the specified result and property
-     * 3. Extract the primitive value for comparison
-     * 4. Return the full FlowDataType output if the condition matches
-     *
-     * @param results The list of parallel execution results
-     * @param condition The merge condition to evaluate
-     * @return The FlowDataType output from the matching result
-     * @throws IllegalArgumentException if the condition format is invalid or no match is found
-     */
-    private fun evaluateMergeCondition(
-        results: List<ParallelResult<*, *>>,
+    private fun getParallelNodeResultByCondition(
+        results: List<ParallelResult<FlowDataType, FlowDataType>>,
         condition: ParallelMergeCondition
-    ): FlowDataType {
+    ): ParallelResult<FlowDataType, FlowDataType> {
         // Parse the variable: "results.1.output" -> ["results", "1", "output"]
         val parts = condition.variable.split(".")
 
@@ -511,14 +502,38 @@ public object KoogStrategyFactory {
             error("Index out of bounds in merge condition: $index (available: 0..${results.size - 1})")
         }
 
-        val property: String = parts[2]
-
         // Take the Koog parallel nodes execution result by index
-        val result = results[index]
+        return results[index]
+    }
+
+    /**
+     * Evaluates a merge condition for parallel execution results.
+     *
+     * Parses the variable notation (e.g., "results.1.output") to:
+     * 1. Extract the index and property path
+     * 2. Navigate to the specified result and property
+     * 3. Extract the primitive value for comparison
+     * 4. Return the full FlowDataType output if the condition matches
+     *
+     * @param results The list of parallel execution results
+     * @param condition The merge condition to evaluate
+     * @return The FlowDataType output from the matching result
+     * @throws IllegalArgumentException if the condition format is invalid or no match is found
+     */
+    private fun evaluateMergeCondition(
+        results: List<ParallelResult<FlowDataType, FlowDataType>>,
+        condition: ParallelMergeCondition
+    ): FlowDataType {
+        // Parse the variable: "results.1.output" -> ["results", "1", "output"]
+        val parts = condition.variable.split(".")
+
+        val result = getParallelNodeResultByCondition(results, condition)
+
+        val property: String = parts[2]
 
         // Extract the value from an actual Koog parallel nodes result based on the property name.
         val flowDataType = extractPropertyFromParallelResult(result, property)
-            ?: error("Failed to get an actual parallel nodes execution result by the property (index: $index, property: $property)")
+            ?: error("Failed to get an actual parallel nodes execution result by the property (property: $property)")
 
         // Extract the primitive value for condition matching
         val primitiveValue = extractPrimitiveValue(flowDataType)
