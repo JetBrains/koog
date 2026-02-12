@@ -9,7 +9,7 @@ import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
-import ai.koog.agents.core.optimization.util.findOptimizableModules
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableModules
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel

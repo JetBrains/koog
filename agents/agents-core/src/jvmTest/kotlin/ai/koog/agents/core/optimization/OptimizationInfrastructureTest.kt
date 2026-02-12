@@ -4,7 +4,8 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.OptimizationConfig
-import ai.koog.agents.core.optimization.util.findOptimizableModules
+import ai.koog.agents.core.optimization.core.optimizableNode
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableModules
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.test.Test

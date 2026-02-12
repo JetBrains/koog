@@ -5,7 +5,7 @@ package ai.koog.agents.core.optimization.core
  *
  * An example consists of a map of mapping data field keys (node names) to data field values (node outputs).
  * When generating few-shot examples, the example for the node specified by the field key is converted to a few-shot example.
- * The field values can be any type, strings, data classes, enums, etc., matching whatever the corresponding [OptimizableNode][ai.koog.agents.core.optimization.OptimizableNode]
+ * The field values can be any type, strings, data classes, enums, etc., matching whatever the corresponding [OptimizableNode][OptimizableNode]
  *
  * If given, `labelKey` defines the key in [data] that contains the expected output for the whole agent.
  *

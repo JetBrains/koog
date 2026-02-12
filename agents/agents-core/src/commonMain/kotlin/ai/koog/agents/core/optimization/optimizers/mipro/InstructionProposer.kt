@@ -1,11 +1,11 @@
 package ai.koog.agents.core.optimization.optimizers.mipro
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.optimization.OptimizableNode
+import ai.koog.agents.core.optimization.core.OptimizableNode
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
-import ai.koog.agents.core.optimization.util.describeForOptimization
-import ai.koog.agents.core.optimization.util.findOptimizableModules
+import ai.koog.agents.core.optimization.optimizers.utils.describeForOptimization
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableModules
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import kotlin.random.Random

@@ -3,18 +3,18 @@ package ai.koog.agents.core.optimization.optimizers
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.optimization.OptimizableNode
+import ai.koog.agents.core.optimization.core.OptimizableNode
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
+import ai.koog.agents.core.optimization.features.CollectedTraces
 import ai.koog.agents.core.optimization.features.TraceCollectionFeature
-import ai.koog.agents.core.optimization.features.TraceCollectionFeatureImpl
 import ai.koog.agents.core.optimization.features.collectTraces
-import ai.koog.agents.core.optimization.util.sampleLabeledDemonstrations
-import ai.koog.agents.core.optimization.util.findOptimizableModules
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableModules
+import ai.koog.agents.core.optimization.optimizers.utils.sampleLabeledDemonstrations
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.withContext
@@ -142,7 +142,12 @@ public class BootstrapFewShot(
         // Step 1: Teacher pre-optimization with LabeledFewShot
         val teacherConfig = if (maxLabeledDemos > 0) {
             OptimizationConfig(
-                demonstrations = modules.associate { it.name to sampleLabeledDemonstrations(it.demonstrations, true, maxLabeledDemos, random) }
+                demonstrations = modules.associate { it.name to sampleLabeledDemonstrations(
+                    it.demonstrations,
+                    maxLabeledDemos,
+                    random
+                )
+                }
             )
         } else {
             OptimizationConfig()
@@ -284,8 +289,8 @@ public class BootstrapFewShot(
             },
         )
 
-        val traceFeature = teacherAgent.createSession().pipeline()!!
-            .feature(TraceCollectionFeatureImpl::class, TraceCollectionFeature)
+        val collectedTraces = teacherAgent.createSession().pipeline()!!
+            .feature(CollectedTraces::class, TraceCollectionFeature)
             ?: error("TraceCollectionFeature should have been installed on teacher agent")
 
         // Filter teacher demos: remove demos whose input and output both come from the
@@ -321,7 +326,7 @@ public class BootstrapFewShot(
 
         // Collect traces: for each module, select one trace
         val traces = modules.mapNotNull { module ->
-            val nodeTraces = traceFeature.collectedTraces.getTracesForNode(module.name)
+            val nodeTraces = collectedTraces.getTracesForNode(module.name)
             if (nodeTraces.isEmpty()) return@mapNotNull null
             module.name to selectTrace(nodeTraces, random)
         }.toMap()
@@ -353,7 +358,7 @@ public class BootstrapFewShot(
 
             val labeled = if (remaining > 0) {
                 // TODO: Double check again
-                sampleLabeledDemonstrations(module.demonstrations, true, remaining, random)
+                sampleLabeledDemonstrations(module.demonstrations, remaining, random)
             } else {
                 emptyList()
             }

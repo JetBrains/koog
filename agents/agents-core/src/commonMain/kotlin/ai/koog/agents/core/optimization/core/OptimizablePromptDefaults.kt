@@ -1,10 +1,9 @@
 @file:OptIn(DetachedPromptExecutorAPI::class)
 
-package ai.koog.agents.core.optimization
+package ai.koog.agents.core.optimization.core
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.structure.executeStructured

@@ -1,12 +1,9 @@
-package ai.koog.agents.core.optimization
+package ai.koog.agents.core.optimization.core
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.optimization.core.Demonstration
-import ai.koog.agents.core.optimization.core.OptimizationConfig
-import ai.koog.agents.core.optimization.dsl.getOptimizationConfig
 import ai.koog.prompt.dsl.Prompt
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.serialization.serializer
@@ -215,7 +212,10 @@ public inline fun <reified TInput, reified TOutput> AIAgentSubgraphBuilderBase<*
     name: String? = null,
     description: String? = null,
     demonstrations: List<Demonstration<TInput, TOutput>> = emptyList(),
-    noinline promptFn: OptimizableNodePromptBuildFn<TInput, TOutput> = defaultPromptFn(serializer<TInput>(), serializer<TOutput>()),
+    noinline promptFn: OptimizableNodePromptBuildFn<TInput, TOutput> = defaultPromptFn(
+        serializer<TInput>(),
+        serializer<TOutput>()
+    ),
 ): OptimizableNodeDelegate<TInput, TOutput> {
     return OptimizableNodeDelegate(
         name = name,
@@ -227,4 +227,14 @@ public inline fun <reified TInput, reified TOutput> AIAgentSubgraphBuilderBase<*
         inputType = typeOf<TInput>(),
         outputType = typeOf<TOutput>(),
     )
+}
+
+/**
+ * Gets the current [OptimizationConfig] from the coroutine context, if present.
+ *
+ * @return The current optimization config, or null if not in an optimization context.
+ */
+@Suppress("UnusedReceiverParameter")
+private suspend fun AIAgentGraphContextBase.getOptimizationConfig(): OptimizationConfig? {
+    return currentCoroutineContext()[OptimizationConfig]
 }

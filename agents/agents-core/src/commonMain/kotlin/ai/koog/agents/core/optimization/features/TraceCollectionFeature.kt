@@ -7,7 +7,7 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.optimization.OptimizableNode
+import ai.koog.agents.core.optimization.core.OptimizableNode
 import ai.koog.agents.core.optimization.core.Demonstration
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -45,21 +45,26 @@ public class TraceCollectionConfig : FeatureConfig() {
  *
  * This class holds the demonstrations (input-output pairs) captured during execution.
  * It is safe for concurrent access from parallel node execution via [Mutex].
+ * It also serves as the feature implementation stored in the agent's storage.
  *
- * All mutating and reading methods are suspend functions to support coroutine-based locking.
+ * All mutating and reading methods are suspend-functions to support coroutine-based locking.
  */
-public class CollectedTraces {
+public class CollectedTraces(
+    private val maxPerNode: Int
+) {
+    // NodeExecutionCompletedContext.input: Any? and output: Any? therefore here
+    // Demonstration<Any?, Any?>
     private val _traces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
     private val mutex = Mutex()
 
     /**
      * Adds a demonstration for a node.
      */
-    internal suspend fun addTrace(nodeName: String, input: Any?, output: Any?, maxPerNode: Int) {
+    internal suspend fun addTrace(nodeName: String, input: Any?, output: Any?) {
         mutex.withLock {
             val nodeTraces = _traces.getOrPut(nodeName) { mutableListOf() }
 
-            // Evict oldest if at capacity
+            // Evict the oldest if at capacity
             if (maxPerNode > 0 && nodeTraces.size >= maxPerNode) {
                 nodeTraces.removeAt(0)
             }
@@ -75,38 +80,6 @@ public class CollectedTraces {
         return mutex.withLock {
             _traces[nodeName]?.toList() ?: emptyList()
         }
-    }
-}
-
-/**
- * Feature implementation holder.
- *
- * This class is stored in the agent's storage and provides access to collected traces.
- */
-public class TraceCollectionFeatureImpl(
-    private val config: TraceCollectionConfig
-) {
-    /**
-     * The collected traces from agent execution.
-     */
-    public val collectedTraces: CollectedTraces = CollectedTraces()
-
-    internal fun shouldCollectForNode(node: AIAgentNode<*, *>): Boolean {
-        // Check node name filter
-        if (config.nodeNameFilter.isNotEmpty() && node.name !in config.nodeNameFilter) {
-            return false
-        }
-
-        // Check optimizable filter
-        if (config.collectOnlyOptimizable && node !is OptimizableNode<*, *>) {
-            return false
-        }
-
-        return true
-    }
-
-    internal suspend fun addTrace(nodeName: String, input: Any?, output: Any?) {
-        collectedTraces.addTrace(nodeName, input, output, config.maxTracesPerNode)
     }
 }
 
@@ -132,13 +105,13 @@ public class TraceCollectionFeatureImpl(
  * agent.run(input)
  *
  * // Access collected traces
- * val traces = agent.feature(TraceCollectionFeature)?.collectedTraces
+ * val traces = agent.feature(TraceCollectionFeature)
  * val nodeTraces = traces?.getTracesForNode("myNode")
  * ```
  */
-public object TraceCollectionFeature : AIAgentGraphFeature<TraceCollectionConfig, TraceCollectionFeatureImpl> {
+public object TraceCollectionFeature : AIAgentGraphFeature<TraceCollectionConfig, CollectedTraces> {
 
-    override val key: AIAgentStorageKey<TraceCollectionFeatureImpl> =
+    override val key: AIAgentStorageKey<CollectedTraces> =
         AIAgentStorageKey("optimization-trace-collection")
 
     override fun createInitialConfig(): TraceCollectionConfig = TraceCollectionConfig()
@@ -146,15 +119,14 @@ public object TraceCollectionFeature : AIAgentGraphFeature<TraceCollectionConfig
     override fun install(
         config: TraceCollectionConfig,
         pipeline: AIAgentGraphPipeline
-    ): TraceCollectionFeatureImpl {
-        val featureImpl = TraceCollectionFeatureImpl(config)
+    ): CollectedTraces {
+        val collectedTraces = CollectedTraces(config.maxTracesPerNode)
 
         pipeline.interceptNodeExecutionCompleted(this) { eventContext: NodeExecutionCompletedContext ->
             val node = eventContext.node
 
-            // Only collect for AIAgentNode instances (not start/finish nodes, etc.)
-            if (node is AIAgentNode<*, *> && featureImpl.shouldCollectForNode(node)) {
-                featureImpl.addTrace(
+            if (node is AIAgentNode<*, *> && shouldCollectForNode(node, config)) {
+                collectedTraces.addTrace(
                     nodeName = node.name,
                     input = eventContext.input,
                     output = eventContext.output
@@ -162,7 +134,19 @@ public object TraceCollectionFeature : AIAgentGraphFeature<TraceCollectionConfig
             }
         }
 
-        return featureImpl
+        return collectedTraces
+    }
+
+    private fun shouldCollectForNode(node: AIAgentNode<*, *>, config: TraceCollectionConfig): Boolean {
+        if (config.nodeNameFilter.isNotEmpty() && node.name !in config.nodeNameFilter) {
+            return false
+        }
+
+        if (config.collectOnlyOptimizable && node !is OptimizableNode<*, *>) {
+            return false
+        }
+
+        return true
     }
 }
 

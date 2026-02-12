@@ -6,6 +6,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
+import ai.koog.agents.core.optimization.core.optimizableNode
 import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.testing.tools.getMockExecutor
