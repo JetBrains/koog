@@ -3,6 +3,8 @@ package ai.koog.protocol.flow
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.mcp.McpToolRegistryProvider
@@ -85,28 +87,48 @@ public class KoogFlow(
             toolRegistry = toolRegistry,
         ) {
             handleEvents {
+                onAgentStarting { ctx ->
+                    println(">>> Agent: ${ctx.agent.id}")
+                }
+
+                onAgentCompleted { ctx ->
+                    println("<<< Agent: ${ctx.agentId}. Result: ${ctx.result}")
+                }
+
                 onNodeExecutionStarting { ctx ->
-                    println("> Node: ${ctx.node.id}")
+                    if (!ctx.node.name.contains(START_NODE_PREFIX) &&
+                        !ctx.node.name.contains(FINISH_NODE_PREFIX)) {
+
+                        println(">>> Node: ${ctx.node.id}")
+                    }
+                }
+
+                onNodeExecutionCompleted { ctx ->
+                    if (!ctx.node.name.contains(START_NODE_PREFIX) &&
+                        !ctx.node.name.contains(FINISH_NODE_PREFIX)) {
+
+                        println("<<< Node: ${ctx.node.id}. Result: ${ctx.output}")
+                    }
                 }
 
                 onToolCallStarting { ctx ->
-                    println("> Tool start\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}")
+                    println(">>> Tool start\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}")
                 }
 
                 onToolCallCompleted { ctx ->
-                    println("> Tool completed\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}")
+                    println("<<< Tool completed\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}, result: ${ctx.toolResult}")
                 }
 
                 onLLMCallStarting { ctx ->
                     println(
-                        "> LLM start\nRequest:${ctx.prompt.messages.lastOrNull()?.content}\n" +
+                        ">>> LLM start\nRequest:${ctx.prompt.messages.lastOrNull()?.content}\n" +
                             "tools: ${ctx.tools.joinToString("\n") { " - ${it.name }" } }"
                     )
                 }
 
                 onLLMCallCompleted { ctx ->
                     println(
-                        "> LLM complete\nResponses:${ctx.responses.joinToString("\n") { " - [${it.role.name}] ${it.content}" } } }"
+                        "<<< LLM complete\nResponses:${ctx.responses.joinToString("\n") { " - [${it.role.name}] ${it.content}" } } }"
                     )
                 }
             }

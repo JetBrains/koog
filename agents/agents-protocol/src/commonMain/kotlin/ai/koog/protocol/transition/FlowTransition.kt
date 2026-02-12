@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
 public data class FlowTransition(
     public val from: String,
     public val to: String,
-    public val condition: FlowTransitionCondition? = null
+    public val condition: FlowTransitionCondition? = null,
 ) {
     /**
      * Human-readable string representation of this transition for debugging and logging.
