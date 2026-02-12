@@ -6,13 +6,12 @@ import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.metric.BaseMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
 import ai.koog.agents.features.opentelemetry.metric.HistogramMetricEvent
-import ai.koog.agents.features.opentelemetry.metric.MetricEvent
 import ai.koog.prompt.llm.LLModel
 import kotlinx.datetime.Clock
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
-internal fun AgentLifecycleEventContext.toMetricEvent(): MetricEvent {
+internal fun AgentLifecycleEventContext.toMetricEvent(): BaseMetricEvent {
     return BaseMetricEvent(
         id = this@toMetricEvent.eventId,
         timestamp = Clock.System.now(),

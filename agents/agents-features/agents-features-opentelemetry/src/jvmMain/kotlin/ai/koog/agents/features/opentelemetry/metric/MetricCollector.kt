@@ -14,7 +14,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
 
     private val histograms = ConcurrentHashMap<String, DoubleHistogram>()
 
-    private val metricEvents = ConcurrentHashMap<String, MetricEvent>()
+    private val metricEvents = ConcurrentHashMap<String, MetricEvent<*>>()
 
     companion object {
         private val logger = KotlinLogging.logger { }
@@ -59,7 +59,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         return counter
     }
 
-    internal fun storeMetricEvent(metricEvent: MetricEvent) {
+    internal fun storeMetricEvent(metricEvent: MetricEvent<*>) {
         val result = metricEvents.putIfAbsent(metricEvent.id, metricEvent)
 
         if (result == null) {
@@ -67,7 +67,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
     }
 
-    internal fun getMetricEvent(id: String): MetricEvent? {
+    internal fun getMetricEvent(id: String): MetricEvent<*>? {
         return metricEvents.remove(id)
     }
 
@@ -81,7 +81,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
 
         metric.add(
-            metricEvent.value,
+            updatedMetricEvent.value,
             updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
         )
     }
@@ -96,7 +96,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
 
         metric.record(
-            metricEvent.value,
+            updatedMetricEvent.value,
             updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
         )
     }

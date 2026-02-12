@@ -18,7 +18,7 @@ public fun OpenTelemetryConfig.restrictToolNameCardinality(
     fallbackToolName: String = FALLBACK_TOOL_NAME,
 ) {
     addMetricAdapter(object : MetricAdapter() {
-        override fun process(metricEvent: MetricEvent): MetricEvent {
+        override fun <T : MetricEvent<T>> process(metricEvent: T): T {
             val toolNameKey = GenAIAttributes.Tool.Name("").key
             val toolName = metricEvent.attributes.find { it.key == toolNameKey }
 
