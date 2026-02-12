@@ -23,7 +23,7 @@ import kotlin.reflect.typeOf
 
 /**
  * [AIAgentService] is a core interface for managing AI agents. The service allows creation, removal, and
- * management of AI agents and provides functionalities to list agents based on their statuses.f
+ * management of AI agents and provides functionalities to list agents based on their statuses.
  *
  * A single instance of [AIAgentService] manages one kind of uniform AI Agents serving same purpose and solving the same type
  * of user task. It's useful to create, manage, and track the progress of running agents solving similar user tasks in parallel.
