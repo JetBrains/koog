@@ -120,7 +120,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     adjustedCount--
     val unshuffledOptimizer = BootstrapFewShot(
         maxBootstrappedDemos = maxBootstrappedDemos,
-        maxLabeledDemos = maxLabeledDemos,
+        maxTotalDemos = maxLabeledDemos,
         maxRounds = maxRounds,
         maxErrors = maxErrors,
         metricThreshold = 1.0, // doesn't matter since metric is null
@@ -144,7 +144,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
 
         val shuffledOptimizer = BootstrapFewShot(
             maxBootstrappedDemos = numDemos,
-            maxLabeledDemos = maxLabeledDemos,
+            maxTotalDemos = maxLabeledDemos,
             maxRounds = maxRounds,
             maxErrors = maxErrors,
             metricThreshold = metricThreshold ?: 1.0,

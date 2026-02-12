@@ -78,8 +78,8 @@ private sealed class BootstrapOutcome {
  * ```
  *
  * @property maxBootstrappedDemos Maximum number of bootstrapped demonstrations per node.
- * @property maxLabeledDemos Maximum number of labeled demonstrations used during bootstrapping
- *  and as fallback. Set to 0 to disable.
+ * @property maxTotalDemos Maximum number of labeled demonstrations used during bootstrapping
+ *  and as fallback. Set to 0 to disable. In DSPy it is called maxLabeledDemos, but it is confusing.
  * @property maxRounds Maximum retry rounds per training example.
  * @property maxErrors Maximum total exceptions before stopping. Null means unlimited.
  * @property metricThreshold Minimum metric score to accept a bootstrap.
@@ -87,7 +87,7 @@ private sealed class BootstrapOutcome {
  */
 public class BootstrapFewShot(
     public val maxBootstrappedDemos: Int = 4,
-    public val maxLabeledDemos: Int = 16,
+    public val maxTotalDemos: Int = 16,
     public val maxRounds: Int = 1,
     public val maxErrors: Int? = null,
     public val metricThreshold: Double = 1.0,
@@ -132,12 +132,12 @@ public class BootstrapFewShot(
         }
 
         // Populate the optimization config with initially labeled demos
-        val baseConfig = if (maxLabeledDemos > 0) {
+        val baseConfig = if (maxTotalDemos > 0) {
             OptimizationConfig(
                 demonstrations = optimizableNodes.associate {
                     it.name to sampleLabeledDemonstrations(
                         it.demonstrations,
-                        maxLabeledDemos,
+                        maxTotalDemos,
                         random
                     )
                 }
@@ -147,7 +147,9 @@ public class BootstrapFewShot(
         }
 
         // Bootstrap - collect traces from executions
-        val (bootstrappedTracesDict, notBootstrapped) = bootstrap(
+        // TODO: Double check if all required labeled demos are properly
+        //  injected into the joint config.
+        val bootstrappedTraces = bootstrap(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
             strategy = strategy,
@@ -160,9 +162,9 @@ public class BootstrapFewShot(
         )
 
         // Build joint config from bootstrapped and labeled demos
-        val config = buildOptimizationConfig(optimizableNodes, bootstrappedTracesDict)
+        val config = buildOptimizationConfig(optimizableNodes, bootstrappedTraces)
 
-        val totalBootstrapped = bootstrappedTracesDict.values.sumOf { it.size }
+        val totalBootstrapped = bootstrappedTraces.values.sumOf { it.size }
 
         return OptimizationResult(
             config = config,
@@ -171,7 +173,7 @@ public class BootstrapFewShot(
             metadata = mapOf(
                 "optimizer" to "BootstrapFewShot",
                 "maxBootstrappedDemos" to maxBootstrappedDemos,
-                "maxLabeledDemos" to maxLabeledDemos,
+                "maxLabeledDemos" to maxTotalDemos,
                 "numNodes" to optimizableNodes.size,
                 "totalBootstrapped" to totalBootstrapped,
             ),
@@ -181,7 +183,7 @@ public class BootstrapFewShot(
     /**
      * Bootstrap phase: runs agent on training examples and collects traces from successful runs.
      *
-     * @return Pair of (maps of nodes to bootstrapped demonstrations, dataset of training examples that were not bootstrapped successfully)
+     * @return Map of node names to bootstrapped demonstrations collected from successful runs.
      */
     private suspend fun <TInput, TOutput> bootstrap(
         promptExecutor: PromptExecutor,
@@ -193,14 +195,13 @@ public class BootstrapFewShot(
         baseConfig: OptimizationConfig,
         metric: Metric<TOutput>?,
         inputFromExample: (Example) -> TInput,
-    ): Pair<Map<String, MutableList<Demonstration<Any?, Any?>>>, Dataset> {
+    ): Map<String, MutableList<Demonstration<Any?, Any?>>> {
         val nodeName2BootstrappedTraces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
-        val bootstrappedIndices = mutableSetOf<Int>()
+        var bootstrapCount = 0
         var errorCount = 0
 
-        for ((index, example) in trainset.withIndex()) {
-            // Check if we have enough bootstrapped demos
-            if (bootstrappedIndices.size >= maxBootstrappedDemos) break
+        for (example in trainset) {
+            if (bootstrapCount >= maxBootstrappedDemos) break
 
             // Check error budget
             if (maxErrors != null && errorCount >= maxErrors) break
@@ -224,8 +225,8 @@ public class BootstrapFewShot(
                         for ((nodeName, demo) in outcome.traces) {
                             nodeName2BootstrappedTraces.getOrPut(nodeName) { mutableListOf() }.add(demo)
                         }
-                        bootstrappedIndices.add(index)
-                        break // Move to the next example
+                        bootstrapCount++
+                        break // Move on to the next example
                     }
 
                     is BootstrapOutcome.Failure.MetricNotPassed -> {
@@ -241,12 +242,7 @@ public class BootstrapFewShot(
             }
         }
 
-        // Training examples that were NOT bootstrapped remain ordinary examples, i.e., labeled few shot examples
-        // Our optimizer shuffles them
-        val notBootstrapped = trainset.filterIndexed { index, _ -> index !in bootstrappedIndices }
-            .shuffled(random)
-
-        return nodeName2BootstrappedTraces to notBootstrapped
+        return nodeName2BootstrappedTraces
     }
 
     /**
@@ -291,6 +287,8 @@ public class BootstrapFewShot(
         // Filter demos: remove demos whose input and output both come from the
         // current example's data to prevent parroting the ground truth.
         val exampleValues = example.data.values.toSet()
+        // TODO: [Andrei] This doesn't make any sense, we should clean up the semantics of the
+        //  demonstrations passed in the train set
         val filteredDemos = baseConfig.demonstrations.mapValues { (_, demos) ->
             demos.filterNot { it.input in exampleValues && it.output in exampleValues }
         }
@@ -300,12 +298,9 @@ public class BootstrapFewShot(
         )
 
         // Run agent
-        val output: TOutput
-        try {
-            val input = inputFromExample(example)
-            output = withContext(filteredConfig) {
-                tracingAgent.run(input)
-            }
+        val input = inputFromExample(example)
+        val output = try {
+            withContext(filteredConfig) { tracingAgent.run(input) }
         } catch (e: Exception) {
             return BootstrapOutcome.Failure.ExceptionRaised(e)
         }
@@ -334,7 +329,7 @@ public class BootstrapFewShot(
      *
      * For each optimizable node:
      * 1. Takes up to [maxBootstrappedDemos] bootstrapped traces
-     * 2. Fills remaining slots (up to [maxLabeledDemos]) with labeled demos from the node's demonstrations
+     * 2. Fills remaining slots (up to [maxTotalDemos]) with labeled demos from the node's demonstrations
      */
     private fun buildOptimizationConfig(
         optimizableNodes: List<OptimizableNode<*, *>>,
@@ -346,7 +341,7 @@ public class BootstrapFewShot(
             val bootstrapped = (bootstrappedTraces[node.name] ?: emptyList())
                 .take(maxBootstrappedDemos)
 
-            val remaining = (maxLabeledDemos - bootstrapped.size).coerceAtLeast(0)
+            val remaining = (maxTotalDemos - bootstrapped.size).coerceAtLeast(0)
 
             val labeled = if (remaining > 0) {
                 sampleLabeledDemonstrations(node.demonstrations, remaining, random)

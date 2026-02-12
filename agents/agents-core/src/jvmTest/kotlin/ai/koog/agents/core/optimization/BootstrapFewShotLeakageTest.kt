@@ -145,7 +145,7 @@ class BootstrapFewShotLeakageTest {
         val result = runBlocking {
             val optimizer = BootstrapFewShot(
                 maxBootstrappedDemos = 1,
-                maxLabeledDemos = 1,  // Enable LabeledFewShot so teacher has demos to potentially leak
+                maxTotalDemos = 1,  // Enable LabeledFewShot so teacher has demos to potentially leak
                 maxRounds = 1,
             )
 
@@ -193,7 +193,7 @@ class BootstrapFewShotLeakageTest {
         runBlocking {
             val optimizer = BootstrapFewShot(
                 maxBootstrappedDemos = 1,
-                maxLabeledDemos = 1,
+                maxTotalDemos = 1,
                 maxRounds = 1,
             )
 

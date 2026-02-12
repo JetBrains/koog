@@ -95,7 +95,7 @@ class BootstrapFewShotTest {
         val executor = createMockExecutor(correct)
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = maxBootstrappedDemos,
-            maxLabeledDemos = maxLabeledDemos,
+            maxTotalDemos = maxLabeledDemos,
             maxRounds = 1,
         )
 
