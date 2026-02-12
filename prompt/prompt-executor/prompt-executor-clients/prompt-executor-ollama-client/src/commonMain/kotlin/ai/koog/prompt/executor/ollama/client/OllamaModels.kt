@@ -1,12 +1,16 @@
-package ai.koog.prompt.llm
+package ai.koog.prompt.executor.ollama.client
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import kotlin.jvm.JvmField
 
 /**
  * Represents a collection of predefined Large Language Models (LLM) categorized by makers.
  * Each maker contains specific models with configurations such as unique identifiers and capabilities.
  */
-public object OllamaModels {
+public object OllamaModels : LLModelDefinitions {
     /**
      *  The Groq object represents the configuration for the Groq large language model (LLM).
      *  It contains the predefined model specifications for Groq's LLMs, including their identifiers
@@ -326,5 +330,136 @@ public object OllamaModels {
             ),
             contextLength = 16_384,
         )
+    }
+
+    /**
+     * Ollama embedding models.
+     *
+     * Models are sourced from https://ollama.com/blog/embedding-models and other official Ollama resources.
+     * Each model has a specific purpose and performance characteristics.
+     */
+    public object Embeddings {
+        /**
+         * Nomic's text embedding model, optimized for text embeddings.
+         * A good general-purpose embedding model.
+         *
+         * Parameters: 137M
+         * Dimensions: 768
+         * Context Length: 8192
+         * Performance: High-quality embeddings for semantic search and text similarity tasks
+         * Tradeoffs: Balanced between quality and efficiency
+         */
+        @JvmField
+        public val NOMIC_EMBED_TEXT: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "nomic-embed-text",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 2_048,
+        )
+
+        /**
+         * All MiniLM embedding model, a lightweight and efficient model.
+         *
+         * Parameters: 33M
+         * Dimensions: 384
+         * Context Length: 512
+         * Performance: Fast inference with good quality for general text embeddings
+         * Tradeoffs: Smaller model size with reduced context length, but very efficient
+         */
+        @JvmField
+        public val ALL_MINI_LM: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "all-minilm",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512,
+        )
+
+        /**
+         * Multilingual E5 embedding model, supports multiple languages.
+         *
+         * Parameters: 300M
+         * Dimensions: 768
+         * Context Length: 512
+         * Performance: Strong performance across 100+ languages
+         * Tradeoffs: Larger model size but provides excellent multilingual capabilities
+         */
+        @JvmField
+        public val MULTILINGUAL_E5: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "zylonai/multilingual-e5-large",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512,
+        )
+
+        /**
+         * BGE Large embedding model, optimized for English text.
+         *
+         * Parameters: 335M
+         * Dimensions: 1024
+         * Context Length: 512
+         * Performance: Excellent for English text retrieval and semantic search
+         * Tradeoffs: Larger model size but provides high-quality embeddings
+         */
+        @JvmField
+        public val BGE_LARGE: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "bge-large",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512,
+        )
+
+        /**
+         * Represents the model ID for the MXBAI Embed Large model.
+         *
+         * This model ID identifies the "mxbai-embed-large" embedding configuration
+         * within the Ollama framework, which is designed for creating high-dimensional
+         * embeddings of textual data.
+         *
+         * It can be used in components that require referencing or interacting
+         * with this specific model configuration.
+         */
+        @JvmField
+        public val MXBAI_EMBED_LARGE: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "mxbai-embed-large",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512,
+        )
+    }
+
+    /**
+     * List of the supported models by the Anthropic provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        Groq.LLAMA_3_GROK_TOOL_USE_8B,
+        Groq.LLAMA_3_GROK_TOOL_USE_70B,
+        Meta.LLAMA_3_2,
+        Meta.LLAMA_3_2_3B,
+        Meta.LLAMA_4,
+        Meta.LLAMA_GUARD_3,
+        Alibaba.QWEN_2_5_05B,
+        Alibaba.QWEN_3_06B,
+        Alibaba.QWQ_32B,
+        Alibaba.QWQ,
+        Alibaba.QWEN_CODER_2_5_32B,
+        Granite.GRANITE_3_2_VISION,
+        Embeddings.NOMIC_EMBED_TEXT,
+        Embeddings.ALL_MINI_LM,
+        Embeddings.MULTILINGUAL_E5,
+        Embeddings.BGE_LARGE,
+        Embeddings.MXBAI_EMBED_LARGE,
+    )
+
+    /**
+     * Custom models added to the Anthropic provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Ollama) { "Model provider must be Ollama" }
+        customModels.add(model)
     }
 }

@@ -2,9 +2,10 @@ package ai.koog.integration.tests.mcp
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.mcp.McpTool
 import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.agents.mcp.metadata.McpMetadataKeys
 import ai.koog.agents.mcp.server.startSseMcpServer
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
@@ -15,10 +16,10 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.maps.shouldContain
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.types.shouldBeTypeOf
-import io.kotest.matchers.types.shouldNotBeTypeOf
 import io.ktor.server.netty.Netty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -29,6 +30,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(InternalAgentsApi::class)
 class McpServerTest {
 
     companion object {
@@ -42,7 +44,7 @@ class McpServerTest {
     @MethodSource("getModels")
     fun integration_testMcpServerWithSSETransport(model: LLModel) = runTest(timeout = 1.minutes) {
         val randomNumberTool = RandomNumberTool()
-        randomNumberTool.shouldNotBeTypeOf<McpTool>()
+        randomNumberTool.metadata shouldBe emptyMap()
 
         val (server, connectors) = startSseMcpServer(
             factory = Netty,
@@ -57,14 +59,12 @@ class McpServerTest {
         try {
             val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    McpToolRegistryProvider.fromTransport(
-                        transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$port")
-                    )
+                    McpToolRegistryProvider.fromSseUrl("http://localhost:$port")
                 }
             }
 
             toolRegistry.tools.map { it.descriptor }.shouldContainExactly(randomNumberTool.descriptor)
-            toolRegistry.tools.forEach { it.shouldBeTypeOf<McpTool>() }
+            toolRegistry.tools.forEach { it.metadata shouldContain (McpMetadataKeys.ToolId to it.name) }
 
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(40.seconds) {

@@ -33,7 +33,7 @@ To install the feature and configure event handlers for the agent, do the follow
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 val agent = AIAgent(
     promptExecutor = simpleOllamaAIExecutor(),
@@ -69,7 +69,7 @@ This function also installs the event handler feature and configures event handl
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 -->
 ```kotlin
 val agent = AIAgent(

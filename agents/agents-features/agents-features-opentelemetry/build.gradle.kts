@@ -18,6 +18,7 @@ kotlin {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-utils"))
                 api(libs.kotlinx.serialization.json)
+                implementation(project(":agents:agents-mcp-metadata"))
             }
         }
 
@@ -43,7 +44,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
-
+                implementation(libs.opentelemetry.sdk.testing)
                 implementation(libs.junit.jupiter.params)
             }
         }

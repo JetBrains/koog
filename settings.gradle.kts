@@ -26,6 +26,7 @@ include(":agents:agents-features:agents-features-a2a-server")
 include(":agents:agents-features:agents-features-a2a-client")
 
 include(":agents:agents-mcp")
+include(":agents:agents-mcp-metadata")
 include(":agents:agents-mcp-server")
 include(":agents:agents-test")
 include(":agents:agents-tools")

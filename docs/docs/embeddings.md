@@ -23,7 +23,7 @@ For installation and running instructions, refer to the [official Ollama GitHub 
 
 <!--- INCLUDE
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import kotlinx.coroutines.runBlocking
 -->
@@ -33,7 +33,7 @@ fun main() {
         // Create an OllamaClient instance
         val client = OllamaClient()
         // Create an embedder
-        val embedder = LLMEmbedder(client, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+        val embedder = LLMEmbedder(client, OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
         // Create embeddings
         val embedding = embedder.embed("This is the text to embed")
         // Print embeddings to the output
