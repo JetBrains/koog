@@ -8,6 +8,8 @@ import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
+import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
+import ai.koog.agents.core.dsl.builder.ParallelResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -18,6 +20,7 @@ import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.agent.FlowDataType
 import ai.koog.protocol.agent.agents.parallel.FlowParallelAgent
+import ai.koog.protocol.agent.agents.parallel.ParallelMergeCondition
 import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformAgent
@@ -249,11 +252,13 @@ public object KoogStrategyFactory {
                 name = agent.name,
                 nodes = parallelAgents,
                 merge = {
-                    // TODO: Here, the JSON should define the defined accessors for a result, e.g., use the 'results' keyword
-                    //  results.1.output
-                    //  results.2.name
-                    //  results.3.input
-                    results.first().nodeResult
+                    // Evaluate the merge condition to select the appropriate result
+                    val selectedOutput = evaluateMergeCondition(results, agent.parameters.merge)
+
+                    ParallelNodeExecutionResult(
+                        selectedOutput,
+                        results.first().nodeResult.context
+                    )
                 }
             )
 
@@ -337,91 +342,29 @@ public object KoogStrategyFactory {
      * @return true if the condition is satisfied
      */
     private fun evaluateCondition(output: FlowDataType, condition: FlowTransitionCondition): Boolean {
-        // String / Boolean / Double / Int vs. String / Boolean / Double / Int
-        val conditionValue: Comparable<*> = when (condition.value) {
-            is FlowDataType.FlowBoolean -> condition.value.data
-            is FlowDataType.FlowInteger -> condition.value.data
-            is FlowDataType.FlowDouble -> condition.value.data
-            is FlowDataType.FlowString -> condition.value.data
-            else -> error("Unsupported condition type ${condition.value}")
-        }
-
         val conditionVariable = extractOutputValue(outputString = condition.variable)
 
-        // TODO: Add validation for conditionVariable
+        // Extract the value from the output based on the property path
         val outputValue: Comparable<*> = when (output) {
-            is FlowDataType.FlowBoolean -> output.data
-            is FlowDataType.FlowInteger -> output.data
-            is FlowDataType.FlowDouble -> output.data
-            is FlowDataType.FlowString -> output.data
             is FlowDataType.FlowCritiqueResult -> {
+                // Special handling for FlowCritiqueResult with nested properties
                 when (conditionVariable) {
                     "success" -> output.success
                     "feedback" -> output.feedback
                     else -> error("Unsupported condition variable: $conditionVariable")
                 }
             }
-            else -> error("Not primitive types are not yet supported")
+            else -> {
+                // For primitive types, extract the value directly using a shared helper
+                extractPrimitiveValue(output)
+            }
         }
 
-        return when (condition.operation) {
-            ConditionOperationKind.EQUALS -> outputValue == conditionValue
-            ConditionOperationKind.NOT_EQUALS -> outputValue != conditionValue
-            ConditionOperationKind.MORE -> {
-                when {
-                    outputValue is Number && conditionValue is Number ->
-                        outputValue.toDouble() > conditionValue.toDouble()
-                    outputValue is String && conditionValue is String ->
-                        outputValue.compareTo(conditionValue, ignoreCase = true) > 0
-                    else -> false
-                }
-            }
-            ConditionOperationKind.LESS -> {
-                when {
-                    outputValue is Number && conditionValue is Number ->
-                        outputValue.toDouble() < conditionValue.toDouble()
-                    outputValue is String && conditionValue is String ->
-                        outputValue.compareTo(conditionValue, ignoreCase = true) < 0
-                    else -> false
-                }
-            }
-            ConditionOperationKind.MORE_OR_EQUAL -> {
-                when {
-                    outputValue is Number && conditionValue is Number ->
-                        outputValue.toDouble() >= conditionValue.toDouble()
-                    outputValue is String && conditionValue is String ->
-                        outputValue.compareTo(conditionValue, ignoreCase = true) >= 0
-                    else -> false
-                }
-            }
-            ConditionOperationKind.LESS_OR_EQUAL -> {
-                when {
-                    outputValue is Number && conditionValue is Number ->
-                        outputValue.toDouble() <= conditionValue.toDouble()
-                    outputValue is String && conditionValue is String ->
-                        outputValue.compareTo(conditionValue, ignoreCase = true) <= 0
-                    else -> false
-                }
-            }
-            ConditionOperationKind.NOT -> {
-                when {
-                    outputValue is Boolean && conditionValue is Boolean -> outputValue != conditionValue
-                    else -> false
-                }
-            }
-            ConditionOperationKind.AND -> {
-                when {
-                    outputValue is Boolean && conditionValue is Boolean -> outputValue && conditionValue
-                    else -> false
-                }
-            }
-            ConditionOperationKind.OR -> {
-                when {
-                    outputValue is Boolean && conditionValue is Boolean -> outputValue || conditionValue
-                    else -> false
-                }
-            }
-        }
+        // Extract condition value using a shared helper
+        val conditionValue = extractPrimitiveValue(condition.value)
+
+        // Use shared comparison logic
+        return compareValues(outputValue, conditionValue, condition.operation)
     }
 
     /**
@@ -490,6 +433,179 @@ public object KoogStrategyFactory {
                 FlowDataType.FlowString(value)
             }
             else -> error("Not primitive types are not yet supported")
+        }
+    }
+
+    /**
+     * Evaluates a merge condition for parallel execution results.
+     *
+     * Parses the variable notation (e.g., "results.1.output") to:
+     * 1. Extract the index and property path
+     * 2. Navigate to the specified result and property
+     * 3. Extract the primitive value for comparison
+     * 4. Return the full FlowDataType output if the condition matches
+     *
+     * @param results The list of parallel execution results
+     * @param condition The merge condition to evaluate
+     * @return The FlowDataType output from the matching result
+     * @throws IllegalArgumentException if the condition format is invalid or no match is found
+     */
+    private fun evaluateMergeCondition(
+        results: List<ParallelResult<*, *>>,
+        condition: ParallelMergeCondition
+    ): FlowDataType {
+        // Parse the variable: "results.1.output" -> ["results", "1", "output"]
+        val parts = condition.variable.split(".")
+
+        if (parts.size != 3) {
+            error("Expected format for merge condition variable: 'results.<index>.<property>', got: ${condition.variable}")
+        }
+
+        if (parts[0] != "results") {
+            error("Expected 'results' keyword for accessing parallel results: 'results.<index>.<property>', got: ${condition.variable}")
+        }
+
+        val index = parts[1].toIntOrNull()
+            ?: error("Invalid index in merge condition variable: ${parts[1]}")
+
+        if (index < 0 || index >= results.size) {
+            error("Index out of bounds in merge condition: $index (available: 0..${results.size - 1})")
+        }
+
+        val property = parts[2]
+
+        // Get the result at the specified index
+        val result = results[index]
+
+        // Extract the FlowDataType based on the property
+        val flowDataType = extractPropertyFromParallelResult(result, property, index)
+
+        // Extract the primitive value for comparison
+        val primitiveValue = extractPrimitiveValue(flowDataType)
+
+        // Extract condition value
+        val conditionValue = extractPrimitiveValue(condition.value)
+
+        // Evaluate the condition using the shared comparison logic
+        val matches = compareValues(primitiveValue, conditionValue, condition.operation)
+
+        if (!matches) {
+            error("Merge condition not satisfied: ${condition.variable} ${condition.operation} $conditionValue")
+        }
+
+        // Return the full output FlowDataType from the result
+        return result.nodeResult.output as FlowDataType
+    }
+
+    /**
+     * Extracts a property from a parallel execution result.
+     *
+     * @param result The parallel execution result
+     * @param property The property name to extract (output, input, or name)
+     * @param index The result index (for error messages)
+     * @return The FlowDataType representing the requested property
+     */
+    private fun extractPropertyFromParallelResult(
+        result: ParallelResult<*, *>,
+        property: String,
+        index: Int
+    ): FlowDataType {
+        return when (property) {
+            "output" -> result.nodeResult.output as? FlowDataType
+                ?: error("Result output at index $index is not a FlowDataType")
+            "input" -> result.nodeInput as? FlowDataType
+                ?: error("Result input at index $index is not a FlowDataType")
+            "name" -> FlowDataType.FlowString(result.nodeName)
+            else -> error("Unsupported property in merge condition: $property (supported: output, input, name)")
+        }
+    }
+
+    /**
+     * Extracts a primitive comparable value from a FlowDataType.
+     *
+     * @param flowDataType The FlowDataType to extract from
+     * @return The primitive value (Boolean, Int, Double, or String)
+     */
+    private fun extractPrimitiveValue(flowDataType: FlowDataType): Comparable<*> {
+        return when (flowDataType) {
+            is FlowDataType.FlowBoolean -> flowDataType.data
+            is FlowDataType.FlowInteger -> flowDataType.data
+            is FlowDataType.FlowDouble -> flowDataType.data
+            is FlowDataType.FlowString -> flowDataType.data
+            else -> error("Cannot extract primitive value from FlowDataType: ${flowDataType::class.simpleName}")
+        }
+    }
+
+    /**
+     * Compares two primitive values using the specified operation.
+     *
+     * @param value1 The first value to compare
+     * @param value2 The second value to compare
+     * @param operation The comparison operation to perform
+     * @return true if the comparison is satisfied, false otherwise
+     */
+    private fun compareValues(
+        value1: Comparable<*>,
+        value2: Comparable<*>,
+        operation: ConditionOperationKind
+    ): Boolean {
+        return when (operation) {
+            ConditionOperationKind.EQUALS -> value1 == value2
+            ConditionOperationKind.NOT_EQUALS -> value1 != value2
+            ConditionOperationKind.MORE -> {
+                when {
+                    value1 is Number && value2 is Number ->
+                        value1.toDouble() > value2.toDouble()
+                    value1 is String && value2 is String ->
+                        value1.compareTo(value2, ignoreCase = true) > 0
+                    else -> false
+                }
+            }
+            ConditionOperationKind.LESS -> {
+                when {
+                    value1 is Number && value2 is Number ->
+                        value1.toDouble() < value2.toDouble()
+                    value1 is String && value2 is String ->
+                        value1.compareTo(value2, ignoreCase = true) < 0
+                    else -> false
+                }
+            }
+            ConditionOperationKind.MORE_OR_EQUAL -> {
+                when {
+                    value1 is Number && value2 is Number ->
+                        value1.toDouble() >= value2.toDouble()
+                    value1 is String && value2 is String ->
+                        value1.compareTo(value2, ignoreCase = true) >= 0
+                    else -> false
+                }
+            }
+            ConditionOperationKind.LESS_OR_EQUAL -> {
+                when {
+                    value1 is Number && value2 is Number ->
+                        value1.toDouble() <= value2.toDouble()
+                    value1 is String && value2 is String ->
+                        value1.compareTo(value2, ignoreCase = true) <= 0
+                    else -> false
+                }
+            }
+            ConditionOperationKind.NOT -> {
+                when {
+                    value1 is Boolean && value2 is Boolean -> value1 != value2
+                    else -> false
+                }
+            }
+            ConditionOperationKind.AND -> {
+                when {
+                    value1 is Boolean && value2 is Boolean -> value1 && value2
+                    else -> false
+                }
+            }
+            ConditionOperationKind.OR -> {
+                when {
+                    value1 is Boolean && value2 is Boolean -> value1 || value2
+                    else -> false
+                }
+            }
         }
     }
 

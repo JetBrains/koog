@@ -7,6 +7,7 @@ import ai.koog.protocol.agent.FlowAgentPrompt
 import ai.koog.protocol.agent.FlowAgentRuntimeKind
 import ai.koog.protocol.agent.agents.parallel.FlowParallelAgent
 import ai.koog.protocol.agent.agents.parallel.FlowParallelAgentParameters
+import ai.koog.protocol.agent.agents.parallel.ParallelMergeCondition
 import ai.koog.protocol.agent.agents.react.FlowReActAgent
 import ai.koog.protocol.agent.agents.react.FlowReActAgentParameters
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
@@ -16,6 +17,7 @@ import ai.koog.protocol.agent.agents.transform.FlowInputTransformParameters
 import ai.koog.protocol.agent.agents.transform.FlowInputTransformation
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgentParameters
+import ai.koog.protocol.flow.ConditionOperationKind
 import ai.koog.protocol.flow.FlowConfig
 import ai.koog.protocol.model.FlowAgentModel
 import ai.koog.protocol.model.FlowModel
@@ -136,12 +138,36 @@ public class FlowJsonConfigParser : FlowConfigParser {
             FlowAgentKind.PARALLEL -> {
                 val agentNames = params?.get("agents")?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }
                     ?: error("Missing <agents> parameter for parallel agent")
+
+                // Parse merge condition
+                val mergeJson = params.get("merge")?.jsonObject
+                    ?: error("Missing <merge> parameter for parallel agent")
+
+                val variable = mergeJson["variable"]?.jsonPrimitive?.content
+                    ?: error("Missing <variable> in merge condition")
+
+                val operation = mergeJson["operation"]?.jsonPrimitive?.content
+                    ?: error("Missing <operation> in merge condition")
+
+                val value = mergeJson["value"]?.jsonPrimitive
+                    ?: error("Missing <value> in merge condition")
+
+                val operationKind = ConditionOperationKind.entries
+                    .find { it.id.equals(operation, ignoreCase = true) }
+                    ?: error("Unsupported operation: $operation")
+
+                val mergeCondition = ParallelMergeCondition(
+                    variable = variable,
+                    operation = operationKind,
+                    value = value.toPrimitiveFlowDataType()
+                )
+
                 FlowParallelAgent(
                     name = name,
                     model = resolvedModel,
                     config = agentConfig,
                     prompt = agentPrompt,
-                    parameters = FlowParallelAgentParameters(agentNames)
+                    parameters = FlowParallelAgentParameters(agentNames, mergeCondition)
                 )
             }
         }
