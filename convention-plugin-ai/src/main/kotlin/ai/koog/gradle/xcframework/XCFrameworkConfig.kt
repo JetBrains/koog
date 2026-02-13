@@ -1,6 +1,7 @@
 package ai.koog.gradle.xcframework
 
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -34,9 +35,9 @@ object XCFrameworkConfig {
      * @param project The Gradle project
      */
     fun KotlinMultiplatformExtension.configureXCFrameworkIfRequested(project: Project) {
-        if (isEnabled(project)){
+        if (isEnabled(project)) {
             val xcf = project.XCFramework("Koog")
-            targets.withType(KotlinNativeTarget::class.java)
+            targets.withType<KotlinNativeTarget>()
                 .matching { it.konanTarget.family.isAppleFamily }
                 .configureEach {
                     binaries.framework {
@@ -59,8 +60,8 @@ object XCFrameworkConfig {
         project: Project,
         projectPaths: Set<String>
     ) {
-        if (isEnabled(project)){
-            targets.withType(KotlinNativeTarget::class.java).configureEach {
+        if (isEnabled(project)) {
+            targets.withType<KotlinNativeTarget>().configureEach {
                 binaries.withType(Framework::class.java).configureEach {
                     projectPaths.forEach {
                         export(project.project(it))
