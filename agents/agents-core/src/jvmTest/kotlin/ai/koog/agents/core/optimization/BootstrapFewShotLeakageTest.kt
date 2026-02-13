@@ -6,6 +6,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
+import ai.koog.agents.core.optimization.core.optimizableNode
 import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -141,7 +142,7 @@ class BootstrapFewShotLeakageTest {
         val result = runBlocking {
             val optimizer = BootstrapFewShot(
                 maxBootstrappedDemos = 1,
-                maxLabeledDemos = 1,  // Enable LabeledFewShot so teacher has demos to potentially leak
+                maxTotalDemos = 1,  // Enable LabeledFewShot so teacher has demos to potentially leak
                 maxRounds = 1,
             )
 
@@ -188,7 +189,7 @@ class BootstrapFewShotLeakageTest {
         runBlocking {
             val optimizer = BootstrapFewShot(
                 maxBootstrappedDemos = 1,
-                maxLabeledDemos = 1,
+                maxTotalDemos = 1,
                 maxRounds = 1,
             )
 

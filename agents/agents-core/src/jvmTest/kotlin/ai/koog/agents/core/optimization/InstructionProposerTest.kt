@@ -4,10 +4,11 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
+import ai.koog.agents.core.optimization.core.optimizableNode
 import ai.koog.agents.core.optimization.optimizers.mipro.InstructionProposer
 import ai.koog.agents.core.optimization.optimizers.mipro.InstructionProposerConfig
 import ai.koog.agents.core.optimization.optimizers.mipro.TIPS
-import ai.koog.agents.core.optimization.util.describeForOptimization
+import ai.koog.agents.core.optimization.optimizers.utils.describeForOptimization
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
@@ -22,7 +23,6 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class InstructionProposerTest {

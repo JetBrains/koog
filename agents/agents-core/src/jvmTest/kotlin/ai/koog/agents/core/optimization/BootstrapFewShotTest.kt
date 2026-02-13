@@ -8,8 +8,9 @@ import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationResult
+import ai.koog.agents.core.optimization.core.optimizableNode
+import ai.koog.agents.core.optimization.core.toAgent
 import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
-import ai.koog.agents.core.optimization.util.toAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -75,7 +76,7 @@ class BootstrapFewShotTest {
         val executor = createMockExecutor(correct)
         val optimizer = BootstrapFewShot(
             maxBootstrappedDemos = maxBootstrappedDemos,
-            maxLabeledDemos = maxLabeledDemos,
+            maxTotalDemos = maxLabeledDemos,
             maxRounds = 1,
         )
 
@@ -92,7 +93,7 @@ class BootstrapFewShotTest {
      * Runs the optimized agent and returns the captured prompts.
      * The prompts are in execution order: first the thinking node's prompt, then the answer node's.
      *
-     * Each prompt has the structure (from [defaultStringPromptFn]):
+     * Each prompt has the structure (from [ai.koog.agents.core.optimization.core.defaultStringPromptFn]):
      *   messages[0] = system(instruction)
      *   messages[1..2*N] = N demo pairs: user(demo.input), assistant(demo.output)
      *   messages[last] = user(actualInput)
@@ -189,19 +190,21 @@ class BootstrapFewShotTest {
         assertTrue(thinkingDemos.isNotEmpty(), "Thinking node should have demos")
         assertTrue(answerDemos.isNotEmpty(), "Answer node should have demos")
 
-        // Labeled demos come from trainset — no "(bootstrapped)" marker
+        // With maxBootstrappedDemos=0, no bootstrapping runs. Labeled demos come from
+        // non-bootstrapped dataset items (Example(input, label)), so every node gets
+        // the same (Question N, Answer N) pairs regardless of the node's role.
         for ((input, output) in thinkingDemos) {
             assertTrue(input.startsWith("Question "),
-                "Thinking labeled demo input should be a question, got: $input")
-            assertTrue(output.startsWith("Thinking ") && "(bootstrapped)" !in output,
-                "Thinking labeled demo output should be from trainset, got: $output")
+                "Labeled demo input should be a question, got: $input")
+            assertTrue(output.startsWith("Answer ") && "(bootstrapped)" !in output,
+                "Labeled demo output should be dataset label (Answer N), got: $output")
         }
 
         for ((input, output) in answerDemos) {
-            assertTrue(input.startsWith("Thinking "),
-                "Answer labeled demo input should be a thinking, got: $input")
+            assertTrue(input.startsWith("Question "),
+                "Labeled demo input should be a question, got: $input")
             assertTrue(output.startsWith("Answer "),
-                "Answer labeled demo output should be from trainset, got: $output")
+                "Labeled demo output should be dataset label (Answer N), got: $output")
         }
     }
 

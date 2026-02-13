@@ -6,8 +6,8 @@ import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.optimizers.BootstrapFewShot
-import ai.koog.agents.core.optimization.util.findOptimizableModules
-import ai.koog.agents.core.optimization.util.sampleLabeledDemonstrations
+import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
+import ai.koog.agents.core.optimization.optimizers.utils.sampleLabeledDemonstrations
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -83,7 +83,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
         return null
     }
 
-    val modules = strategy.findOptimizableModules()
+    val modules = strategy.findOptimizableNodes()
     if (modules.isEmpty()) return null
 
     // Output map: node name → mutable list of demo sets
@@ -119,7 +119,6 @@ public suspend fun <TInput, TOutput> generateDemoSets(
         for (module in modules) {
             val labeled = sampleLabeledDemonstrations(
                 module.demonstrations,
-                sample = true,
                 k = maxLabeledDemos,
                 random = random
             )
@@ -132,7 +131,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     adjustedCount--
     val unshuffledOptimizer = BootstrapFewShot(
         maxBootstrappedDemos = maxBootstrappedDemos,
-        maxLabeledDemos = maxLabeledDemos,
+        maxTotalDemos = maxLabeledDemos,
         maxRounds = maxRounds,
         maxErrors = maxErrors,
         metricThreshold = 1.0, // doesn't matter since metric is null
@@ -173,7 +172,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
 
                     val shuffledOptimizer = BootstrapFewShot(
                         maxBootstrappedDemos = params.numDemos,
-                        maxLabeledDemos = maxLabeledDemos,
+                        maxTotalDemos = maxLabeledDemos,
                         maxRounds = maxRounds,
                         maxErrors = maxErrors,
                         metricThreshold = metricThreshold ?: 1.0,
