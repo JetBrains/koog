@@ -55,7 +55,7 @@ public fun <TInput, TOutput> defaultPromptFn(
     inputSerializer: KSerializer<TInput>,
     outputSerializer: KSerializer<TOutput>,
 ): OptimizableNodePromptBuildFn<TInput, TOutput> {
-    val json = Json { isLenient = true; ignoreUnknownKeys = true }
+    val json = Json { prettyPrint = true; isLenient = true; ignoreUnknownKeys = true }
     return { instruction, demos, input ->
         prompt("optimizable-node") {
             system(instruction)
