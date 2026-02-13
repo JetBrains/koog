@@ -1,31 +1,3 @@
 {
-  "id": "real-flow",
-  "version": "1.0.0",
-  "description": "Real flow for testing purposes.",
-  "defaultModel": "anthropic/sonnet_4",
-  "agents": [
-    {
-      "name": "joke-generator-1",
-      "type": "task",
-      "model": "openai/gpt4o",
-      "params": {
-        "task": "Generate a joke about programming."
-      }
-    },
-    {
-      "name": "joke-generator-2",
-      "type": "task",
-      "model": "anthropic/sonnet_4",
-      "params": {
-        "task": "Generate a joke about cats."
-      }
-    },
-    {
-      "name": "parallel-joke-generator",
-      "type": "parallel",
-      "params": {
-        "agents": ["joke-generator-1", "joke-generator-2"]
-      }
-    }
-  ]
+
 }
