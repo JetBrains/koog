@@ -5,8 +5,8 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.optimization.core.OptimizableNode
 import ai.koog.agents.core.optimization.core.Dataset
-import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Demonstration
+import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
@@ -147,9 +147,7 @@ public class BootstrapFewShot(
         }
 
         // Bootstrap - collect traces from executions
-        // TODO: Double check if all required labeled demos are properly
-        //  injected into the joint config.
-        val (bootstrappedTraces, notBootstrappedDatasetItems) = bootstrap(
+        val bootstrappedTraces = bootstrap(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
             strategy = strategy,
@@ -161,7 +159,7 @@ public class BootstrapFewShot(
         )
 
         // Build joint config from bootstrapped and labeled demos
-        val config = buildOptimizationConfig(optimizableNodes, bootstrappedTraces, notBootstrappedDatasetItems)
+        val config = buildOptimizationConfig(optimizableNodes, bootstrappedTraces)
 
         val totalBootstrapped = bootstrappedTraces.values.sumOf { it.size }
 
@@ -193,7 +191,7 @@ public class BootstrapFewShot(
         trainset: Dataset<TInput, TOutput>,
         baseConfig: OptimizationConfig,
         metric: Metric<TOutput>?,
-    ): Pair<Map<String, MutableList<Demonstration<Any?, Any?>>>, List<Example<TInput, TOutput>>> {
+    ): Map<String, MutableList<Demonstration<Any?, Any?>>> {
         val nodeName2BootstrappedTraces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
         val bootstrappedIndices = mutableSetOf<Int>()
         var errorCount = 0
@@ -245,10 +243,7 @@ public class BootstrapFewShot(
         }
         logger.info { "Bootstrap complete: ${bootstrappedIndices.size} successful out of ${trainset.size} examples" }
 
-        val notBootstrapped = trainset.filterIndexed { index, _ -> index !in bootstrappedIndices }
-            .shuffled(random)
-
-        return nodeName2BootstrappedTraces to notBootstrapped
+        return nodeName2BootstrappedTraces
     }
 
     /**
@@ -331,12 +326,18 @@ public class BootstrapFewShot(
      *
      * For each optimizable node:
      * 1. Takes up to [maxBootstrappedDemos] bootstrapped traces
-     * 2. Fills remaining slots (up to [maxTotalDemos]) with labeled demos from the node's demonstrations
+     * 2. Fills remaining slots (up to [maxTotalDemos]) with labeled demos from the node's
+     *    own [OptimizableNode.demonstrations]
+     *
+     * Note: DSPy's original BootstrapFewShot fills remaining slots with training examples
+     * (input → final output), but this only works in DSPy's stringly-typed world. In our
+     * typed system, intermediate nodes (e.g., a "vote" node taking VoteInput) would get
+     * demos with mismatched types (e.g., PatientData), causing ClassCastExceptions.
+     * Using each node's own demonstrations ensures type safety.
      */
-    private fun <TInput, TOutput> buildOptimizationConfig(
+    private fun buildOptimizationConfig(
         optimizableNodes: List<OptimizableNode<*, *>>,
         bootstrappedTraces: Map<String, List<Demonstration<Any?, Any?>>>,
-        notBootstrappedDatasetItems: List<Example<TInput, TOutput>>,
     ): OptimizationConfig {
         val jointDemonstrations = mutableMapOf<String, List<Demonstration<*, *>>>()
 
@@ -347,19 +348,7 @@ public class BootstrapFewShot(
             val remaining = (maxTotalDemos - bootstrapped.size).coerceAtLeast(0)
 
             val labeled = if (remaining > 0) {
-                // The original BootstrapFewShot in DSPy does the following:
-                // when maxTotalDemos is bigger than maxBootstrappedDemos, it adds some more
-                // labeled examples from the original training set. It makes little sense,
-                // especially for intermediate nodes, since this action would semantically add
-                // Demonstration(inputToTheFirstNode, outputFromTheLastNode), but we keep this
-                // to reproduce the original behavior.
-                // We should use node.demonstrations for labeled fallback, not the training examples.
-                // The training examples only make sense as demos for an end-to-end pipeline (input → final output),
-                // not for intermediate nodes like "thinking".
-                // TODO: check what works better, using notBootstrappedDatasetItems.map { exampleToDemonstration(it) }
-                //  or node.demonstrations here (simply by evaluating both)
-                val labeledExamples = notBootstrappedDatasetItems.map { exampleToDemonstration(it) }
-                sampleLabeledDemonstrations(labeledExamples, remaining, random)
+                sampleLabeledDemonstrations(node.demonstrations, remaining, random)
             } else {
                 emptyList()
             }
@@ -370,9 +359,6 @@ public class BootstrapFewShot(
         return OptimizationConfig(demonstrations = jointDemonstrations)
     }
 
-    private fun <TInput, TOutput> exampleToDemonstration(
-        example: Example<TInput, TOutput>,
-    ) = Demonstration(input = example.input, output = example.label, isBootstrapped = false)
 }
 
 /**
