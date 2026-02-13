@@ -685,7 +685,6 @@ public class OpenTelemetry {
 
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, path)
-                spanCollector.collectSpan(executeToolSpan, patchedExecutionInfo)
 
                 // Metrics
                 metricCollector.storeMetricEvent(eventContext.toMetricEvent())
