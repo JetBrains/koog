@@ -23,7 +23,7 @@ import kotlin.reflect.typeOf
 
 private val logger = KotlinLogging.logger {}
 
-private val prettyJson = Json { prettyPrint = true; isLenient = true; ignoreUnknownKeys = true }
+private val prettyJson = Json { prettyPrint = false; isLenient = true; ignoreUnknownKeys = true }
 
 /**
  * Serialize [value] to pretty-printed JSON using the runtime [type], falling back to [toString] if
