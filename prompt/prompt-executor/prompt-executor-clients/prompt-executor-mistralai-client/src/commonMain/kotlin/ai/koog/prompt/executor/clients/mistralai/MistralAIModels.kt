@@ -171,7 +171,8 @@ public object MistralAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Document,
             ),
             contextLength = 128_000
         )
