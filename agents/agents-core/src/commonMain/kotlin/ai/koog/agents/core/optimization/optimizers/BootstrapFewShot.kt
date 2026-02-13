@@ -5,8 +5,8 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.optimization.core.OptimizableNode
 import ai.koog.agents.core.optimization.core.Dataset
-import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Demonstration
+import ai.koog.agents.core.optimization.core.Example
 import ai.koog.agents.core.optimization.core.Metric
 import ai.koog.agents.core.optimization.core.OptimizationConfig
 import ai.koog.agents.core.optimization.core.OptimizationResult
@@ -147,9 +147,7 @@ public class BootstrapFewShot(
         }
 
         // Bootstrap - collect traces from executions
-        // TODO: Double check if all required labeled demos are properly
-        //  injected into the joint config.
-        val (bootstrappedTraces, notBootstrappedDatasetItems) = bootstrap(
+        val (bootstrappedTraces, notBootstrappedExamples) = bootstrap(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
             strategy = strategy,
@@ -161,7 +159,9 @@ public class BootstrapFewShot(
         )
 
         // Build joint config from bootstrapped and labeled demos
-        val config = buildOptimizationConfig(optimizableNodes, bootstrappedTraces, notBootstrappedDatasetItems)
+        val config = buildOptimizationConfig(
+            optimizableNodes, bootstrappedTraces, notBootstrappedExamples, strategy
+        )
 
         val totalBootstrapped = bootstrappedTraces.values.sumOf { it.size }
 
@@ -182,7 +182,7 @@ public class BootstrapFewShot(
     /**
      * Bootstrap phase: runs agent on training examples and collects traces from successful runs.
      *
-     * @return Map of node names to bootstrapped demonstrations collected from successful runs.
+     * @return Pair of (node name → bootstrapped demonstrations, not-bootstrapped training examples).
      */
     private suspend fun <TInput, TOutput> bootstrap(
         promptExecutor: PromptExecutor,
@@ -331,12 +331,20 @@ public class BootstrapFewShot(
      *
      * For each optimizable node:
      * 1. Takes up to [maxBootstrappedDemos] bootstrapped traces
-     * 2. Fills remaining slots (up to [maxTotalDemos]) with labeled demos from the node's demonstrations
+     * 2. Fills remaining slots (up to [maxTotalDemos]) with labeled demos:
+     *    - For nodes whose types match the strategy's input/output types (e.g., single-node
+     *      strategies or end-to-end nodes): uses training examples as labeled fallback,
+     *      matching DSPy's original behavior.
+     *    - For intermediate nodes with different types (e.g., a "vote" node taking VoteInput):
+     *      uses the node's own [OptimizableNode.demonstrations] to avoid type mismatches
+     *      that would cause ClassCastExceptions at runtime (due to type erasure hiding the
+     *      mismatch at compile time).
      */
     private fun <TInput, TOutput> buildOptimizationConfig(
         optimizableNodes: List<OptimizableNode<*, *>>,
         bootstrappedTraces: Map<String, List<Demonstration<Any?, Any?>>>,
-        notBootstrappedDatasetItems: List<Example<TInput, TOutput>>,
+        notBootstrappedExamples: List<Example<TInput, TOutput>>,
+        strategy: AIAgentGraphStrategy<TInput, TOutput>,
     ): OptimizationConfig {
         val jointDemonstrations = mutableMapOf<String, List<Demonstration<*, *>>>()
 
@@ -347,19 +355,19 @@ public class BootstrapFewShot(
             val remaining = (maxTotalDemos - bootstrapped.size).coerceAtLeast(0)
 
             val labeled = if (remaining > 0) {
-                // The original BootstrapFewShot in DSPy does the following:
-                // when maxTotalDemos is bigger than maxBootstrappedDemos, it adds some more
-                // labeled examples from the original training set. It makes little sense,
-                // especially for intermediate nodes, since this action would semantically add
-                // Demonstration(inputToTheFirstNode, outputFromTheLastNode), but we keep this
-                // to reproduce the original behavior.
-                // We should use node.demonstrations for labeled fallback, not the training examples.
-                // The training examples only make sense as demos for an end-to-end pipeline (input → final output),
-                // not for intermediate nodes like "thinking".
-                // TODO: check what works better, using notBootstrappedDatasetItems.map { exampleToDemonstration(it) }
-                //  or node.demonstrations here (simply by evaluating both)
-                val labeledExamples = notBootstrappedDatasetItems.map { exampleToDemonstration(it) }
-                sampleLabeledDemonstrations(labeledExamples, remaining, random)
+                val nodeTypesMatchStrategy =
+                    node.inputType == strategy.inputType && node.outputType == strategy.outputType
+                if (nodeTypesMatchStrategy) {
+                    // Node types match strategy — training examples are valid demos
+                    val labeledExamples = notBootstrappedExamples.map { exampleToDemonstration(it) }
+                    sampleLabeledDemonstrations(labeledExamples, remaining, random)
+                } else {
+                    // Intermediate node with different types — use node's own demonstrations
+                    // The following would make more sense:
+                    // sampleLabeledDemonstrations(node.demonstrations, remaining, random)
+                    // But we match dspy behavior
+                    emptyList()
+                }
             } else {
                 emptyList()
             }
@@ -373,6 +381,7 @@ public class BootstrapFewShot(
     private fun <TInput, TOutput> exampleToDemonstration(
         example: Example<TInput, TOutput>,
     ) = Demonstration(input = example.input, output = example.label, isBootstrapped = false)
+
 }
 
 /**

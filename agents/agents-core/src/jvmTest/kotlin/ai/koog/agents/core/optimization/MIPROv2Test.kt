@@ -106,7 +106,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            createStrategy = { simpleStrategy },
+            strategy = simpleStrategy,
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -142,7 +142,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            createStrategy = { simpleStrategy },
+            strategy = simpleStrategy,
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -200,7 +200,7 @@ class MIPROv2Test {
             mipro.optimize(
                 promptExecutor = executor,
                 agentConfig = agentConfig,
-                createStrategy = { simpleStrategy },
+                strategy = simpleStrategy,
                 trainset = trainset,
                 metric = exactMatch,
                 valset = valset,
@@ -231,7 +231,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            createStrategy = { simpleStrategy },
+            strategy = simpleStrategy,
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -268,7 +268,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            createStrategy = { simpleStrategy },
+            strategy = simpleStrategy,
             trainset = trainset,
             metric = exactMatch,
             valset = valset,
@@ -305,7 +305,7 @@ class MIPROv2Test {
         val result = mipro.optimize(
             promptExecutor = executor,
             agentConfig = agentConfig,
-            createStrategy = { simpleStrategy },
+            strategy = simpleStrategy,
             trainset = trainset,
             metric = exactMatch,
             valset = null,
