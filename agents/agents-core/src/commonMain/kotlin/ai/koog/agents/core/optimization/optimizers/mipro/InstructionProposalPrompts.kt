@@ -4,7 +4,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 
 /**
- * Prompt builders for instruction proposal in MIPRO Step 2.
+ * Prompt builders for an instruction proposal in MIPRO Step 2.
  *
  * These functions construct Koog prompts for:
  * - DatasetDescriptor: Observe patterns in a batch of examples
@@ -13,10 +13,15 @@ import ai.koog.prompt.dsl.prompt
  * - GenerateModuleInstruction: Generate a new instruction given context
  */
 
+private const val DATASET_OBSERVATION_SYSTEM =
+    """Given several examples from a dataset please write observations about trends that hold for most or all of the samples.
+Some areas you may consider in your observations: topics, content, syntax, conciseness, etc.
+It will be useful to make an educated guess as to the nature of the task this dataset will enable. Don't be afraid to be creative."""
+
 /**
  * Formats a batch of pre-rendered example strings for display to the LLM.
  */
-internal fun formatExampleBatch(examples: List<String>): String {
+private fun formatExampleBatch(examples: List<String>): String {
     return examples.mapIndexed { index, example ->
         "Example ${index + 1}: $example"
     }.joinToString("\n")
@@ -25,14 +30,10 @@ internal fun formatExampleBatch(examples: List<String>): String {
 /**
  * Prompt to observe patterns in a batch of dataset examples.
  *
- * Corresponds to dspy's DatasetDescriptor signature.
+ * Corresponds to DSPy's DatasetDescriptor signature.
  */
 internal fun datasetDescriptorPrompt(exampleBatch: List<String>): Prompt = prompt("dataset-descriptor") {
-    system(
-        """Given several examples from a dataset please write observations about trends that hold for most or all of the samples.
-Some areas you may consider in your observations: topics, content, syntax, conciseness, etc.
-It will be useful to make an educated guess as to the nature of the task this dataset will enable. Don't be afraid to be creative."""
-    )
+    system(DATASET_OBSERVATION_SYSTEM)
     user(
         """EXAMPLES:
 ${formatExampleBatch(exampleBatch)}
@@ -42,9 +43,9 @@ Please write your observations about trends that hold for most or all of the sam
 }
 
 /**
- * Prompt to add observations to prior observations, or signal completion.
+ * Prompt to add observations to prior observations or signal completion.
  *
- * Corresponds to dspy's DatasetDescriptorWithPriorObservations signature.
+ * Corresponds to DSPy's DatasetDescriptorWithPriorObservations signature.
  */
 internal fun datasetDescriptorWithPriorObservationsPrompt(
     exampleBatch: List<String>,
@@ -70,7 +71,7 @@ Please add new observations or respond with 'COMPLETE' if the observations are c
 /**
  * Prompt to summarize observations into a brief 2-3 sentence summary.
  *
- * Corresponds to dspy's ObservationSummarizer signature.
+ * Corresponds to DSPy's ObservationSummarizer signature.
  */
 internal fun observationSummarizerPrompt(observations: String): Prompt = prompt("observation-summarizer") {
     system(
@@ -87,9 +88,9 @@ Please provide a two to three sentence summary of only the most significant high
 /**
  * Prompt to describe what the overall program does, given its code and an example.
  *
- * Corresponds to dspy's DescribeProgram signature.
+ * Corresponds to DSPy's DescribeProgram signature.
  *
- * @param programCode Structural representation of the program (from [describeForOptimization])
+ * @param programCode Structural representation of the program (from [ai.koog.agents.core.optimization.optimizers.utils.describeForOptimization])
  * @param programExample An example of the program in use (formatted task demos or trainset example)
  */
 internal fun describeProgramPrompt(programCode: String, programExample: String): Prompt = prompt("describe-program") {
@@ -112,7 +113,7 @@ Please describe what this program does and how it works."""
 /**
  * Prompt to describe a specific module's role within the broader program.
  *
- * Corresponds to dspy's DescribeModule signature.
+ * Corresponds to DSPy's DescribeModule signature.
  *
  * @param programCode Structural representation of the program
  * @param programDescription Description of what the overall program does
@@ -163,7 +164,7 @@ internal data class GenerateInstructionPromptConfig(
 /**
  * Prompt to generate a new instruction for a module.
  *
- * Corresponds to dspy's GenerateSingleModuleInstruction signature,
+ * Corresponds to DSPy's GenerateSingleModuleInstruction signature,
  * with conditional sections based on what context is available.
  */
 internal fun generateModuleInstructionPrompt(config: GenerateInstructionPromptConfig): Prompt =
@@ -173,54 +174,35 @@ internal fun generateModuleInstructionPrompt(config: GenerateInstructionPromptCo
         )
 
         val sections = buildString {
-            if (config.datasetSummary != null) {
-                appendLine("DATASET SUMMARY:")
-                appendLine(config.datasetSummary)
-                appendLine()
+            fun appendSection(header: String, content: String?) {
+                if (!content.isNullOrBlank()) {
+                    appendLine("$header:")
+                    appendLine(content)
+                    appendLine()
+                }
             }
 
-            if (config.programCode != null) {
-                appendLine("PROGRAM CODE:")
-                appendLine(config.programCode)
-                appendLine()
-            }
-
-            if (config.programDescription != null) {
-                appendLine("PROGRAM DESCRIPTION:")
-                appendLine(config.programDescription)
-                appendLine()
-            }
+            appendSection("DATASET SUMMARY", config.datasetSummary)
+            appendSection("PROGRAM CODE", config.programCode)
+            appendSection("PROGRAM DESCRIPTION", config.programDescription)
 
             appendLine("MODULE:")
             appendLine(config.moduleCodeString)
             appendLine()
 
-            if (config.moduleDescription != null) {
-                appendLine("MODULE DESCRIPTION:")
-                appendLine(config.moduleDescription)
-                appendLine()
-            }
+            appendSection("MODULE DESCRIPTION", config.moduleDescription)
 
             appendLine("TASK DEMO(S):")
             appendLine(config.taskDemos)
             appendLine()
 
-            if (config.previousInstructions != null && config.previousInstructions.isNotBlank()) {
-                appendLine("PREVIOUS INSTRUCTIONS:")
-                appendLine(config.previousInstructions)
-                appendLine()
-            }
+            appendSection("PREVIOUS INSTRUCTIONS", config.previousInstructions)
 
             appendLine("BASIC INSTRUCTION:")
             appendLine(config.basicInstruction)
 
-            if (config.tip != null && config.tip.isNotBlank()) {
-                appendLine()
-                appendLine("TIP:")
-                appendLine(config.tip)
-            }
+            appendSection("TIP", config.tip)
 
-            appendLine()
             appendLine("---")
             appendLine("Based on the above information, propose an improved instruction that will help the Language Model perform this task better. Output only the instruction text, nothing else.")
         }

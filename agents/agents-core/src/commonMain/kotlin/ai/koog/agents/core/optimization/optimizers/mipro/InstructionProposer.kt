@@ -5,6 +5,7 @@ import ai.koog.agents.core.optimization.core.OptimizableNode
 import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.optimizers.utils.describeForOptimization
+import ai.koog.agents.core.optimization.optimizers.utils.executeAndExtract
 import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -20,10 +21,12 @@ import kotlin.reflect.KType
 
 private val logger = KotlinLogging.logger {}
 
+private const val NO_TASK_DEMOS = "No task demos provided."
+
 /**
  * Tips for instruction generation, randomly selected to encourage diversity.
  *
- * Corresponds to dspy's TIPS dictionary in grounded_proposer.py.
+ * Corresponds to DSPy's TIPS dictionary in grounded_proposer.py.
  */
 public val TIPS: Map<String, String> = mapOf(
     "none" to "",
@@ -38,7 +41,7 @@ public val TIPS: Map<String, String> = mapOf(
  * Configuration for [InstructionProposer].
  *
  * @param useDatasetSummary Whether to generate and use a dataset summary for context
- * @param programAware Whether to include program structure description in context
+ * @param programAware Whether to include the program structure description in context
  * @param useTaskDemos Whether to include few-shot demo examples in context
  * @param numDemosInContext Maximum number of demo examples to include
  * @param useTip Whether to include a tip for instruction generation
@@ -65,10 +68,9 @@ public data class InstructionProposerConfig(
  * - Few-shot demo examples
  * - Random tips for diversity
  *
- * Corresponds to dspy's GroundedProposer class.
+ * Corresponds to DSPy's GroundedProposer class.
  *
  * @param strategy The strategy containing optimizable nodes to generate instructions for
- * @param trainset Training dataset used for context
  * @param promptExecutor Executor for running LLM prompts
  * @param llModel The LLM model to use for instruction generation
  * @param config Configuration options
@@ -76,7 +78,6 @@ public data class InstructionProposerConfig(
  */
 public class InstructionProposer private constructor(
     private val strategy: AIAgentGraphStrategy<*, *>,
-    private val renderedExamples: List<String>,
     private val promptExecutor: PromptExecutor,
     private val llModel: LLModel,
     private val config: InstructionProposerConfig,
@@ -85,6 +86,7 @@ public class InstructionProposer private constructor(
     private val datasetSummary: String?,
     private val programCode: String?,
 ) {
+    /** Factory for creating [InstructionProposer] instances. */
     public companion object {
         private const val MAX_INSTRUCT_IN_HISTORY = 5
 
@@ -118,11 +120,7 @@ public class InstructionProposer private constructor(
             }
 
             val datasetSummary = if (config.useDatasetSummary) {
-                try {
-                    createDatasetSummary(renderedExamples, promptExecutor, llModel)
-                } catch (_: Exception) {
-                    null
-                }
+                createDatasetSummary(renderedExamples, promptExecutor, llModel)
             } else null
 
             val programCode = if (config.programAware) {
@@ -135,7 +133,6 @@ public class InstructionProposer private constructor(
 
             return InstructionProposer(
                 strategy = strategy,
-                renderedExamples = renderedExamples,
                 promptExecutor = promptExecutor,
                 llModel = llModel,
                 config = config,
@@ -148,27 +145,18 @@ public class InstructionProposer private constructor(
     }
 
     /**
-     * Format a trainset example for use as the "program example" in [describeProgramPrompt].
-     * Matches DSPy's use of task_demos as program_example.
-     */
-    private fun formatTrainsetExample(): String {
-        if (renderedExamples.isEmpty()) return "No examples available."
-        return renderedExamples.first()
-    }
-
-    /**
      * Generate instruction candidates for all optimizable nodes in the strategy.
      *
      * For each node, generates N instruction candidates by varying:
      * - The demo set used for context
      * - The tip (if setTipRandomly is true)
      *
-     * @param demoCandidates Map from node name to list of demo sets (from Step 1).
+     * @param demoCandidates Map from node name to a list of demo sets (from Step 1).
      *  Each demo set is a list of [Demonstration]s with typed input/output.
      * @param numCandidates Number of instruction candidates to generate per node
      * @param parallelism Maximum number of concurrent instruction proposals per module.
      *  Set to 1 (default) for sequential execution.
-     * @return Map from node name to list of N instruction candidates
+     * @return Map from node name to a list of N instruction candidates
      */
     public suspend fun proposeInstructionsForProgram(
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
@@ -177,7 +165,6 @@ public class InstructionProposer private constructor(
         parallelism: Int = 1,
     ): Map<String, List<String>> {
         val modules = strategy.findOptimizableNodes()
-        val proposedInstructions = mutableMapOf<String, MutableList<String>>()
 
         // Gap 3: 50/50 coin flip to toggle instruction history for this round
         val effectiveUseHistory = if (config.setHistoryRandomly) random.nextBoolean() else config.useInstructHistory
@@ -193,33 +180,33 @@ public class InstructionProposer private constructor(
         // Pre-select tips from parent random before launching (for determinism)
         val preSelectedTips = (0 until numDemoSets).map { selectTip() }
 
-        for ((moduleIdx, module) in modules.withIndex()) {
-            val moduleName = module.name
-            logger.info { "Proposing instructions for module '${moduleName}' (${moduleIdx + 1}/${modules.size})..." }
+        return buildMap {
+            for ((moduleIdx, module) in modules.withIndex()) {
+                val moduleName = module.name
+                logger.info { "Proposing instructions for module '${moduleName}' (${moduleIdx + 1}/${modules.size})..." }
 
-            val semaphore = Semaphore(maxOf(1, parallelism))
-            val instructions = coroutineScope {
-                (0 until numDemoSets).map { demoSetIndex ->
-                    async {
-                        semaphore.withPermit {
-                            val instruction = proposeInstructionForNode(
-                                node = module,
-                                demoCandidates = demoCandidates,
-                                demoSetIndex = demoSetIndex,
-                                tip = preSelectedTips[demoSetIndex],
-                                effectiveUseHistory = effectiveUseHistory,
-                                previousInstructions = previousInstructions,
-                            )
-                            logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated for '$moduleName'" }
-                            instruction
+                val semaphore = Semaphore(maxOf(1, parallelism))
+                val instructions = coroutineScope {
+                    (0 until numDemoSets).map { demoSetIndex ->
+                        async {
+                            semaphore.withPermit {
+                                val instruction = proposeInstructionForNode(
+                                    node = module,
+                                    demoCandidates = demoCandidates,
+                                    demoSetIndex = demoSetIndex,
+                                    tip = preSelectedTips[demoSetIndex],
+                                    effectiveUseHistory = effectiveUseHistory,
+                                    previousInstructions = previousInstructions,
+                                )
+                                logger.info { "  Candidate ${demoSetIndex + 1}/$numDemoSets generated for '$moduleName'" }
+                                instruction
+                            }
                         }
-                    }
-                }.awaitAll()
+                    }.awaitAll()
+                }
+                put(moduleName, instructions)
             }
-            proposedInstructions[moduleName] = instructions.toMutableList()
         }
-
-        return proposedInstructions
     }
 
     /**
@@ -242,35 +229,23 @@ public class InstructionProposer private constructor(
         val basicInstruction = node.instruction
 
         // Gap 4: Per-call program description
-        val currentProgramDescription = if (userProgramDescription != null) {
-            userProgramDescription
-        } else if (config.programAware && programCode != null) {
-            try {
-                val prompt = describeProgramPrompt(programCode!!, taskDemos)
-                val responses = promptExecutor.execute(prompt, llModel)
-                extractAssistantContent(responses).ifBlank { null }
-            } catch (_: Exception) {
+        val currentProgramDescription = userProgramDescription
+            ?: if (config.programAware && programCode != null) {
+                val prompt = describeProgramPrompt(programCode, taskDemos)
+                promptExecutor.executeAndExtract(prompt, llModel)
+            } else {
                 null
             }
-        } else {
-            null
-        }
 
         // Gap 4: Per-call module description
-        val currentModuleDescription = if (node.description != null) {
-            node.description
-        } else if (config.programAware && programCode != null && currentProgramDescription != null) {
-            try {
+        val currentModuleDescription = node.description
+            ?: if (config.programAware && programCode != null && currentProgramDescription != null) {
                 // Gap 5: Pass taskDemos as programExample
-                val prompt = describeModulePrompt(programCode!!, currentProgramDescription, taskDemos, moduleCodeString)
-                val responses = promptExecutor.execute(prompt, llModel)
-                extractAssistantContent(responses).ifBlank { null }
-            } catch (_: Exception) {
+                val prompt = describeModulePrompt(programCode, currentProgramDescription, taskDemos, moduleCodeString)
+                promptExecutor.executeAndExtract(prompt, llModel)
+            } else {
                 null
             }
-        } else {
-            null
-        }
 
         // Gap 2: Format instruction history if enabled
         val historyString = if (effectiveUseHistory) {
@@ -293,13 +268,9 @@ public class InstructionProposer private constructor(
 
         val instructionPrompt = generateModuleInstructionPrompt(promptConfig)
 
-        return try {
-            val responses = promptExecutor.execute(instructionPrompt, llModel)
-            val proposedInstruction = extractAssistantContent(responses).trim()
-            stripInstructionPrefixes(proposedInstruction).ifBlank { basicInstruction }
-        } catch (_: Exception) {
-            basicInstruction
-        }
+        val proposedInstruction =
+            promptExecutor.executeAndExtract(instructionPrompt, llModel) ?: return basicInstruction
+        return stripInstructionPrefixes(proposedInstruction.trim()).ifBlank { basicInstruction }
     }
 
     /**
@@ -351,53 +322,42 @@ public class InstructionProposer private constructor(
         demoSetIndex: Int,
     ): String {
         if (!config.useTaskDemos || demoCandidates.isNullOrEmpty()) {
-            return "No task demos provided."
+            return NO_TASK_DEMOS
         }
 
         val moduleDemoCandidates = demoCandidates[moduleName]
         if (moduleDemoCandidates.isNullOrEmpty()) {
-            return "No task demos provided."
+            return NO_TASK_DEMOS
         }
 
-        // Get the current demo set and adjacent sets for more examples
-        val adjacentSets = buildList {
-            if (demoSetIndex < moduleDemoCandidates.size) {
-                add(moduleDemoCandidates[demoSetIndex])
-            }
-            for (i in (demoSetIndex + 1) until moduleDemoCandidates.size) {
-                add(moduleDemoCandidates[i])
-            }
-            for (i in 0 until demoSetIndex) {
-                add(moduleDemoCandidates[i])
-            }
+        // Default to no demos for the first demo set (index 0) — matches DSPy behavior
+        if (demoSetIndex == 0) {
+            return NO_TASK_DEMOS
         }
 
-        // Gather bootstrapped examples first, up to numDemosInContext
-        val examples = mutableListOf<String>()
-        for (demoSet in adjacentSets) {
-            for (demo in demoSet) {
-                if (demo.isBootstrapped && examples.size < config.numDemosInContext) {
-                    examples.add(formatDemonstrationAsExample(demo))
+        // Rotate demo sets so that demoSetIndex is first, wrapping around
+        val safeIndex = demoSetIndex.coerceAtMost(moduleDemoCandidates.size)
+        val rotatedSets = moduleDemoCandidates.subList(safeIndex, moduleDemoCandidates.size) +
+            moduleDemoCandidates.subList(0, safeIndex)
+
+        // Collect up to numDemosInContext examples, preferring bootstrapped ones
+        val limit = config.numDemosInContext
+        val allDemos = rotatedSets.flatten()
+        val examples = buildList {
+            for (demo in allDemos) {
+                if (size >= limit) break
+                if (demo.isBootstrapped) add(formatDemonstrationAsExample(demo))
+            }
+            if (size < limit) {
+                for (demo in allDemos) {
+                    if (size >= limit) break
+                    if (!demo.isBootstrapped) add(formatDemonstrationAsExample(demo))
                 }
             }
-            if (examples.size >= config.numDemosInContext) break
         }
 
-        // If we still need more, add non-bootstrapped demos
-        if (examples.size < config.numDemosInContext) {
-            for (demoSet in adjacentSets) {
-                for (demo in demoSet) {
-                    if (!demo.isBootstrapped && examples.size < config.numDemosInContext) {
-                        examples.add(formatDemonstrationAsExample(demo))
-                    }
-                }
-                if (examples.size >= config.numDemosInContext) break
-            }
-        }
-
-        // Default to no demos if first demo set (index 0) or no examples gathered
-        if (demoSetIndex == 0 || examples.isEmpty()) {
-            return "No task demos provided."
+        if (examples.isEmpty()) {
+            return NO_TASK_DEMOS
         }
 
         return examples.joinToString("\n\n")
@@ -419,7 +379,7 @@ public class InstructionProposer private constructor(
     }
 
     /**
-     * Select a tip based on configuration.
+     * Select a tip based on the configuration.
      */
     private fun selectTip(): String? {
         if (!config.useTip) return null
@@ -437,18 +397,16 @@ public class InstructionProposer private constructor(
      */
     private fun stripInstructionPrefixes(instruction: String): String {
         val prefixes = listOf(
-            "PROPOSED INSTRUCTION:",
-            "Proposed Instruction:",
-            "INSTRUCTION:",
-            "Instruction:",
-            "Here is",
-            "Here's",
+            "proposed instruction:",
+            "instruction:",
+            "here is",
+            "here's",
         )
 
         var result = instruction
         for (prefix in prefixes) {
             if (result.startsWith(prefix, ignoreCase = true)) {
-                result = result.removePrefix(prefix).trimStart()
+                result = result.drop(prefix.length).trimStart()
             }
         }
         return result.trim()
