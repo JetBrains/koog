@@ -1,9 +1,10 @@
 package ai.koog.agents.tools;
 
 import ai.koog.agents.core.tools.annotations.LLMDescription;
-import ai.koog.agents.tools.test.Payload;
+import ai.koog.agents.tools.test.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
-// TODO: Remove @LLMDescription, and fix koog/agents/agents-tools/src/jvmMain/kotlin/ai/koog/agents/core/tools/reflect/java/javaIUtils.kt so that it detects parameter names always (currently: arg0, arg1, arg2, etc. -- see /Users/Vadim.Briliantov/koog/agents/agents-tools/src/jvmTest/java/ai/koog/agents/tools/JavaMethodToolsTest.java)
 public class JavaToolbox {
 
     // primitives
@@ -29,5 +30,37 @@ public class JavaToolbox {
     // instance method with primitive
     public int inc(int x) {
         return x + 1;
+    }
+
+    public enum Color {
+        RED, GREEN, BLUE
+    }
+
+    public static String colorName(Color color) {
+        return color.name();
+    }
+
+
+    public static String complexInfo(Complex c) {
+        return c.getMeta() + ":" + c.getPayload().getName();
+    }
+
+    @LLMDescription(description = "Adds two numbers")
+    public static int describedAdd(int a, int b) {
+        return a + b;
+    }
+
+    public static String testNestedEnum(NestedEnumPayload p) {
+        return p.getOuter().name() + ":" + p.getInner().name();
+    }
+
+    public static String testEnumList(EnumListPayload p) {
+        return p.getEnums().stream().map(Enum::name).collect(Collectors.joining(","));
+    }
+
+    public static String testListOfLists(List<List<String>> list) {
+        return list.stream()
+            .map(inner -> String.join("-", inner))
+            .collect(Collectors.joining("|"));
     }
 }

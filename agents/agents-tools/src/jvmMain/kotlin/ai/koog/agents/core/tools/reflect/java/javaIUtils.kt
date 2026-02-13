@@ -197,7 +197,7 @@ public fun Parameter.getParameterName(): String? {
         val indexInJava = method.parameters.indexOf(this)
         if (indexInJava in valueParameters.indices) {
             val kName = valueParameters[indexInJava].name
-            if (kName != null && !kName.startsWith("arg")) return kName
+            if (kName != null) return kName
         }
     }
 
