@@ -14,6 +14,7 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
+import ai.koog.prompt.executor.clients.google.models.GoogleData.*
 import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingConfig
@@ -22,6 +23,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleFunctionDeclaration
 import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleModelsResponse
 import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GooglePart.*
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
@@ -483,7 +485,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             parts.forEach { part ->
                 when (part) {
                     is ContentPart.Text -> {
-                        add(GooglePart.Text(part.text))
+                        add(Text(part.text))
                     }
 
                     is ContentPart.Image -> {
@@ -492,13 +494,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                         }
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            is AttachmentContent.Binary -> Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
                         }
 
-                        add(GooglePart.InlineData(blob))
+                        add(InlineData(blob))
                     }
 
                     is ContentPart.Audio -> {
@@ -507,13 +509,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                         }
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            is AttachmentContent.Binary -> Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported audio attachment content: ${content::class}"
                             )
                         }
 
-                        add(GooglePart.InlineData(blob))
+                        add(InlineData(blob))
                     }
 
                     is ContentPart.File -> {
@@ -522,13 +524,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                         }
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            is AttachmentContent.Binary -> Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported file attachment content: ${content::class}"
                             )
                         }
 
-                        add(GooglePart.InlineData(blob))
+                        add(InlineData(blob))
                     }
 
                     is ContentPart.Video -> {
@@ -537,14 +539,16 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                         }
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            is AttachmentContent.Binary -> Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported video attachment content: ${content::class}"
                             )
                         }
 
-                        add(GooglePart.InlineData(blob))
+                        add(InlineData(blob))
                     }
+
+                    is ContentPart.Thought -> TODO("Thought content parts are not yet supported in user messages")
                 }
             }
         }

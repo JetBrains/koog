@@ -36,8 +36,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
-import ai.koog.prompt.streaming.emitTextDelta
-import ai.koog.prompt.streaming.emitToolCallDelta
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -300,11 +298,15 @@ public class OllamaClient @JvmOverloads constructor(
             while (!channel.isClosedForRead) {
                 val line = channel.readUTF8Line() ?: break
                 if (line.isBlank()) continue
-
                 try {
                     val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                     chunk.message?.let { message ->
-                        emitTextDelta(message.content)
+                        if(message.content.isNotEmpty()){
+                            emitTextDelta(message.content)
+                        }
+                        if(message.thinking.isNullOrEmpty().not()){
+                            emitReasoningDelta(message.thinking)
+                        }
                         message.toolCalls?.forEachIndexed { index, toolCall ->
                             val name = toolCall.function.name
                             val args = toolCall.function.arguments.toString()

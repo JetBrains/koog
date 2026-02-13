@@ -77,6 +77,12 @@ public suspend fun FlowCollector<StreamFrame>.emitReasoningComplete(
     emit(StreamFrame.ReasoningComplete(text, summary, encrypted, index))
 
 /**
+ * Emits a [StreamFrame.Append] with the given [text].
+ */
+public suspend fun FlowCollector<StreamFrame>.emitAppendThinking(text: String): Unit =
+    emit(StreamFrame.AppendThinking(text))
+
+/**
  * Emits a [StreamFrame.End] with the given [finishReason].
  */
 public suspend fun FlowCollector<StreamFrame>.emitEnd(
