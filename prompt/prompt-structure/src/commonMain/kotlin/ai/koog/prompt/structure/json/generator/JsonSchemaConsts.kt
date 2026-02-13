@@ -1,5 +1,8 @@
 package ai.koog.prompt.structure.json.generator
 
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.native.ObjCName
+
 /**
  * Collection of special constants, such as keys and data types, from JSON schema definition.
  */
@@ -46,6 +49,9 @@ public object JsonSchemaConsts {
         public const val BOOLEAN: String = "boolean"
         public const val ARRAY: String = "array"
         public const val OBJECT: String = "object"
+
+        @OptIn(ExperimentalObjCName::class)
+        @ObjCName("JSON_NULL")
         public const val NULL: String = "null"
     }
 }

@@ -2,6 +2,7 @@
 
 import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import ai.koog.gradle.tests.configureTests
+import ai.koog.gradle.xcframework.XCFrameworkConfig.configureXCFrameworkIfRequested
 import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
@@ -18,12 +19,15 @@ kotlin {
     // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
     // Tier 1
     iosSimulatorArm64()
-    iosX64()
-
-    // Tier 2
     iosArm64()
 
+    // Tier 2
+
     // Tier 3
+    iosX64()
+
+    // Configure XCFramework for iOS targets (opt-in via -Pkoog.build.xcframework=true)
+    configureXCFrameworkIfRequested(project)
 
     // Android
     androidTarget()

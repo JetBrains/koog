@@ -1,4 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import ai.koog.gradle.xcframework.XCFrameworkConfig.configureFrameworkExportsIfRequested
 
 group = rootProject.group
 version = rootProject.version
@@ -87,14 +88,16 @@ val included = setOf(
 )
 
 kotlin {
+    val projects = rootProject.subprojects
+        .filterNot { it.path in excluded }
+        .filter { it.buildFile.exists() }
+    val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
+
+    configureFrameworkExportsIfRequested(project, projectsPaths)
+
     sourceSets {
         commonMain {
             dependencies {
-                val projects = rootProject.subprojects
-                    .filterNot { it.path in excluded }
-                    .filter { it.buildFile.exists() }
-
-                val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 
                 val obsoleteIncluded = included - projectsPaths
                 require(obsoleteIncluded.isEmpty()) {
