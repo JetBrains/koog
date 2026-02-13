@@ -84,7 +84,7 @@ class OptimizationInfrastructureTest {
         val nodes = testStrategy.findOptimizableNodes()
         assertEquals(1, nodes.size)
 
-        val node =nodes[0]
+        val node = nodes[0]
         assertEquals("myNode", node.name)
         assertEquals("My instruction", node.instruction)
         assertEquals("My description", node.description)
@@ -111,7 +111,7 @@ class OptimizationInfrastructureTest {
         val nodes = testStrategy.findOptimizableNodes()
         assertEquals(1, nodes.size)
 
-        val node =nodes[0]
+        val node = nodes[0]
         assertEquals(1, node.demonstrations.size)
     }
 
