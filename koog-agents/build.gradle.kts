@@ -1,6 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
-import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import ai.koog.gradle.xcframework.XCFrameworkConfig.configureFrameworkExportsIfRequested
 
 group = rootProject.group
 version = rootProject.version
@@ -94,13 +93,7 @@ kotlin {
         .filter { it.buildFile.exists() }
     val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 
-    targets.withType<KotlinNativeTarget>().configureEach {
-        binaries.withType<Framework>().configureEach {
-            projectsPaths.forEach {
-                export(project(it))
-            }
-        }
-    }
+    configureFrameworkExportsIfRequested(project, projectsPaths)
 
     sourceSets {
         commonMain {

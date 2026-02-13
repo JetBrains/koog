@@ -50,7 +50,7 @@ jobs:
           JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
         run: |
           echo "Assembling XCFramework binary..."
-          ./gradlew :koog-agents:assembleKoogXCFramework --no-daemon --stacktrace
+          ./gradlew :koog-agents:assembleKoogXCFramework -Pkoog.build.xcframework=true --no-daemon --stacktrace
           echo "XCFramework binary assembled"
 
       # Uploading XCF binary on manual runs without polluting the release - for debugging & testing
