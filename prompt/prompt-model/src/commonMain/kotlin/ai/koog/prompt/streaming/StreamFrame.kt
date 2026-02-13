@@ -11,6 +11,15 @@ import kotlinx.serialization.json.jsonObject
  */
 @Serializable
 public sealed interface StreamFrame {
+    /**
+     * Represents a frame of a streaming response from a LLM that appends some text, while the model is still "thinking".
+     *
+     * @property text The text to append to the response.
+     */
+    @Serializable
+    public data class AppendThinking(
+        val text: String
+    ) : StreamFrame
 
     /**
      * Represents a frame of a streaming response from a LLM that appends some text.

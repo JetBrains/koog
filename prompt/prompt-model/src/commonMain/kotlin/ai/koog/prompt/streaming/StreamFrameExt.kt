@@ -24,6 +24,7 @@ public fun Message.Response.toStreamFrame(): StreamFrame =
  */
 public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
     var assistantContent: String? = null
+    var assistantThought: String? = null
     val toolCalls = mutableListOf<StreamFrame.ToolCall>()
     var end: StreamFrame.End? = null
 
@@ -32,6 +33,7 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
             is StreamFrame.Append -> assistantContent = (assistantContent ?: "") + frame.text
             is StreamFrame.ToolCall -> toolCalls += frame
             is StreamFrame.End -> end = frame
+            is StreamFrame.AppendThinking -> assistantThought = (assistantThought ?: "") + frame.text
         }
     }
 

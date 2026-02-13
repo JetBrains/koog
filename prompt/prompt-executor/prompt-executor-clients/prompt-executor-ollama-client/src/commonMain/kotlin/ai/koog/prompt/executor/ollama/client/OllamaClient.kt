@@ -35,6 +35,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitAppendThinking
 import ai.koog.prompt.streaming.emitToolCall
 import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -300,7 +301,12 @@ public class OllamaClient @JvmOverloads constructor(
             try {
                 val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                 chunk.message?.let { message ->
-                    emitAppend(message.content)
+                    if(message.content.isNotEmpty()){
+                        emitAppend(message.content)
+                    }
+                    if(message.thinking.isNullOrEmpty().not()){
+                        emitAppendThinking(message.thinking)
+                    }
                     message.toolCalls?.forEach { toolCall ->
                         emitToolCall(
                             id = null,

@@ -1183,6 +1183,7 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
     model: LLModel,
     tools: List<ToolDescriptor> = emptyList(),
     appendable: Appendable,
+    appendableThought: Appendable? = null,
     endMessages: MutableList<StreamFrame.End>,
     toolMessages: MutableList<StreamFrame.ToolCall>
 ) {
@@ -1191,6 +1192,7 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
             is StreamFrame.Append -> appendable.append(frame.text)
             is StreamFrame.End -> endMessages.add(frame)
             is StreamFrame.ToolCall -> toolMessages.add(frame)
+            is StreamFrame.AppendThinking -> appendableThought?.append(frame.text)
         }
     }
 }

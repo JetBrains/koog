@@ -7,7 +7,9 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import com.agentclientprotocol.common.Event.SessionUpdateEvent
 import com.agentclientprotocol.model.ContentBlock
+import com.agentclientprotocol.model.ContentBlock.*
 import com.agentclientprotocol.model.EmbeddedResourceResource
+import com.agentclientprotocol.model.EmbeddedResourceResource.*
 import com.agentclientprotocol.model.SessionUpdate
 import com.agentclientprotocol.model.SessionUpdate.AgentMessageChunk
 import com.agentclientprotocol.model.ToolCallId
@@ -67,7 +69,7 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                 }
 
                 is AttachmentContent.URL -> {
-                    ContentBlock.ResourceLink(
+                    ResourceLink(
                         name = this.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
                         mimeType = this.mimeType,
@@ -82,24 +84,24 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
 
         is ContentPart.File ->
             when (val content = this.content) {
-                is AttachmentContent.Binary.Base64 -> ContentBlock.Resource(
-                    resource = EmbeddedResourceResource.BlobResourceContents(
+                is AttachmentContent.Binary.Base64 -> Resource(
+                    resource = BlobResourceContents(
                         blob = content.base64,
                         uri = this.fileName ?: UNKNOWN_URI,
                         mimeType = this.mimeType
                     )
                 )
 
-                is AttachmentContent.Binary.Bytes -> ContentBlock.Resource(
-                    resource = EmbeddedResourceResource.BlobResourceContents(
+                is AttachmentContent.Binary.Bytes -> Resource(
+                    resource = BlobResourceContents(
                         blob = content.asBase64(),
                         uri = this.fileName ?: UNKNOWN_URI,
                         mimeType = this.mimeType
                     )
                 )
 
-                is AttachmentContent.PlainText -> ContentBlock.Resource(
-                    resource = EmbeddedResourceResource.TextResourceContents(
+                is AttachmentContent.PlainText -> Resource(
+                    resource = TextResourceContents(
                         text = content.text,
                         uri = this.fileName ?: UNKNOWN_URI,
                         mimeType = this.mimeType,
@@ -107,7 +109,7 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                 )
 
                 is AttachmentContent.URL -> {
-                    ContentBlock.ResourceLink(
+                    ResourceLink(
                         name = this.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
                         mimeType = this.mimeType,
@@ -127,7 +129,7 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
                 }
 
                 is AttachmentContent.URL -> {
-                    ContentBlock.ResourceLink(
+                    ResourceLink(
                         name = this.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
                         mimeType = this.mimeType,
@@ -143,6 +145,8 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
         is ContentPart.Video -> {
             throw IllegalArgumentException("Video content is not supported yet in Acp content blocks.")
         }
+
+        is ContentPart.Thought -> TODO("Thought content part type does not have a clear mapping to Acp content blocks and is not supported yet.")
     }
 }
 
