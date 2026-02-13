@@ -14,11 +14,29 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 private val logger = KotlinLogging.logger {}
+
+private val prettyJson = Json { prettyPrint = true; isLenient = true; ignoreUnknownKeys = true }
+
+/**
+ * Serialize [value] to pretty-printed JSON using the runtime [type], falling back to [toString] if
+ * serialization fails (e.g. for non-serializable types).
+ */
+internal fun serializeOrToString(value: Any?, type: KType): String {
+    return try {
+        val serializer = prettyJson.serializersModule.serializer(type)
+        prettyJson.encodeToString(serializer, value)
+    } catch (_: Exception) {
+        value.toString()
+    }
+}
 
 /**
  * Tips for instruction generation, randomly selected to encourage diversity.
@@ -108,7 +126,7 @@ public class InstructionProposer private constructor(
             config: InstructionProposerConfig = InstructionProposerConfig(),
             random: Random = Random.Default,
             programDescription: String? = null,
-            describeInput: (TInput) -> String = { it.toString() },
+            describeInput: (TInput) -> String = { serializeOrToString(it, strategy.inputType) },
         ): InstructionProposer {
             val renderedExamples = trainset.map { ex ->
                 buildString {
@@ -359,6 +377,10 @@ public class InstructionProposer private constructor(
             return "No task demos provided."
         }
 
+        val node = strategy.findOptimizableNodes().firstOrNull { it.name == moduleName }
+        val inputType = node?.inputType ?: typeOf<Any>()
+        val outputType = node?.outputType ?: typeOf<Any>()
+
         // Get the current demo set and adjacent sets for more examples
         val adjacentSets = buildList {
             if (demoSetIndex < moduleDemoCandidates.size) {
@@ -377,7 +399,7 @@ public class InstructionProposer private constructor(
         for (demoSet in adjacentSets) {
             for (demo in demoSet) {
                 if (demo.isBootstrapped && examples.size < config.numDemosInContext) {
-                    examples.add(formatDemonstrationAsExample(demo))
+                    examples.add(formatDemonstrationAsExample(demo, inputType, outputType))
                 }
             }
             if (examples.size >= config.numDemosInContext) break
@@ -388,7 +410,7 @@ public class InstructionProposer private constructor(
             for (demoSet in adjacentSets) {
                 for (demo in demoSet) {
                     if (!demo.isBootstrapped && examples.size < config.numDemosInContext) {
-                        examples.add(formatDemonstrationAsExample(demo))
+                        examples.add(formatDemonstrationAsExample(demo, inputType, outputType))
                     }
                 }
                 if (examples.size >= config.numDemosInContext) break
@@ -404,13 +426,18 @@ public class InstructionProposer private constructor(
     }
 
     /**
-     * Format a [Demonstration] as a string example for the LLM.
+     * Format a [Demonstration] as a string example for the LLM, using JSON serialization
+     * when available for consistency with runtime prompt formatting.
      */
-    private fun formatDemonstrationAsExample(demo: Demonstration<*, *>): String {
+    private fun formatDemonstrationAsExample(
+        demo: Demonstration<*, *>,
+        inputType: KType,
+        outputType: KType,
+    ): String {
         return buildString {
             appendLine("Input:")
-            appendLine(demo.input.toString().take(500))
-            val output = demo.output.toString()
+            appendLine(serializeOrToString(demo.input, inputType).take(500))
+            val output = serializeOrToString(demo.output, outputType)
             if (output.isNotBlank()) {
                 appendLine("Output:")
                 appendLine(output.take(500))

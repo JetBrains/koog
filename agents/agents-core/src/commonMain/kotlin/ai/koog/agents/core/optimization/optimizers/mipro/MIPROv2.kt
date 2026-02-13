@@ -151,7 +151,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
      * @param valset Optional validation set. If null, split from [trainset].
      * @param toolRegistry Tools available to the agent.
      * @param describeInput Renders an input value as a human-readable string for dataset
-     *  summarization. Defaults to [toString].
+     *  summarization. When null (default), uses JSON serialization with toString fallback.
      * @return The best [OptimizationResult] found during search.
      */
     public suspend fun <TInput, TOutput> optimize(
@@ -162,7 +162,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         metric: Metric<TOutput>,
         valset: Dataset<TInput, TOutput>? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-        describeInput: (TInput) -> String = { it.toString() },
+        describeInput: ((TInput) -> String)? = null,
     ): OptimizationResult {
         val random = Random(config.seed)
         // Create one strategy upfront for inspection (node discovery, descriptions, etc.)
@@ -212,7 +212,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             llModel = config.promptModel,
             config = config.proposerConfig,
             random = random,
-            describeInput = describeInput,
+            describeInput = describeInput ?: { serializeOrToString(it, strategy.inputType) },
         )
         val instructionCandidates = proposer.proposeInstructionsForProgram(
             demoCandidates = demoCandidates,
@@ -255,7 +255,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         metric: Metric<TOutput>,
         valset: Dataset<TInput, TOutput>? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-        describeInput: (TInput) -> String = { it.toString() },
+        describeInput: ((TInput) -> String)? = null,
     ): OptimizationResult = optimize(
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
