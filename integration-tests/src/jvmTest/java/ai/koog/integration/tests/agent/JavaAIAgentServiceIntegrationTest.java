@@ -5,14 +5,12 @@ import ai.koog.agents.core.agent.GraphAIAgent;
 import ai.koog.agents.core.agent.GraphAIAgentService;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaInteropUtils;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -108,8 +106,8 @@ public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
     public void integration_AIAgentServiceWithCustomToolRegistry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
-        ToolRegistry serviceToolRegistry = JavaInteropUtils.createToolRegistry(calculator);
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
+        ToolRegistry serviceToolRegistry = JavaUtils.createToolRegistry(calculator);
 
         GraphAIAgentService<String, String> service = AIAgentService.builder()
             .promptExecutor(createExecutor(model))
@@ -176,9 +174,9 @@ public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((context, input) -> {
                 String inputStr = (input instanceof String) ? (String) input : String.valueOf(input);
-                Message.Response response = JavaInteropUtils.requestLLM(context, inputStr, true);
+                Message.Response response = JavaUtils.requestLLM(context, inputStr, true);
                 if (response instanceof Message.Assistant) {
-                    return JavaInteropUtils.getAssistantContent((Message.Assistant) response);
+                    return JavaUtils.getAssistantContent((Message.Assistant) response);
                 }
                 return "Unexpected response type";
             })

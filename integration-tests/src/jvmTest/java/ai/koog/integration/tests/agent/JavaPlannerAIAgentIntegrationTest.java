@@ -2,6 +2,8 @@ package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
+import ai.koog.agents.core.tools.ToolRegistry;
+import ai.koog.agents.core.tools.ToolRegistryBuilder;
 import ai.koog.agents.planner.AIAgentPlanner;
 import ai.koog.agents.planner.AIAgentPlannerStrategy;
 import ai.koog.agents.planner.JavaAIAgentPlanner;
@@ -12,21 +14,22 @@ import ai.koog.agents.planner.goap.GOAPPlannerBuilder;
 import ai.koog.agents.planner.goap.Goal;
 import ai.koog.agents.planner.llm.SimpleLLMPlanner;
 import ai.koog.agents.planner.llm.SimplePlan;
+import ai.koog.integration.tests.utils.JavaUtils;
+import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.LLMClient;
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
+import static ai.koog.integration.tests.utils.JavaUtils.createOpenAIClient;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JavaPlannerAIAgentIntegrationTest {
-
     static class TestPlanner extends JavaAIAgentPlanner<String, String> {
 
         @Override
@@ -44,38 +47,42 @@ public class JavaPlannerAIAgentIntegrationTest {
 
         @Override
         protected Boolean isPlanCompleted(AIAgentFunctionalContext context, String state, String plan) {
-            return !state.equals(REQUEST);
+            return !state.equals(context.getAgentInput());
         }
     }
 
     private static final String STRATEGY_NAME = "my-strategy";
 
-    private static String getOpenAiApiKey() {
-        String key = System.getenv("OPEN_AI_API_TEST_KEY");
-        if (key == null) {
-            throw new IllegalArgumentException("OPEN_AI_API_TEST_KEY environment variable is required");
-        }
-        return key;
-    }
-
-    private static final LLMClient client = new OpenAILLMClient(getOpenAiApiKey());
+    private static final LLMClient client = createOpenAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
     private static final PromptExecutor promptExecutor = new MultiLLMPromptExecutor(client);
     private static final String SYSTEM_PROMPT = "You are a helpful assistant.";
     private static final String REQUEST = "What's 1 + 1?";
 
     @SuppressWarnings("unchecked")
     private static <Plan> void testPlanner(AIAgentPlanner<String, Plan> planner) {
+        testPlanner(planner, null, REQUEST, "2");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <Plan> void testPlanner(AIAgentPlanner<String, Plan> planner, @Nullable ToolRegistry toolRegistry, String request, String expectedResultPart) {
         AIAgentPlannerStrategy<String, Plan> strategy = new AIAgentPlannerStrategy<String, Plan>(STRATEGY_NAME, planner);
-        AIAgent<String, String> agent = (AIAgent<String, String>) (Object) PlannerAIAgent.<String, Plan>builder(strategy)
+        var builder = PlannerAIAgent.<String, Plan>builder(strategy)
             .promptExecutor(promptExecutor)
             .llmModel(OpenAIModels.Chat.GPT4o)
-            .systemPrompt(SYSTEM_PROMPT)
-            .build();
+            .systemPrompt(SYSTEM_PROMPT);
+
+        if (toolRegistry != null) {
+            builder.toolRegistry(toolRegistry);
+        }
+
+        AIAgent<String, String> agent = builder.build();
 
         assertNotNull(agent);
-        String result = agent.run(REQUEST);
+
+        String result = agent.run(request);
+
         assertNotNull(result);
-        assertTrue(result.contains("2"));
+        assertTrue(result.contains(expectedResultPart), "Result should contain: " + expectedResultPart + ", but was: " + result);
     }
 
     @Test
@@ -88,10 +95,13 @@ public class JavaPlannerAIAgentIntegrationTest {
 
     @Test
     @Retry
-    public void integration_testCustomPlanner() {
+    public void integration_testPlannerWithTools() {
         AIAgentPlanner<String, String> planner = new TestPlanner();
+        ToolRegistry toolRegistry = new ToolRegistryBuilder()
+            .tools(new JavaUtils.CalculatorTools())
+            .build();
 
-        testPlanner(planner);
+        testPlanner(planner, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");
     }
 
     @Test

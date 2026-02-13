@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.ToolCalls;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaInteropUtils;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
@@ -70,13 +70,13 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_RequestLLMStructuredSimple(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant that provides structured responses.")
                 .functionalStrategy((context, input) -> {
-                    CalculationResult calc = JavaInteropUtils.requestLLMStructuredBlocking(
+                    CalculationResult calc = JavaUtils.requestLLMStructuredBlocking(
                         context,
                         "Calculate 15 + 27 and return the result in the specified format",
                         CalculationResult.class
@@ -85,7 +85,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Calculate 15 + 27");
+        String result = JavaUtils.runAgentBlocking(agent, "Calculate 15 + 27");
 
         assertNotNull(result);
         assertTrue(result.contains("42"));
@@ -97,13 +97,13 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_RequestLLMStructuredComplex(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant that provides structured responses about people.")
                 .functionalStrategy((context, input) -> {
-                    PersonInfo person = JavaInteropUtils.requestLLMStructuredBlocking(
+                    PersonInfo person = JavaUtils.requestLLMStructuredBlocking(
                         context,
                         "Create a person profile with name 'Alice', age 30, and hobbies: reading, coding, hiking",
                         PersonInfo.class
@@ -126,13 +126,13 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_LLMWriteSession(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant.")
                 .functionalStrategy((context, input) ->
-                    JavaInteropUtils.llmWriteSession(context, writeSession -> {
+                    JavaUtils.llmWriteSession(context, writeSession -> {
                         writeSession.appendPrompt(prompt -> {
                             prompt.user("First question: What is 2+2?");
                             return null;
@@ -146,14 +146,14 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                         Message.Response response2 = writeSession.requestLLM();
 
                         if (response2 instanceof Message.Assistant) {
-                            return JavaInteropUtils.getAssistantContent((Message.Assistant) response2);
+                            return JavaUtils.getAssistantContent((Message.Assistant) response2);
                         }
                         return "Unexpected response type";
                     })
                 )
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Test");
+        String result = JavaUtils.runAgentBlocking(agent, "Test");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -165,28 +165,28 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_LLMReadSession(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant.")
                 .functionalStrategy((context, input) -> {
-                    Message.Response response = JavaInteropUtils.requestLLM(context, "What is 5+5?", true);
+                    Message.Response response = JavaUtils.requestLLM(context, "What is 5+5?", true);
 
-                    return JavaInteropUtils.llmReadSession(context, readSession -> {
+                    return JavaUtils.llmReadSession(context, readSession -> {
                         var messages = readSession.getPrompt().getMessages();
                         int historySize = messages.size();
 
                         if (response instanceof Message.Assistant) {
                             return "History size: " + historySize + ", Answer: " +
-                                JavaInteropUtils.getAssistantContent((Message.Assistant) response);
+                                JavaUtils.getAssistantContent((Message.Assistant) response);
                         }
                         return "Unexpected response type";
                     });
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Test");
+        String result = JavaUtils.runAgentBlocking(agent, "Test");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -200,15 +200,15 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
         List<Tool<?, ?>> tools = List.of(calculator.getAddTool());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a coordinator that delegates calculations.")
-                .toolRegistry(JavaInteropUtils.createToolRegistry(calculator))
+                .toolRegistry(JavaUtils.createToolRegistry(calculator))
                 .functionalStrategy((context, input) -> {
                     String subtaskResult = context.subtask("Calculate the sum of 10 and 20 using the add tool")
                         .withInput(input)
@@ -222,7 +222,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Perform calculation");
+        String result = JavaUtils.runAgentBlocking(agent, "Perform calculation");
 
         assertNotNull(result);
         assertTrue(result.contains("Subtask completed"));
@@ -235,15 +235,15 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
         List<Tool<?, ?>> tools = List.of(calculator.getAddTool(), calculator.getMultiplyTool());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a coordinator that delegates calculations.")
-                .toolRegistry(JavaInteropUtils.createToolRegistry(calculator))
+                .toolRegistry(JavaUtils.createToolRegistry(calculator))
                 .functionalStrategy((context, input) -> {
                     String subtaskResult = context.subtask("Calculate 5 + 3 and 4 * 6 using available tools")
                         .withInput(input)
@@ -257,7 +257,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Perform parallel calculations");
+        String result = JavaUtils.runAgentBlocking(agent, "Perform parallel calculations");
 
         assertNotNull(result);
         assertTrue(result.contains("Parallel subtask result"));
@@ -269,15 +269,15 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskSingleRunSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
         List<Tool<?, ?>> tools = List.of(calculator.getAddTool());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a coordinator.")
-                .toolRegistry(JavaInteropUtils.createToolRegistry(calculator))
+                .toolRegistry(JavaUtils.createToolRegistry(calculator))
                 .functionalStrategy((context, input) -> {
                     String subtaskResult = context.subtask("Add 7 and 8")
                         .withInput(input)
@@ -291,7 +291,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Calculate");
+        String result = JavaUtils.runAgentBlocking(agent, "Calculate");
 
         assertNotNull(result);
         assertTrue(result.contains("Single-run result"));
@@ -303,16 +303,16 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_ExecuteMultipleToolsParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a calculator. Use add and multiply tools.")
-                .toolRegistry(JavaInteropUtils.createToolRegistry(calculator))
+                .toolRegistry(JavaUtils.createToolRegistry(calculator))
                 .functionalStrategy((context, input) -> {
-                    Message.Response response = JavaInteropUtils.requestLLM(
+                    Message.Response response = JavaUtils.requestLLM(
                         context,
                         "Calculate 5+3 and 4*6. You can use multiple tools in parallel.",
                         true
@@ -323,10 +323,10 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                         calls.add((Message.Tool.Call) response);
 
                         if (!calls.isEmpty()) {
-                            var results = JavaInteropUtils.executeMultipleTools(context, calls, true);
-                            var responses = JavaInteropUtils.sendMultipleToolResults(context, results);
+                            var results = JavaUtils.executeMultipleTools(context, calls, true);
+                            var responses = JavaUtils.sendMultipleToolResults(context, results);
                             if (!responses.isEmpty() && responses.get(0) instanceof Message.Assistant) {
-                                return JavaInteropUtils.getAssistantContent((Message.Assistant) responses.get(0));
+                                return JavaUtils.getAssistantContent((Message.Assistant) responses.get(0));
                             }
                         }
                     }
@@ -335,7 +335,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Calculate");
+        String result = JavaUtils.runAgentBlocking(agent, "Calculate");
 
         assertNotNull(result);
     }
@@ -345,16 +345,16 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_ExecuteSingleTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You coordinate tool execution.")
-                .toolRegistry(JavaInteropUtils.createToolRegistry(calculator))
+                .toolRegistry(JavaUtils.createToolRegistry(calculator))
                 .functionalStrategy((context, input) -> {
-                    Message.Response response = JavaInteropUtils.requestLLM(
+                    Message.Response response = JavaUtils.requestLLM(
                         context,
                         "Use the add tool to calculate 10 + 5",
                         true
@@ -362,11 +362,11 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
 
                     if (response instanceof Message.Tool.Call) {
                         Message.Tool.Call toolCall = (Message.Tool.Call) response;
-                        var toolResult = JavaInteropUtils.executeTool(context, toolCall);
-                        var finalResponse = JavaInteropUtils.sendToolResult(context, toolResult);
+                        var toolResult = JavaUtils.executeTool(context, toolCall);
+                        var finalResponse = JavaUtils.sendToolResult(context, toolResult);
 
                         if (finalResponse instanceof Message.Assistant) {
-                            return JavaInteropUtils.getAssistantContent((Message.Assistant) finalResponse);
+                            return JavaUtils.getAssistantContent((Message.Assistant) finalResponse);
                         }
                     }
 
@@ -374,7 +374,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Test");
+        String result = JavaUtils.runAgentBlocking(agent, "Test");
 
         assertNotNull(result);
     }
@@ -384,23 +384,23 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_GetHistory(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant.")
                 .functionalStrategy((context, input) -> {
-                    JavaInteropUtils.requestLLM(context, "First question: What is 2+2?", true);
-                    JavaInteropUtils.requestLLM(context, "Second question: What is 3*3?", true);
+                    JavaUtils.requestLLM(context, "First question: What is 2+2?", true);
+                    JavaUtils.requestLLM(context, "Second question: What is 3*3?", true);
 
-                    var history = JavaInteropUtils.getHistory(context);
+                    var history = JavaUtils.getHistory(context);
                     int historySize = history.size();
 
                     return "History contains " + historySize + " messages";
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Test");
+        String result = JavaUtils.runAgentBlocking(agent, "Test");
 
         assertNotNull(result);
         assertTrue(result.contains("History contains"));

@@ -5,7 +5,7 @@ import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaInteropUtils;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
@@ -25,7 +25,7 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
 
     private String getAssistantContentOrDefault(Message.Response response, String defaultValue) {
         if (response instanceof Message.Assistant) {
-            return JavaInteropUtils.getAssistantContent((Message.Assistant) response);
+            return JavaUtils.getAssistantContent((Message.Assistant) response);
         }
         return defaultValue;
     }
@@ -36,15 +36,15 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
         Models.assumeAvailable(model.getProvider());
 
         // Test simple functional strategy with retry logic
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant.")
                 .functionalStrategy((context, input) -> {
                     for (int i = 0; i < 3; i++) {
                         String result = getAssistantContentOrDefault(
-                            JavaInteropUtils.requestLLM(context, input, true),
+                            JavaUtils.requestLLM(context, input, true),
                             ""
                         );
                         if (!result.isEmpty()) {
@@ -55,7 +55,7 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Say hello");
+        String result = JavaUtils.runAgentBlocking(agent, "Say hello");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -67,16 +67,16 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_MultiStepFunctionalStrategy(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant.")
                 .functionalStrategy((context, input) -> {
-                    Message.Response response1 = JavaInteropUtils.requestLLM(context, "First step: " + input, true);
+                    Message.Response response1 = JavaUtils.requestLLM(context, "First step: " + input, true);
                     String step1Result = getAssistantContentOrDefault(response1, "");
 
-                    Message.Response response2 = JavaInteropUtils.requestLLM(
+                    Message.Response response2 = JavaUtils.requestLLM(
                         context,
                         "Second step, previous result was: " + step1Result,
                         true
@@ -86,7 +86,7 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Count to 3");
+        String result = JavaUtils.runAgentBlocking(agent, "Count to 3");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -97,17 +97,17 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_FunctionalStrategyWithManualToolHandling(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaInteropUtils.createToolRegistry(calculator);
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
+        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculator);
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a calculator. Use the add tool to perform calculations.")
                 .toolRegistry(toolRegistry)
                 .functionalStrategy((context, input) -> {
-                    Message.Response currentResponse = JavaInteropUtils.requestLLM(
+                    Message.Response currentResponse = JavaUtils.requestLLM(
                         context,
                         "Calculate: " + input + ". You MUST use the add tool.",
                         true
@@ -116,20 +116,20 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
                     int maxIterations = 5;
                     for (int i = 0; i < maxIterations && currentResponse instanceof Message.Tool.Call; i++) {
                         Message.Tool.Call toolCall = (Message.Tool.Call) currentResponse;
-                        ReceivedToolResult toolResult = JavaInteropUtils.executeTool(context, toolCall);
-                        currentResponse = JavaInteropUtils.sendToolResult(context, toolResult);
+                        ReceivedToolResult toolResult = JavaUtils.executeTool(context, toolCall);
+                        currentResponse = JavaUtils.sendToolResult(context, toolResult);
                     }
 
                     if (currentResponse instanceof Message.Assistant) {
-                        return JavaInteropUtils.getAssistantContent((Message.Assistant) currentResponse);
+                        return JavaUtils.getAssistantContent((Message.Assistant) currentResponse);
                     } else if (currentResponse instanceof Message.Tool.Call) {
-                        return "Max iterations reached, last tool: " + JavaInteropUtils.getToolName((Message.Tool.Call) currentResponse);
+                        return "Max iterations reached, last tool: " + JavaUtils.getToolName((Message.Tool.Call) currentResponse);
                     }
                     return "Unexpected response type";
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "10 + 5");
+        String result = JavaUtils.runAgentBlocking(agent, "10 + 5");
 
         assertNotNull(result);
         assertFalse(result.isBlank());
@@ -143,21 +143,21 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
 
         MultiLLMPromptExecutor executor = createExecutor(model);
 
-        JavaInteropUtils.CalculatorTools calculator = new JavaInteropUtils.CalculatorTools();
+        JavaUtils.CalculatorTools calculator = new JavaUtils.CalculatorTools();
 
         List<Tool<?, ?>> calculatorTools = List.of(
             calculator.getAddTool(),
             calculator.getMultiplyTool()
         );
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(executor)
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant that coordinates calculations.")
-                .toolRegistry(JavaInteropUtils.createToolRegistry(calculator))
+                .toolRegistry(JavaUtils.createToolRegistry(calculator))
                 .functionalStrategy((context, input) -> {
-                    String subtaskResult = JavaInteropUtils.runSubtask(
+                    String subtaskResult = JavaUtils.runSubtask(
                         context,
                         "Calculate: " + input,
                         input,
@@ -170,7 +170,7 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "What is 5 + 3?");
+        String result = JavaUtils.runAgentBlocking(agent, "What is 5 + 3?");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -181,13 +181,13 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_CustomStrategyWithValidation(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = JavaInteropUtils.buildFunctionalAgent(
-            JavaInteropUtils.createAgentBuilder()
+        AIAgent<String, String> agent = JavaUtils.buildFunctionalAgent(
+            JavaUtils.createAgentBuilder()
                 .promptExecutor(createExecutor(model))
                 .llmModel(model)
                 .systemPrompt("You are a helpful assistant that generates JSON.")
                 .functionalStrategy((context, input) -> {
-                    Message.Response response = JavaInteropUtils.requestLLM(
+                    Message.Response response = JavaUtils.requestLLM(
                         context,
                         "Generate a JSON object with 'status' field set to 'success'",
                         true
@@ -201,7 +201,7 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
                 })
         );
 
-        String result = JavaInteropUtils.runAgentBlocking(agent, "Generate status JSON");
+        String result = JavaUtils.runAgentBlocking(agent, "Generate status JSON");
 
         assertNotNull(result);
         assertFalse(result.isEmpty());

@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaInteropUtils;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.llm.LLModel;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,8 +30,8 @@ public class JavaAIAgentAdvancedFeaturesIntegrationTest extends KoogJavaTestBase
         AtomicBoolean agentStarted = new AtomicBoolean(false);
         AtomicBoolean agentCompleted = new AtomicBoolean(false);
 
-        JavaInteropUtils.TransactionTools transactionTools = new JavaInteropUtils.TransactionTools();
-        ToolRegistry toolRegistry = JavaInteropUtils.createToolRegistry(transactionTools);
+        JavaUtils.TransactionTools transactionTools = new JavaUtils.TransactionTools();
+        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(transactionTools);
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
