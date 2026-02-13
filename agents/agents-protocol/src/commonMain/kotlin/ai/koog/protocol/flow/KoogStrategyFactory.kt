@@ -68,14 +68,20 @@ public object KoogStrategyFactory {
         transition: FlowTransition,
     ) {
         val fromNode = collectedNodes.find { it.name == transition.from }
-            ?: error("Unable to find 'from' node for transition '${transition.transitionString}': ${transition.from}")
+            ?: error(
+                "Unable to find 'from' node for transition '${transition.transitionString}': '${transition.from}'. " +
+                    "Available nodes: ${collectedNodes.joinToString { it.name }}"
+            )
 
         if (transition.to == FINISH_NODE_PREFIX) {
             createEdgeToFinish(fromNode, transition.condition, transition.transformation)
             return
         }
         val toNode = collectedNodes.find { it.name == transition.to }
-            ?: error("Unable to find 'to' node for transition '${transition.transitionString}': ${transition.to}")
+            ?: error(
+                "Unable to find 'to' node for transition '${transition.transitionString}': '${transition.to}'. " +
+                    "Available nodes: ${collectedNodes.joinToString { it.name }}"
+            )
 
         createEdge(fromNode, toNode, transition.condition, transition.transformation)
     }
@@ -384,7 +390,10 @@ public object KoogStrategyFactory {
                 when (conditionVariable) {
                     "success" -> output.success
                     "feedback" -> output.feedback
-                    else -> error("Unsupported condition variable: $conditionVariable")
+                    else -> error(
+                        "Unsupported condition variable: '$conditionVariable' for FlowCritiqueResult. " +
+                            "Valid properties: 'success', 'feedback'"
+                    )
                 }
             }
             else -> {
@@ -467,17 +476,26 @@ public object KoogStrategyFactory {
         return when (valueString) {
             "success" -> {
                 val value = (input as? FlowDataType.FlowCritiqueResult)?.success
-                    ?: error("Cannot extract property '$valueString' from ${input::class.simpleName}")
+                    ?: error(
+                        "Cannot extract property '$valueString' from ${input::class.simpleName}. " +
+                            "Property 'success' is only available on FlowCritiqueResult type."
+                    )
 
                 FlowDataType.FlowBoolean(value)
             }
             "feedback" -> {
                 val value = (input as? FlowDataType.FlowCritiqueResult)?.feedback
-                    ?: error("Cannot extract property '$valueString' from ${input::class.simpleName}")
+                    ?: error(
+                        "Cannot extract property '$valueString' from ${input::class.simpleName}. " +
+                            "Property 'feedback' is only available on FlowCritiqueResult type."
+                    )
 
                 FlowDataType.FlowString(value)
             }
-            else -> error("Property '$valueString' is not yet supported for transformation")
+            else -> error(
+                "Property '$valueString' is not yet supported for transformation. " +
+                    "Supported properties: 'success', 'feedback' (for FlowCritiqueResult)"
+            )
         }
     }
 
@@ -516,11 +534,16 @@ public object KoogStrategyFactory {
      * 3. Extract the primitive value for comparison
      * 4. Return the full FlowDataType output if the condition matches
      *
+     * NOTE: This method is currently unused but preserved for potential future
+     * enhancements to parallel execution merge strategies. The current implementation
+     * in nodeParallel() uses getParallelNodeResultByCondition() directly.
+     *
      * @param results The list of parallel execution results
      * @param condition The merge condition to evaluate
      * @return The FlowDataType output from the matching result
      * @throws IllegalArgumentException if the condition format is invalid or no match is found
      */
+    @Suppress("unused")
     private fun evaluateMergeCondition(
         results: List<ParallelResult<FlowDataType, FlowDataType>>,
         condition: ParallelMergeCondition

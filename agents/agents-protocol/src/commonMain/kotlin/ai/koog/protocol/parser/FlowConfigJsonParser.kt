@@ -68,7 +68,7 @@ public class FlowJsonConfigParser : FlowConfigParser {
 
     private fun FlowAgentModel.createKoogFlowAgent(defaultModel: String?): FlowAgent {
         val resolvedModel = model ?: defaultModel
-            ?: error("Model for an agent is node defined. Please specify whether an agent model or a default model for a flow.")
+            ?: error("Model for an agent is not defined. Please specify either an agent model or a default model for a flow.")
 
         val agentConfig = config ?: FlowAgentConfig()
         val agentPrompt = prompt ?: FlowAgentPrompt("")

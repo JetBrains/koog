@@ -1,4 +1,4 @@
-# Module agents-protocol
+Check # Module agents-protocol
 
 Declarative JSON-based protocol for defining and executing multi-agent workflows.
 

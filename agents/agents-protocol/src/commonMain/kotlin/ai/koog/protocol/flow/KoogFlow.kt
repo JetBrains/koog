@@ -4,10 +4,7 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -15,12 +12,13 @@ import ai.koog.protocol.agent.FlowAgent
 import ai.koog.protocol.agent.FlowDataType
 import ai.koog.protocol.agent.agents.task.FlowTaskAgent
 import ai.koog.protocol.agent.agents.verify.FlowVerifyAgent
+import ai.koog.protocol.feature.addEventHandler
 import ai.koog.protocol.tool.FlowTool
 import ai.koog.protocol.transition.FlowTransition
 import kotlin.reflect.typeOf
 
 /**
- * Platform-specific implementation for creating a ToolRegistry from a stdio MCP tool.
+ * Platform-specific implementation for creating a ToolRegistry from a STDIO MCP tool.
  *
  * @param command The executable command to run
  * @param args List of command-line arguments to pass to the command
@@ -43,16 +41,33 @@ internal expect class StdioProcessHolder() {
 
 /**
  * Koog-specific implementation of the Flow interface with agent orchestration.
+ *
+ * @param id Unique identifier for this flow
+ * @param agents List of agents that will execute in this flow
+ * @param tools List of tools available to agents
+ * @param transitions List of transitions defining the flow between agents
+ * @param promptExecutor Optional pre-configured prompt executor (will be created if not provided)
  */
 public class KoogFlow(
     override val id: String,
     override val agents: List<FlowAgent>,
     override val tools: List<FlowTool>,
     override val transitions: List<FlowTransition>,
-    public val promptExecutor: PromptExecutor? = null
+    public val promptExecutor: PromptExecutor? = null,
 ) : Flow {
 
-    private val stdioProcesses = StdioProcessHolder()
+    private companion object {
+        /**
+         * Number of iterations allocated per agent in the flow.
+         * Each agent subgraph can use multiple iterations (setup, call, decide, tools, finalize, etc.)
+         */
+        const val ITERATIONS_PER_AGENT = 10
+
+        /**
+         * Minimum number of iterations for any flow, regardless of agent count.
+         */
+        const val MIN_FLOW_ITERATIONS = 50
+    }
 
     /**
      * Runs the flow with the provided input.
@@ -61,17 +76,13 @@ public class KoogFlow(
      * @return The output from the final agent in the flow.
      */
     override suspend fun run(input: FlowDataType?): FlowDataType {
-        try {
-            val agent = buildAgent()
-            val agentInput = input
-                ?: FlowUtil.getFirstAgentOrNull(agents, transitions)?.let { firstAgent -> getInputFromFlowAgent(agent = firstAgent) }
-                ?: error("No agents found")
+        val agent = buildAgent()
 
-            return agent.run(agentInput)
-        } finally {
-            // Clean up any stdio processes that were launched
-            stdioProcesses.cleanup()
-        }
+        val agentInput = input
+            ?: FlowUtil.getFirstAgentOrNull(agents, transitions)?.let { firstAgent -> getInputFromFlowAgent(agent = firstAgent) }
+            ?: error("No agents found")
+
+        return agent.run(agentInput)
     }
 
     //region Private Methods
@@ -99,8 +110,7 @@ public class KoogFlow(
         }
 
         // Calculate a reasonable default for maxAgentIterations based on the number of agents
-        // Each agent subgraph can use multiple iterations (setup, call, decide, tools, finalize, etc.)
-        val defaultMaxIterations = (agents.size * 10).coerceAtLeast(50)
+        val defaultMaxIterations = (agents.size * ITERATIONS_PER_AGENT).coerceAtLeast(MIN_FLOW_ITERATIONS)
 
         val agentConfig = AIAgentConfig(
             prompt = agentPrompt,
@@ -117,52 +127,7 @@ public class KoogFlow(
             strategy = strategy,
             toolRegistry = toolRegistry,
         ) {
-            handleEvents {
-                onAgentStarting { ctx ->
-                    println("---\n>>> Agent: ${ctx.agent.id}\n---")
-                }
-
-                onAgentCompleted { ctx ->
-                    println("---\n<<< Agent: ${ctx.agentId}. Result: ${ctx.result}\n---")
-                }
-
-                onSubgraphExecutionStarting { ctx ->
-                    if (!ctx.subgraph.name.contains(START_NODE_PREFIX) &&
-                        !ctx.subgraph.name.contains(FINISH_NODE_PREFIX)) {
-
-                        println("---\n>>> Subgraph: ${ctx.subgraph.id}. Model: ${ctx.context.llm.model.id}\n---")
-                    }
-                }
-
-                onSubgraphExecutionCompleted { ctx ->
-                    if (!ctx.subgraph.name.contains(START_NODE_PREFIX) &&
-                        !ctx.subgraph.name.contains(FINISH_NODE_PREFIX)) {
-
-                        println("---\n<<< Subgraph: ${ctx.subgraph.id}. Result: ${ctx.output}\n---")
-                    }
-                }
-
-                onToolCallStarting { ctx ->
-                    println("---\n>>> Tool start\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}\n---")
-                }
-
-                onToolCallCompleted { ctx ->
-                    println("---\n<<< Tool completed\nTool: ${ctx.toolName}, args: ${ctx.toolArgs}, result: ${ctx.toolResult}\n---")
-                }
-
-                onLLMCallStarting { ctx ->
-                    println(
-                        "---\n>>> LLM start\nRequest:${ctx.prompt.messages.lastOrNull()?.content}\n" +
-                            "tools: ${ctx.tools.joinToString("\n") { " - ${it.name }" } }\n---"
-                    )
-                }
-
-                onLLMCallCompleted { ctx ->
-                    println(
-                        "---\n<<< LLM complete\nResponses:${ctx.responses.joinToString("\n") { " - [${it.role.name}] ${it.content}" } } }\n---"
-                    )
-                }
-            }
+            addEventHandler()
         }
     }
 
@@ -189,7 +154,8 @@ public class KoogFlow(
                 }
                 is FlowTool.Mcp.Stdio -> {
                     // Stdio transport uses platform-specific implementation (JVM only)
-                    buildStdioToolRegistry(mcpTool.command, mcpTool.args, stdioProcesses)
+                    // TODO: Support stdio transport
+                    ToolRegistry.EMPTY
                 }
             }
         }

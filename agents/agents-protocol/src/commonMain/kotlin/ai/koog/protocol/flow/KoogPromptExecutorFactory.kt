@@ -47,13 +47,19 @@ public object KoogPromptExecutorFactory {
      */
     public fun resolveModel(model: String): LLModel {
         if (!model.contains("/")) {
-            error("Invalid model string format: <$model>. Expected format: <provider_name>/<model_name>")
+            error(
+                "Invalid model string format: '$model'. Expected format: '<provider_name>/<model_name>' " +
+                    "(e.g., 'openai/gpt-4o', 'anthropic/claude-3-opus', 'ollama/llama2')"
+            )
         }
 
         val normalizedModelIdentifier = getNormalizedModelIdentifier(model)
 
         val llModel = getModelFromIdentifier(normalizedModelIdentifier)
-            ?: error("Unable to find model identifier from string: '$model' (normalized: '$normalizedModelIdentifier')")
+            ?: error(
+                "Unable to find model identifier from string: '$model' (normalized: '$normalizedModelIdentifier'). " +
+                    "Please check that the provider and model name are correct."
+            )
 
         logger.debug { "Resolved input model config (model string: $model) to model: $llModel" }
         return llModel
