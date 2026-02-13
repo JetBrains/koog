@@ -363,7 +363,10 @@ public class BootstrapFewShot(
                     sampleLabeledDemonstrations(labeledExamples, remaining, random)
                 } else {
                     // Intermediate node with different types — use node's own demonstrations
-                    sampleLabeledDemonstrations(node.demonstrations, remaining, random)
+                    // The following would make more sense:
+                    // sampleLabeledDemonstrations(node.demonstrations, remaining, random)
+                    // But we match dspy behavior
+                    emptyList()
                 }
             } else {
                 emptyList()
