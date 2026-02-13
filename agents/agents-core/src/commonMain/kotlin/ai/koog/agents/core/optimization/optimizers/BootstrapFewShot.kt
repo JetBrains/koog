@@ -147,7 +147,7 @@ public class BootstrapFewShot(
         }
 
         // Bootstrap - collect traces from executions
-        val bootstrappedTraces = bootstrap(
+        val (bootstrappedTraces, notBootstrappedExamples) = bootstrap(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
             strategy = strategy,
@@ -159,7 +159,9 @@ public class BootstrapFewShot(
         )
 
         // Build joint config from bootstrapped and labeled demos
-        val config = buildOptimizationConfig(optimizableNodes, bootstrappedTraces)
+        val config = buildOptimizationConfig(
+            optimizableNodes, bootstrappedTraces, notBootstrappedExamples, strategy
+        )
 
         val totalBootstrapped = bootstrappedTraces.values.sumOf { it.size }
 
@@ -180,7 +182,7 @@ public class BootstrapFewShot(
     /**
      * Bootstrap phase: runs agent on training examples and collects traces from successful runs.
      *
-     * @return Map of node names to bootstrapped demonstrations collected from successful runs.
+     * @return Pair of (node name → bootstrapped demonstrations, not-bootstrapped training examples).
      */
     private suspend fun <TInput, TOutput> bootstrap(
         promptExecutor: PromptExecutor,
@@ -191,7 +193,7 @@ public class BootstrapFewShot(
         trainset: Dataset<TInput, TOutput>,
         baseConfig: OptimizationConfig,
         metric: Metric<TOutput>?,
-    ): Map<String, MutableList<Demonstration<Any?, Any?>>> {
+    ): Pair<Map<String, MutableList<Demonstration<Any?, Any?>>>, List<Example<TInput, TOutput>>> {
         val nodeName2BootstrappedTraces = mutableMapOf<String, MutableList<Demonstration<Any?, Any?>>>()
         val bootstrappedIndices = mutableSetOf<Int>()
         var errorCount = 0
@@ -243,7 +245,10 @@ public class BootstrapFewShot(
         }
         logger.info { "Bootstrap complete: ${bootstrappedIndices.size} successful out of ${trainset.size} examples" }
 
-        return nodeName2BootstrappedTraces
+        val notBootstrapped = trainset.filterIndexed { index, _ -> index !in bootstrappedIndices }
+            .shuffled(random)
+
+        return nodeName2BootstrappedTraces to notBootstrapped
     }
 
     /**
@@ -326,18 +331,20 @@ public class BootstrapFewShot(
      *
      * For each optimizable node:
      * 1. Takes up to [maxBootstrappedDemos] bootstrapped traces
-     * 2. Fills remaining slots (up to [maxTotalDemos]) with labeled demos from the node's
-     *    own [OptimizableNode.demonstrations]
-     *
-     * Note: DSPy's original BootstrapFewShot fills remaining slots with training examples
-     * (input → final output), but this only works in DSPy's stringly-typed world. In our
-     * typed system, intermediate nodes (e.g., a "vote" node taking VoteInput) would get
-     * demos with mismatched types (e.g., PatientData), causing ClassCastExceptions.
-     * Using each node's own demonstrations ensures type safety.
+     * 2. Fills remaining slots (up to [maxTotalDemos]) with labeled demos:
+     *    - For nodes whose types match the strategy's input/output types (e.g., single-node
+     *      strategies or end-to-end nodes): uses training examples as labeled fallback,
+     *      matching DSPy's original behavior.
+     *    - For intermediate nodes with different types (e.g., a "vote" node taking VoteInput):
+     *      uses the node's own [OptimizableNode.demonstrations] to avoid type mismatches
+     *      that would cause ClassCastExceptions at runtime (due to type erasure hiding the
+     *      mismatch at compile time).
      */
-    private fun buildOptimizationConfig(
+    private fun <TInput, TOutput> buildOptimizationConfig(
         optimizableNodes: List<OptimizableNode<*, *>>,
         bootstrappedTraces: Map<String, List<Demonstration<Any?, Any?>>>,
+        notBootstrappedExamples: List<Example<TInput, TOutput>>,
+        strategy: AIAgentGraphStrategy<TInput, TOutput>,
     ): OptimizationConfig {
         val jointDemonstrations = mutableMapOf<String, List<Demonstration<*, *>>>()
 
@@ -348,7 +355,16 @@ public class BootstrapFewShot(
             val remaining = (maxTotalDemos - bootstrapped.size).coerceAtLeast(0)
 
             val labeled = if (remaining > 0) {
-                sampleLabeledDemonstrations(node.demonstrations, remaining, random)
+                val nodeTypesMatchStrategy =
+                    node.inputType == strategy.inputType && node.outputType == strategy.outputType
+                if (nodeTypesMatchStrategy) {
+                    // Node types match strategy — training examples are valid demos
+                    val labeledExamples = notBootstrappedExamples.map { exampleToDemonstration(it) }
+                    sampleLabeledDemonstrations(labeledExamples, remaining, random)
+                } else {
+                    // Intermediate node with different types — use node's own demonstrations
+                    sampleLabeledDemonstrations(node.demonstrations, remaining, random)
+                }
             } else {
                 emptyList()
             }
@@ -358,6 +374,10 @@ public class BootstrapFewShot(
 
         return OptimizationConfig(demonstrations = jointDemonstrations)
     }
+
+    private fun <TInput, TOutput> exampleToDemonstration(
+        example: Example<TInput, TOutput>,
+    ) = Demonstration(input = example.input, output = example.label, isBootstrapped = false)
 
 }
 
