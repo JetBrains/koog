@@ -75,7 +75,7 @@ public class JavaPlannerAIAgentIntegrationTest {
             builder.toolRegistry(toolRegistry);
         }
 
-        AIAgent<String, String> agent = (AIAgent<String, String>) (Object) builder.build();
+        AIAgent<String, String> agent = builder.build();
 
         assertNotNull(agent);
 
