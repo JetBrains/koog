@@ -117,7 +117,6 @@ public abstract class LLMProvider(public val id: String, public val display: Str
     }
 }
 
-
 /**
  * Represents a specialized implementation of the `LLMProvider` class corresponding to the Google provider.
  *
