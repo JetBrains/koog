@@ -177,6 +177,17 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-01.kt -->
 
+    === "Java"
+
+        ```java
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .build();
+
+        System.out.println(agent.run("Hello! How can you help me?"));
+        ```
+
     The example can produce the following output:
     
     ```
@@ -223,6 +234,17 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-02.kt -->
 
+    === "Java"
+
+        ```java
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(simpleAnthropicExecutor(System.getenv("ANTHROPIC_API_KEY")))
+            .llmModel(AnthropicModels.Opus_4_1)
+            .build();
+
+        System.out.println(agent.run("Hello! How can you help me?"));
+        ```
+
     The example can produce the following output:
 
     ```
@@ -266,6 +288,17 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     }
     ```
     <!--- KNIT example-getting-started-03.kt -->
+
+    === "Java"
+
+        ```java
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(simpleGoogleAIExecutor(System.getenv("GOOGLE_API_KEY")))
+            .llmModel(GoogleModels.Gemini2_5Pro)
+            .build();
+
+        System.out.println(agent.run("Hello! How can you help me?"));
+        ```
 
     The example can produce the following output:
 
@@ -317,6 +350,20 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-04.kt -->
 
+    === "Java"
+
+        ```java
+        // In Java, use the provided client and executor classes directly
+        DeepSeekLLMClient deepSeekClient = new DeepSeekLLMClient(System.getenv("DEEPSEEK_API_KEY"));
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(new MultiLLMPromptExecutor(deepSeekClient))
+            .llmModel(DeepSeekModels.DeepSeekChat)
+            .build();
+
+        System.out.println(agent.run("Hello! How can you help me?"));
+        ```
+
     The example can produce the following output:
 
     ```
@@ -352,6 +399,17 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-05.kt -->
 
+    === "Java"
+
+        ```java
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(simpleOpenRouterExecutor(System.getenv("OPENROUTER_API_KEY")))
+            .llmModel(OpenRouterModels.GPT4o)
+            .build();
+
+        System.out.println(agent.run("Hello! How can you help me?"));
+        ```
+
     The example can produce the following output:
 
     ```
@@ -386,6 +444,20 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     }
     ```
     <!--- KNIT example-getting-started-06.kt -->
+
+    === "Java"
+
+        ```java
+        String accessKey = System.getenv("AWS_BEDROCK_ACCESS_KEY");
+        String secretKey = System.getenv("AWS_BEDROCK_SECRET_ACCESS_KEY");
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(simpleBedrockExecutor(accessKey, secretKey,null, new BedrockClientSettings()))
+            .llmModel(BedrockModels.INSTANCE.getAnthropicClaude4_5Sonnet())
+            .build();
+
+        System.out.println(agent.run("Hello! How can you help me?"));
+        ```
 
     The example can produce the following output:
 
@@ -454,26 +526,39 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
     The following example creates and runs a simple Koog agent using the [`llama3.2`](https://ollama.com/library/llama3.2) model running locally via Ollama.
 
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-    import ai.koog.prompt.executor.ollama.client.OllamaModels
-    import kotlinx.coroutines.runBlocking
-    -->
-    ```kotlin
-    fun main() = runBlocking {
-        // Create an agent
-        val agent = AIAgent(
-            promptExecutor = simpleOllamaAIExecutor(),
-            llmModel = OllamaModels.Meta.LLAMA_3_2
-        )
+    === "Kotlin"
 
-        // Run the agent
-        val result = agent.run("Hello! How can you help me?")
-        println(result)
-    }
-    ```
-    <!--- KNIT example-getting-started-08.kt -->
+        <!--- INCLUDE
+        import ai.koog.agents.core.agent.AIAgent
+        import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+        import ai.koog.prompt.executor.ollama.client.OllamaModels
+        import kotlinx.coroutines.runBlocking
+        -->
+        ```kotlin
+        fun main() = runBlocking {
+            // Create an agent
+            val agent = AIAgent(
+                promptExecutor = simpleOllamaAIExecutor(),
+                llmModel = OllamaModels.Meta.LLAMA_3_2
+            )
+
+            // Run the agent
+            val result = agent.run("Hello! How can you help me?")
+            println(result)
+        }
+        ```
+        <!--- KNIT example-getting-started-07.kt -->
+
+    === "Java"
+
+        ```java
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+            .llmModel(OllamaModels.Meta.LLAMA_3_2)
+            .build();
+
+        System.out.println(agent.run("Hello! How can you help me?"));
+        ```
 
     The example can produce the following output:
 

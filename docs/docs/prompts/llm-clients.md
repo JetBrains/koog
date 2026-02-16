@@ -29,41 +29,64 @@ To run a prompt using an LLM client, perform the following:
 
 Here is an example that uses `OpenAILLMClient` to run prompts:
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.params.LLMParams
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() = runBlocking {
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.params.LLMParams
+    import kotlinx.coroutines.runBlocking
+    -->
+
+    ```kotlin
+    fun main() = runBlocking {
+        // Create an OpenAI client
+        val apiKey = System.getenv("OPENAI_API_KEY")
+        val client = OpenAILLMClient(apiKey)
+
+        // Create a prompt
+        val prompt = prompt("prompt_name", LLMParams()) {
+            // Add a system message to set the context
+            system("You are a helpful assistant.")
+
+            // Add a user message
+            user("Tell me about Kotlin")
+
+            // You can also add assistant messages for few-shot examples
+            assistant("Kotlin is a modern programming language...")
+
+            // Add another user message
+            user("What are its key features?")
+        }
+
+        // Run the prompt
+        val response = client.execute(prompt, OpenAIModels.Chat.GPT4o)
+        // Print the response
+        println(response)
+    }
+    ```
+    <!--- KNIT example-llm-clients-01.kt -->
+
+=== "Java"
+
+    ```java
     // Create an OpenAI client
-    val token = System.getenv("OPENAI_API_KEY")
-    val client = OpenAILLMClient(token)
+    String token = System.getenv("OPENAI_API_KEY");
+    OpenAILLMClient client = new OpenAILLMClient(token);
 
     // Create a prompt
-    val prompt = prompt("prompt_name", LLMParams()) {
-        // Add a system message to set the context
-        system("You are a helpful assistant.")
+    Prompt prompt = Prompt.builder("prompt_name")
+        .system("You are a helpful assistant.")
+        .user("Tell me about Kotlin")
+        .assistant("Kotlin is a modern programming language...")
+        .user("What are its key features?")
+        .build();
 
-        // Add a user message
-        user("Tell me about Kotlin")
-
-        // You can also add assistant messages for few-shot examples
-        assistant("Kotlin is a modern programming language...")
-
-        // Add another user message
-        user("What are its key features?")
-    }
-
-    // Run the prompt
-    val response = client.execute(prompt, OpenAIModels.Chat.GPT4o)
-    // Print the response
-    println(response)
-}
-```
-<!--- KNIT example-llm-clients-01.kt -->
+    // FAILED: Run the prompt (suspend function call from Java requires a Continuation)
+    // List<Message.Response> response = client.execute(prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList(), continuation);
+    // System.out.println(response);
+    ```
 
 ## Streaming responses
 
@@ -81,39 +104,61 @@ The streaming API provides different frame types:
 For models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1), reasoning frames will be emitted during streaming.
 See the [Streaming API documentation](../streaming-api.md) for more details on working with frames.
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.coroutines.runBlocking
+=== "Kotlin"
 
-fun main() = runBlocking {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-// Set up the OpenAI client with your API key
-val token = System.getenv("OPENAI_API_KEY")
-val client = OpenAILLMClient(token)
-
-val response = client.executeStreaming(
-    prompt = prompt("stream_demo") { user("Stream this response in short chunks.") },
-    model = OpenAIModels.Chat.GPT4_1
-)
-
-response.collect { frame ->
-    when (frame) {
-        is StreamFrame.TextDelta -> print(frame.text)
-        is StreamFrame.ReasoningDelta -> print("[Reasoning] ${frame.text}")
-        is StreamFrame.ToolCallComplete -> println("\nTool call: ${frame.name}")
-        is StreamFrame.End -> println("\n[done] Reason: ${frame.finishReason}")
-        else -> {} // Handle other frame types if needed
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.streaming.StreamFrame
+    import kotlinx.coroutines.runBlocking
+    fun main() = runBlocking {
+    -->
+    <!--- SUFFIX
     }
-}
+    -->
+    ```kotlin
+    // Set up the OpenAI client with your API key
+    val token = System.getenv("OPENAI_API_KEY")
+    val client = OpenAILLMClient(token)
+
+    val response = client.executeStreaming(
+        prompt = prompt("stream_demo") { user("Stream this response in short chunks.") },
+        model = OpenAIModels.Chat.GPT4_1
+    )
+
+    response.collect { frame ->
+        when (frame) {
+            is StreamFrame.TextDelta -> print(frame.text)
+            is StreamFrame.ReasoningDelta -> print("[Reasoning] ${frame.text}")
+            is StreamFrame.ToolCallComplete -> println("\nTool call: ${frame.name}")
+            is StreamFrame.End -> println("\n[done] Reason: ${frame.finishReason}")
+            else -> {} // Handle other frame types if needed
+        }
+    }
 ```
 <!--- KNIT example-llm-clients-02.kt -->
+
+=== "Java"
+
+    ```java
+    // Set up the OpenAI client with your API key
+    String token = System.getenv("OPENAI_API_KEY");
+    OpenAILLMClient client = new OpenAILLMClient(token);
+
+    Prompt prompt = Prompt.builder("stream_demo")
+        .user("Stream this response in short chunks.")
+        .build();
+
+    // FAILED: executeStreaming returns a Kotlin Flow
+    Flow<StreamFrame> response = client.executeStreaming(
+        prompt,
+        OpenAIModels.Chat.GPT4_1,
+        Collections.emptyList()
+    );
+
+    // FAILED: Consuming Kotlin Flow in Java usually requires FlowAdapters or runBlocking
+    ```
 
 ## Multiple choices
 
@@ -124,33 +169,63 @@ You can request multiple alternative responses from the model in a single call b
 It requires additionally specifying the [`numberOfChoices`](prompt-creation/index.md#prompt-parameters) LLM parameter in the prompt
 being executed.
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.params.LLMParams
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() = runBlocking {
-    val apiKey = System.getenv("OPENAI_API_KEY")
-    val client = OpenAILLMClient(apiKey)
+=== "Kotlin"
 
-    val choices = client.executeMultipleChoices(
-        prompt = prompt("n_best", params = LLMParams(numberOfChoices = 3)) {
-            system("You are a creative assistant.")
-            user("Give me three different opening lines for a story.")
-        },
-        model = OpenAIModels.Chat.GPT4o
-    )
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.params.LLMParams
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    fun main() = runBlocking {
+        val apiKey = System.getenv("OPENAI_API_KEY")
+        val client = OpenAILLMClient(apiKey)
 
-    choices.forEachIndexed { i, choice ->
-        val text = choice.joinToString(" ") { it.content }
-        println("Line #${i + 1}: $text")
+        val choices = client.executeMultipleChoices(
+            prompt = prompt("n_best", params = LLMParams(numberOfChoices = 3)) {
+                system("You are a creative assistant.")
+                user("Give me three different opening lines for a story.")
+            },
+            model = OpenAIModels.Chat.GPT4o
+        )
+
+        choices.forEachIndexed { i, choice ->
+            val text = choice.joinToString(" ") { it.content }
+            println("Line #${i + 1}: $text")
+        }
     }
-}
-```
-<!--- KNIT example-llm-clients-03.kt -->
+    ```
+    <!--- KNIT example-llm-clients-03.kt -->
+
+=== "Java"
+
+    ```java
+    String apiKey = System.getenv("OPENAI_API_KEY");
+    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+
+    // Configure parameters (LLMParams constructor requires all 8 arguments in Java)
+    LLMParams params = new LLMParams(
+        null, // temperature
+        null, // maxTokens
+        3,    // numberOfChoices
+        null, // speculation
+        null, // schema
+        null, // toolChoice
+        null, // user
+        null  // additionalProperties
+    );
+
+    Prompt prompt = Prompt.builder("n_best")
+        .system("You are a creative assistant.")
+        .user("Give me three different opening lines for a story.")
+        .build()
+        .withParams(params);
+
+    // FAILED: executeMultipleChoices is a suspend function; call with Continuation from Java
+    // List<LLMChoice> choices = client.executeMultipleChoices(prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList(), continuation);
+    ```
 
 ## Listing available models
 
@@ -159,23 +234,35 @@ fun main() = runBlocking {
 
 To get a list of available model IDs supported by the LLM client, use the `models()` method:    
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.llm.LLModel
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() = runBlocking {
-    val apiKey = System.getenv("OPENAI_API_KEY")
-    val client = OpenAILLMClient(apiKey)
+=== "Kotlin"
 
-    val models: List<LLModel> = client.models()
-    models.forEach { println(it.id) }
-}
-```
-<!--- KNIT example-llm-clients-04.kt -->
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.llm.LLModel
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    fun main() = runBlocking {
+        val apiKey = System.getenv("OPENAI_API_KEY")
+        val client = OpenAILLMClient(apiKey)
+
+        val models: List<LLModel> = client.models()
+        models.forEach { println(it.id) }
+    }
+    ```
+    <!--- KNIT example-llm-clients-04.kt -->
+
+=== "Java"
+
+    ```java
+    String apiKey = System.getenv("OPENAI_API_KEY");
+    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+
+    // FAILED: models() is a suspend function; call with Continuation from Java
+    // List<LLModel> models = client.models(continuation);
+    ```
 
 ## Embeddings
 
@@ -185,26 +272,42 @@ fun main() = runBlocking {
 You convert text into embedding vectors using the `embed()` method.
 Choose an embedding model and pass your text to this method:
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() = runBlocking {
-    val apiKey = System.getenv("OPENAI_API_KEY")
-    val client = OpenAILLMClient(apiKey)
+=== "Kotlin"
 
-    val embedding = client.embed(
-        text = "This is a sample text for embedding",
-        model = OpenAIModels.Embeddings.TextEmbedding3Large
-    )
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    fun main() = runBlocking {
+        val apiKey = System.getenv("OPENAI_API_KEY")
+        val client = OpenAILLMClient(apiKey)
 
-    println("Embedding size: ${embedding.size}")
-}
-```
-<!--- KNIT example-llm-clients-05.kt -->
+        val embedding = client.embed(
+            text = "This is a sample text for embedding",
+            model = OpenAIModels.Embeddings.TextEmbedding3Large
+        )
+
+        println("Embedding size: ${embedding.size}")
+    }
+    ```
+    <!--- KNIT example-llm-clients-05.kt -->
+
+=== "Java"
+
+    ```java
+    String apiKey = System.getenv("OPENAI_API_KEY");
+    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+
+    // FAILED: embed() is a suspend function; call with Continuation from Java
+    // List<Double> embedding = client.embed(
+    //     "This is a sample text for embedding",
+    //     OpenAIModels.Embeddings.TextEmbedding3Large,
+    //     continuation
+    // );
+    ```
 
 ## Moderation
 
@@ -213,28 +316,44 @@ fun main() = runBlocking {
 
 You can use the `moderate()` method with a moderation model to check whether a prompt contains inappropriate content:
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() = runBlocking {
-    val apiKey = System.getenv("OPENAI_API_KEY")
-    val client = OpenAILLMClient(apiKey)
+=== "Kotlin"
 
-    val result = client.moderate(
-        prompt = prompt("moderation") {
-            user("This is a test message that may contain offensive content.")
-        },
-        model = OpenAIModels.Moderation.Omni
-    )
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    fun main() = runBlocking {
+        val apiKey = System.getenv("OPENAI_API_KEY")
+        val client = OpenAILLMClient(apiKey)
 
-    println(result)
-}
-```
-<!--- KNIT example-llm-clients-06.kt -->
+        val result = client.moderate(
+            prompt = prompt("moderation") {
+                user("This is a test message that may contain offensive content.")
+            },
+            model = OpenAIModels.Moderation.Omni
+        )
+
+        println(result)
+    }
+    ```
+    <!--- KNIT example-llm-clients-06.kt -->
+
+=== "Java"
+
+    ```java
+    String apiKey = System.getenv("OPENAI_API_KEY");
+    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+
+    Prompt prompt = Prompt.builder("moderation")
+        .user("This is a test message that may contain offensive content.")
+        .build();
+
+    // FAILED: moderate() is a suspend function; call with Continuation from Java
+    // ModerationResult result = client.moderate(prompt, OpenAIModels.Moderation.Omni, continuation);
+    ```
 
 ## Integration with prompt executors
 

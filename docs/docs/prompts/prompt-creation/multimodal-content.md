@@ -25,26 +25,42 @@ the corresponding attachment parameters based on the file extension.
 
 The general format of the `user` message that includes a text message and a list of auto-configured attachments is as follows:
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import kotlinx.io.files.Path
+=== "Kotlin"
 
-val prompt = prompt("image_analysis") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-user {
-    +"Describe these images:"
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import kotlinx.io.files.Path
 
-    image("https://example.com/test.png")
-    image(Path("/path/to/image.png"))
+    val prompt = prompt("image_analysis") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
 
-    +"Focus on the main subjects."
-}
-```
-<!--- KNIT example-multimodal-content-01.kt -->
+    ```kotlin
+    user {
+        +"Describe these images:"
+
+        image("https://example.com/test.png")
+        image(Path("/path/to/image.png"))
+
+        +"Focus on the main subjects."
+    }
+    ```
+    <!--- KNIT example-multimodal-content-01.kt -->
+
+=== "Java"
+
+    ```java
+    ContentPartsBuilder partsBuilder = new ContentPartsBuilder();
+    partsBuilder.text("Describe these images:");
+    partsBuilder.image("https://example.com/test.png");
+    partsBuilder.text("Focus on the main subjects.");
+
+    Prompt prompt = Prompt.builder("image_analysis")
+        .user(partsBuilder.build())
+        .build();
+    ```
 
 The `+` operator adds text content to the user message along with the attachments.
 
@@ -59,30 +75,49 @@ configure its parameters, and pass it to the corresponding `image()`, `audio()`,
 
 The general format of the `user` message that includes a text message and a list of custom-configured attachments is as follows:
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+=== "Kotlin"
 
-val prompt = prompt("custom_image") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-user {
-    +"Describe this image"
-    image(
-        ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/capture.png"),
-            format = "png",
-            mimeType = "image/png",
-            fileName = "capture.png"
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.message.AttachmentContent
+    import ai.koog.prompt.message.ContentPart
+
+    val prompt = prompt("custom_image") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+
+    ```kotlin
+    user {
+        +"Describe this image"
+        image(
+            ContentPart.Image(
+                content = AttachmentContent.URL("https://example.com/capture.png"),
+                format = "png",
+                mimeType = "image/png",
+                fileName = "capture.png"
+            )
         )
-    )
-}
-```
-<!--- KNIT example-multimodal-content-02.kt -->
+    }
+    ```
+    <!--- KNIT example-multimodal-content-02.kt -->
+
+=== "Java"
+
+    ```java
+    Prompt prompt = Prompt.builder("custom_image")
+        .user(List.of(
+            new ContentPart.Text("Describe this image"),
+            new ContentPart.Image(
+                new AttachmentContent.URL("https://example.com/capture.png"),
+                "png",
+                "image/png",
+                "capture.png"
+            )
+        ))
+        .build();
+    ```
 
 Koog provides the following specialized classes for each media type that implement the `ContentPart.Attachment` interface:
 
@@ -127,24 +162,50 @@ Implementations of the AttachmentContent interface define the type and source of
 
 In addition to providing different types of attachments in separate prompts or messages, you can also provide multiple and mixed types of attachments in a single `user()` message:
 
-<!--- CLEAR -->
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import kotlinx.io.files.Path
--->
-```kotlin
-val prompt = prompt("mixed_content") {
-    system("You are a helpful assistant.")
+=== "Kotlin"
 
-    user {
-        +"Compare the image with the document content."
-        image(Path("/path/to/image.png"))
-        binaryFile(Path("/path/to/page.pdf"), "application/pdf")
-        +"Structure the result as a table"
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import kotlinx.io.files.Path
+    -->
+
+    ```kotlin
+    val prompt = prompt("mixed_content") {
+        system("You are a helpful assistant.")
+
+        user {
+            +"Compare the image with the document content."
+            image(Path("/path/to/image.png"))
+            binaryFile(Path("/path/to/page.pdf"), "application/pdf")
+            +"Structure the result as a table"
+        }
     }
-}
-```
-<!--- KNIT example-multimodal-content-03.kt -->
+    ```
+    <!--- KNIT example-multimodal-content-03.kt -->
+
+=== "Java"
+
+    ```java
+    Prompt prompt = Prompt.builder("mixed_content_example")
+    .system("You are a helpful assistant.")
+    .user(List.of(
+        new ContentPart.Text("Please analyze this image and the attached document."),
+        new ContentPart.Image(
+            new AttachmentContent.URL("https://example.com/image.png"),
+            "png",
+            "image/png",
+            "image.png"
+        ),
+        new ContentPart.File(
+            new AttachmentContent.URL("https://example.com/document.pdf"),
+            "pdf",
+            "application/pdf",
+            "document.pdf"
+        ),
+        new ContentPart.Text("Summarize the differences.")
+    ))
+    .build();
+    ```
 
 ## Next steps
 
