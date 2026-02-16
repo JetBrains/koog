@@ -35,61 +35,136 @@ To learn more, see [ToolRegistry](api:agents-tools::ai.koog.agents.core.tools.To
 
 Here is an example of how to create the tool registry and add the tool to it:
 
-<!--- INCLUDE
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.tool.SayToUser
--->
-```kotlin
-val toolRegistry = ToolRegistry {
-    tool(SayToUser)
-}
-```
-<!--- KNIT example-tools-overview-01.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.reflect.tools
+    class MyToolSet : ToolSet {
+        @Tool
+        fun myTool(): String {
+            // Tool implementation
+            return "Result"
+        }
+    }
+    val myTool = MyToolSet()
+    -->
+    ```kotlin
+    val toolRegistry = ToolRegistry {
+        tools(myTool)
+    }
+    ```
+    <!--- KNIT example-tools-overview-01.kt -->
+
+=== "Java"
+
+    ```java
+    // Create an instance of your ToolSet
+    MyToolSet myTool = new MyToolSet();
+
+    // Build the ToolRegistry and register tools from the ToolSet
+    ToolRegistry toolRegistry = ToolRegistry.builder()
+        .tools(myTool)
+        .build();
+    ```
 
 To merge multiple tool registries, do the following:
 
-<!--- INCLUDE
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.ext.tool.SayToUser
+=== "Kotlin"
 
-typealias FirstSampleTool = AskUser
-typealias SecondSampleTool = SayToUser
--->
-```kotlin
-val firstToolRegistry = ToolRegistry {
-    tool(FirstSampleTool)
-}
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.reflect.tools
+    class FirstToolSet : ToolSet {
+        @Tool
+        fun firstSampleTool(): String {
+            // Tool implementation
+            return "First result"
+        }
+    }
+    class SecondToolSet : ToolSet {
+        @Tool
+        fun secondSampleTool(): String {
+            // Tool implementation
+            return "Second result"
+        }
+    }
+    val firstSampleTool = FirstToolSet()
+    val secondSampleTool = SecondToolSet()
+    -->
+    ```kotlin
+    val firstToolRegistry = ToolRegistry {
+        tools(firstSampleTool)
+    }
+    
+    val secondToolRegistry = ToolRegistry {
+        tools(secondSampleTool)
+    }
+    
+    val newRegistry = firstToolRegistry + secondToolRegistry
+    ```
+    <!--- KNIT example-tools-overview-02.kt -->
 
-val secondToolRegistry = ToolRegistry {
-    tool(SecondSampleTool)
-}
+=== "Java"
+    
+    ```java
+    // Create instances of your ToolSets
+    FirstToolSet firstSampleTool = new FirstToolSet();
+    SecondToolSet secondSampleTool = new SecondToolSet();
 
-val newRegistry = firstToolRegistry + secondToolRegistry
-```
-<!--- KNIT example-tools-overview-02.kt -->
+    // Build separate tool registries
+    ToolRegistry firstToolRegistry = ToolRegistry.builder()
+        .tools(firstSampleTool)
+        .build();
+
+    ToolRegistry secondToolRegistry = ToolRegistry.builder()
+        .tools(secondSampleTool)
+        .build();
+
+    ToolRegistry newRegistry = firstToolRegistry.plus(secondToolRegistry);
+    ```
 
 ### Passing tools to an agent
 
 To enable an agent to use a tool, you need to provide a tool registry that contains this tool as an argument when creating the agent:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.example.exampleToolsOverview01.toolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
--->
-```kotlin
-// Agent initialization
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    systemPrompt = "You are a helpful assistant with strong mathematical skills.",
-    llmModel = OpenAIModels.Chat.GPT4o,
-    // Pass your tool registry to the agent
-    toolRegistry = toolRegistry
-)
-```
-<!--- KNIT example-tools-overview-03.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.example.exampleToolsOverview01.toolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    -->
+    ```kotlin
+    // Agent initialization
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+        systemPrompt = "You are a helpful assistant with strong mathematical skills.",
+        llmModel = OpenAIModels.Chat.GPT4o,
+        // Pass your tool registry to the agent
+        toolRegistry = toolRegistry
+    )
+    ```
+    <!--- KNIT example-tools-overview-03.kt -->
+
+=== "Java"
+
+    ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are a helpful assistant with strong mathematical skills.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .toolRegistry(ToolRegistry.builder()
+            .tools(secondSampleTool)
+            .build()
+        )
+        .build();
+    ```
 
 ### Calling tools
 
@@ -115,53 +190,60 @@ For more details, see [API reference](api:agents-core::ai.koog.agents.core.agent
 
 You can also call tools in parallel using the `toParallelToolCallsRaw` extension. For example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.serialization.typeToken
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.Serializable
--->
-```kotlin
-@Serializable
-data class Book(
-    val title: String,
-    val author: String,
-    val description: String
-)
+=== "Kotlin"
 
-class BookTool() : SimpleTool<Book>(
-    argsType = typeToken<Book>(),
-    name = NAME,
-    description = "A tool to parse book information from Markdown"
-) {
-    companion object {
-        const val NAME = "book"
-    }
-
-    override suspend fun execute(args: Book): String {
-        println("${args.title} by ${args.author}:\n ${args.description}")
-        return "Done"
-    }
-}
-
-val strategy = strategy<Unit, Unit>("strategy-name") {
-
-    /*...*/
-
-    val myNode by node<Unit, Unit> { _ ->
-        llm.writeSession {
-            flow {
-                emit(Book("Book 1", "Author 1", "Description 1"))
-            }.toParallelToolCallsRaw(BookTool::class).collect()
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.tools.SimpleTool
+    import kotlinx.coroutines.flow.collect
+    import kotlinx.coroutines.flow.flow
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    -->
+    ```kotlin
+    @Serializable
+    data class Book(
+        val title: String,
+        val author: String,
+        val description: String
+    )
+    
+    class BookTool() : SimpleTool<Book>(
+        argsType = typeToken<Book>(),
+        name = NAME,
+        description = "A tool to parse book information from Markdown"
+    ) {
+        companion object {
+            const val NAME = "book"
+        }
+    
+        override suspend fun execute(args: Book): String {
+            println("${args.title} by ${args.author}:\n ${args.description}")
+            return "Done"
         }
     }
-}
+    
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+    
+        /*...*/
+    
+        val myNode by node<Unit, Unit> { _ ->
+            llm.writeSession {
+                flow {
+                    emit(Book("Book 1", "Author 1", "Description 1"))
+                }.toParallelToolCallsRaw(BookTool::class).collect()
+            }
+        }
+    }
+    
+    ```
+    <!--- KNIT example-tools-overview-04.kt -->
 
-```
-<!--- KNIT example-tools-overview-04.kt -->
+=== "Java"
+
+    ```java
+    ```
 
 #### Calling tools from nodes
 
@@ -186,67 +268,72 @@ This powerful feature enables you to create hierarchical agent architectures whe
 
 To convert an agent into a tool, use the `AIAgentService` and the `createAgentTool()` extension function:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgentService
-import ai.koog.agents.core.agent.createAgentTool
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.serialization.typeToken
+=== "Kotlin"
 
-const val apiKey = ""
-val analysisToolRegistry = ToolRegistry {}
-
--->
-```kotlin
-// Create a specialized agent service, responsible for creating financial analysis agents.
-val analysisAgentService = AIAgentService(
-    promptExecutor = simpleOpenAIExecutor(apiKey),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    systemPrompt = "You are a financial analysis specialist.",
-    toolRegistry = analysisToolRegistry
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.agent.AIAgentService
+    import ai.koog.agents.core.agent.createAgentTool
+    import ai.koog.agents.core.tools.ToolParameterDescriptor
+    import ai.koog.agents.core.tools.ToolParameterType
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.serialization.typeToken
+    const val apiKey = ""
+    val analysisToolRegistry = ToolRegistry {}
+    -->
+    ```kotlin
+    // Create a specialized agent service, responsible for creating financial analysis agents.
+    val analysisAgentService = AIAgentService(
+        promptExecutor = simpleOpenAIExecutor(apiKey),
+        llmModel = OpenAIModels.Chat.GPT4o,
+        systemPrompt = "You are a financial analysis specialist.",
+        toolRegistry = analysisToolRegistry
+    )
+    
+    // Create a tool that would run financial analysis agent once called.
+    val analysisAgentTool = analysisAgentService.createAgentTool(
+        agentName = "analyzeTransactions",
+        agentDescription = "Performs financial transaction analysis",
+        inputDescription = "Transaction analysis request",
+        inputType = typeToken<String>(),
 )
-
-// Create a tool that would run financial analysis agent once called.
-val analysisAgentTool = analysisAgentService.createAgentTool(
-    agentName = "analyzeTransactions",
-    agentDescription = "Performs financial transaction analysis",
-    inputDescription = "Transaction analysis request",
-    inputType = typeToken<String>(),
-)
-```
-<!--- KNIT example-tools-overview-05.kt -->
+    ```
+    <!--- KNIT example-tools-overview-05.kt -->
 
 ### Using agent tools in other agents
 
 Once converted to a tool, you can add the agent tool to another agent's tool registry:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.example.exampleToolsOverview05.analysisAgentTool
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+=== "Kotlin"
 
-const val apiKey = ""
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.example.exampleToolsOverview05.analysisAgentTool
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    const val apiKey = ""
+    -->
+    ```kotlin
+    // Create a coordinator agent that can use specialized agents as tools
+    val coordinatorAgent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(apiKey),
+        llmModel = OpenAIModels.Chat.GPT4o,
+        systemPrompt = "You coordinate different specialized services.",
+        toolRegistry = ToolRegistry {
+            tool(analysisAgentTool)
+            // Add other tools as needed
+        }
+    )
+    ```
+    <!--- KNIT example-tools-overview-06.kt -->
 
--->
-```kotlin
-// Create a coordinator agent that can use specialized agents as tools
-val coordinatorAgent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(apiKey),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    systemPrompt = "You coordinate different specialized services.",
-    toolRegistry = ToolRegistry {
-        tool(analysisAgentTool)
-        // Add other tools as needed
-    }
-)
-```
-<!--- KNIT example-tools-overview-06.kt -->
+=== "Java"
+
+    ```java
+    ```
 
 ### Agent tool execution
 

@@ -8,6 +8,8 @@ env.properties
 local.properties
 **/kotlin-js-store
 docs/src/main/kotlin/*.kt
+docs/docs-code-snippets/*.java
+**/.env
 **/.env*
 .venv
 .DS_Store
@@ -38,4 +40,4 @@ node_modules/
 
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/
