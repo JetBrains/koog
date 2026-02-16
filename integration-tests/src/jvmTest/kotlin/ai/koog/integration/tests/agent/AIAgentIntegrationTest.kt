@@ -70,6 +70,7 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
+import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -1341,5 +1342,29 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             shouldContain("Subtask completed: ")
             shouldContain("30")
         }
+    }
+
+    @Disabled("KG-694")
+    @Test
+    fun integration_ThrowError() = runTest(timeout = 15.seconds) {
+        val model = OpenAIModels.Chat.GPT5_1
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getExecutor(model))
+            .llmModel(model)
+            .functionalStrategy<String, String> { _, _ ->
+                throw RuntimeException("Intentional error from functional strategy")
+            }
+            .build()
+
+        val exception = try {
+            agent.run("Test")
+            null
+        } catch (e: Exception) {
+            e
+        }
+
+        exception.shouldNotBeNull()
+        exception.message shouldBe "Intentional error from functional strategy"
     }
 }

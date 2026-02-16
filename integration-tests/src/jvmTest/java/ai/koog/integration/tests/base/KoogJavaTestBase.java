@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Timeout(value = 300, unit = TimeUnit.SECONDS)
+@Timeout(value = 120, unit = TimeUnit.SECONDS)
 public abstract class KoogJavaTestBase {
 
     protected final List<AutoCloseable> resourcesToClose = new ArrayList<>();

@@ -9,8 +9,11 @@ import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.StructuredResults;
+import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -348,5 +351,29 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
         assertNotNull(result);
         assertTrue(result.contains("History contains"));
         assertTrue(result.matches(".*History contains \\d+ messages.*"));
+    }
+
+    @Disabled("KG-694")
+    @Test
+    public void integration_ThrowError() {
+        var model = OpenAIModels.Chat.GPT5_1;
+        Models.assumeAvailable(model.getProvider());
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                if (input != null) {
+                    throw new RuntimeException("Intentional error from functional strategy");
+                }
+                return "Should not reach here";
+            })
+            .build();
+
+        assertThrows(RuntimeException.class, () ->
+                runBlocking(continuation ->
+                    agent.run("Test", null, continuation)),
+            "Intentional error from functional strategy"
+        );
     }
 }
