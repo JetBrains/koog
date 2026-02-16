@@ -14,18 +14,17 @@ import ai.koog.agents.planner.goap.GOAPPlannerBuilder;
 import ai.koog.agents.planner.goap.Goal;
 import ai.koog.agents.planner.llm.SimpleLLMPlanner;
 import ai.koog.agents.planner.llm.SimplePlan;
-import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.LLMClient;
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
-import static ai.koog.integration.tests.utils.JavaUtils.createOpenAIClient;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,7 +52,7 @@ public class JavaPlannerAIAgentIntegrationTest {
 
     private static final String STRATEGY_NAME = "my-strategy";
 
-    private static final LLMClient client = createOpenAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+    private static final LLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
     private static final PromptExecutor promptExecutor = new MultiLLMPromptExecutor(client);
     private static final String SYSTEM_PROMPT = "You are a helpful assistant.";
     private static final String REQUEST = "What's 1 + 1?";
@@ -98,7 +97,7 @@ public class JavaPlannerAIAgentIntegrationTest {
     public void integration_testPlannerWithTools() {
         AIAgentPlanner<String, String> planner = new TestPlanner();
         ToolRegistry toolRegistry = new ToolRegistryBuilder()
-            .tools(new JavaUtils.CalculatorTools())
+            .tools(new CalculatorTools())
             .build();
 
         testPlanner(planner, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");

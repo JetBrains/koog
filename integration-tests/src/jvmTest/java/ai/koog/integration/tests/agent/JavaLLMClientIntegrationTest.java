@@ -1,7 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaInteropUtils;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
@@ -44,7 +44,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Hello from OpenAI'")
             .build();
 
-        List<Message.Response> responses = JavaInteropUtils.executeClientBlocking(client, prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+        List<Message.Response> responses = JavaUtils.executeClientBlocking(client, prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
 
         assertValidResponse(responses);
     }
@@ -61,7 +61,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Hello from Anthropic'")
             .build();
 
-        List<Message.Response> responses = JavaInteropUtils.executeClientBlocking(client, prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
+        List<Message.Response> responses = JavaUtils.executeClientBlocking(client, prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
 
         assertValidResponse(responses);
     }
@@ -86,7 +86,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'OpenAI response'")
             .build();
 
-        List<Message.Response> openAIResponses = JavaInteropUtils.executeExecutorBlocking(executor, openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+        List<Message.Response> openAIResponses = JavaUtils.executeExecutorBlocking(executor, openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
         assertValidResponse(openAIResponses);
 
         Prompt anthropicPrompt = Prompt.builder("test-multi-anthropic")
@@ -94,7 +94,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Anthropic response'")
             .build();
 
-        List<Message.Response> anthropicResponses = JavaInteropUtils.executeExecutorBlocking(executor, anthropicPrompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
+        List<Message.Response> anthropicResponses = JavaUtils.executeExecutorBlocking(executor, anthropicPrompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
         assertValidResponse(anthropicResponses);
     }
 }

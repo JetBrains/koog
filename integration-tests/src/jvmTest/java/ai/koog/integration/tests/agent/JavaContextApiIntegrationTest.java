@@ -6,7 +6,7 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaInteropUtils;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.StructuredResults;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
@@ -33,7 +33,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
             .llmModel(model)
             .systemPrompt("You are a helpful assistant that provides structured responses.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                StructuredResults.CalculationResult calc = JavaInteropUtils.requestLLMStructuredBlocking(
+                StructuredResults.CalculationResult calc = JavaUtils.requestLLMStructuredBlocking(
                     context,
                     "Calculate 15 + 27 and return the result in the specified format",
                     StructuredResults.CalculationResult.class
@@ -58,7 +58,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
             .llmModel(model)
             .systemPrompt("You are a helpful assistant that provides structured responses about people.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                StructuredResults.PersonInfo person = JavaInteropUtils.requestLLMStructuredBlocking(
+                StructuredResults.PersonInfo person = JavaUtils.requestLLMStructuredBlocking(
                     context,
                     "Create a person profile with name 'Alice', age 30, and hobbies: reading, coding, hiking",
                     StructuredResults.PersonInfo.class
