@@ -451,11 +451,12 @@ internal class AIAgentFunctionalContextImpl(
             when {
                 response is Message.Tool.Call -> {
                     val toolResult = executeToolHacked(response, finishTool)
-                    response = sendToolResult(toolResult)
 
                     if (toolResult.tool == finishTool.descriptor.name) {
                         return toolResult.toSafeResult(finishTool).asSuccessful().result
                     }
+
+                    response = sendToolResult(toolResult)
                 }
 
                 else -> {
@@ -524,12 +525,13 @@ internal class AIAgentFunctionalContextImpl(
                     val toolCalls = extractToolCalls(responses)
                     val toolResults =
                         executeMultipleToolsHacked(toolCalls, finishTool, parallelTools = runMode == ToolCalls.PARALLEL)
-                    responses = sendMultipleToolResults(toolResults)
 
                     toolResults.firstOrNull { it.tool == finishTool.descriptor.name }
                         ?.let { finishResult ->
                             return finishResult.toSafeResult(finishTool).asSuccessful().result
                         }
+
+                    responses = sendMultipleToolResults(toolResults)
                 }
 
                 else -> {
