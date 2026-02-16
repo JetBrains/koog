@@ -41,55 +41,99 @@ including the initial prompt, language model, and iteration limits.
 For simple agents, besides the mandatory prompt executor and language model,
 you can specify the initial system prompt and some other parameters directly in the agent constructor:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
--->
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    systemPrompt = "You are a helpful assistant.",
-    temperature = 0.7,
-    maxIterations = 10
-)
-```
-<!--- KNIT example-agent-config-01.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    -->
+    ```kotlin
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
+        llmModel = OpenAIModels.Chat.GPT4o,
+        systemPrompt = "You are a helpful assistant.",
+        temperature = 0.7,
+        maxIterations = 10
+    )
+    ```
+    <!--- KNIT example-agent-config-01.kt -->
+
+=== "Java"
+
+    ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")))
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .systemPrompt("You are a helpful assistant.")
+        .temperature(0.7)
+        .maxIterations(10)
+        .build();
+    ```
 
 Alternatively, you can create an instance of [`AIAgentConfig`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.config/-a-i-agent-config/index.html)
 to define the agent's behavior and parameters more granularly, then pass it to the agent constructor.
 This enables you to define complex prompts with multiple messages,
 conversation history, LLM parameters, and additional execution parameters.
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.params.LLMParams
--->
-```kotlin
-val agentConfig = AIAgentConfig(
-    prompt = prompt(
-        id = "assistant",
-        params = LLMParams(
-            temperature = 0.7
-        )
-    ) {
-        system("You are a helpful assistant.")
-    },
-    model = OpenAIModels.Chat.GPT4o,
-    maxAgentIterations = 10
-)
+=== "Kotlin"
 
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    agentConfig = agentConfig
-)
-```
-<!--- KNIT example-agent-config-02.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.agent.config.AIAgentConfig
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.prompt.params.LLMParams
+    -->
+    ```kotlin
+    val agentConfig = AIAgentConfig(
+        prompt = prompt(
+            id = "assistant",
+            params = LLMParams(
+                temperature = 0.7
+            )
+        ) {
+            system("You are a helpful assistant.")
+        },
+        model = OpenAIModels.Chat.GPT4o,
+        maxAgentIterations = 10
+    )
+
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+        agentConfig = agentConfig
+    )
+    ```
+    <!--- KNIT example-agent-config-02.kt -->
+
+=== "Java"
+
+    ```java
+    Prompt prompt = Prompt.builder("assistant")
+        .system("You are a helpful assistant.")
+        .build()
+        .withParams(new LLMParams(
+            0.7,         // temperature
+            null,        // maxTokens
+            1,           // numberOfChoices
+            null,        // speculation
+            null,        // schema
+            LLMParams.ToolChoice.Auto.INSTANCE, // toolChoice
+            null,        // user
+            null         // additionalProperties
+        ));
+
+    AIAgentConfig agentConfig = AIAgentConfig.builder(OpenAIModels.Chat.GPT4o)
+        .prompt(prompt)
+        .maxAgentIterations(10)
+        .build();
+
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .agentConfig(agentConfig)
+        .build();
+    ```
 
 Here are the parameters of `AIAgentConfig`:
 

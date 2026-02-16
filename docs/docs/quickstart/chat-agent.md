@@ -63,175 +63,339 @@ messages before each run and storing the updated history afterward.
 
 === "OpenAI"
 
-    <!--- INCLUDE
-    import ai.koog.agents.chatMemory.feature.ChatMemory
-    import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.tools.ToolRegistry
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-    -->
-    ```kotlin
-    suspend fun main() {
-        val sessionId = "my-conversation"
+    === "Kotlin"
 
-        val toolRegistry = ToolRegistry {
-            // register your tools here
-        }
+        <!--- INCLUDE
+        import ai.koog.agents.chatMemory.feature.ChatMemory
+        import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
+        import ai.koog.agents.core.agent.AIAgent
+        import ai.koog.agents.core.tools.ToolRegistry
+        import ai.koog.prompt.executor.clients.openai.OpenAIModels
+        import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+        -->
+        ```kotlin
+        suspend fun main() {
+            val sessionId = "my-conversation"
 
-        simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")).use { executor ->
-            val agent = AIAgent(
-                promptExecutor = executor,
-                llmModel = OpenAIModels.Chat.GPT5_2,
-                systemPrompt = "You are a helpful assistant.",
-                toolRegistry = toolRegistry,
-            ) {
-                install(ChatMemory) {
-                    windowSize(20) // keep only the last 20 messages
+            val toolRegistry = ToolRegistry {
+                // register your tools here
+            }
+
+            simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")).use { executor ->
+                val agent = AIAgent(
+                    promptExecutor = executor,
+                    llmModel = OpenAIModels.Chat.GPT5_2,
+                    systemPrompt = "You are a helpful assistant.",
+                    toolRegistry = toolRegistry,
+                ) {
+                    install(ChatMemory) {
+                        windowSize(20) // keep only the last 20 messages
+                    }
+                }
+
+                while (true) {
+                    print("You: ")
+                    val input = readln().trim()
+                    if (input == "/bye") break
+                    if (input.isEmpty()) continue
+
+                    val reply = agent.run(input, sessionId)
+                    println("Assistant: $reply\n")
                 }
             }
+        }
+        ```
 
-            while (true) {
-                print("You: ")
-                val input = readln().trim()
-                if (input == "/bye") break
-                if (input.isEmpty()) continue
+    === "Java"
 
-                val reply = agent.run(input, sessionId)
-                println("Assistant: $reply\n")
+        ```java
+        public class ExampleChatAgentOpenAI {
+            public static void main(String[] args) {
+                String sessionId = "my-conversation";
+        
+                ToolRegistry toolRegistry = ToolRegistry.builder()
+                        // register your tools here
+                        .build();
+        
+                try (var executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))) {
+                    AIAgent<String, String> agent = AIAgent.builder()
+                            .promptExecutor(executor)
+                            .llmModel(OpenAIModels.Chat.GPT5_2)
+                            .systemPrompt("You are a helpful assistant.")
+                            .toolRegistry(toolRegistry)
+                            .install(ChatMemory.Feature, config -> {
+                                config.windowSize(20); // keep only the last 20 messages
+                            })
+                            .build();
+        
+                    Scanner scanner = new Scanner(System.in);
+                    while (true) {
+                        System.out.print("You: ");
+                        String input = scanner.nextLine().trim();
+                        if (input.equals("/bye")) break;
+                        if (input.isEmpty()) continue;
+        
+                        String reply = agent.run(input, sessionId);
+                        System.out.println("Assistant: " + reply + "\n");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
-    }
-    ```
+        ```
 
 === "Anthropic"
 
-    <!--- INCLUDE
-    import ai.koog.agents.chatMemory.feature.ChatMemory
-    import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.tools.ToolRegistry
-    import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-    import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
-    -->
-    ```kotlin
-    suspend fun main() {
-        val sessionId = "my-conversation"
+    === "Kotlin"
 
-        val toolRegistry = ToolRegistry {
-            // register your tools here
-        }
+        <!--- INCLUDE
+        import ai.koog.agents.chatMemory.feature.ChatMemory
+        import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
+        import ai.koog.agents.core.agent.AIAgent
+        import ai.koog.agents.core.tools.ToolRegistry
+        import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+        import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+        -->
+        ```kotlin
+        suspend fun main() {
+            val sessionId = "my-conversation"
 
-        simpleAnthropicExecutor(System.getenv("ANTHROPIC_API_KEY")).use { executor ->
-            val agent = AIAgent(
-                promptExecutor = executor,
-                llmModel = AnthropicModels.Sonnet4_1,
-                systemPrompt = "You are a helpful assistant.",
-                toolRegistry = toolRegistry,
-            ) {
-                install(ChatMemory) {
-                    windowSize(20)
+            val toolRegistry = ToolRegistry {
+                // register your tools here
+            }
+
+            simpleAnthropicExecutor(System.getenv("ANTHROPIC_API_KEY")).use { executor ->
+                val agent = AIAgent(
+                    promptExecutor = executor,
+                    llmModel = AnthropicModels.Sonnet_4_5,
+                    systemPrompt = "You are a helpful assistant.",
+                    toolRegistry = toolRegistry,
+                ) {
+                    install(ChatMemory) {
+                        windowSize(20)
+                    }
+                }
+
+                while (true) {
+                    print("You: ")
+                    val input = readln().trim()
+                    if (input == "/bye") break
+                    if (input.isEmpty()) continue
+
+                    val reply = agent.run(input, sessionId)
+                    println("Assistant: $reply\n")
                 }
             }
+        }
+        ```
 
-            while (true) {
-                print("You: ")
-                val input = readln().trim()
-                if (input == "/bye") break
-                if (input.isEmpty()) continue
+    === "Java"
 
-                val reply = agent.run(input, sessionId)
-                println("Assistant: $reply\n")
+        ```java
+        public class ExampleChatAgentAnthropic {
+            public static void main(String[] args) {
+                String sessionId = "my-conversation";
+        
+                ToolRegistry toolRegistry = ToolRegistry.builder()
+                        // register your tools here
+                        .build();
+        
+                try (var executor = simpleAnthropicExecutor(System.getenv("ANTHROPIC_API_KEY"))) {
+                    AIAgent<String, String> agent = AIAgent.builder()
+                            .promptExecutor(executor)
+                            .llmModel(AnthropicModels.Sonnet_4_5)
+                            .systemPrompt("You are a helpful assistant.")
+                            .toolRegistry(toolRegistry)
+                            .install(ChatMemory.Feature, config -> {
+                                config.windowSize(20);
+                            })
+                            .build();
+        
+                    Scanner scanner = new Scanner(System.in);
+                    while (true) {
+                        System.out.print("You: ");
+                        String input = scanner.nextLine().trim();
+                        if (input.equals("/bye")) break;
+                        if (input.isEmpty()) continue;
+        
+                        String reply = agent.run(input, sessionId);
+                        System.out.println("Assistant: " + reply + "\n");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
-    }
-    ```
+        ```
 
 === "Google"
 
-    <!--- INCLUDE
-    import ai.koog.agents.chatMemory.feature.ChatMemory
-    import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.tools.ToolRegistry
-    import ai.koog.prompt.executor.clients.google.GoogleModels
-    import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
-    -->
-    ```kotlin
-    suspend fun main() {
-        val sessionId = "my-conversation"
+    === "Kotlin"
 
-        val toolRegistry = ToolRegistry {
-            // register your tools here
-        }
+        <!--- INCLUDE
+        import ai.koog.agents.chatMemory.feature.ChatMemory
+        import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
+        import ai.koog.agents.core.agent.AIAgent
+        import ai.koog.agents.core.tools.ToolRegistry
+        import ai.koog.prompt.executor.clients.google.GoogleModels
+        import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
+        -->
+        ```kotlin
+        suspend fun main() {
+            val sessionId = "my-conversation"
 
-        simpleGoogleAIExecutor(System.getenv("GOOGLE_API_KEY")).use { executor ->
-            val agent = AIAgent(
-                promptExecutor = executor,
-                llmModel = GoogleModels.Gemini2_5Pro,
-                systemPrompt = "You are a helpful assistant.",
-                toolRegistry = toolRegistry,
-            ) {
-                install(ChatMemory) {
-                    windowSize(20)
+            val toolRegistry = ToolRegistry {
+                // register your tools here
+            }
+
+            simpleGoogleAIExecutor(System.getenv("GOOGLE_API_KEY")).use { executor ->
+                val agent = AIAgent(
+                    promptExecutor = executor,
+                    llmModel = GoogleModels.Gemini2_5Pro,
+                    systemPrompt = "You are a helpful assistant.",
+                    toolRegistry = toolRegistry,
+                ) {
+                    install(ChatMemory) {
+                        windowSize(20)
+                    }
+                }
+
+                while (true) {
+                    print("You: ")
+                    val input = readln().trim()
+                    if (input == "/bye") break
+                    if (input.isEmpty()) continue
+
+                    val reply = agent.run(input, sessionId)
+                    println("Assistant: $reply\n")
                 }
             }
+        }
+        ```
 
-            while (true) {
-                print("You: ")
-                val input = readln().trim()
-                if (input == "/bye") break
-                if (input.isEmpty()) continue
+    === "Java"
 
-                val reply = agent.run(input, sessionId)
-                println("Assistant: $reply\n")
+        ```java
+        public class ExampleChatAgentGoogle {
+            public static void main(String[] args) {
+                String sessionId = "my-conversation";
+        
+                ToolRegistry toolRegistry = ToolRegistry.builder()
+                        // register your tools here
+                        .build();
+        
+                try (var executor = simpleGoogleAIExecutor(System.getenv("GOOGLE_API_KEY"))) {
+                    AIAgent<String, String> agent = AIAgent.builder()
+                            .promptExecutor(executor)
+                            .llmModel(GoogleModels.Gemini2_5Pro)
+                            .systemPrompt("You are a helpful assistant.")
+                            .toolRegistry(toolRegistry)
+                            .install(ChatMemory.Feature, config -> {
+                                config.windowSize(20);
+                            })
+                            .build();
+        
+                    Scanner scanner = new Scanner(System.in);
+                    while (true) {
+                        System.out.print("You: ");
+                        String input = scanner.nextLine().trim();
+                        if (input.equals("/bye")) break;
+                        if (input.isEmpty()) continue;
+        
+                        String reply = agent.run(input, sessionId);
+                        System.out.println("Assistant: " + reply + "\n");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
-    }
-    ```
+        ```
 
 === "Ollama"
 
-    <!--- INCLUDE
-    import ai.koog.agents.chatMemory.feature.ChatMemory
-    import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.tools.ToolRegistry
-    import ai.koog.prompt.executor.ollama.client.OllamaModels
-    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-    -->
-    ```kotlin
-    suspend fun main() {
-        val sessionId = "my-conversation"
+    === "Kotlin"
 
-        val toolRegistry = ToolRegistry {
-            // register your tools here
-        }
+        <!--- INCLUDE
+        import ai.koog.agents.chatMemory.feature.ChatMemory
+        import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
+        import ai.koog.agents.core.agent.AIAgent
+        import ai.koog.agents.core.tools.ToolRegistry
+        import ai.koog.prompt.executor.ollama.client.OllamaModels
+        import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+        -->
+        ```kotlin
+        suspend fun main() {
+            val sessionId = "my-conversation"
 
-        simpleOllamaAIExecutor().use { executor ->
-            val agent = AIAgent(
-                promptExecutor = executor,
-                llmModel = OllamaModels.Meta.LLAMA_3_2,
-                systemPrompt = "You are a helpful assistant.",
-                toolRegistry = toolRegistry,
-            ) {
-                install(ChatMemory) {
-                    windowSize(20)
+            val toolRegistry = ToolRegistry {
+                // register your tools here
+            }
+
+            simpleOllamaAIExecutor().use { executor ->
+                val agent = AIAgent(
+                    promptExecutor = executor,
+                    llmModel = OllamaModels.Meta.LLAMA_3_2,
+                    systemPrompt = "You are a helpful assistant.",
+                    toolRegistry = toolRegistry,
+                ) {
+                    install(ChatMemory) {
+                        windowSize(20)
+                    }
+                }
+
+                while (true) {
+                    print("You: ")
+                    val input = readln().trim()
+                    if (input == "/bye") break
+                    if (input.isEmpty()) continue
+
+                    val reply = agent.run(input, sessionId)
+                    println("Assistant: $reply\n")
                 }
             }
+        }
+        ```
 
-            while (true) {
-                print("You: ")
-                val input = readln().trim()
-                if (input == "/bye") break
-                if (input.isEmpty()) continue
+    === "Java"
 
-                val reply = agent.run(input, sessionId)
-                println("Assistant: $reply\n")
+        ```java
+        public class ExampleChatAgentOllama {
+            public static void main(String[] args) {
+                String sessionId = "my-conversation";
+
+                ToolRegistry toolRegistry = ToolRegistry.builder()
+                        // register your tools here
+                        .build();
+
+                try (var executor = simpleOllamaAIExecutor("http://localhost:11434")) {
+                    AIAgent<String, String> agent = AIAgent.builder()
+                            .promptExecutor(executor)
+                            .llmModel(OllamaModels.Meta.LLAMA_3_2)
+                            .systemPrompt("You are a helpful assistant.")
+                            .toolRegistry(toolRegistry)
+                            .install(ChatMemory.Feature, config -> {
+                                config.windowSize(20);
+                            })
+                            .build();
+
+                    Scanner scanner = new Scanner(System.in);
+                    while (true) {
+                        System.out.print("You: ");
+                        String input = scanner.nextLine().trim();
+                        if (input.equals("/bye")) break;
+                        if (input.isEmpty()) continue;
+
+                        String reply = agent.run(input, sessionId);
+                        System.out.println("Assistant: " + reply + "\n");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
-    }
-    ```
+        ```
 
 ## How it works
 
@@ -241,18 +405,34 @@ The example above has three key parts:
 
 ChatMemory is installed as a [feature](../features-overview.md) inside the agent builder block:
 
-```kotlin
-AIAgent(
-    promptExecutor = executor,
-    llmModel = OpenAIModels.Chat.GPT5_2,
-    systemPrompt = "You are a helpful assistant.",
-    toolRegistry = toolRegistry,
-) {
-    install(ChatMemory) {
-        windowSize(20) // keep only the last 20 messages
+=== "Kotlin"
+
+    ```kotlin
+    AIAgent(
+        promptExecutor = executor,
+        llmModel = OpenAIModels.Chat.GPT5_2,
+        systemPrompt = "You are a helpful assistant.",
+        toolRegistry = toolRegistry,
+    ) {
+        install(ChatMemory) {
+            windowSize(20) // keep only the last 20 messages
+        }
     }
-}
-```
+    ```
+
+=== "Java"
+
+    ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(executor)
+            .llmModel(OpenAIModels.Chat.GPT5_2)
+            .systemPrompt("You are a helpful assistant.")
+            .toolRegistry(toolRegistry)
+            .install(ChatMemory.Feature, config -> {
+                config.windowSize(20); // keep only the last 20 messages
+            })
+            .build();
+    ```
 
 The `windowSize(20)` [preprocessor](../chat-memory.md#preprocessors) ensures that the conversation context
 stays bounded — only the 20 most recent messages are kept. Without this, prompt size
@@ -262,9 +442,17 @@ grows unboundedly as the conversation gets longer.
 
 The second argument to `agent.run()` is the session ID:
 
-```kotlin
-val reply = agent.run(input, sessionId)
-```
+=== "Kotlin"
+
+    ```kotlin
+    val reply = agent.run(input, sessionId)
+    ```
+
+=== "Java"
+
+    ```java
+    String reply = agent.run(input, sessionId);
+    ```
 
 ChatMemory uses this ID to load and store the conversation. All calls with the same session ID
 share the same history. Different session IDs produce fully isolated conversations.
