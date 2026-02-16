@@ -8,9 +8,9 @@ import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaInteropUtils;
 import ai.koog.integration.tests.utils.Models;
+import ai.koog.integration.tests.utils.StructuredResults;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
-import kotlinx.serialization.Serializable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -20,51 +20,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
-
-    @Serializable
-    public static class CalculationResult {
-        private final int result;
-        private final String operation;
-
-        public CalculationResult(int result, String operation) {
-            this.result = result;
-            this.operation = operation;
-        }
-
-        public int getResult() {
-            return result;
-        }
-
-        public String getOperation() {
-            return operation;
-        }
-    }
-
-    @Serializable
-    public static class PersonInfo {
-        private final String name;
-        private final int age;
-        private final List<String> hobbies;
-
-        public PersonInfo(String name, int age, List<String> hobbies) {
-            this.name = name;
-            this.age = age;
-            this.hobbies = hobbies;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getAge() {
-            return age;
-        }
-
-        public List<String> getHobbies() {
-            return hobbies;
-        }
-    }
-
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_RequestLLMStructuredSimple(LLModel model) {
@@ -75,10 +30,10 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
             .llmModel(model)
             .systemPrompt("You are a helpful assistant that provides structured responses.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                CalculationResult calc = JavaInteropUtils.requestLLMStructuredBlocking(
+                StructuredResults.CalculationResult calc = JavaInteropUtils.requestLLMStructuredBlocking(
                     context,
                     "Calculate 15 + 27 and return the result in the specified format",
-                    CalculationResult.class
+                    StructuredResults.CalculationResult.class
                 );
                 return "Result: " + calc.getResult() + ", Operation: " + calc.getOperation();
             })
@@ -100,10 +55,10 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
             .llmModel(model)
             .systemPrompt("You are a helpful assistant that provides structured responses about people.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                PersonInfo person = JavaInteropUtils.requestLLMStructuredBlocking(
+                StructuredResults.PersonInfo person = JavaInteropUtils.requestLLMStructuredBlocking(
                     context,
                     "Create a person profile with name 'Alice', age 30, and hobbies: reading, coding, hiking",
-                    PersonInfo.class
+                    StructuredResults.PersonInfo.class
                 );
                 return "Name: " + person.getName() + ", Age: " + person.getAge() +
                     ", Hobbies: " + person.getHobbies().size();
