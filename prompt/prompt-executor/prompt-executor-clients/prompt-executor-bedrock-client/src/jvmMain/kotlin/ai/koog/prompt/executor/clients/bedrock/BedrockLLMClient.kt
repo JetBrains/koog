@@ -260,6 +260,9 @@ public class BedrockLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
+        if (prompt.messages.any { message -> message.parts.any { it !is ContentPart.Text } }) {
+            throw IllegalArgumentException("BedrockLLMClient with apiMethod=BedrockAPIMethod.InvokeModel (which is the default), only supports text content. For other kinds of content, use apiMethod=BedrockAPIMethod.Converse.")
+        }
         val modelFamily = getBedrockModelFamily(model)
         val requestBody = createRequestBody(prompt, model, tools)
         val invokeRequest = InvokeModelRequest {
