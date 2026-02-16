@@ -3,7 +3,12 @@ package ai.koog.agents.core.utils
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
@@ -140,7 +145,11 @@ public suspend fun <T> AIAgentConfig.submitToMainDispatcher(block: () -> T): T {
     val result = CompletableDeferred<T>()
 
     (strategyExecutorService ?: Dispatchers.Default.asExecutor()).execute {
-        result.complete(block())
+        try {
+            result.complete(block())
+        } catch (e: Throwable) {
+            result.completeExceptionally(e)
+        }
     }
 
     return result.await()
