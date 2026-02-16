@@ -180,10 +180,10 @@ public class MIPROv2(private val config: MIPROv2Config) {
         }
 
         // Validate and split datasets
-        val (effectiveTrainset, effectiveValset) = validateAndSplitDatasets(trainset, valset)
+        val (effectiveTrainset, effectiveValSet) = validateAndSplitDatasets(trainset, valset)
 
         // Compute hyperparameters
-        val hyperparams = computeHyperparameters(strategy, effectiveValset, zeroShotMode, random)
+        val hyperParams = computeHyperparameters(strategy, effectiveValSet, zeroShotMode, random)
 
         // Step 1: Generate demo candidate sets
         logger.info { "=== MIPROv2 Step 1: Generating demo candidate sets ===" }
@@ -192,7 +192,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             agentConfig = agentConfig,
             strategy = strategy,
             trainset = effectiveTrainset,
-            numCandidateSets = hyperparams.numFewshotCandidates,
+            numCandidateSets = hyperParams.numFewShotCandidates,
             maxBootstrappedDemos = if (zeroShotMode) BOOTSTRAPPED_FEWSHOT_EXAMPLES_IN_CONTEXT else config.maxBootstrappedDemos,
             maxLabeledDemos = if (zeroShotMode) LABELED_FEWSHOT_EXAMPLES_IN_CONTEXT else config.maxLabeledDemos,
             metric = metric,
@@ -216,7 +216,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         )
         val instructionCandidates = proposer.proposeInstructionsForProgram(
             demoCandidates = demoCandidates,
-            numCandidates = hyperparams.numInstructCandidates,
+            numCandidates = hyperParams.numInstructCandidates,
             parallelism = config.parallelism,
         )
 
@@ -224,7 +224,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         val finalDemoCandidates = if (zeroShotMode) null else demoCandidates
 
         // Step 3: Random grid search
-        logger.info { "=== MIPROv2 Step 3: Random grid search (${hyperparams.numTrials} trials) ===" }
+        logger.info { "=== MIPROv2 Step 3: Random grid search (${hyperParams.numTrials} trials) ===" }
         return randomGridSearch(
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
@@ -232,9 +232,9 @@ public class MIPROv2(private val config: MIPROv2Config) {
             toolRegistry = toolRegistry,
             instructionCandidates = instructionCandidates,
             demoCandidates = finalDemoCandidates,
-            valset = hyperparams.valset,
-            numTrials = hyperparams.numTrials,
-            minibatch = hyperparams.minibatch,
+            valSet = hyperParams.valSet,
+            numTrials = hyperParams.numTrials,
+            minibatch = hyperParams.minibatch,
             metric = metric,
             random = random,
         )
@@ -280,7 +280,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         toolRegistry: ToolRegistry,
         instructionCandidates: Map<String, List<String>>,
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
-        valset: Dataset<TInput, TOutput>,
+        valSet: Dataset<TInput, TOutput>,
         numTrials: Int,
         minibatch: Boolean,
         metric: Metric<TOutput>,
@@ -290,7 +290,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
         val moduleNames = inspectionStrategy.findOptimizableNodes().map { it.name }
 
         // Evaluate baseline (empty config)
-        logger.info { "Evaluating baseline on ${valset.size} examples..." }
+        logger.info { "Evaluating baseline on ${valSet.size} examples..." }
         val baselineConfig = OptimizationConfig()
         val baselineScore = evaluateConfig(
             config = baselineConfig,
@@ -298,7 +298,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
             agentConfig = agentConfig,
             createStrategy = createStrategy,
             toolRegistry = toolRegistry,
-            dataset = valset,
+            dataset = valSet,
             metric = metric,
         )
 
@@ -336,11 +336,11 @@ public class MIPROv2(private val config: MIPROv2Config) {
                 demonstrations = demonstrations,
             )
 
-            // Evaluate on valset (or minibatch)
+            // Evaluate on valSet (or minibatch)
             val evalSet = if (minibatch) {
-                createMinibatch(valset, config.minibatchSize, random)
+                createMinibatch(valSet, config.minibatchSize, random)
             } else {
-                valset
+                valSet
             }
 
             val score = evaluateConfig(
@@ -369,20 +369,20 @@ public class MIPROv2(private val config: MIPROv2Config) {
                     agentConfig = agentConfig,
                     createStrategy = createStrategy,
                     toolRegistry = toolRegistry,
-                    dataset = valset,
+                    dataset = valSet,
                     metric = metric,
                 )
             }
         }
 
-        // Final full evaluation of best config
+        // Final full evaluation of the best config
         val finalScore = evaluateConfig(
             config = bestConfig,
             promptExecutor = promptExecutor,
             agentConfig = agentConfig,
             createStrategy = createStrategy,
             toolRegistry = toolRegistry,
-            dataset = valset,
+            dataset = valSet,
             metric = metric,
         )
 
@@ -467,25 +467,25 @@ public class MIPROv2(private val config: MIPROv2Config) {
     /**
      * Validates and optionally splits datasets.
      *
-     * If [valset] is null, splits [trainset] into train/val with 80% for validation
-     * (matching dspy's hardcoded ratio).
+     * If [valSet] is null, splits [trainset] into train/val with 80% for validation
+     * (matching DSPy's hardcoded ratio).
      */
     private fun <TInput, TOutput> validateAndSplitDatasets(
         trainset: Dataset<TInput, TOutput>,
-        valset: Dataset<TInput, TOutput>?,
+        valSet: Dataset<TInput, TOutput>?,
     ): Pair<Dataset<TInput, TOutput>, Dataset<TInput, TOutput>> {
         require(trainset.isNotEmpty()) { "Trainset cannot be empty" }
 
-        return if (valset == null) {
+        return if (valSet == null) {
             require(trainset.size >= 2) {
-                "Trainset must have at least 2 examples if no valset specified"
+                "Trainset must have at least 2 examples if no valSet specified"
             }
             val valSize = minOf(1000, maxOf(1, (trainset.size * 0.80).toInt()))
             val cutoff = trainset.size - valSize
             trainset.take(cutoff) to trainset.drop(cutoff)
         } else {
-            require(valset.isNotEmpty()) { "Validation set must have at least 1 example" }
-            trainset to valset
+            require(valSet.isNotEmpty()) { "Validation set must have at least 1 example" }
+            trainset to valSet
         }
     }
 
@@ -494,7 +494,7 @@ public class MIPROv2(private val config: MIPROv2Config) {
      */
     private fun <TInput, TOutput> computeHyperparameters(
         strategy: AIAgentGraphStrategy<TInput, TOutput>,
-        valset: Dataset<TInput, TOutput>,
+        valSet: Dataset<TInput, TOutput>,
         zeroShotMode: Boolean,
         random: Random,
     ): HyperparameterSet<TInput, TOutput> {
@@ -502,16 +502,16 @@ public class MIPROv2(private val config: MIPROv2Config) {
             val numCandidates = config.numCandidates!!
             return HyperparameterSet(
                 numTrials = config.numTrials!!,
-                valset = valset,
+                valSet = valSet,
                 minibatch = config.minibatch,
                 numInstructCandidates = numCandidates,
-                numFewshotCandidates = numCandidates,
+                numFewShotCandidates = numCandidates,
             )
         }
 
         val autoSettings = config.auto
-        val effectiveValset = createMinibatch(valset, autoSettings.valSize, random)
-        val effectiveMinibatch = effectiveValset.size > MIN_MINIBATCH_SIZE
+        val effectiveValSet = createMinibatch(valSet, autoSettings.valSize, random)
+        val effectiveMinibatch = effectiveValSet.size > MIN_MINIBATCH_SIZE
 
         // Allocate half of candidates to instructions when not zero-shot
         val numInstructCandidates = if (zeroShotMode) {
@@ -519,16 +519,16 @@ public class MIPROv2(private val config: MIPROv2Config) {
         } else {
             (autoSettings.numCandidates * 0.5).toInt()
         }
-        val numFewshotCandidates = autoSettings.numCandidates
+        val numFewShotCandidates = autoSettings.numCandidates
 
         val numTrials = estimateNumTrials(strategy, zeroShotMode, autoSettings.numCandidates)
 
         return HyperparameterSet(
             numTrials = numTrials,
-            valset = effectiveValset,
+            valSet = effectiveValSet,
             minibatch = effectiveMinibatch,
             numInstructCandidates = numInstructCandidates,
-            numFewshotCandidates = numFewshotCandidates,
+            numFewShotCandidates = numFewShotCandidates,
         )
     }
 
@@ -563,10 +563,10 @@ public class MIPROv2(private val config: MIPROv2Config) {
 
     private data class HyperparameterSet<TInput, TOutput>(
         val numTrials: Int,
-        val valset: Dataset<TInput, TOutput>,
+        val valSet: Dataset<TInput, TOutput>,
         val minibatch: Boolean,
         val numInstructCandidates: Int,
-        val numFewshotCandidates: Int,
+        val numFewShotCandidates: Int,
     )
 
     private companion object {

@@ -57,7 +57,7 @@ private val logger = KotlinLogging.logger {}
  * @param random Random instance for reproducibility.
  * @param parallelism Maximum number of concurrent shuffled bootstrap runs. Set to 1 (default)
  *  for sequential execution.
- * @return Map from node name to list of candidate demo sets (each set is a list of [Demonstration]s),
+ * @return Map from node name to a list of candidate demo sets (each set is a list of [Demonstration]s),
  *  or null if zero-shot mode (both maxBootstrappedDemos and maxLabeledDemos are 0).
  */
 public suspend fun <TInput, TOutput> generateDemoSets(
@@ -126,7 +126,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
         }
     }
 
-    // 3. Unshuffled bootstrap: no metric filtering (accept all traces)
+    // 3. Unshuffled bootstrap: no metric filtering
     logger.info { "Demo set generation: running unshuffled bootstrap (1/${numCandidateSets} sets)..." }
     adjustedCount--
     val unshuffledOptimizer = BootstrapFewShot(
@@ -147,7 +147,7 @@ public suspend fun <TInput, TOutput> generateDemoSets(
     )
     addFromBootstrapResult(unshuffledResult.config.demonstrations)
 
-    // 4. Shuffled bootstraps: fill remaining slots with shuffled trainset + random demo count
+    // 4. Shuffled bootstraps: fill the remaining slots with shuffled trainset + random demo count
     val shuffledTotal = maxOf(0, adjustedCount)
 
     // Pre-generate seeds and per-iteration random values from parent random for determinism
