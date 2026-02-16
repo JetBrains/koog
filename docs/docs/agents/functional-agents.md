@@ -31,31 +31,52 @@ The most convenient way is to use the `functionalStrategy {...}` DSL method.
 For example, here is how to define a functional strategy that expects a string input and returns a string output,
 makes one LLM call, then returns the content of the assistant message from the response.
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-val strategy = functionalStrategy<String, String> { input ->
-    val response = requestLLM(input)
-    response.asAssistantMessage().content
-}
+=== "Kotlin"
 
-val mathAgent = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-    strategy = strategy
-)
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.agent.functionalStrategy
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    val strategy = functionalStrategy<String, String> { input ->
+        val response = requestLLM(input)
+        response.asAssistantMessage().content
+    }
 
-fun main() = runBlocking {
-    val result = mathAgent.run("What is 12 × 9?")
-    println(result)
-}
-```
-<!--- KNIT example-functional-agent-01.kt -->
+    val mathAgent = AIAgent(
+        promptExecutor = simpleOllamaAIExecutor(),
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        strategy = strategy
+    )
+
+    fun main() = runBlocking {
+        val result = mathAgent.run("What is 12 × 9?")
+        println(result)
+    }
+    ```
+    <!--- KNIT example-functional-agent-01.kt -->
+
+=== "Java"
+
+    ```java
+    AIAgent<String, String> mathAgent = AIAgent.builder()
+        .promptExecutor(SimpleLLMExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .functionalStrategy("mathStrategy", (AIAgentFunctionalContext context, String input) -> {
+            Message.Response response = context.requestLLM(input);
+            if (response instanceof Message.Assistant) {
+                return ((Message.Assistant) response).getContent();
+            }
+            return "";
+        })
+        .build();
+
+    String result = mathAgent.run("What is 12 × 9?");
+    System.out.println(result);
+    ```
 
 The agent can produce the following output:
 
@@ -67,20 +88,54 @@ The answer to 12 × 9 is 108.
 
 You can extend the previous strategy to make multiple sequential LLM calls:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.functionalStrategy
--->
-```kotlin
-val strategy = functionalStrategy<String, String> { input ->
-    // The first LLM call produces an initial draft based on the user input
-    val draft = requestLLM("Draft: $input").asAssistantMessage().content
-    // The second LLM call improves the initial draft
-    val improved = requestLLM("Improve and clarify.").asAssistantMessage().content
-    // The final LLM call formats the improved text and returns the result
-    requestLLM("Format the result as bold.").asAssistantMessage().content
-}
-```
-<!--- KNIT example-functional-agent-02.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.functionalStrategy
+    -->
+    ```kotlin
+    val strategy = functionalStrategy<String, String> { input ->
+        // The first LLM call produces an initial draft based on the user input
+        val draft = requestLLM("Draft: $input").asAssistantMessage().content
+        // The second LLM call improves the initial draft
+        val improved = requestLLM("Improve and clarify.").asAssistantMessage().content
+        // The final LLM call formats the improved text and returns the result
+        requestLLM("Format the result as bold.").asAssistantMessage().content
+    }
+    ```
+    <!--- KNIT example-functional-agent-02.kt -->
+
+=== "Java"
+
+    ```java
+    AIAgent<String, String> mathAgent = AIAgent.builder()
+        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+        .systemPrompt("You are a precise math assistant.")
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+            // The first LLM call produces an initial draft based on the user input
+            Message.Response draftResponse = context.requestLLM("Draft: " + input);
+            String draft = "";
+            if (draftResponse instanceof Message.Assistant) {
+                draft = ((Message.Assistant) draftResponse).getContent();
+            }
+
+            // The second LLM call improves the initial draft
+            Message.Response improvedResponse = context.requestLLM("Improve and clarify.");
+            String improved = "";
+            if (improvedResponse instanceof Message.Assistant) {
+                improved = ((Message.Assistant) improvedResponse).getContent();
+            }
+
+            // The final LLM call formats the improved text and returns the result
+            Message.Response finalResponse = context.requestLLM("Format the result as bold.");
+            if (finalResponse instanceof Message.Assistant) {
+                return ((Message.Assistant) finalResponse).getContent();
+            }
+            return "";
+        })
+        .build();
+    ```
 
 The agent can produce the following output:
 
@@ -103,65 +158,119 @@ Here is what you need to do:
 3. Make sure the agent strategy can identify tool calls in LLM responses, execute the requested tools,
    send their results back to the LLM, and repeat the process until there are no tool calls remaining.
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.tool
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-@LLMDescription("Tools for performing math operations")
-class MathTools : ToolSet {
-    @Tool
-    @LLMDescription("Multiplies two numbers and returns the result")
-    fun multiply(a: Int, b: Int): Int {
-        // This is not necessary, but it helps to see the tool call in the console output
-        println("Multiplying $a and $b...")
-        return a * b
-    }
-}
+=== "Kotlin"
 
-val toolRegistry = ToolRegistry {
-    tool(MathTools()::multiply)
-}
-
-val strategy = functionalStrategy<String, String> { input ->
-    // Send the user input to the LLM
-    var responses = requestLLMMultiple(input)
-
-    // Only loop while the LLM requests tools
-    while (responses.containsToolCalls()) {
-        // Extract tool calls from the response
-        val pendingCalls = extractToolCalls(responses)
-        // Execute the tools and return the results
-        val results = executeMultipleTools(pendingCalls)
-        // Send the tool results back to the LLM. The LLM may call more tools or return a final output
-        responses = sendMultipleToolResults(results)
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.agent.functionalStrategy
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.reflect.tool
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    @LLMDescription("Tools for performing math operations")
+    class MathTools : ToolSet {
+        @Tool
+        @LLMDescription("Multiplies two numbers and returns the result")
+        fun multiply(a: Int, b: Int): Int {
+            // This is not necessary, but it helps to see the tool call in the console output
+            println("Multiplying $a and $b...")
+            return a * b
+        }
     }
 
-    // When no tool calls remain, extract and return the assistant message content from the response
-    responses.single().asAssistantMessage().content
-}
+    val toolRegistry = ToolRegistry {
+        tool(MathTools()::multiply)
+    }
 
-val mathAgentWithTools = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-    toolRegistry = toolRegistry,
-    strategy = strategy
-)
+    val strategy = functionalStrategy<String, String> { input ->
+        // Send the user input to the LLM
+        var responses = requestLLMMultiple(input)
 
-fun main() = runBlocking {
-    val result = mathAgentWithTools.run("Multiply 3 by 4, then multiply the result by 5.")
-    println(result)
-}
-```
-<!--- KNIT example-functional-agent-03.kt -->
+        // Only loop while the LLM requests tools
+        while (responses.containsToolCalls()) {
+            // Extract tool calls from the response
+            val pendingCalls = extractToolCalls(responses)
+            // Execute the tools and return the results
+            val results = executeMultipleTools(pendingCalls)
+            // Send the tool results back to the LLM. The LLM may call more tools or return a final output
+            responses = sendMultipleToolResults(results)
+        }
+
+        // When no tool calls remain, extract and return the assistant message content from the response
+        responses.single().asAssistantMessage().content
+    }
+
+    val mathAgentWithTools = AIAgent(
+        promptExecutor = simpleOllamaAIExecutor(),
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        toolRegistry = toolRegistry,
+        strategy = strategy
+    )
+
+    fun main() = runBlocking {
+        val result = mathAgentWithTools.run("Multiply 3 by 4, then multiply the result by 5.")
+        println(result)
+    }
+    ```
+    <!--- KNIT example-functional-agent-03.kt -->
+
+=== "Java"
+
+    ```java
+    @LLMDescription(description = "Tools for performing math operations")
+    public static class MathTools implements ToolSet {
+        @Tool
+        @LLMDescription(description = "Multiplies two numbers and returns the result")
+        public int multiply(int a, int b) {
+            // This is not necessary, but it helps to see the tool call in the console output
+            System.out.println("Multiplying " + a + " and " + b + "...");
+            return a * b;
+        }
+    }
+
+    public static void main(String[] args) {
+        MathTools mathTools = new MathTools();
+        ToolRegistry toolRegistry = ToolRegistry.builder()
+            .tools(mathTools)
+            .build();
+
+        AIAgent<String, String> mathAgentWithTools = AIAgent.builder()
+            .promptExecutor(SimpleLLMExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
+            .llmModel(OllamaModels.Meta.LLAMA_3_2)
+            .toolRegistry(toolRegistry)
+            .functionalStrategy("mathWithTools", (AIAgentFunctionalContext context, String input) -> {
+                // Send the user input to the LLM
+                List<Message.Response> responses = context.requestLLMMultiple(input);
+
+                // Only loop while the LLM requests tools
+                while (context.containsToolCalls(responses)) {
+                    // Extract tool calls from the response
+                    List<Message.Tool.Call> pendingCalls = context.extractToolCalls(responses);
+                    // Execute the tools and return the results
+                    List<ReceivedToolResult> results = context.executeMultipleTools(pendingCalls, false);
+                    // Send the tool results back to the LLM
+                    responses = context.sendMultipleToolResults(results);
+                }
+
+                // Extract and return the assistant message content from the response
+                Message.Response finalResponse = responses.get(0);
+                if (finalResponse instanceof Message.Assistant) {
+                    return ((Message.Assistant) finalResponse).getContent();
+                }
+                return "";
+            })
+            .build();
+
+        String result = mathAgentWithTools.run("Multiply 3 by 4, then multiply the result by 5.");
+        System.out.println(result);
+    }
+    ```
 
 The agent can produce the following output:
 
