@@ -1,4 +1,4 @@
-rootProject.name = "KoogJs"
+rootProject.name = "koog-js-example"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

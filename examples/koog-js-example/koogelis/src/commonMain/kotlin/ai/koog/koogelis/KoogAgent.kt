@@ -17,8 +17,9 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels.Alibaba.QWEN_2_5_05B
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -42,7 +43,15 @@ class KoogAgent(val agentConfiguration: AgentConfiguration) {
 
     private val mcpTransportManager = McpTransportManager(logger)
 
-    private val defaultOllamaModel = QWEN_2_5_05B // by default simpleOllamaAIExecutor will be used
+    private val defaultOllamaModel = LLModel(
+        provider = LLMProvider.Ollama, id = "llama3.2:1b",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Tools
+        ),
+        contextLength = 131_072,
+    )
 
     companion object KoogFactory {
         fun create(agentConfiguration: AgentConfiguration): KoogAgent = KoogAgent(agentConfiguration)
@@ -52,7 +61,9 @@ class KoogAgent(val agentConfiguration: AgentConfiguration) {
         val llm = SupportedGoogleModels.findModel(agentConfiguration.llm.id) ?: defaultOllamaModel
 
         val promptExecutor = if (llm != defaultOllamaModel) {
-            simpleGoogleAIExecutor(agentConfiguration.llm.authToken ?: throw IllegalArgumentException("API key is required"))
+            simpleGoogleAIExecutor(
+                agentConfiguration.llm.authToken ?: throw IllegalArgumentException("API key is required")
+            )
         } else {
             val llmUrl = if (agentConfiguration.llm.url.isNullOrBlank()) {
                 "http://localhost:11434"
@@ -139,7 +150,7 @@ class KoogAgent(val agentConfiguration: AgentConfiguration) {
         val toolRegistries = mutableListOf<ToolRegistry>()
         for (toolDefinition in tools) {
             when (toolDefinition.type) {
-                AgentConfiguration.ToolType.SIMPLE -> {
+                AgentConfiguration.ToolType.SIMPLE -> { // You can define your tools and then use them here
 //                    if (toolDefinition.id == "web_scraping") {
 //                        toolRegistries.add(ToolRegistry {
 //                            tool(WebScrapingTool("https://nos.nl"))

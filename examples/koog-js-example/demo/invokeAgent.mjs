@@ -17,7 +17,7 @@ function getEnv(name, fallback = undefined) {
 }
 
 const apiKey = getEnv('API_KEY') || 'YOUR_API_TOKEN';
-const modelId = 'qwen'; // can be also gemini-2.0-flash or gemini-2.5-flash-lite or gemini-2.5-pro
+const modelId = 'local'; // can be also gemini-2.0-flash or gemini-2.5-flash-lite or gemini-2.5-pro
 const temperature = parseFloat(getEnv('TEMPERATURE', '0.0'));
 
 
@@ -79,16 +79,16 @@ const agentConfig = new AgentConfiguration(
     AgentConfiguration.AgentStrategy.SINGLE_RUN,
     'You are a expert in Lithuanian national food. You can use ONLY get-sum tool, it is useful for calculating calories. Tinginys has 500 kcal, Cepelinai has 300 kcal, Kugelis has 250 kcal.',
     [], // you can pass mcpServer from above
-    10,
+    100,
     true,
-    myLogger,
-    myPersistence
+    null, // possible to use myLogger
+    null // possible to use myPersistence
 );
 
 async function main() {
     try {
         const koogAgent = KoogAgent.KoogFactory.create(agentConfig);
-        const prompt = process.argv.slice(2).join(' ').trim() || 'Give me a good joke about food';
+        const prompt = process.argv.slice(2).join(' ').trim() || 'Gimme a good joke about Kotlin/JS please';
 
         const result = await koogAgent.invoke(prompt); // or use the code below to abort after timeoutId
         // const result = await koogAgent.invoke(prompt, signal)

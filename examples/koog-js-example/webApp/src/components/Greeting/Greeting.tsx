@@ -6,8 +6,8 @@ import {KoogAgent, AgentConfiguration} from 'koogelis';
 import type { AnimationEvent } from 'react';
 
 export function Greeting() {
-  const apiKey = ''; // not needed for QWEN
-  const modelId = 'qwen'; // can also be gemini-2.0-flash or gemini-2.5-flash-lite or gemini-2.5-pro
+  const apiKey = ''; // not needed for local
+  const modelId = 'local'; // can also be gemini-2.0-flash or gemini-2.5-flash-lite or gemini-2.5-pro
   const agentConfig = new AgentConfiguration(
       'Joker',
       new AgentConfiguration.Llm(
