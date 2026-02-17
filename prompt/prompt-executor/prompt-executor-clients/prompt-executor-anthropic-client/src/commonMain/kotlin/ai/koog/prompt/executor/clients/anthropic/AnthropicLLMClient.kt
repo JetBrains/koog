@@ -226,6 +226,14 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                     )
                                 }
 
+                                is AnthropicContent.Thinking -> {
+                                    emitReasoningDelta(
+                                        text = contentBlock.thinking,
+                                        index = response.index
+                                            ?: throw LLMClientException(clientName, "Tool index is missing")
+                                    )
+                                }
+
                                 else -> {
                                     contentBlock?.let { logger.warn { "Unknown Anthropic stream content block type: ${it::class}" } }
                                         ?: logger.warn { "Anthropic stream content block is missing" }
@@ -254,6 +262,8 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                         )
                                     }
 
+                                    // TODO: where comes reasoning?
+
                                     else -> {
                                         logger.warn { "Unknown Anthropic stream delta type: ${delta.type}" }
                                     }
@@ -262,7 +272,18 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                         }
 
                         AnthropicStreamEventType.CONTENT_BLOCK_STOP.value -> {
-                            tryEmitPendingToolCall()
+                            response.delta?.let { delta ->
+                                when (delta.type) {
+                                    AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
+                                        tryEmitPendingToolCall()
+                                    }
+
+                                    AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
+                                        tryEmitPendingText()
+                                        tryEmitPendingReasoning()
+                                    }
+                                }
+                            }
                         }
 
                         AnthropicStreamEventType.MESSAGE_DELTA.value -> {

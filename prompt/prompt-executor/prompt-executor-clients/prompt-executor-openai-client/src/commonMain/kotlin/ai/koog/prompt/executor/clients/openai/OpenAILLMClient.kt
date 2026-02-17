@@ -357,8 +357,12 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                             StreamFrame.ReasoningDelta(it.delta)
                         }
 
+                        is OpenAIStreamEvent.ResponseReasoningSummaryTextDelta -> {
+                            StreamFrame.ReasoningSummaryDelta(it.delta)
+                        }
+
                         is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
-                            StreamFrame.ReasoningDelta(it.delta)
+                            StreamFrame.ToolCallDelta(it.itemId, null, it.delta, it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
@@ -366,11 +370,17 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                 is Item.Text -> StreamFrame.TextComplete(item.value)
                                 is Item.Reasoning -> {
                                     StreamFrame.ReasoningComplete(
-                                        item.content?.map { content -> content.text } ?: emptyList(),
+                                        text = item.content?.map { content -> content.text } ?: emptyList(),
+                                        summary = item.summary.map { content -> content.text },
                                         encrypted = item.encryptedContent
                                     )
                                 }
-                                is Item.FunctionToolCall -> StreamFrame.ToolCallDelta(item.id, item.name, item.arguments)
+
+                                is Item.FunctionToolCall -> StreamFrame.ToolCallComplete(
+                                    item.id,
+                                    item.name,
+                                    item.arguments
+                                )
 
                                 else -> null
                             }
