@@ -3,12 +3,11 @@ package ai.koog.agents.example.calculator
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.handleEvents
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.agents.features.opentelemetry.metric.adapter.restrictToolNameCardinality
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
@@ -85,37 +84,9 @@ private suspend fun runCalculatorExample(runMode: RunMode) {
                     println("Result: ${eventContext.result}")
                 }
             }
-
-            install(OpenTelemetry) {
-                setServiceInfo(
-                    "calculator",
-                    "0.0.1"
-                )
-                addResourceAttributes(
-                    mapOf(AttributeKey.stringKey("service.instance.id") to "run-1")
-                )
-                addMetricExporter(
-                    OtlpGrpcMetricExporter.builder()
-                        .setEndpoint("http://localhost:17011")
-                        .setTimeout(2, TimeUnit.SECONDS)
-                        .build(),
-                    1.seconds
-                )
-                restrictToolNameCardinality(
-                    setOf("plus", "minus", "multiply", "divide"),
-                    "unknown"
-                )
-                addSpanExporter(
-                    OtlpGrpcSpanExporter.builder()
-                        .setEndpoint("http://localhost:17011")
-                        .setTimeout(2, TimeUnit.SECONDS)
-                        .build()
-                )
-            }
         }
 
-        val expression = "(10 + 20) * (5 + 5) / (2 - 11) * 445 / 23 + 2334 / 23 + 3"
-        val result = agent.run(expression)
+        val result = agent.run("(10 + 20) * (5 + 5) / (2 - 11)")
         println("Agent result: $result")
     }
 }
