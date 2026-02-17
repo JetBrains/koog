@@ -21,7 +21,7 @@ public abstract class NonSuspendAIAgentStrategy<TInput, TOutput, TContext : AIAg
      * Executes the AI agent's strategy asynchronously using the provided [context] and [input].
      *
      * The strategy is executed on the main dispatcher that is either:
-     *  a) [ai.koog.agents.core.agent.config.AIAgentConfig.strategyExecutorService] from [AIAgentContext.config] of the provided [config]
+     *  a) [ai.koog.agents.core.agent.config.AIAgentConfig.strategyExecutorService] from [AIAgentContext.config] of the provided [context]
      *  b) [kotlinx.coroutines.Dispatchers.Default]
      *
      * @param context The execution context in which the AI agent operates. It provides access to the agent's
