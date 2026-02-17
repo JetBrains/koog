@@ -27,32 +27,25 @@ private fun Attribute.toSdkAttribute(verbose: Boolean): Pair<AttributeKey<*>, An
             val unwrappedValue = if (verbose) value.value else value.toString()
             Pair(AttributeKey.stringKey(key), unwrappedValue)
         }
-
         is CharSequence,
         is Char -> {
             Pair(AttributeKey.stringKey(key), value)
         }
-
         is Boolean -> {
             Pair(AttributeKey.booleanKey(key), value)
         }
-
         is Int -> {
             Pair(AttributeKey.longKey(key), value.toLong())
         }
-
         is Long -> {
             Pair(AttributeKey.longKey(key), value)
         }
-
         is Float -> {
             Pair(AttributeKey.doubleKey(key), value)
         }
-
         is Double -> {
             Pair(AttributeKey.doubleKey(key), value)
         }
-
         is List<*> -> {
             if (value.all { it is HiddenString }) {
                 val unwrappedValue = value.map {
@@ -82,7 +75,6 @@ private fun Attribute.toSdkAttribute(verbose: Boolean): Pair<AttributeKey<*>, An
                 )
             }
         }
-
         else -> {
             error("Attribute '$key' has unsupported type for value: ${value::class.simpleName}")
         }
