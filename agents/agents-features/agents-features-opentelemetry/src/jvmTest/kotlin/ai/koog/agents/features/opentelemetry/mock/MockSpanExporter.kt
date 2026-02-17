@@ -1,6 +1,6 @@
 package ai.koog.agents.features.opentelemetry.mock
 
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.sdk.common.CompletableResultCode
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -19,7 +19,7 @@ internal class MockSpanExporter : SpanExporter {
 
     companion object {
         private val createAgentSpanOperationAttribute =
-            SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CREATE_AGENT)
+            GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.CREATE_AGENT)
     }
 
     private val _collectedSpans = mutableListOf<SpanData>()

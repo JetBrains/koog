@@ -4,7 +4,6 @@ import ai.koog.agents.utils.HiddenString
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.common.AttributesBuilder
-import java.util.function.BiConsumer
 
 internal fun AttributesBuilder.addAttributes(attributes: Map<AttributeKey<*>, Any>): AttributesBuilder {
     attributes.forEach { (key, value) ->
@@ -16,26 +15,7 @@ internal fun AttributesBuilder.addAttributes(attributes: Map<AttributeKey<*>, An
 
 internal fun List<Attribute>.toSdkAttributes(verbose: Boolean): Attributes {
     val sdkAttributesMap = this.associate { it.toSdkAttribute(verbose) }
-
-    return object : Attributes {
-
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : Any?> get(key: AttributeKey<T?>): T? = sdkAttributesMap[key] as T?
-
-        override fun forEach(consumer: BiConsumer<in AttributeKey<*>, in Any>) {
-            sdkAttributesMap.forEach { attribute ->
-                consumer.accept(attribute.key, attribute.value)
-            }
-        }
-
-        override fun size(): Int = sdkAttributesMap.size
-
-        override fun isEmpty(): Boolean = sdkAttributesMap.isEmpty()
-
-        override fun asMap(): Map<AttributeKey<*>, Any> = sdkAttributesMap
-
-        override fun toBuilder(): AttributesBuilder = Attributes.builder().addAttributes(sdkAttributesMap)
-    }
+    return Attributes.builder().addAttributes(sdkAttributesMap).build()
 }
 
 private fun Attribute.toSdkAttribute(verbose: Boolean): Pair<AttributeKey<*>, Any> {
@@ -47,25 +27,32 @@ private fun Attribute.toSdkAttribute(verbose: Boolean): Pair<AttributeKey<*>, An
             val unwrappedValue = if (verbose) value.value else value.toString()
             Pair(AttributeKey.stringKey(key), unwrappedValue)
         }
+
         is CharSequence,
         is Char -> {
             Pair(AttributeKey.stringKey(key), value)
         }
+
         is Boolean -> {
             Pair(AttributeKey.booleanKey(key), value)
         }
+
         is Int -> {
             Pair(AttributeKey.longKey(key), value.toLong())
         }
+
         is Long -> {
             Pair(AttributeKey.longKey(key), value)
         }
+
         is Float -> {
             Pair(AttributeKey.doubleKey(key), value)
         }
+
         is Double -> {
             Pair(AttributeKey.doubleKey(key), value)
         }
+
         is List<*> -> {
             if (value.all { it is HiddenString }) {
                 val unwrappedValue = value.map {
@@ -87,12 +74,15 @@ private fun Attribute.toSdkAttribute(verbose: Boolean): Pair<AttributeKey<*>, An
                 Pair(AttributeKey.doubleArrayKey(key), value.map { (it as Float).toDouble() })
             } else {
                 error(
-                    "Attribute '$key' has unsupported type for List values: ${value.firstOrNull()?.let {
-                        it::class.simpleName
-                    } }"
+                    "Attribute '$key' has unsupported type for List values: ${
+                        value.firstOrNull()?.let {
+                            it::class.simpleName
+                        }
+                    }"
                 )
             }
         }
+
         else -> {
             error("Attribute '$key' has unsupported type for value: ${value::class.simpleName}")
         }
