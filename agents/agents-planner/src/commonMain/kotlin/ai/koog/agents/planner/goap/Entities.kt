@@ -1,12 +1,12 @@
 package ai.koog.agents.planner.goap
 
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import kotlin.jvm.JvmStatic
 
 public typealias Condition<State> = (State) -> Boolean
 public typealias Belief<State> = (State) -> State
 public typealias Cost<State> = (State) -> Double
-public typealias Execute<State> = suspend (AIAgentFunctionalContext, State) -> State
+public typealias Execute<State> = suspend (AIAgentPlannerContext, State) -> State
 public typealias GoalValue = (Double) -> Double
 
 /**

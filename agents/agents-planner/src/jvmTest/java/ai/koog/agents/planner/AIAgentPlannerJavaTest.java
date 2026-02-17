@@ -1,6 +1,6 @@
 package ai.koog.agents.planner;
 
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +10,7 @@ public class AIAgentPlannerJavaTest {
 
         @Override
         protected String buildPlan(
-            AIAgentFunctionalContext context,
+            AIAgentPlannerContext context,
             String state,
             @Nullable String plan
         ) {
@@ -19,7 +19,7 @@ public class AIAgentPlannerJavaTest {
 
         @Override
         protected String executeStep(
-            AIAgentFunctionalContext context,
+            AIAgentPlannerContext context,
             String state,
             String plan
         ) {
@@ -28,7 +28,7 @@ public class AIAgentPlannerJavaTest {
 
         @Override
         protected Boolean isPlanCompleted(
-            AIAgentFunctionalContext context,
+            AIAgentPlannerContext context,
             String state,
             String plan
         ) {

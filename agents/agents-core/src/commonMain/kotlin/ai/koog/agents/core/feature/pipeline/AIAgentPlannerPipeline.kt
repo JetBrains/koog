@@ -1,8 +1,8 @@
-package ai.koog.agents.planner
+package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import kotlinx.datetime.Clock
 
 /**

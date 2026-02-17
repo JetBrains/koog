@@ -1,6 +1,6 @@
 package ai.koog.agents.planner.llm
 
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown
@@ -26,7 +26,7 @@ public class SimpleLLMWithCriticPlanner() : SimpleLLMPlanner() {
     )
 
     override suspend fun assessPlan(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: String,
         plan: SimplePlan?
     ): SimplePlanAssessment<SimplePlan> {

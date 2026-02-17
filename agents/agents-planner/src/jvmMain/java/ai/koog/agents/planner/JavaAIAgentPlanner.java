@@ -1,7 +1,7 @@
 package ai.koog.agents.planner;
 
 import ai.koog.agents.annotations.JavaAPI;
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,26 +14,26 @@ public abstract class JavaAIAgentPlanner<State, Plan> extends AIAgentPlanner<Sta
     }
 
     abstract protected Plan buildPlan(
-        AIAgentFunctionalContext context,
+        AIAgentPlannerContext context,
         State state,
         @Nullable Plan plan
     );
 
     abstract protected State executeStep(
-        AIAgentFunctionalContext context,
-        State state,
-        Plan plan
+        AIAgentPlannerContext context,
+            State state,
+            Plan plan
     );
 
     abstract protected Boolean isPlanCompleted(
-        AIAgentFunctionalContext context,
+        AIAgentPlannerContext context,
         State state,
         Plan plan
     );
 
     @Override
     protected final Plan buildPlan(
-        AIAgentFunctionalContext context,
+        AIAgentPlannerContext context,
         State state,
         @Nullable Plan plan,
         @NotNull Continuation<? super Plan> continuation
@@ -43,7 +43,7 @@ public abstract class JavaAIAgentPlanner<State, Plan> extends AIAgentPlanner<Sta
 
     @Override
     protected final State executeStep(
-        AIAgentFunctionalContext context,
+        AIAgentPlannerContext context,
         State state,
         Plan plan,
         @NotNull Continuation<? super State> continuation
@@ -53,7 +53,7 @@ public abstract class JavaAIAgentPlanner<State, Plan> extends AIAgentPlanner<Sta
 
     @Override
     protected final Boolean isPlanCompleted(
-        AIAgentFunctionalContext context,
+        AIAgentPlannerContext context,
         State state,
         Plan plan,
         @NotNull Continuation<? super Boolean> continuation

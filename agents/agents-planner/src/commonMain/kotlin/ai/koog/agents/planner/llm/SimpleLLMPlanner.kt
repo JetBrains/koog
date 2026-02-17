@@ -1,6 +1,6 @@
 package ai.koog.agents.planner.llm
 
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
@@ -26,7 +26,7 @@ public open class SimpleLLMPlanner : AIAgentPlanner<String, SimplePlan>(
     stateType = typeOf<String>(),
 ) {
     override suspend fun buildPlan(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: String,
         plan: SimplePlan?
     ): SimplePlan {
@@ -172,7 +172,7 @@ public open class SimpleLLMPlanner : AIAgentPlanner<String, SimplePlan>(
     }
 
     protected open suspend fun assessPlan(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: String,
         plan: SimplePlan?
     ): SimplePlanAssessment<SimplePlan> {
@@ -181,7 +181,7 @@ public open class SimpleLLMPlanner : AIAgentPlanner<String, SimplePlan>(
     }
 
     override suspend fun executeStep(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: String,
         plan: SimplePlan
     ): String {
@@ -205,7 +205,7 @@ public open class SimpleLLMPlanner : AIAgentPlanner<String, SimplePlan>(
         return result.content
     }
 
-    override suspend fun isPlanCompleted(context: AIAgentFunctionalContext, state: String, plan: SimplePlan): Boolean =
+    override suspend fun isPlanCompleted(context: AIAgentPlannerContext, state: String, plan: SimplePlan): Boolean =
         plan.steps.all { it.isCompleted }
 }
 

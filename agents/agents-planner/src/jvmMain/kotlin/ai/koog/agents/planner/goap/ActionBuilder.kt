@@ -7,7 +7,7 @@
 package ai.koog.agents.planner.goap
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 
@@ -43,6 +43,6 @@ public actual class ActionBuilder<State> : ActionBuilderApi<State> {
      * Synchronous GOAP action execution.
      */
     public fun interface ExecuteSync<State> {
-        public fun execute(context: AIAgentFunctionalContext, state: State): State
+        public fun execute(context: AIAgentPlannerContext, state: State): State
     }
 }

@@ -1,6 +1,6 @@
 package ai.koog.agents.planner.goap
 
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.planner.AIAgentPlanner
 import kotlin.reflect.KType
 
@@ -22,7 +22,7 @@ public open class GOAPPlanner<State> internal constructor(
     stateType = stateType,
 ) {
     override suspend fun buildPlan(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: State,
         plan: GOAPPlan<State>?
     ): GOAPPlan<State> = goals
@@ -31,7 +31,7 @@ public open class GOAPPlanner<State> internal constructor(
         ?: throw IllegalStateException("No valid plan found for state: $state")
 
     override suspend fun executeStep(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: State,
         plan: GOAPPlan<State>
     ): State {
@@ -42,7 +42,7 @@ public open class GOAPPlanner<State> internal constructor(
     }
 
     override suspend fun isPlanCompleted(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: State,
         plan: GOAPPlan<State>
     ): Boolean = plan.goal.condition(state)

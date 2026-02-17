@@ -1,7 +1,7 @@
 package ai.koog.agents.planner
 
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KType
@@ -38,7 +38,7 @@ public abstract class AIAgentPlanner<State, Plan>(
      * Builds a plan
      */
     protected abstract suspend fun buildPlan(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: State,
         plan: Plan?
     ): Plan
@@ -47,7 +47,7 @@ public abstract class AIAgentPlanner<State, Plan>(
      * Executes a step in the plan.
      */
     protected abstract suspend fun executeStep(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: State,
         plan: Plan
     ): State
@@ -56,7 +56,7 @@ public abstract class AIAgentPlanner<State, Plan>(
      * Checks if the plan is completed.
      */
     protected abstract suspend fun isPlanCompleted(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         state: State,
         plan: Plan
     ): Boolean
@@ -72,7 +72,7 @@ public abstract class AIAgentPlanner<State, Plan>(
      * configuration is exceeded.
      */
     public suspend fun execute(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         input: State
     ): State {
         logger.debug { formatLog(context, "Starting planner execution") }

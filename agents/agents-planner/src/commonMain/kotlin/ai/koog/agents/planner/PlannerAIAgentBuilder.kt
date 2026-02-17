@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
-import ai.koog.agents.core.feature.AIAgentFunctionalFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
@@ -161,17 +161,17 @@ public class PlannerAIAgentBuilder<State, Plan>(
     /**
      * Installs a planner-specific AI agent feature into the builder with its provided configuration.
      *
-     * This method allows the integration of an [AIAgentFunctionalFeature] into the builder and its
+     * This method allows the integration of an [AIAgentPlannerFeature] into the builder and its
      * configuration using a lambda function. The feature is then added to the list of feature
      * installers, enabling its functionality within the AI agent being constructed.
      *
      * @param TConfig The type of the configuration for the feature, extending [FeatureConfig].
-     * @param feature The [AIAgentFunctionalFeature] to be installed into the builder.
+     * @param feature The [AIAgentPlannerFeature] to be installed into the builder.
      * @param configure A lambda function to configure the feature's properties and behavior.
      * @return The current instance of the [PlannerAIAgentBuilder] for chaining additional configurations.
      */
     public fun <TConfig : FeatureConfig> install(
-        feature: AIAgentFunctionalFeature<TConfig, *>,
+        feature: AIAgentPlannerFeature<TConfig, *>,
         configure: ConfigureAction<TConfig>
     ): PlannerAIAgentBuilder<State, Plan> = apply {
         featureInstallers.add {

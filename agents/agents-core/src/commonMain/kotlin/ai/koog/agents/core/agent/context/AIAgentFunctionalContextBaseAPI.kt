@@ -13,7 +13,7 @@ import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
-import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -28,17 +28,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
 
 /**
- * API for the [AIAgentFunctionalContext]
+ * API for the [AIAgentFunctionalContextBase]
  */
 @OptIn(InternalAgentsApi::class)
 @Suppress("UNCHECKED_CAST", "MissingKDocForPublicAPI")
-public interface AIAgentFunctionalContextAPI : AIAgentContext {
+public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : AIAgentContext {
 
     override val environment: AIAgentEnvironment
 
     override val agentId: String
 
-    override val pipeline: AIAgentFunctionalPipeline
+    override val pipeline: Pipeline
 
     override var executionInfo: AgentExecutionInfo
 

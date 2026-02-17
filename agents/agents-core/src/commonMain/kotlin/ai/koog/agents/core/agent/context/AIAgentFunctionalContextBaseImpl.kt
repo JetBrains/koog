@@ -15,7 +15,7 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.environment.toSafeResult
-import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -41,7 +41,7 @@ import kotlin.reflect.KClass
 @OptIn(InternalAgentsApi::class)
 @Suppress("UNCHECKED_CAST")
 @PublishedApi
-internal class AIAgentFunctionalContextImpl(
+internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
     override val environment: AIAgentEnvironment,
     override val agentId: String,
     override val runId: String,
@@ -51,11 +51,11 @@ internal class AIAgentFunctionalContextImpl(
     override val stateManager: AIAgentStateManager,
     override val storage: AIAgentStorage,
     override val strategyName: String,
-    override val pipeline: AIAgentFunctionalPipeline,
+    override val pipeline: Pipeline,
     override var executionInfo: AgentExecutionInfo,
     internal val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf(),
     override val parentContext: AIAgentContext? = null
-) : AIAgentFunctionalContextAPI {
+) : AIAgentFunctionalContextBaseAPI<Pipeline> {
 
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         storeMap[key] = value

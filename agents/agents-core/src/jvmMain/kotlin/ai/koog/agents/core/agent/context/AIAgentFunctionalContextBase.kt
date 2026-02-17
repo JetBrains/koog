@@ -14,7 +14,7 @@ import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
-import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.asCoroutineContext
@@ -37,39 +37,10 @@ import java.util.concurrent.Flow
 import kotlin.reflect.KClass
 
 @Suppress("MissingKDocForPublicAPI")
-public actual class AIAgentFunctionalContext internal actual constructor(
-    @PublishedApi internal actual val delegate: AIAgentFunctionalContextImpl
-) : AIAgentFunctionalContextAPI by delegate {
-    @JvmOverloads
-    public actual constructor(
-        environment: AIAgentEnvironment,
-        agentId: String,
-        runId: String,
-        agentInput: Any?,
-        config: AIAgentConfig,
-        llm: AIAgentLLMContext,
-        stateManager: AIAgentStateManager,
-        storage: AIAgentStorage,
-        strategyName: String,
-        pipeline: AIAgentFunctionalPipeline,
-        executionInfo: AgentExecutionInfo,
-        parentContext: AIAgentContext?
-    ) : this(
-        delegate = AIAgentFunctionalContextImpl(
-            environment = environment,
-            agentId = agentId,
-            pipeline = pipeline,
-            runId = runId,
-            agentInput = agentInput,
-            config = config,
-            llm = llm,
-            stateManager = stateManager,
-            storage = storage,
-            strategyName = strategyName,
-            parentContext = parentContext,
-            executionInfo = executionInfo,
-        )
-    )
+public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipeline> internal actual constructor(
+    @PublishedApi
+    internal actual val delegate: AIAgentFunctionalContextBaseImpl<Pipeline>
+) : AIAgentFunctionalContextBaseAPI<Pipeline> by delegate {
 
     @JvmOverloads
     public actual suspend inline fun <reified T> requestLLMStructured(
@@ -97,38 +68,6 @@ public actual class AIAgentFunctionalContext internal actual constructor(
         assistantResponseRepeatMax,
     )
 
-    @JvmOverloads
-    public actual fun copy(
-        environment: AIAgentEnvironment,
-        agentId: String,
-        runId: String,
-        agentInput: Any?,
-        config: AIAgentConfig,
-        llm: AIAgentLLMContext,
-        stateManager: AIAgentStateManager,
-        storage: AIAgentStorage,
-        strategyName: String,
-        pipeline: AIAgentFunctionalPipeline,
-        executionInfo: AgentExecutionInfo,
-        parentRootContext: AIAgentContext?
-    ): AIAgentFunctionalContext = AIAgentFunctionalContext(
-        delegate = AIAgentFunctionalContextImpl(
-            environment = environment,
-            agentId = agentId,
-            pipeline = pipeline,
-            runId = runId,
-            agentInput = agentInput,
-            config = config,
-            llm = llm,
-            stateManager = stateManager,
-            storage = storage,
-            strategyName = strategyName,
-            parentContext = parentContext,
-            executionInfo = executionInfo,
-            storeMap = delegate.storeMap
-        )
-    )
-
     /**
      * Retrieves the current AI agent environment.
      *
@@ -151,7 +90,7 @@ public actual class AIAgentFunctionalContext internal actual constructor(
      * @return An instance of AIAgentFunctionalPipeline representing the constructed pipeline.
      */
     @JavaAPI
-    public fun pipeline(): AIAgentFunctionalPipeline = pipeline
+    public fun pipeline(): Pipeline = pipeline
 
     /**
      * Retrieves the current run identifier.

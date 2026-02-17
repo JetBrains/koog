@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService
  * @param taskDescription A textual description of the task to be handled by the subtask.
  */
 public class SubtaskBuilder(
-    public val context: AIAgentFunctionalContext,
+    public val context: AIAgentFunctionalContextBase<*>,
     public val taskDescription: String
 ) {
     /**
@@ -44,7 +44,7 @@ public class SubtaskBuilder(
  * @property input The input data provided to the subtask.
  */
 public class SubtaskBuilderWithInput<Input>(
-    public val context: AIAgentFunctionalContext,
+    public val context: AIAgentFunctionalContextBase<*>,
     public val taskDescription: String,
     public val input: Input
 ) {
@@ -95,7 +95,7 @@ public class SubtaskBuilderWithInput<Input>(
  * @param executorService Optional executor service for managing asynchronous operations.
  */
 public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
-    public val context: AIAgentFunctionalContext,
+    public val context: AIAgentFunctionalContextBase<*>,
     public val taskDescription: String,
     public val input: Input,
     public val output: OutputOption<Output>,
@@ -158,7 +158,7 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
      * @param outputClass The class type of the output expected from the task execution.
      */
     public constructor(
-        context: AIAgentFunctionalContext,
+        context: AIAgentFunctionalContextBase<*>,
         taskDescription: String,
         input: Input,
         outputClass: Class<Output>
@@ -174,7 +174,7 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
      * @param finishTool A tool used to produce the final output for the subtask.
      */
     public constructor(
-        context: AIAgentFunctionalContext,
+        context: AIAgentFunctionalContextBase<*>,
         taskDescription: String,
         input: Input,
         finishTool: Tool<*, Output>

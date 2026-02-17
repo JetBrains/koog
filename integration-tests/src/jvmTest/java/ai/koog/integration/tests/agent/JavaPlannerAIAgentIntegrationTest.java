@@ -1,7 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.ToolRegistryBuilder;
 import ai.koog.agents.planner.AIAgentPlanner;
@@ -32,12 +32,12 @@ public class JavaPlannerAIAgentIntegrationTest {
     static class TestPlanner extends JavaAIAgentPlanner<String, String> {
 
         @Override
-        protected String buildPlan(AIAgentFunctionalContext context, String state, @Nullable String plan) {
+        protected String buildPlan(AIAgentPlannerContext context, String state, @Nullable String plan) {
             return "Request llm with state.";
         }
 
         @Override
-        protected String executeStep(AIAgentFunctionalContext context, String state, String plan) {
+        protected String executeStep(AIAgentPlannerContext context, String state, String plan) {
             return context.llm().writeSession(session -> {
                 session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user(state).build());
                 return session.requestLLM().getContent();
@@ -45,7 +45,7 @@ public class JavaPlannerAIAgentIntegrationTest {
         }
 
         @Override
-        protected Boolean isPlanCompleted(AIAgentFunctionalContext context, String state, String plan) {
+        protected Boolean isPlanCompleted(AIAgentPlannerContext context, String state, String plan) {
             return !state.equals(context.getAgentInput());
         }
     }

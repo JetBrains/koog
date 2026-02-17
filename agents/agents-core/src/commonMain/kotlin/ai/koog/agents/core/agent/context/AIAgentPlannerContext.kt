@@ -5,12 +5,12 @@ import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 
 /***/
-public class AIAgentFunctionalContext private constructor(
-    delegate: AIAgentFunctionalContextBaseImpl<AIAgentFunctionalPipeline>
-) : AIAgentFunctionalContextBase<AIAgentFunctionalPipeline>(delegate) {
+public class AIAgentPlannerContext private constructor(
+    delegate: AIAgentFunctionalContextBaseImpl<AIAgentPlannerPipeline>
+) : AIAgentFunctionalContextBase<AIAgentPlannerPipeline>(delegate) {
 
     /**
      *
@@ -25,7 +25,7 @@ public class AIAgentFunctionalContext private constructor(
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
         strategyName: String,
-        pipeline: AIAgentFunctionalPipeline,
+        pipeline: AIAgentPlannerPipeline,
         executionInfo: AgentExecutionInfo,
         parentContext: AIAgentContext? = null
     ) : this(
@@ -60,7 +60,7 @@ public class AIAgentFunctionalContext private constructor(
      * @param stateManager The [AIAgentStateManager] to be used, or preserve the current state keeper.
      * @param storage The [AIAgentStorage] to be used, or stick with the current memory bank.
      * @param strategyName The strategy name, or maintain the current game plan.
-     * @param pipeline The [AIAgentFunctionalPipeline] to be used, or keep the current execution superhighway.
+     * @param pipeline The [AIAgentPlannerContext] to be used, or keep the current execution superhighway.
      * @param parentRootContext The parent root context, or maintain the current family tree.
      * @return A new [AIAgentFunctionalContext] with your desired modifications applied!
      */
@@ -74,10 +74,10 @@ public class AIAgentFunctionalContext private constructor(
         stateManager: AIAgentStateManager = this.stateManager,
         storage: AIAgentStorage = this.storage,
         strategyName: String = this.strategyName,
-        pipeline: AIAgentFunctionalPipeline = this.pipeline,
+        pipeline: AIAgentPlannerPipeline = this.pipeline,
         executionInfo: AgentExecutionInfo = this.executionInfo,
         parentRootContext: AIAgentContext? = this.parentContext,
-    ): AIAgentFunctionalContext = AIAgentFunctionalContext(
+    ): AIAgentPlannerContext = AIAgentPlannerContext(
         AIAgentFunctionalContextBaseImpl(
             environment = environment,
             agentId = agentId,
