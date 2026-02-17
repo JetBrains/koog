@@ -68,7 +68,7 @@ class MetricAdapterTest {
 
         // Metric adapter should have processed the tool name
         // The metric should be recorded regardless of filtering
-        assertTrue(toolCallCountRecords.last().value == 1L)
+        assertEquals(1L, toolCallCountRecords.last().value)
     }
 
     @Test
@@ -127,7 +127,7 @@ class MetricAdapterTest {
             )
         )
 
-        // Add disallowed tool
+        // Add a disallowed tool
         metricCollector.addCounterMetricEvent(
             createToolCallCounterMetricEvent(
                 id = "test-id",
@@ -138,9 +138,6 @@ class MetricAdapterTest {
 
         val toolCallCountRecords = meter.getRecordsByCounterName("koog.tool.count")
         assertEquals(4, toolCallCountRecords.size) // Initial 0 + 3 calls
-
-        // Verify all three calls are recorded
-        assertTrue(toolCallCountRecords.size == 4)
     }
 
     @Test
@@ -166,7 +163,7 @@ class MetricAdapterTest {
         val toolCallCountRecords = meter.getRecordsByCounterName("koog.tool.count")
         assertEquals(2, toolCallCountRecords.size)
 
-        // Verify the metric was recorded (even if tool name might be filtered)
-        assertTrue(toolCallCountRecords.last().value == 1L)
+        // Verify the metric was recorded (even if the tool name might be filtered)
+        assertEquals(1L, toolCallCountRecords.last().value)
     }
 }
