@@ -60,6 +60,8 @@ See the [Usage](#usage) section below for code examples.
 - `FlowTaskAgent` - Executes LLM-based tasks with optional tool access
 - `FlowVerifyAgent` - Validates outputs and returns `FlowCritiqueResult` with success/failure
 - `FlowInputTransformAgent` - Transforms inputs without LLM calls (e.g., extract fields)
+- `FlowReActAgent` - Executes tasks using ReAct (Reasoning and Acting) strategy with configurable reasoning intervals
+- `FlowParallelAgent` - Runs multiple child agents concurrently and selects a result via a merge condition
 
 **FlowTransition** — Defines edges between agents with optional conditions. Conditions evaluate agent outputs to determine routing.
 
@@ -94,12 +96,13 @@ See the [Usage](#usage) section below for code examples.
 
 ## Agent Types
 
-| JSON `type`   | Behavior                                                                          |
-|---------------|-----------------------------------------------------------------------------------|
-| `"task"`      | Calls LLM with task from `params.task`, can use tools from `params.toolNames`     |
-| `"verify"`    | Calls LLM for validation, outputs `FlowCritiqueResult(success, feedback, input)` |
-| `"transform"` | Transforms input without LLM (e.g., extract `success` from `FlowCritiqueResult`) |
-| `"parallel"`  | Not yet implemented                                                               |
+| JSON `type`   | Behavior                                                                                                                    |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `"task"`      | Calls LLM with task from `params.task`, can use tools from `params.toolNames`                                               |
+| `"verify"`    | Calls LLM for validation, outputs `FlowCritiqueResult(success, feedback, input)`                                           |
+| `"transform"` | Transforms input without LLM (e.g., extract `success` from `FlowCritiqueResult`)                                           |
+| `"react"`     | Calls LLM using ReAct strategy; alternates between reasoning and tool calls at `params.reasoningInterval` tool-call intervals |
+| `"parallel"`  | Runs `params.agents` child agents concurrently; selects a result based on `params.merge` condition on `results.<i>.<field>` |
 
 ## Input/Output Types (`FlowDataType`)
 
@@ -125,6 +128,13 @@ sealed interface FlowDataType {
         val feedback: String,
         val input: FlowDataType
     )
+
+    // Special (parallel agent output — one entry per child agent)
+    data class ParallelExecutionResult(
+        val name: String,       // child agent name
+        val input: FlowDataType,
+        val output: FlowDataType
+    )
 }
 ```
 
@@ -143,82 +153,148 @@ sealed interface FlowTool {
 ## JSON Schema
 
 ### Root Structure
+
+All fields except `agents` and `transitions` are optional.
+
 ```json
 {
   "id": "string",
   "version": "string",
-  "description": "string",              // Optional: Flow description
-  "defaultModel": "provider/model-id",  // Optional: e.g., "openai/gpt-4o"
-  "tools": [...],
-  "agents": [...],
-  "transitions": [...]
+  "description": "string",
+  "defaultModel": "provider/model-id",
+  "tools": [],
+  "agents": [],
+  "transitions": []
 }
 ```
 
 ### Agent
+
+All fields except `name`, `type`, and `params` are optional.
+
 ```json
 {
   "name": "unique-agent-name",
-  "type": "task|verify|transform",
-  "model": "provider/model-id",         // Optional, falls back to defaultModel
-  "runtime": "koog",                    // Optional: Currently only "koog" is implemented
-  "config": {                           // Optional: LLM configuration
+  "type": "task",
+  "model": "provider/model-id",
+  "runtime": "koog",
+  "config": {
     "temperature": 0.7,
     "maxIterations": 10,
     "maxTokens": 4096,
     "topP": 0.9,
-    "toolChoice": "auto|none|required|{\"toolName\":\"name\"}",
+    "toolChoice": "auto",
     "speculation": "string"
   },
-  "prompt": {                           // Optional: Agent prompts
+  "prompt": {
     "system": "System prompt text",
-    "user": "User prompt text"          // Optional
+    "user": "User prompt text"
   },
-  "params": {                           // Agent-specific parameters
-    "task": "Task description",         // For task/verify agents
-    "toolNames": ["tool1", "tool2"],    // Optional: Restrict which tools agent can use
-    "transformations": [                // For transform agents - extract fields from input
-      {
-        "value": "input.feedback"       // Use "input." prefix to access incoming data fields
-      }
-    ]
-  },
-  "output": {                           // Optional: Output schema definition
+  "params": {},
+  "output": {
     "schema": "json-schema-string"
   }
 }
 ```
 
+`toolChoice` accepts `"auto"`, `"none"`, `"required"`, or `{"toolName": "name"}`.
+
+`params` schema varies by agent `type`:
+
+**task / verify** — `task` required; `toolNames` is an optional allowlist:
+```json
+{
+  "params": {
+    "task": "Task description",
+    "toolNames": ["tool1", "tool2"]
+  }
+}
+```
+
+**transform** — extracts fields from the incoming input using `"input.<field>"` paths, without an LLM call:
+```json
+{
+  "params": {
+    "transformations": [
+      { "value": "input.feedback" }
+    ]
+  }
+}
+```
+
+**react** — same as `task` plus `reasoningInterval` (tool calls between reasoning steps, default `1`):
+```json
+{
+  "params": {
+    "task": "Task description",
+    "toolNames": ["tool1"],
+    "reasoningInterval": 2
+  }
+}
+```
+
+**parallel** — `agents` lists child agent names to run concurrently; `merge` selects one result via a condition on `"results.<index>.<field>"`:
+```json
+{
+  "params": {
+    "agents": ["child1", "child2"],
+    "merge": {
+      "variable": "results.0.output",
+      "operation": "more",
+      "value": 50
+    }
+  }
+}
+```
+
 **Notes**:
-- The `model` field in the `config` object in actual JSON examples appears to be deprecated/ignored. Use the top-level `model` field instead.
+- The `model` field inside `config` is deprecated/ignored. Use the top-level `model` field instead.
 - Input is provided at runtime when calling `flow.run(input)`.
 
 ### Tool (MCP)
+
+SSE transport (remote HTTP server):
 ```json
 {
   "name": "tool-name",
   "type": "mcp",
   "parameters": {
-    "transport": "sse|stdio",
-    "url": "http://...",                // For SSE
-    "command": "npx",                   // For Stdio
-    "args": ["-y", "@mcp/server"]       // For Stdio
+    "transport": "sse",
+    "url": "http://example.com/mcp"
+  }
+}
+```
+
+Stdio transport (local process, JVM only):
+```json
+{
+  "name": "tool-name",
+  "type": "mcp",
+  "parameters": {
+    "transport": "stdio",
+    "command": "npx",
+    "args": ["-y", "@mcp/server"]
   }
 }
 ```
 
 ### Transition
+
+`condition` is optional. When omitted the transition is always taken.
+
 ```json
 {
   "from": "source-agent-name",
-  "to": "target-agent-name|__finish__",
-  "condition": {                        // Optional
-    "variable": "output.success",       // Access previous agent's output using "output." prefix
-    "operation": "equals|not_equals|more|less|more_or_equal|less_or_equal|not|and|or",
-    "value": true                       // Primitive value to compare against
+  "to": "target-agent-name",
+  "condition": {
+    "variable": "output.success",
+    "operation": "equals",
+    "value": true
   }
 }
 ```
+
+`operation` accepts: `equals`, `not_equals`, `more`, `less`, `more_or_equal`, `less_or_equal`, `not`, `and`, `or`.
 
 **Notes**:
 - Use `"output.<property>"` to access fields from the previous agent's output in conditions.
