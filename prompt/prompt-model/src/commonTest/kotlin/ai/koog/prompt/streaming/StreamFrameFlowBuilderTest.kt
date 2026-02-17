@@ -65,7 +65,7 @@ class StreamFrameFlowBuilderTest {
     fun `throw when upserting partial tool call without an id`() = runTest {
         assertFailsWith<StreamFrameFlowBuilderError.NoPartialToolCallToComplete> {
             buildStreamFrameFlow {
-                emitToolCallDelta(index = 0, id = null, name = "test_error", "")
+                emitToolCallDelta(id = null, name = "test_error", args = "", index = 0)
             }.collect()
         }
     }
@@ -74,8 +74,8 @@ class StreamFrameFlowBuilderTest {
     fun `throw when upserting partial tool call with index mismatch`() = runTest {
         assertFailsWith<StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex> {
             buildStreamFrameFlow {
-                emitToolCallDelta(index = 0, id = "test", name = "test_error", "")
-                emitToolCallDelta(index = 1, id = null, name = "test_error", "")
+                emitToolCallDelta(id = "test", name = "test_error", args = "", index = 0)
+                emitToolCallDelta(id = null, name = "test_error", args = "", index = 1)
             }.collect()
         }
     }

@@ -43,7 +43,7 @@ public suspend fun FlowCollector<StreamFrame>.emitTextDelta(text: String, index:
  * Emits a [StreamFrame.TextComplete] with the given [text].
  */
 public suspend fun FlowCollector<StreamFrame>.emitTextComplete(text: String, index: Int? = null): Unit =
-    emit(StreamFrame.TextComplete(text))
+    emit(StreamFrame.TextComplete(text, index))
 
 /**
  * Emits a [StreamFrame.ReasoningDelta] with the given [text].

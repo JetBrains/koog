@@ -9,42 +9,39 @@ import ai.koog.prompt.message.ResponseMetaInfo
  * Final [StreamFrame.End] is also emitted.
  */
 public fun List<Message.Response>.toStreamFrames(): List<StreamFrame> =
-    flatMap { it.toStreamFrames() }
+    flatMapIndexed { index, response -> response.toStreamFrames(index) }.plus(StreamFrame.End(null, ResponseMetaInfo.Empty))
 
 /**
  * Converts a [Message.Response] to a list of [StreamFrame].
- * First it emits the deltas frames for each text content part, then complete with the full message content.
- * Finally [StreamFrame.End] is emitted.
+ * First it emits the delta frames for each content part for each message, then complete frame with the full message content.
  */
-public fun Message.Response.toStreamFrames(): List<StreamFrame> {
+public fun Message.Response.toStreamFrames(index: Int? = null): List<StreamFrame> {
     val response = this
     return buildList {
         when (response) {
             is Message.Assistant -> {
-                parts.filterIsInstance<ContentPart.Text>().forEach { add(StreamFrame.TextDelta(it.text)) }
-                add(StreamFrame.TextComplete(content))
+                parts.filterIsInstance<ContentPart.Text>().forEach { add(StreamFrame.TextDelta(it.text, index)) }
+                add(StreamFrame.TextComplete(content, index))
             }
 
             is Message.Reasoning -> {
-                parts.forEach { add(StreamFrame.ReasoningDelta(it.text)) }
-                summary?.forEach { add(StreamFrame.ReasoningDelta(it.text)) }
+                parts.forEach { add(StreamFrame.ReasoningDelta(it.text, index)) }
+                summary?.forEach { add(StreamFrame.ReasoningSummaryDelta(it.text, index)) }
                 add(
                     StreamFrame.ReasoningComplete(
                         parts.map { it.text },
                         summary?.map { it.text },
-                        encrypted
+                        encrypted,
+                        index
                     )
                 )
             }
 
             is Message.Tool.Call -> {
-                add(StreamFrame.ToolCallDelta(id, tool, content))
-                add(StreamFrame.ToolCallComplete(id, tool, content))
+                add(StreamFrame.ToolCallDelta(id, tool, content, index))
+                add(StreamFrame.ToolCallComplete(id, tool, content, index))
             }
         }
-
-        // Finish reason is unknown here
-        add(StreamFrame.End(null, metaInfo))
     }
 }
 
@@ -72,12 +69,12 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
     }
 
     return buildList {
-        toolCallCompleteFrames.forEach {
+        reasoningCompleteFrames.forEach {
             add(
-                Message.Tool.Call(
-                    id = it.id,
-                    tool = it.name,
-                    content = it.content,
+                Message.Reasoning(
+                    parts = it.text.map { textPart -> ContentPart.Text(textPart) },
+                    summary = it.summary?.map { summaryPart -> ContentPart.Text(summaryPart) },
+                    encrypted = it.encrypted,
                     metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
                 )
             )
@@ -91,11 +88,12 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
                 )
             )
         }
-        reasoningCompleteFrames.forEach {
+        toolCallCompleteFrames.forEach {
             add(
-                Message.Reasoning(
-                    parts = it.text.map { textPart -> ContentPart.Text(textPart) },
-                    encrypted = it.encrypted,
+                Message.Tool.Call(
+                    id = it.id,
+                    tool = it.name,
+                    content = it.content,
                     metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
                 )
             )
