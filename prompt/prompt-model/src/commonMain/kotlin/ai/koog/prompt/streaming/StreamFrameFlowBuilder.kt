@@ -142,6 +142,12 @@ public class StreamFrameFlowBuilder(
     public suspend fun emitTextDelta(text: String, index: Int? = null) {
         tryEmitPendingToolCall()
         tryEmitPendingReasoning()
+        val previous: PendingText? = pendingTextRef.load()
+        if (previous == null) {
+            pendingTextRef.store(PendingText(textDelta = text, index = index))
+        } else {
+            pendingTextRef.store(previous.appendTextDelta(text, index))
+        }
         flowCollector.emitTextDelta(text, index)
     }
 
@@ -151,6 +157,12 @@ public class StreamFrameFlowBuilder(
     public suspend fun emitReasoningDelta(text: String, index: Int? = null) {
         tryEmitPendingToolCall()
         tryEmitPendingText()
+        val previous: PendingReasoning? = pendingReasoningRef.load()
+        if (previous == null) {
+            pendingReasoningRef.store(PendingReasoning(textDelta = text, summaryDelta = null, index = index))
+        } else {
+            pendingReasoningRef.store(previous.appendTextDelta(text, index))
+        }
         flowCollector.emitReasoningDelta(text, index)
     }
 
@@ -160,6 +172,12 @@ public class StreamFrameFlowBuilder(
     public suspend fun emitReasoningSummaryDelta(text: String, index: Int? = null) {
         tryEmitPendingToolCall()
         tryEmitPendingText()
+        val previous: PendingReasoning? = pendingReasoningRef.load()
+        if (previous == null) {
+            pendingReasoningRef.store(PendingReasoning(textDelta = null, summaryDelta = text, index = index))
+        } else {
+            pendingReasoningRef.store(previous.appendSummaryDelta(text, index))
+        }
         flowCollector.emitReasoningSummaryDelta(text, index)
     }
 
@@ -185,6 +203,8 @@ public class StreamFrameFlowBuilder(
         args: String? = null,
         index: Int? = null
     ) {
+        tryEmitPendingText()
+        tryEmitPendingReasoning()
         val new: PendingToolCall = if (id != null) {
             tryEmitPendingToolCall()
             PendingToolCall(id, name, args, index)
