@@ -203,7 +203,10 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                                 content = part.functionCall.args?.toString() ?: "{}"
                             )
 
-                            is GooglePart.Text -> emitTextDelta(part.text)
+                            is GooglePart.Text -> {
+                                emitTextDelta(part.text)
+                            }
+
                             else -> Unit
                         }
                     }

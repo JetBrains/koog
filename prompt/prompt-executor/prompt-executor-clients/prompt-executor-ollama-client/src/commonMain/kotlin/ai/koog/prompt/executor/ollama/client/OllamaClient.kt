@@ -34,9 +34,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.emitTextDelta
-import ai.koog.prompt.streaming.emitToolCallComplete
-import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -276,7 +275,7 @@ public class OllamaClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = streamFrameFlow {
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         val request = ollamaJson.encodeToString(
@@ -305,11 +304,12 @@ public class OllamaClient @JvmOverloads constructor(
                     chunk.message?.let { message ->
                         emitTextDelta(message.content)
                         message.toolCalls?.forEach { toolCall ->
-                            emitToolCallComplete(
+                            emitToolCallDelta(
                                 id = null,
                                 name = toolCall.function.name,
-                                content = toolCall.function.arguments.toString()
+                                args = toolCall.function.arguments.toString()
                             )
+                            tryEmitPendingToolCall()
                         }
                     }
                 } catch (_: Exception) {

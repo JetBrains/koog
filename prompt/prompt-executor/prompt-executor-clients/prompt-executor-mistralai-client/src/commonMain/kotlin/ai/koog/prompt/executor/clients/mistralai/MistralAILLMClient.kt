@@ -168,11 +168,11 @@ public open class MistralAILLMClient(
                 choice.delta.content?.let { emitTextDelta(it) }
 
                 choice.delta.toolCalls?.forEach { toolCall ->
-                    val index = toolCall.index
                     val id = toolCall.id
                     val name = toolCall.function?.name
                     val arguments = toolCall.function?.arguments
-                    emitToolCallDelta(index, id, name, arguments)
+                    val index = toolCall.index
+                    emitToolCallDelta(id, name, arguments, index)
                 }
 
                 choice.finishReason?.let { finishReason = it }

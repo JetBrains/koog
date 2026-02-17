@@ -170,7 +170,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
                     val id = openAIToolCall.id
                     val name = openAIToolCall.function.name
                     val arguments = openAIToolCall.function.arguments
-                    emitToolCallDelta(index, id, name, arguments)
+                    emitToolCallDelta(id, name, arguments, index)
                 }
 
                 choice.finishReason?.let { finishReason = it }

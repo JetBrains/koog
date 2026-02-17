@@ -214,15 +214,22 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                         AnthropicStreamEventType.CONTENT_BLOCK_START.value -> {
                             when (val contentBlock = response.contentBlock) {
                                 is AnthropicContent.Text -> {
-                                    emitTextDelta(contentBlock.text)
+                                    emitTextDelta(
+                                        text = contentBlock.text,
+                                        index = response.index
+                                            ?: throw LLMClientException(
+                                                clientName,
+                                                "Text index is missing"
+                                            )
+                                    )
                                 }
 
                                 is AnthropicContent.ToolUse -> {
                                     emitToolCallDelta(
-                                        index = response.index
-                                            ?: throw LLMClientException(clientName, "Tool index is missing"),
                                         id = contentBlock.id,
                                         name = contentBlock.name,
+                                        index = response.index
+                                            ?: throw LLMClientException(clientName, "Tool index is missing"),
                                     )
                                 }
 
@@ -230,7 +237,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                     emitReasoningDelta(
                                         text = contentBlock.thinking,
                                         index = response.index
-                                            ?: throw LLMClientException(clientName, "Tool index is missing")
+                                            ?: throw LLMClientException(clientName, "Thinking index is missing")
                                     )
                                 }
 
@@ -246,23 +253,31 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 // Handles deltas for tool calls and text
 
                                 when (delta.type) {
-                                    AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
-                                        emitToolCallDelta(
-                                            index = response.index
-                                                ?: throw LLMClientException(clientName, "Tool index is missing"),
-                                            args = delta.partialJson
-                                                ?: throw LLMClientException(clientName, "Tool args are missing")
-                                        )
-                                    }
-
                                     AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
                                         emitTextDelta(
                                             delta.text
-                                                ?: throw LLMClientException(clientName, "Text delta is missing")
+                                                ?: throw LLMClientException(clientName, "Text delta is missing"),
+                                            index = response.index
                                         )
                                     }
 
-                                    // TODO: where comes reasoning?
+                                    AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
+                                        emitToolCallDelta(
+                                            args = delta.partialJson
+                                                ?: throw LLMClientException(clientName, "Tool args are missing"),
+                                            index = response.index
+                                                ?: throw LLMClientException(clientName, "Tool index is missing"),
+                                        )
+                                    }
+
+                                    AnthropicStreamDeltaContentType.THINKING_DELTA.value -> {
+                                        emitReasoningDelta(
+                                            text = delta.thinking
+                                                ?: throw LLMClientException(clientName, "Reasoning delta is missing"),
+                                            index = response.index
+                                                ?: throw LLMClientException(clientName, "Reasoning index is missing")
+                                        )
+                                    }
 
                                     else -> {
                                         logger.warn { "Unknown Anthropic stream delta type: ${delta.type}" }
@@ -274,12 +289,15 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                         AnthropicStreamEventType.CONTENT_BLOCK_STOP.value -> {
                             response.delta?.let { delta ->
                                 when (delta.type) {
+                                    AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
+                                        tryEmitPendingText()
+                                    }
+
                                     AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
                                         tryEmitPendingToolCall()
                                     }
 
-                                    AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
-                                        tryEmitPendingText()
+                                    AnthropicStreamDeltaContentType.THINKING_DELTA.value -> {
                                         tryEmitPendingReasoning()
                                     }
                                 }

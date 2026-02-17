@@ -350,15 +350,15 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 processStreamingChunk = { it ->
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                            StreamFrame.TextDelta(it.delta)
+                            StreamFrame.TextDelta(it.delta, it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
-                            StreamFrame.ReasoningDelta(it.delta)
+                            StreamFrame.ReasoningDelta(it.delta, it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningSummaryTextDelta -> {
-                            StreamFrame.ReasoningSummaryDelta(it.delta)
+                            StreamFrame.ReasoningSummaryDelta(it.delta, it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
@@ -367,19 +367,21 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
                             when (val item = it.item) {
-                                is Item.Text -> StreamFrame.TextComplete(item.value)
+                                is Item.Text -> StreamFrame.TextComplete(item.value, it.outputIndex)
                                 is Item.Reasoning -> {
                                     StreamFrame.ReasoningComplete(
                                         text = item.content?.map { content -> content.text } ?: emptyList(),
                                         summary = item.summary.map { content -> content.text },
-                                        encrypted = item.encryptedContent
+                                        encrypted = item.encryptedContent,
+                                        index = it.outputIndex
                                     )
                                 }
 
                                 is Item.FunctionToolCall -> StreamFrame.ToolCallComplete(
-                                    item.id,
-                                    item.name,
-                                    item.arguments
+                                    id = item.id,
+                                    name = item.name,
+                                    content = item.arguments,
+                                    index = it.outputIndex
                                 )
 
                                 else -> null
