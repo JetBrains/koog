@@ -1,96 +1,26 @@
 package ai.koog.prompt.executor.llms
 
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 class MultiLLMPromptExecutorTest {
-
-    val mockClock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
-
-    // Mock client for Anthropic
-    private inner class MockAnthropicLLMClient : LLMClient {
-        override suspend fun execute(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(clock = mockClock)))
-        }
-
-        override fun llmProvider(): LLMProvider = LLMProvider.Anthropic
-
-        override fun executeStreaming(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>
-        ): Flow<StreamFrame> =
-            flowOf("Anthropic", " streaming", " response").map(StreamFrame::TextDelta)
-
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-            throw UnsupportedOperationException("Moderation is not supported by mock client.")
-        }
-
-        override fun close() {
-            // No resources to close
-        }
-    }
-
-    // Mock client for Gemini
-    private inner class MockGoogleLLMClient : LLMClient {
-        override suspend fun execute(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(clock = mockClock)))
-        }
-
-        override fun llmProvider(): LLMProvider = LLMProvider.Google
-
-        override fun executeStreaming(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>
-        ): Flow<StreamFrame> =
-            flowOf("Gemini", " streaming", " response").map(StreamFrame::TextDelta)
-
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-            throw UnsupportedOperationException("Moderation is not supported by mock client.")
-        }
-
-        override fun close() {}
-    }
 
     @Test
     fun testExecuteWithOpenAI() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
-            LLMProvider.Anthropic to MockAnthropicLLMClient(),
-            LLMProvider.Google to MockGoogleLLMClient()
+            LLMProvider.OpenAI to MockLLMClient(provider = LLMProvider.OpenAI),
+            LLMProvider.Anthropic to MockLLMClient(provider = LLMProvider.Anthropic),
+            LLMProvider.Google to MockLLMClient(provider = LLMProvider.Google)
         )
 
         val model = OpenAIModels.Chat.GPT4o
@@ -107,9 +37,9 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteWithAnthropic() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
-            LLMProvider.Anthropic to MockAnthropicLLMClient(),
-            LLMProvider.Google to MockGoogleLLMClient()
+            LLMProvider.OpenAI to MockLLMClient(provider = LLMProvider.OpenAI),
+            LLMProvider.Anthropic to MockLLMClient(provider = LLMProvider.Anthropic),
+            LLMProvider.Google to MockLLMClient(provider = LLMProvider.Google)
         )
 
         val model = AnthropicModels.Opus_4_6
@@ -126,9 +56,9 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteWithGoogle() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
-            LLMProvider.Anthropic to MockAnthropicLLMClient(),
-            LLMProvider.Google to MockGoogleLLMClient()
+            LLMProvider.OpenAI to MockLLMClient(provider = LLMProvider.OpenAI),
+            LLMProvider.Anthropic to MockLLMClient(provider = LLMProvider.Anthropic),
+            LLMProvider.Google to MockLLMClient(provider = LLMProvider.Google)
         )
 
         val model = GoogleModels.Gemini2_0Flash
@@ -139,15 +69,15 @@ class MultiLLMPromptExecutorTest {
 
         val response = executor.execute(prompt = prompt, model = model).single()
 
-        assertEquals("Gemini response", response.content)
+        assertEquals("Google response", response.content)
     }
 
     @Test
     fun testExecuteStreamingWithOpenAI() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
-            LLMProvider.Anthropic to MockAnthropicLLMClient(),
-            LLMProvider.Google to MockGoogleLLMClient()
+            LLMProvider.OpenAI to MockLLMClient(provider = LLMProvider.OpenAI),
+            LLMProvider.Anthropic to MockLLMClient(provider = LLMProvider.Anthropic),
+            LLMProvider.Google to MockLLMClient(provider = LLMProvider.Google)
         )
 
         val model = OpenAIModels.Chat.GPT4o
@@ -170,9 +100,9 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithAnthropic() = runTest {
         val executor = MultiLLMPromptExecutor(
-            MockOpenAILLMClient(clock = mockClock),
-            MockAnthropicLLMClient(),
-            MockGoogleLLMClient()
+            MockLLMClient(provider = LLMProvider.OpenAI),
+            MockLLMClient(provider = LLMProvider.Anthropic),
+            MockLLMClient(provider = LLMProvider.Google)
         )
 
         val model = AnthropicModels.Opus_4_6
@@ -195,9 +125,9 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithGoogle() = runTest {
         val executor = MultiLLMPromptExecutor(
-            MockOpenAILLMClient(clock = mockClock),
-            MockAnthropicLLMClient(),
-            MockGoogleLLMClient()
+            MockLLMClient(provider = LLMProvider.OpenAI),
+            MockLLMClient(provider = LLMProvider.Anthropic),
+            MockLLMClient(provider = LLMProvider.Google)
         )
 
         val model = GoogleModels.Gemini2_0Flash
@@ -211,7 +141,7 @@ class MultiLLMPromptExecutorTest {
             .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
-            "Gemini streaming response",
+            "Google streaming response",
             responseChunks.joinToString(""),
             "Response should be from Gemini client"
         )
@@ -219,7 +149,7 @@ class MultiLLMPromptExecutorTest {
 
     @Test
     fun testExecuteWithUnsupportedProvider() = runTest {
-        val executor = MultiLLMPromptExecutor(MockGoogleLLMClient())
+        val executor = MultiLLMPromptExecutor(MockLLMClient(provider = LLMProvider.Google))
 
         val model = AnthropicModels.Opus_4_6
         val prompt = Prompt.build("test-prompt") {
@@ -234,7 +164,7 @@ class MultiLLMPromptExecutorTest {
 
     @Test
     fun testExecuteStreamingWithUnsupportedProvider() = runTest {
-        val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock))
+        val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockLLMClient(provider = LLMProvider.OpenAI))
         val model = AnthropicModels.Opus_4_6
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")

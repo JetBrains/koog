@@ -5,8 +5,6 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.router.LLMClientRouter
-import ai.koog.prompt.executor.router.RoundRobinRouter
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -19,19 +17,19 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
 
 /**
- * Executes prompts across multiple Large Language Models (LLMs).
+ * MultiLLMPromptExecutor is a class responsible for executing prompts
+ * across multiple Large Language Models (LLMs). This implementation supports direct execution
+ * with specific LLM clients or utilizes a fallback strategy if no primary LLM client is available
+ * for the requested provider.
  *
- * Delegates client selection to [LLMClientRouter], which determines which client should
- * handle each request based on the requested model.
- *
- * @param clientRouter Router responsible for selecting appropriate clients for each request
- * @param fallback Optional fallback configuration when no client is available for the requested model
+ * @constructor Constructs an executor instance with a map of LLM providers associated with their respective clients.
+ * @param llmClients A map containing LLM providers associated with their respective [LLMClient]s.
+ * @param fallback Optional settings to configure the fallback mechanism in case a specific provider is not directly available.
  */
 public open class MultiLLMPromptExecutor @JvmOverloads constructor(
-    private val clientRouter: LLMClientRouter,
-    private val fallback: FallbackPromptExecutorSettings? = null,
+    private val llmClients: Map<LLMProvider, LLMClient>,
+    private val fallback: FallbackPromptExecutorSettings? = null
 ) : PromptExecutor {
-
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *
@@ -57,45 +55,43 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
-     * Creates executor with a map of providers to their client lists.
-     * Uses [RoundRobinRouter] for load distribution.
+     * Initializes a new instance of the `MultiLLMPromptExecutor` class with multiple LLM clients.
      *
-     * @param llmClients Map of providers to lists of clients for each provider
-     * @param fallback Optional fallback configuration
-     */
-    @JvmOverloads
-    public constructor(
-        llmClients: Map<LLMProvider, List<LLMClient>>,
-        fallback: FallbackPromptExecutorSettings? = null
-    ) : this(RoundRobinRouter(llmClients), fallback)
-
-    /**
-     * Creates executor with provider-client pairs.
-     * Clients are grouped by provider and routed using [RoundRobinRouter].
+     * Allows specifying a variable number of client-provider pairs, where each pair links a specific
+     * `LLMProvider` with a corresponding implementation of `LLMClient`. All provided pairs are
+     * internally converted into a map for efficient access and management of clients by their associated
+     * providers.
      *
-     * @param llmClients Provider-client pairs
-     * @param fallback Optional fallback configuration
+     * @param llmClients Variable number of pairs, where each pair consists of an `LLMProvider` representing
+     *                   the provider and a `LLMClient` for communication with that provider.
      */
     @JvmOverloads
     public constructor (
         vararg llmClients: Pair<LLMProvider, LLMClient>,
         fallback: FallbackPromptExecutorSettings? = null
-    ) : this(RoundRobinRouter(*llmClients), fallback = fallback)
+    ) : this(llmClients = mapOf(*llmClients), fallback = fallback)
 
     /**
-     * Creates executor with a list of clients.
-     * Clients are grouped by provider and routed using [RoundRobinRouter].
+     * Secondary constructor for `MultiLLMPromptExecutor` that accepts a variable number of `LLMClient` instances.
+     * The provided clients are processed to create a mapping of `LLMProvider` to their respective `LLMClient`.
      *
-     * @param llmClients Vararg clients to use
-     * @param fallback Optional fallback configuration
+     * @param llmClients Vararg parameter of `LLMClient` instances used to construct the executor.
      */
     @JvmOverloads
-    public constructor(
-        vararg llmClients: LLMClient,
-        fallback: FallbackPromptExecutorSettings? = null
-    ) : this(llmClients.groupBy { it.llmProvider() }, fallback)
+    public constructor (vararg llmClients: LLMClient) : this(
+        llmClients.map {
+            it.llmProvider() to it
+        }.associateBy({ it.first }, { it.second })
+    )
 
-    public companion object {
+    /**
+     * Companion object for `MultiLLMPromptExecutor` class.
+     *
+     * Provides shared utilities and constants, including a logger instance for logging
+     * events and debugging information related to the execution of prompts using
+     * multiple LLM clients.
+     */
+    private companion object {
         /**
          * Logger instance used for logging messages within the LLMPromptExecutor and MultiLLMPromptExecutor classes.
          *
@@ -110,21 +106,21 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
-     * Fallback LLM client for interacting with a fallback LLM provider.
+     * Lazily initialized fallback client for interacting with a fallback LLM provider.
      *
-     * Retrieves client specified in `fallback` settings from `clientRouter` if available.
-     * This client is intended to handle cases where no specific client is matched during prompt execution.
+     * Utilizes the fallback provider specified in the `fallbackSettings` to retrieve a corresponding
+     * `LLMClient` from the `llmClients` collection, if available. This client is intended to
+     * handle cases where no specific provider is matched during prompt execution.
      *
-     * Returns `null` if `fallbackSettings` is not specified or corresponding client is not found in `clientRouter`.
+     * Returns `null` if `fallbackSettings` or its `fallbackProvider` is not specified.
      */
-    private val fallbackClient: LLMClient? by lazy {
-        when {
-            fallback != null -> {
-                clientRouter.clients
-                    .firstOrNull { it.llmProvider() == fallback.fallbackProvider }
-                    ?: error("Client for provider ${fallback.fallbackProvider} not found in router")
+    private val fallbackClient: LLMClient? by lazy { fallback?.fallbackProvider?.let(llmClients::get) }
+
+    init {
+        if (fallback != null) {
+            check(fallback.fallbackProvider in llmClients.keys) {
+                "Fallback client not found for provider: ${fallback.fallbackProvider}"
             }
-            else -> null
         }
     }
 
@@ -140,8 +136,18 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
-        val (effectiveClient, effectiveModel) = chooseClientAndModel(model)
-        val response = effectiveClient.execute(prompt, effectiveModel, tools)
+        val provider = model.provider
+
+        val response = when {
+            provider in llmClients -> llmClients[provider]!!.execute(prompt, model, tools)
+            fallback != null -> fallbackClient!!.execute(
+                prompt,
+                fallback.fallbackModel,
+                tools
+            )
+
+            else -> throw IllegalArgumentException("No client found for provider: $provider")
+        }
 
         logger.debug { "Response: $response" }
 
@@ -162,9 +168,10 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
-        val (client, effectiveModel) = chooseClientAndModel(model)
+        val provider = model.provider
+        val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
 
-        return client.executeStreaming(prompt, effectiveModel, tools)
+        return client.executeStreaming(prompt, model, tools)
     }
 
     /**
@@ -183,8 +190,18 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     ): List<LLMChoice> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
-        val (client, effectiveModel) = chooseClientAndModel(model)
-        val choices = client.executeMultipleChoices(prompt, effectiveModel, tools)
+        val provider = model.provider
+
+        val choices = when {
+            provider in llmClients -> llmClients[provider]!!.executeMultipleChoices(prompt, model, tools)
+            fallback != null -> fallbackClient!!.executeMultipleChoices(
+                prompt,
+                fallback.fallbackModel,
+                tools
+            )
+
+            else -> throw IllegalArgumentException("No client found for provider: $provider")
+        }
 
         logger.debug { "Choices: $choices" }
 
@@ -202,17 +219,18 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.debug { "Moderating multi-modal content with model: ${model.id}" }
 
-        val (client, effectiveModel) = chooseClientAndModel(model)
+        val provider = model.provider
+        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
 
-        return client.moderate(prompt, effectiveModel)
+        return client.moderate(prompt, model)
     }
 
     override suspend fun models(): List<LLModel> {
         logger.debug { "Fetching available models from all clients" }
 
-        return clientRouter.clients
-            .flatMap { it.models() }
-            .distinct()
+        return llmClients.values.flatMap { client ->
+            client.models()
+        }
     }
 
     override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
@@ -230,17 +248,6 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     }
 
     override fun close() {
-        clientRouter.clients.forEach { it.close() }
-    }
-
-    private fun chooseClientAndModel(requestedModel: LLModel): EffectiveExecutionSubject {
-        val lbClient = clientRouter.chooseRouteFor(requestedModel)
-        return when {
-            lbClient != null -> lbClient to requestedModel
-            fallback != null -> fallbackClient!! to fallback.fallbackModel
-            else -> throw IllegalArgumentException("No client found for provider: ${requestedModel.provider}")
-        }
+        llmClients.forEach { (_, client) -> client.close() }
     }
 }
-
-private typealias EffectiveExecutionSubject = Pair<LLMClient, LLModel>
