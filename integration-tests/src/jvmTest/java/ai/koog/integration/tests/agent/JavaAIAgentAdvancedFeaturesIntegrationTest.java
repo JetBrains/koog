@@ -75,8 +75,8 @@ public class JavaAIAgentAdvancedFeaturesIntegrationTest extends KoogJavaTestBase
 
         List<String> toolStartingCallOrder = new ArrayList<>();
 
-        JavaUtils.CalculatorTools calculatorTools = new JavaUtils.CalculatorTools();
-        ToolRegistry toolRegistry = JavaUtils.createToolRegistry(calculatorTools);
+        CalculatorTools calculatorTools = new CalculatorTools();
+        ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculatorTools).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .graphStrategy(singleRunStrategy(ToolCalls.SEQUENTIAL))
