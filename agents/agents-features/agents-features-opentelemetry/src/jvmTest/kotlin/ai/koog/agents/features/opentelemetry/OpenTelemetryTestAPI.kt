@@ -25,7 +25,7 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSingleLLMCallStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSingleToolCallStrategy
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
@@ -378,11 +378,11 @@ internal object OpenTelemetryTestAPI {
     }
 
     fun getMessagesString(messages: List<Message>): String {
-        return SpanAttributes.Input.Messages(messages).value.value
+        return GenAIAttributes.Input.Messages(messages).value.value
     }
 
     fun getToolDefinitionsString(toolDescriptors: List<ai.koog.agents.core.tools.ToolDescriptor>): String {
-        return SpanAttributes.Tool.Definitions(toolDescriptors).value.value
+        return GenAIAttributes.Tool.Definitions(toolDescriptors).value.value
     }
 
     //endregion Attributes

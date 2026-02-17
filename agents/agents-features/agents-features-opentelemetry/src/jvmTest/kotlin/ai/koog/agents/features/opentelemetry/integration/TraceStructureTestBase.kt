@@ -24,8 +24,8 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestData
 import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Response.FinishReasonType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
@@ -105,7 +105,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             // Assert expected LLM Call Span (InferenceSpan) attributes for Langfuse/Weave
             val expectedLLMSpans = listOf(
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.provider.name" to model.provider.id,
@@ -257,13 +257,13 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val expectedLLMSpans = listOf(
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
                         "attributes" to expectedInitialLLMSpanAttributes,
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
                         "attributes" to expectedFinalLLMSpanAttributes,
                         "events" to emptyMap()
                     )
@@ -276,7 +276,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val toolEventId = testData.singleAttributeValue(actualToolSpans.single(), "koog.event.id")
             val expectedToolSpans = listOf(
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
@@ -362,7 +362,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             // Assert tool execution spans
             val expectedToolSpans = listOf(
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
@@ -375,7 +375,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     )
                 ),
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
@@ -441,7 +441,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val actualSpans = mockSpanExporter.collectedSpans
 
             // Verify that basic spans are present
-            assertTrue { actualSpans.count { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" } == 1 }
+            assertTrue { actualSpans.count { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" } == 1 }
             assertTrue { actualSpans.any { it.name == "subgraph sg" } }
             assertTrue { actualSpans.any { it.name == "strategy subgraph-finish-tool-strategy" } }
         }
@@ -502,7 +502,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val nodeSpan = spans.first { it.name == "node test-llm-call" }
             val nodeAttrs = nodeSpan.attributes.asMap().asSequence().associate { it.key.key to it.value }
             assertEquals("value-start", nodeAttrs["custom.after.start"])
-            val llmSpan = spans.first { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
+            val llmSpan = spans.first { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
             val llmAttrs = llmSpan.attributes.asMap().asSequence().associate { it.key.key to it.value }
 
             assertEquals(123L, llmAttrs["custom.before.finish"])
@@ -586,7 +586,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             // Assert expected LLM Call Span attributes for structured output
             val expectedLLMSpans = listOf(
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.provider.name" to model.provider.id,
@@ -758,13 +758,13 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val expectedLLMSpans = listOf(
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
                         "attributes" to expectedInitialLLMSpanAttributes,
                         "events" to emptyMap()
                     )
                 ),
                 mapOf(
-                    "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
+                    "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" to mapOf(
                         "attributes" to expectedFinalLLMSpanAttributes,
                         "events" to emptyMap()
                     )
@@ -829,9 +829,9 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             assertTrue(spans.any { it.name == "node moderate-message" })
 
             val llmSpan =
-                spans.firstOrNull { it.name == "${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
+                spans.firstOrNull { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
                     ?: spans.firstOrNull { span -> span.events.any { it.name == "moderation.result" } }
-                    ?: error("No LLM span for moderation found (expected '${SpanAttributes.Operation.OperationNameType.CHAT.id} ${model.id}' or a span with 'moderation.result' event)")
+                    ?: error("No LLM span for moderation found (expected '${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}' or a span with 'moderation.result' event)")
 
             val moderationEvent = llmSpan.events.firstOrNull { it.name == "moderation.result" }
             assertNotNull(moderationEvent, "LLM span should contain a moderation.result event")

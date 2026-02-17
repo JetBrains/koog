@@ -19,8 +19,8 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getSystemInstr
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
 import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
@@ -218,8 +218,8 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
             val collectedSpans = mockExporter.collectedSpans
             assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
 
-            val conversationIdAttribute = SpanAttributes.Conversation.Id(mockExporter.lastRunId)
-            val operationNameAttribute = SpanAttributes.Operation.Name(OperationNameType.INVOKE_AGENT)
+            val conversationIdAttribute = GenAIAttributes.Conversation.Id(mockExporter.lastRunId)
+            val operationNameAttribute = GenAIAttributes.Operation.Name(OperationNameType.INVOKE_AGENT)
 
             fun attributesMatches(attributes: Map<AttributeKey<*>, Any>): Boolean {
                 var conversationIdAttributeExists = false
