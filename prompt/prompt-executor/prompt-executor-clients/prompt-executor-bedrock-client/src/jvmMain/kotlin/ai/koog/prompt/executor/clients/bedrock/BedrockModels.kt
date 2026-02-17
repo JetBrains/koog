@@ -831,7 +831,7 @@ public object BedrockModels : LLModelDefinitions {
  */
 public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     require(provider == LLMProvider.Bedrock) {
-        "withInferencePrefix() can only be used with Bedrock models, but model provider is $provider"
+        "withInferenceProfile() can only be used with Bedrock models, but model provider is $provider"
     }
     val baseModelId = if (id.contains('.')) {
         val potentialPrefix = id.substringBefore('.')

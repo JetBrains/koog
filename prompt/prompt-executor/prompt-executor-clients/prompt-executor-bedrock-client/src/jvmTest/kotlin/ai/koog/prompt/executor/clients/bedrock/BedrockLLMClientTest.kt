@@ -160,8 +160,8 @@ class BedrockLLMClientTest {
         }
 
         assertNotNull(exception.message, "Exception message should not be null")
-        assertTrue(exception.message!!.contains("withInferencePrefix() can only be used with Bedrock models"))
-        assertTrue(exception.message!!.contains("model provider is Anthropic"))
+        assertTrue(exception.message!!.contains("withInferenceProfile() can only be used with Bedrock models"))
+        assertTrue(exception.message!!.contains("AnthropicLLMProvider"))
     }
 
     @Test
