@@ -2,7 +2,7 @@ package ai.koog.agents.features.opentelemetry.integration.langfuse
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.EventBodyFields
@@ -168,7 +168,7 @@ class LangfuseSpanAdapterTest {
         assertEquals("assistant", attributes.requireValue("gen_ai.completion.1.role"))
         assertEquals(expectedToolCallJson, attributes.requireValue("gen_ai.completion.1.content"))
         assertEquals(
-            SpanAttributes.Response.FinishReasonType.ToolCalls.id,
+            GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
             attributes.requireValue("gen_ai.completion.1.finish_reason"),
         )
     }
