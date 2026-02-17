@@ -4,7 +4,10 @@ import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolDescriptor;
 import ai.koog.agents.core.tools.ToolParameterType;
 import ai.koog.agents.core.tools.reflect.java.ToolFromJavaMethod;
-import ai.koog.agents.tools.test.*;
+import ai.koog.agents.tools.test.Complex;
+import ai.koog.agents.tools.test.EnumListPayload;
+import ai.koog.agents.tools.test.NestedEnumPayload;
+import ai.koog.agents.tools.test.Payload;
 import ai.koog.agents.tools.test.utils.ToolUtils;
 import kotlin.coroutines.Continuation;
 import kotlinx.serialization.json.Json;
@@ -17,7 +20,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import static ai.koog.agents.core.tools.reflect.java.JavaIUtilsKt.asTool;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JavaMethodToolsTest {
 
@@ -37,179 +40,103 @@ public class JavaMethodToolsTest {
         return asTool(m, Json.Default, thisRef, null, null);
     }
 
-    @Test
-    public void testPrimitives() {
-        Method m;
+    private static Tool<ToolFromJavaMethod.VarArgs, Object> getTool(String methodName, Object thisRef, Class<?>... parameterTypes) {
         try {
-            m = JavaToolbox.class.getDeclaredMethod("add", int.class, int.class);
+            Method m = JavaToolbox.class.getDeclaredMethod(methodName, parameterTypes);
+            return toolFrom(m, thisRef);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"a\":2,\"b\":3}");
+    }
+
+    private static Object execute(String methodName, String jsonInput, Class<?>... parameterTypes) {
+        return execute(methodName, null, jsonInput, parameterTypes);
+    }
+
+    private static Object execute(String methodName, Object thisRef, String jsonInput, Class<?>... parameterTypes) {
+        Tool<ToolFromJavaMethod.VarArgs, Object> tool = getTool(methodName, thisRef, parameterTypes);
+        JsonObject json = jsonObject(jsonInput);
         ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals(5, (int) result);
+        return ToolUtils.executeToolBlocking(tool, args);
+    }
+
+    @Test
+    public void testPrimitives() {
+        var result = execute("add", "{\"a\":2,\"b\":3}", int.class, int.class);
+        assertThat((int) result).isNotNull().isEqualTo(5);
     }
 
     @Test
     public void testEmpty() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("ping");
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals("pong", result);
+        var result = execute("ping", "{}");
+        assertThat(result).isNotNull().isEqualTo("pong");
     }
 
     @Test
     public void testSerializableDataClass() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("echo", Payload.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"p\":{\"id\":7,\"name\":\"x\"}}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        Payload result = (Payload) ToolUtils.executeToolBlocking(tool, args);
-        assertEquals(7, result.getId());
-        assertEquals("x", result.getName());
+        Payload result = (Payload) execute("echo", "{\"p\":{\"id\":7,\"name\":\"x\"}}", Payload.class);
+        assertThat(result.getId()).isNotNull().isEqualTo(7);
+        assertThat(result.getName()).isNotNull().isEqualTo("x");
     }
 
     @Test
     public void testInstanceMethod() {
         JavaToolbox inst = new JavaToolbox();
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("inc", int.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, inst);
-        JsonObject json = jsonObject("{\"x\":41}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals(42, (int) result);
+        var result = execute("inc", inst, "{\"x\":41}", int.class);
+        assertThat((int) result).isNotNull().isEqualTo(42);
     }
 
     @Test
     public void testStrings() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("concat", String.class, String.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"a\":\"hello \",\"b\":\"world\"}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals("hello world", result);
+        var result = execute("concat", "{\"a\":\"hello \",\"b\":\"world\"}", String.class, String.class);
+        assertThat(result).isNotNull().isEqualTo("hello world");
     }
 
     @Test
     public void testEnums() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("colorName", JavaToolbox.Color.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"color\":\"GREEN\"}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals("GREEN", result);
+        var result = execute("colorName", "{\"color\":\"GREEN\"}", JavaToolbox.Color.class);
+        assertThat(result).isNotNull().isEqualTo("GREEN");
     }
 
     @Test
     public void testComplexObject() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("complexInfo", Complex.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"c\":{\"payload\":{\"id\":123,\"name\":\"nested\"},\"meta\":\"test\"}}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals("test:nested", result);
+        var result = execute("complexInfo", "{\"c\":{\"payload\":{\"id\":123,\"name\":\"nested\"},\"meta\":\"test\"}}", Complex.class);
+        assertThat(result).isNotNull().isEqualTo("test:nested");
     }
 
     @Test
     public void testLLMDescription() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("describedAdd", int.class, int.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
+        Tool<ToolFromJavaMethod.VarArgs, Object> tool = getTool("describedAdd", null, int.class, int.class);
 
         ToolDescriptor descriptor = tool.getDescriptor();
-        assertEquals("describedAdd", descriptor.getName());
-        assertEquals("Adds two numbers", descriptor.getDescription());
+        assertThat(descriptor.getName()).isNotNull().isEqualTo("describedAdd");
+        assertThat(descriptor.getDescription()).isNotNull().isEqualTo("Adds two numbers");
 
         var params = descriptor.getRequiredParameters();
-        assertEquals(2, params.size());
+        assertThat(params.size()).isNotNull().isEqualTo(2);
 
-        assertEquals("a", params.get(0).getName());
-        assertEquals(ToolParameterType.Integer.INSTANCE, params.get(0).getType());
+        assertThat(params.get(0).getName()).isNotNull().isEqualTo("a");
+        assertThat(params.get(0).getType()).isNotNull().isEqualTo(ToolParameterType.Integer.INSTANCE);
 
-        assertEquals("b", params.get(1).getName());
-        assertEquals(ToolParameterType.Integer.INSTANCE, params.get(1).getType());
+        assertThat(params.get(1).getName()).isNotNull().isEqualTo("b");
+        assertThat(params.get(1).getType()).isNotNull().isEqualTo(ToolParameterType.Integer.INSTANCE);
     }
 
     @Test
     public void testNestedEnumInObject() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("testNestedEnum", NestedEnumPayload.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"p\":{\"outer\":\"X\",\"inner\":\"A\"}}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals("X:A", result);
+        var result = execute("testNestedEnum", "{\"p\":{\"outer\":\"X\",\"inner\":\"A\"}}", NestedEnumPayload.class);
+        assertThat(result).isNotNull().isEqualTo("X:A");
     }
 
     @Test
     public void testEnumListInObject() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("testEnumList", EnumListPayload.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"p\":{\"enums\":[\"A\",\"B\",\"C\"]}}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals("A,B,C", result);
+        var result = execute("testEnumList", "{\"p\":{\"enums\":[\"A\",\"B\",\"C\"]}}", EnumListPayload.class);
+        assertThat(result).isNotNull().isEqualTo("A,B,C");
     }
 
     @Test
     public void testListOfLists() {
-        Method m;
-        try {
-            m = JavaToolbox.class.getDeclaredMethod("testListOfLists", List.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        Tool<ToolFromJavaMethod.VarArgs, Object> tool = toolFrom(m, null);
-        JsonObject json = jsonObject("{\"list\":[[\"a\",\"b\"],[\"c\",\"d\"]]}");
-        ToolFromJavaMethod.VarArgs args = tool.decodeArgs(json);
-        var result = ToolUtils.executeToolBlocking(tool, args);
-        assertEquals("a-b|c-d", result);
+        var result = execute("testListOfLists", "{\"list\":[[\"a\",\"b\"],[\"c\",\"d\"]]}", List.class);
+        assertThat(result).isNotNull().isEqualTo("a-b|c-d");
     }
 }

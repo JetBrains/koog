@@ -1,7 +1,11 @@
 package ai.koog.agents.tools;
 
 import ai.koog.agents.core.tools.annotations.LLMDescription;
-import ai.koog.agents.tools.test.*;
+import ai.koog.agents.tools.test.Complex;
+import ai.koog.agents.tools.test.EnumListPayload;
+import ai.koog.agents.tools.test.NestedEnumPayload;
+import ai.koog.agents.tools.test.Payload;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
