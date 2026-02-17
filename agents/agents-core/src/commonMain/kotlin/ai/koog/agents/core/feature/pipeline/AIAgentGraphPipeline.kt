@@ -1,5 +1,4 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.feature.pipeline
 
@@ -60,7 +59,8 @@ public expect open class AIAgentGraphPipeline(
      * @param input The input data for the node execution
      * @param inputType The type of the input data provided to the node
      */
-    public open override suspend fun onNodeExecutionStarting(
+    @InternalAgentsApi
+    internal suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
@@ -81,7 +81,8 @@ public expect open class AIAgentGraphPipeline(
      * @param output The output data produced by the node execution
      * @param outputType The type of the output data produced by the node execution
      */
-    public open override suspend fun onNodeExecutionCompleted(
+    @InternalAgentsApi
+    internal suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
@@ -103,7 +104,8 @@ public expect open class AIAgentGraphPipeline(
      * @param inputType The type of the input data provided to the node.
      * @param throwable The exception or error that occurred during node execution.
      */
-    public open override suspend fun onNodeExecutionFailed(
+    @InternalAgentsApi
+    internal suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
@@ -127,7 +129,8 @@ public expect open class AIAgentGraphPipeline(
      * @param input The input data for the subgraph execution.
      * @param inputType The type of the input data provided to the subgraph.
      */
-    public open override suspend fun onSubgraphExecutionStarting(
+    @InternalAgentsApi
+    internal suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
@@ -148,7 +151,8 @@ public expect open class AIAgentGraphPipeline(
      * @param output The output data produced by the subgraph execution.
      * @param outputType The type of the output data produced by the subgraph execution.
      */
-    public open override suspend fun onSubgraphExecutionCompleted(
+    @InternalAgentsApi
+    internal suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
@@ -170,7 +174,8 @@ public expect open class AIAgentGraphPipeline(
      * @param inputType The type of the input data provided to the subgraph.
      * @param throwable The exception or error that caused the subgraph execution to fail.
      */
-    public open override suspend fun onSubgraphExecutionFailed(
+    @InternalAgentsApi
+    internal suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,

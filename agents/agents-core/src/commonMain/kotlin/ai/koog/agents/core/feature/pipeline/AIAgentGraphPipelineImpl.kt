@@ -27,7 +27,8 @@ internal class AIAgentGraphPipelineImpl(
 
     //region Trigger Node Handlers
 
-    public override suspend fun onNodeExecutionStarting(
+    @InternalAgentsApi
+    public suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
@@ -41,7 +42,8 @@ internal class AIAgentGraphPipelineImpl(
         )
     }
 
-    public override suspend fun onNodeExecutionCompleted(
+    @InternalAgentsApi
+    public suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
@@ -57,7 +59,8 @@ internal class AIAgentGraphPipelineImpl(
         )
     }
 
-    public override suspend fun onNodeExecutionFailed(
+    @InternalAgentsApi
+    public suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
@@ -74,9 +77,10 @@ internal class AIAgentGraphPipelineImpl(
 
     //endregion Trigger Node Handlers
 
-    //region Interceptors
+    //region Trigger Subgraph Handlers
 
-    public override suspend fun onSubgraphExecutionStarting(
+    @InternalAgentsApi
+    public suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
@@ -90,7 +94,8 @@ internal class AIAgentGraphPipelineImpl(
         )
     }
 
-    public override suspend fun onSubgraphExecutionCompleted(
+    @InternalAgentsApi
+    public suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
@@ -115,7 +120,8 @@ internal class AIAgentGraphPipelineImpl(
         )
     }
 
-    public override suspend fun onSubgraphExecutionFailed(
+    @InternalAgentsApi
+    public suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         subgraph: AIAgentSubgraph<*, *>,
@@ -129,6 +135,10 @@ internal class AIAgentGraphPipelineImpl(
             context = SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, throwable)
         )
     }
+
+    //endregion Trigger Subgraph Handlers
+
+    //region Interceptors
 
     public override fun interceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,

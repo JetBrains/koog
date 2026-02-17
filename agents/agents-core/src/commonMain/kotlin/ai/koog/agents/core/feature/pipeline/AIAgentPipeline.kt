@@ -113,6 +113,12 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         featureKey: AIAgentStorageKey<*>
     )
 
+    @InternalAgentsApi
+    internal suspend fun prepareFeatures()
+
+    @InternalAgentsApi
+    internal suspend fun closeAllFeaturesMessageProcessors()
+
     //region Trigger Agent Handlers
 
     /**
@@ -124,9 +130,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param agent The agent instance for which the execution has started
      * @param context The context of the agent execution, providing access to the agent environment and context features
      */
-    // TODO: SD -- make this methods internal
-    @OptIn(InternalAgentsApi::class)
-    public override suspend fun <TInput, TOutput> onAgentStarting(
+    @InternalAgentsApi
+    internal suspend fun <TInput, TOutput> onAgentStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -143,7 +148,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param runId The unique identifier of the agent run
      * @param result The result produced by the agent, or null if no result was produced
      */
-    public override suspend fun onAgentCompleted(
+    @InternalAgentsApi
+    internal suspend fun onAgentCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String,
@@ -161,7 +167,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param runId The unique identifier of the agent run
      * @param throwable The [Throwable] exception instance that was thrown during agent execution
      */
-    public override suspend fun onAgentExecutionFailed(
+    @InternalAgentsApi
+    internal suspend fun onAgentExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String,
@@ -177,7 +184,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param executionInfo The execution information for the agent environment transformation event
      * @param agentId The unique identifier of the agent that will be closed.
      */
-    public override suspend fun onAgentClosing(
+    @InternalAgentsApi
+    internal suspend fun onAgentClosing(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String,
@@ -195,7 +203,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param baseEnvironment The initial environment to be transformed
      * @return The transformed environment after all handlers have been applied
      */
-    public override suspend fun onAgentEnvironmentTransforming(
+    @InternalAgentsApi
+    internal suspend fun onAgentEnvironmentTransforming(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agent: GraphAIAgent<*, *>,
@@ -214,8 +223,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param strategy The strategy that has started execution
      * @param context The context of the strategy execution
      */
-    @OptIn(InternalAgentsApi::class)
-    public override suspend fun onStrategyStarting(
+    @InternalAgentsApi
+    internal suspend fun onStrategyStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         strategy: AIAgentStrategy<*, *, *>,
@@ -231,8 +240,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param context The context of the strategy execution
      * @param result The result produced by the strategy execution
      */
-    @OptIn(InternalAgentsApi::class)
-    public override suspend fun onStrategyCompleted(
+    @InternalAgentsApi
+    internal suspend fun onStrategyCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         strategy: AIAgentStrategy<*, *, *>,
@@ -255,7 +264,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param model The language model instance that will process the request
      * @param tools The list of tool descriptors available for the LLM call
      */
-    public override suspend fun onLLMCallStarting(
+    @InternalAgentsApi
+    internal suspend fun onLLMCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -277,7 +287,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param responses The response messages received from the language model
      * @param moderationResponse The moderation response, if any, received from the language model
      */
-    public override suspend fun onLLMCallCompleted(
+    @InternalAgentsApi
+    internal suspend fun onLLMCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -290,6 +301,106 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     )
 
     //endregion Trigger LLM Call Handlers
+
+    //region Trigger LLM Streaming
+
+    /**
+     * Invoked before streaming from a language model begins.
+     *
+     * This method notifies all registered stream handlers that streaming is about to start,
+     * allowing them to perform preprocessing or logging operations.
+     *
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the LLM streaming event;
+     * @param runId The unique identifier for this streaming session;
+     * @param prompt The prompt being sent to the language model;
+     * @param model The language model being used for streaming;
+     * @param tools The list of available tool descriptors for this streaming session.
+     */
+    @InternalAgentsApi
+    internal suspend fun onLLMStreamingStarting(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    /**
+     * Invoked when a stream frame is received during the streaming process.
+     *
+     * This method notifies all registered stream handlers about each incoming stream frame,
+     * allowing them to process, transform, or aggregate the streaming content in real-time.
+     *
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the LLM streaming event;
+     * @param runId The unique identifier for this streaming session;
+     * @param prompt The prompt being sent to the language model;
+     * @param model The language model being used for streaming;
+     * @param streamFrame The individual stream frame containing partial response data.
+     */
+    @InternalAgentsApi
+    internal suspend fun onLLMStreamingFrameReceived(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        streamFrame: StreamFrame,
+        context: AIAgentContext
+    )
+
+    /**
+     * Invoked if an error occurs during the streaming process.
+     *
+     * This method notifies all registered stream handlers about the streaming error,
+     * allowing them to handle or log the error.
+     *
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the LLM streaming event;
+     * @param runId The unique identifier for this streaming session;
+     * @param prompt The prompt being sent to the language model;
+     * @param model The language model being used for streaming;
+     * @param throwable The exception that occurred during streaming if applicable.
+     */
+    @InternalAgentsApi
+    internal suspend fun onLLMStreamingFailed(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        throwable: Throwable,
+        context: AIAgentContext
+    )
+
+    /**
+     * Invoked after streaming from a language model completes.
+     *
+     * This method notifies all registered stream handlers that streaming has finished,
+     * allowing them to perform post-processing, cleanup, or final logging operations.
+     *
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the LLM streaming event;
+     * @param runId The unique identifier for this streaming session;
+     * @param prompt The prompt that was sent to the language model;
+     * @param model The language model that was used for streaming;
+     * @param tools The list of tool descriptors that were available for this streaming session.
+     */
+    @InternalAgentsApi
+    internal suspend fun onLLMStreamingCompleted(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    //endregion Trigger LLM Streaming
 
     //region Trigger Tool Call Handlers
 
@@ -304,7 +415,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param toolDescription The description of the tool that is being called.
      * @param toolArgs The arguments provided to the tool
      */
-    public override suspend fun onToolCallStarting(
+    @InternalAgentsApi
+    internal suspend fun onToolCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -328,7 +440,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param message The validation error message;
      * @param error The [AIAgentError] validation error.
      */
-    public override suspend fun onToolValidationFailed(
+    @InternalAgentsApi
+    internal suspend fun onToolValidationFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -354,7 +467,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param message A message describing the failure.
      * @param error The [AIAgentError] that caused the failure.
      */
-    public override suspend fun onToolCallFailed(
+    @InternalAgentsApi
+    internal suspend fun onToolCallFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -379,7 +493,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param toolArgs The arguments that were provided to the tool;
      * @param toolResult The result produced by the tool, or null if no result was produced.
      */
-    public override suspend fun onToolCallCompleted(
+    @InternalAgentsApi
+    internal suspend fun onToolCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -392,102 +507,6 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     )
 
     //endregion Trigger Tool Call Handlers
-
-    //region Trigger LLM Streaming
-
-    /**
-     * Invoked before streaming from a language model begins.
-     *
-     * This method notifies all registered stream handlers that streaming is about to start,
-     * allowing them to perform preprocessing or logging operations.
-     *
-     * @param eventId The unique identifier for the event group;
-     * @param executionInfo The execution information for the LLM streaming event;
-     * @param runId The unique identifier for this streaming session;
-     * @param prompt The prompt being sent to the language model;
-     * @param model The language model being used for streaming;
-     * @param tools The list of available tool descriptors for this streaming session.
-     */
-    public override suspend fun onLLMStreamingStarting(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        runId: String,
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        context: AIAgentContext
-    )
-
-    /**
-     * Invoked when a stream frame is received during the streaming process.
-     *
-     * This method notifies all registered stream handlers about each incoming stream frame,
-     * allowing them to process, transform, or aggregate the streaming content in real-time.
-     *
-     * @param eventId The unique identifier for the event group;
-     * @param executionInfo The execution information for the LLM streaming event;
-     * @param runId The unique identifier for this streaming session;
-     * @param prompt The prompt being sent to the language model;
-     * @param model The language model being used for streaming;
-     * @param streamFrame The individual stream frame containing partial response data.
-     */
-    public override suspend fun onLLMStreamingFrameReceived(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        runId: String,
-        prompt: Prompt,
-        model: LLModel,
-        streamFrame: StreamFrame,
-        context: AIAgentContext
-    )
-
-    /**
-     * Invoked if an error occurs during the streaming process.
-     *
-     * This method notifies all registered stream handlers about the streaming error,
-     * allowing them to handle or log the error.
-     *
-     * @param eventId The unique identifier for the event group;
-     * @param executionInfo The execution information for the LLM streaming event;
-     * @param runId The unique identifier for this streaming session;
-     * @param prompt The prompt being sent to the language model;
-     * @param model The language model being used for streaming;
-     * @param throwable The exception that occurred during streaming if applicable.
-     */
-    public override suspend fun onLLMStreamingFailed(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        runId: String,
-        prompt: Prompt,
-        model: LLModel,
-        throwable: Throwable,
-        context: AIAgentContext
-    )
-
-    /**
-     * Invoked after streaming from a language model completes.
-     *
-     * This method notifies all registered stream handlers that streaming has finished,
-     * allowing them to perform post-processing, cleanup, or final logging operations.
-     *
-     * @param eventId The unique identifier for the event group;
-     * @param executionInfo The execution information for the LLM streaming event;
-     * @param runId The unique identifier for this streaming session;
-     * @param prompt The prompt that was sent to the language model;
-     * @param model The language model that was used for streaming;
-     * @param tools The list of tool descriptors that were available for this streaming session.
-     */
-    public override suspend fun onLLMStreamingCompleted(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        runId: String,
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        context: AIAgentContext
-    )
-
-    //endregion Trigger LLM Streaming
 
     //region Interceptors
 
@@ -1012,14 +1031,4 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     )
 
     //endregion Deprecated Interceptors
-
-    //region public and Internal Methods
-
-    @InternalAgentsApi
-    public override suspend fun prepareFeatures()
-
-    @InternalAgentsApi
-    public override suspend fun closeAllFeaturesMessageProcessors()
-
-    //endregion public and Internal Methods
 }

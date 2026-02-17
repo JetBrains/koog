@@ -1,11 +1,5 @@
-@file:Suppress("MissingKDocForPublicAPI")
-
 package ai.koog.agents.core.feature.pipeline
 
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
-import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
@@ -13,7 +7,6 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
-import kotlin.reflect.KType
 
 /**
  * Public API surface for graph-specific pipeline operations (nodes and subgraphs).
@@ -23,99 +16,87 @@ import kotlin.reflect.KType
  */
 public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
 
-    //region Trigger Node Handlers
-    public suspend fun onNodeExecutionStarting(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
-        context: AIAgentGraphContextBase,
-        input: Any?,
-        inputType: KType
-    )
-
-    public suspend fun onNodeExecutionCompleted(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
-        context: AIAgentGraphContextBase,
-        input: Any?,
-        inputType: KType,
-        output: Any?,
-        outputType: KType,
-    )
-
-    public suspend fun onNodeExecutionFailed(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
-        context: AIAgentGraphContextBase,
-        input: Any?,
-        inputType: KType,
-        throwable: Throwable
-    )
-    //endregion
-
-    //region Trigger Subgraph Handlers
-    public suspend fun onSubgraphExecutionStarting(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
-        context: AIAgentGraphContextBase,
-        input: Any?,
-        inputType: KType
-    )
-
-    public suspend fun onSubgraphExecutionCompleted(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
-        context: AIAgentGraphContextBase,
-        input: Any?,
-        inputType: KType,
-        output: Any?,
-        outputType: KType,
-    )
-
-    public suspend fun onSubgraphExecutionFailed(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
-        context: AIAgentGraphContextBase,
-        input: Any?,
-        inputType: KType,
-        throwable: Throwable
-    )
-    //endregion
-
     //region Interceptors
+
+    /**
+     * Registers an interceptor to handle events triggered before the execution of a node in the AI agent graph pipeline.
+     *
+     * @param feature The graph-specific feature that defines the context in which the interceptor applies.
+     * @param handle A suspending function that will be invoked when a node execution is about to start.
+     *               The function receives a [NodeExecutionStartingContext] containing detailed information about the event.
+     */
     public fun interceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionStartingContext) -> Unit
     )
 
+    /**
+     * Registers an interceptor to handle events triggered after the execution of a node in the AI agent graph pipeline.
+     *
+     * @param feature The graph-specific feature that defines the context in which the interceptor applies.
+     * @param handle A suspending function that will be invoked when a node execution is completed.
+     *               The function receives a [NodeExecutionCompletedContext] containing detailed information
+     *               about the completed node execution.
+     */
     public fun interceptNodeExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionCompletedContext) -> Unit
     )
 
+    /**
+     * Registers an interceptor to handle events triggered when a node execution fails in the AI agent graph pipeline.
+     *
+     * @param feature The graph-specific feature that defines the context in which the interceptor applies.
+     * @param handle A suspending function that will be invoked when a node execution fails.
+     *               The function receives a [NodeExecutionFailedContext], which contains detailed information
+     *               about the failed node execution.
+     */
     public fun interceptNodeExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionFailedContext) -> Unit
     )
 
+    /**
+     * Registers an interceptor to handle events triggered before the execution of a subgraph
+     * in the AI agent graph pipeline.
+     *
+     * @param feature The graph-specific feature that defines the context in which the interceptor applies.
+     * @param handle A suspending function that will be invoked when a subgraph execution is about to start.
+     *               The function receives a [SubgraphExecutionStartingContext] containing detailed
+     *               information about the starting subgraph execution.
+     */
     public fun interceptSubgraphExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit
     )
 
+    /**
+     * Registers an interceptor to handle events triggered after the execution of a subgraph
+     * in the AI agent graph pipeline.
+     *
+     * @param feature The graph-specific feature that defines the context in which the interceptor applies.
+     * @param handle A suspending function that will be invoked when a subgraph execution is completed.
+     *               The function receives a [SubgraphExecutionCompletedContext] containing detailed
+     *               information about the completed subgraph execution.
+     */
     public fun interceptSubgraphExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit
     )
 
+    /**
+     * Registers an interceptor to handle events triggered when a subgraph execution fails
+     * in the AI agent graph pipeline.
+     *
+     * @param feature The graph-specific feature that defines the context in which the interceptor applies.
+     * @param handle A suspending function that will be invoked when a subgraph execution fails.
+     *               The function receives a [SubgraphExecutionFailedContext], which contains detailed
+     *               information about the failed subgraph execution.
+     */
     public fun interceptSubgraphExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit
     )
-    //endregion
+
+    //endregion Interceptors
 }
