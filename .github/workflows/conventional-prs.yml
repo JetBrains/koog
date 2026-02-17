@@ -1,0 +1,49 @@
+name: 'Conventional PRs'
+
+on:
+  pull_request:
+    branches: [ "develop" ]
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+
+jobs:
+  main:
+    name: Validate PR title
+    runs-on: ubuntu-slim
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Docs: https://github.com/amannn/action-semantic-pull-request?tab=readme-ov-file#configuration
+        # Remember to update CONTRIBUTING.md if you change these configs!
+        with:
+          types: |
+            fix
+            feat
+            build
+            ci
+            docs
+            refactor
+            test
+            example
+          # top-level modules for now, might be refined later
+          scopes: |
+            a2a
+            agents
+            embeddings
+            integration-tests
+            koog-agents
+            koog-ktor
+            spring-boot
+            prompt
+            rag
+            test-utils
+            utils
+          # ignore dependabot
+          ignoreLabels: |
+            dependencies

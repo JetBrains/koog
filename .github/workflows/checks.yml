@@ -11,6 +11,7 @@ on:
   push:
     branches: [ "main", "develop" ]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -23,8 +24,29 @@ env:
   JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
 
 jobs:
-  compilation:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
+      docs: ${{ steps.filter.outputs.docs_any_changed }}
+    steps:
+      - uses: actions/checkout@v5
 
+      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+        name: Check changed files
+        id: filter
+        with:
+          write_output_files: 'true'
+          files_yaml_from_source_file: .github/file-filters.yml
+
+      - run: .github/scripts/print_changed_files.sh
+        name: 'Print changed files'
+
+  compilation:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -52,8 +74,9 @@ jobs:
         run: ./gradlew jvmTestClasses jsTestClasses
 
   docs:
+    needs: changes
+    if: ${{ needs.changes.outputs.docs == 'true' }}
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
 
@@ -81,8 +104,11 @@ jobs:
           uv sync --frozen --all-extras
           uv run mkdocs build
 
+  # Do not set individual matrix jobs (e.g., "tests (ubuntu-latest)") as required in GitHub branch protection.
+  # Instead, use the summary job `tests-result` below, which properly reports status when tests are skipped.
   tests:
-
+    needs: compilation
+    if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -127,21 +153,21 @@ jobs:
 
       - name: Archive coverage data
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: gradle-coverage-data.zip
           path: .qodana/code-coverage
 
       - name: Collect reports
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: reports-${{ matrix.os }}
           path: |
             **/build/reports/
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         if: ${{ !cancelled() }} # always run even if the previous step fails
         with:
           report_paths: '**/test-results/**/TEST-*.xml'
@@ -151,47 +177,27 @@ jobs:
           include_time_in_summary: true
           annotate_only: true
 
-  qodana:
-    needs: [ tests ]
-    if: github.repository == 'jetbrains/koog' && (github.event_name == 'push' || github.event.pull_request.head.repo.fork == false)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      checks: write
+  # Matrix jobs don't report status when skipped, causing required checks to hang.
+  # This summary job always checks `tests` jobs result and reports status for branch protection.
+  tests-result:
+    needs: [ changes, tests ]
+    if: always()
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
-          fetch-depth: 0  # a full history is required for pull request analysis
-          persist-credentials: false  # https://github.com/orgs/community/discussions/151365
+      - name: Check tests status
+        #language=bash
+        run: |
+          if [[ "${{ needs.tests.result }}" == "skipped" ]]; then
+            echo "Tests skipped"
+            exit 0
+          elif [[ "${{ needs.tests.result }}" != "success" ]]; then
+            echo "Tests didn't finish successfully"
+            exit 1
+          fi 
 
-      # Add Java setup step
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          cache: gradle
-
-      # Download the coverage data artifact
-      - name: Download coverage data
-        uses: actions/download-artifact@v6
-        with:
-          name: gradle-coverage-data.zip
-          path: .qodana/code-coverage
-
-      - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2025.2
-        with:
-          pr-mode: false
-          args: --baseline,qodana.sarif.json
-          use-caches: true
-          cache-default-branch-only: true
-        env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1399872884 }}
-          QODANA_ENDPOINT: 'https://qodana.cloud'
   knit:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' || needs.changes.outputs.docs == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -200,13 +206,13 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v5
-      - name: Generate and verify code examples
+      - name: Verify code snippets in docs
         run: |
           echo "Starting knit generation..."
           FILES_BEFORE_KNIT=$(find docs/src/ -name "*.kt" 2>/dev/null | wc -l || echo "0")
           echo "Files before knit: $FILES_BEFORE_KNIT"
 
-          ./gradlew :docs:knit
+          ./gradlew :docs:knit 
 
           FILES_AFTER_KNIT=$(find docs/src/ -name "*.kt" 2>/dev/null | wc -l || echo "0")
           echo "Files after knit: $FILES_AFTER_KNIT"
@@ -218,18 +224,16 @@ jobs:
           ./gradlew :docs:assemble
 
   dokka:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v5
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5
         with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-
-      - name: Verify Dokka
-        run: ./gradlew dokkaGenerate
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Generate API docs
+        run: |
+          ./gradlew dokkaGenerate

@@ -36,7 +36,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
@@ -61,5 +61,3 @@ jobs:
       - name: Assemble target
         working-directory: ./examples/demo-compose-app
         run: ./gradlew ${{ matrix.gradle-tasks }} --stacktrace
-        env:
-          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
