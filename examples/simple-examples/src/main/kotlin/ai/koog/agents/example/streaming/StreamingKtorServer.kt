@@ -134,7 +134,7 @@ private fun createStrategy(
         val totalText = StringBuilder()
 
         // Filter for text append frames and stream each chunk immediately
-        input.filterIsInstance<StreamFrame.Append>()
+        input.filterIsInstance<StreamFrame.TextDelta>()
             .collect {
                 sendChunk(it.text)
                 totalText.append(it.text)
