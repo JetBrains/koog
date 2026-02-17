@@ -1,0 +1,72 @@
+package ai.koog.agents.features.opentelemetry.metrics
+
+import ai.koog.agents.features.opentelemetry.metric.MetricFactory
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+class MetricFactoryTest {
+
+    @Test
+    fun testCreateTokenCounterMetric() {
+        val metric = MetricFactory.createTokenCounterMetric()
+
+        assertEquals("gen_ai.client.token.usage", metric.name)
+        assertEquals("Total token count", metric.description)
+        assertEquals("token", metric.unit)
+    }
+
+    @Test
+    fun testCreateToolCallCounterMetric() {
+        val metric = MetricFactory.createToolCallCounterMetric()
+
+        assertEquals("koog.tool.count", metric.name)
+        assertEquals("Tool calls count", metric.description)
+        assertEquals("tool call", metric.unit)
+    }
+
+    @Test
+    fun testCreateOperationDurationHistogramMetric() {
+        val metric = MetricFactory.createOperationDurationHistogramMetric()
+
+        assertEquals("gen_ai.client.operation.duration", metric.name)
+        assertEquals("Operation duration", metric.description)
+        assertEquals("s", metric.unit)
+
+        // Verify boundaries advice is set according to OpenTelemetry semantic conventions
+        assertNotNull(metric.boundariesAdvice)
+        assertTrue(metric.boundariesAdvice.isNotEmpty())
+
+        val expectedBoundaries = listOf(
+            0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12, 10.24, 20.48, 40.96, 81.92
+        )
+        assertEquals(expectedBoundaries, metric.boundariesAdvice)
+    }
+
+    @Test
+    fun testOperationDurationHistogramBoundariesAreOrdered() {
+        val metric = MetricFactory.createOperationDurationHistogramMetric()
+
+        val boundaries = metric.boundariesAdvice
+
+        // Verify boundaries are in ascending order
+        for (i in 0 until boundaries.size - 1) {
+            assertTrue(
+                boundaries[i] < boundaries[i + 1],
+                "Boundaries should be in ascending order: ${boundaries[i]} should be less than ${boundaries[i + 1]}"
+            )
+        }
+    }
+
+    @Test
+    fun testOperationDurationHistogramBoundariesCoverReasonableRange() {
+        val metric = MetricFactory.createOperationDurationHistogramMetric()
+
+        val boundaries = metric.boundariesAdvice
+
+        // Verify the range covers from 10ms to ~82 seconds
+        assertTrue(boundaries.first() >= 0.01, "First boundary should be at least 10ms")
+        assertTrue(boundaries.last() <= 100.0, "Last boundary should be at most 100s")
+    }
+}

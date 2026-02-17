@@ -12,7 +12,8 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.SerializationUtils
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
+import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
@@ -21,6 +22,13 @@ import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.mcp.McpMethod
+import ai.koog.agents.features.opentelemetry.metric.MetricCollector
+import ai.koog.agents.features.opentelemetry.metric.events.createExecuteToolDurationHistogramMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDurationHistogramMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createLLMOutputTokensMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.createToolCallCounterMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.toMetricEvent
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
 import ai.koog.agents.features.opentelemetry.span.SpanType
@@ -42,6 +50,7 @@ import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.agents.mcp.metadata.McpMetadataKeys
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlin.reflect.KType
@@ -264,6 +273,9 @@ public class OpenTelemetry {
         ) {
             val spanAdapter = config.spanAdapter
             val tracer = config.tracer
+            val meter = config.meter
+
+            val metricCollector = MetricCollector(meter, config)
 
             //region Agent
 
@@ -354,8 +366,8 @@ public class OpenTelemetry {
                 ) ?: return@intercept
 
                 invokeAgentSpan.addAttribute(
-                    attribute = SpanAttributes.Response.FinishReasons(
-                        listOf(SpanAttributes.Response.FinishReasonType.Error)
+                    attribute = GenAIAttributes.Response.FinishReasons(
+                        listOf(GenAIAttributes.Response.FinishReasonType.Error)
                     )
                 )
 
@@ -517,6 +529,9 @@ public class OpenTelemetry {
                     span = inferenceSpan,
                     path = patchedExecutionInfo
                 )
+
+                // Metrics
+                metricCollector.storeMetricEvent(eventContext.toMetricEvent())
             }
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
@@ -567,11 +582,11 @@ public class OpenTelemetry {
                 eventContext.responses.lastOrNull()?.let { message ->
                     val finishReasonsAttribute = when (message) {
                         is Message.Assistant, is Message.Reasoning -> {
-                            SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.Stop))
+                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.Stop))
                         }
 
                         is Message.Tool.Call -> {
-                            SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.ToolCalls))
+                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls))
                         }
                     }
 
@@ -590,6 +605,37 @@ public class OpenTelemetry {
                     span = inferenceSpan,
                     path = patchedExecutionInfo
                 )
+
+                eventContext.responses.lastOrNull()?.metaInfo?.inputTokensCount?.toLong()?.let { inputTokens ->
+                    metricCollector.addCounterMetricEvent(
+                        metricEvent = createLLMInputTokensMetricEvent(
+                            id = eventContext.eventId,
+                            model = eventContext.model,
+                            inputTokens = inputTokens,
+                        )
+                    )
+                }
+
+                eventContext.responses.lastOrNull()?.metaInfo?.outputTokensCount?.toLong()?.let { outputTokens ->
+                    metricCollector.addCounterMetricEvent(
+                        metricEvent = createLLMOutputTokensMetricEvent(
+                            id = eventContext.eventId,
+                            model = eventContext.model,
+                            outputTokens = outputTokens,
+                        )
+                    )
+                }
+
+                // Metrics
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createLLMCallDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            model = eventContext.model,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp
+                        )
+                    )
+                }
             }
 
             //endregion LLM Call
@@ -639,6 +685,9 @@ public class OpenTelemetry {
 
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, path)
+
+                // Metrics
+                metricCollector.storeMetricEvent(eventContext.toMetricEvent())
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
@@ -651,6 +700,26 @@ public class OpenTelemetry {
                     spanCollector = spanCollector,
                     eventContext = eventContext,
                 )
+
+                // Metrics
+                metricCollector.addCounterMetricEvent(
+                    metricEvent = createToolCallCounterMetricEvent(
+                        id = eventContext.eventId,
+                        toolName = eventContext.toolName,
+                        toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
+                    )
+                )
+
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createExecuteToolDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            toolName = eventContext.toolName,
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                        )
+                    )
+                }
             }
 
             pipeline.interceptToolCallFailed(this) intercept@{ eventContext ->
@@ -663,6 +732,26 @@ public class OpenTelemetry {
                     eventContext = eventContext,
                     error = eventContext.error,
                 )
+
+                // Metrics
+                metricCollector.addCounterMetricEvent(
+                    metricEvent = createToolCallCounterMetricEvent(
+                        id = eventContext.eventId,
+                        toolName = eventContext.toolName,
+                        toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR
+                    )
+                )
+
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createExecuteToolDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            toolName = eventContext.toolName,
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                        )
+                    )
+                }
             }
 
             pipeline.interceptToolValidationFailed(this) intercept@{ eventContext ->
@@ -675,6 +764,26 @@ public class OpenTelemetry {
                     eventContext = eventContext,
                     error = eventContext.error,
                 )
+
+                // Metrics
+                metricCollector.addCounterMetricEvent(
+                    metricEvent = createToolCallCounterMetricEvent(
+                        id = eventContext.eventId,
+                        toolName = eventContext.toolName,
+                        toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                    )
+                )
+
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createExecuteToolDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            toolName = eventContext.toolName,
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                        )
+                    )
+                }
             }
 
             //endregion Tool Call
