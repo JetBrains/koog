@@ -2,6 +2,7 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -10,7 +11,19 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@Suppress("MissingKDocForPublicAPI")
+/**
+ * Represents an AI agent environment that operates within the context of a specific agent framework.
+ *
+ * This class acts as a decorator over an existing [AIAgentEnvironment], augmenting operations with contextual
+ * processing using the provided [AIAgentContext].
+ *
+ * @constructor Constructs a new instance of [ContextualAgentEnvironment] with a decorated [environment] and a
+ * contextual [context].
+ *
+ * @param environment The underlying agent environment responsible for managing tool execution.
+ * @param context The context that augments the environment with additional behavioral and execution information.
+ */
+@InternalAgentsApi
 public class ContextualAgentEnvironment(
     private val environment: AIAgentEnvironment,
     private val context: AIAgentContext,

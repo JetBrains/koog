@@ -92,7 +92,6 @@ public class AIAgentPipelineImpl(
         Debugger.key
     )
 
-    // TODO: SD -- add comment
     private val agentLifecycleHandlersCollector = AgentLifecycleHandlersCollector()
 
     public override fun <TFeature : Any> feature(
@@ -168,8 +167,7 @@ public class AIAgentPipelineImpl(
 
     //region Invoke Agent Handlers
 
-    // TODO: SD -- rename all to invokeOnAgentStarting
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun <TInput, TOutput> onAgentStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -183,7 +181,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onAgentCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -198,7 +196,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onAgentExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -213,7 +211,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onAgentClosing(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -225,13 +223,13 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    @InternalAgentsApi
     public override suspend fun onAgentEnvironmentTransforming(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agent: GraphAIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
-        @OptIn(InternalAgentsApi::class)
         return invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.AgentEnvironmentTransforming,
             context = AgentEnvironmentTransformingContext(eventId, executionInfo, agent, config),
@@ -243,7 +241,7 @@ public class AIAgentPipelineImpl(
 
     //region Invoke Strategy Handlers
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onStrategyStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -256,7 +254,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onStrategyCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -275,7 +273,7 @@ public class AIAgentPipelineImpl(
 
     //region Invoke LLM Call Handlers
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onLLMCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -291,7 +289,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onLLMCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -313,7 +311,7 @@ public class AIAgentPipelineImpl(
 
     //region Invoke Tool Call Handlers
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onToolCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -339,7 +337,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onToolValidationFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -369,7 +367,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onToolCallFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -399,7 +397,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onToolCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -431,7 +429,7 @@ public class AIAgentPipelineImpl(
 
     //region Invoke LLM Streaming
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -447,7 +445,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingFrameReceived(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -463,7 +461,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -479,7 +477,7 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -511,8 +509,6 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    // TODO: SD -- rename all to
-    //  onAgentStarting(...)
     @OptIn(InternalAgentsApi::class)
     public override fun interceptAgentStarting(
         feature: AIAgentFeature<*, *>,

@@ -60,6 +60,7 @@ public expect open class AIAgentGraphPipeline(
      * @param input The input data for the node execution
      * @param inputType The type of the input data provided to the node
      */
+    @InternalAgentsApi
     public open override suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -81,6 +82,7 @@ public expect open class AIAgentGraphPipeline(
      * @param output The output data produced by the node execution
      * @param outputType The type of the output data produced by the node execution
      */
+    @InternalAgentsApi
     public open override suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -103,6 +105,7 @@ public expect open class AIAgentGraphPipeline(
      * @param inputType The type of the input data provided to the node.
      * @param throwable The exception or error that occurred during node execution.
      */
+    @InternalAgentsApi
     public open override suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -127,6 +130,7 @@ public expect open class AIAgentGraphPipeline(
      * @param input The input data for the subgraph execution.
      * @param inputType The type of the input data provided to the subgraph.
      */
+    @InternalAgentsApi
     public open override suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -148,6 +152,7 @@ public expect open class AIAgentGraphPipeline(
      * @param output The output data produced by the subgraph execution.
      * @param outputType The type of the output data produced by the subgraph execution.
      */
+    @InternalAgentsApi
     public open override suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -170,6 +175,7 @@ public expect open class AIAgentGraphPipeline(
      * @param inputType The type of the input data provided to the subgraph.
      * @param throwable The exception or error that caused the subgraph execution to fail.
      */
+    @InternalAgentsApi
     public open override suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,

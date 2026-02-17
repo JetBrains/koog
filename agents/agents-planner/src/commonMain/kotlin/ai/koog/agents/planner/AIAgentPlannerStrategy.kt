@@ -3,6 +3,7 @@ package ai.koog.agents.planner
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -21,6 +22,7 @@ public class AIAgentPlannerStrategy<State, Plan>(
         input: State
     ): State {
         return try {
+            @OptIn(InternalAgentsApi::class)
             context.with(partName = name) { executionInfo, eventId ->
                 context.pipeline.onStrategyStarting(eventId, executionInfo, this, context)
                 val result = planner.execute(context, input)
