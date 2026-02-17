@@ -6,9 +6,27 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.random.Random
+import kotlin.reflect.KType
 
 private val logger = KotlinLogging.logger {}
+
+private val prettyJson = Json { prettyPrint = true; isLenient = true; ignoreUnknownKeys = true }
+
+/**
+ * Serialize [value] to pretty-printed JSON using the runtime [type], falling back to [toString]
+ * if serialization fails (e.g. for non-serializable types).
+ */
+public fun serializeOrToString(value: Any?, type: KType): String {
+    return try {
+        val serializer = prettyJson.serializersModule.serializer(type)
+        prettyJson.encodeToString(serializer, value)
+    } catch (_: Exception) {
+        value.toString()
+    }
+}
 
 /**
  * Randomly samples up to [k] demonstrations from [candidates].

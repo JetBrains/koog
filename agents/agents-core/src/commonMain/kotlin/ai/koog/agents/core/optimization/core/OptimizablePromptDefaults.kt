@@ -4,10 +4,12 @@ package ai.koog.agents.core.optimization.core
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.structure.executeStructured
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.json.Json
 
 /**
@@ -42,9 +44,43 @@ public val defaultStringPromptFn: OptimizableNodePromptBuildFn<String, String> =
     }
 
 /**
+ * Extracts field names and their [@LLMDescription] annotations from a [SerialDescriptor].
+ * Returns an empty list if no fields have descriptions.
+ */
+private fun extractFieldDescriptions(descriptor: SerialDescriptor): List<Pair<String, String>> {
+    return (0 until descriptor.elementsCount).mapNotNull { i ->
+        val name = descriptor.getElementName(i)
+        val desc = descriptor.getElementAnnotations(i)
+            .filterIsInstance<LLMDescription>()
+            .firstOrNull()
+            ?.description
+        if (desc != null) name to desc else null
+    }
+}
+
+/**
+ * Builds a system message from the instruction and optional input field descriptions.
+ * If the input type has [@LLMDescription] annotations on its fields, they are appended
+ * to the instruction as an "Input fields:" section, giving the LLM context about
+ * what each JSON field means.
+ */
+private fun buildSystemMessage(instruction: String, inputFieldDescriptions: List<Pair<String, String>>): String {
+    if (inputFieldDescriptions.isEmpty()) return instruction
+    return buildString {
+        append(instruction)
+        append("\n\nInput fields:\n")
+        inputFieldDescriptions.forEach { (name, desc) ->
+            append("- $name: $desc\n")
+        }
+    }
+}
+
+/**
  * Default prompt function for generic typed nodes using JSON serialization.
  *
  * Serializes demonstration inputs/outputs and the node input to JSON for the prompt messages.
+ * If the input type has [@LLMDescription] annotations on its fields, they are included
+ * in the system message alongside the instruction.
  *
  * @param TInput The input type (must be `@Serializable`).
  * @param TOutput The output type (must be `@Serializable`).
@@ -56,9 +92,10 @@ public fun <TInput, TOutput> defaultPromptFn(
     outputSerializer: KSerializer<TOutput>,
 ): OptimizableNodePromptBuildFn<TInput, TOutput> {
     val json = Json { prettyPrint = false; isLenient = true; ignoreUnknownKeys = true }
+    val inputFieldDescriptions = extractFieldDescriptions(inputSerializer.descriptor)
     return { instruction, demos, input ->
         prompt("optimizable-node") {
-            system(instruction)
+            system(buildSystemMessage(instruction, inputFieldDescriptions))
             for (demo in demos) {
                 user(json.encodeToString(inputSerializer, demo.input))
                 assistant(json.encodeToString(outputSerializer, demo.output))

@@ -7,6 +7,7 @@ import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.optimizers.utils.describeForOptimization
 import ai.koog.agents.core.optimization.optimizers.utils.executeAndExtract
 import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
+import ai.koog.agents.core.optimization.optimizers.utils.serializeOrToString
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -100,7 +101,8 @@ public class InstructionProposer private constructor(
          * always skip LLM generation.
          *
          * @param describeInput Renders an input value as a human-readable string for dataset
-         *  summarization and example display. Defaults to [toString].
+         *  summarization and example display. Defaults to pretty-printed JSON serialization
+         *  with [toString] fallback for non-serializable types.
          */
         public suspend fun <TInput, TOutput> create(
             strategy: AIAgentGraphStrategy<*, *>,
@@ -110,7 +112,7 @@ public class InstructionProposer private constructor(
             config: InstructionProposerConfig = InstructionProposerConfig(),
             random: Random = Random.Default,
             programDescription: String? = null,
-            describeInput: (TInput) -> String = { it.toString() },
+            describeInput: (TInput) -> String = { serializeOrToString(it, strategy.inputType) },
         ): InstructionProposer {
             val renderedExamples = trainset.map { ex ->
                 buildString {
@@ -225,7 +227,7 @@ public class InstructionProposer private constructor(
     ): String {
         val nodeName = node.name
         val moduleCodeString = buildModuleCodeString(nodeName, node)
-        val taskDemos = gatherTaskDemos(nodeName, demoCandidates, demoSetIndex)
+        val taskDemos = gatherTaskDemos(node, demoCandidates, demoSetIndex)
         val basicInstruction = node.instruction
 
         // Gap 4: Per-call program description
@@ -317,7 +319,7 @@ public class InstructionProposer private constructor(
      * Prefers bootstrapped demonstrations over labeled-only ones.
      */
     private fun gatherTaskDemos(
-        moduleName: String,
+        node: OptimizableNode<*, *>,
         demoCandidates: Map<String, List<List<Demonstration<*, *>>>>?,
         demoSetIndex: Int,
     ): String {
@@ -325,7 +327,7 @@ public class InstructionProposer private constructor(
             return NO_TASK_DEMOS
         }
 
-        val moduleDemoCandidates = demoCandidates[moduleName]
+        val moduleDemoCandidates = demoCandidates[node.name]
         if (moduleDemoCandidates.isNullOrEmpty()) {
             return NO_TASK_DEMOS
         }
@@ -346,12 +348,12 @@ public class InstructionProposer private constructor(
         val examples = buildList {
             for (demo in allDemos) {
                 if (size >= limit) break
-                if (demo.isBootstrapped) add(formatDemonstrationAsExample(demo))
+                if (demo.isBootstrapped) add(formatDemonstrationAsExample(demo, node.inputType, node.outputType))
             }
             if (size < limit) {
                 for (demo in allDemos) {
                     if (size >= limit) break
-                    if (!demo.isBootstrapped) add(formatDemonstrationAsExample(demo))
+                    if (!demo.isBootstrapped) add(formatDemonstrationAsExample(demo, node.inputType, node.outputType))
                 }
             }
         }
@@ -365,12 +367,17 @@ public class InstructionProposer private constructor(
 
     /**
      * Format a [Demonstration] as a string example for the LLM.
+     * Uses pretty-printed JSON serialization with [toString] fallback.
      */
-    private fun formatDemonstrationAsExample(demo: Demonstration<*, *>): String {
+    private fun formatDemonstrationAsExample(
+        demo: Demonstration<*, *>,
+        inputType: KType,
+        outputType: KType,
+    ): String {
         return buildString {
             appendLine("Input:")
-            appendLine(demo.input.toString().take(500))
-            val output = demo.output.toString()
+            appendLine(serializeOrToString(demo.input, inputType).take(500))
+            val output = serializeOrToString(demo.output, outputType)
             if (output.isNotBlank()) {
                 appendLine("Output:")
                 appendLine(output.take(500))
