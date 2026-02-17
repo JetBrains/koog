@@ -219,7 +219,7 @@ class MultiLLMPromptExecutorTest {
 
     @Test
     fun testExecuteWithUnsupportedProvider() = runTest {
-        val executor = MultiLLMPromptExecutor()
+        val executor = MultiLLMPromptExecutor(MockGoogleLLMClient())
 
         val model = AnthropicModels.Opus_4_6
         val prompt = Prompt.build("test-prompt") {

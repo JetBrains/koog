@@ -34,22 +34,26 @@ class ExecutorsTest {
 
     LLMProvider provider = mock(LLMProvider.class);
 
-    LLMClient llmClient = new MockOpenAILLMClient("Hello from LLM");
-    LLMClient failingClient = new MockOpenAILLMClient("Hello from LLM", true);
+    LLMClient firstClient = new MockOpenAILLMClient("Hello from LLM # 1");
+    LLMClient secondClient = new MockOpenAILLMClient("Hello from LLM # 2");
+    LLMClient firstFailingClient = new MockOpenAILLMClient("Hello from LLM # 1", true);
+    LLMClient secondFailingClient = new MockOpenAILLMClient("Hello from LLM # 2", true);
 
     Iterable<JavaPromptExecutor> promptExecutors() {
         return List.of(
-            Executors.promptExecutor(provider, llmClient),
-            Executors.promptExecutor(Map.of(provider, llmClient)),
-            Executors.promptExecutor(llmClient)
+            Executors.promptExecutor(provider, firstClient),
+            Executors.promptExecutor(Map.of(provider, List.of(firstClient))),
+            Executors.promptExecutor(firstClient),
+            Executors.promptExecutor(Map.of(provider, List.of(firstClient, secondClient)))
         );
     }
 
     Iterable<JavaPromptExecutor> failingPromptExecutors() {
         return List.of(
-            Executors.promptExecutor(provider, failingClient),
-            Executors.promptExecutor(Map.of(provider, failingClient)),
-            Executors.promptExecutor(failingClient)
+            Executors.promptExecutor(provider, firstFailingClient),
+            Executors.promptExecutor(Map.of(provider, List.of(firstFailingClient))),
+            Executors.promptExecutor(firstFailingClient),
+            Executors.promptExecutor(Map.of(provider, List.of(firstFailingClient, secondFailingClient)))
         );
     }
 

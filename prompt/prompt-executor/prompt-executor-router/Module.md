@@ -7,8 +7,8 @@ Routing capabilities for distributing LLM requests across multiple LLM Clients.
 The `prompt-executor-router` module enables distributing requests to given LLModel across multiple LLMClient instances. This helps avoid rate limits, improve throughput, and implement failover strategies.
 
 Key features include:
-- Extensible interface for custom routing strategies (see [LLMClientRouter](src/main/kotlin/ai/koog/prompt/executor/router/LLMClientRouter.kt))
-- Predefined routing strategies (see [RoutingStrategy](src/main/kotlin/ai/koog/prompt/executor/router/RoutingStrategy.kt))
+- Extensible interface for custom routing strategies (see [LLMClientRouter](src/commonMain/kotlin/ai/koog/prompt/executor/router/LLMClientRouter.kt))
+- Built-in round-robin routing (see [RoundRobinRouter](src/commonMain/kotlin/ai/koog/prompt/executor/router/RoundRobinRouter.kt))
 
 ### Using in your project
 
@@ -26,11 +26,11 @@ val openAI1 = OpenAILLMClient(apiKey = "openai-key-1")
 val openAI2 = OpenAILLMClient(apiKey = "openai-key-2")
 val anthropic = AnthropicLLMClient(apiKey = "anthropic-key")
 
-// Create executor with round-robin router
-val executor = MultiLLMPromptExecutor(
-    openAI1, openAI2, anthropic,
-    routingStrategy = RoutingStrategy.ROUND_ROBIN
-)
+// Create router with round-robin strategy
+val router = RoundRobinRouter(openAI1, openAI2, anthropic)
+
+// Create executor with router
+val executor = MultiLLMPromptExecutor(router)
 
 // Requests to OpenAI models alternate between openAI1 and openAI2
 executor.execute(prompt, OpenAIModels.GPT_4, tools)

@@ -8,27 +8,66 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.fetchAndIncrement
 
 /**
- * Internal implementation of [RoutingStrategy.ROUND_ROBIN].
+ * Distributes requests across clients in sequential rotation, ensuring even load distribution.
  *
- * Maintains separate atomic counters per provider for thread-safe rotation.
+ * When multiple clients serve the same provider, cycles through them using an atomic counter.
+ * Thread-safe for concurrent access.
+ *
+ * @param clientsPerProvider Map of providers to their available clients
  */
 @OptIn(ExperimentalAtomicApi::class)
-internal class RoundRobinRouter(override val availableClients: List<LLMClient>) : LLMClientRouter {
+public class RoundRobinRouter(clientsPerProvider: Map<LLMProvider, List<LLMClient>>) : LLMClientRouter {
 
     init {
-        require(availableClients.isNotEmpty()) { "RoundRobinRouter requires at least one LLMClient." }
+        require(clientsPerProvider.isNotEmpty()) { "RoundRobinRouter requires at least one LLMClient." }
     }
 
-    private val clientsByProvider: Map<LLMProvider, List<LLMClient>> =
-        availableClients.groupBy { it.llmProvider() }
+    /**
+     * Creates router from a flat list of clients, grouping by provider automatically.
+     */
+    public constructor(clients: List<LLMClient>) : this(clients.groupBy { it.llmProvider() })
 
-    private val countersByProvider: Map<LLMProvider, AtomicInt> =
-        clientsByProvider.keys.associateWith { AtomicInt(0) }
+    /**
+     * Creates router from vararg clients, grouping by provider automatically.
+     */
+    public constructor(vararg clients: LLMClient) : this(clients.toList())
+
+    /**
+     * Creates router from provider-client pairs, grouping by provider automatically.
+     */
+    public constructor(vararg llmClients: Pair<LLMProvider, LLMClient>) :
+        this(llmClients.groupBy { it.first }.mapValues { it.value.map { it.second } })
+
+    override val clients: List<LLMClient> = clientsPerProvider.values.flatten()
+
+    private val clientPoolsPerProvider: Map<LLMProvider, ClientPool>
+
+    init {
+        clientPoolsPerProvider = clientsPerProvider.mapValues { (_, clients) ->
+            when (clients.size) {
+                1 -> ClientPool.Single(clients.first())
+                else -> ClientPool.Multiple(clients)
+            }
+        }
+    }
 
     override fun chooseRouteFor(model: LLModel): LLMClient? {
-        if (model.provider !in clientsByProvider) return null
-        val supportingClients = clientsByProvider[model.provider]!!
-        val counter = countersByProvider[model.provider]!!
-        return supportingClients[counter.fetchAndIncrement().mod(supportingClients.size)]
+        return clientPoolsPerProvider[model.provider]?.next()
+    }
+
+    private sealed class ClientPool {
+        abstract fun next(): LLMClient
+
+        data class Single(val client: LLMClient) : ClientPool() {
+            override fun next(): LLMClient = client
+        }
+
+        data class Multiple(val clients: List<LLMClient>) : ClientPool() {
+            private val counter = AtomicInt(0)
+
+            override fun next(): LLMClient {
+                return clients[counter.fetchAndIncrement().mod(clients.size)]
+            }
+        }
     }
 }

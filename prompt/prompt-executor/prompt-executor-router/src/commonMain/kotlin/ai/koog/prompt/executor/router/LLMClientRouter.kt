@@ -1,6 +1,5 @@
 package ai.koog.prompt.executor.router
 
-import ai.koog.prompt.executor.router.RoutingStrategy.ROUND_ROBIN
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLModel
 
@@ -13,9 +12,9 @@ import ai.koog.prompt.llm.LLModel
 public interface LLMClientRouter {
 
     /**
-     * All clients available for routing.
+     * All clients that this router can use
      */
-    public val availableClients: List<LLMClient>
+    public val clients: List<LLMClient>
 
     /**
      * Selects a client to handle the given model.
@@ -24,22 +23,4 @@ public interface LLMClientRouter {
      * @return A client capable of serving the model, or null if none available
      */
     public fun chooseRouteFor(model: LLModel): LLMClient?
-
-    public companion object {
-
-        public operator fun invoke(
-            strategy: RoutingStrategy,
-            clients: List<LLMClient>
-        ): LLMClientRouter {
-            return when (strategy) {
-                ROUND_ROBIN -> RoundRobinRouter(clients)
-            }
-        }
-
-        public operator fun invoke(
-            strategy: RoutingStrategy,
-            vararg clients: LLMClient
-        ): LLMClientRouter =
-            invoke(strategy, clients.toList())
-    }
 }

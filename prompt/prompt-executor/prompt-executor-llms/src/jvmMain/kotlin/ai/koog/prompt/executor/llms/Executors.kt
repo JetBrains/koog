@@ -23,15 +23,16 @@ public object Executors {
     /**
      * Creates a new instance of `JavaPromptExecutor` using the provided map of LLM clients.
      * The `JavaPromptExecutor` is configured with a delegated instance of `MultiLLMPromptExecutor`
-     * to handle prompts across multiple LLM providers.
+     * to handle prompts across multiple LLM providers with load balancing support.
      *
      * @param llmClients A map where keys are `LLMProvider` instances representing the language model providers
-     *                   and values are `LLMClient` instances for interacting with the respective providers.
+     *                   and values are lists of `LLMClient` instances for interacting with the respective providers.
+     *                   Multiple clients per provider enable load balancing.
      * @return A configured `JavaPromptExecutor` instance ready to handle prompt execution.
      */
     @JvmStatic
     @ApiStatus.Experimental
-    public fun promptExecutor(llmClients: Map<LLMProvider, LLMClient>): JavaPromptExecutor =
+    public fun promptExecutor(llmClients: Map<LLMProvider, List<LLMClient>>): JavaPromptExecutor =
         JavaPromptExecutor(
             delegate = MultiLLMPromptExecutor(llmClients)
         )
@@ -46,7 +47,7 @@ public object Executors {
     @JvmStatic
     @ApiStatus.Experimental
     public fun promptExecutor(llmProvider: LLMProvider, llmClient: LLMClient): JavaPromptExecutor =
-        promptExecutor(mapOf(llmProvider to llmClient))
+        promptExecutor(mapOf(llmProvider to listOf(llmClient)))
 
     /**
      * Creates and returns a Java-friendly prompt executor that delegates prompt execution
