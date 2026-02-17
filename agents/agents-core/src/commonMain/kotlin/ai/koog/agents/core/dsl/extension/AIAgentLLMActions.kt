@@ -126,6 +126,12 @@ public suspend fun AIAgentLLMWriteSession.replaceHistoryWithTLDR(
     strategy.compress(this, memoryMessages)
 }
 
+public fun AIAgentLLMWriteSession.replaceHistory(
+    messages: List<Message>
+) {
+    this.prompt = this.prompt.withMessages { messages }
+}
+
 /**
  * Drops all trailing tool call messages from the current prompt
  */
