@@ -1,6 +1,5 @@
 package ai.koog.prompt.executor.llms
 
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -9,15 +8,10 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.router.LLMClientRouter
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -54,7 +48,7 @@ class RoutingLLMPromptExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
-        val fallback = FallbackPromptExecutorSettings(
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
@@ -106,7 +100,7 @@ class RoutingLLMPromptExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
-        val fallback = FallbackPromptExecutorSettings(
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
@@ -158,7 +152,7 @@ class RoutingLLMPromptExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
-        val fallback = FallbackPromptExecutorSettings(
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
@@ -208,7 +202,7 @@ class RoutingLLMPromptExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
-        val fallback = FallbackPromptExecutorSettings(
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
@@ -291,6 +285,7 @@ class RoutingLLMPromptExecutorTest {
         }
         assertEquals(client.moderateFailure, exception)
     }
+
     @Test
     fun testModelsReturnsAllModelsFromAllClients() = runTest {
         // Given

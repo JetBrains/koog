@@ -138,7 +138,7 @@ class RoundRobinBasedExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val anthropicClient = MockLLMClient(provider = LLMProvider.Anthropic)
-        val fallback = FallbackPromptExecutorSettings(
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.Anthropic,
             fallbackModel = AnthropicModels.Sonnet_3_7
         )
@@ -168,7 +168,7 @@ class RoundRobinBasedExecutorTest {
     fun testFallbackClientNotFoundInRouterFails() = runTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
-        val fallback = FallbackPromptExecutorSettings(
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.Anthropic,
             fallbackModel = AnthropicModels.Sonnet_3_7
         )

@@ -32,6 +32,30 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
 ) : PromptExecutor {
 
     /**
+     * Represents configuration for a fallback large language model (LLM) execution strategy.
+     *
+     * This class is used to specify a fallback LLM provider and model that can be utilized
+     * when the primary LLM execution fails. It ensures that the fallback model is associated
+     * with the specified fallback provider.
+     *
+     * @property fallbackProvider The LLMProvider responsible for handling fallback requests.
+     * @property fallbackModel The LLModel instance to be used for fallback execution.
+     *
+     * @throws IllegalArgumentException If the provider of the fallback model does not match the
+     * fallback provider.
+     */
+    public data class FallbackPromptExecutorSettings(
+        val fallbackProvider: LLMProvider,
+        val fallbackModel: LLModel
+    ) {
+        init {
+            check(fallbackModel.provider == fallbackProvider) {
+                "LLM model provider must match the fallback provider"
+            }
+        }
+    }
+
+    /**
      * Creates executor with a map of providers to their client lists.
      * Uses [RoundRobinRouter] for load distribution.
      *
@@ -61,7 +85,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         /**
          * Logger instance used for logging messages within the RoutingLLMPromptExecutor class.
          *
-         * This logger is utilized to provide debug logs during the execution of prompts and handling of streaming responses.
+         * This logger is used to provide debug logs during the execution of prompts and handling of streaming responses.
          * It primarily tracks operations such as prompt execution initiation, tool usage, and responses received from the
          * respective LLM clients.
          *
@@ -85,6 +109,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
                 .firstOrNull { it.llmProvider() == fallback.fallbackProvider }
                 ?: error("Client for provider ${fallback.fallbackProvider} not found in router")
         }
+
         else -> null
     }
 
@@ -95,7 +120,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      * @param model The LLM model to use for execution.
      * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
-     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
      */
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
@@ -134,7 +159,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      * @param model The LLM model to use for execution.
      * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
-     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
      */
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
