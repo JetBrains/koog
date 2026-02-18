@@ -56,6 +56,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashsco
 include(":prompt:prompt-executor:prompt-executor-llms")
 include(":prompt:prompt-executor:prompt-executor-llms-all")
 include(":prompt:prompt-executor:prompt-executor-model")
+include(":prompt:prompt-executor:prompt-executor-router")
 
 include(":prompt:prompt-llm")
 include(":prompt:prompt-markdown")

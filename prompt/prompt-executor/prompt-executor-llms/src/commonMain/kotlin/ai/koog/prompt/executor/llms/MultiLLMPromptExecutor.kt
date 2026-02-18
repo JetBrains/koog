@@ -3,6 +3,8 @@ package ai.koog.prompt.executor.llms
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.router.LLMClientRouter
+import ai.koog.prompt.executor.router.RoutingStrategy
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -28,8 +30,19 @@ import kotlin.jvm.JvmOverloads
  */
 public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     private val llmClients: Map<LLMProvider, LLMClient>,
-    private val fallback: FallbackPromptExecutorSettings? = null
+    private val fallback: FallbackPromptExecutorSettings? = null,
+    private val clientRouter: LLMClientRouter? = null
 ) : PromptExecutor {
+
+    init {
+        if (clientRouter != null) {
+            val excessiveClients = clientRouter.availableClients.filter { it !in llmClients.values }
+            require(excessiveClients.isEmpty()) {
+                "Client router contains clients that are not available in the executor: $excessiveClients"
+            }
+        }
+    }
+
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *
@@ -84,6 +97,16 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         }.associateBy({ it.first }, { it.second })
     )
 
+    public constructor(
+        vararg llmClients: LLMClient,
+        fallback: FallbackPromptExecutorSettings? = null,
+        loadBalancingStrategy: RoutingStrategy
+    ) : this(
+        llmClients.groupBy { it.llmProvider() },
+        fallback,
+        LLMClientRouter(loadBalancingStrategy, llmClients.toList())
+    )
+
     /**
      * Companion object for `MultiLLMPromptExecutor` class.
      *
@@ -136,18 +159,8 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
-        val provider = model.provider
-
-        val response = when {
-            provider in llmClients -> llmClients[provider]!!.execute(prompt, model, tools)
-            fallback != null -> fallbackClient!!.execute(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
-        }
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(model)
+        val response = effectiveClient.execute(prompt, effectiveModel, tools)
 
         logger.debug { "Response: $response" }
 
@@ -190,18 +203,8 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     ): List<LLMChoice> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
-        val provider = model.provider
-
-        val choices = when {
-            provider in llmClients -> llmClients[provider]!!.executeMultipleChoices(prompt, model, tools)
-            fallback != null -> fallbackClient!!.executeMultipleChoices(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
-        }
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(model)
+        val choices = effectiveClient.executeMultipleChoices(prompt, effectiveModel, tools)
 
         logger.debug { "Choices: $choices" }
 
@@ -250,4 +253,16 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     override fun close() {
         llmClients.forEach { (_, client) -> client.close() }
     }
+
+    private fun chooseClientAndModel(requestedModel: LLModel): EffectiveExecutionSubject {
+        val lbClient = clientRouter?.chooseRouteFor(requestedModel)
+        return when {
+            lbClient != null -> lbClient to requestedModel
+            requestedModel.provider in llmClients -> llmClients[requestedModel.provider]!! to requestedModel
+            fallback != null -> fallbackClient!! to fallback.fallbackModel
+            else -> throw IllegalArgumentException("No client found for provider: ${requestedModel.provider}")
+        }
+    }
 }
+
+private typealias EffectiveExecutionSubject = Pair<LLMClient, LLModel>
