@@ -739,4 +739,51 @@ class OpenRouterSerializationTest {
         req.provider?.sort shouldBe "price"
         req.provider?.maxPrice shouldBe mapOf("prompt" to "0.002", "completion" to "0.006")
     }
+
+    @Test
+    fun `test OpenRouter streaming response with reasoning fields deserialization`() {
+        val jsonString =
+            // language=json
+            """
+            {
+                "id": "gen-1758662697-qjFTfAqlZh2Qa1vAfoff",
+                "provider": "AtlasCloud",
+                "model": "alibaba/tongyi-deepresearch-30b-a3b",
+                "object": "chat.completion.chunk",
+                "created": 1758662697,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {
+                            "role": "assistant",
+                            "content": "",
+                            "reasoning": null,
+                            "reasoning_details": []
+                        },
+                        "finish_reason": null,
+                        "native_finish_reason": null,
+                        "logprobs": null
+                    }
+                ]
+            }
+            """.trimIndent()
+
+        val response = json.decodeFromString(OpenRouterChatCompletionStreamResponse.serializer(), jsonString)
+
+        response.id shouldBe "gen-1758662697-qjFTfAqlZh2Qa1vAfoff"
+        response.model shouldBe "alibaba/tongyi-deepresearch-30b-a3b"
+        response.objectType shouldBe "chat.completion.chunk"
+        response.created shouldBe 1758662697L
+        response.choices.size shouldBe 1
+
+        val choice = response.choices.first()
+        choice.finishReason shouldBe null
+        choice.nativeFinishReason shouldBe null
+
+        choice.delta.role shouldBe "assistant"
+        choice.delta.content shouldBe ""
+        choice.delta.reasoning shouldBe null
+        choice.delta.reasoningDetails shouldNotBe null
+        choice.delta.reasoningDetails?.size shouldBe 0
+    }
 }
