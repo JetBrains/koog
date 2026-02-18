@@ -27,6 +27,7 @@ import ai.koog.utils.io.use
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
@@ -560,7 +561,9 @@ class EventHandlerTest {
 
         val expectedEvents = listOf(
             "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
-            "OnLLMStreamingFrameReceived (run id: $runId, frame: Append(text=$testLLMResponse))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextDelta(text=$testLLMResponse, index=0))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextComplete(text=$testLLMResponse, index=0))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: End(finishReason=null, metaInfo=ResponseMetaInfo(timestamp=${Instant.DISTANT_PAST}, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
             "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
         )
 
