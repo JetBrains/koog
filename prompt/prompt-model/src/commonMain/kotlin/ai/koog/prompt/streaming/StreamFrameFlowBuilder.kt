@@ -232,7 +232,7 @@ public class StreamFrameFlowBuilder(
         val pendingText = pendingTextRef.exchange(null)
         if (pendingText != null) {
             flowCollector.emitTextComplete(
-                pendingText.textDelta ?: "",
+                text = pendingText.textDelta ?: "",
                 index = pendingText.index
             )
         }
@@ -245,8 +245,8 @@ public class StreamFrameFlowBuilder(
         val pendingReasoning = pendingReasoningRef.exchange(null)
         if (pendingReasoning != null) {
             flowCollector.emitReasoningComplete(
-                pendingReasoning.textDelta ?: "",
-                pendingReasoning.summaryDelta ?: "",
+                text = pendingReasoning.textDelta ?: "",
+                summary = pendingReasoning.summaryDelta,
                 index = pendingReasoning.index
             )
         }
@@ -296,11 +296,13 @@ public class StreamFrameFlowBuilder(
     ) {
         fun appendTextDelta(textDelta: String?, index: Int?): PendingReasoning {
             require(this.index == index)
+            if (textDelta == null) return copy()
             return copy(textDelta = (this.textDelta ?: "") + textDelta)
         }
 
         fun appendSummaryDelta(summaryDelta: String?, index: Int?): PendingReasoning {
             require(this.index == index)
+            if (summaryDelta == null) return copy()
             return copy(summaryDelta = (this.summaryDelta ?: "") + summaryDelta)
         }
     }

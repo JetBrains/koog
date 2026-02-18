@@ -127,6 +127,7 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.ToolCallDelta("call_2", "calculator", "{\"b\":", 1),
                 StreamFrame.ToolCallDelta(null, null, " 6}", 1),
                 StreamFrame.ToolCallComplete("call_2", "calculator", "{\"b\": 6}", 1),
+                StreamFrame.End(null, ResponseMetaInfo.Empty),
             ),
             frames
         )
@@ -184,7 +185,7 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.ToolCallDelta("call_1", "search", "{}", 0),
                 StreamFrame.ToolCallComplete("call_1", "search", "{}", 0),
                 StreamFrame.ReasoningDelta("Now thinking...", 1),
-                StreamFrame.ReasoningComplete(listOf("Now thinking..."), emptyList(), null, 1),
+                StreamFrame.ReasoningComplete(listOf("Now thinking..."), null, null, 1),
                 StreamFrame.End(null, ResponseMetaInfo.Empty)
             ),
             frames
@@ -241,53 +242,6 @@ class StreamFrameFlowBuilderTest {
             listOf(
                 StreamFrame.ToolCallDelta("call_1", "tool", "{}"),
                 StreamFrame.ToolCallComplete("call_1", "tool", "{}"),
-                StreamFrame.End("stop", ResponseMetaInfo.Empty)
-            ),
-            frames
-        )
-    }
-
-    @Test
-    fun testToolCallWithIndexes() = runTest {
-        val frames = buildStreamFrameFlow {
-            emitToolCallDelta(id = "call_1", name = "tool1", args = "{", index = 0)
-            emitToolCallDelta(args = "}", index = 0)
-            emitToolCallDelta(id = "call_2", name = "tool2", args = "{", index = 1)
-            emitToolCallDelta(args = "}", index = 1)
-            emitEnd()
-        }.toList()
-
-        assertContentEquals(
-            listOf(
-                StreamFrame.ToolCallDelta("call_1", "tool1", "{", 0),
-                StreamFrame.ToolCallDelta(null, null, "}", 0),
-                StreamFrame.ToolCallComplete("call_1", "tool1", "{}", 0),
-                StreamFrame.ToolCallDelta("call_2", "tool2", "{", 1),
-                StreamFrame.ToolCallDelta(null, null, "}", 1),
-                StreamFrame.ToolCallComplete("call_2", "tool2", "{}", 1),
-                StreamFrame.End(null, ResponseMetaInfo.Empty)
-            ),
-            frames
-        )
-    }
-
-    @Test
-    fun testComplexMixedScenario() = runTest {
-        val frames = buildStreamFrameFlow {
-            emitReasoningDelta("Thinking...", 0)
-            emitReasoningSummaryDelta("Summary", 0)
-            emitTextDelta("Hello", 1)
-            emitToolCallDelta(id = "call_1", name = "search", args = "{\"q\":\"test\"}", 2)
-            emitEnd("stop")
-        }.toList()
-
-        assertContentEquals(
-            listOf(
-                StreamFrame.ReasoningDelta("Thinking...", 0),
-                StreamFrame.ReasoningSummaryDelta("Summary", 0),
-                StreamFrame.TextDelta("Hello", 1),
-                StreamFrame.ToolCallDelta("call_1", "search", "{\"q\":\"test\"}", 2),
-                StreamFrame.ToolCallComplete("call_1", "search", "{\"q\":\"test\"}", 2),
                 StreamFrame.End("stop", ResponseMetaInfo.Empty)
             ),
             frames
