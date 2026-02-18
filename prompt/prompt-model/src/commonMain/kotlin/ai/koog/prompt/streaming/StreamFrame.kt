@@ -13,14 +13,14 @@ import kotlinx.serialization.json.jsonObject
 public sealed interface StreamFrame {
 
     /**
-     * The interface representing a delta or partial frame of a streaming response from a LLM.
+     * The interface representing a complete frame of a streaming response from a LLM.
      */
     public sealed interface CompleteFrame : StreamFrame {
         public val index: Int?
     }
 
     /**
-     * The interface representing a complete frame of a streaming response from a LLM.
+     * The interface representing a delta or partial frame of a streaming response from a LLM.
      */
     public sealed interface DeltaFrame : StreamFrame {
         public val index: Int?
