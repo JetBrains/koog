@@ -15,7 +15,6 @@ import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Clock
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 
@@ -44,7 +43,7 @@ internal class MockLLMClient @JvmOverloads constructor(
                 execute = Result.failure(IllegalStateException("Mock failed to execute")),
                 executeStreaming = Result.failure(IllegalStateException("Mock failed to execute streaming")),
                 executeMultipleChoices =
-                    Result.failure(IllegalStateException("Mock failed to execute multiple choices")),
+                Result.failure(IllegalStateException("Mock failed to execute multiple choices")),
                 moderate = Result.failure(IllegalStateException("Mock failed to moderate"))
             )
 

@@ -123,7 +123,7 @@ class ExecutorsTest {
             .completesExceptionallyWithin(Duration.ofSeconds(3))
             .withThrowableThat().satisfies(throwable -> {
                 assertThat(throwable).isInstanceOf(ExecutionException.class);
-                assertThat(throwable).hasRootCauseMessage("Throw exception for test");
+                assertThat(throwable).hasRootCauseMessage("Mock failed to execute");
             });
     }
 }
