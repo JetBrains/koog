@@ -87,7 +87,7 @@ class RoundRobinBasedExecutorTest {
         assertEquals(secondAnthropicClient.executeResponse, anthropicResponses[1])
         assertEquals(firstAnthropicClient.executeResponse, anthropicResponses[2])
         assertEquals(secondAnthropicClient.executeResponse, anthropicResponses[3])
-        assertEquals(secondAnthropicClient.executeResponse, anthropicResponses[4])
+        assertEquals(firstAnthropicClient.executeResponse, anthropicResponses[4])
     }
 
     @Test

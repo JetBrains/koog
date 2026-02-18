@@ -30,29 +30,6 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     private val llmClients: Map<LLMProvider, LLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
 ) : PromptExecutor {
-    /**
-     * Represents configuration for a fallback large language model (LLM) execution strategy.
-     *
-     * This class is used to specify a fallback LLM provider and model that can be utilized
-     * when the primary LLM execution fails. It ensures that the fallback model is associated
-     * with the specified fallback provider.
-     *
-     * @property fallbackProvider The LLMProvider responsible for handling fallback requests.
-     * @property fallbackModel The LLModel instance to be used for fallback execution.
-     *
-     * @throws IllegalArgumentException If the provider of the fallback model does not match the
-     * fallback provider.
-     */
-    public data class FallbackPromptExecutorSettings(
-        val fallbackProvider: LLMProvider,
-        val fallbackModel: LLModel
-    ) {
-        init {
-            check(fallbackModel.provider == fallbackProvider) {
-                "LLM model provider must match the fallback provider"
-            }
-        }
-    }
 
     /**
      * Initializes a new instance of the `MultiLLMPromptExecutor` class with multiple LLM clients.
