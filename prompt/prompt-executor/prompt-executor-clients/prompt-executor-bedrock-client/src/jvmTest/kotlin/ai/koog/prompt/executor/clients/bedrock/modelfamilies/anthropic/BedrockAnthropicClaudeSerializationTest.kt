@@ -447,7 +447,26 @@ class BedrockAnthropicClaudeSerializationTest {
             StreamFrame.ToolCallDelta(
                 id = toolId,
                 name = toolName,
-                content = "{\"location\":\"Paris\"}"
+                content = null,
+                index = 0
+            ),
+            StreamFrame.ToolCallDelta(
+                id = null,
+                name = null,
+                content = "{\"location\":",
+                index = 0
+            ),
+            StreamFrame.ToolCallDelta(
+                id = null,
+                name = null,
+                content = "\"Paris\"}",
+                index = 0
+            ),
+            StreamFrame.ToolCallComplete(
+                id = toolId,
+                name = toolName,
+                content = "{\"location\":\"Paris\"}",
+                index = 0
             )
         )
         assertEquals(expected, content)
