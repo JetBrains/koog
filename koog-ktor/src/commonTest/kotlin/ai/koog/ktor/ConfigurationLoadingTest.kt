@@ -299,6 +299,13 @@ class ConfigurationLoadingTest {
         )
     }
 
+    @Test
+    fun testConfigWithoutSpecificTimeouts() = testApplication {
+        environment { config = buildConfigWithoutSpecificTimeouts() }
+        install(Koog)
+        startApplication()
+    }
+
     private fun buildCompleteConfig() =
         buildOpenAIConfig()
             .mergeWith(buildAnthropicConfig())
@@ -379,5 +386,50 @@ class ConfigurationLoadingTest {
         "koog.anthropic.timeout.requestTimeoutMillis" to "invalid-timeout",
         // Invalid fallback configuration - missing model
         "koog.llm.fallback.provider" to "google"
+    )
+
+    private fun buildConfigWithoutSpecificTimeouts() = MapApplicationConfig(
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.baseUrl" to "https://api.openai.com/v1"
+    )
+
+    private fun buildTimeoutConfig() = MapApplicationConfig(
+        // All providers with custom timeouts (900000ms for request/socket, 60000ms for connect)
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.timeout.requestTimeoutMillis" to "900000",
+        "koog.openai.timeout.connectTimeoutMillis" to "60000",
+        "koog.openai.timeout.socketTimeoutMillis" to "900000",
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        "koog.anthropic.timeout.requestTimeoutMillis" to "900000",
+        "koog.anthropic.timeout.connectTimeoutMillis" to "60000",
+        "koog.anthropic.timeout.socketTimeoutMillis" to "900000",
+        "koog.google.apikey" to "test-google-api-key",
+        "koog.google.timeout.requestTimeoutMillis" to "900000",
+        "koog.google.timeout.connectTimeoutMillis" to "60000",
+        "koog.google.timeout.socketTimeoutMillis" to "900000",
+        "koog.openrouter.apikey" to "test-openrouter-api-key",
+        "koog.openrouter.timeout.requestTimeoutMillis" to "900000",
+        "koog.openrouter.timeout.connectTimeoutMillis" to "60000",
+        "koog.openrouter.timeout.socketTimeoutMillis" to "900000",
+        "koog.deepseek.apikey" to "test-deepseek-api-key",
+        "koog.deepseek.timeout.requestTimeoutMillis" to "900000",
+        "koog.deepseek.timeout.connectTimeoutMillis" to "60000",
+        "koog.deepseek.timeout.socketTimeoutMillis" to "900000",
+        "koog.ollama.enable" to "true",
+        "koog.ollama.timeout.requestTimeoutMillis" to "900000",
+        "koog.ollama.timeout.connectTimeoutMillis" to "60000",
+        "koog.ollama.timeout.socketTimeoutMillis" to "900000"
+    )
+
+    private fun buildMixedTimeoutConfig() = MapApplicationConfig(
+        // OpenAI with custom timeout configuration
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.timeout.requestTimeoutMillis" to "900000",
+        "koog.openai.timeout.connectTimeoutMillis" to "60000",
+        "koog.openai.timeout.socketTimeoutMillis" to "900000",
+        // Anthropic without timeout config (should use defaults)
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        // Google without API key but with timeout config (should not load)
+        "koog.google.timeout.requestTimeoutMillis" to "900000"
     )
 }

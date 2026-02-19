@@ -146,18 +146,19 @@ private inline fun KoogAgentsConfig.config(
 
 private fun KoogAgentsConfig.TimeoutConfiguration.configure(key: String, config: ApplicationConfig) {
     if (config.propertyOrNull(key) != null) {
-        val configKey = config.config(key)
+        val providerTimeoutSection = config.config(key)
 
-        configKey.propertyOrNull("requestTimeoutMillis")
+        providerTimeoutSection.propertyOrNull("requestTimeoutMillis")
             ?.getString()
             ?.toLongOrNull()
             ?.let { requestTimeout = it.milliseconds }
 
-        configKey.propertyOrNull("connectTimeoutMillis")
+        providerTimeoutSection.propertyOrNull("connectTimeoutMillis")
             ?.getString()
             ?.toLongOrNull()
             ?.let { connectTimeout = it.milliseconds }
-        configKey.propertyOrNull("socketTimeoutMillis")
+        
+        providerTimeoutSection.propertyOrNull("socketTimeoutMillis")
             ?.getString()
             ?.toLongOrNull()
             ?.let { socketTimeout = it.milliseconds }
