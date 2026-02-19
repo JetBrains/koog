@@ -5,11 +5,11 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
 import ai.koog.agents.ext.tool.file.render.file
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.model.FileSystemEntry
 import kotlinx.serialization.Serializable
 
 /**
@@ -92,7 +92,9 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         validate(metadata.type == FileMetadata.FileType.File) { "Not a file: ${args.path}" }
 
         val type = fs.getFileContentType(path)
-        validate(type == FileMetadata.FileContentType.Text) { "File is not a text file: ${args.path}" }
+        val isEmpty = fs.size(path) == 0L
+        val isText = isEmpty || (type == FileMetadata.FileContentType.Text)
+        validate(isText) { "File is not a text file: ${args.path}" }
 
         return runCatching {
             var warningMessage: String? = null

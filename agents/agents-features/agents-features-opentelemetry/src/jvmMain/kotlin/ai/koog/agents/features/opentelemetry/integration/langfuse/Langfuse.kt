@@ -33,7 +33,10 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
     timeout: Duration = 10.seconds,
     traceAttributes: List<CustomAttribute> = emptyList()
 ) {
-    val url = langfuseUrl ?: System.getenv()["LANGFUSE_HOST"] ?: "https://cloud.langfuse.com"
+    val url = langfuseUrl
+        ?: System.getenv()["LANGFUSE_HOST"]
+        ?: System.getenv()["LANGFUSE_BASE_URL"]
+        ?: "https://cloud.langfuse.com"
 
     logger.debug { "Configured endpoint for Langfuse telemetry: $url" }
 

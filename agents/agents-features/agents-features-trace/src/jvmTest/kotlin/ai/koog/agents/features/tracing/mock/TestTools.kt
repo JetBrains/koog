@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.serialization.Serializable
 
 internal class TestTool(private val executor: PromptExecutor) : SimpleTool<TestTool.Args>(

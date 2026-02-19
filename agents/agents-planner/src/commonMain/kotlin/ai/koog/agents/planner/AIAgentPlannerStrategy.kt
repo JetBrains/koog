@@ -1,6 +1,6 @@
 package ai.koog.agents.planner
 
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import kotlin.coroutines.cancellation.CancellationException
@@ -15,9 +15,9 @@ import kotlin.coroutines.cancellation.CancellationException
 public class AIAgentPlannerStrategy<State, Plan>(
     override val name: String,
     private val planner: AIAgentPlanner<State, Plan>,
-) : AIAgentStrategy<State, State, AIAgentFunctionalContext> {
+) : AIAgentStrategy<State, State, AIAgentPlannerContext> {
     override suspend fun execute(
-        context: AIAgentFunctionalContext,
+        context: AIAgentPlannerContext,
         input: State
     ): State {
         return try {

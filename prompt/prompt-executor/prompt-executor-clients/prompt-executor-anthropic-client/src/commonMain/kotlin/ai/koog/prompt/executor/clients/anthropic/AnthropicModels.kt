@@ -15,6 +15,8 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_5
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
+import kotlin.jvm.JvmField
 
 /**
  * Anthropic models for text generation and embeddings.
@@ -44,6 +46,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_3: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-opus",
@@ -67,6 +70,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Haiku_3: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-haiku",
@@ -90,6 +94,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_3_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-5-sonnet",
@@ -114,6 +119,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Haiku_3_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-5-haiku",
@@ -138,6 +144,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_3_7: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-7-sonnet",
@@ -161,6 +168,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_4: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-sonnet-4-0",
@@ -185,6 +193,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_4: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-opus-4-0",
@@ -209,6 +218,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_4_1: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-opus-4-1",
@@ -234,6 +244,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_4_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-opus-4-5",
@@ -258,6 +269,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_4_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-sonnet-4-5",
@@ -282,6 +294,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Haiku_4_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-haiku-4-5",
@@ -296,6 +309,36 @@ public object AnthropicModels : LLModelDefinitions {
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
+
+    /**
+     * List of the supported models by the Anthropic provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        Opus_3,
+        Haiku_3,
+        Sonnet_3_5,
+        Haiku_3_5,
+        Sonnet_3_7,
+        Sonnet_4,
+        Opus_4,
+        Opus_4_1,
+        Opus_4_5,
+        Sonnet_4_5,
+        Haiku_4_5
+    )
+
+    /**
+     * Custom models added to the Anthropic provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Anthropic) { "Model provider must be Anthropic" }
+        customModels.add(model)
+    }
 }
 
 internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(

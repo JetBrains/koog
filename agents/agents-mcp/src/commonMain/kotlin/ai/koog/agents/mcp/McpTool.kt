@@ -1,5 +1,6 @@
 package ai.koog.agents.mcp
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import io.modelcontextprotocol.kotlin.sdk.client.Client
@@ -19,13 +20,16 @@ import kotlinx.serialization.json.jsonObject
  * 2. Calling the MCP tool through the MCP client
  * 3. Converting MCP tool results back to agent framework tool results
  */
+@InternalAgentsApi
 public class McpTool(
     private val mcpClient: Client,
     descriptor: ToolDescriptor,
+    metadata: Map<String, String>,
 ) : Tool<JsonObject, CallToolResult?>(
     argsSerializer = JsonObject.serializer(),
     resultSerializer = CallToolResult.serializer().nullable,
-    descriptor = descriptor
+    descriptor = descriptor,
+    metadata = metadata
 ) {
 
     /**

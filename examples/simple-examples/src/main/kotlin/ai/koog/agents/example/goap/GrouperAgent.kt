@@ -1,7 +1,7 @@
 package ai.koog.agents.example.goap
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
@@ -19,7 +19,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.typeOf
 
-suspend fun AIAgentFunctionalContext.generateProposal(
+suspend fun AIAgentPlannerContext.generateProposal(
     config: GrouperConfig,
     bestWordings: BestWordings,
     feedback: List<String>,
@@ -72,7 +72,7 @@ suspend fun AIAgentFunctionalContext.generateProposal(
     requestLLMStructured<Proposal>().getOrThrow().data
 }
 
-suspend fun AIAgentFunctionalContext.evaluateWordings(
+suspend fun AIAgentPlannerContext.evaluateWordings(
     config: GrouperConfig,
     wordings: List<String>,
 ): List<Reaction> {

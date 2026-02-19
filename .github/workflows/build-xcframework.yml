@@ -1,0 +1,83 @@
+name: Build XCFramework
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Manual trigger
+
+env:
+  JAVA_VERSION: 17
+  JAVA_DISTRIBUTION: 'corretto'
+  JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
+
+jobs:
+  build-xcframework:
+    name: Build iOS XCFramework
+    runs-on: macos-latest  # Required for Xcode
+    timeout-minutes: 60
+    permissions:
+      contents: write  # Required for uploading release assets
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+
+      - uses: actions/checkout@v5
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${{ github.sha }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: false
+
+      - name: Verify Xcode installation
+        run: xcodebuild -version
+
+      - name: Build XCFramework
+        run: |
+          echo "Assembling XCFramework binary..."
+          ./gradlew :koog-agents:assembleKoogXCFramework -Pkoog.build.xcframework=true --no-daemon --stacktrace
+          echo "XCFramework binary assembled"
+
+      # Uploading XCF binary on manual runs without polluting the release - for debugging & testing
+      # Note that 'actions/upload-artifact@v4' always zips the artifact, so we don't have to do it for manual runs
+      - name: Upload XCFramework artifact for manual runs
+        # disable for branch test
+        #if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Koog-xcframework-${{ steps.version.outputs.version }}
+          path: koog-agents/build/XCFrameworks/release/
+          retention-days: 30
+
+      - name: Create XCFramework zip for release
+        if: github.event_name == 'release'
+        id: archive
+        run: |
+          ARCHIVE_NAME="Koog-${{ steps.version.outputs.version }}.xcframework.zip"
+          cd koog-agents/build/XCFrameworks/release
+          zip -r "$ARCHIVE_NAME" Koog.xcframework
+          echo "archive_path=$(pwd)/$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+          echo "XCFramework zip created:"
+          ls -lh "$ARCHIVE_NAME"
+          # Calculate checksum for SPM
+          shasum -a 256 "$ARCHIVE_NAME"
+
+      - name: Upload XCFramework artifact to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.archive.outputs.archive_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

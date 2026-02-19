@@ -32,6 +32,8 @@ kotlin {
                 implementation(kotlin("test-junit5"))
             }
         }
+
+        jsMain {}
     }
 
     explicitApi()

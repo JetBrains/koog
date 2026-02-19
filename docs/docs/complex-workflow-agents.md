@@ -70,15 +70,15 @@ val anthropicClient = AnthropicLLMClient(System.getenv("ANTHROPIC_KEY"))
 val googleClient = GoogleLLMClient(System.getenv("GOOGLE_KEY"))
 ```
 <!--- KNIT example-complex-workflow-agents-02.kt -->
-2) Pass the configured clients to the `DefaultMultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
+2) Pass the configured clients to the `MultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
 <!--- INCLUDE
 import ai.koog.agents.example.exampleComplexWorkflowAgents02.anthropicClient
 import ai.koog.agents.example.exampleComplexWorkflowAgents02.googleClient
 import ai.koog.agents.example.exampleComplexWorkflowAgents02.openAIClient
-import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 -->
 ```kotlin
-val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+val multiExecutor = MultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 ```
 <!--- KNIT example-complex-workflow-agents-03.kt -->
 
@@ -323,7 +323,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 
 val agent = AIAgent(
     promptExecutor = simpleOllamaAIExecutor(),

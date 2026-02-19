@@ -6,7 +6,7 @@ This section describes how to create and run prompts with Koog.
 
 ## Creating prompts
 
-In Koog, prompts are instances of the [**Prompt**](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.dsl/-prompt/index.html) 
+In Koog, prompts are instances of the [**Prompt**](api:prompt-model::ai.koog.prompt.dsl.Prompt) 
 data class with the following properties:
 
 - `id`: A unique identifier for the prompt.
@@ -160,7 +160,7 @@ flowchart TB
 ```
 
 For more [advanced configurations](../complex-workflow-agents.md#4-configure-the-agent), you can also use 
-[AIAgentConfig](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.config/-a-i-agent-config/index.html)
+[AIAgentConfig](api:agents-core::ai.koog.agents.core.agent.config.AIAgentConfig)
 to define the agent's initial prompt.
 
 ### Automatic prompt updates

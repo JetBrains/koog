@@ -1,14 +1,13 @@
 package ai.koog.spring.sandwich.agents
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgent.Companion.State
+import ai.koog.agents.core.agent.AIAgentState
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
-import ai.koog.agents.snapshot.feature.registerRollback
 import ai.koog.agents.snapshot.feature.withPersistence
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -32,7 +31,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class KoogAgentService(
-    private val promptExecutor: MultiLLMPromptExecutor,
+    private val promptExecutor: PromptExecutor,
     private val spanExporters: List<SpanExporter>,
     private val buildProps: BuildProperties,
 ) {
@@ -88,7 +87,7 @@ class KoogAgentService(
 
     suspend fun launchSupportAgent(userId: String, question: String): String {
         val agent = createAgent(userId)
-        parallelScope.launch { agent.run(question) }
+        parallelScope.launch { agent.run(question, null) }
         return agent.id
     }
 
@@ -118,7 +117,8 @@ class KoogAgentService(
 
     suspend fun rollback(agentId: String, checkpointId: String) {
         val agent = agentsById[agentId] ?: throw Exception("Agent with id = `$agentId` not found")
-        agent.withPersistence { ctx ->
+        val session = agent.getSession() ?: throw Exception("Agent session not available")
+        session.withPersistence { ctx ->
             rollbackToCheckpoint(checkpointId, ctx)
         }
     }

@@ -267,3 +267,6 @@ extra:
 
 watch:
   - includes
+
+hooks:
+  - process-api-links.py

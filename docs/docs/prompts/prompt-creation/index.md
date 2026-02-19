@@ -155,7 +155,7 @@ val prompt = prompt("calculator_example") {
 ## Text message builders
 
 When building a `system()`, `user()`, or `assistant()` message, you can use 
-helper [text-building functions](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.text/-text-content-builder/index.html)
+helper [text-building functions](api:prompt-model::ai.koog.prompt.text.TextContentBuilder)
 for rich text formatting.
 
 <!--- INCLUDE
@@ -181,8 +181,8 @@ val prompt = prompt("text_example") {
 ```
 <!--- KNIT example-creating-prompts-07.kt -->
 
-You can also use the [Markdown](https://api.koog.ai/prompt/prompt-markdown/ai.koog.prompt.markdown/markdown.html) 
-and [XML](https://api.koog.ai/prompt/prompt-xml/ai.koog.prompt.xml/xml.html) builders to add the content in 
+You can also use the [Markdown](api:prompt-markdown::ai.koog.prompt.markdown.markdown) 
+and [XML](api:prompt-xml::ai.koog.prompt.xml.xml) builders to add the content in 
 the corresponding format.
 
 <!--- INCLUDE

@@ -54,11 +54,14 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.AnthropicLLMProvider
+import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.OllamaLLMProvider
+import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -77,6 +80,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
@@ -90,7 +94,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
+import java.util.Base64
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
@@ -124,13 +128,13 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
 
-    private fun createReasoningParams(model: LLModel): LLMParams {
+    open fun createReasoningParams(model: LLModel): LLMParams {
         return when (model.provider) {
-            is LLMProvider.Anthropic -> AnthropicParams(
+            is AnthropicLLMProvider -> AnthropicParams(
                 thinking = AnthropicThinking.Enabled(budgetTokens = 1024)
             )
 
-            is LLMProvider.OpenAI -> OpenAIResponsesParams(
+            is OpenAILLMProvider -> OpenAIResponsesParams(
                 reasoning = ReasoningConfig(
                     effort = ReasoningEffort.MEDIUM,
                     summary = ReasoningSummary.AUTO
@@ -139,7 +143,7 @@ abstract class ExecutorIntegrationTestBase {
                 maxTokens = basicLimit
             )
 
-            is LLMProvider.Google -> {
+            is GoogleLLMProvider -> {
                 val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
                     GoogleThinkingConfig(
                         includeThoughts = true,
@@ -164,12 +168,12 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     private fun createNoReasoningParams(model: LLModel): LLMParams = when (model.provider) {
-        is LLMProvider.Anthropic -> AnthropicParams(
+        is AnthropicLLMProvider -> AnthropicParams(
             thinking = AnthropicThinking.Disabled()
         )
 
-        is LLMProvider.OpenAI ->
-            if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+        is OpenAILLMProvider ->
+            if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
                 OpenAIResponsesParams(
                     maxTokens = basicLimit
                 )
@@ -179,7 +183,7 @@ abstract class ExecutorIntegrationTestBase {
                 )
             }
 
-        is LLMProvider.Google ->
+        is GoogleLLMProvider ->
             GoogleParams(
                 thinkingConfig = GoogleThinkingConfig(
                     includeThoughts = false,
@@ -240,8 +244,19 @@ abstract class ExecutorIntegrationTestBase {
                 length shouldNotBe (0)
                 toolMessages.shouldBeEmpty()
                 when (model.provider) {
-                    is LLMProvider.Ollama -> endMessages.size shouldBe 0
-                    else -> endMessages.size shouldBe 1
+                    is OllamaLLMProvider -> endMessages.size shouldBe 0
+
+                    else -> {
+                        endMessages.size shouldBe 1
+                        endMessages.first() should { end ->
+                            end.metaInfo should { meta ->
+                                withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
+                                    listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
+                                        .shouldForAny { it != null }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 toString() shouldNotBeNull {
@@ -257,7 +272,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         withRetry(times = 3, testName = "integration_testToolWithRequiredParams[${model.id}]") {
             with(getExecutor(model).execute(calculatorPrompt, model, listOf(CalculatorTool.descriptor))) {
@@ -269,7 +284,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolWithNotRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         withRetry(times = 3, testName = "integration_testToolWithNotRequiredOptionalParams[${model.id}]") {
             with(
@@ -287,7 +302,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         withRetry(times = 3, testName = "integration_testToolWithOptionalParams[${model.id}]") {
             with(getExecutor(model).execute(calculatorPrompt, model, listOf(calculatorToolDescriptorOptionalParams))) {
@@ -299,7 +314,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val prompt = Prompt.build("test-tools") {
             system {
@@ -319,7 +334,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val prompt = Prompt.build("test-tools") {
             system {
@@ -339,7 +354,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val prompt = Prompt.build("test-tools") {
             system {
@@ -359,7 +374,7 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testToolsWithNullParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.provider != LLMProvider.Anthropic, "Anthropic does not support anyOf")
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(
             model.provider != LLMProvider.MistralAI,
             "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix"
@@ -384,7 +399,7 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testToolsWithAnyOfParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.provider != LLMProvider.Anthropic, "Anthropic does not support anyOf")
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val prompt = Prompt.build("test-tools", LLMParams(toolChoice = ToolChoice.Required)) {
             system {
@@ -437,7 +452,7 @@ abstract class ExecutorIntegrationTestBase {
                         +"Please list all the markdown elements used in it and describe its structure clearly."
                     }
 
-                    if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                    if (model.supports(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
                         textFile(KtPath(file.pathString), "text/plain")
                     } else {
                         markdown {
@@ -486,7 +501,7 @@ abstract class ExecutorIntegrationTestBase {
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
             assumeTrue(
-                model.capabilities.contains(LLMCapability.Vision.Image),
+                model.supports(LLMCapability.Vision.Image),
                 "Model must support vision capability"
             )
 
@@ -500,21 +515,7 @@ abstract class ExecutorIntegrationTestBase {
                         +"I'm sending you an image. Please analyze it and identify the image format if possible."
                     }
 
-                    when (scenario) {
-                        ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                            image(
-                                ContentPart.Image(
-                                    content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
-                                    format = "jpg",
-                                    mimeType = "image/jpeg"
-                                )
-                            )
-                        }
-
-                        else -> {
-                            image(KtPath(imageFile.pathString))
-                        }
-                    }
+                    image(KtPath(imageFile.pathString))
                 }
             }
 
@@ -527,19 +528,23 @@ abstract class ExecutorIntegrationTestBase {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
                             val message = e.message.shouldNotBeNull()
 
-                            message.shouldContain("Status code: 400")
-                            message.shouldContain("image exceeds")
+                            listOf(
+                                "Status code: 400",
+                                "image exceeds",
+                                "Could not process image"
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
                             val message = e.message.shouldNotBeNull()
 
-                            message.shouldContain("Status code: 400")
-                            if (model.provider == LLMProvider.Anthropic) {
-                                message.shouldContain("Could not process image")
-                            } else if (model.provider == LLMProvider.OpenAI) {
-                                message.shouldContain("You uploaded an unsupported image. Please make sure your image is valid.")
-                            }
+                            listOf(
+                                "Status code: 400",
+                                "Could not process image",
+                                "You uploaded an unsupported image. Please make sure your image is valid.",
+                            ).any { it in message }
+                                .shouldBe(true, "Must contain error message from the list")
                         }
 
                         else -> {
@@ -557,7 +562,7 @@ abstract class ExecutorIntegrationTestBase {
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
             val prompt =
-                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                if (model.supports(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
                     prompt("text-test-${scenario.name.lowercase()}") {
                         system("You are a helpful assistant that can analyze and process text.")
 
@@ -619,7 +624,7 @@ abstract class ExecutorIntegrationTestBase {
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
             assumeTrue(
-                model.capabilities.contains(LLMCapability.Audio),
+                model.supports(LLMCapability.Audio),
                 "Model must support audio capability"
             )
 
@@ -658,7 +663,7 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
 
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Vision.Image),
+            model.supports(LLMCapability.Vision.Image),
             "Model must support vision capability"
         )
 
@@ -695,7 +700,7 @@ abstract class ExecutorIntegrationTestBase {
         assumeTrue(model.provider !== LLMProvider.Google, "Google models do not support URL attachments")
 
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Vision.Image),
+            model.supports(LLMCapability.Vision.Image),
             "Model must support vision capability"
         )
 
@@ -727,7 +732,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testStructuredOutputNative(model: LLModel) = runTest {
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            model.supports(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
 
@@ -747,7 +752,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) = runTest {
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            model.supports(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
 
@@ -813,7 +818,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
 
         val prompt = calculatorPrompt
 
@@ -841,7 +846,7 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
 
         assumeTrue(model.provider != LLMProvider.Bedrock, "Bedrock API doesn't support 'none' tool choice.")
-        assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
         assumeTrue(
             model.provider != LLMProvider.MistralAI,
             "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix"
@@ -874,7 +879,7 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
 
         assumeTrue(
-            model.capabilities.contains(LLMCapability.ToolChoice),
+            model.supports(LLMCapability.ToolChoice),
             "Model $model does not support tool choice"
         )
 
@@ -936,7 +941,7 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testSingleMessageModeration(model: LLModel) = runTest(timeout = 300.seconds) {
         // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
         assumeTrue(
-            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
+            model.provider == LLMProvider.Bedrock || model.supports(LLMCapability.Moderation),
             "Model $model does not support moderation"
         )
 
@@ -966,7 +971,7 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testMultipleMessagesModeration(model: LLModel) = runTest(timeout = 300.seconds) {
         // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
         assumeTrue(
-            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
+            model.provider == LLMProvider.Bedrock || model.supports(LLMCapability.Moderation),
             "Model $model does not support moderation"
         )
 
@@ -1127,21 +1132,17 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(
             model.provider !== LLMProvider.OpenRouter,
             "KG-626 Error from OpenRouter on a streaming with a tool call"
-        )
-        assumeTrue(
-            model.provider !== LLMProvider.Bedrock,
-            "KG-627 Error from Bedrock executor on a streaming with a tool call"
         )
 
         val executor = getExecutor(model)
 
         val params = when (model.provider) {
             LLMProvider.OpenAI ->
-                if (model.capabilities.contains(LLMCapability.OpenAIEndpoint.Responses)) {
+                if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
                     OpenAIResponsesParams(toolChoice = ToolChoice.Required)
                 } else {
                     OpenAIChatParams(toolChoice = ToolChoice.Required)

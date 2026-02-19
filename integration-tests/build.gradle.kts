@@ -30,7 +30,9 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-snapshot"))
                 implementation(project(":agents:agents-features:agents-features-acp"))
                 implementation(project(":agents:agents-mcp"))
+                implementation(project(":agents:agents-features:agents-features-opentelemetry"))
                 implementation(project(":agents:agents-mcp-server"))
+                implementation(project(":agents:agents-planner"))
                 implementation(project(":agents:agents-test"))
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
@@ -51,6 +53,7 @@ kotlin {
                 implementation(libs.aws.sdk.kotlin.bedrock)
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.opentelemetry.sdk.testing)
             }
         }
     }

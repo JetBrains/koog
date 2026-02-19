@@ -10,17 +10,7 @@ name: Checks
 on:
   push:
     branches: [ "main", "develop" ]
-    paths-ignore:
-      - 'examples/**'
-      - '!examples/code-agent/**'
-      - '!examples/simple-examples/**'
-      - '*.md'
   pull_request:
-    paths-ignore:
-      - 'examples/**'
-      - '!examples/code-agent/**'
-      - '!examples/simple-examples/**'
-      - '*.md'
   workflow_dispatch:
 
 concurrency:
@@ -34,8 +24,29 @@ env:
   JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
 
 jobs:
-  compilation:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
+      docs: ${{ steps.filter.outputs.docs_any_changed }}
+    steps:
+      - uses: actions/checkout@v5
 
+      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+        name: Check changed files
+        id: filter
+        with:
+          write_output_files: 'true'
+          files_yaml_from_source_file: .github/file-filters.yml
+
+      - run: .github/scripts/print_changed_files.sh
+        name: 'Print changed files'
+
+  compilation:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -63,8 +74,9 @@ jobs:
         run: ./gradlew jvmTestClasses jsTestClasses
 
   docs:
+    needs: changes
+    if: ${{ needs.changes.outputs.docs == 'true' }}
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
 
@@ -92,9 +104,12 @@ jobs:
           uv sync --frozen --all-extras
           uv run mkdocs build
 
+  # Do not set individual matrix jobs (e.g., "tests (ubuntu-latest)") as required in GitHub branch protection.
+  # Instead, use the summary job `tests-result` below, which properly reports status when tests are skipped.
   tests:
-
     name: tests (${{ matrix.os }})
+    needs: compilation
+    if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -161,7 +176,27 @@ jobs:
           include_time_in_summary: true
           annotate_only: true
 
-  knit-and-dokka:
+  # Matrix jobs don't report status when skipped, causing required checks to hang.
+  # This summary job always checks `tests` jobs result and reports status for branch protection.
+  tests-result:
+    needs: [ changes, tests ]
+    if: always()
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check tests status
+        #language=bash
+        run: |
+          if [[ "${{ needs.tests.result }}" == "skipped" ]]; then
+            echo "Tests skipped"
+            exit 0
+          elif [[ "${{ needs.tests.result }}" != "success" ]]; then
+            echo "Tests didn't finish successfully"
+            exit 1
+          fi 
+
+  knit:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' || needs.changes.outputs.docs == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -170,7 +205,7 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v5
-      - name: Generate and verify code examples
+      - name: Verify code snippets in docs
         run: |
           echo "Starting knit generation..."
           FILES_BEFORE_KNIT=$(find docs/src/ -name "*.kt" 2>/dev/null | wc -l || echo "0")
@@ -185,4 +220,19 @@ jobs:
           echo "Knit generated $KNIT_GENERATED_FILES files"
 
           echo "Starting assemble..."
-          ./gradlew :docs:assemble dokkaGenerate
+          ./gradlew :docs:assemble
+
+  dokka:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Generate API docs
+        run: |
+          ./gradlew dokkaGenerate

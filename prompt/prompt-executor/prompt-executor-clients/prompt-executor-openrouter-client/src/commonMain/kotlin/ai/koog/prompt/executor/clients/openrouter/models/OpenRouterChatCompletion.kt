@@ -127,12 +127,17 @@ public class OpenRouterStreamChoice(
  * @property content The contents of the chunk message.
  * @property role The role of the author of this message.
  * @property toolCalls The tool calls requested by the model.
+ * @property reasoning The reasoning content for models that support it.
+ * @property reasoningDetails Additional reasoning details in structured format.
  */
 @Serializable
 public class OpenRouterStreamDelta(
     public val content: String? = null,
     public val role: String? = null,
-    public val toolCalls: List<OpenAIToolCall>? = null
+    public val toolCalls: List<OpenAIToolCall>? = null,
+    public val reasoning: String? = null,
+    @SerialName("reasoning_details")
+    public val reasoningDetails: List<JsonElement>? = null
 )
 
 /**

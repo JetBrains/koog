@@ -48,19 +48,16 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jetbrains.example.koog.compose.theme.AppDimension
 import com.jetbrains.example.koog.compose.theme.AppTheme
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun AgentDemoScreen(
-    onNavigateBack: () -> Unit,
-    viewModel: AgentDemoViewModel,
-) {
+fun AgentDemoScreen(viewModel: AgentDemoViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     AgentDemoScreenContent(
@@ -70,10 +67,7 @@ fun AgentDemoScreen(
         isInputEnabled = uiState.isInputEnabled,
         isLoading = uiState.isLoading,
         isChatEnded = uiState.isChatEnded,
-        onInputTextChanged = viewModel::updateInputText,
-        onSendClicked = viewModel::sendMessage,
-        onRestartClicked = viewModel::restartChat,
-        onNavigateBack = onNavigateBack
+        onEvent = viewModel::onEvent,
     )
 }
 
@@ -86,10 +80,7 @@ private fun AgentDemoScreenContent(
     isInputEnabled: Boolean,
     isLoading: Boolean,
     isChatEnded: Boolean,
-    onInputTextChanged: (String) -> Unit,
-    onSendClicked: () -> Unit,
-    onRestartClicked: () -> Unit,
-    onNavigateBack: () -> Unit
+    onEvent: (AgentDemoUiEvents) -> Unit,
 ) {
     val listState = rememberLazyListState()
     val focusRequester = remember { FocusRequester() }
@@ -107,7 +98,7 @@ private fun AgentDemoScreenContent(
             TopAppBar(
                 title = { Text(title) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { onEvent(AgentDemoUiEvents.NavigateBack) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -152,13 +143,13 @@ private fun AgentDemoScreenContent(
 
             // Input area or restart button
             if (isChatEnded) {
-                RestartButton(onRestartClicked = onRestartClicked)
+                RestartButton(onRestartClicked = { onEvent(AgentDemoUiEvents.RestartChat) })
             } else {
                 InputArea(
                     text = inputText,
-                    onTextChanged = onInputTextChanged,
+                    onTextChanged = { onEvent(AgentDemoUiEvents.UpdateInputText(it)) },
                     onSendClicked = {
-                        onSendClicked()
+                        onEvent(AgentDemoUiEvents.SendMessage)
                         focusManager.clearFocus()
                     },
                     isEnabled = isInputEnabled,
@@ -441,10 +432,7 @@ fun AgentDemoScreenPreview() {
             isInputEnabled = true,
             isLoading = false,
             isChatEnded = false,
-            onInputTextChanged = {},
-            onSendClicked = {},
-            onRestartClicked = {},
-            onNavigateBack = {}
+            onEvent = {},
         )
     }
 }
@@ -465,10 +453,7 @@ fun AgentDemoScreenEndedPreview() {
             isInputEnabled = false,
             isLoading = false,
             isChatEnded = true,
-            onInputTextChanged = {},
-            onSendClicked = {},
-            onRestartClicked = {},
-            onNavigateBack = {}
+            onEvent = {},
         )
     }
 }

@@ -3,63 +3,47 @@ package ai.koog.agents.core.agent.context
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
-import ai.koog.prompt.message.Message
 
-/**
- * Represents the execution context for an AI agent operating in a loop.
- * It provides access to critical parts such as the environment, configuration, large language model (LLM) context,
- * state management, and storage. Additionally, it enables the agent to store, retrieve, and manage context-specific data
- * during its execution lifecycle.
- *
- * @property environment The environment interface allowing the agent to interact with the external world,
- * including executing tools and reporting problems.
- * @property agentId A unique identifier for the agent, differentiating it from other agents in the system.
- * @property runId A unique identifier for the current run or instance of the agent's operation.
- * @property agentInput The input data passed to the agent, which can be of any type, depending on the agent's context.
- * @property config The configuration settings for the agent, including its prompt and model details,
- * as well as operational constraints like iteration limits.
- * @property llm The context for interacting with the large language model used by the agent, enabling message history
- * retrieval and processing.
- * @property stateManager The state management component responsible for tracking and updating the agent's state during its execution.
- * @property storage A storage interface providing persistent storage capabilities for the agent's data.
- * @property strategyName The name of the agent's strategic approach or operational method, determining its behavior
- * during execution.
- */
-@OptIn(InternalAgentsApi::class)
-public class AIAgentFunctionalContext(
-    override val environment: AIAgentEnvironment,
-    override val agentId: String,
-    override val runId: String,
-    override val agentInput: Any?,
-    override val config: AIAgentConfig,
-    override val llm: AIAgentLLMContext,
-    override val stateManager: AIAgentStateManager,
-    override val storage: AIAgentStorage,
-    override val strategyName: String,
-    override val pipeline: AIAgentFunctionalPipeline,
-    override var executionInfo: AgentExecutionInfo,
-    override val parentContext: AIAgentContext?,
-) : AIAgentContext {
+/***/
+public class AIAgentFunctionalContext private constructor(
+    delegate: AIAgentFunctionalContextBaseImpl<AIAgentFunctionalPipeline>
+) : AIAgentFunctionalContextBase<AIAgentFunctionalPipeline>(delegate) {
 
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
-
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> get(key: AIAgentStorageKey<*>): T? = storeMap[key] as T?
-
-    override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null
-
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession { prompt.messages }
-    }
+    /**
+     *
+     */
+    public constructor (
+        environment: AIAgentEnvironment,
+        agentId: String,
+        runId: String,
+        agentInput: Any?,
+        config: AIAgentConfig,
+        llm: AIAgentLLMContext,
+        stateManager: AIAgentStateManager,
+        storage: AIAgentStorage,
+        strategyName: String,
+        pipeline: AIAgentFunctionalPipeline,
+        executionInfo: AgentExecutionInfo,
+        parentContext: AIAgentContext? = null
+    ) : this(
+        AIAgentFunctionalContextBaseImpl(
+            environment = environment,
+            agentId = agentId,
+            runId = runId,
+            agentInput = agentInput,
+            config = config,
+            llm = llm,
+            stateManager = stateManager,
+            storage = storage,
+            strategyName = strategyName,
+            pipeline = pipeline,
+            executionInfo = executionInfo,
+            parentContext = parentContext
+        )
+    )
 
     /**
      * Creates a copy of the current [AIAgentFunctionalContext], allowing for selective overriding of its properties.
@@ -78,7 +62,7 @@ public class AIAgentFunctionalContext(
      * @param strategyName The strategy name, or maintain the current game plan.
      * @param pipeline The [AIAgentFunctionalPipeline] to be used, or keep the current execution superhighway.
      * @param parentRootContext The parent root context, or maintain the current family tree.
-     * @return A shiny new [AIAgentFunctionalContext] with your desired modifications applied!
+     * @return A new [AIAgentFunctionalContext] with your desired modifications applied!
      */
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
@@ -93,8 +77,8 @@ public class AIAgentFunctionalContext(
         pipeline: AIAgentFunctionalPipeline = this.pipeline,
         executionInfo: AgentExecutionInfo = this.executionInfo,
         parentRootContext: AIAgentContext? = this.parentContext,
-    ): AIAgentFunctionalContext {
-        val freshContext = AIAgentFunctionalContext(
+    ): AIAgentFunctionalContext = AIAgentFunctionalContext(
+        AIAgentFunctionalContextBaseImpl(
             environment = environment,
             agentId = agentId,
             runId = runId,
@@ -106,12 +90,7 @@ public class AIAgentFunctionalContext(
             strategyName = strategyName,
             pipeline = pipeline,
             executionInfo = executionInfo,
-            parentContext = parentRootContext,
+            parentContext = parentRootContext
         )
-
-        // Copy over the internal store map to preserve any stored values
-        freshContext.storeMap.putAll(this.storeMap)
-
-        return freshContext
-    }
+    )
 }

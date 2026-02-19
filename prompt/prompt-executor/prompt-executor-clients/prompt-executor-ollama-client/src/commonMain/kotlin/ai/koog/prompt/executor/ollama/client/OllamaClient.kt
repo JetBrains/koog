@@ -57,6 +57,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.jvm.JvmOverloads
 
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
@@ -72,7 +73,7 @@ import kotlinx.serialization.json.Json
  * @param contextWindowStrategy The [ContextWindowStrategy] to use for computing context window lengths.
  *   Defaults to [ContextWindowStrategy.None].
  */
-public class OllamaClient(
+public class OllamaClient @JvmOverloads constructor(
     public val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
@@ -336,7 +337,7 @@ public class OllamaClient(
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        if (!model.capabilities.contains(LLMCapability.Embed)) {
+        if (!model.supports(LLMCapability.Embed)) {
             throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
         }
 
@@ -389,7 +390,7 @@ public class OllamaClient(
     }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-        if (!model.capabilities.contains(LLMCapability.Moderation)) {
+        if (!model.supports(LLMCapability.Moderation)) {
             throw LLMClientException(clientName, "Model ${model.id} does not support moderation")
         }
 

@@ -9,7 +9,7 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -59,7 +59,7 @@ class SimpleGraphCheckpointTest {
         }
 
         // Run the agent
-        val result = agent.run("Start the test")
+        val result = agent.run("Start the test", null)
 
         // Verify that the result contains the expected output from the teleported node
         assertEquals(
@@ -119,7 +119,7 @@ class SimpleGraphCheckpointTest {
         }
 
         // Run the agent
-        agent.run("Start the test")
+        agent.run("Start the test", null)
 
         // Verify that a checkpoint was created and saved
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
@@ -167,7 +167,7 @@ class SimpleGraphCheckpointTest {
         }
 
         // Run the agent
-        agent.run("Start the test")
+        agent.run("Start the test", null)
 
         // Verify that a checkpoint was created and saved
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull() ?: error("checkpoint is null")

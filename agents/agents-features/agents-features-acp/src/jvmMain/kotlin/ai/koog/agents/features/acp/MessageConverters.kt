@@ -254,7 +254,7 @@ public fun Message.Response.toAcpEvents(tools: List<ToolDescriptor> = emptyList(
                                 ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.PENDING,
-                            rawInput = response.contentJson,
+                            rawInput = response.contentJsonResult.getOrNull(),
                         )
                     )
                 )

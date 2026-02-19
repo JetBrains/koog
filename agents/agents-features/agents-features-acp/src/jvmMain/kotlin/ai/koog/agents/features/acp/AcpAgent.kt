@@ -228,7 +228,7 @@ public class AcpAgent(
                 logger.debug { "Emitting SessionUpdateEvent for ToolCall Failed" }
                 sendEvent(
                     Event.SessionUpdateEvent(
-                        update = SessionUpdate.ToolCall(
+                        update = SessionUpdate.ToolCallUpdate(
                             toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
                             title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
@@ -243,7 +243,7 @@ public class AcpAgent(
                 logger.debug { "Emitting SessionUpdateEvent for ToolCall Completed" }
                 sendEvent(
                     Event.SessionUpdateEvent(
-                        update = SessionUpdate.ToolCall(
+                        update = SessionUpdate.ToolCallUpdate(
                             toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
                             title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools

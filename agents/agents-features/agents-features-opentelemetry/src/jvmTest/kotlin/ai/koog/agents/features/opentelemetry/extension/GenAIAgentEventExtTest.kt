@@ -1,10 +1,15 @@
 package ai.koog.agents.features.opentelemetry.extension
 
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttribute
+import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockEventBodyField
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.mock.MockSpan
+import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.span.SpanType
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.context.Context
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -38,10 +43,21 @@ class GenAIAgentEventExtTest {
     fun `toSpanAttributes adds converted attributes to span`() {
         val bodyFieldMap = MockEventBodyField("bodyFieldMap", mapOf("test-key" to "test-value"))
         val event = MockGenAIAgentEvent(fields = listOf(bodyFieldMap))
-        val span = MockGenAIAgentSpan(id = "test-span-id", name = "test-span-name")
 
-        val mockSpan = MockSpan()
-        span.span = mockSpan
+        val actualAttributes = mutableListOf<GenAIAttribute>()
+        val actualEvents = mutableListOf<GenAIAgentEvent>()
+
+        val span = GenAIAgentSpan(
+            type = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "test-span-id",
+            name = "test-span-name",
+            span = MockSpan(),
+            context = Context.root(),
+            kind = SpanKind.INTERNAL,
+            attributes = actualAttributes,
+            events = actualEvents
+        )
 
         event.toSpanAttributes(span = span, verbose = false)
 

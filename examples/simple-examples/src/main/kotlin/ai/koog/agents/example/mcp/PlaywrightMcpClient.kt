@@ -22,7 +22,7 @@ fun main() {
     // Get the API key from environment variables
     val openAIApiToken = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable not set")
 
-    // Start the Docker container with the Google Maps MCP server
+    // Start the Playwright MCP server
     val process = ProcessBuilder(
         "npx",
         "@playwright/mcp@latest",
@@ -38,9 +38,7 @@ fun main() {
             try {
                 // Create the ToolRegistry with tools from the MCP server
                 println("Connecting to Playwright MCP server...")
-                val toolRegistry = McpToolRegistryProvider.fromTransport(
-                    transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:8931/sse")
-                )
+                val toolRegistry = McpToolRegistryProvider.fromSseUrl("http://localhost:8931/sse")
                 println("Successfully connected to Playwright MCP server")
 
                 // Create the runner

@@ -93,7 +93,7 @@ class AIAgentMemoryTest {
         every { response.content } returns "Test fact"
 
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         coEvery {
@@ -174,7 +174,7 @@ class AIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         val llm = AIAgentLLMContext(
@@ -258,7 +258,7 @@ class AIAgentMemoryTest {
 
         // Verify that writeSession was called and the prompt was updated with facts
         coVerify {
-            llm.writeSession(any())
+            llm.writeSession(any<suspend AIAgentLLMWriteSession.() -> Any?>())
         }
         assertTrue(promptUpdateSlot.isCaptured, "Prompt update should be captured")
 
@@ -285,7 +285,7 @@ class AIAgentMemoryTest {
         val response = mockk<Message.Response>()
         every { response.content } returns "Test fact"
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         // Mock memory feature to capture saved facts
@@ -366,7 +366,7 @@ class AIAgentMemoryTest {
 
         val capturedModels = mutableListOf<LLModel>()
         coEvery {
-            promptExecutor.execute(any(), capture(capturedModels), any())
+            promptExecutor.execute(any(), capture(capturedModels))
         } returns listOf(response)
 
         coEvery {
@@ -426,7 +426,7 @@ class AIAgentMemoryTest {
         }
 
         coVerify(exactly = 1) {
-            promptExecutor.execute(any(), customModel, any())
+            promptExecutor.execute(any(), customModel)
         }
     }
 
@@ -454,7 +454,7 @@ class AIAgentMemoryTest {
 
         val capturedModels = mutableListOf<LLModel>()
         coEvery {
-            promptExecutor.execute(any(), capture(capturedModels), any())
+            promptExecutor.execute(any(), capture(capturedModels))
         } returns listOf(response)
 
         coEvery {
@@ -541,7 +541,7 @@ class AIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         val llm = AIAgentLLMContext(

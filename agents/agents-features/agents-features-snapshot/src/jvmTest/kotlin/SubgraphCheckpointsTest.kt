@@ -9,7 +9,7 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
@@ -46,7 +46,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "Start the test\n" +
@@ -73,7 +73,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "History: You are a test agent.\n" +
@@ -100,7 +100,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "History: You are a test agent.\n" +
@@ -128,7 +128,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", null)
 
         assertEquals(
             "History: You are a test agent.\n" +
@@ -166,7 +166,7 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 
     @Test
@@ -206,6 +206,6 @@ class SubgraphCheckpointsTest {
             }
         }
 
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 }

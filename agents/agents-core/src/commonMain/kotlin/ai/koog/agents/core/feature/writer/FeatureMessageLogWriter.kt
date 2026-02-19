@@ -6,6 +6,7 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.jvm.JvmOverloads
 
 /**
  * An abstract base class for implementing a stream feature provider that logs incoming feature messages
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * @param targetLogger The [KLogger] instance used for feature messages to be streamed into.
  */
-public abstract class FeatureMessageLogWriter(
+public abstract class FeatureMessageLogWriter @JvmOverloads constructor(
     protected val targetLogger: KLogger,
     protected val logLevel: LogLevel = LogLevel.INFO
 ) : FeatureMessageProcessor() {
@@ -55,7 +56,7 @@ public abstract class FeatureMessageLogWriter(
         }
     }
 
-    override suspend fun close() { }
+    override suspend fun close() {}
 
     /**
      * Converts the incoming [ai.koog.agents.core.feature.message.FeatureMessage] into a target logger message.

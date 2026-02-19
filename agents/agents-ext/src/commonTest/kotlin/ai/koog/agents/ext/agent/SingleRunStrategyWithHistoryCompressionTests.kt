@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -54,7 +54,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        agent.run("Solve task")
+        agent.run("Solve task", null)
         assertTrue(compressionRequested)
     }
 
@@ -78,7 +78,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        val result = agent.run("Solve task")
+        val result = agent.run("Solve task", null)
         assertEquals("Tools called!", result)
     }
 
@@ -107,7 +107,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        agent.run("Solve task")
+        agent.run("Solve task", null)
         assertTrue(compressionRequested)
     }
 
@@ -136,7 +136,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
-        agent.run("Solve task")
+        agent.run("Solve task", null)
         assertTrue(compressionRequested)
     }
 }

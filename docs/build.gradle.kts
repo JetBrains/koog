@@ -23,8 +23,8 @@ dependencies {
     implementation(project(":agents:agents-features:agents-features-acp"))
     implementation(project(":agents:agents-test"))
     implementation(project(":koog-agents"))
-    implementation(libs.opentelemetry.exporter.logging)
-    implementation(libs.opentelemetry.exporter.otlp)
+    api(libs.opentelemetry.exporter.logging)
+    api(libs.opentelemetry.exporter.otlp)
 }
 
 dokka {

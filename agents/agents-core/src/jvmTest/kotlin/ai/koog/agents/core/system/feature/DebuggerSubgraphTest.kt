@@ -105,7 +105,7 @@ class DebuggerSubgraphTest {
                     }
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
         }
 
@@ -245,7 +245,7 @@ class DebuggerSubgraphTest {
                 }
             }.use { agent ->
                 assertFailsWith<IllegalStateException> {
-                    agent.run(userPrompt)
+                    agent.run(userPrompt, null)
                 }
             }
             assertEquals(nodeSubgraphErrorMessage, throwable.message)

@@ -45,7 +45,7 @@ public class FunctionalAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<Input, Output, AIAgentFunctionalContext>(
+) : AIAgentBase<Input, Output, AIAgentFunctionalContext>(
     logger = logger,
     id = id,
 ) {
@@ -53,7 +53,7 @@ public class FunctionalAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
+    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(agentConfig, clock)
 
     /**
      * Represents a context for managing and configuring features in an AI agent.

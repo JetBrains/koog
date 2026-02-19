@@ -297,6 +297,7 @@ The OpenTelemetry feature automatically creates different types of spans to trac
 - **SubgraphExecuteSpan**: the execution of a subgraph within the agent strategy. This is a custom, Koog-specific span.
 - **InferenceSpan**: an LLM call.
 - **ExecuteToolSpan**: a tool call.
+- **McpClientSpan**: an MCP (Model Context Protocol) client operation. This span follows OpenTelemetry semantic conventions for MCP.
 
 Spans are organized in a nested, hierarchical structure. Here is an example of a span structure:
 
@@ -665,3 +666,74 @@ fun main() {
 
 4. **Span adapters override each other**
     - Currently, the OpenTelemetry agent feature does not support applying multiple span adapters [KG-265](https://youtrack.jetbrains.com/issue/KG-265/Adding-Weave-exporter-breaks-Langfuse-exporter).
+
+## MCP (Model Context Protocol) telemetry support
+
+Koog provides comprehensive OpenTelemetry instrumentation for MCP operations following the [official OpenTelemetry semantic conventions for MCP](https://github.com/open-telemetry/semantic-conventions/pull/2083).
+
+### Overview
+
+The MCP telemetry support includes:
+
+- **Automatic enrichment** of tool execution spans with MCP-specific attributes
+- **Client-side instrumentation** for MCP client operations (tools/call)
+- **Full semantic convention compliance** with all required, conditionally required, and recommended attributes
+
+### MCP attributes
+
+MCP telemetry follows OpenTelemetry semantic conventions and includes the following attribute groups:
+
+**Required attributes:**
+- `mcp.method.name`: The MCP method name (e.g., "tools/call")
+
+**Conditionally required attributes:**
+- `gen_ai.tool.name`: When operation involves a tool
+- `gen_ai.prompt.name`: When operation involves a prompt
+- `jsonrpc.request.id`: When executing a request (not a notification)
+- `error.type`: When operation fails
+
+**Recommended attributes:**
+- `mcp.session.id`: Session identifier
+- `mcp.protocol.version`: MCP protocol version (e.g., "2025-06-18")
+- `network.transport`: Transport type ("pipe" for stdio, "tcp" for HTTP)
+- `server.address` and `server.port`: For client operations
+
+### Span naming convention
+
+MCP spans follow the naming convention: `{mcp.method.name} {target}`
+
+Where `{target}` is the tool name or prompt name when applicable. Examples:
+- `"tools/call search"` - calling a tool named "search"
+
+### Best practices
+
+- **Always set session IDs** when working with persistent MCP sessions to enable session tracking
+- **Propagate request IDs** from JSON-RPC requests for complete request tracing
+- **Monitor metrics** to identify performance bottlenecks in MCP operations
+
+### Example: Full MCP client with telemetry
+
+```kotlin
+// Create MCP tools registry
+val toolRegistry = McpToolRegistryProvider.fromSseUrl("http://localhost:3000")
+
+// Create agent with OpenTelemetry enabled and pass the tool registry
+val agent = AIAgent(
+    promptExecutor = simpleOpenAIExecutor(apiKey),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    systemPrompt = "You are a helpful assistant.",
+    toolRegistry = toolRegistry
+) {
+    install(OpenTelemetry) {
+        setServiceInfo("mcp-agent-service", "1.0.0")
+        addSpanExporter(LoggingSpanExporter.create())
+    }
+}
+
+// Run agent - MCP tool calls will be automatically instrumented
+agent.use {
+    it.run("Use the search tool to find information")
+}
+```
+
+This setup provides complete observability for MCP operations with minimal code changes, following OpenTelemetry best practices and semantic conventions.

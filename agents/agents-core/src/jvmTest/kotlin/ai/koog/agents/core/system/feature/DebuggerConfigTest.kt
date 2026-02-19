@@ -153,7 +153,7 @@ class DebuggerConfigTest {
             }.use { agent ->
                 actualAgentRunTime = measureTime {
                     withTimeoutOrNull(defaultClientServerTimeout) {
-                        agent.run(userPrompt)
+                        agent.run(userPrompt, null)
                     }
                 }
             }

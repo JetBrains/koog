@@ -1,5 +1,8 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.agent.session
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.SafeToolFromCallable
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool

@@ -28,6 +28,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import kotlin.coroutines.cancellation.CancellationException
 import io.modelcontextprotocol.kotlin.sdk.types.Tool as SdkTool
 
 /**
@@ -123,7 +124,16 @@ public fun Server.addTool(
     tool: Tool<*, *>,
 ) {
     addTool(tool.descriptor.asSdkTool()) { request ->
-        val args = tool.decodeArgs(request.arguments ?: EmptyJsonObject)
+        val args = try {
+            tool.decodeArgs(request.arguments ?: EmptyJsonObject)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return@addTool CallToolResult(
+                content = listOf(TextContent("Failed to parse arguments for tool '${tool.name}': ${e.message}")),
+                isError = true,
+            )
+        }
         val result = tool.executeUnsafe(args)
 
         CallToolResult(

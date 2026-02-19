@@ -31,11 +31,11 @@ testWithMultipleLLMs(testExecutor) {
 ### Example of usage
 
 ```kotlin
-// Create a DefaultMultiLLMPromptExecutor with OpenAI and Anthropic clients
+// Create a MultiLLMPromptExecutor with OpenAI and Anthropic clients
 val openAIClient = OpenAILLMClient("your-openai-api-key")
 val anthropicClient = AnthropicLLMClient("your-anthropic-api-key")
 val googleClient = GoogleLLMClient("your-google-api-key")
-val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+val multiExecutor = MultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
 // Or use utility functions to create single LLM executors
 val openAIExecutor = simpleOpenAIExecutor("your-openai-api-key")

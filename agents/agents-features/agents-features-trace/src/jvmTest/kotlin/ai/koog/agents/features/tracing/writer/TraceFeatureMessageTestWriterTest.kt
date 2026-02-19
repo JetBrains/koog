@@ -100,7 +100,7 @@ class TraceFeatureMessageTestWriterTest {
             }
         }
 
-        agent.run("")
+        agent.run("", null)
         agent.close()
 
         val llmStartEvents = messageProcessor.messages.filterIsInstance<LLMCallStartingEvent>().toList()
@@ -148,7 +148,7 @@ class TraceFeatureMessageTestWriterTest {
 
         // Calling a non-existent tool returns an observation with an error
         // instead of throwing an exception, allowing the agent to handle it gracefully
-        val result = agent.run("")
+        val result = agent.run("", null)
         agent.close()
 
         // Verify the result contains the error message about the tool not being found
@@ -185,7 +185,7 @@ class TraceFeatureMessageTestWriterTest {
             }
         }
 
-        agent.run("")
+        agent.run("", null)
 
         val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
@@ -225,7 +225,7 @@ class TraceFeatureMessageTestWriterTest {
             toolRegistry.add(RecursiveTool())
         }
 
-        agent.run("")
+        agent.run("", null)
 
         val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
@@ -264,7 +264,7 @@ class TraceFeatureMessageTestWriterTest {
             toolRegistry.add(dummyTool)
         }
 
-        agent.run("")
+        agent.run("", null)
 
         val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
@@ -306,7 +306,7 @@ class TraceFeatureMessageTestWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                val throwable = assertFails { agent.run("") }
+                val throwable = assertFails { agent.run("", null) }
                 assertEquals(testErrorMessage, throwable.message)
 
                 val actualEvents = writer.messages.filterIsInstance<NodeExecutionFailedEvent>().toList()
@@ -378,7 +378,7 @@ class TraceFeatureMessageTestWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
 
                 val actualEvents = writer.messages.filter { event ->
                     event is LLMStreamingStartingEvent ||
@@ -502,7 +502,7 @@ class TraceFeatureMessageTestWriterTest {
                 }
             }.use { agent ->
                 val throwable = assertFails {
-                    agent.run("")
+                    agent.run("", null)
                 }
 
                 assertEquals(testStreamingErrorMessage, throwable.message)
@@ -583,7 +583,7 @@ class TraceFeatureMessageTestWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                agent.run(inputRequest)
+                agent.run(inputRequest, null)
             }
 
             val actualEvents = writer.messages.filter { event ->
@@ -666,7 +666,7 @@ class TraceFeatureMessageTestWriterTest {
             }.use { agent ->
                 assertFails {
                     try {
-                        agent.run(inputRequest)
+                        agent.run(inputRequest, null)
                     } catch (t: Throwable) {
                         expectedStackTrace = t.stackTraceToString()
                         expectedCause = t.cause?.stackTraceToString()

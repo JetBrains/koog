@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -15,6 +17,7 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -934,8 +937,8 @@ public class Testing {
             pipeline: AIAgentGraphPipeline,
         ): Testing {
             val testing = Testing()
-            pipeline.interceptEnvironmentCreated(this) { agentEnvironment ->
-                MockEnvironment(agent.toolRegistry, agent.promptExecutor, agentEnvironment)
+            pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
+                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, environment)
             }
 
             if (config.enableGraphTesting) {

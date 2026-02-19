@@ -18,6 +18,8 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ConverseRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.CountTokensRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.CountTokensResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.GetAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.GetAsyncInvokeResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailAction
@@ -158,8 +160,8 @@ class BedrockLLMClientTest {
         }
 
         assertNotNull(exception.message, "Exception message should not be null")
-        assertTrue(exception.message!!.contains("withInferencePrefix() can only be used with Bedrock models"))
-        assertTrue(exception.message!!.contains("model provider is Anthropic"))
+        assertTrue(exception.message!!.contains("withInferenceProfile() can only be used with Bedrock models"))
+        assertTrue(exception.message!!.contains("AnthropicLLMProvider"))
     }
 
     @Test
@@ -298,6 +300,9 @@ class BedrockLLMClientTest {
                 block: suspend (ConverseStreamResponse) -> T
             ): T =
                 throw UnsupportedOperationException("converseStream not implemented in mock client")
+
+            override suspend fun countTokens(input: CountTokensRequest): CountTokensResponse =
+                throw UnsupportedOperationException("countTokens not implemented in mock client")
 
             override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
                 throw UnsupportedOperationException("getAsyncInvoke not implemented in mock client")
@@ -527,6 +532,9 @@ class BedrockLLMClientTest {
             override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse =
                 throw UnsupportedOperationException("startAsyncInvoke not implemented in mock client")
 
+            override suspend fun countTokens(input: CountTokensRequest): CountTokensResponse =
+                throw UnsupportedOperationException("countTokens not implemented in mock client")
+
             override fun close() {
                 print("closing")
             }
@@ -572,7 +580,7 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `execute throws LLMClientException for model without Completion capability`() = runTest {
+    fun `execute throws IllegalArgumentException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
@@ -590,7 +598,7 @@ class BedrockLLMClientTest {
         val prompt = Prompt.build("test") {
             user("Some input")
         }
-        assertFailsWith<LLMClientException> {
+        assertFailsWith<IllegalArgumentException> {
             client.execute(prompt, noCompletionModel, emptyList())
         }
     }
@@ -634,7 +642,7 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `executeStreaming throws LLMClientException for model without Completion capability`() = runTest {
+    fun `executeStreaming throws IllegalArgumentException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
@@ -652,7 +660,7 @@ class BedrockLLMClientTest {
         val prompt = Prompt.build("test") {
             user("Some input")
         }
-        assertFailsWith<LLMClientException> {
+        assertFailsWith<IllegalArgumentException> {
             client.executeStreaming(prompt, noCompletionModel, emptyList()).toList()
         }
     }
