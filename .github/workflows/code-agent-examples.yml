@@ -52,7 +52,9 @@ jobs:
           - step-02-add-execution-tool
           - step-03-add-observability
           - step-04-add-subagent
-          - step-05-history
+          # TODO: KG-697 Re-enable history step in code-agents examples workflow
+          #       This step should be included along with release for 0.7.0
+          # - step-05-history
 
     steps:
       - name: Configure Git
