@@ -157,7 +157,7 @@ private fun KoogAgentsConfig.TimeoutConfiguration.configure(key: String, config:
             ?.getString()
             ?.toLongOrNull()
             ?.let { connectTimeout = it.milliseconds }
-        
+
         providerTimeoutSection.propertyOrNull("socketTimeoutMillis")
             ?.getString()
             ?.toLongOrNull()
