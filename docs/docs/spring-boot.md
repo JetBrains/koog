@@ -19,8 +19,7 @@ ready-to-use beans for dependency injection. It supports all major LLM providers
 
 ### 1. Add Dependency
 
-Add the Koog Spring Boot starter and [Ktor Client Engine](https://ktor.io/docs/client-engines.html#jvm) 
-to your `build.gradle.kts` or `pom.xml`:
+Add the Koog Spring Boot starter and [Ktor Client Engine](https://ktor.io/docs/client-engines.html#jvm) to your build configuration:
 
 ```kotlin
 dependencies {
@@ -117,33 +116,72 @@ For example, setting the environment variable `OPENAI_API_KEY` is enough for Ope
 
 Inject the auto-configured executors into your services:
 
-```kotlin
-@Service
-class AIService(
-    private val openAIExecutor: MultiLLMPromptExecutor?,
-    private val anthropicExecutor: MultiLLMPromptExecutor?
-) {
+=== "Kotlin"
 
-    suspend fun generateResponse(input: String): String {
-        val prompt = prompt {
-            system("You are a helpful AI assistant")
-            user(input)
-        }
+    ```kotlin
+    @Service
+    class AIService(
+        private val openAIExecutor: MultiLLMPromptExecutor?,
+        private val anthropicExecutor: MultiLLMPromptExecutor?
+    ) {
 
-        return when {
-            openAIExecutor != null -> {
-                val result = openAIExecutor.execute(prompt)
-                result.text
+        suspend fun generateResponse(input: String): String {
+            val prompt = prompt {
+                system("You are a helpful AI assistant")
+                user(input)
             }
-            anthropicExecutor != null -> {
-                val result = anthropicExecutor.execute(prompt)
-                result.text
+
+            return when {
+                openAIExecutor != null -> {
+                    val result = openAIExecutor.execute(prompt)
+                    result.text
+                }
+                anthropicExecutor != null -> {
+                    val result = anthropicExecutor.execute(prompt)
+                    result.text
+                }
+                else -> throw IllegalStateException("No LLM provider configured")
             }
-            else -> throw IllegalStateException("No LLM provider configured")
         }
     }
-}
-```
+    ```
+
+=== "Java"
+
+    ```java
+    @Service
+    public class AIService {
+        private final MultiLLMPromptExecutor openAIExecutor;
+        private final MultiLLMPromptExecutor anthropicExecutor;
+
+        public AIService(MultiLLMPromptExecutor openAIExecutor, MultiLLMPromptExecutor anthropicExecutor) {
+            this.openAIExecutor = openAIExecutor;
+            this.anthropicExecutor = anthropicExecutor;
+        }
+
+        public String generateResponse(String input) {
+            Prompt prompt = Prompt.builder("ai-service")
+                .system("You are a helpful AI assistant")
+                .user(input)
+                .build();
+
+            if (openAIExecutor != null) {
+                // FAILED: PromptExecutor.execute is a suspend function and requires an LLModel argument.
+                // From Java, call a non-suspending wrapper (e.g., runBlocking helper) and specify a model explicitly:
+                // List<Message.Response> result = JavaUtils.executeExecutorBlocking(openAIExecutor, prompt, OpenAIModels.Chat.GPT4o);
+                // return result.get(0).getContent();
+                throw new IllegalStateException("No non-suspending Java API available in this snippet");
+            } else if (anthropicExecutor != null) {
+                // FAILED: Same limitation as above; also a model must be provided (e.g., AnthropicModels.Haiku_4_5).
+                // List<Message.Response> result = JavaUtils.executeExecutorBlocking(anthropicExecutor, prompt, AnthropicModels.Haiku_4_5);
+                // return result.get(0).getContent();
+                throw new IllegalStateException("No non-suspending Java API available in this snippet");
+            } else {
+                throw new IllegalStateException("No LLM provider configured");
+            }
+        }
+    }
+    ```
 
 ## Advanced Usage
 
@@ -151,101 +189,231 @@ class AIService(
 
 Create a chat endpoint using auto-configured executors:
 
-```kotlin
-@RestController
-@RequestMapping("/api/chat")
-class ChatController(
-    private val anthropicExecutor: MultiLLMPromptExecutor?
-) {
+=== "Kotlin"
 
-    @PostMapping
-    suspend fun chat(@RequestBody request: ChatRequest): ResponseEntity<ChatResponse> {
-        return if (anthropicExecutor != null) {
-            try {
-                val prompt = prompt {
-                    system("You are a helpful assistant")
-                    user(request.message)
+    ```kotlin
+    @RestController
+    @RequestMapping("/api/chat")
+    class ChatController(
+        private val anthropicExecutor: MultiLLMPromptExecutor?
+    ) {
+
+        @PostMapping
+        suspend fun chat(@RequestBody request: ChatRequest): ResponseEntity<ChatResponse> {
+            return if (anthropicExecutor != null) {
+                try {
+                    val prompt = prompt {
+                        system("You are a helpful assistant")
+                        user(request.message)
+                    }
+
+                    val result = anthropicExecutor.execute(prompt)
+                    ResponseEntity.ok(ChatResponse(result.text))
+                } catch (e: Exception) {
+                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ChatResponse("Error processing request"))
                 }
-
-                val result = anthropicExecutor.execute(prompt)
-                ResponseEntity.ok(ChatResponse(result.text))
-            } catch (e: Exception) {
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ChatResponse("Error processing request"))
+            } else {
+                ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(ChatResponse("AI service not configured"))
             }
-        } else {
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(ChatResponse("AI service not configured"))
         }
     }
-}
 
-data class ChatRequest(val message: String)
-data class ChatResponse(val response: String)
-```
+    data class ChatRequest(val message: String)
+    data class ChatResponse(val response: String)
+    ```
+
+=== "Java"
+
+    ```java
+    @RestController
+    @RequestMapping("/api/chat")
+    public class ChatController {
+        private final MultiLLMPromptExecutor anthropicExecutor;
+
+        public ChatController(MultiLLMPromptExecutor anthropicExecutor) {
+            this.anthropicExecutor = anthropicExecutor;
+        }
+
+        @PostMapping
+        public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
+            if (anthropicExecutor != null) {
+                try {
+                    Prompt prompt = Prompt.builder("chat")
+                        .system("You are a helpful assistant")
+                        .user(request.message)
+                        .build();
+
+                    // FAILED: PromptExecutor.execute is suspend-only and requires a model argument.
+                    // From Java, use a blocking helper and specify a model, e.g.:
+                    // List<Message.Response> result = JavaUtils.executeExecutorBlocking(anthropicExecutor, prompt, AnthropicModels.Haiku_4_5);
+                    // return ResponseEntity.ok(new ChatResponse(result.get(0).getContent()));
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ChatResponse("Error processing request (suspend-only API)"));
+                } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ChatResponse("Error processing request"));
+                }
+            } else {[ExampleSpringBoot_ChatController.java](../../../koog-java-samples/src/main/java/ExampleSpringBoot_ChatController.java)
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(new ChatResponse("AI service not configured"));
+            }
+        }
+    }
+
+    class ChatRequest {
+        public String message;
+    }
+    class ChatResponse {
+        public final String response;
+        public ChatResponse(String response) { this.response = response; }
+    }
+    ```
 
 ### Multiple Provider Support
 
 Handle multiple providers with fallback logic:
 
-```kotlin
-@Service
-class RobustAIService(
-    private val openAIExecutor: MultiLLMPromptExecutor?,
-    private val anthropicExecutor: MultiLLMPromptExecutor?,
-    private val openRouterExecutor: MultiLLMPromptExecutor?
-) {
+=== "Kotlin"
 
-    suspend fun generateWithFallback(input: String): String {
-        val prompt = prompt {
-            system("You are a helpful AI assistant")
-            user(input)
-        }
+    ```kotlin
+    @Service
+    class RobustAIService(
+        private val openAIExecutor: MultiLLMPromptExecutor?,
+        private val anthropicExecutor: MultiLLMPromptExecutor?,
+        private val openRouterExecutor: MultiLLMPromptExecutor?
+    ) {
 
-        val executors = listOfNotNull(openAIExecutor, anthropicExecutor, openRouterExecutor)
-
-        for (executor in executors) {
-            try {
-                val result = executor.execute(prompt)
-                return result.text
-            } catch (e: Exception) {
-                logger.warn("Executor failed, trying next: ${e.message}")
-                continue
+        suspend fun generateWithFallback(input: String): String {
+            val prompt = prompt {
+                system("You are a helpful AI assistant")
+                user(input)
             }
+
+            val executors = listOfNotNull(openAIExecutor, anthropicExecutor, openRouterExecutor)
+
+            for (executor in executors) {
+                try {
+                    val result = executor.execute(prompt)
+                    return result.text
+                } catch (e: Exception) {
+                    logger.warn("Executor failed, trying next: ${e.message}")
+                    continue
+                }
+            }
+
+            throw IllegalStateException("All AI providers failed")
         }
 
-        throw IllegalStateException("All AI providers failed")
+        companion object {
+            private val logger = LoggerFactory.getLogger(RobustAIService::class.java)
+        }
     }
+    ```
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(RobustAIService::class.java)
+=== "Java"
+
+    ```java
+    @Service
+    public class RobustAIService {
+        private static final Logger logger = LoggerFactory.getLogger(RobustAIService.class);
+        private final MultiLLMPromptExecutor openAIExecutor;
+        private final MultiLLMPromptExecutor anthropicExecutor;
+        private final MultiLLMPromptExecutor openRouterExecutor;
+
+        public RobustAIService(MultiLLMPromptExecutor openAIExecutor,
+                               MultiLLMPromptExecutor anthropicExecutor,
+                               MultiLLMPromptExecutor openRouterExecutor) {
+            this.openAIExecutor = openAIExecutor;
+            this.anthropicExecutor = anthropicExecutor;
+            this.openRouterExecutor = openRouterExecutor;
+        }
+
+        public String generateWithFallback(String input) {
+            Prompt prompt = Prompt.builder("robust")
+                .system("You are a helpful AI assistant")
+                .user(input)
+                .build();
+
+            List<MultiLLMPromptExecutor> executors = new ArrayList<>();
+            if (openAIExecutor != null) executors.add(openAIExecutor);
+            if (anthropicExecutor != null) executors.add(anthropicExecutor);
+            if (openRouterExecutor != null) executors.add(openRouterExecutor);
+
+            for (MultiLLMPromptExecutor executor : executors) {
+                try {
+                    // FAILED: PromptExecutor.execute is suspend-only and requires an explicit model.
+                    // Example (requires helper):
+                    // List<Message.Response> result = JavaUtils.executeExecutorBlocking(executor, prompt, SomeModels.Default);
+                    // return result.get(0).getContent();
+                    throw new IllegalStateException("Suspend-only API, model required");
+                } catch (Exception e) {
+                    logger.warn("Executor failed, trying next: {}", e.getMessage());
+                }
+            }
+            throw new IllegalStateException("All AI providers failed");
+        }
     }
-}
-```
+    ```
 
 ### Configuration Properties
 
 You can also inject configuration properties for custom logic:
 
-```kotlin
-@Service
-class ConfigurableAIService(
-    private val openAIExecutor: MultiLLMPromptExecutor?,
-    @Value("\${ai.koog.openai.api-key:}") private val openAIKey: String
-) {
+=== "Kotlin"
 
-    fun isOpenAIConfigured(): Boolean = openAIKey.isNotBlank() && openAIExecutor != null
+    ```kotlin
+    @Service
+    class ConfigurableAIService(
+        private val openAIExecutor: MultiLLMPromptExecutor?,
+        @Value("\${ai.koog.openai.api-key:}") private val openAIKey: String
+    ) {
 
-    suspend fun processIfConfigured(input: String): String? {
-        return if (isOpenAIConfigured()) {
-            val result = openAIExecutor!!.execute(prompt { user(input) })
-            result.text
-        } else {
-            null
+        fun isOpenAIConfigured(): Boolean = openAIKey.isNotBlank() && openAIExecutor != null
+
+        suspend fun processIfConfigured(input: String): String? {
+            return if (isOpenAIConfigured()) {
+                val result = openAIExecutor!!.execute(prompt { user(input) })
+                result.text
+            } else {
+                null
+            }
         }
     }
-}
-```
+    ```
+
+=== "Java"
+
+    ```java
+    @Service
+    public class ConfigurableAIService {
+        private final MultiLLMPromptExecutor openAIExecutor;
+        private final String openAIKey;
+
+        public ConfigurableAIService(MultiLLMPromptExecutor openAIExecutor,
+                                     @Value("${ai.koog.openai.api-key:}") String openAIKey) {
+            this.openAIExecutor = openAIExecutor;
+            this.openAIKey = openAIKey;
+        }
+
+        public boolean isOpenAIConfigured() {
+            return openAIKey != null && !openAIKey.isBlank() && openAIExecutor != null;
+        }
+
+        public String processIfConfigured(String input) {
+            if (!isOpenAIConfigured()) return null;
+
+            Prompt prompt = Prompt.builder("configurable").user(input).build();
+
+            // FAILED: PromptExecutor.execute is suspend-only and requires a model.
+            // Example with helper:
+            // List<Message.Response> result = JavaUtils.executeExecutorBlocking(openAIExecutor, prompt, OpenAIModels.Chat.GPT4o);
+            // return result.get(0).getContent();
+            return null;
+        }
+    }
+    ```
 
 ## Configuration Reference
 
@@ -296,15 +464,34 @@ Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
 
 **Solution:** Use `@Qualifier` to specify which bean you want:
 
-```kotlin
-@Service
-class MyService(
-    @Qualifier("openAIExecutor") private val openAIExecutor: MultiLLMPromptExecutor,
-    @Qualifier("anthropicExecutor") private val anthropicExecutor: MultiLLMPromptExecutor
-) {
-    // ...
-}
-```
+=== "Kotlin"
+
+    ```kotlin
+    @Service
+    class MyService(
+        @Qualifier("openAIExecutor") private val openAIExecutor: MultiLLMPromptExecutor,
+        @Qualifier("anthropicExecutor") private val anthropicExecutor: MultiLLMPromptExecutor
+    ) {
+        // ...
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Service
+    public class MyService {
+        private final MultiLLMPromptExecutor openAIExecutor;
+        private final MultiLLMPromptExecutor anthropicExecutor;
+
+        public MyService(@Qualifier("openAIExecutor") MultiLLMPromptExecutor openAIExecutor,
+                         @Qualifier("anthropicExecutor") MultiLLMPromptExecutor anthropicExecutor) {
+            this.openAIExecutor = openAIExecutor;
+            this.anthropicExecutor = anthropicExecutor;
+        }
+        // ...
+    }
+    ```
 
 **API key not loaded:**
 
