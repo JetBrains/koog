@@ -7,6 +7,11 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.optimization.core.OptimizableNode
+import ai.koog.agents.core.optimization.core.extractFieldDescriptions
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import kotlin.reflect.KType
 
 /**
  * Finds all [OptimizableNode] instances in a strategy.
@@ -47,6 +52,20 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.describeForOp
                 }
                 val instr = node.instruction
                 appendLine("    Current Instruction: ${instr.take(100)}${if (instr.length > 100) "..." else ""}")
+                val inputDescs = extractFieldDescriptionsFromType(node.inputType)
+                if (inputDescs.isNotEmpty()) {
+                    appendLine("    Input fields:")
+                    inputDescs.forEach { (name, desc) ->
+                        appendLine("      - $name: $desc")
+                    }
+                }
+                val outputDescs = extractFieldDescriptionsFromType(node.outputType)
+                if (outputDescs.isNotEmpty()) {
+                    appendLine("    Output fields:")
+                    outputDescs.forEach { (name, desc) ->
+                        appendLine("      - $name: $desc")
+                    }
+                }
             }
         }
     }
@@ -82,4 +101,21 @@ internal fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.findAllNode
 
     visit(nodeStart)
     return nodes
+}
+
+private val json = Json { prettyPrint = false; isLenient = true; ignoreUnknownKeys = true }
+
+/**
+ * Extracts [@LLMDescription] field descriptions from a [KType] via runtime serializer lookup.
+ * Returns an empty list if the type is not serializable or has no described fields.
+ */
+internal fun extractFieldDescriptionsFromType(type: KType): List<Pair<String, String>> {
+    return try {
+        val descriptor = json.serializersModule.serializer(type).descriptor
+        extractFieldDescriptions(descriptor)
+    } catch (_: SerializationException) {
+        emptyList()
+    } catch (_: IllegalArgumentException) {
+        emptyList()
+    }
 }

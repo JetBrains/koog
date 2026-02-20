@@ -17,7 +17,7 @@ private val logger = KotlinLogging.logger {}
 private val prettyJson = Json { prettyPrint = false; isLenient = true; ignoreUnknownKeys = true }
 
 /**
- * Serialize [value] to pretty-printed JSON using the runtime [type], falling back to [toString]
+ * Serialize [value] to a JSON using the runtime [type], falling back to [toString]
  * if serialization fails (e.g. for non-serializable types).
  */
 public fun serializeOrToString(value: Any?, type: KType): String {

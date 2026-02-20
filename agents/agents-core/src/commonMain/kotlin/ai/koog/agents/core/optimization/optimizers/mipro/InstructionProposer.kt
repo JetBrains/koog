@@ -6,6 +6,7 @@ import ai.koog.agents.core.optimization.core.Dataset
 import ai.koog.agents.core.optimization.core.Demonstration
 import ai.koog.agents.core.optimization.optimizers.utils.describeForOptimization
 import ai.koog.agents.core.optimization.optimizers.utils.executeAndExtract
+import ai.koog.agents.core.optimization.optimizers.utils.extractFieldDescriptionsFromType
 import ai.koog.agents.core.optimization.optimizers.utils.findOptimizableNodes
 import ai.koog.agents.core.optimization.optimizers.utils.serializeOrToString
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -57,6 +58,7 @@ public data class InstructionProposerConfig(
     val setTipRandomly: Boolean = true,
     val useInstructHistory: Boolean = false,
     val setHistoryRandomly: Boolean = false,
+    val includeFieldDescriptions: Boolean = true,
 )
 
 /**
@@ -310,6 +312,22 @@ public class InstructionProposer private constructor(
         return buildString {
             appendLine("Module \"$moduleName\": $inputTypeName -> $outputTypeName")
             appendLine("Current instruction: \"${module.instruction}\"")
+            if (config.includeFieldDescriptions) {
+                val inputDescs = extractFieldDescriptionsFromType(module.inputType)
+                if (inputDescs.isNotEmpty()) {
+                    appendLine("Input fields:")
+                    inputDescs.forEach { (name, desc) ->
+                        appendLine("  - $name: $desc")
+                    }
+                }
+                val outputDescs = extractFieldDescriptionsFromType(module.outputType)
+                if (outputDescs.isNotEmpty()) {
+                    appendLine("Output fields:")
+                    outputDescs.forEach { (name, desc) ->
+                        appendLine("  - $name: $desc")
+                    }
+                }
+            }
         }
     }
 

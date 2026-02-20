@@ -47,7 +47,7 @@ public val defaultStringPromptFn: OptimizableNodePromptBuildFn<String, String> =
  * Extracts field names and their [@LLMDescription] annotations from a [SerialDescriptor].
  * Returns an empty list if no fields have descriptions.
  */
-private fun extractFieldDescriptions(descriptor: SerialDescriptor): List<Pair<String, String>> {
+internal fun extractFieldDescriptions(descriptor: SerialDescriptor): List<Pair<String, String>> {
     return (0 until descriptor.elementsCount).mapNotNull { i ->
         val name = descriptor.getElementName(i)
         val desc = descriptor.getElementAnnotations(i)
