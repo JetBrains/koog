@@ -24,6 +24,7 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition
 import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
+import ai.koog.prompt.executor.ollama.client.dto.generateToolCallId
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
@@ -36,6 +37,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.emitTextDelta
+import ai.koog.prompt.streaming.emitToolCallDelta
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -303,11 +305,14 @@ public class OllamaClient @JvmOverloads constructor(
                     val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                     chunk.message?.let { message ->
                         emitTextDelta(message.content)
-                        message.toolCalls?.forEach { toolCall ->
+                        message.toolCalls?.forEachIndexed { index, toolCall ->
+                            val name = toolCall.function.name
+                            val args = toolCall.function.arguments.toString()
                             emitToolCallDelta(
-                                id = null,
+                                id = generateToolCallId(name, args, index),
                                 name = toolCall.function.name,
-                                args = toolCall.function.arguments.toString()
+                                args = args,
+                                index = index
                             )
                             tryEmitPendingToolCall()
                         }
