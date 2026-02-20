@@ -9,9 +9,15 @@ Koog agents are built around the following core concepts:
 
 - A [prompt executor](../prompts/prompt-executors.md) manages and executes prompts,
   enabling the agent to interact with LLMs for reasoning and decision-making.
-- A [strategy](../nodes-and-components.md) in the form of a directed graph defines the agent's workflow.
+- A [strategy](../nodes-and-components.md) defines the agent's workflow.
+  It can be in the form of a directed graph, a function, or a planner.
+  See [Agent types](#agent-types).
 - An agent can use [tools](../tools-overview.md) to interact with external data sources and services.
 - You can extend and enhance the functionality of AI agents using [features](../features-overview.md).
+
+!!! tip
+
+    For information about creating and running a minimal agent, see [Quickstart](../quickstart.md).
 
 ## Agent types
 
@@ -19,19 +25,18 @@ Depending on the task you need to perform, Koog provides several agent types:
 
 - [Basic agents](basic-agents.md) are ideal for simple tasks that don't require any custom logic.
   These agents implement a predefined strategy that works for most common use cases.
-- [Functional agents](functional-agents.md) enable you to prototype custom logic as a lambda function.
-  However, they are not suitable for complex workflows and lack robust state management.
-- [Graph-based agents](graph-based-agents.md) are the proper way to design complex workflows with Koog.
-  Create a custom strategy for production agents to have full control and flexibility.
-- [Planner agents](planner-agents.md) can plan and execute multistep tasks through iterative cycles.
-  These agents implement a special type of strategy that accepts the initial state and outputs the final state.
+- [Graph-based agents](graph-based-agents.md) provide full control and flexibility of the agent's workflow, state management, and visualization.
+- [Functional agents](functional-agents.md) enable you to quickly prototype custom logic as a function with access to the agent's context.
+- [Planner agents](planner-agents.md) can autonomously plan and execute multistep tasks through iterative cycles until they reach a desired final state.
 
 ## Agent configuration
 
+Agent configuration defines the agent's execution parameters,
+including the initial prompt, language model, and iteration limits.
+
 !!! tip
 
-    For information about creating and running a minimal agent,
-    see [Getting started](../getting-started.md) and [Basic agents](basic-agents.md).
+    For information about creating and running a minimal agent, see [Quickstart](../quickstart.md).
 
 For simple agents, besides the mandatory prompt executor and language model,
 you can specify the initial system prompt and some other parameters directly in the agent constructor:
@@ -53,8 +58,9 @@ val agent = AIAgent(
 <!--- KNIT example-agent-config-01.kt -->
 
 Alternatively, you can create an instance of [`AIAgentConfig`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.config/-a-i-agent-config/index.html)
-to define the agent's behavior and parameters more granularly,
-then pass it to the agent constructor:
+to define the agent's behavior and parameters more granularly, then pass it to the agent constructor.
+This enables you to define complex prompts with multiple messages,
+conversation history, LLM parameters, and additional execution parameters.
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent

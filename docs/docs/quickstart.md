@@ -1,14 +1,14 @@
-# Getting started
+# Quickstart
 
 This guide will help you start using Koog in your project.
 
 ## Prerequisites
 
---8<-- "getting-started-snippets.md:prerequisites"
+--8<-- "quickstart-snippets.md:prerequisites"
 
 ## Install Koog
 
---8<-- "getting-started-snippets.md:dependencies"
+--8<-- "quickstart-snippets.md:dependencies"
 
 ??? tip "Nightly builds"
 
@@ -152,7 +152,6 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
     The following example creates and runs a simple Koog agent using the [`GPT-4o`](https://platform.openai.com/docs/models/gpt-4o) model via the OpenAI API.
 
-    <!--- CLEAR -->
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -365,7 +364,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
+    import ai.koog.prompt.executor.llms.all.simpleBedrockExecutorWithBearerToken
     import ai.koog.prompt.executor.clients.bedrock.BedrockModels
     import kotlinx.coroutines.runBlocking
     -->
@@ -432,7 +431,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         println(result)
     }
     ```
-    <!--- KNIT example-getting-started-06.kt -->
+    <!--- KNIT example-getting-started-07.kt -->
 
     The example can produce the following output:
 
@@ -474,7 +473,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         println(result)
     }
     ```
-    <!--- KNIT example-getting-started-07.kt -->
+    <!--- KNIT example-getting-started-08.kt -->
 
     The example can produce the following output:
 

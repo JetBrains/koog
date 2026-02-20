@@ -107,7 +107,7 @@ The prompt lifecycle in an agent usually includes several stages:
 
 ### Initial prompt setup
 
-When you [initialize an agent](../getting-started.md#create-your-first-koog-agent),
+When you [initialize an agent](../quickstart.md#create-your-first-koog-agent),
 you can define a [system message](prompt-creation/index.md#system-message) that sets the agent's behavior.
 Then, when you call the agent's `run()` method,
 you typically provide an initial [user message](prompt-creation/index.md#user-messages) as input.

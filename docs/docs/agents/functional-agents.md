@@ -1,22 +1,24 @@
 # Functional agents
 
-Functional agents are lightweight AI agents that operate without building complex strategy graphs.
-Instead, you implement the agent logic as a lambda function that handles user input,
-interacts with an LLM, calls tools if necessary, and produces the final output.
+With functional agents, you implement the logic as a function that handles user input,
+interacts with LLMs, calls tools if necessary, and produces the final output.
+Compared to [graph-based agents](graph-based-agents.md),
+this usually means faster prototyping with the following downsides:
+
+- Not easy to visualize
+- No state persistence
 
 ??? note "Prerequisites"
 
-    --8<-- "getting-started-snippets.md:prerequisites"
+    --8<-- "quickstart-snippets.md:prerequisites"
 
-    --8<-- "getting-started-snippets.md:dependencies"
+    --8<-- "quickstart-snippets.md:dependencies"
 
-    --8<-- "getting-started-snippets.md:api-key"
+    --8<-- "quickstart-snippets.md:api-key"
 
     Examples on this page assume that you are running Llama 3.2 locally via Ollama.
 
-This page describes how to implement a functional strategy to prototype some custom logic for your agent.
-For production needs, refactor your functional agent into a [graph-based agent](graph-based-agents.md)
-by implementing a proper strategy graph.
+This page describes how to implement a functional strategy to quickly prototype some custom logic for your agent.
 
 ## Create a minimal functional agent
 

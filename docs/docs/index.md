@@ -7,7 +7,7 @@ You can customize agent capabilities with a modular feature system and deploy yo
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch:{ .lg .middle } [**Getting started**](getting-started.md)
+-   :material-rocket-launch:{ .lg .middle } [**Quickstart**](quickstart.md)
 
     ---
 

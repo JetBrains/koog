@@ -1,16 +1,22 @@
 # Graph-based agents
 
-While [basic agents](basic-agents.md) are great for simple tasks with a predefined agent workflow
-and [functional agents](functional-agents.md) let you prototype custom logic quickly,
-the standard approach is to build your own [strategy graph](../custom-strategy-graphs.md) for the agent.
+With graph-based agents, you model the behavior as an explicit state machine:
+nodes of a graph strategy represent actions (LLM calls, tool execution)
+and edges represent data flow between nodes.
+
+The main advantages of graph-based agents are:
+
+- Easy to visualize
+- State persistence
+- Composable architecture
 
 ??? note "Prerequisites"
 
-    --8<-- "getting-started-snippets.md:prerequisites"
+    --8<-- "quickstart-snippets.md:prerequisites"
 
-    --8<-- "getting-started-snippets.md:dependencies"
+    --8<-- "quickstart-snippets.md:dependencies"
 
-    --8<-- "getting-started-snippets.md:api-key"
+    --8<-- "quickstart-snippets.md:api-key"
 
     Examples on this page assume that you are running Llama 3.2 locally via Ollama.
 
@@ -88,7 +94,7 @@ val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
 }
 ```
-<!--- KNIT example-standard-agents-01.kt -->
+<!--- KNIT example-graph-agents-01.kt -->
 
 This example uses only [predefined nodes](../nodes-and-components.md),
 but you can also create [custom nodes](../custom-nodes.md).
@@ -124,6 +130,7 @@ effectively transforming `Message.Assistant` to `String`, because `nodeFinish` e
 
 Let's create an agent instance with this strategy and run it:
 
+<!--- CLEAR -->
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -161,7 +168,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-standard-agents-02.kt -->
+<!--- KNIT example-standard-agents-01.kt -->
 
 When you run this agent, it will respond with something like this:
 
@@ -241,7 +248,7 @@ val toolRegistry = ToolRegistry {
     tools(MathTools())
 }
 ```
-<!--- KNIT example-standard-agents-03.kt -->
+<!--- KNIT example-standard-agents-02.kt -->
 
 Add the tool registry to the agent configuration:
 
@@ -310,7 +317,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-standard-agents-04.kt -->
+<!--- KNIT example-standard-agents-03.kt -->
 
 When you run the agent now, it will respond with something like this:
 
@@ -407,7 +414,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-standard-agents-05.kt -->
+<!--- KNIT example-standard-agents-04.kt -->
 
 When you run the agent now, it will respond with something like this:
 
@@ -424,6 +431,6 @@ ensuring that it performs the calculations deterministically instead of risking 
 
 ## Next steps
 
-- Learn about [planner agents](planner-agents.md)
+- Compare to [functional agents](functional-agents.md) and [planner agents](planner-agents.md)
 - Enhance your agent by [installing additional features](../features-overview.md)
 - Improve the predictability and reliability with [structured output](../structured-output.md)

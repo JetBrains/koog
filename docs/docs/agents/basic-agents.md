@@ -2,68 +2,52 @@
 
 A basic agent uses a predefined strategy with a simple execution flow that works for most common use cases.
 It accepts a string input (a question, request, or task description) and sends this input to the configured LLM.
-The agent may decide to use one of the provided tools.
-In this case, it sends the tool results back to the LLM,
-and this repeats until the LLM does not request any more tool calls.
-The agent then outputs a string response.
+The LLM may decide to call provided tools.
+The agent will execute the tools and send the results back to the LLM.
+This repeats until the LLM does not request any more tool calls and returns a string response.
+The agent then outputs this response.
 
-In [graph-based agents](graph-based-agents.md),
+In [Graph-based agents](graph-based-agents.md),
 you can see how to re-create the predefined strategy graph used by basic agents.
 
 ??? note "Prerequisites"
 
-    --8<-- "getting-started-snippets.md:prerequisites"
+    --8<-- "quickstart-snippets.md:prerequisites"
 
-    --8<-- "getting-started-snippets.md:dependencies"
+    --8<-- "quickstart-snippets.md:dependencies"
 
-    --8<-- "getting-started-snippets.md:api-key"
+    --8<-- "quickstart-snippets.md:api-key"
 
     Examples on this page assume that you have set the `OPENAI_API_KEY` environment variable.
 
 ## Create a minimal agent
 
-The [`AIAgent`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent/index.html) interface
-is the primary starting point for creating Koog agents.
-The overloaded `invoke()` operator functions on its companion object
-enable you to instantiate this interface with a constructor-like syntax.
-
-To create the most basic agent, provide a [prompt executor](../prompts/prompt-executors.md)
-and a [language model](../model-capabilities.md#creating-a-model-llmodel-configuration):
-
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
--->
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    llmModel = OpenAIModels.Chat.GPT4o
-)
-```
-<!--- KNIT example-basic-01.kt -->
-
-This agent will expect a string as input and return a string as output.
-To run the agent, use the `run()` function with some user input:
+To create the most basic agent, instantiate [`AIAgent`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent/index.html)
+and provide a [prompt executor](../prompts/prompt-executors.md) with a [language model](../model-capabilities.md#creating-a-model-llmodel-configuration):
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
-
+-->
+```kotlin
 val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     llmModel = OpenAIModels.Chat.GPT4o
 )
--->
+```
+
+This agent will expect a string as input and return a string as output.
+To run the agent, use the `run()` function with some user input:
+
 ```kotlin
 fun main() = runBlocking {
     val result = agent.run("Hello! How can you help me?")
     println(result)
 }
 ```
-<!--- KNIT example-basic-02.kt -->
+<!--- KNIT example-basic-01.kt -->
 
 The agent will return a generic answer, such as:
 
@@ -98,7 +82,7 @@ val agent = AIAgent(
     llmModel = OpenAIModels.Chat.GPT4o
 )
 ```
-<!--- KNIT example-basic-03.kt -->
+<!--- KNIT example-basic-02.kt -->
 
 The instructions in the system prompt will guide the agent's response:
 
@@ -127,7 +111,7 @@ val agent = AIAgent(
     temperature = 0.7
 )
 ```
-<!--- KNIT example-basic-04.kt -->
+<!--- KNIT example-basic-03.kt -->
 
 Here are some response examples with different temperature values:
 
@@ -158,17 +142,33 @@ Here are some response examples with different temperature values:
 ## Add tools
 
 Agents can use [tools](../tools-overview.md) to perform specific tasks.
-Koog provides some built-in tools, or you can implement your own custom tools.
 
-To configure tools, use the `toolRegistry` parameter that defines the tools available to the agent:
+First, create a tool by annotating a function with the [`@Tool`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.annotations/-tool/index.html) annotation:
+
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.tool
 -->
+```kotlin
+@Tool
+@LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
+fun askUser(
+    @LLMDescription("Question from the agent")
+    question: String
+): String {
+    println(question)
+    return readln()
+}
+```
+
+Then, use the [`ToolRegistry`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html) to make this tool available to the agent:
+
 ```kotlin
 val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
@@ -176,14 +176,13 @@ val agent = AIAgent(
     llmModel = OpenAIModels.Chat.GPT4o,
     temperature = 0.7,
     toolRegistry = ToolRegistry {
-        tool(AskUser)
+        tool(::askUser)
     }
 )
 ```
-<!--- KNIT example-basic-05.kt -->
+<!--- KNIT example-basic-04.kt -->
 
-In the example, [`AskUser`](https://api.koog.ai/agents/agents-ext/ai.koog.agents.ext.tool/-ask-user/index.html)
-is a built-in tool that helps the agent maintain a conversation with the user.
+In the example, `askUser` is a tool that helps the agent maintain a conversation with the user via printing and reading from the console.
 If the agent decides to ask the user a question,
 it can call this tool that writes to `stdout` via `println()` and reads from `stdin` via `readln()`.
 
@@ -225,9 +224,21 @@ For example, a simple agent described here is not likely to require more than 10
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.tool
+
+@Tool
+@LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
+fun askUser(
+    @LLMDescription("Question from the agent")
+    question: String
+): String {
+    println(question)
+    return readln()
+}
 -->
 ```kotlin
 val agent = AIAgent(
@@ -236,12 +247,12 @@ val agent = AIAgent(
     llmModel = OpenAIModels.Chat.GPT4o,
     temperature = 0.7,
     toolRegistry = ToolRegistry {
-        tool(AskUser)
+        tool(::askUser)
     },
     maxIterations = 10
 )
 ```
-<!--- KNIT example-basic-06.kt -->
+<!--- KNIT example-basic-05.kt -->
 
 !!! tip
 
@@ -259,10 +270,22 @@ Call the `handleEvents()` function inside the agent constructor lambda to instal
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.tool
+
+@Tool
+@LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
+fun askUser(
+    @LLMDescription("Question from the agent")
+    question: String
+): String {
+    println(question)
+    return readln()
+}
 -->
 ```kotlin
 val agent = AIAgent(
@@ -271,7 +294,7 @@ val agent = AIAgent(
     llmModel = OpenAIModels.Chat.GPT4o,
     temperature = 0.7,
     toolRegistry = ToolRegistry {
-        tool(AskUser)
+        tool(::askUser)
     },
     maxIterations = 10
 ){
@@ -283,16 +306,16 @@ val agent = AIAgent(
     }
 }
 ```
-<!--- KNIT example-basic-07.kt -->
+<!--- KNIT example-basic-06.kt -->
 
-The agent will now output something similar to the following when it calls the `AskUser` tool:
+The agent will now output something similar to the following when it calls the `askUser` tool:
 
 ```text
-Tool called: __ask_user__ with args {"message":"Which meme would you like me to explain?"}
+Tool called: askUser with args {"question":"Which meme would you like me to explain?"}
 ```
 
 For more information about Koog agent features, see [Features overview](../features-overview.md).
 
 ## Next steps
 
-- Learn more about building [functional agents](functional-agents.md) and [graph-based agents](graph-based-agents.md)
+- Learn more about building [graph-based agents](graph-based-agents.md) and [functional agents](functional-agents.md)

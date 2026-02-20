@@ -63,7 +63,7 @@ and multi‑provider options are available.
 
 ## Next steps
 
-- [Create and run an agent](getting-started.md) with a specific LLM provider.
+- [Create and run an agent](quickstart.md) with a specific LLM provider.
 - Learn more about [prompts](prompts/index.md).
 
 [^1]: Capability is supported only by some models of the provider.
