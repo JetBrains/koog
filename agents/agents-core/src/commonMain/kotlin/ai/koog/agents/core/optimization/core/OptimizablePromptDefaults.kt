@@ -90,9 +90,13 @@ private fun buildSystemMessage(instruction: String, inputFieldDescriptions: List
 public fun <TInput, TOutput> defaultPromptFn(
     inputSerializer: KSerializer<TInput>,
     outputSerializer: KSerializer<TOutput>,
+    includeFieldDescriptions: Boolean = false,
 ): OptimizableNodePromptBuildFn<TInput, TOutput> {
     val json = Json { prettyPrint = false; isLenient = true; ignoreUnknownKeys = true }
-    val inputFieldDescriptions = extractFieldDescriptions(inputSerializer.descriptor)
+    val inputFieldDescriptions = if (includeFieldDescriptions)
+        extractFieldDescriptions(inputSerializer.descriptor)
+    else
+        emptyList()
     return { instruction, demos, input ->
         prompt("optimizable-node") {
             system(buildSystemMessage(instruction, inputFieldDescriptions))
