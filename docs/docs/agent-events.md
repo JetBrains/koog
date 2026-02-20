@@ -378,166 +378,300 @@ The following section includes commonly asked questions and answers related to t
 
 Use the `messageFilter` property to filter events. For example, to trace only node execution:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
-import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
-import ai.koog.agents.example.exampleTracing01.outputPath
-import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import kotlinx.coroutines.runBlocking
-import kotlinx.io.buffered
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
+=== "Kotlin"
 
-const val input = "What's the weather like in New York?"
-
-fun main() {
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+    import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+    import ai.koog.agents.example.exampleTracing01.outputPath
+    import ai.koog.agents.features.tracing.feature.Tracing
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import kotlinx.coroutines.runBlocking
+    import kotlinx.io.buffered
+    import kotlinx.io.files.Path
+    import kotlinx.io.files.SystemFileSystem
+    const val input = "What's the weather like in New York?"
+    fun main() {
     runBlocking {
-        // Creating an agent
-        val agent = AIAgent(
-            promptExecutor = simpleOllamaAIExecutor(),
-            llmModel = OllamaModels.Meta.LLAMA_3_2,
-        ) {
-            val writer = TraceFeatureMessageFileWriter(
-                outputPath,
-                { path: Path -> SystemFileSystem.sink(path).buffered() }
-            )
--->
-<!--- SUFFIX
+    // Creating an agent
+    val agent = AIAgent(
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+    ) {
+    val writer = TraceFeatureMessageFileWriter(
+    outputPath,
+    { path: Path -> SystemFileSystem.sink(path).buffered() }
+    )
+    -->
+    <!--- SUFFIX
+            }
         }
     }
-}
--->
-```kotlin
-install(Tracing) {
-    val fileWriter = TraceFeatureMessageFileWriter(
-        outputPath, 
-        { path: Path -> SystemFileSystem.sink(path).buffered() }
-    )
-    addMessageProcessor(fileWriter)
-    
-    // Only trace LLM calls
-    fileWriter.setMessageFilter { message ->
-        message is LLMCallStartingEvent || message is LLMCallCompletedEvent
+    -->
+    ```kotlin
+    install(Tracing) {
+        val fileWriter = TraceFeatureMessageFileWriter(
+            outputPath, 
+            { path: Path -> SystemFileSystem.sink(path).buffered() }
+        )
+        addMessageProcessor(fileWriter)
+        
+        // Only trace LLM calls
+        fileWriter.setMessageFilter { message ->
+            message is LLMCallStartingEvent || message is LLMCallCompletedEvent
+        }
     }
-}
-```
-<!--- KNIT example-events-01.kt -->
+    ```
+    <!--- KNIT example-events-01.kt -->
+
+=== "Java"
+
+    ```java
+    // Note: outputPath in Kotlin comes from exampleTracing01; in Java we refer to the same variable via the generated class.
+    // If unavailable on classpath, replace with an explicit Path instance.
+    public class ExampleAgentEvents01 {
+        public static void main(String[] args) throws Exception {
+            AIAgent<String, String> agent = AIAgent.builder()
+                .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+                .llmModel(OllamaModels.Meta.LLAMA_3_2)
+                .install(Tracing.Feature, new ConfigureAction<ai.koog.agents.features.tracing.feature.TraceFeatureConfig>() {
+                    @Override
+                    public void configure(ai.koog.agents.features.tracing.feature.TraceFeatureConfig cfg) {
+                        // Construct file writer; Path type is from kotlinx-io; use the same value as Kotlin sample via helper if available
+                        Object outputPath = ai.koog.agents.example.exampleTracing01.ExampleTracing01Kt.getOutputPath();
+
+                        TraceFeatureMessageFileWriter<Object> fileWriter = new TraceFeatureMessageFileWriter<>(
+                            outputPath,
+                            new Function1<Object, kotlinx.io.Sink>() {
+                                @Override
+                                public kotlinx.io.Sink invoke(Object path) {
+                                    // Kotlin SystemFileSystem.sink(path).buffered()
+                                    return kotlinx.io.files.SystemFileSystem.INSTANCE.sink((kotlinx.io.files.Path) path).buffered();
+                                }
+                            },
+                            null
+                        );
+
+                        cfg.addMessageProcessor(fileWriter);
+
+                        // Only trace LLM calls
+                        fileWriter.setMessageFilter(new Function1<FeatureMessage, Boolean>() {
+                            @Override
+                            public Boolean invoke(FeatureMessage message) {
+                                return (message instanceof LLMCallStartingEvent) || (message instanceof LLMCallCompletedEvent);
+                            }
+                        });
+                    }
+                })
+                .build();
+
+            System.out.println(agent.run("What's the weather like in New York?"));
+        }
+    }
+
+    // FAILED: This Java snippet relies on Kotlin classes like kotlinx.io.files.Path/SystemFileSystem and a top-level `outputPath` from examples.
+    // These may not be on the Java examples classpath, and Kotlin function types are required for sink opener and messageFilter.
+    // Ensure the Kotlin modules are on the classpath, or provide Java-accessible wrappers for Path/sink and message filtering.
+    ```
 
 ### Can I use multiple message processors?
 
 Yes, you can add multiple message processors to trace to different destinations simultaneously:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
-import ai.koog.agents.example.exampleTracing01.outputPath
-import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
-import ai.koog.agents.features.tracing.writer.TraceFeatureMessageLogWriter
-import ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriter
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.runBlocking
-import kotlinx.io.buffered
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
+=== "Kotlin"
 
-const val input = "What's the weather like in New York?"
-val syncOpener = { path: Path -> SystemFileSystem.sink(path).buffered() }
-val logger = KotlinLogging.logger {}
-val connectionConfig = DefaultServerConnectionConfig(host = ai.koog.agents.example.exampleTracing06.host, port = ai.koog.agents.example.exampleTracing06.port)
-
-fun main() {
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
+    import ai.koog.agents.example.exampleTracing01.outputPath
+    import ai.koog.agents.features.tracing.feature.Tracing
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageLogWriter
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriter
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import io.github.oshai.kotlinlogging.KotlinLogging
+    import kotlinx.coroutines.runBlocking
+    import kotlinx.io.buffered
+    import kotlinx.io.files.Path
+    import kotlinx.io.files.SystemFileSystem
+    const val input = "What's the weather like in New York?"
+    val syncOpener = { path: Path -> SystemFileSystem.sink(path).buffered() }
+    val logger = KotlinLogging.logger {}
+    val connectionConfig = DefaultServerConnectionConfig(host = ai.koog.agents.example.exampleTracing06.host, port = ai.koog.agents.example.exampleTracing06.port)
+    fun main() {
     runBlocking {
-        // Creating an agent
-        val agent = AIAgent(
-            promptExecutor = simpleOllamaAIExecutor(),
-            llmModel = OllamaModels.Meta.LLAMA_3_2,
-        ) {
--->
-<!--- SUFFIX
+    // Creating an agent
+    val agent = AIAgent(
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+    ) {
+    -->
+    <!--- SUFFIX
+            }
         }
     }
-}
--->
-```kotlin
-install(Tracing) {
-    addMessageProcessor(TraceFeatureMessageLogWriter(logger))
-    addMessageProcessor(TraceFeatureMessageFileWriter(outputPath, syncOpener))
-    addMessageProcessor(TraceFeatureMessageRemoteWriter(connectionConfig))
-}
-```
-<!--- KNIT example-events-02.kt -->
+    -->
+    ```kotlin
+    install(Tracing) {
+        addMessageProcessor(TraceFeatureMessageLogWriter(logger))
+        addMessageProcessor(TraceFeatureMessageFileWriter(outputPath, syncOpener))
+        addMessageProcessor(TraceFeatureMessageRemoteWriter(connectionConfig))
+    }
+    ```
+    <!--- KNIT example-events-02.kt -->
+
+=== "Java"
+
+    ```java
+    public class ExampleAgentEvents02 {
+        public static void main(String[] args) throws Exception {
+            final KLogger logger = KotlinLogging.logger("AgentEvents");
+            final DefaultServerConnectionConfig connectionConfig = new DefaultServerConnectionConfig(
+                ai.koog.agents.example.exampleTracing06.ExampleTracing06Kt.getHost(),
+                ai.koog.agents.example.exampleTracing06.ExampleTracing06Kt.getPort()
+            );
+
+            AIAgent<String, String> agent = AIAgent.builder()
+                .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+                .llmModel(OllamaModels.Meta.LLAMA_3_2)
+                .install(Tracing.Feature, (ConfigureAction<ai.koog.agents.features.tracing.feature.TraceFeatureConfig>) cfg -> {
+                    cfg.addMessageProcessor(new TraceFeatureMessageLogWriter(logger));
+
+                    Object outputPath = ai.koog.agents.example.exampleTracing01.ExampleTracing01Kt.getOutputPath();
+                    cfg.addMessageProcessor(new TraceFeatureMessageFileWriter<>(
+                        outputPath,
+                        (Function1<Object, kotlinx.io.Sink>) path -> kotlinx.io.files.SystemFileSystem.INSTANCE.sink((kotlinx.io.files.Path) path).buffered(),
+                        null
+                    ));
+
+                    cfg.addMessageProcessor(new TraceFeatureMessageRemoteWriter(connectionConfig));
+                })
+                .build();
+
+            System.out.println(agent.run("What's the weather like in New York?"));
+        }
+    }
+
+    // FAILED: This Java snippet depends on Kotlin-specific types (kotlinx.io.files.Path, SystemFileSystem) and top-level properties for host/port/outputPath.
+    // Ensure those modules are present or replace with Java-accessible alternatives. Otherwise, compilation will fail due to missing symbols or type casts.
+    ```
 
 ### How can I create a custom message processor?
 
 Implement the `FeatureMessageProcessor` interface:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
-import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
-import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureMessageProcessor
-import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+=== "Kotlin"
 
-fun main() {
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+    import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+    import ai.koog.agents.core.feature.message.FeatureMessage
+    import ai.koog.agents.core.feature.message.FeatureMessageProcessor
+    import ai.koog.agents.features.tracing.feature.Tracing
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import kotlinx.coroutines.runBlocking
+    import kotlinx.coroutines.flow.MutableStateFlow
+    import kotlinx.coroutines.flow.StateFlow
+    import kotlinx.coroutines.flow.asStateFlow
+    fun main() {
     runBlocking {
-        // Creating an agent
-        val agent = AIAgent(
-            promptExecutor = simpleOllamaAIExecutor(),
-            llmModel = OllamaModels.Meta.LLAMA_3_2,
-        ) {
--->
-<!--- SUFFIX
+    // Creating an agent
+    val agent = AIAgent(
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+    ) {
+    -->
+    <!--- SUFFIX
+            }
         }
     }
-}
--->
-```kotlin
-class CustomTraceProcessor : FeatureMessageProcessor() {
+    -->
+    ```kotlin
+    class CustomTraceProcessor : FeatureMessageProcessor() {
 
-    // Current open state of the processor
-    private var _isOpen = MutableStateFlow(false)
+        // Current open state of the processor
+        private var _isOpen = MutableStateFlow(false)
 
-    override val isOpen: StateFlow<Boolean>
-        get() = _isOpen.asStateFlow()
-    
-    override suspend fun processMessage(message: FeatureMessage) {
-        // Custom processing logic
-        when (message) {
-            is NodeExecutionStartingEvent -> {
+        override val isOpen: StateFlow<Boolean>
+            get() = _isOpen.asStateFlow()
+        
+        override suspend fun processMessage(message: FeatureMessage) {
+            // Custom processing logic
+            when (message) {
+                is NodeExecutionStartingEvent -> {
+                    // Process node start event
+                }
+
+                is LLMCallCompletedEvent -> {
+                    // Process LLM call end event 
+                }
+                // Handle other event types 
+            }
+        }
+
+        override suspend fun close() {
+            // Close connections of established
+        }
+    }
+
+    // Use your custom processor
+    install(Tracing) {
+        addMessageProcessor(CustomTraceProcessor())
+    }
+    ```
+    <!--- KNIT example-events-03.kt -->
+
+=== "Java"
+
+    ```java
+    // Java implementation of a custom processor
+    class CustomTraceProcessorJava extends FeatureMessageProcessor {
+        private final MutableStateFlow<Boolean> _isOpen = new MutableStateFlow<>(false);
+
+        @Override
+        public StateFlow<Boolean> getIsOpen() {
+            return _isOpen;
+        }
+
+        @Override
+        protected Object processMessage(FeatureMessage message, kotlin.coroutines.Continuation<? super Unit> cont) {
+            // Custom processing logic
+            if (message instanceof NodeExecutionStartingEvent) {
                 // Process node start event
+            } else if (message instanceof LLMCallCompletedEvent) {
+                // Process LLM call end event
             }
+            return kotlin.coroutines.intrinsics.IntrinsicsKt.getCOROUTINE_SUSPENDED();
+        }
 
-            is LLMCallCompletedEvent -> {
-                // Process LLM call end event 
-            }
-            // Handle other event types 
+        @Override
+        public Object close(kotlin.coroutines.Continuation<? super Unit> cont) {
+            // Close established connections if any
+            return Unit.INSTANCE;
         }
     }
 
-    override suspend fun close() {
-        // Close connections of established
+    public class ExampleAgentEvents03 {
+        public static void main(String[] args) throws Exception {
+            AIAgent<String, String> agent = AIAgent.builder()
+                .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+                .llmModel(OllamaModels.Meta.LLAMA_3_2)
+                .install(Tracing.Feature, (ConfigureAction<ai.koog.agents.features.tracing.feature.TraceFeatureConfig>) cfg -> {
+                    cfg.addMessageProcessor(new CustomTraceProcessorJava());
+                })
+                .build();
+        }
     }
-}
 
-// Use your custom processor
-install(Tracing) {
-    addMessageProcessor(CustomTraceProcessor())
-}
-```
-<!--- KNIT example-events-03.kt -->
+    // FAILED: FeatureMessageProcessor has suspend functions and exposes Kotlin Flow types.
+    // Directly subclassing and overriding suspend methods from Java requires Continuation plumbing and is not practical.
+    // Provide a Kotlin wrapper or factory for Java, or use existing writer implementations instead of custom Java processors.
+    ```
 
 For more information about existing event types that can be handled by message processors, see [Predefined event types](#predefined-event-types).
