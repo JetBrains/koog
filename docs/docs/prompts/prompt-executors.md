@@ -6,12 +6,13 @@ with dynamic switching between them and fallbacks.
 
 ## Executor types
 
-Koog provides two main types of prompt executors that implement the [`PromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.model.PromptExecutor) interface:
+Koog provides three main types of prompt executors that implement the [`PromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.model.PromptExecutor) interface:
 
 | Type            | <div style="width:175px">Class</div>                                                                                                                               | Description                                                                                                                                                                                                                                                          |
 |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Single-provider | [`SingleLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.SingleLLMPromptExecutor) | Wraps a single LLM client for one provider. Use this executor if your agent only requires switching between models within a single LLM provider.                                                                                                                     |
 | Multi-provider  | [`MultiLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor)   | Wraps multiple LLM clients and routes calls based on the LLM provider. It can optionally use a configured fallback provider and LLM when the requested client is unavailable. Use this executor if your agent needs to switch between LLMs from different providers. |
+| Routing         | [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) | Distributes requests to a given LLM model across multiple client instances using routing strategies. Use this executor to avoid rate limits, improve throughput, and implement failover strategies with load balancing.                                               |
 
 ## Creating a single-provider executor
 
@@ -57,6 +58,40 @@ val multiExecutor = MultiLLMPromptExecutor(
 ```
 <!--- KNIT example-prompt-executors-02.kt -->
 
+## Creating a routing executor
+
+To create a prompt executor that distributes requests across multiple LLM client instances using routing strategies, do the following:
+
+1. Configure multiple client instances (they can be for the same or different LLM providers) with the corresponding API keys.
+2. Create a router using a routing strategy, such as [`RoundRobinRouter`](api:prompt-executor-router::ai.koog.prompt.executor.router.RoundRobinRouter).
+3. Pass the router to the [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) class constructor.
+
+This is useful for avoiding rate limits, improving throughput, and implementing failover strategies.
+
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.router.RoundRobinRouter
+import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
+-->
+```kotlin
+// Create multiple client instances
+val openAI1 = OpenAILLMClient(apiKey = "openai-key-1")
+val openAI2 = OpenAILLMClient(apiKey = "openai-key-2")
+val anthropic = AnthropicLLMClient(apiKey = "anthropic-key")
+
+// Create router with round-robin strategy
+val router = RoundRobinRouter(openAI1, openAI2, anthropic)
+
+// Create routing executor
+val routingExecutor = RoutingLLMPromptExecutor(router)
+```
+<!--- KNIT example-prompt-executors-03.kt -->
+
+When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
+
+You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-router::ai.koog.prompt.executor.router.LLMClientRouter) interface.
+
 ## Pre-defined prompt executors
 
 For faster setup, Koog provides the ready-to-use executor implementations for common providers.
@@ -96,7 +131,7 @@ val anthropicClient = AnthropicLLMClient("ANTHROPIC_KEY")
 val googleClient = GoogleLLMClient("GOOGLE_KEY")
 val multiExecutor = MultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 ```
-<!--- KNIT example-prompt-executors-03.kt -->
+<!--- KNIT example-prompt-executors-04.kt -->
 
 ## Running a prompt
 
@@ -130,7 +165,7 @@ val response = promptExecutor.execute(
     model = OpenAIModels.Chat.GPT4o
 )
 ```
-<!--- KNIT example-prompt-executors-04.kt -->
+<!--- KNIT example-prompt-executors-05.kt -->
 
 This will run the prompt with the `GPT4o` model and return the response.
 
@@ -190,15 +225,14 @@ val openAIResult = executor.execute(p, OpenAIModels.Chat.GPT4o)
 // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
 val anthropicResult = executor.execute(p, AnthropicModels.Opus_4_6)
 ```
-<!--- KNIT example-prompt-executors-05.kt -->
+<!--- KNIT example-prompt-executors-06.kt -->
 
 You can optionally configure a fallback LLM provider and model to use when the requested client is unavailable.
-For details, refer to [Configuring fallbacks](#configuring-fallbacks).
 
 ## Configuring fallbacks
 
-Multi-provider prompt executors can be configured to use a fallback LLM provider and model when the requested LLM client is unavailable.
-To configure the fallback mechanism, provide the `fallback` parameter to the `MultiLLMPromptExecutor` constructor:
+Multi-provider and routing prompt executors can be configured to use a fallback LLM provider and model when the requested LLM client is unavailable.
+To configure the fallback mechanism, provide the `fallback` parameter to the `MultiLLMPromptExecutor` or `RoutingLLMPromptExecutor` constructor:
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -220,7 +254,7 @@ val multiExecutor = MultiLLMPromptExecutor(
     )
 )
 ```
-<!--- KNIT example-prompt-executors-06.kt -->
+<!--- KNIT example-prompt-executors-07.kt -->
 
 If you pass a model from an LLM provider that is not included in the `MultiLLMPromptExecutor`,
 the prompt executor will use the fallback model:
@@ -258,7 +292,7 @@ val p = prompt("demo") { user("Summarize this") }
 // If you pass a Google model, the prompt executor will use the fallback model, as the Google client is not included
 val response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro)
 ```
-<!--- KNIT example-prompt-executors-07.kt -->
+<!--- KNIT example-prompt-executors-08.kt -->
 
 !!! note
     Fallbacks are available for the `execute()` and `executeMultipleChoices()` methods only.

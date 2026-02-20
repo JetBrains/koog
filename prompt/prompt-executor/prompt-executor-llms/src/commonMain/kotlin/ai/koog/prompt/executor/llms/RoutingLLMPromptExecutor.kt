@@ -34,26 +34,12 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *
-     * This class is used to specify a fallback LLM provider and model that can be utilized
-     * when the primary LLM execution fails. It ensures that the fallback model is associated
-     * with the specified fallback provider.
+     * This class is used to specify a fallback LLM model that can be utilized when the primary LLM execution fails.
+     * It ensures that the fallback model is associated with the specified fallback provider.
      *
-     * @property fallbackProvider The LLMProvider responsible for handling fallback requests.
      * @property fallbackModel The LLModel instance to be used for fallback execution.
-     *
-     * @throws IllegalArgumentException If the provider of the fallback model does not match the
-     * fallback provider.
      */
-    public data class FallbackPromptExecutorSettings(
-        val fallbackProvider: LLMProvider,
-        val fallbackModel: LLModel
-    ) {
-        init {
-            check(fallbackModel.provider == fallbackProvider) {
-                "LLM model provider must match the fallback provider"
-            }
-        }
-    }
+    public data class FallbackPromptExecutorSettings(val fallbackModel: LLModel)
 
     /**
      * Creates executor with a map of providers to their client lists.
@@ -92,22 +78,24 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
          * The logger can aid in debugging by capturing detailed information about the state and flow of operations within
          * the class.
          */
-        private val logger = KotlinLogging.logger("ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor")
+        private val logger = KotlinLogging.logger {}
     }
 
     /**
      * Fallback LLM client for interacting with a fallback LLM provider.
      *
      * Retrieves client specified in `fallback` settings from `clientRouter` if available.
+     * If multiple clients are found for the fallback provider, the first one is used as the fallback client.
      * This client is intended to handle cases where no specific client is matched during prompt execution.
      *
      * Returns `null` if `fallback` is not specified or corresponding client is not found in `clientRouter`.
      */
     private val fallbackClient: LLMClient? = when {
         fallback != null -> {
+            val fallbackProvider = fallback.fallbackModel.provider
             clientRouter.clients
-                .firstOrNull { it.llmProvider() == fallback.fallbackProvider }
-                ?: error("Client for provider ${fallback.fallbackProvider} not found in router")
+                .firstOrNull { it.llmProvider() == fallbackProvider }
+                ?: error("Client for provider $fallbackProvider not found in router")
         }
 
         else -> null
