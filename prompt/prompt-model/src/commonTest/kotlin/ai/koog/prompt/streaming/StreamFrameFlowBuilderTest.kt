@@ -216,7 +216,7 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.TextDelta("Continue after tool with text", 2),
                 StreamFrame.TextComplete("Continue after tool with text", 2),
                 StreamFrame.ReasoningDelta(text = "Now switch from text to thinking...", index = 3),
-                StreamFrame.ReasoningDelta(text = "Summary thinking", index = 3),
+                StreamFrame.ReasoningDelta(summary = "Summary thinking", index = 3),
                 StreamFrame.ReasoningComplete(
                     listOf("Now switch from text to thinking..."),
                     listOf("Summary thinking"),
@@ -226,7 +226,7 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.ToolCallDelta("call_2", "search", "{}", 4),
                 StreamFrame.ToolCallComplete("call_2", "search", "{}", 4),
                 StreamFrame.ReasoningDelta(text = "Now switch from tool to thinking...", index = 5),
-                StreamFrame.ReasoningDelta(text = "Summary thinking", index = 5),
+                StreamFrame.ReasoningDelta(summary = "Summary thinking", index = 5),
                 StreamFrame.ReasoningComplete(
                     listOf("Now switch from tool to thinking..."),
                     listOf("Summary thinking"),
