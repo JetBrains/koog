@@ -1,8 +1,8 @@
-package ai.koog.prompt.structure
+package ai.koog.prompt.executor.model
 
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.StructureFixingParser
+import ai.koog.prompt.structure.LLMStructuredParsingError
 import ai.koog.prompt.structure.json.JsonStructure
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -29,8 +29,8 @@ class StructureFixingParserTest {
     )
 
     private val testData = TestData("test", 42)
-    private val testDataJson = Json.encodeToString(testData)
-    private val testStructure = JsonStructure.create<TestData>()
+    private val testDataJson = Json.Default.encodeToString(testData)
+    private val testStructure = JsonStructure.Companion.create<TestData>()
 
     @Test
     fun testParseValidContentWithoutFixing() = runTest {
@@ -94,7 +94,7 @@ class StructureFixingParserTest {
             retries = 2,
         )
 
-        val structure = JsonStructure.create<DataWithWildcard>()
+        val structure = JsonStructure.Companion.create<DataWithWildcard>()
 
         val invalidContent = """
             {

@@ -24,6 +24,14 @@ kotlin {
                 api(libs.kotlinx.coroutines.jdk8)
             }
         }
+
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":agents:agents-test"))
+            }
+        }
     }
 
     explicitApi()
