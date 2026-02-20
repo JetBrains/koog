@@ -76,11 +76,11 @@ public class ExamplePromptExecutors {
         /* Configuring fallbacks */
         MultiLLMPromptExecutor multiExecutor = new MultiLLMPromptExecutor(
             Map.of(
-                LLMProvider.OpenAI.INSTANCE, openAIClient,
-                LLMProvider.Ollama.INSTANCE, ollamaClient
+                LLMProvider.OpenAI, openAIClient,
+                LLMProvider.Ollama, ollamaClient
             ),
             new MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
-                LLMProvider.Ollama.INSTANCE,
+                LLMProvider.Ollama,
                 OllamaModels.Meta.LLAMA_3_2
             )
         );

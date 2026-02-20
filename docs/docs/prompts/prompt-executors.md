@@ -301,9 +301,9 @@ Here is an example of switching between providers:
     // Create a MultiLLMPromptExecutor that maps LLM providers to LLM clients
     MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(
         Map.of(
-            LLMProvider.OpenAI.INSTANCE, openAIClient,
-            LLMProvider.Anthropic.INSTANCE, anthropicClient,
-            LLMProvider.Google.INSTANCE, googleClient
+            LLMProvider.OpenAI, openAIClient,
+            LLMProvider.Anthropic, anthropicClient,
+            LLMProvider.Google, googleClient
         )
     );
 
@@ -364,11 +364,11 @@ To configure the fallback mechanism, provide the `fallback` parameter to the `Mu
 
     MultiLLMPromptExecutor multiExecutor = new MultiLLMPromptExecutor(
         Map.of(
-            LLMProvider.OpenAI.INSTANCE, openAIClient,
-            LLMProvider.Ollama.INSTANCE, ollamaClient
+            LLMProvider.OpenAI, openAIClient,
+            LLMProvider.Ollama, ollamaClient
         ),
         new MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
-            LLMProvider.Ollama.INSTANCE,
+            LLMProvider.Ollama,
             OllamaModels.Meta.LLAMA_3_2
         )
     );
