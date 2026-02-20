@@ -8,6 +8,7 @@ import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.debugger.writer.DebuggerFeatureMessageRemoteWriter
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
@@ -36,6 +37,7 @@ import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
@@ -69,7 +71,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
      */
     public companion object Feature :
         AIAgentGraphFeature<DebuggerConfig, Debugger>,
-        AIAgentFunctionalFeature<DebuggerConfig, Debugger> {
+        AIAgentFunctionalFeature<DebuggerConfig, Debugger>,
+        AIAgentPlannerFeature<DebuggerConfig, Debugger> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -116,7 +119,22 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
 
             val writer = configureRemoteWriter(config)
-            installFunctionalPipeline(pipeline, writer)
+            installCommon(pipeline, writer)
+
+            return Debugger(
+                port = writer.server.connectionConfig.port,
+                awaitInitialConnectionTimeout = writer.server.connectionConfig.awaitInitialConnectionTimeout
+            )
+        }
+
+        override fun install(
+            config: DebuggerConfig,
+            pipeline: AIAgentPlannerPipeline
+        ): Debugger {
+            logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
+
+            val writer = configureRemoteWriter(config)
+            installCommon(pipeline, writer)
 
             return Debugger(
                 port = writer.server.connectionConfig.port,
@@ -478,13 +496,6 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
             }
 
             //endregion Intercept Subgraph Events
-        }
-
-        private fun installFunctionalPipeline(
-            pipeline: AIAgentFunctionalPipeline,
-            writer: DebuggerFeatureMessageRemoteWriter,
-        ) {
-            installCommon(pipeline, writer)
         }
 
         //region Private Methods

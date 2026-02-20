@@ -5,9 +5,11 @@ import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.prompt.tokenizer.CachingTokenizer
 import ai.koog.prompt.tokenizer.NoTokenizer
 import ai.koog.prompt.tokenizer.OnDemandTokenizer
@@ -46,7 +48,8 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
      */
     public companion object Feature :
         AIAgentGraphFeature<MessageTokenizerConfig, MessageTokenizer>,
-        AIAgentFunctionalFeature<MessageTokenizerConfig, MessageTokenizer> {
+        AIAgentFunctionalFeature<MessageTokenizerConfig, MessageTokenizer>,
+        AIAgentPlannerFeature<MessageTokenizerConfig, MessageTokenizer> {
 
         override val key: AIAgentStorageKey<MessageTokenizer> =
             AIAgentStorageKey("agents-features-tracing")
@@ -76,6 +79,13 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
         override fun install(
             config: MessageTokenizerConfig,
             pipeline: AIAgentFunctionalPipeline,
+        ): MessageTokenizer {
+            return createFeature(config)
+        }
+
+        override fun install(
+            config: MessageTokenizerConfig,
+            pipeline: AIAgentPlannerPipeline,
         ): MessageTokenizer {
             return createFeature(config)
         }

@@ -6,10 +6,12 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import com.agentclientprotocol.common.Event
 import com.agentclientprotocol.model.PromptResponse
@@ -111,7 +113,8 @@ public class AcpAgent(
      */
     public companion object Feature :
         AIAgentGraphFeature<AcpConfig, AcpAgent>,
-        AIAgentFunctionalFeature<AcpConfig, AcpAgent> {
+        AIAgentFunctionalFeature<AcpConfig, AcpAgent>,
+        AIAgentPlannerFeature<AcpConfig, AcpAgent> {
 
         private val logger = KotlinLogging.logger { }
         override val key: AIAgentStorageKey<AcpAgent> = AIAgentStorageKey("agents-features-acp")
@@ -149,6 +152,20 @@ public class AcpAgent(
         override fun install(
             config: AcpConfig,
             pipeline: AIAgentFunctionalPipeline,
+        ): AcpAgent {
+            logger.debug { "Start installing feature: ${AcpAgent::class.simpleName}" }
+
+            val acpAgent = createFeature(config)
+            if (config.setDefaultNotifications) {
+                acpAgent.registerDefaultNotificationHandlers(pipeline)
+            }
+
+            return acpAgent
+        }
+
+        override fun install(
+            config: AcpConfig,
+            pipeline: AIAgentPlannerPipeline,
         ): AcpAgent {
             logger.debug { "Start installing feature: ${AcpAgent::class.simpleName}" }
 

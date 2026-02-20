@@ -5,11 +5,13 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.handler.tool.ToolCallEventContext
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
@@ -58,7 +60,8 @@ public class OpenTelemetry {
      */
     public companion object Feature :
         AIAgentGraphFeature<OpenTelemetryConfig, OpenTelemetry>,
-        AIAgentFunctionalFeature<OpenTelemetryConfig, OpenTelemetry> {
+        AIAgentFunctionalFeature<OpenTelemetryConfig, OpenTelemetry>,
+        AIAgentPlannerFeature<OpenTelemetryConfig, OpenTelemetry> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -246,6 +249,18 @@ public class OpenTelemetry {
         override fun install(
             config: OpenTelemetryConfig,
             pipeline: AIAgentFunctionalPipeline
+        ): OpenTelemetry {
+            val openTelemetry = OpenTelemetry()
+            val spanCollector = SpanCollector()
+
+            installCommon(config, pipeline, spanCollector)
+
+            return openTelemetry
+        }
+
+        override fun install(
+            config: OpenTelemetryConfig,
+            pipeline: AIAgentPlannerPipeline
         ): OpenTelemetry {
             val openTelemetry = OpenTelemetry()
             val spanCollector = SpanCollector()
