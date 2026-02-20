@@ -43,16 +43,13 @@ In the following example, GOAP handles high-level planning for creating an artic
 while the LLM performs the actual content generation within each action.
 
 <!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
-import ai.koog.agents.planner.goap.goap
+import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
-import kotlin.reflect.typeOf
 -->
 ```kotlin
 // Define a state for content creation
@@ -64,10 +61,12 @@ data class ContentState(
     val draft: String = "",
     val hasReview: Boolean = false,
     val isPublished: Boolean = false
-)
+): GoapAgentState<String, String>(topic) {
+    override fun provideOutput(): String = draft
+}
 
 // Create GOAP planner with LLM-powered actions
-val planner = goap<ContentState>(typeOf<ContentState>()) {
+val planner = AIAgentPlannerStrategy.goap("content-planner", ::ContentState) {
     // Define actions with preconditions and beliefs
     action(
         name = "Create outline",
@@ -145,14 +144,14 @@ val agentConfig = AIAgentConfig(
     maxAgentIterations = 20
 )
 
-val agent = PlannerAIAgent(
+val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    strategy = AIAgentPlannerStrategy("content-planner", planner),
+    strategy = planner,
     agentConfig = agentConfig
 )
 
 suspend fun main() {
-    val result = agent.run(ContentState(topic = "The Future of AI in Software Development"))
+    val result = agent.run("The Future of AI in Software Development")
     println("Final state: $result")
 }
 ```
@@ -164,15 +163,18 @@ As [A* search] uses cost as a factor in finding the optimal sequence of actions,
 you can define custom cost functions for actions and goals to guide the planner:
 
 <!--- INCLUDE
-import ai.koog.agents.planner.goap.goap
-import kotlin.reflect.typeOf
+import ai.koog.agents.planner.goap.GoapAgentState
+import ai.koog.agents.planner.AIAgentPlannerStrategy
 
 data class MyState(
-    val operationDone: Boolean,
-    val hasOptimization: Boolean
-)
+    val topic: String,
+    val operationDone: Boolean = true,
+    val hasOptimization: Boolean = true
+): GoapAgentState<String, String>(topic) {
+    override fun provideOutput(): String = ""
+}
 
-val planner = goap<MyState>(typeOf<MyState>()) {
+val planner = AIAgentPlannerStrategy.goap("content-planner", ::MyState) {
 ----- SUFFIX
 }   
 -->
@@ -202,17 +204,20 @@ GOAP distinguishes between the concepts of beliefs (optimistic predictions) and 
 This allows the planner to make plans based on expected outcomes while handling actual results properly:
 
 <!--- INCLUDE
-import ai.koog.agents.planner.goap.goap
-import kotlin.reflect.typeOf
+import ai.koog.agents.planner.goap.GoapAgentState
+import ai.koog.agents.planner.AIAgentPlannerStrategy
 
 data class MyState(
-    val taskComplete: Boolean,
+    val topic: String,
+    val taskComplete: Boolean = true,
     val attempts: Int = 0
-)
+): GoapAgentState<String, String>(topic) {
+    override fun provideOutput(): String = ""
+}
 
 fun performComplexTask(): Boolean = true
 
-val planner = goap<MyState>(typeOf<MyState>()) {
+val planner = AIAgentPlannerStrategy.goap("content-planner", ::MyState) {
 ----- SUFFIX
 }   
 -->

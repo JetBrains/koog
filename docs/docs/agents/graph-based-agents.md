@@ -140,7 +140,7 @@ import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.runBlocking
 -->
 ```kotlin
@@ -168,7 +168,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-standard-agents-01.kt -->
+<!--- KNIT example-graph-agents-02.kt -->
 
 When you run this agent, it will respond with something like this:
 
@@ -248,7 +248,7 @@ val toolRegistry = ToolRegistry {
     tools(MathTools())
 }
 ```
-<!--- KNIT example-standard-agents-02.kt -->
+<!--- KNIT example-graph-agents-03.kt -->
 
 Add the tool registry to the agent configuration:
 
@@ -266,7 +266,7 @@ import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.runBlocking
 
 @LLMDescription("Tools for performing math operations")
@@ -317,7 +317,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-standard-agents-03.kt -->
+<!--- KNIT example-graph-agents-04.kt -->
 
 When you run the agent now, it will respond with something like this:
 
@@ -356,7 +356,7 @@ import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.runBlocking
 
 @LLMDescription("Tools for performing math operations")
@@ -414,7 +414,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-standard-agents-04.kt -->
+<!--- KNIT example-graph-agents-05.kt -->
 
 When you run the agent now, it will respond with something like this:
 
