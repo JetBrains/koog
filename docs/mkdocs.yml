@@ -133,7 +133,7 @@ plugins:
         'basic-agents.md': 'agents/basic-agents.md'
         'functional-agents.md': 'agents/functional-agents.md'
         'complex-workflow-agents.md': 'agents/graph-based-agents.md'
-        'planner-agents.md': 'agents/planner-agents.md'
+        'planner-agents.md': 'agents/planner-agents/index.md'
   - llmstxt:
       markdown_description: Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin.
       full_output: llms-full.txt

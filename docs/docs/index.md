@@ -45,7 +45,7 @@ Learn about [agents in general](agents/index.md) and how to create different typ
 
     Implement a custom workflow as a strategy graph
 
--   :material-list-status:{ .lg .middle } [**Planner agents**](agents/planner-agents.md)
+-   :material-list-status:{ .lg .middle } [**Planner agents**](agents/planner-agents/index.md)
 
     ---
 

@@ -27,7 +27,7 @@ Depending on the task you need to perform, Koog provides several agent types:
   These agents implement a predefined strategy that works for most common use cases.
 - [Graph-based agents](graph-based-agents.md) provide full control and flexibility of the agent's workflow, state management, and visualization.
 - [Functional agents](functional-agents.md) enable you to quickly prototype custom logic as a function with access to the agent's context.
-- [Planner agents](planner-agents.md) can autonomously plan and execute multistep tasks through iterative cycles until they reach a desired final state.
+- [Planner agents](planner-agents/index.md) can autonomously plan and execute multistep tasks through iterative cycles until they reach a desired final state.
 
 ## Agent configuration
 
