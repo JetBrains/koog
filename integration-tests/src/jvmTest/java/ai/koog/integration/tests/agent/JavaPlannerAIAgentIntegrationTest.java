@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.ToolRegistryBuilder;
@@ -42,7 +43,7 @@ public class JavaPlannerAIAgentIntegrationTest {
         }
 
         @Override
-        protected Boolean isPlanCompleted(AIAgentFunctionalContext context, String state, String plan) {
+        protected Boolean isPlanCompleted(AIAgentPlannerContext context, String state, String plan) {
             return !state.equals(context.getAgentInput());
         }
     }
@@ -61,7 +62,7 @@ public class JavaPlannerAIAgentIntegrationTest {
 
     @SuppressWarnings("unchecked")
     private static <Plan> void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy, @Nullable ToolRegistry toolRegistry, String request, String expectedResultPart) {
-        var builder = PlannerAIAgent.<String, Plan>builder(strategy)
+        var builder = PlannerAIAgent.<String, String>builder(strategy)
             .promptExecutor(promptExecutor)
             .llmModel(OpenAIModels.Chat.GPT4o)
             .systemPrompt(SYSTEM_PROMPT);
@@ -92,11 +93,12 @@ public class JavaPlannerAIAgentIntegrationTest {
     @Retry
     public void integration_testPlannerWithTools() {
         var planner = new TestPlanner();
+        var plannerStrategy = AIAgentPlannerStrategy.builder("test-planner").withPlanner(planner).build();
         var toolRegistry = new ToolRegistryBuilder()
             .tools(new CalculatorTools())
             .build();
 
-        testPlanner(planner, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");
+        testPlanner(plannerStrategy, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");
     }
 
     private class TextualState extends GoapAgentState<String, String> {

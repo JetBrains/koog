@@ -9,6 +9,7 @@ import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.BuilderChainAction
@@ -715,7 +716,7 @@ public class PlannerAgentBuilder<Input, Output>(
      * @return The current instance of PlannerAgentBuilder with the feature installed, enabling method chaining.
      */
     public fun <TConfig : FeatureConfig> install(
-        feature: AIAgentFunctionalFeature<TConfig, *>,
+        feature: AIAgentPlannerFeature<TConfig, *>,
         configure: ConfigureAction<TConfig>
     ): PlannerAgentBuilder<Input, Output> = apply {
         this.featureInstallers += {

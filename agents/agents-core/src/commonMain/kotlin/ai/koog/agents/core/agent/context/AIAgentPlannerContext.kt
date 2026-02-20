@@ -7,13 +7,37 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 
-/***/
+/**
+ * Represents a context for the AI agent of [ai.koog.agents.planner.PlannerAIAgent] type, responsible for managing
+ * execution pipelines, configurations, and other contextual data required for agent operations.
+ *
+ * @constructor
+ * Primary constructor for internal use, leveraging a delegate of type [AIAgentFunctionalContextBaseImpl].
+ *
+ * @property delegate The delegated functional context implementation, encapsulating the core functionality.
+ */
 public class AIAgentPlannerContext private constructor(
     delegate: AIAgentFunctionalContextBaseImpl<AIAgentPlannerPipeline>
 ) : AIAgentFunctionalContextBase<AIAgentPlannerPipeline>(delegate) {
 
     /**
+     * Constructs an instance of AIAgentPlannerContext by delegating to the base implementation
+     * for the AI agent's functional context. This constructor initializes the context with
+     * the provided components and parameters to facilitate agent planning and execution.
      *
+     * @param environment The AI agent's operating environment, which provides tools, error reporting,
+     *        and mechanism for execution.
+     * @param agentId A unique identifier for the agent.
+     * @param runId A unique identifier representing the current execution run.
+     * @param agentInput Input data provided to the agent for processing or decision-making.
+     * @param config Configuration details for the AI agent, dictating its behavior and settings.
+     * @param llm The context for interactions with the underlying language model.
+     * @param stateManager Responsible for managing the state of the agent across executions.
+     * @param storage Provides long-term memory or storage for the agent's operations.
+     * @param strategyName Name of the strategy guiding the agent's behavior.
+     * @param pipeline The planning pipeline that orchestrates the agent's decision-making processes.
+     * @param executionInfo Metadata and details regarding the agent's execution, such as timestamps or states.
+     * @param parentContext An optional parent context, allowing nested or hierarchical composition of agent contexts.
      */
     public constructor (
         environment: AIAgentEnvironment,
