@@ -58,7 +58,7 @@ public class OpenRouterLLMClient(
     apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<OpenRouterChatCompletionResponse, OpenRouterChatCompletionStreamResponse>(
     apiKey = apiKey,

@@ -12,11 +12,11 @@ import ai.koog.prompt.streaming.toStreamFrame
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 object CalculatorChatExecutor : PromptExecutor {
     private val json = Json {

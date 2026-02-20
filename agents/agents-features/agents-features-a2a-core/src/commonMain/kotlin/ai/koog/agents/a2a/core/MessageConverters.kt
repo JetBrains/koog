@@ -31,7 +31,7 @@ public typealias A2AMessage = ai.koog.a2a.model.Message
  * @param clock The clock to use for the timestamp. Defaults to [Clock.System].
  */
 public fun A2AMessage.toKoogMessage(
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
 ): Message {
     // Create metadata
     val metadata = JsonObject(emptyMap()).withA2AMetadata(

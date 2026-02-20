@@ -24,7 +24,7 @@ import kotlinx.datetime.Clock
 public class CachedPromptExecutor(
     private val cache: PromptCache,
     private val nested: PromptExecutor,
-    private val clock: Clock = Clock.System
+    private val clock: Clock = kotlin.time.Clock.System
 ) : PromptExecutor {
 
     override suspend fun execute(

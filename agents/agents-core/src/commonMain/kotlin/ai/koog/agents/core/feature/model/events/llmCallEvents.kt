@@ -5,8 +5,8 @@ import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Represents an event indicating the start of a call to a Language Learning Model (LLM).

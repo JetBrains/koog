@@ -208,7 +208,7 @@ internal data class SubjectWithFact(
 @InternalAgentsApi
 public fun parseFactsFromResponse(
     content: String,
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
 ): List<Pair<MemorySubject, Fact>> {
     val parsedFacts = Json.decodeFromString<List<SubjectWithFact>>(content)
     val groupedFacts = parsedFacts.groupBy { it.subject to it.keyword }

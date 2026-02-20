@@ -53,7 +53,7 @@ public class DashscopeLLMClient(
     apiKey: String,
     private val settings: DashscopeClientSettings = DashscopeClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DashscopeChatCompletionResponse, DashscopeChatCompletionStreamResponse>(
     apiKey = apiKey,
