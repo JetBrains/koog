@@ -232,7 +232,6 @@ abstract class ExecutorIntegrationTestBase {
             val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
             val textFrames = mutableListOf<StreamFrame.TextDelta>()
             val reasoningFrames = mutableListOf<StreamFrame.ReasoningDelta>()
-            val reasoningSummaryFrames = mutableListOf<StreamFrame.ReasoningSummaryDelta>()
 
             executor.executeStreamAndCollect(
                 prompt = prompt,
@@ -240,7 +239,6 @@ abstract class ExecutorIntegrationTestBase {
                 tools = listOf(SimpleCalculatorTool.descriptor),
                 textFrames = textFrames,
                 reasoningFrames = reasoningFrames,
-                reasoningSummaryFrames = reasoningSummaryFrames,
                 endFrame = endMessages,
                 toolFrames = toolMessages
             )
@@ -1163,7 +1161,6 @@ abstract class ExecutorIntegrationTestBase {
             val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
             val textFrames = mutableListOf<StreamFrame.TextDelta>()
             val reasoningFrames = mutableListOf<StreamFrame.ReasoningDelta>()
-            val reasoningSummaryFrames = mutableListOf<StreamFrame.ReasoningSummaryDelta>()
 
             executor.executeStreamAndCollect(
                 prompt = prompt,
@@ -1171,7 +1168,6 @@ abstract class ExecutorIntegrationTestBase {
                 tools = listOf(SimpleCalculatorTool.descriptor),
                 textFrames = textFrames,
                 reasoningFrames = reasoningFrames,
-                reasoningSummaryFrames = reasoningSummaryFrames,
                 endFrame = endMessages,
                 toolFrames = toolMessages
             )
@@ -1195,7 +1191,6 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
     endFrame: MutableList<StreamFrame.End>,
     toolFrames: MutableList<StreamFrame.ToolCallDelta>,
     reasoningFrames: MutableList<StreamFrame.ReasoningDelta>,
-    reasoningSummaryFrames: MutableList<StreamFrame.ReasoningSummaryDelta> = mutableListOf(),
 ) {
     this.executeStreaming(prompt, model, tools).collect { frame ->
         when (frame) {
@@ -1204,7 +1199,6 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
                     is StreamFrame.TextDelta -> textFrames.add(delta)
                     is StreamFrame.ToolCallDelta -> toolFrames.add(delta)
                     is StreamFrame.ReasoningDelta -> reasoningFrames.add(delta)
-                    is StreamFrame.ReasoningSummaryDelta -> reasoningSummaryFrames.add(delta)
                 }
             }
 

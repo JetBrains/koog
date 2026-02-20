@@ -55,18 +55,8 @@ public sealed interface StreamFrame {
      */
     @Serializable
     public data class ReasoningDelta(
-        val text: String,
-        override val index: Int? = null
-    ) : DeltaFrame, StreamFrame
-
-    /**
-     * Represents a frame of a streaming response from a LLM with reasoning summary delta.
-     *
-     * @property text The text to append to the reasoning text.
-     */
-    @Serializable
-    public data class ReasoningSummaryDelta(
-        val text: String,
+        val text: String? = null,
+        val summary: String? = null,
         override val index: Int? = null
     ) : DeltaFrame, StreamFrame
 

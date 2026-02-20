@@ -29,14 +29,14 @@ class StreamFrameFlowBuilderTest {
     @Test
     fun testEmitReasoningDelta() = runTest {
         val frames = buildStreamFrameFlow {
-            emitReasoningDelta("Thinking...", 0)
-            emitReasoningDelta(" step 2", 0)
+            emitReasoningDelta(text = "Thinking...", index = 0)
+            emitReasoningDelta(text = " step 2", index = 0)
         }.toList()
 
         assertContentEquals(
             listOf(
-                StreamFrame.ReasoningDelta("Thinking...", 0),
-                StreamFrame.ReasoningDelta(" step 2", 0)
+                StreamFrame.ReasoningDelta(text = "Thinking...", index = 0),
+                StreamFrame.ReasoningDelta(text = " step 2", index = 0)
             ),
             frames
         )
@@ -45,14 +45,14 @@ class StreamFrameFlowBuilderTest {
     @Test
     fun testEmitReasoningSummaryDelta() = runTest {
         val frames = buildStreamFrameFlow {
-            emitReasoningSummaryDelta("Summary part 1", 0)
-            emitReasoningSummaryDelta(" part 2", 0)
+            emitReasoningDelta(summary = "Summary part 1", index = 0)
+            emitReasoningDelta(summary = " part 2", index = 0)
         }.toList()
 
         assertContentEquals(
             listOf(
-                StreamFrame.ReasoningSummaryDelta("Summary part 1", 0),
-                StreamFrame.ReasoningSummaryDelta(" part 2", 0)
+                StreamFrame.ReasoningDelta(summary = "Summary part 1", index = 0),
+                StreamFrame.ReasoningDelta(summary = " part 2", index = 0)
             ),
             frames
         )
@@ -176,7 +176,7 @@ class StreamFrameFlowBuilderTest {
     fun testSwitchingFromToolCallToReasoningEmitsPendingToolCall() = runTest {
         val frames = buildStreamFrameFlow {
             emitToolCallDelta(id = "call_1", name = "search", args = "{}", 0)
-            emitReasoningDelta("Now thinking...", 1)
+            emitReasoningDelta(text = "Now thinking...", index = 1)
             emitEnd()
         }.toList()
 
@@ -184,7 +184,7 @@ class StreamFrameFlowBuilderTest {
             listOf(
                 StreamFrame.ToolCallDelta("call_1", "search", "{}", 0),
                 StreamFrame.ToolCallComplete("call_1", "search", "{}", 0),
-                StreamFrame.ReasoningDelta("Now thinking...", 1),
+                StreamFrame.ReasoningDelta(text = "Now thinking...", index = 1),
                 StreamFrame.ReasoningComplete(listOf("Now thinking..."), null, null, 1),
                 StreamFrame.End(null, ResponseMetaInfo.Empty)
             ),
@@ -198,11 +198,11 @@ class StreamFrameFlowBuilderTest {
             emitTextDelta("Start with text", 0)
             emitToolCallDelta(id = "call_1", name = "calculator", args = "{\"a\": 5}", 1)
             emitTextDelta("Continue after tool with text", 2)
-            emitReasoningDelta("Now switch from text to thinking...", 3)
-            emitReasoningSummaryDelta("Summary thinking", 3)
+            emitReasoningDelta(text = "Now switch from text to thinking...", index = 3)
+            emitReasoningDelta(summary = "Summary thinking", index = 3)
             emitToolCallDelta(id = "call_2", name = "search", args = "{}", 4)
-            emitReasoningDelta("Now switch from tool to thinking...", 5)
-            emitReasoningSummaryDelta("Summary thinking", 5)
+            emitReasoningDelta(text = "Now switch from tool to thinking...", index = 5)
+            emitReasoningDelta(summary = "Summary thinking", index = 5)
             emitTextDelta("Finally switch from reasoning to text ", 6)
             emitEnd()
         }.toList()
@@ -215,14 +215,24 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.ToolCallComplete("call_1", "calculator", "{\"a\": 5}", 1),
                 StreamFrame.TextDelta("Continue after tool with text", 2),
                 StreamFrame.TextComplete("Continue after tool with text", 2),
-                StreamFrame.ReasoningDelta("Now switch from text to thinking...", 3),
-                StreamFrame.ReasoningSummaryDelta("Summary thinking", 3),
-                StreamFrame.ReasoningComplete(listOf("Now switch from text to thinking..."), listOf("Summary thinking"), null, 3),
+                StreamFrame.ReasoningDelta(text = "Now switch from text to thinking...", index = 3),
+                StreamFrame.ReasoningDelta(text = "Summary thinking", index = 3),
+                StreamFrame.ReasoningComplete(
+                    listOf("Now switch from text to thinking..."),
+                    listOf("Summary thinking"),
+                    null,
+                    3
+                ),
                 StreamFrame.ToolCallDelta("call_2", "search", "{}", 4),
                 StreamFrame.ToolCallComplete("call_2", "search", "{}", 4),
-                StreamFrame.ReasoningDelta("Now switch from tool to thinking...", 5),
-                StreamFrame.ReasoningSummaryDelta("Summary thinking", 5),
-                StreamFrame.ReasoningComplete(listOf("Now switch from tool to thinking..."), listOf("Summary thinking"), null, 5),
+                StreamFrame.ReasoningDelta(text = "Now switch from tool to thinking...", index = 5),
+                StreamFrame.ReasoningDelta(text = "Summary thinking", index = 5),
+                StreamFrame.ReasoningComplete(
+                    listOf("Now switch from tool to thinking..."),
+                    listOf("Summary thinking"),
+                    null,
+                    5
+                ),
                 StreamFrame.TextDelta("Finally switch from reasoning to text ", 6),
                 StreamFrame.TextComplete("Finally switch from reasoning to text ", 6),
                 StreamFrame.End(null, ResponseMetaInfo.Empty)

@@ -12,10 +12,9 @@ Koog’s **Streaming API** lets you consume **LLM output incrementally** as a `F
 The stream carries **typed frames** organized into two categories:
 
 **Delta frames** (incremental/partial content):
-- `StreamFrame.TextDelta(text: String)` — incremental assistant text
-- `StreamFrame.ReasoningDelta(text: String)` — incremental reasoning text
-- `StreamFrame.ReasoningSummaryDelta(text: String)` — incremental reasoning summary
-- `StreamFrame.ToolCallDelta(id: String?, name: String?, content: String?)` — partial tool invocation
+- `StreamFrame.TextDelta(text: String, index: Int?)` — incremental assistant text
+- `StreamFrame.ReasoningDelta(text: String?, summary: String?, index: Int?)` — incremental reasoning text and summary
+- `StreamFrame.ToolCallDelta(id: String?, name: String?, content: String?, index: Int?)` — partial tool invocation
 
 **Complete frames** (full content):
 - `StreamFrame.TextComplete(text: String)` — complete assistant text
@@ -78,8 +77,7 @@ llm.writeSession {
     stream.collect { frame ->
         when (frame) {
             is StreamFrame.TextDelta -> print(frame.text)
-            is StreamFrame.ReasoningDelta -> print("[Reasoning] ${frame.text}")
-            is StreamFrame.ReasoningSummaryDelta -> print("[Summary] ${frame.text}")
+            is StreamFrame.ReasoningDelta -> print("[Reasoning] text=${frame.text} summary=${frame.summary}")
             is StreamFrame.ToolCallComplete -> {
                 println("\n🔧 Tool call: ${frame.name} args=${frame.content}")
                 // Optionally parse lazily:
@@ -153,12 +151,14 @@ llm.writeSession {
     stream.collect { frame ->
         when (frame) {
             is StreamFrame.ReasoningDelta -> {
-                reasoningSteps.add(frame.text)
-                print(frame.text) // Display reasoning as it arrives
-            }
-            is StreamFrame.ReasoningSummaryDelta -> {
-                summarySteps.add(frame.text)
-                print(frame.text) // Display summary as it arrives
+                frame.text?.let { 
+                    reasoningSteps.add(it)
+                    print(frame.text) // Display reasoning as it arrives
+                }
+                frame.summary?.let {
+                    summarySteps.add(it)
+                    print(frame.summary) // Display reasoning summary as it arrives
+                }
             }
             is StreamFrame.ReasoningComplete -> {
                 // Access complete reasoning
@@ -229,8 +229,7 @@ handleEvents {
     onLLMStreamingFrameReceived { context ->
         when (val frame = context.streamFrame) {
             is StreamFrame.TextDelta -> print(frame.text)
-            is StreamFrame.ReasoningDelta -> print("[Reasoning] ${frame.text}")
-            is StreamFrame.ReasoningSummaryDelta -> print("[Summary] ${frame.text}")
+            is StreamFrame.ReasoningDelta -> print("[Reasoning] text=${frame.text} summary=${frame.summary}")
             else -> {} // Handle other frame types if needed
         }
     }

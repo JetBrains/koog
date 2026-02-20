@@ -60,9 +60,9 @@ internal class StreamFrameExtTest {
         )
 
         val expectedFrames = listOf(
-            StreamFrame.ReasoningDelta("Thinking step 1"),
-            StreamFrame.ReasoningDelta("Thinking step 2"),
-            StreamFrame.ReasoningSummaryDelta("Summary"),
+            StreamFrame.ReasoningDelta(text = "Thinking step 1"),
+            StreamFrame.ReasoningDelta(text = "Thinking step 2"),
+            StreamFrame.ReasoningDelta(summary = "Summary"),
             StreamFrame.ReasoningComplete(
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),
@@ -120,9 +120,9 @@ internal class StreamFrameExtTest {
         )
 
         val expectedFrames = listOf(
-            StreamFrame.ReasoningDelta("Thinking step 1", 0),
-            StreamFrame.ReasoningDelta("Thinking step 2", 0),
-            StreamFrame.ReasoningSummaryDelta("Summary", 0),
+            StreamFrame.ReasoningDelta(text = "Thinking step 1", index = 0),
+            StreamFrame.ReasoningDelta(text = "Thinking step 2", index = 0),
+            StreamFrame.ReasoningDelta(summary = "Summary", index = 0),
             StreamFrame.ReasoningComplete(
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),
@@ -185,7 +185,7 @@ internal class StreamFrameExtTest {
         val frames = listOf(
             StreamFrame.ReasoningDelta("Thinking step 1"),
             StreamFrame.ReasoningDelta("Thinking step 2"),
-            StreamFrame.ReasoningSummaryDelta("Summary"),
+            StreamFrame.ReasoningDelta(summary = "Summary"),
             StreamFrame.ReasoningComplete(
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),
@@ -233,9 +233,9 @@ internal class StreamFrameExtTest {
     @Test
     fun testStreamFramesToListOfMessageResponses() {
         val frames = listOf(
-            StreamFrame.ReasoningDelta("Thinking step 1", 0),
-            StreamFrame.ReasoningDelta("Thinking step 2", 0),
-            StreamFrame.ReasoningSummaryDelta("Summary", 0),
+            StreamFrame.ReasoningDelta(text = "Thinking step 1", index = 0),
+            StreamFrame.ReasoningDelta(text = "Thinking step 2", index = 0),
+            StreamFrame.ReasoningDelta(summary = "Summary", index = 0),
             StreamFrame.ReasoningComplete(
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),

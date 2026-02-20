@@ -22,7 +22,6 @@ public fun streamFrameFlowOf(vararg content: String): Flow<StreamFrame.TextDelta
  * @see emitTextDelta for emitting a [StreamFrame.TextDelta] object.
  * @see emitTextComplete for emitting a [StreamFrame.TextComplete] object.
  * @see emitReasoningDelta for emitting a [StreamFrame.ReasoningDelta] object.
- * @see emitReasoningSummaryDelta for emitting a [StreamFrame.ReasoningSummaryDelta] object.
  * @see emitReasoningComplete for emitting a [StreamFrame.ReasoningComplete] object.
  * @see emitToolCallDelta for emitting a [StreamFrame.ToolCallDelta] object.
  * @see emitToolCallComplete for emitting a [StreamFrame.ToolCallComplete] object.
@@ -46,16 +45,14 @@ public suspend fun FlowCollector<StreamFrame>.emitTextComplete(text: String, ind
     emit(StreamFrame.TextComplete(text, index))
 
 /**
- * Emits a [StreamFrame.ReasoningDelta] with the given [text].
+ * Emits a [StreamFrame.ReasoningDelta] with the given [text] and [summary].
  */
-public suspend fun FlowCollector<StreamFrame>.emitReasoningDelta(text: String, index: Int? = null): Unit =
-    emit(StreamFrame.ReasoningDelta(text, index))
-
-/**
- * Emits a [StreamFrame.ReasoningSummaryDelta] with the given [text].
- */
-public suspend fun FlowCollector<StreamFrame>.emitReasoningSummaryDelta(text: String, index: Int? = null): Unit =
-    emit(StreamFrame.ReasoningSummaryDelta(text, index))
+public suspend fun FlowCollector<StreamFrame>.emitReasoningDelta(
+    text: String? = null,
+    summary: String? = null,
+    index: Int? = null
+): Unit =
+    emit(StreamFrame.ReasoningDelta(text, summary, index))
 
 /**
  * Emits a [StreamFrame.ReasoningComplete] with the given [text].
@@ -154,31 +151,16 @@ public class StreamFrameFlowBuilder(
     /**
      * Emits a [StreamFrame.ReasoningDelta] with the given [text].
      */
-    public suspend fun emitReasoningDelta(text: String, index: Int? = null) {
+    public suspend fun emitReasoningDelta(text: String? = null, summary: String? = null, index: Int? = null) {
         tryEmitPendingToolCall()
         tryEmitPendingText()
         val previous: PendingReasoning? = pendingReasoningRef.load()
         if (previous == null) {
-            pendingReasoningRef.store(PendingReasoning(textDelta = text, summaryDelta = null, index = index))
+            pendingReasoningRef.store(PendingReasoning(textDelta = text, summaryDelta = summary, index = index))
         } else {
-            pendingReasoningRef.store(previous.appendTextDelta(text, index))
+            pendingReasoningRef.store(previous.appendDelta(text, summary, index))
         }
-        flowCollector.emitReasoningDelta(text, index)
-    }
-
-    /**
-     * Emits a [StreamFrame.ReasoningSummaryDelta] with the given [text].
-     */
-    public suspend fun emitReasoningSummaryDelta(text: String, index: Int? = null) {
-        tryEmitPendingToolCall()
-        tryEmitPendingText()
-        val previous: PendingReasoning? = pendingReasoningRef.load()
-        if (previous == null) {
-            pendingReasoningRef.store(PendingReasoning(textDelta = null, summaryDelta = text, index = index))
-        } else {
-            pendingReasoningRef.store(previous.appendSummaryDelta(text, index))
-        }
-        flowCollector.emitReasoningSummaryDelta(text, index)
+        flowCollector.emitReasoningDelta(text, summary, index)
     }
 
     /**
@@ -294,16 +276,11 @@ public class StreamFrameFlowBuilder(
         val summaryDelta: String?,
         val index: Int?
     ) {
-        fun appendTextDelta(textDelta: String?, index: Int?): PendingReasoning {
+        fun appendDelta(textDelta: String?, summaryDelta: String?, index: Int?): PendingReasoning {
             require(this.index == index)
-            if (textDelta == null) return copy()
-            return copy(textDelta = (this.textDelta ?: "") + textDelta)
-        }
-
-        fun appendSummaryDelta(summaryDelta: String?, index: Int?): PendingReasoning {
-            require(this.index == index)
-            if (summaryDelta == null) return copy()
-            return copy(summaryDelta = (this.summaryDelta ?: "") + summaryDelta)
+            val textDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
+            val summaryDelta = if (summaryDelta == null) this.summaryDelta else (this.summaryDelta ?: "") + summaryDelta
+            return copy(textDelta = textDelta, summaryDelta = summaryDelta)
         }
     }
 }

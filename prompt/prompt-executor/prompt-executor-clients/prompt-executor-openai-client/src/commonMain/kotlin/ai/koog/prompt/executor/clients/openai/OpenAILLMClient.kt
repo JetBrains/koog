@@ -350,19 +350,19 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 processStreamingChunk = { it ->
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                            StreamFrame.TextDelta(it.delta, it.outputIndex)
+                            StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
-                            StreamFrame.ReasoningDelta(it.delta, it.outputIndex)
+                            StreamFrame.ReasoningDelta(text = it.delta, index = it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningSummaryTextDelta -> {
-                            StreamFrame.ReasoningSummaryDelta(it.delta, it.outputIndex)
+                            StreamFrame.ReasoningDelta(summary = it.delta, index = it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
-                            StreamFrame.ToolCallDelta(it.itemId, null, it.delta, it.outputIndex)
+                            StreamFrame.ToolCallDelta(id = it.itemId, name = null, content = it.delta, index = it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {

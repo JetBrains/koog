@@ -25,8 +25,8 @@ public fun Message.Response.toStreamFrames(index: Int? = null): List<StreamFrame
             }
 
             is Message.Reasoning -> {
-                parts.forEach { add(StreamFrame.ReasoningDelta(it.text, index)) }
-                summary?.forEach { add(StreamFrame.ReasoningSummaryDelta(it.text, index)) }
+                parts.forEach { add(StreamFrame.ReasoningDelta(it.text, null, index)) }
+                summary?.forEach { add(StreamFrame.ReasoningDelta(null, it.text, index)) }
                 add(
                     StreamFrame.ReasoningComplete(
                         parts.map { it.text },
