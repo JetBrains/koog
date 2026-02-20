@@ -12,7 +12,6 @@ import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
 import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
-import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
