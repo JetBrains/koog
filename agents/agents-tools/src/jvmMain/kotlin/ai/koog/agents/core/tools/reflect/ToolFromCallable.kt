@@ -72,6 +72,7 @@ public class ToolFromCallable(
         ensureValid()
     }
 
+    @OptIn(ExperimentalContextParameters::class)
     private fun ensureValid() {
         for (parameter in callable.parameters) {
             when (parameter.kind) {
@@ -92,6 +93,10 @@ public class ToolFromCallable(
 
                 KParameter.Kind.EXTENSION_RECEIVER -> {
                     throw IllegalArgumentException("Extension functions are not allowed")
+                }
+
+                KParameter.Kind.CONTEXT -> {
+                    throw IllegalArgumentException("Context parameters are not allowed")
                 }
             }
         }
