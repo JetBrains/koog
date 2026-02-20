@@ -7,7 +7,7 @@ import com.agentclientprotocol.protocol.Protocol
 import com.agentclientprotocol.transport.StdioTransport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered

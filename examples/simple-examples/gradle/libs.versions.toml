@@ -1,8 +1,7 @@
 [versions]
-kotlin = "2.2.20"
+kotlin = "2.3.10"
 kotlinx-coroutines = "1.10.2"
-kotlinx-datetime = "0.6.2"
-kotlinx-serialization = "1.8.1"
+kotlinx-datetime = "0.7.1"
 ktor3 = "3.2.2"
 logback = "1.5.13"
 mockk = "1.13.8"

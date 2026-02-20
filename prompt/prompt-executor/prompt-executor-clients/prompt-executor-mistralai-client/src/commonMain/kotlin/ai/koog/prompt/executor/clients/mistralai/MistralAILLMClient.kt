@@ -71,7 +71,7 @@ public open class MistralAILLMClient(
     apiKey: String,
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
     apiKey = apiKey,

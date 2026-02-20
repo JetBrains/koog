@@ -22,7 +22,7 @@ import kotlin.reflect.KType
  *
  * @property clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
+public class AIAgentGraphPipeline(clock: Clock = kotlin.time.Clock.System) : AIAgentPipeline(clock) {
 
     /**
      * Installs a feature into the pipeline with the provided configuration.

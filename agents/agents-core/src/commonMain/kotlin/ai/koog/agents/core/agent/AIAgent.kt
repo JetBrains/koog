@@ -173,7 +173,7 @@ public interface AIAgent<Input, Output> : Closeable {
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             noinline installFeatures: FeatureContext.() -> Unit = {},
         ): GraphAIAgent<Input, Output> {
             return GraphAIAgent(
@@ -216,7 +216,7 @@ public interface AIAgent<Input, Output> : Closeable {
             toolRegistry = toolRegistry,
             strategy = strategy,
             id = id,
-            clock = Clock.System,
+            clock = kotlin.time.Clock.System,
             installFeatures = installFeatures
         )
 
@@ -241,7 +241,7 @@ public interface AIAgent<Input, Output> : Closeable {
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
         ): FunctionalAIAgent<Input, Output> {
             return FunctionalAIAgent(
@@ -333,7 +333,7 @@ public interface AIAgent<Input, Output> : Closeable {
             responseProcessor: ResponseProcessor? = null,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             systemPrompt: String? = null,
             temperature: Double? = null,
             numberOfChoices: Int = 1,

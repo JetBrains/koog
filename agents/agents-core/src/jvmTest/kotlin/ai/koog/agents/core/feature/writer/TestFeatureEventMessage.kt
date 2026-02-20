@@ -2,8 +2,8 @@ package ai.koog.agents.core.feature.writer
 
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 @Serializable
 data class TestFeatureEventMessage(

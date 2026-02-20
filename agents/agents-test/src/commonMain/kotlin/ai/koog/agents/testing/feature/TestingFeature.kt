@@ -32,9 +32,9 @@ import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
@@ -416,7 +416,7 @@ public class Testing {
          * This enables test scenarios that require precise control over time
          * by allowing the use of custom clock instances, such as mock or fixed clocks.
          */
-        public var clock: Clock = Clock.System
+        public var clock: Clock = kotlin.time.Clock.System
 
         /**
          * Defines the tokenizer to be used for estimating token counts in text strings.

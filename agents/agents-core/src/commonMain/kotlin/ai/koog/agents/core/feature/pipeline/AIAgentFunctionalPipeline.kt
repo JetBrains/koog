@@ -13,7 +13,7 @@ import kotlinx.datetime.Clock
  *
  * @property clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentFunctionalPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
+public class AIAgentFunctionalPipeline(clock: Clock = kotlin.time.Clock.System) : AIAgentPipeline(clock) {
 
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.

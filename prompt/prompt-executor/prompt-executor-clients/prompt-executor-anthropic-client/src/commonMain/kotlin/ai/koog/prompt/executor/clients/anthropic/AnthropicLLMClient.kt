@@ -90,7 +90,7 @@ public open class AnthropicLLMClient(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    private val clock: Clock = Clock.System
+    private val clock: Clock = kotlin.time.Clock.System
 ) : LLMClient {
 
     private companion object {

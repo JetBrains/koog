@@ -3,8 +3,8 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Represents an event triggered at the start of an AI agent strategy execution.

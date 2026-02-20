@@ -272,7 +272,7 @@ public interface AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> 
         id: String? = null,
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: Clock = Clock.System,
+        clock: Clock = kotlin.time.Clock.System,
     ): TAgent
 
     /**
@@ -290,7 +290,7 @@ public interface AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> 
         id: String? = null,
         additionalToolRegistry: ToolRegistry = this.toolRegistry,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: Clock = Clock.System,
+        clock: Clock = kotlin.time.Clock.System,
     ): Output = createAgent(id, additionalToolRegistry, agentConfig, clock).run(agentInput)
 }
 
@@ -330,7 +330,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String? = null,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock = Clock.System,
+        clock: Clock = kotlin.time.Clock.System,
     ): TAgent
 
     /**
@@ -565,7 +565,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     parentAgentId: String? = null,
-    clock: Clock = Clock.System
+    clock: Clock = kotlin.time.Clock.System
 ): Tool<Input, AIAgentTool.AgentToolResult<Output>> = AIAgentTool(
     agentService = this,
     agentName = agentName,

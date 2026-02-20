@@ -216,7 +216,7 @@ public interface PromptCache {
 public suspend fun PromptCache.get(
     prompt: Prompt,
     tools: List<ToolDescriptor>,
-    clock: Clock = Clock.System
+    clock: Clock = kotlin.time.Clock.System
 ): List<Message.Response>? {
     return get(PromptCache.Request.create(prompt, tools))?.let { messages ->
         val metaInfo = prompt

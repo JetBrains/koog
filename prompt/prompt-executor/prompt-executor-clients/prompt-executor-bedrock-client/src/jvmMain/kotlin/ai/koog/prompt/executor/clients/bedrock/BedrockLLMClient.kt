@@ -140,7 +140,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     private val apiMethod: BedrockAPIMethod = BedrockAPIMethod.InvokeModel,
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     private val fallbackModelFamily: BedrockModelFamilies? = null,
-    private val clock: Clock = Clock.System,
+    private val clock: Clock = kotlin.time.Clock.System,
 ) : LLMClient, LLMEmbeddingProvider {
 
     private val logger = KotlinLogging.logger {}
@@ -157,7 +157,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     public constructor(
         identityProvider: IdentityProvider,
         settings: BedrockClientSettings = BedrockClientSettings(),
-        clock: Clock = Clock.System,
+        clock: Clock = kotlin.time.Clock.System,
     ) : this(
         bedrockClient = BedrockRuntimeClient {
             this.region = settings.region

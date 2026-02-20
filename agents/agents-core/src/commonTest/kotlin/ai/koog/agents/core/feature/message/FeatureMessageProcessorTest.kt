@@ -10,8 +10,6 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.js.JsName
 import kotlin.test.Test
@@ -19,6 +17,8 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class FeatureMessageProcessorTest {
 

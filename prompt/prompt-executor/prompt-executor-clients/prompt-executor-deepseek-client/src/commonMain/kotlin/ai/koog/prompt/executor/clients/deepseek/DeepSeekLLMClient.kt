@@ -57,7 +57,7 @@ public class DeepSeekLLMClient(
     apiKey: String,
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
     apiKey = apiKey,

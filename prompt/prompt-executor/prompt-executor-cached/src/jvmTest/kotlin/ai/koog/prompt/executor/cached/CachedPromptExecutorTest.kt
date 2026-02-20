@@ -15,10 +15,10 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.streamFrameFlowOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class CachedPromptExecutorTest {
     companion object {

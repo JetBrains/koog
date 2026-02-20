@@ -80,7 +80,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.JsonElement
 import ai.koog.agents.core.dsl.builder.strategy
 
@@ -209,7 +209,7 @@ Convert ACP content blocks to Koog messages using the provided extension functio
 import ai.koog.agents.features.acp.toKoogMessage
 import ai.koog.prompt.dsl.Prompt
 import com.agentclientprotocol.model.ContentBlock
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val clock: Clock = Clock.System
 val existingPrompt: Prompt = TODO()
@@ -327,7 +327,7 @@ The module provides utilities for converting between Koog and ACP message format
 import ai.koog.agents.features.acp.toKoogContentPart
 import ai.koog.agents.features.acp.toKoogMessage
 import com.agentclientprotocol.model.ContentBlock
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val clock: Clock = Clock.System
 val acpContentBlocks: List<ContentBlock> = TODO()

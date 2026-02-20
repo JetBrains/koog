@@ -11,12 +11,12 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 class TestLLMExecutor : PromptExecutor {
     companion object {
         val testClock: Clock = object : Clock {
-            override fun now(): kotlinx.datetime.Instant = kotlinx.datetime.Instant.parse("2023-01-01T00:00:00Z")
+            override fun now(): kotlin.time.Instant = kotlin.time.Instant.parse("2023-01-01T00:00:00Z")
         }
 
         const val DEFAULT_ASSISTANT_RESPONSE = "Default test response"

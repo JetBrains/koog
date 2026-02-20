@@ -5,8 +5,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -19,6 +17,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class PromptTest {
     companion object {
