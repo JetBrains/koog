@@ -4,6 +4,8 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -283,5 +285,56 @@ internal object AIAgentHelper {
         installFeatures = installFeatures,
         toolRegistry = toolRegistry,
         strategy = strategy
+    )
+
+    internal operator fun <Input, Output> invoke(
+        promptExecutor: PromptExecutor,
+        llmModel: LLModel,
+        responseProcessor: ResponseProcessor?,
+        toolRegistry: ToolRegistry,
+        strategy: AIAgentPlannerStrategy<Input, Output, *>,
+        id: String?,
+        systemPrompt: String?,
+        temperature: Double?,
+        numberOfChoices: Int,
+        maxIterations: Int,
+        installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
+    ): AIAgent<Input, Output> = PlannerAIAgent(
+        promptExecutor = promptExecutor,
+        agentConfig = AIAgentConfig(
+            prompt = prompt(
+                id = "chat",
+                params = LLMParams(
+                    temperature = temperature,
+                    numberOfChoices = numberOfChoices
+                )
+            ) {
+                systemPrompt?.let { system(it) }
+            },
+            model = llmModel,
+            maxAgentIterations = maxIterations,
+            responseProcessor = responseProcessor
+        ),
+        installFeatures = installFeatures,
+        toolRegistry = toolRegistry,
+        strategy = strategy
+    )
+
+    internal operator fun <Input, Output> invoke(
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        strategy: AIAgentPlannerStrategy<Input, Output, *>,
+        toolRegistry: ToolRegistry,
+        id: String?,
+        clock: Clock,
+        installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
+    ): AIAgent<Input, Output> = PlannerAIAgent(
+        promptExecutor = promptExecutor,
+        agentConfig = agentConfig,
+        toolRegistry = toolRegistry,
+        strategy = strategy,
+        id = id,
+        clock = clock,
+        installFeatures = installFeatures
     )
 }

@@ -8,7 +8,11 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.utils.BuilderChainAction
 import ai.koog.agents.core.utils.ConfigureAction
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
+import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -103,20 +107,33 @@ public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilde
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentBuilder<Input, Output> = delegate.functionalStrategy(strategy)
 
+    public actual override fun <Input, Output> plannerStrategy(
+        strategy: AIAgentPlannerStrategy<Input, Output, *>
+    ): PlannerAgentBuilder<Input, Output> = delegate.plannerStrategy(strategy)
+
+    public actual override fun <Input : Any, Output : Any> plannerStrategy(
+        name: String,
+        buildStrategy: BuilderChainAction<AIAgentPlannerStrategyBuilder, TypedAgentPlannerStrategyBuilder<Input, Output>>
+    ): PlannerAgentBuilder<Input, Output> = delegate.plannerStrategy(name, buildStrategy)
+
     public actual override fun id(id: String?): AIAgentBuilder = apply { delegate.id(id) }
 
-    public actual override fun systemPrompt(systemPrompt: String): AIAgentBuilder = apply { delegate.systemPrompt(systemPrompt) }
+    public actual override fun systemPrompt(systemPrompt: String): AIAgentBuilder =
+        apply { delegate.systemPrompt(systemPrompt) }
 
     public actual override fun prompt(prompt: Prompt): AIAgentBuilder = apply { delegate.prompt(prompt) }
 
-    public actual override fun temperature(temperature: Double): AIAgentBuilder = apply { delegate.temperature(temperature) }
+    public actual override fun temperature(temperature: Double): AIAgentBuilder =
+        apply { delegate.temperature(temperature) }
 
     public actual override fun numberOfChoices(numberOfChoices: Int): AIAgentBuilder =
         apply { delegate.numberOfChoices(numberOfChoices) }
 
-    public actual override fun maxIterations(maxIterations: Int): AIAgentBuilder = apply { delegate.maxIterations(maxIterations) }
+    public actual override fun maxIterations(maxIterations: Int): AIAgentBuilder =
+        apply { delegate.maxIterations(maxIterations) }
 
-    public actual override fun agentConfig(config: AIAgentConfig): AIAgentBuilder = apply { delegate.agentConfig(config) }
+    public actual override fun agentConfig(config: AIAgentConfig): AIAgentBuilder =
+        apply { delegate.agentConfig(config) }
 
     public actual override fun <TConfig : FeatureConfig> install(
         feature: AIAgentGraphFeature<TConfig, *>,

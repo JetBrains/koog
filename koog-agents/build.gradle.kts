@@ -51,7 +51,6 @@ val included = setOf(
     ":agents:agents-features:agents-features-snapshot",
     ":agents:agents-mcp",
     ":agents:agents-mcp-metadata",
-    ":agents:agents-planner",
     ":agents:agents-tools",
     ":agents:agents-utils",
     ":embeddings:embeddings-base",

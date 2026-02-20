@@ -5,7 +5,11 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.utils.BuilderChainAction
 import ai.koog.agents.core.utils.ConfigureAction
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
+import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -85,6 +89,29 @@ public interface AIAgentBuilderAPI {
     public fun <Input, Output> functionalStrategy(
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentBuilder<Input, Output>
+
+    /**
+     * Configures the planner strategy to be used by an AI agent planner.
+     *
+     * @param strategy the planning strategy to define how the AI agent should plan actions, utilizing a specific state and strategy implementation
+     * @return an instance of PlannerAgentBuilder configured with the specified planning strategy
+     */
+    public fun <Input, Output> plannerStrategy(
+        strategy: AIAgentPlannerStrategy<Input, Output, *>
+    ): PlannerAgentBuilder<Input, Output>
+
+    /**
+     * Defines a strategy for the planner using a specified builder chain action.
+     *
+     * @param buildStrategy A function that builds the planner strategy by chaining actions using
+     *                      an instance of AIAgentPlannerStrategyBuilder and optionally
+     *                      TypedAgentPlannerStrategyBuilder for typed input and output.
+     * @return A PlannerAgentBuilder instance configured with the specified input and output types.
+     */
+    public fun <Input : Any, Output : Any> plannerStrategy(
+        name: String,
+        buildStrategy: BuilderChainAction<AIAgentPlannerStrategyBuilder, TypedAgentPlannerStrategyBuilder<Input, Output>>
+    ): PlannerAgentBuilder<Input, Output>
 
     /**
      * Sets the identifier for the builder configuration.

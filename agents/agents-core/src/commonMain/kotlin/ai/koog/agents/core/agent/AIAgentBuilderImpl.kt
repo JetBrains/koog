@@ -7,7 +7,12 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.utils.BuilderChainAction
 import ai.koog.agents.core.utils.ConfigureAction
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
+import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
+import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -90,6 +95,29 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         missingToolsConversionStrategy = this.missingToolsConversionStrategy,
         clock = this.clock,
         toolRegistry = this.toolRegistry
+    )
+
+    public override fun <Input, Output> plannerStrategy(
+        strategy: AIAgentPlannerStrategy<Input, Output, *>
+    ): PlannerAgentBuilder<Input, Output> = PlannerAgentBuilder(
+        strategy = strategy,
+        id = this.id,
+        promptExecutor = this.promptExecutor,
+        prompt = this.prompt,
+        llmModel = this.llmModel,
+        temperature = this.temperature,
+        numberOfChoices = this.numberOfChoices,
+        maxIterations = this.maxIterations,
+        missingToolsConversionStrategy = this.missingToolsConversionStrategy,
+        clock = this.clock,
+        toolRegistry = this.toolRegistry
+    )
+
+    public override fun <Input : Any, Output : Any> plannerStrategy(
+        name: String,
+        buildStrategy: BuilderChainAction<AIAgentPlannerStrategyBuilder, TypedAgentPlannerStrategyBuilder<Input, Output>>
+    ): PlannerAgentBuilder<Input, Output> = plannerStrategy(
+        buildStrategy.configure(AIAgentPlannerStrategyBuilder(name)).build()
     )
 
     public override fun id(id: String?): AIAgentBuilderAPI = apply {

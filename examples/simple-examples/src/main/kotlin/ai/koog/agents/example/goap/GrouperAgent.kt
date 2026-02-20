@@ -122,7 +122,7 @@ suspend fun AIAgentPlannerContext.evaluateWordings(
     }
 }
 
-fun grouperPlanner() = goap<State>(typeOf<State>()) {
+fun grouperPlanner() = AIAgentPlannerStrategy.goap("strategy", ::State) {
     goal(
         name = "Needed number of good proposals reached"
     ) { state ->
@@ -199,10 +199,7 @@ fun grouperPlanner() = goap<State>(typeOf<State>()) {
 }
 
 suspend fun main() {
-    val grouperStrategy = AIAgentPlannerStrategy(
-        name = "grouper",
-        planner = grouperPlanner(),
-    )
+    val grouperStrategy = grouperPlanner()
 
     val agentConfig = AIAgentConfig(
         prompt = prompt("grouper") {},
@@ -285,7 +282,7 @@ suspend fun main() {
             message = message,
         )
 
-        val result = agent.run(State(config)).result
+        val result = agent.run(config)
         buildString {
             appendLine("Final result:")
             appendLine(result)

@@ -8,6 +8,8 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
@@ -232,6 +234,58 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
+        ): AIAgent<Input, Output>
+
+        /**
+         * Invokes the AI agent with the provided configuration and parameters.
+         *
+         * @param promptExecutor The executor responsible for running prompts.
+         * @param llmModel The large language model to be used by the agent.
+         * @param responseProcessor An optional processor for handling responses from the language model.
+         * @param toolRegistry The registry of tools available to the agent, defaulting to an empty registry.
+         * @param strategy The planning strategy used by the AI agent.
+         * @param id An optional unique identifier for the agent.
+         * @param systemPrompt An optional system-level prompt to initialize the agent.
+         * @param temperature An optional parameter to control the randomness of the language model's output.
+         * @param numberOfChoices The number of response choices to generate, defaulting to 1.
+         * @param maxIterations The maximum number of iterations allowed for the agent, defaulting to 50.
+         * @param installFeatures A lambda for configuring additional features in the agent.
+         * @return An AI agent instance configured with the provided parameters.
+         */
+        public operator fun <Input, Output> invoke(
+            promptExecutor: PromptExecutor,
+            llmModel: LLModel,
+            responseProcessor: ResponseProcessor? = null,
+            toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+            strategy: AIAgentPlannerStrategy<Input, Output, *>,
+            id: String? = null,
+            systemPrompt: String? = null,
+            temperature: Double? = null,
+            numberOfChoices: Int = 1,
+            maxIterations: Int = 50,
+            installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
+        ): AIAgent<Input, Output>
+
+        /**
+         * Invokes the creation of an AI agent using the provided configuration, strategy, and optional parameters.
+         *
+         * @param promptExecutor The executor responsible for handling prompts and responses.
+         * @param agentConfig The configuration object for the AI agent, including its behavior and properties.
+         * @param strategy The planning strategy used to determine the agent's actions, tailored to the given world state and plan.
+         * @param toolRegistry An optional registry of tools available for the agent, defaults to an empty registry.
+         * @param id An optional unique identifier for the agent, defaults to null if not provided.
+         * @param clock The clock instance used for time-based operations, defaults to the system clock.
+         * @param installFeatures A lambda function used to install additional features into the agent's feature context.
+         * @return An instance of an AI agent configured with the provided parameters that maps a world state to another world state.
+         */
+        public operator fun <Input, Output> invoke(
+            promptExecutor: PromptExecutor,
+            agentConfig: AIAgentConfig,
+            strategy: AIAgentPlannerStrategy<Input, Output, *>,
+            toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+            id: String? = null,
+            clock: Clock = Clock.System,
+            installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
         ): AIAgent<Input, Output>
     }
 }

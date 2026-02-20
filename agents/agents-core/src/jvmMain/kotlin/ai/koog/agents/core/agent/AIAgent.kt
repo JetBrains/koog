@@ -11,6 +11,8 @@ import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
@@ -172,6 +174,43 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             maxIterations,
             installFeatures
         )
+
+        public actual operator fun <Input, Output> invoke(
+            promptExecutor: PromptExecutor,
+            llmModel: LLModel,
+            responseProcessor: ResponseProcessor?,
+            toolRegistry: ToolRegistry,
+            strategy: AIAgentPlannerStrategy<Input, Output, *>,
+            id: String?,
+            systemPrompt: String?,
+            temperature: Double?,
+            numberOfChoices: Int,
+            maxIterations: Int,
+            installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
+        ): AIAgent<Input, Output> = AIAgentHelper.invoke(
+            promptExecutor,
+            llmModel,
+            responseProcessor,
+            toolRegistry,
+            strategy,
+            id,
+            systemPrompt,
+            temperature,
+            numberOfChoices,
+            maxIterations,
+            installFeatures
+        )
+
+        public actual operator fun <Input, Output> invoke(
+            promptExecutor: PromptExecutor,
+            agentConfig: AIAgentConfig,
+            strategy: AIAgentPlannerStrategy<Input, Output, *>,
+            toolRegistry: ToolRegistry,
+            id: String?,
+            clock: Clock,
+            installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
+        ): AIAgent<Input, Output> =
+            AIAgentHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
 
         @JvmStatic
         public actual fun builder(): AIAgentBuilder = AIAgentBuilder()

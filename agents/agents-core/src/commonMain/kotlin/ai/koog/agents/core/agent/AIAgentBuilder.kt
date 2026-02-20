@@ -11,7 +11,12 @@ import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.utils.BuilderChainAction
 import ai.koog.agents.core.utils.ConfigureAction
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
+import ai.koog.agents.planner.PlannerAIAgent
+import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -140,6 +145,15 @@ public expect class AIAgentBuilder internal constructor() : AIAgentBuilderAPI {
     public override fun <Input, Output> functionalStrategy(
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentBuilder<Input, Output>
+
+    public override fun <Input, Output> plannerStrategy(
+        strategy: AIAgentPlannerStrategy<Input, Output, *>
+    ): PlannerAgentBuilder<Input, Output>
+
+    public override fun <Input : Any, Output : Any> plannerStrategy(
+        name: String,
+        buildStrategy: BuilderChainAction<AIAgentPlannerStrategyBuilder, TypedAgentPlannerStrategyBuilder<Input, Output>>
+    ): PlannerAgentBuilder<Input, Output>
 
     public override fun id(id: String?): AIAgentBuilder
 
@@ -531,6 +545,193 @@ public class FunctionalAgentBuilder<Input, Output>(
      */
     public fun build(): AIAgent<Input, Output> {
         return FunctionalAIAgent(
+            strategy = strategy,
+            promptExecutor = requireNotNull(promptExecutor) { "promptExecutor must be set" },
+            toolRegistry = toolRegistry,
+            id = id,
+            agentConfig = AIAgentConfig(
+                prompt = prompt ?: Prompt.Empty,
+                model = requireNotNull(llmModel) { "llmModel must be set" },
+                maxAgentIterations = maxIterations,
+            ),
+            clock = clock
+        ) {
+            featureInstallers.forEach { install ->
+                install()
+            }
+        }
+    }
+}
+
+/**
+ * Builds an AI-based planning agent by configuring various parameters and defining custom behaviors
+ * for the agent. This builder allows flexible setup of an agent's functionality and behavior
+ * based on the provided configuration and tools.
+ *
+ * @param State The type representing the state handled by the AI agent.
+ * @param strategy The planning strategy used by the agent to process and execute tasks.
+ * @param promptExecutor The executor responsible for handling AI prompts.
+ * @param toolRegistry The registry of tools available for use by the agent. Defaults to an empty tool registry.
+ * @param id The optional identifier of the agent.
+ * @param prompt The system prompt or structured prompt that the agent uses for planning. Defaults to an empty prompt.
+ * @param llmModel The language learning model used by the agent to interpret and process tasks.
+ * @param temperature The temperature parameter controlling randomness in the agent's decision-making. Defaults to `1.0`.
+ * @param numberOfChoices The number of choices for the agent's output per action. Defaults to `1`.
+ * @param missingToolsConversionStrategy The strategy used when dealing with missing tools during execution.
+ *        Defaults to converting missing tools to JSON representation.
+ * @param maxIterations The maximum number of iterations the agent can perform in a planning loop. Defaults to `50`.
+ * @param clock The clock instance used to track time-related operations for the agent. Defaults to the system clock.
+ * @param featureInstallers A list of feature installers that enhance the agent's behavior with additional functionality.
+ */
+public class PlannerAgentBuilder<Input, Output>(
+    private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    private var promptExecutor: PromptExecutor? = null,
+    private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    private var id: String? = null,
+    private var prompt: Prompt? = Prompt.Empty,
+    private var llmModel: LLModel? = null,
+    private var temperature: Double = 1.0,
+    private var numberOfChoices: Int = 1,
+    private var missingToolsConversionStrategy: MissingToolsConversionStrategy =
+        MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
+    private var maxIterations: Int = 50,
+    private var clock: Clock = Clock.System,
+    private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
+) {
+
+    /**
+     * Sets the `PromptExecutor` instance to be used by the `PlannerAgentBuilder`.
+     *
+     * @param promptExecutor An instance of `PromptExecutor` that will handle prompt execution logic.
+     * @return The current instance of `PlannerAgentBuilder<Input, Output>` for method chaining.
+     */
+    public fun promptExecutor(promptExecutor: PromptExecutor): PlannerAgentBuilder<Input, Output> = apply {
+        this.promptExecutor = promptExecutor
+    }
+
+    /**
+     * Sets the Large Language Model (LLM) to be used by the `PlannerAgentBuilder`.
+     *
+     * @param model The instance of [LLModel] representing the Large Language Model to be configured.
+     * @return The current instance of [PlannerAgentBuilder] for method chaining.
+     */
+    public fun llmModel(model: LLModel): PlannerAgentBuilder<Input, Output> = apply {
+        this.llmModel = model
+    }
+
+    /**
+     * Sets the tool registry for the PlannerAgentBuilder.
+     *
+     * @param toolRegistry The tool registry to be used.
+     * @return The PlannerAgentBuilder instance with the updated tool registry.
+     */
+    public fun toolRegistry(toolRegistry: ToolRegistry): PlannerAgentBuilder<Input, Output> = apply {
+        this.toolRegistry = toolRegistry
+    }
+
+    /**
+     * Sets the identifier for the PlannerAgentBuilder and returns the updated builder instance.
+     *
+     * @param id The identifier to be set. It can be null.
+     * @return The updated PlannerAgentBuilder instance for chaining further configurations.
+     */
+    public fun id(id: String?): PlannerAgentBuilder<Input, Output> = apply {
+        this.id = id
+    }
+
+    /**
+     * Configures the system prompt for the planner agent.
+     *
+     * The system prompt provides foundational instructions or context for the planner agent's behavior.
+     *
+     * @param systemPrompt The content of the system prompt to set.
+     * @return The current instance of the PlannerAgentBuilder with the specified system prompt applied.
+     */
+    public fun systemPrompt(systemPrompt: String): PlannerAgentBuilder<Input, Output> = apply {
+        this.prompt = ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) }
+    }
+
+    /**
+     * Sets the prompt to be used by the builder and updates the internal state accordingly.
+     *
+     * @param prompt The prompt to be used by the PlannerAgentBuilder.
+     * @return The current instance of PlannerAgentBuilder with the updated prompt.
+     */
+    public fun prompt(prompt: Prompt): PlannerAgentBuilder<Input, Output> = apply {
+        this.prompt = prompt
+    }
+
+    /**
+     * Sets the temperature parameter for the planner agent.
+     * Temperature controls the randomness of the agent's outputs.
+     * A higher value encourages more random and diverse outputs,
+     * while a lower value makes the outputs more focused and deterministic.
+     *
+     * @param temperature The temperature value to be used. Typically ranges from 0.0 to 1.0.
+     * @return The current instance of [PlannerAgentBuilder], allowing for method chaining.
+     */
+    public fun temperature(temperature: Double): PlannerAgentBuilder<Input, Output> = apply {
+        this.temperature = temperature
+    }
+
+    /**
+     * Sets the number of choices the planner agent can consider while making decisions.
+     *
+     * @param numberOfChoices The number of choices to be allowed for the agent.
+     * @return The updated instance of the PlannerAgentBuilder.
+     */
+    public fun numberOfChoices(numberOfChoices: Int): PlannerAgentBuilder<Input, Output> = apply {
+        this.numberOfChoices = numberOfChoices
+    }
+
+    /**
+     * Sets the maximum number of iterations for the planner agent.
+     *
+     * @param maxIterations The maximum number of iterations the agent is allowed to perform.
+     * @return The updated instance of the PlannerAgentBuilder with the specified maximum iterations.
+     */
+    public fun maxIterations(maxIterations: Int): PlannerAgentBuilder<Input, Output> = apply {
+        this.maxIterations = maxIterations
+    }
+
+    /**
+     * Configures the agent with the specified AI agent configuration.
+     *
+     * @param config The configuration object that contains settings for the AI agent, such as prompt, model, maximum iterations, and tool conversion strategy.
+     * @return The updated instance of PlannerAgentBuilder<Input, Output> with the applied configuration.
+     */
+    public fun agentConfig(config: AIAgentConfig): PlannerAgentBuilder<Input, Output> = apply {
+        this.prompt = config.prompt
+        this.llmModel = config.model
+        this.maxIterations = config.maxAgentIterations
+        this.missingToolsConversionStrategy = config.missingToolsConversionStrategy
+    }
+
+    /**
+     * Installs a functional feature into the PlannerAgentBuilder with the specified configuration.
+     *
+     * @param feature The functional feature to be installed, parameterized with a configuration type and an additional type.
+     * @param configure A lambda or action responsible for configuring the provided feature with the appropriate settings.
+     * @return The current instance of PlannerAgentBuilder with the feature installed, enabling method chaining.
+     */
+    public fun <TConfig : FeatureConfig> install(
+        feature: AIAgentFunctionalFeature<TConfig, *>,
+        configure: ConfigureAction<TConfig>
+    ): PlannerAgentBuilder<Input, Output> = apply {
+        this.featureInstallers += {
+            install(feature) {
+                configure.configure(this)
+            }
+        }
+    }
+
+    /**
+     * Constructs and returns an instance of [AIAgent] configured with the provided parameters and features.
+     *
+     * @return An instance of [AIAgent] that uses the specified strategy, model, prompt, tools, and other configurations defined in the builder.
+     */
+    public fun build(): AIAgent<Input, Output> {
+        return PlannerAIAgent(
             strategy = strategy,
             promptExecutor = requireNotNull(promptExecutor) { "promptExecutor must be set" },
             toolRegistry = toolRegistry,

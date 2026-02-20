@@ -57,11 +57,11 @@ where the agent accepts an initial state string and returns the final state stri
 
 Koog provides two simple planners: 
 
-- [SimpleLLMPlanner](api:agents-planner::ai.koog.agents.planner.llm.SimpleLLMPlanner)
+- [SimpleLLMPlanner](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner.llm/-simple-l-l-m-planner/index.html)
     generates a plan only once at the very beginning and then follows the plan until it is completed. 
     To include replanning, extend `SimpleLLMPlanner` and override the `assessPlan` method,
     indicating when the agent should replan.
-- [SimpleLLMWithCriticPlanner](api:agents-planner::ai.koog.agents.planner.llm.SimpleLLMWithCriticPlanner)
+- [SimpleLLMWithCriticPlanner](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner.llm/-simple-l-l-m-with-critic-planner/index.html)
     implements the `assessPlan` method that uses an LLM.
     The method checks the validity of the plan via an LLM request and assesses whether the agent should replan.
 
@@ -130,10 +130,10 @@ A GOAP planner uses A* search to find the sequence of actions that satisfies the
 To create a GOAP agent, you need to:
 
 1. Define the state as a data class with properties representing various aspects specific to your goal.
-2. Create a [GOAPPlanner](api:agents-planner::ai.koog.agents.planner.goap.GOAPPlanner) instance using the [goap()](api:agents-planner::ai.koog.agents.planner.goap.goap) function.
-    1. Define actions with preconditions and beliefs using the [action()](api:agents-planner::ai.koog.agents.planner.goap.GOAPPlannerBuilder.action) function.
-    2. Define goals with completion conditions using the [goal()](api:agents-planner::ai.koog.agents.planner.goap.GOAPPlannerBuilder.goal) function.
-3. Wrap the planner with [AIAgentPlannerStrategy](api:agents-planner::ai.koog.agents.planner.AIAgentPlannerStrategy) and pass it to the [PlannerAIAgent](api:agents-planner::ai.koog.agents.planner.PlannerAIAgent) constructor.
+2. Create a [GOAPPlanner](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner.goap/-g-o-a-p-planner/index.html) instance using the [goap()](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner.goap/goap.html) function.
+    1. Define actions with preconditions and beliefs using the [action()](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/action.html) function.
+    2. Define goals with completion conditions using the [goal()](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/goal.html) function.
+3. Wrap the planner with [AIAgentPlannerStrategy](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner/-a-i-agent-planner-strategy/index.html) and pass it to the [PlannerAIAgent](https://api.koog.ai/agents/agents-core/ai.koog.agents.planner/-planner-a-i-agent/index.html) constructor.
 
 !!! note
 
@@ -146,16 +146,13 @@ In the following example, GOAP handles the high-level planning for creating an a
 while the LLM performs the actual content generation within each action.
 
 <!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
-import ai.koog.agents.planner.goap.goap
+import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
-import kotlin.reflect.typeOf
 -->
 ```kotlin
 // Define a state for content creation
@@ -167,10 +164,22 @@ data class ContentState(
     val draft: String = "",
     val hasReview: Boolean = false,
     val isPublished: Boolean = false
+) : GoapAgentState<String, String>(topic) {
+    // output of the agent:
+    override fun provideOutput(): String = draft
+}
+
+// Create and run the agent
+val agentConfig = AIAgentConfig(
+    prompt = prompt("writer") {
+        system("You are a professional content writer.")
+    },
+    model = OpenAIModels.Chat.GPT4o,
+    maxAgentIterations = 20
 )
 
-// Create GOAP planner with LLM-powered actions
-val planner = goap<ContentState>(typeOf<ContentState>()) {
+// Create GOAP planner strategy with LLM-powered actions
+val plannerStrategy = AIAgentPlannerStrategy.goap("content-planner", ::ContentState) {
     // Define actions with preconditions and beliefs
     action(
         name = "Create outline",
@@ -230,7 +239,7 @@ val planner = goap<ContentState>(typeOf<ContentState>()) {
         println("Publishing article...")
         state.copy(isPublished = true)
     }
-    
+
     // Define the goal with a completion condition
     goal(
         name = "Published article",
@@ -239,24 +248,15 @@ val planner = goap<ContentState>(typeOf<ContentState>()) {
     )
 }
 
-// Create and run the agent
-val agentConfig = AIAgentConfig(
-    prompt = prompt("writer") {
-        system("You are a professional content writer.")
-    },
-    model = OpenAIModels.Chat.GPT4o,
-    maxAgentIterations = 20
-)
-
-val agent = PlannerAIAgent(
+val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    strategy = AIAgentPlannerStrategy("content-planner", planner),
+    strategy = plannerStrategy,
     agentConfig = agentConfig
 )
 
 suspend fun main() {
-    val result = agent.run(ContentState(topic = "The Future of AI in Software Development"))
-    println("Final state: $result")
+    val result = agent.run("The Future of AI in Software Development")
+    println("Final draft: $result")
 }
 ```
 <!--- KNIT example-planner-02.kt -->

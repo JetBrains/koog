@@ -8,10 +8,7 @@ import ai.koog.agents.planner.AIAgentPlanner;
 import ai.koog.agents.planner.AIAgentPlannerStrategy;
 import ai.koog.agents.planner.JavaAIAgentPlanner;
 import ai.koog.agents.planner.PlannerAIAgent;
-import ai.koog.agents.planner.goap.Action;
-import ai.koog.agents.planner.goap.GOAPPlanner;
-import ai.koog.agents.planner.goap.GOAPPlannerBuilder;
-import ai.koog.agents.planner.goap.Goal;
+import ai.koog.agents.planner.goap.*;
 import ai.koog.agents.planner.llm.SimpleLLMPlanner;
 import ai.koog.agents.planner.llm.SimplePlan;
 import ai.koog.integration.tests.utils.TestCredentials;
@@ -45,7 +42,7 @@ public class JavaPlannerAIAgentIntegrationTest {
         }
 
         @Override
-        protected Boolean isPlanCompleted(AIAgentPlannerContext context, String state, String plan) {
+        protected Boolean isPlanCompleted(AIAgentFunctionalContext context, String state, String plan) {
             return !state.equals(context.getAgentInput());
         }
     }
@@ -58,13 +55,12 @@ public class JavaPlannerAIAgentIntegrationTest {
     private static final String REQUEST = "What's 1 + 1?";
 
     @SuppressWarnings("unchecked")
-    private static <Plan> void testPlanner(AIAgentPlanner<String, Plan> planner) {
-        testPlanner(planner, null, REQUEST, "2");
+    private static <Plan> void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy) {
+        testPlanner(strategy, null, REQUEST, "2");
     }
 
     @SuppressWarnings("unchecked")
-    private static <Plan> void testPlanner(AIAgentPlanner<String, Plan> planner, @Nullable ToolRegistry toolRegistry, String request, String expectedResultPart) {
-        AIAgentPlannerStrategy<String, Plan> strategy = new AIAgentPlannerStrategy<String, Plan>(STRATEGY_NAME, planner);
+    private static <Plan> void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy, @Nullable ToolRegistry toolRegistry, String request, String expectedResultPart) {
         var builder = PlannerAIAgent.<String, Plan>builder(strategy)
             .promptExecutor(promptExecutor)
             .llmModel(OpenAIModels.Chat.GPT4o)
@@ -87,7 +83,7 @@ public class JavaPlannerAIAgentIntegrationTest {
     @Test
     @Retry
     public void integration_testSimplePlanner() {
-        AIAgentPlanner<String, SimplePlan> planner = new SimpleLLMPlanner();
+        var planner = AIAgentPlannerStrategy.builder("simple").llmBasedPlanner().build();
 
         testPlanner(planner);
     }
@@ -95,46 +91,66 @@ public class JavaPlannerAIAgentIntegrationTest {
     @Test
     @Retry
     public void integration_testPlannerWithTools() {
-        AIAgentPlanner<String, String> planner = new TestPlanner();
-        ToolRegistry toolRegistry = new ToolRegistryBuilder()
+        var planner = new TestPlanner();
+        var toolRegistry = new ToolRegistryBuilder()
             .tools(new CalculatorTools())
             .build();
 
         testPlanner(planner, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");
     }
 
+    private class TextualState extends GoapAgentState<String, String> {
+        public String text;
+
+        public TextualState(String text) {
+            super(text);
+            this.text = text;
+        }
+
+        @Override
+        public String provideOutput() {
+            return text;
+        }
+    }
+
     @Test
     @Retry
     public void integration_testGoapPlanner() {
-        Action<String> formulateAction = Action.<String>builder()
+        var formulateAction = Action.<TextualState>builder()
             .name("formulate-problem")
             .precondition(state -> true)
-            .belief(state -> "Problem: example problem")
-            .executeSync((context, state) -> context.llm().writeSession(session -> {
-                session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Formulate problem: " + state + ". Answer with the problem formulation in the form \"Problem: ...\"").build());
-                return session.requestLLM().getContent();
-            }))
+            .belief(state -> new TextualState("Problem: example problem"))
+            .execute((context, state) -> {
+                String result = context.llm().writeSession(session -> {
+                    session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Formulate problem: " + state.text + ". Answer with the problem formulation in the form \"Problem: ...\"").build());
+                    return session.requestLLM().getContent();
+                });
+                return new TextualState(result);
+            })
             .build();
 
-        Action<String> solveAction = Action.<String>builder()
+        var solveAction = Action.<TextualState>builder()
             .name("solve-problem")
-            .precondition(state -> state.contains("Problem"))
-            .belief(state -> "Solution: example solution")
-            .executeSync((context, state) -> context.llm().writeSession(session -> {
-                session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Find solution. " + state + ". Answer with the solution in the form \"Solution: ...\"").build());
-                return session.requestLLM().getContent();
-            }))
+            .precondition(state -> state.text.contains("Problem"))
+            .belief(state -> new TextualState("Solution: example solution"))
+            .execute((context, state) -> {
+                String result = context.llm().writeSession(session -> {
+                    session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Find solution. " + state.text + ". Answer with the solution in the form \"Solution: ...\"").build());
+                    return session.requestLLM().getContent();
+                });
+                return new TextualState(result);
+            })
             .build();
 
-        Goal<String> goal = Goal.<String>builder()
+        var goal = Goal.<TextualState>builder()
             .name("find-solution")
             .cost(state -> 1.0)
-            .condition(state -> state.contains("Solution"))
+            .condition(state -> state.text.contains("Solution"))
             .build();
 
-        GOAPPlannerBuilder<String> builder = new GOAPPlannerBuilder<String>();
 
-        GOAPPlanner<String> planner = builder
+        var planner = AIAgentPlannerStrategy.builder("custom-goap")
+            .goap(TextualState::new)
             .action(formulateAction)
             .action(solveAction)
             .goal(goal)
