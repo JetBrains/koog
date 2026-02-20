@@ -17,6 +17,16 @@ public class ChatMemoryConfig : FeatureConfig() {
      * Defaults to [InMemoryChatHistoryProvider].
      */
     public var chatHistoryProvider: ChatHistoryProvider = InMemoryChatHistoryProvider()
+
+    /**
+     * Maximum number of messages to keep in the conversation window.
+     *
+     * When set, only the most recent [windowSize] messages are loaded into the prompt
+     * and stored after each run. This prevents unbounded prompt growth in long conversations.
+     *
+     * A value of `null` means no limit — all messages are kept.
+     */
+    public var windowSize: Int? = null
 }
 
 /**

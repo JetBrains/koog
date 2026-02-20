@@ -127,6 +127,7 @@ registerRunExampleTask("runExampleStreamingKtorServer", "ai.koog.agents.example.
 
 registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.GrouperAgentKt")
 registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemory.ChatMemoryExampleKt")
+registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
 /*
  A2A examples
 */

@@ -5,6 +5,7 @@ import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.testing.tools.MockLLMBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
@@ -58,7 +59,8 @@ class ChatMemoryTest {
 
     private fun createGraphAgent(
         historyProvider: ChatHistoryProvider,
-        mockExecutorInit: ai.koog.agents.testing.tools.MockLLMBuilder.() -> Unit
+        windowSize: Int? = null,
+        mockExecutorInit: MockLLMBuilder.() -> Unit
     ): AIAgent<String, String> {
         val mockExecutor = getMockExecutor(init = mockExecutorInit)
         return AIAgent(
@@ -69,13 +71,15 @@ class ChatMemoryTest {
         ) {
             install(ChatMemory) {
                 chatHistoryProvider = historyProvider
+                this.windowSize = windowSize
             }
         }
     }
 
     private fun createFunctionalAgent(
         historyProvider: ChatHistoryProvider,
-        mockExecutorInit: ai.koog.agents.testing.tools.MockLLMBuilder.() -> Unit
+        windowSize: Int? = null,
+        mockExecutorInit: MockLLMBuilder.() -> Unit
     ): AIAgent<String, List<Message>> {
         val mockExecutor = getMockExecutor(init = mockExecutorInit)
         return AIAgent(
@@ -87,6 +91,7 @@ class ChatMemoryTest {
         ) {
             install(ChatMemory) {
                 chatHistoryProvider = historyProvider
+                this.windowSize = windowSize
             }
         }
     }
@@ -660,5 +665,170 @@ class ChatMemoryTest {
 
         assertEquals("session-alpha", historyProvider.storeCalls[0].first)
         assertEquals("session-beta", historyProvider.storeCalls[1].first)
+    }
+
+    // ---- Window Size ----
+
+    @Test
+    fun testWindowSizeNullKeepsAllMessages() = runTest {
+        val sessionId = "no-window-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val agent = createGraphAgent(historyProvider, windowSize = null) {
+            mockLLMAnswer("Reply 1") onRequestContains "Q1"
+            mockLLMAnswer("Reply 2") onRequestContains "Q2"
+            mockLLMAnswer("Reply 3") onRequestContains "Q3"
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        agent.run("Q1", sessionId)
+        agent.run("Q2", sessionId)
+        agent.run("Q3", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        val userMessages = saved.filterIsInstance<Message.User>()
+        assertEquals(3, userMessages.size, "All 3 user messages should be kept without window limit")
+    }
+
+    @Test
+    fun testWindowSizeTruncatesStoredHistory() = runTest {
+        val sessionId = "window-store-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        // Window of 2 messages: only the last 2 messages should be stored
+        val agent = createGraphAgent(historyProvider, windowSize = 2) {
+            mockLLMAnswer("Reply 1") onRequestContains "Q1"
+            mockLLMAnswer("Reply 2") onRequestContains "Q2"
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        agent.run("Q1", sessionId)
+        agent.run("Q2", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertEquals(2, saved.size, "Only the last 2 messages should be stored")
+    }
+
+    @Test
+    fun testWindowSizeTruncatesLoadedHistory() = runTest {
+        val sessionId = "window-load-session"
+        // Pre-seed with 4 messages
+        val historyProvider = InMemoryChatHistoryProvider(
+            history = mutableMapOf(sessionId to preSeededHistory)
+        )
+
+        // Window of 2: only 2 of the 4 pre-seeded messages should be loaded
+        val agent = createFunctionalAgent(historyProvider, windowSize = 2) {
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        val history = agent.run("New question", sessionId)
+        val nonSystemMessages = history.filter { it !is Message.System }
+
+        // Should see 2 windowed messages + the new user message = 3
+        assertTrue(
+            nonSystemMessages.size <= 2 + 1,
+            "Loaded history should be windowed to 2 messages plus the new question, but was ${nonSystemMessages.size}"
+        )
+        // The pre-seeded France messages (earliest) should be dropped
+        assertTrue(
+            nonSystemMessages.none { it.content.contains("France") },
+            "Oldest messages about France should be outside the window"
+        )
+    }
+
+    @Test
+    fun testWindowSizeKeepsNewestMessages() = runTest {
+        val sessionId = "window-newest-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        // Window of 4: each run produces a user+assistant pair (2 messages)
+        // After 3 runs we have 6 messages, but only last 4 should be kept
+        val agent = createGraphAgent(historyProvider, windowSize = 4) {
+            mockLLMAnswer("Reply 1") onRequestContains "Q1"
+            mockLLMAnswer("Reply 2") onRequestContains "Q2"
+            mockLLMAnswer("Reply 3") onRequestContains "Q3"
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        agent.run("Q1", sessionId)
+        agent.run("Q2", sessionId)
+        agent.run("Q3", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertEquals(4, saved.size, "Window should keep exactly 4 messages")
+
+        val contents = saved.map { it.content }
+        assertTrue(contents.none { it.contains("Q1") }, "Q1 should have been truncated")
+        assertTrue(contents.none { it.contains("Reply 1") }, "Reply 1 should have been truncated")
+        assertTrue(contents.any { it.contains("Q2") }, "Q2 should be within window")
+        assertTrue(contents.any { it.contains("Q3") }, "Q3 should be within window")
+    }
+
+    @Test
+    fun testWindowSizeLargerThanHistoryKeepsAll() = runTest {
+        val sessionId = "large-window-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val agent = createGraphAgent(historyProvider, windowSize = 100) {
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        agent.run("Hello", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertTrue(saved.isNotEmpty(), "All messages should be kept when window > history size")
+        assertTrue(saved.size <= 100, "Should not exceed window size")
+    }
+
+    @Test
+    fun testWindowSizeOfOneKeepsOnlyLastMessage() = runTest {
+        val sessionId = "window-one-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val agent = createGraphAgent(historyProvider, windowSize = 1) {
+            mockLLMAnswer("Reply 1") onRequestContains "Q1"
+            mockLLMAnswer("Reply 2") onRequestContains "Q2"
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        agent.run("Q1", sessionId)
+        agent.run("Q2", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertEquals(1, saved.size, "Window of 1 should keep only the last message")
+    }
+
+    @Test
+    fun testWindowSizeAppliedConsistentlyAcrossRuns() = runTest {
+        val sessionId = "window-consistent-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val agent = createGraphAgent(historyProvider, windowSize = 4) {
+            mockLLMAnswer("Reply 1") onRequestContains "Q1"
+            mockLLMAnswer("Reply 2") onRequestContains "Q2"
+            mockLLMAnswer("Reply 3") onRequestContains "Q3"
+            mockLLMAnswer("Reply 4") onRequestContains "Q4"
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        agent.run("Q1", sessionId)
+        assertEquals(2, historyProvider.history[sessionId]!!.size, "After 1 run: 2 messages")
+
+        agent.run("Q2", sessionId)
+        assertEquals(4, historyProvider.history[sessionId]!!.size, "After 2 runs: 4 messages (at window limit)")
+
+        agent.run("Q3", sessionId)
+        assertEquals(4, historyProvider.history[sessionId]!!.size, "After 3 runs: still 4 messages (window applied)")
+
+        agent.run("Q4", sessionId)
+        assertEquals(4, historyProvider.history[sessionId]!!.size, "After 4 runs: still 4 messages (window applied)")
+
+        val saved = historyProvider.history[sessionId]!!
+        val contents = saved.map { it.content }
+        assertTrue(contents.none { it.contains("Q1") }, "Q1 should be outside window")
+        assertTrue(contents.none { it.contains("Q2") }, "Q2 should be outside window")
+        assertTrue(contents.any { it.contains("Q3") }, "Q3 should be in window")
+        assertTrue(contents.any { it.contains("Q4") }, "Q4 should be in window")
     }
 }
