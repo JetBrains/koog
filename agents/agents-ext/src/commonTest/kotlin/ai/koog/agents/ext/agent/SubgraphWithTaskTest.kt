@@ -228,62 +228,63 @@ class SubgraphWithTaskTest {
 
     @Test
     @JsName("testParallelSubgraphWithTaskToolChoiceSupportReceiveToolCallsAndAssistantMessageSuccess")
-    fun `test parallel subgraphWithTask tool_choice support receive tool calls and assistant message success`() = runTest {
-        val blankTool = TestBlankTool("blank-tool")
-        val finishTool = TestFinishTool
+    fun `test parallel subgraphWithTask tool_choice support receive tool calls and assistant message success`() =
+        runTest {
+            val blankTool = TestBlankTool("blank-tool")
+            val finishTool = TestFinishTool
 
-        val toolRegistry = ToolRegistry {
-            tool(blankTool)
-        }
-
-        val model = OpenAIModels.Chat.GPT4o
-
-        val inputRequest = "Test input"
-        val blankToolResult = "Blank tool result"
-        val assistantResponse = "Assistant response"
-
-        val mockExecutor = getMockExecutor {
-            mockLLMMixedResponse(
-                toolCalls = listOf(blankTool to TestBlankTool.Args(blankToolResult)),
-                responses = listOf(assistantResponse)
-            ) onRequestEquals inputRequest
-
-            mockLLMToolCall(finishTool, TestFinishTool.Args()) onRequestContains blankToolResult
-        }
-
-        // Expected / Actual
-        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
-
-        val expectedExecutionResult = listOf(
-            requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Assistant, assistantResponse),
-            responseString(Message.Role.Tool, blankToolArgsSerialized),
-            toolCallString(blankTool.name, blankToolArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankToolResult\""),
-            responseString(Message.Role.Tool, finishToolArgsSerialized),
-        )
-
-        val actualExecutionResult = mutableListOf<String>()
-
-        // Run Test
-        createAgent(
-            model = model,
-            runMode = ToolCalls.PARALLEL,
-            toolRegistry = toolRegistry,
-            executor = mockExecutor,
-            finishTool = finishTool,
-            installFeatures = {
-                installEventHandlerCaptureEvents(actualExecutionResult)
+            val toolRegistry = ToolRegistry {
+                tool(blankTool)
             }
-        ).use { agent ->
-            val agentResult = agent.run(inputRequest, null)
-            logger.info { "Agent is finished with result: $agentResult" }
-        }
 
-        assertEquals(expectedExecutionResult.size, actualExecutionResult.size)
-        assertContentEquals(expectedExecutionResult, actualExecutionResult)
-    }
+            val model = OpenAIModels.Chat.GPT4o
+
+            val inputRequest = "Test input"
+            val blankToolResult = "Blank tool result"
+            val assistantResponse = "Assistant response"
+
+            val mockExecutor = getMockExecutor {
+                mockLLMMixedResponse(
+                    toolCalls = listOf(blankTool to TestBlankTool.Args(blankToolResult)),
+                    responses = listOf(assistantResponse)
+                ) onRequestEquals inputRequest
+
+                mockLLMToolCall(finishTool, TestFinishTool.Args()) onRequestContains blankToolResult
+            }
+
+            // Expected / Actual
+            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
+            val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args())
+
+            val expectedExecutionResult = listOf(
+                requestString(Message.Role.User, inputRequest),
+                responseString(Message.Role.Assistant, assistantResponse),
+                responseString(Message.Role.Tool, blankToolArgsSerialized),
+                toolCallString(blankTool.name, blankToolArgsSerialized),
+                requestString(Message.Role.Tool, "\"$blankToolResult\""),
+                responseString(Message.Role.Tool, finishToolArgsSerialized),
+            )
+
+            val actualExecutionResult = mutableListOf<String>()
+
+            // Run Test
+            createAgent(
+                model = model,
+                runMode = ToolCalls.PARALLEL,
+                toolRegistry = toolRegistry,
+                executor = mockExecutor,
+                finishTool = finishTool,
+                installFeatures = {
+                    installEventHandlerCaptureEvents(actualExecutionResult)
+                }
+            ).use { agent ->
+                val agentResult = agent.run(inputRequest, null)
+                logger.info { "Agent is finished with result: $agentResult" }
+            }
+
+            assertEquals(expectedExecutionResult.size, actualExecutionResult.size)
+            assertContentEquals(expectedExecutionResult, actualExecutionResult)
+        }
 
     //endregion Model With tool_choice Support
 
@@ -418,72 +419,73 @@ class SubgraphWithTaskTest {
 
     @Test
     @JsName("testSequentialSubgraphWithTaskNoToolChoiceSupportReceiveAssistantMessageExceedMaxAttempts")
-    fun `test sequential subgraphWithTask no tool_choice support receive assistant message exceed maxAttempts`() = runTest {
-        val blankTool = TestBlankTool()
-        val finishTool = TestFinishTool
+    fun `test sequential subgraphWithTask no tool_choice support receive assistant message exceed maxAttempts`() =
+        runTest {
+            val blankTool = TestBlankTool()
+            val finishTool = TestFinishTool
 
-        val toolRegistry = ToolRegistry {
-            tool(blankTool)
-        }
-
-        val model = OllamaModels.Meta.LLAMA_3_2
-
-        val inputRequest = "Test input"
-        val blankToolResult = "I'm done"
-        val mockResponse = "Test assistant response"
-        var responses = 0
-
-        val mockExecutor = getMockExecutor {
-            mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
-                responses++ == 0 && input == inputRequest
+            val toolRegistry = ToolRegistry {
+                tool(blankTool)
             }
 
-            mockLLMAnswer(mockResponse) onCondition { responses > 0 }
-        }
+            val model = OllamaModels.Meta.LLAMA_3_2
 
-        // Expected / Actual
-        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-        val expectedToolCallAssistantRequest =
-            "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
+            val inputRequest = "Test input"
+            val blankToolResult = "I'm done"
+            val mockResponse = "Test assistant response"
+            var responses = 0
 
-        val expectedExecutionResult = listOf(
-            requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankToolArgsSerialized),
-            toolCallString(blankTool.name, blankToolArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankToolResult\""),
-            responseString(Message.Role.Assistant, mockResponse),
-            requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Assistant, mockResponse),
-            requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Assistant, mockResponse),
-            requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Assistant, mockResponse),
-        )
+            val mockExecutor = getMockExecutor {
+                mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
+                    responses++ == 0 && input == inputRequest
+                }
 
-        val actualExecutionResult = mutableListOf<String>()
-
-        createAgent(
-            model = model,
-            runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
-            toolRegistry = toolRegistry,
-            executor = mockExecutor,
-            finishTool = finishTool,
-            installFeatures = {
-                installEventHandlerCaptureEvents(actualExecutionResult)
+                mockLLMAnswer(mockResponse) onCondition { responses > 0 }
             }
-        ).use { agent ->
-            val throwable = assertFails { agent.run(inputRequest, null) }
 
-            val expectedErrorMessage =
-                "Unable to finish subgraph with task. Reason: the model '${model.id}' does not support tool choice, " +
-                    "and was not able to call `${finishTool.name}` tool after <${SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX}> attempts."
+            // Expected / Actual
+            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
+            val expectedToolCallAssistantRequest =
+                "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
 
-            assertEquals(expectedErrorMessage, throwable.message)
+            val expectedExecutionResult = listOf(
+                requestString(Message.Role.User, inputRequest),
+                responseString(Message.Role.Tool, blankToolArgsSerialized),
+                toolCallString(blankTool.name, blankToolArgsSerialized),
+                requestString(Message.Role.Tool, "\"$blankToolResult\""),
+                responseString(Message.Role.Assistant, mockResponse),
+                requestString(Message.Role.User, expectedToolCallAssistantRequest),
+                responseString(Message.Role.Assistant, mockResponse),
+                requestString(Message.Role.User, expectedToolCallAssistantRequest),
+                responseString(Message.Role.Assistant, mockResponse),
+                requestString(Message.Role.User, expectedToolCallAssistantRequest),
+                responseString(Message.Role.Assistant, mockResponse),
+            )
+
+            val actualExecutionResult = mutableListOf<String>()
+
+            createAgent(
+                model = model,
+                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+                toolRegistry = toolRegistry,
+                executor = mockExecutor,
+                finishTool = finishTool,
+                installFeatures = {
+                    installEventHandlerCaptureEvents(actualExecutionResult)
+                }
+            ).use { agent ->
+                val throwable = assertFails { agent.run(inputRequest, null) }
+
+                val expectedErrorMessage =
+                    "Unable to finish subgraph with task. Reason: the model '${model.id}' does not support tool choice, " +
+                        "and was not able to call `${finishTool.name}` tool after <${SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX}> attempts."
+
+                assertEquals(expectedErrorMessage, throwable.message)
+            }
+
+            assertEquals(expectedExecutionResult.size, actualExecutionResult.size)
+            assertContentEquals(expectedExecutionResult, actualExecutionResult)
         }
-
-        assertEquals(expectedExecutionResult.size, actualExecutionResult.size)
-        assertContentEquals(expectedExecutionResult, actualExecutionResult)
-    }
 
     @Test
     @JsName("testParallelSubgraphWithTaskNoToolChoiceSupportSuccess")
@@ -632,75 +634,76 @@ class SubgraphWithTaskTest {
 
     @Test
     @JsName("testParallelSubgraphWithTaskNoToolChoiceSupportReceiveAssistantMessageExceedMaxAttempts")
-    fun `test parallel subgraphWithTask no tool_choice support receive assistant message exceed maxAttempts`() = runTest {
-        val blankTool = TestBlankTool()
-        val finishTool = TestFinishTool
+    fun `test parallel subgraphWithTask no tool_choice support receive assistant message exceed maxAttempts`() =
+        runTest {
+            val blankTool = TestBlankTool()
+            val finishTool = TestFinishTool
 
-        val toolRegistry = ToolRegistry {
-            tool(blankTool)
-        }
-
-        val model = OllamaModels.Meta.LLAMA_3_2
-
-        val inputRequest = "Test input"
-        val blankToolResult = "I'm done"
-        val mockResponse = "Test assistant response"
-        var responses = 0
-
-        val mockExecutor = getMockExecutor {
-            mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
-                responses++ == 0 && input == inputRequest
+            val toolRegistry = ToolRegistry {
+                tool(blankTool)
             }
 
-            mockLLMMixedResponse(
-                toolCalls = emptyList<Pair<Tool<Any?, Any?>, Any?>>(),
-                responses = listOf(mockResponse)
-            ) onCondition { responses > 0 }
-        }
+            val model = OllamaModels.Meta.LLAMA_3_2
 
-        // Expected / Actual
-        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
-        val expectedToolCallAssistantRequest =
-            "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
+            val inputRequest = "Test input"
+            val blankToolResult = "I'm done"
+            val mockResponse = "Test assistant response"
+            var responses = 0
 
-        val expectedExecutionResult = listOf(
-            requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankToolArgsSerialized),
-            toolCallString(blankTool.name, blankToolArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankToolResult\""),
-            responseString(Message.Role.Assistant, mockResponse),
-            requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Assistant, mockResponse),
-            requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Assistant, mockResponse),
-            requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Assistant, mockResponse),
-        )
+            val mockExecutor = getMockExecutor {
+                mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onCondition { input ->
+                    responses++ == 0 && input == inputRequest
+                }
 
-        val actualExecutionResult = mutableListOf<String>()
-
-        createAgent(
-            model = model,
-            runMode = ToolCalls.PARALLEL,
-            toolRegistry = toolRegistry,
-            executor = mockExecutor,
-            finishTool = finishTool,
-            installFeatures = {
-                installEventHandlerCaptureEvents(actualExecutionResult)
+                mockLLMMixedResponse(
+                    toolCalls = emptyList<Pair<Tool<Any?, Any?>, Any?>>(),
+                    responses = listOf(mockResponse)
+                ) onCondition { responses > 0 }
             }
-        ).use { agent ->
-            val throwable = assertFails { agent.run(inputRequest, null) }
 
-            val expectedErrorMessage =
-                "Unable to finish subgraph with task. Reason: the model '${model.id}' does not support tool choice, " +
-                    "and was not able to call `${finishTool.name}` tool after <${SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX}> attempts."
+            // Expected / Actual
+            val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult))
+            val expectedToolCallAssistantRequest =
+                "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
 
-            assertEquals(expectedErrorMessage, throwable.message)
+            val expectedExecutionResult = listOf(
+                requestString(Message.Role.User, inputRequest),
+                responseString(Message.Role.Tool, blankToolArgsSerialized),
+                toolCallString(blankTool.name, blankToolArgsSerialized),
+                requestString(Message.Role.Tool, "\"$blankToolResult\""),
+                responseString(Message.Role.Assistant, mockResponse),
+                requestString(Message.Role.User, expectedToolCallAssistantRequest),
+                responseString(Message.Role.Assistant, mockResponse),
+                requestString(Message.Role.User, expectedToolCallAssistantRequest),
+                responseString(Message.Role.Assistant, mockResponse),
+                requestString(Message.Role.User, expectedToolCallAssistantRequest),
+                responseString(Message.Role.Assistant, mockResponse),
+            )
+
+            val actualExecutionResult = mutableListOf<String>()
+
+            createAgent(
+                model = model,
+                runMode = ToolCalls.PARALLEL,
+                toolRegistry = toolRegistry,
+                executor = mockExecutor,
+                finishTool = finishTool,
+                installFeatures = {
+                    installEventHandlerCaptureEvents(actualExecutionResult)
+                }
+            ).use { agent ->
+                val throwable = assertFails { agent.run(inputRequest, null) }
+
+                val expectedErrorMessage =
+                    "Unable to finish subgraph with task. Reason: the model '${model.id}' does not support tool choice, " +
+                        "and was not able to call `${finishTool.name}` tool after <${SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX}> attempts."
+
+                assertEquals(expectedErrorMessage, throwable.message)
+            }
+
+            assertEquals(expectedExecutionResult.size, actualExecutionResult.size)
+            assertContentEquals(expectedExecutionResult, actualExecutionResult)
         }
-
-        assertEquals(expectedExecutionResult.size, actualExecutionResult.size)
-        assertContentEquals(expectedExecutionResult, actualExecutionResult)
-    }
 
     //endregion Model Without tool_choice Support
 
@@ -725,7 +728,11 @@ class SubgraphWithTaskTest {
     ) : PromptExecutor {
         var callCount = 0
 
-        override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): List<Message.Response> {
             callCount += 1
             val content = if (callCount == 1) invalidArgsJson else validArgsJson
             return listOf(
@@ -744,7 +751,7 @@ class SubgraphWithTaskTest {
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
             ModerationResult(isHarmful = false, categories = emptyMap())
 
-        override fun close() { }
+        override fun close() {}
     }
 
     @Test

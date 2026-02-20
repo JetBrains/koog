@@ -63,6 +63,7 @@ class LLMBasedToolJsonFixTest {
             error("Not supported")
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = error("Not supported")
+
         override fun close() {}
     }
 

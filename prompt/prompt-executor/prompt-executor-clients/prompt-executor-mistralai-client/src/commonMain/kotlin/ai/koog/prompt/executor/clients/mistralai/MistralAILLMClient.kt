@@ -85,11 +85,6 @@ public open class MistralAILLMClient(
 
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
-
-        init {
-            // On class load register custom OpenAI JSON schema generators for structured output.
-            registerOpenAIJsonSchemaGenerators(LLMProvider.DeepSeek)
-        }
     }
 
     /**

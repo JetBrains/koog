@@ -10,6 +10,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
@@ -229,6 +231,20 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         return llmClients.values.flatMap { client ->
             client.models()
         }
+    }
+
+    override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        val provider = model.provider
+        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+
+        return client.getStandardJsonSchemaGenerator()
+    }
+
+    override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        val provider = model.provider
+        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+
+        return client.getBasicJsonSchemaGenerator()
     }
 
     override fun close() {

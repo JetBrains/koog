@@ -23,7 +23,6 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
@@ -32,9 +31,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
-import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
-import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -89,17 +87,12 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient {
 
-    protected companion object {
+    override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+        return OpenAIBasicJsonSchemaGenerator
+    }
 
-        /**
-         * Register basic and standard openai json schema generator for given provider
-         */
-        @Suppress("RedundantVisibilityModifier") // it is required here due to explicitApi
-        @OptIn(InternalStructuredOutputApi::class)
-        public fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
-            RegisteredBasicJsonSchemaGenerators[llmProvider] = OpenAIBasicJsonSchemaGenerator
-            RegisteredStandardJsonSchemaGenerators[llmProvider] = OpenAIStandardJsonSchemaGenerator
-        }
+    override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+        return OpenAIStandardJsonSchemaGenerator
     }
 
     private val chatCompletionsPath: String = settings.chatCompletionsPath

@@ -10,6 +10,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -201,6 +203,14 @@ public class ContextualPromptExecutor(
 
     override suspend fun models(): List<LLModel> {
         return executor.models()
+    }
+
+    override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        return executor.getStandardJsonSchemaGenerator(model)
+    }
+
+    override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        return executor.getBasicJsonSchemaGenerator(model)
     }
 
     override fun close() {

@@ -62,6 +62,14 @@ public class CachedPromptExecutor(
 
     override suspend fun models(): List<LLModel> = nested.models()
 
+    override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        return nested.getStandardJsonSchemaGenerator(model)
+    }
+
+    override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        return nested.getBasicJsonSchemaGenerator(model)
+    }
+
     override fun close() {
         nested.close()
     }

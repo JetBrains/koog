@@ -13,12 +13,12 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.prompt.structure.StructureDefinition
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow

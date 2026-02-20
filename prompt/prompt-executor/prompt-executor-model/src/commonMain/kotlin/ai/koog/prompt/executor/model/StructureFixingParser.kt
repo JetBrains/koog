@@ -1,12 +1,13 @@
-package ai.koog.prompt.structure
+package ai.koog.prompt.executor.model
 
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.structure.LLMStructuredParsingError
+import ai.koog.prompt.structure.Structure
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.SerializationException
 

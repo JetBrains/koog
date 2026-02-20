@@ -13,6 +13,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":prompt:prompt-model"))
+                api(project(":prompt:prompt-structure"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.oshai.kotlin.logging)
             }

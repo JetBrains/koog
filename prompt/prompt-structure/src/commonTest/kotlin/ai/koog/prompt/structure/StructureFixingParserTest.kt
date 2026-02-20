@@ -2,6 +2,7 @@ package ai.koog.prompt.structure
 
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.structure.json.JsonStructure
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable

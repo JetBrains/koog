@@ -7,6 +7,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -113,5 +115,21 @@ public interface PromptExecutor : AutoCloseable {
      */
     public suspend fun models(): List<LLModel> {
         throw UnsupportedOperationException("Not implemented for this executor")
+    }
+
+    /**
+     * Standard JSON schema generator required for the given model.
+     * Return [StandardJsonSchemaGenerator] by default.
+     */
+    public fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        return StandardJsonSchemaGenerator
+    }
+
+    /**
+     * Basic JSON schema generator required for the given model.
+     * Return [BasicJsonSchemaGenerator] by default.
+     */
+    public fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        return BasicJsonSchemaGenerator
     }
 }

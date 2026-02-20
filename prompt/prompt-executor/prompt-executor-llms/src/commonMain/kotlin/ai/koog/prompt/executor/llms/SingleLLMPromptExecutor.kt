@@ -9,6 +9,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 
@@ -65,6 +67,14 @@ public open class SingleLLMPromptExecutor(
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = llmClient.moderate(prompt, model)
 
     override suspend fun models(): List<LLModel> = llmClient.models()
+
+    override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        return llmClient.getStandardJsonSchemaGenerator()
+    }
+
+    override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        return llmClient.getBasicJsonSchemaGenerator()
+    }
 
     override fun close() {
         llmClient.close()
