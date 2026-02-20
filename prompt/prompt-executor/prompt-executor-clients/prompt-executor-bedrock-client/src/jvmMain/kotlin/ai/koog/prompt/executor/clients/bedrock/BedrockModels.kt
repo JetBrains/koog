@@ -194,6 +194,17 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Claude Opus 4.6 is a frontier model with strong capabilities in software engineering,
+     * agentic tasks, and long context reasoning, as well as in knowledge work—including financial
+     * analysis, document creation, and multi-step research workflows.
+     *
+     */
+    public val AnthropicClaude46Opus: LLModel = BedrockModel(
+        AnthropicModels.Opus_4_6,
+        "anthropic.claude-opus-4-6-v1",
+    ).effectiveModel
+
+    /**
      * Claude 4 Sonnet - High-performance model with exceptional reasoning and efficiency
      *
      * This model offers:
@@ -758,6 +769,7 @@ public object BedrockModels : LLModelDefinitions {
         AnthropicClaude4Opus,
         AnthropicClaude41Opus,
         AnthropicClaude45Opus,
+        AnthropicClaude46Opus,
         AnthropicClaude4Sonnet,
         AnthropicClaude4_5Sonnet,
         AnthropicClaude4_5Haiku,

@@ -251,6 +251,7 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
     "opus_4" to AnthropicModels.Opus_4,
     "opus_4_1" to AnthropicModels.Opus_4_1,
     "opus_4_5" to AnthropicModels.Opus_4_5,
+    "opus_4_6" to AnthropicModels.Opus_4_6,
     "haiku_3" to AnthropicModels.Haiku_3,
     "haiku_3_5" to AnthropicModels.Haiku_3_5,
     "haiku_4_5" to AnthropicModels.Haiku_4_5,
