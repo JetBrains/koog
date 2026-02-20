@@ -197,8 +197,9 @@ internal class AIAgentLLMReadSessionImpl(
 
     override suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
-        config: StructuredRequestConfig<T>
-    ): StructuredResponse<T> = executor.parseResponseToStructuredResponse(response, config, model)
+        config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser?
+    ): StructuredResponse<T> = executor.parseResponseToStructuredResponse(response, config, model, fixingParser)
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
         validateSession()

@@ -215,7 +215,8 @@ public interface AIAgentLLMSessionAPI : AutoCloseable {
      */
     public suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
-        config: StructuredRequestConfig<T>
+        config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser? = null
     ): StructuredResponse<T>
 
     /**

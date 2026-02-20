@@ -15,8 +15,8 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.text.text
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

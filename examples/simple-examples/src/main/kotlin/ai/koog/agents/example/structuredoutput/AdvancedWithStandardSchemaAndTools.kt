@@ -19,8 +19,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
@@ -71,16 +71,15 @@ suspend fun main() {
 
         // Fallback manual structured output mode, via explicit prompting with additional message, not native model support
         default = StructuredRequest.Manual(genericWeatherStructure),
+    )
 
+    val agentStrategy = structuredOutputWithToolsStrategy<FullWeatherForecastRequest, FullWeatherForecast>(
+        config,
         // Helper parser to attempt a fix if a malformed output is produced.
         fixingParser = StructureFixingParser(
             model = AnthropicModels.Haiku_4_5,
             retries = 2,
         ),
-    )
-
-    val agentStrategy = structuredOutputWithToolsStrategy<FullWeatherForecastRequest, FullWeatherForecast>(
-        config
     ) { request ->
         text {
             +"Requesting forecast for"

@@ -190,7 +190,8 @@ internal class AIAgentLLMWriteSessionImpl internal constructor(
 
     override suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
-        config: StructuredRequestConfig<T>
+        config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser?
     ): StructuredResponse<T> {
         return delegate.parseResponseToStructuredResponse(response, config)
     }

@@ -297,9 +297,10 @@ public actual class AIAgentLLMReadSession actual constructor(
     public fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser? = null,
         executorService: ExecutorService? = null
     ): StructuredResponse<T> = this.config.runOnStrategyDispatcher(executorService) {
-        parseResponseToStructuredResponse(response, config)
+        parseResponseToStructuredResponse(response, config, fixingParser)
     }
 
     /**

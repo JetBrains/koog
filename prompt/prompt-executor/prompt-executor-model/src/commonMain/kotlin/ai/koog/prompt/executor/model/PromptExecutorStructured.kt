@@ -12,6 +12,7 @@ import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.serializer
 
 /**
  * Executes a prompt with structured output, enhancing it with schema instructions or native structured output
@@ -159,5 +160,41 @@ public suspend fun <T> PromptExecutor.parseResponseToStructuredResponse(
         data = structureResponse,
         structure = structure,
         message = response
+    )
+}
+
+/**
+ * Executes a prompt with structured output, enhancing it with schema instructions or native structured output
+ * parameter, and parses the response into the defined structure.
+ *
+ * This is a simple version of the full `executeStructured`. Unlike the full version, it does not require specifying
+ * struct definitions and structured output modes manually. It attempts to find the best approach to provide a structured
+ * output based on the defined [model] capabilities.
+ *
+ * For example, it chooses which JSON schema to use (simple or full) and with which mode (native or manual).
+ *
+ * @param T The structure to request.
+ * @param prompt The prompt to be executed.
+ * @param model LLM to execute requests.
+ * @param examples Optional list of examples in case manual mode will be used. These examples might help the model to
+ * understand the format better.
+ * @param fixingParser Optional parser that handles malformed responses by using an auxiliary LLM to
+ * intelligently fix parsing errors. When specified, parsing errors trigger additional
+ * LLM calls with error context to attempt correction of the structure format.
+ *
+ * @return [kotlin.Result] with parsed [StructuredResponse] or error.
+ */
+public suspend inline fun <reified T> PromptExecutor.executeStructured(
+    prompt: Prompt,
+    model: LLModel,
+    examples: List<T> = emptyList(),
+    fixingParser: StructureFixingParser? = null,
+): Result<StructuredResponse<T>> {
+    return executeStructured(
+        prompt = prompt,
+        model = model,
+        serializer = serializer<T>(),
+        examples = examples,
+        fixingParser = fixingParser,
     )
 }

@@ -269,6 +269,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
 public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     name: String? = null,
     config: StructuredRequestConfig<T>,
+    fixingParser: StructureFixingParser? = null
 ): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> =
     node(name) { message ->
         llm.writeSession {
@@ -276,7 +277,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
                 user(message)
             }
 
-            requestLLMStructured(config)
+            requestLLMStructured(config, fixingParser)
         }
     }
 
@@ -648,7 +649,7 @@ public inline fun <reified ToolArg, reified TResult> AIAgentSubgraphBuilderBase<
 @AIAgentBuilderDslMarker
 public inline fun <reified TInput, T> AIAgentSubgraphBuilderBase<*, *>.nodeSetStructuredOutput(
     name: String? = null,
-    config: StructuredRequestConfig<T>
+    config: StructuredRequestConfig<T>,
 ): AIAgentNodeDelegate<TInput, TInput> =
     node(name) { message ->
         llm.writeSession {

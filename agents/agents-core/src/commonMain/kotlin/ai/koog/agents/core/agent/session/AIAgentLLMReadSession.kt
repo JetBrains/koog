@@ -64,7 +64,8 @@ public expect class AIAgentLLMReadSession internal constructor(
 
     override suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
-        config: StructuredRequestConfig<T>
+        config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser?
     ): StructuredResponse<T>
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice>
