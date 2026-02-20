@@ -25,7 +25,7 @@ official [A2A protocol specification](https://a2a-protocol.org/latest/specificat
 
 3. **In another terminal, run the TCK tests:**
    ```bash
-    ./run_tck.sh --sut-url http://localhost:9999/a2a --category all --report   
+    ./run_tck.sh --sut-url http://localhost:9999/a2a --category all --report
     ```
 
 ## More information
