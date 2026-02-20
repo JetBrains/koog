@@ -284,7 +284,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             strategy: AIAgentPlannerStrategy<Input, Output, *>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: Clock = kotlin.time.Clock.System,
             installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
         ): AIAgent<Input, Output>
     }

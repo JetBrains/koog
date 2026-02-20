@@ -596,7 +596,7 @@ public class PlannerAgentBuilder<Input, Output>(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
     private var maxIterations: Int = 50,
-    private var clock: Clock = Clock.System,
+    private var clock: Clock = kotlin.time.Clock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) {
 
