@@ -10,6 +10,7 @@ This module consists of several submodules that work together to provide compreh
 - **prompt-executor**: Components for executing prompts against various language models
 - **prompt-llm**: Interfaces and models for language model capabilities and providers
 - **prompt-cache**: Caching mechanisms for prompt responses to improve performance
+- **prompt-pii**: Transparent PII anonymization/deanonymization wrapper for prompt execution
 - **prompt-markdown**: Utilities for working with Markdown in prompts
 - **prompt-structure**: Tools for parsing and generating structured data from prompts
 - **prompt-xml**: XML handling utilities for prompt content
@@ -31,6 +32,8 @@ dependencies {
 
     // Optional modules based on your needs
     implementation("ai.koog.prompt:prompt-cache-model:$version")
+    implementation("ai.koog.prompt:prompt-pii-model:$version")
+    implementation("ai.koog.prompt:prompt-pii-detector-structured:$version")
     implementation("ai.koog.prompt:prompt-markdown:$version")
     implementation("ai.koog.prompt:prompt-structure:$version")
 }

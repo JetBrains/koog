@@ -76,6 +76,8 @@ val included = setOf(
     ":prompt:prompt-llm",
     ":prompt:prompt-markdown",
     ":prompt:prompt-model",
+    ":prompt:prompt-pii:prompt-pii-model",
+    ":prompt:prompt-pii:prompt-pii-detector-structured",
     ":prompt:prompt-processor",
     ":prompt:prompt-structure",
     ":prompt:prompt-tokenizer",

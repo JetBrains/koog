@@ -60,6 +60,10 @@ include(":prompt:prompt-executor:prompt-executor-model")
 include(":prompt:prompt-llm")
 include(":prompt:prompt-markdown")
 include(":prompt:prompt-model")
+
+include(":prompt:prompt-pii:prompt-pii-model")
+include(":prompt:prompt-pii:prompt-pii-detector-structured")
+
 include(":prompt:prompt-processor")
 include(":prompt:prompt-structure")
 include(":prompt:prompt-tokenizer")

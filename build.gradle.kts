@@ -244,6 +244,8 @@ dependencies {
     dokka(project(":prompt:prompt-llm"))
     dokka(project(":prompt:prompt-markdown"))
     dokka(project(":prompt:prompt-model"))
+    dokka(project(":prompt:prompt-pii:prompt-pii-model"))
+    dokka(project(":prompt:prompt-pii:prompt-pii-detector-structured"))
     dokka(project(":prompt:prompt-processor"))
     dokka(project(":prompt:prompt-structure"))
     dokka(project(":prompt:prompt-tokenizer"))
