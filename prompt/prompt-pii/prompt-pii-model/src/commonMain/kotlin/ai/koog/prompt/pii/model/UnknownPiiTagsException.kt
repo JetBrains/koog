@@ -10,4 +10,3 @@ public class UnknownPiiTagsException(
 ) : IllegalStateException(
     "Unknown PII tags detected: ${unknownTags.sorted()}. Known tags: ${knownTags.sorted()}."
 )
-

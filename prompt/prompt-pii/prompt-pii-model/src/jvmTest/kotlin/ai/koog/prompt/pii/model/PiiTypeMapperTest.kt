@@ -26,5 +26,4 @@ class PiiTypeMapperTest {
         assertEquals(PiiType.OTHER, PiiTypeMapper.fromLabel("favorite_color"))
         assertEquals(PiiType.OTHER, PiiTypeMapper.fromLabel("custom:unknown type"))
     }
-
 }

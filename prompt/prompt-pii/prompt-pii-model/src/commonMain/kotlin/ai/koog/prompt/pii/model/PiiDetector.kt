@@ -9,4 +9,3 @@ public interface PiiDetector {
      */
     public suspend fun detect(text: String): List<PiiDetection>
 }
-

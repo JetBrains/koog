@@ -107,4 +107,3 @@ class PiiTagFixingParserTest {
         override fun close() {}
     }
 }
-
