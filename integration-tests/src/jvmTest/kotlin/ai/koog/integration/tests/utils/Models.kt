@@ -75,7 +75,7 @@ object Models {
      */
     @JvmStatic
     fun dimensionCapableEmbeddingModels(): Stream<LLModel> {
-        return embeddingModels().filter { it.capabilities.contains(LLMCapability.Embedding.Dimensions) }
+        return embeddingModels().filter { it.supports(LLMCapability.Embedding.Dimensions) }
     }
 
     /**

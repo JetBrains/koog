@@ -342,7 +342,7 @@ public class OllamaClient(
     ): List<Double> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        if (!model.capabilities.contains(LLMCapability.Embed)) {
+        if (!model.supports(LLMCapability.Embed)) {
             throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
         }
 

@@ -20,6 +20,6 @@ public interface LLMEmbeddingProvider {
     public suspend fun embed(
         text: String,
         model: LLModel,
-        params: EmbeddingParams = EmbeddingParams()
+        params: EmbeddingParams = EmbeddingParams.None
     ): List<Double>
 }

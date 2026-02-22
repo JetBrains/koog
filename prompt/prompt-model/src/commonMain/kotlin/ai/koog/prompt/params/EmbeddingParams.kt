@@ -5,17 +5,17 @@ import kotlinx.serialization.Serializable
 /**
  * Base parameters for embedding generation.
  *
- * This is an `open class` to allow provider-specific subclasses to add additional
- * parameters while maintaining polymorphism. This mirrors the [LLMParams] pattern.
+ * This is an interface to allow provider-specific subclasses to add additional
+ * parameters while maintaining polymorphism.
  *
  * @see LLMParams for the equivalent pattern used in completion/chat models.
  */
-@Serializable
-public open class EmbeddingParams {
+public interface EmbeddingParams {
 
-    override fun equals(other: Any?): Boolean = other is EmbeddingParams
-
-    override fun hashCode(): Int = 0
-
-    override fun toString(): String = "EmbeddingParams()"
+    /**
+     * Default implementation of EmbeddingParams for cases where
+     * provider-specific parameters are not needed.
+     */
+    @Serializable
+    public object None : EmbeddingParams
 }

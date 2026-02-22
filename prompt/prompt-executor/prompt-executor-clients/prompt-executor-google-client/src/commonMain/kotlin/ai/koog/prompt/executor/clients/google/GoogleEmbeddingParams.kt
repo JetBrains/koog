@@ -46,7 +46,7 @@ public class GoogleEmbeddingParams(
     public val dimensions: Int? = null,
     public val taskType: GoogleEmbeddingTaskType? = null,
     public val title: String? = null,
-) : EmbeddingParams() {
+) : EmbeddingParams {
 
     init {
         dimensions?.let {

@@ -120,11 +120,9 @@ class GoogleEmbeddingParamsTest {
     }
 
     @Test
-    fun `toGoogleEmbeddingParams should convert base EmbeddingParams to defaults`() {
-        val baseParams = EmbeddingParams()
-        val result = baseParams.toGoogleEmbeddingParams()
+    fun `toGoogleEmbeddingParams should construct default GoogleEmbeddingParams when given EmbeddingParams_None`() {
+        val result = EmbeddingParams.None.toGoogleEmbeddingParams()
 
-        result shouldNotBe baseParams
         result.dimensions shouldBe null
         result.taskType shouldBe null
         result.title shouldBe null

@@ -796,7 +796,7 @@ public open class GoogleLLMClient(
     }
 
     private fun validateEmbeddingRequest(model: LLModel, params: GoogleEmbeddingParams) {
-        require(model.capabilities.contains(LLMCapability.Embed)) {
+        require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
         }
         if (params.dimensions != null) {
