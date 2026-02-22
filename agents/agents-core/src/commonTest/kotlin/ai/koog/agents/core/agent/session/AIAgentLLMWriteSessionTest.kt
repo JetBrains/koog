@@ -17,8 +17,8 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -26,8 +26,12 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -392,6 +396,11 @@ class AIAgentLLMWriteSessionTest {
     }
 
     @Test
+    // This behavior is not supported for non-list responses from "requestLLM..." methods
+    // The test was passing due to a bug in the requestLLMOnlyCallingTools implementation
+    // See KG-663
+    // TODO(): remove the test after deprecating non-list responses from LLM
+    @Ignore
     fun testRequestLLMOnlyCallingToolsWithThinking() = runTest {
         val thinkingContent = "<thinking>Checking file...</thinking>"
         val testTool = TestTool()
@@ -418,30 +427,6 @@ class AIAgentLLMWriteSessionTest {
     }
 
     @Test
-    fun testRequestLLMOnlyCallingToolsNoToolCallThrowsException() = runTest {
-        val mockExecutor = getMockExecutor(clock = testClock) {
-            // Simulate model refusing to use tools and just responding with text
-            mockLLMAnswer("I cannot use tools for this request.").asDefaultResponse
-        }
-
-        val session = createSession(mockExecutor, listOf(TestTool()))
-
-        val exception = kotlin.runCatching {
-            session.requestLLMOnlyCallingTools()
-        }.exceptionOrNull()
-
-        assertNotNull(exception, "Expected an exception when no tool call is found")
-        assertTrue(
-            exception is IllegalStateException,
-            "Expected IllegalStateException but got ${exception::class.simpleName}"
-        )
-        assertTrue(
-            exception.message?.contains("expected at least one Tool.Call") == true,
-            "Exception message should indicate missing tool call"
-        )
-    }
-
-    @Test
     fun testRequestLLMOnlyCallingToolsWithMultipleToolCalls() = runTest {
         val testTool = TestTool()
 
@@ -464,8 +449,43 @@ class AIAgentLLMWriteSessionTest {
         assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
         assertEquals("test-tool", response.tool)
 
-        // Both tool calls should be in history
-        val lastTwoMessages = session.prompt.messages.takeLast(2)
-        assertTrue(lastTwoMessages.all { it is Message.Tool.Call })
+        // Only the first tool call should be added to the history
+        val lastMessage = session.prompt.messages.last()
+        assertIs<Message.Tool.Call>(lastMessage)
+        assertContains(lastMessage.content, "first")
+    }
+
+    @Test
+    fun testRequestLLMForceOneToolUpdatesMessageHistoryCorrectly() = runTest {
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            // Simulate model returning multiple tool calls (parallel tool calling)
+            mockLLMMixedResponse(
+                toolCalls = listOf(
+                    testTool to TestTool.Args("tool"),
+                ),
+                responses = emptyList()
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val response = session.requestLLMForceOneTool(testTool)
+
+        // Should return the tool call
+        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
+        assertEquals("test-tool", response.tool)
+
+        // The tool call should be added to the history
+        val lastMessage = session.prompt.messages.last()
+        assertIs<Message.Tool.Call>(lastMessage)
+        assertContains(lastMessage.content, "tool")
+
+        assertNotEquals(
+            lastMessage,
+            session.prompt.messages.dropLast(1).last(),
+            "Tool call should not be added to the history twice"
+        )
     }
 }

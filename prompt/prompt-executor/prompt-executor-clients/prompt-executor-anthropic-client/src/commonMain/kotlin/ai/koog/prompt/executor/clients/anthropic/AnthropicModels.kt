@@ -8,6 +8,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_3
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_1
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_5
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_6
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_7
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4
@@ -15,6 +16,8 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_5
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
+import kotlin.jvm.JvmField
 
 /**
  * Anthropic models for text generation and embeddings.
@@ -30,6 +33,7 @@ import ai.koog.prompt.llm.LLModel
  * | [Opus_4]     | Moderately fast | $15-$75      | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4_1]   | Moderately fast | $15-$75      | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4_5]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
+ * | [Opus_4_6]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
  * | [Sonnet_4_5] | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
  * | [Haiku_4_5]  | Fastest         | $1-$5        | Text, Image, Tools, Document | Text, Tools |
  */
@@ -44,6 +48,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_3: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-opus",
@@ -67,6 +72,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Haiku_3: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-haiku",
@@ -90,6 +96,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_3_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-5-sonnet",
@@ -114,6 +121,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Haiku_3_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-5-haiku",
@@ -138,6 +146,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_3_7: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-7-sonnet",
@@ -161,6 +170,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_4: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-sonnet-4-0",
@@ -185,6 +195,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_4: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-opus-4-0",
@@ -209,6 +220,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_4_1: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-opus-4-1",
@@ -225,7 +237,7 @@ public object AnthropicModels : LLModelDefinitions {
     )
 
     /**
-     * Claude Opus 4.5 is Anthropic's premium model combining maximum intelligence with practical performance.
+     * Claude Opus 4.5 is Anthropic's premium model with the best combination of speed and intelligence.
      * It’s intelligent, efficient, and the best model in the world for coding, agents, and computer use.
      * It’s also meaningfully better at everyday tasks like deep research and working with slides and spreadsheets.
      *
@@ -234,6 +246,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Opus_4_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-opus-4-5",
@@ -250,6 +263,35 @@ public object AnthropicModels : LLModelDefinitions {
     )
 
     /**
+     * Claude Opus 4.6 is a frontier model with strong capabilities in software engineering,
+     * agentic tasks, and long context reasoning, as well as in knowledge work—including financial
+     * analysis, document creation, and multi-step research workflows.
+     *
+     * thinking: {type: "enabled", budget_tokens: N} is deprecated on Opus 4.6.
+     * Migrate to thinking: {type: "adaptive"} with the effort parameter.
+     *
+     * 200K context window
+     * Knowledge cutoff: August 2025
+     *
+     * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
+     */
+    @JvmField
+    public val Opus_4_6: LLModel = LLModel(
+        provider = LLMProvider.Anthropic,
+        id = "claude-opus-4-6",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Vision.Image,
+            LLMCapability.Document,
+            LLMCapability.Completion,
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 1_000_000,
+    )
+
+    /**
      * Claude Sonnet 4.5 is Anthropic's best model for complex agents and coding.
      * It has the highest level of intelligence across most tasks with exceptional agent and coding capabilities.
      *
@@ -258,6 +300,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Sonnet_4_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-sonnet-4-5",
@@ -282,6 +325,7 @@ public object AnthropicModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
+    @JvmField
     public val Haiku_4_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-haiku-4-5",
@@ -296,6 +340,37 @@ public object AnthropicModels : LLModelDefinitions {
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
+
+    /**
+     * List of the supported models by the Anthropic provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        Opus_3,
+        Haiku_3,
+        Sonnet_3_5,
+        Haiku_3_5,
+        Sonnet_3_7,
+        Sonnet_4,
+        Opus_4,
+        Opus_4_1,
+        Opus_4_5,
+        Opus_4_6,
+        Sonnet_4_5,
+        Haiku_4_5
+    )
+
+    /**
+     * Custom models added to the Anthropic provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Anthropic) { "Model provider must be Anthropic" }
+        customModels.add(model)
+    }
 }
 
 internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
@@ -308,6 +383,7 @@ internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
     Opus_4 to "claude-opus-4-20250514",
     Opus_4_1 to "claude-opus-4-1-20250805",
     Opus_4_5 to "claude-opus-4-5-20251101",
+    Opus_4_6 to "claude-opus-4-6",
     Sonnet_4_5 to "claude-sonnet-4-5-20250929",
     Haiku_4_5 to "claude-haiku-4-5-20251001",
 )

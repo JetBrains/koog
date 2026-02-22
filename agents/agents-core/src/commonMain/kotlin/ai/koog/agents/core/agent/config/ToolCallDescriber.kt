@@ -61,7 +61,10 @@ public interface ToolCallDescriber {
                     buildJsonObject {
                         message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
                         put("tool_name", JsonPrimitive(message.tool))
-                        put("tool_args", message.contentJson)
+                        message.contentJsonResult.fold(
+                            onSuccess = { put("tool_args", it) },
+                            onFailure = { put("tool_args_error", JsonPrimitive("Failed to parse tool arguments: $it")) }
+                        )
                     }
                 ),
                 metaInfo = message.metaInfo

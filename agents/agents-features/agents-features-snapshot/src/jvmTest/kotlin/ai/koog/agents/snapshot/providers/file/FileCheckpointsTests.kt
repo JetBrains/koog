@@ -1,5 +1,6 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -8,12 +9,11 @@ import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import java.nio.file.Path
@@ -22,6 +22,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -62,20 +63,19 @@ class FileCheckpointsTests {
 
     @Test
     fun testAgentExecutionWithRollback() = runTest {
-        val agentId = "rollbackAgentId"
+        val sessionId = "rollbackAgentId"
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
             strategy = createCheckpointGraphWithRollback("checkpointId"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
-            id = agentId
         ) {
             install(Persistence) {
                 storage = provider
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", sessionId)
         assertEquals(
             "History: You are a test agent.\n" +
                 "Node 1 output\n" +
@@ -86,7 +86,7 @@ class FileCheckpointsTests {
         )
 
         // Verify that the checkpoint was saved to the file system
-        val checkpoints = provider.getCheckpoints(agentId).filter { !it.isTombstone() }
+        val checkpoints = provider.getCheckpoints(sessionId).filter { !it.isTombstone() }
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
         assertEquals("checkpointId", checkpoints.first().checkpointId)
     }
@@ -117,11 +117,12 @@ class FileCheckpointsTests {
     fun testRestoreFromSingleCheckpoint() = runTest {
         val time = Clock.System.now()
         val agentId = "testAgentId"
+        val sessionId = "testSessionId"
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodeId = "Node2",
+            nodePath = path(agentId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -130,7 +131,7 @@ class FileCheckpointsTests {
             version = 0L
         )
 
-        provider.saveCheckpoint(agentId, testCheckpoint)
+        provider.saveCheckpoint(sessionId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -144,7 +145,7 @@ class FileCheckpointsTests {
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", sessionId)
 
         assertEquals(
             "History: User message\n" +
@@ -155,14 +156,57 @@ class FileCheckpointsTests {
     }
 
     @Test
+    fun testRestoreFromSingleCheckpointWithNodeOutput() = runTest {
+        val time = Clock.System.now()
+        val agentId = "testAgentId"
+        val sessionId = "testSessionId"
+
+        val testCheckpoint = AgentCheckpointData(
+            checkpointId = "testCheckpointId",
+            createdAt = time,
+            nodePath = path(agentId, "straight-forward", "Node2"),
+            lastOutput = JsonPrimitive("Test output"),
+            messageHistory = listOf(
+                Message.User("User message", metaInfo = RequestMetaInfo(time)),
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time)),
+                Message.User("Node 2 output (already calculated)", metaInfo = RequestMetaInfo(time))
+            ),
+            version = 0L
+        )
+
+        provider.saveCheckpoint(sessionId, testCheckpoint)
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor { },
+            strategy = straightForwardGraphNoCheckpoint(),
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+        ) {
+            install(Persistence) {
+                storage = provider
+            }
+        }
+
+        val output = agent.run("Start the test", sessionId)
+
+        assertEquals(
+            "History: User message\n" +
+                "Assistant message\n" +
+                "Node 2 output (already calculated)",
+            output
+        )
+    }
+
+    @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
         val time = Clock.System.now()
         val agentId = "testAgentId"
+        val sessionId = "testSessionId"
 
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId2",
             createdAt = time - 10.seconds,
-            nodeId = "Node1",
+            nodePath = path(agentId, "straight-forward", "Node1"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
@@ -174,7 +218,7 @@ class FileCheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodeId = "Node2",
+            nodePath = path(agentId, "straight-forward", "Node2"),
             lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
@@ -183,22 +227,21 @@ class FileCheckpointsTests {
             version = testCheckpoint2.version.plus(1)
         )
 
-        provider.saveCheckpoint(agentId, testCheckpoint)
-        provider.saveCheckpoint(agentId, testCheckpoint2)
+        provider.saveCheckpoint(sessionId, testCheckpoint)
+        provider.saveCheckpoint(sessionId, testCheckpoint2)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
             strategy = straightForwardGraphNoCheckpoint(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
-            id = agentId
         ) {
             install(Persistence) {
                 storage = provider
             }
         }
 
-        val output = agent.run("Start the test")
+        val output = agent.run("Start the test", sessionId)
 
         assertEquals(
             "History: User message\n" +
@@ -211,6 +254,7 @@ class FileCheckpointsTests {
     @Test
     fun testAgentWithContinuousPersistence() = runTest {
         val agentId = "continuousAgentId"
+        val sessionId = "continuousSessionId"
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -226,10 +270,10 @@ class FileCheckpointsTests {
             }
         }
 
-        agent.run("Start the test")
+        agent.run("Start the test", sessionId)
 
         // Verify that checkpoints were automatically created
-        val checkpoints = provider.getCheckpoints(agentId)
+        val checkpoints = provider.getCheckpoints(sessionId)
         assertTrue(checkpoints.isNotEmpty(), "Should have automatically created checkpoints")
     }
 }

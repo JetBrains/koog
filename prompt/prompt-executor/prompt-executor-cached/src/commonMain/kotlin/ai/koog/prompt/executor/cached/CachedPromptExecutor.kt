@@ -24,7 +24,7 @@ import kotlinx.datetime.Clock
 public class CachedPromptExecutor(
     private val cache: PromptCache,
     private val nested: PromptExecutor,
-    private val clock: Clock = Clock.System
+    private val clock: Clock = kotlin.time.Clock.System
 ) : PromptExecutor {
 
     override suspend fun execute(
@@ -62,7 +62,7 @@ public class CachedPromptExecutor(
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = nested.moderate(prompt, model)
 
-    override suspend fun models(): List<String> = nested.models()
+    override suspend fun models(): List<LLModel> = nested.models()
 
     override fun close() {
         nested.close()

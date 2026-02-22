@@ -124,6 +124,8 @@ public class Tracing {
 
             pipeline.interceptAgentStarting(this) intercept@{ eventContext ->
                 val event = AgentStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -133,6 +135,8 @@ public class Tracing {
 
             pipeline.interceptAgentCompleted(this) intercept@{ eventContext ->
                 val event = AgentCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
@@ -143,6 +147,8 @@ public class Tracing {
 
             pipeline.interceptAgentExecutionFailed(this) intercept@{ eventContext ->
                 val event = AgentExecutionFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     error = eventContext.throwable.toAgentError(),
@@ -153,6 +159,8 @@ public class Tracing {
 
             pipeline.interceptAgentClosing(this) intercept@{ eventContext ->
                 val event = AgentClosingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agentId,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -168,6 +176,8 @@ public class Tracing {
 
                 @OptIn(InternalAgentsApi::class)
                 val event = GraphStrategyStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     graph = strategy.startNodeToGraph(),
@@ -178,6 +188,8 @@ public class Tracing {
 
             pipeline.interceptStrategyCompleted(this) intercept@{ eventContext ->
                 val event = StrategyCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
@@ -192,6 +204,8 @@ public class Tracing {
 
             pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext ->
                 val event = NodeExecutionStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
                     input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
@@ -202,6 +216,8 @@ public class Tracing {
 
             pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext ->
                 val event = NodeExecutionCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
                     input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
@@ -213,6 +229,8 @@ public class Tracing {
 
             pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext ->
                 val event = NodeExecutionFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
                     input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
@@ -228,6 +246,8 @@ public class Tracing {
 
             pipeline.interceptSubgraphExecutionStarting(this) intercept@{ eventContext ->
                 val event = SubgraphExecutionStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
                     input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
@@ -238,6 +258,8 @@ public class Tracing {
 
             pipeline.interceptSubgraphExecutionCompleted(this) intercept@{ eventContext ->
                 val event = SubgraphExecutionCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
                     input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
@@ -249,6 +271,8 @@ public class Tracing {
 
             pipeline.interceptSubgraphExecutionFailed(this) intercept@{ eventContext ->
                 val event = SubgraphExecutionFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
                     input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
@@ -264,8 +288,9 @@ public class Tracing {
 
             pipeline.interceptLLMCallStarting(this) intercept@{ eventContext ->
                 val event = LLMCallStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
-                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
@@ -276,8 +301,9 @@ public class Tracing {
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
                 val event = LLMCallCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
-                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     responses = eventContext.responses,
@@ -293,8 +319,9 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingStarting(this) intercept@{ eventContext ->
                 val event = LLMStreamingStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
-                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
@@ -305,8 +332,9 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingCompleted(this) intercept@{ eventContext ->
                 val event = LLMStreamingCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
-                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
@@ -317,8 +345,11 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingFrameReceived(this) intercept@{ eventContext ->
                 val event = LLMStreamingFrameReceivedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
-                    callId = eventContext.callId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.toModelInfo(),
                     frame = eventContext.streamFrame,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -327,8 +358,11 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingFailed(this) intercept@{ eventContext ->
                 val event = LLMStreamingFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
-                    callId = eventContext.callId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.toModelInfo(),
                     error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -341,6 +375,8 @@ public class Tracing {
 
             pipeline.interceptToolCallStarting(this) intercept@{ eventContext ->
                 val event = ToolCallStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.toolName,
@@ -352,6 +388,8 @@ public class Tracing {
 
             pipeline.interceptToolValidationFailed(this) intercept@{ eventContext ->
                 val event = ToolValidationFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.toolName,
@@ -366,6 +404,8 @@ public class Tracing {
 
             pipeline.interceptToolCallFailed(this) intercept@{ eventContext ->
                 val event = ToolCallFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.toolName,
@@ -379,6 +419,8 @@ public class Tracing {
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
                 val event = ToolCallCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.toolName,

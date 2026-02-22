@@ -21,7 +21,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(kotlin("test-junit5"))
+                api(project(":test-utils"))
             }
         }
 

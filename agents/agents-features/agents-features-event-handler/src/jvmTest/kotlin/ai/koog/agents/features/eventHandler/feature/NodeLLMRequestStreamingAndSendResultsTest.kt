@@ -80,7 +80,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             }
         )
 
-        val result = agent.run("input")
+        val result = agent.run("input", null)
         agent.close()
 
         // Verify the result contains the assistant response
@@ -123,7 +123,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             }
         )
 
-        val result = agent.run("input")
+        val result = agent.run("input", null)
         agent.close()
 
         // Verify the response was collected correctly
@@ -160,7 +160,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }
 
-        val result = agent.run("input")
+        val result = agent.run("input", null)
         agent.close()
 
         // Should return empty content
@@ -201,7 +201,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }
 
-        val result = agent.run("trigger")
+        val result = agent.run("trigger", null)
         agent.close()
 
         // Verify the result

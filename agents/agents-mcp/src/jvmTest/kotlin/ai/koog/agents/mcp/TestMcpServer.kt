@@ -2,6 +2,7 @@ package ai.koog.agents.mcp
 
 import ai.koog.utils.io.SuitableForIO
 import io.ktor.server.cio.CIO
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
@@ -14,13 +15,17 @@ import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A simple MCP server for testing purposes.
@@ -95,15 +100,23 @@ class TestMcpServer(private val port: Int) {
     /**
      * Starts the MCP server on the specified port.
      */
-    fun start() {
-        if (isRunning) return
+    fun start() = runBlocking {
+        if (isRunning) return@runBlocking
 
+        var embeddedServer: EmbeddedServer<*, *>? = null
         serverJob = CoroutineScope(Dispatchers.SuitableForIO).launch {
-            embeddedServer(CIO, host = "0.0.0.0", port = port) {
+            embeddedServer = embeddedServer(CIO, host = "0.0.0.0", port = port) {
                 mcp {
                     return@mcp configureServer()
                 }
-            }.start(wait = true)
+            }
+            embeddedServer.start(wait = true)
+            isRunning = false
+        }
+
+        while (embeddedServer == null || !embeddedServer.application.isActive) {
+            println("Waiting for the server to start...")
+            delay(100.milliseconds)
         }
 
         isRunning = true

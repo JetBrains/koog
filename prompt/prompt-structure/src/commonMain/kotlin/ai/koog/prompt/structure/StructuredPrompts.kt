@@ -8,9 +8,7 @@ import ai.koog.prompt.text.TextContentBuilderBase
  */
 public object StructuredOutputPrompts {
     /**
-     * Formats and appends the structured data output to the provided MarkdownContentBuilder.
-     *
-     * @param structure The StructuredData instance containing the format ID and definition for the output.
+     * Formats and appends the structured data output to the provided text builder.
      */
     public fun outputInstructionPrompt(builder: TextContentBuilderBase<*>, structure: Structure<*, *>): TextContentBuilderBase<*> = builder.apply {
         markdown {
@@ -19,6 +17,32 @@ public object StructuredOutputPrompts {
             br()
 
             structure.definition(this)
+        }
+    }
+
+    /**
+     * Formats and appends structure examples, if they are present in the provided [structure], to the provided text builder,
+     * to show an LLM expected output format. If [Structure.examples] is empty, nothing is appended.
+     */
+    public fun <T> examplesPrompt(builder: TextContentBuilderBase<*>, structure: Structure<T, *>): TextContentBuilderBase<*> = builder.apply {
+        markdown {
+            if (structure.examples.isNotEmpty()) {
+                h4("EXAMPLES")
+
+                if (structure.examples.size == 1) {
+                    +"Here is an example of a valid response:"
+                } else {
+                    +"Here are some examples of valid responses:"
+                }
+
+                structure.examples.forEach { example ->
+                    codeblock(
+                        code = ai.koog.prompt.text.text {
+                            structure(structure, example)
+                        },
+                    )
+                }
+            }
         }
     }
 }

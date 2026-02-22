@@ -15,7 +15,7 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * A utility class for matching strings to associated responses based on different matching strategies.
@@ -63,9 +63,9 @@ internal class MockLLMExecutor(
     private val responseMatcher: ResponseMatcher<List<Message.Response>>,
     private val moderationResponseMatcher: ResponseMatcher<ModerationResult>,
     private val toolRegistry: ToolRegistry? = null,
-    private val logger: KLogger = KotlinLogging.logger(MockLLMExecutor::class.simpleName!!),
+    private val logger: KLogger = KotlinLogging.logger(MockLLMExecutor::class.simpleName.toString()),
     val toolActions: List<ToolCondition<*, *>> = emptyList(),
-    private val clock: Clock = Clock.System,
+    private val clock: Clock = kotlin.time.Clock.System,
     private val tokenizer: Tokenizer? = null
 ) : PromptExecutor {
 

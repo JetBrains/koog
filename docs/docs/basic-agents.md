@@ -14,7 +14,7 @@ The tool result is returned if the tool registry is provided to the agent.
 
 If your goal is to build a simple agent to experiment with, you can provide only a prompt executor and LLM when creating it.
 But if you want more flexibility and customization, you can pass optional parameters to configure the agent.
-To learn more about configuration options, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent/-a-i-agent.html).
+To learn more about configuration options, see [API reference](api:agents-core::ai.koog.agents.core.agent.AIAgent).
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ To use the `AIAgent` functionality, include all necessary dependencies in your b
 
 ```
 dependencies {
-    implementation("ai.koog:koog-agents:$koog_version")
+    implementation("ai.koog:koog-agents:VERSION")
 }
 ```
 
@@ -40,7 +40,7 @@ For all available installation methods, see [Install Koog](getting-started.md#in
 
 ### 2. Create an agent 
 
-To create an agent, create an instance of the `AIAgent` class and provide the `executor` and `llmModel` parameters:
+To create an agent, create an instance of the `AIAgent` class and provide the `promptExecutor` and `llmModel` parameters:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent

@@ -26,7 +26,7 @@ object Models {
     @JvmStatic
     fun anthropicModels(): Stream<LLModel> {
         return Stream.of(
-            AnthropicModels.Opus_4_5,
+            AnthropicModels.Opus_4_6,
             AnthropicModels.Haiku_4_5,
             AnthropicModels.Sonnet_4_5,
         )
@@ -35,6 +35,7 @@ object Models {
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
+            GoogleModels.Gemini3_Pro_Preview,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini2_5Flash,
         )
@@ -43,7 +44,7 @@ object Models {
     @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.DeepSeekV30324,
-        OpenRouterModels.Qwen3VL,
+        OpenRouterModels.Qwen2_5,
     )
 
     @JvmStatic
@@ -125,13 +126,13 @@ object Models {
         return Stream.concat(
             openAIModels()
                 .filter { model ->
-                    model.capabilities.contains(LLMCapability.Vision.Image)
+                    model.supports(LLMCapability.Vision.Image)
                 }
                 .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
 
             anthropicModels()
                 .filter { model ->
-                    model.capabilities.contains(LLMCapability.Vision.Image)
+                    model.supports(LLMCapability.Vision.Image)
                 }
                 .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
         )

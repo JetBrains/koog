@@ -1,8 +1,8 @@
 package ai.koog.agents.ext.tool.search
 
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.rag.base.files.model.FileSystemEntry
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
 import java.nio.file.Path

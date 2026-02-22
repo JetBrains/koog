@@ -4,8 +4,6 @@ import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -15,6 +13,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class CheckpointSerializationTest {
 
@@ -29,8 +29,8 @@ class CheckpointSerializationTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-1",
             createdAt = now,
-            nodeId = "NodeA",
-            lastInput = JsonPrimitive("last-input"),
+            nodePath = "NodeA",
+            lastOutput = JsonPrimitive("last-input"),
             messageHistory = sampleMessages(now),
             version = 0L
         )
@@ -46,8 +46,8 @@ class CheckpointSerializationTest {
         // Thorough field-by-field assertions
         assertEquals("cp-1", restored.checkpointId)
         assertEquals(now, restored.createdAt)
-        assertEquals("NodeA", restored.nodeId)
-        assertEquals(JsonPrimitive("last-input"), restored.lastInput)
+        assertEquals("NodeA", restored.nodePath)
+        assertEquals(JsonPrimitive("last-input"), restored.lastOutput)
         assertNull(restored.properties, "properties should be null after deserialization when omitted in JSON")
 
         // Message history assertions
@@ -87,8 +87,8 @@ class CheckpointSerializationTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-2",
             createdAt = now,
-            nodeId = "NodeB",
-            lastInput = JsonObject(mapOf("inputKey" to JsonPrimitive("inputVal"))),
+            nodePath = "NodeB",
+            lastOutput = JsonObject(mapOf("inputKey" to JsonPrimitive("inputVal"))),
             messageHistory = sampleMessages(now),
             properties = properties,
             version = 0L

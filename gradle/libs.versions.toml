@@ -1,10 +1,10 @@
 [versions]
-acp = "0.3.0"
+acp = "0.13.1"
 agp = "8.12.3"
 annotations = "26.0.2-1"
 assertj = "3.27.6"
 awaitility = "4.3.0"
-aws-sdk-kotlin = "1.5.16"
+aws-sdk-kotlin = "1.6.17"
 dokka = "2.1.0"
 exposed = "0.61.0"
 h2 = "2.4.240"
@@ -12,33 +12,33 @@ hikaricp = "6.2.1"
 jdkVersion = "17"
 jetsign = "45.47"
 junit = "5.8.2"
-knit = "0.5.0"
-kotest = "6.0.5"
-kotlin = "2.2.10"
+knit = "0.5.1"
+kotest = "6.0.7"
+kotlin = "2.3.10"
 kotlinx-coroutines = "1.10.2"
-kotlinx-datetime = "0.6.2"
+kotlinx-datetime = "0.7.1"
 kotlinx-io = "0.7.0"
-kotlinx-serialization = "1.8.1" # check with IJ
-kover = "0.9.3"
+kotlinx-serialization = "1.10.0" # check with IJ
+kover = "0.9.4"
 ktlint = "14.0.1"
 ktor3 = "3.2.2"
 lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
 mcp = "0.8.1"
-mockito = "5.19.0"
-mockk = "1.13.8"
+mockito = "5.21.0"
+mockk = "1.14.7"
 mokksy = "0.5.1"
 mysql = "8.0.33"
-netty = "4.2.6.Final"
+netty = "4.2.9.Final"
 okhttp = "5.3.2"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
 postgresql = "42.7.4"
 slf4j = "2.0.17"
-spring-boot = "3.5.8"
+spring-boot = "3.5.9"
 spring-management = "1.1.7"
-sqlite = "3.46.1.3"
-testcontainers = "1.19.7"
+sqlite = "3.51.1.0"
+testcontainers = "1.21.4"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -90,7 +90,6 @@ mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
-testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
@@ -108,6 +107,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp" }
 okhttp-sse = { module = "com.squareup.okhttp3:okhttp-sse" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
+opentelemetry-sdk-testing = { module = "io.opentelemetry:opentelemetry-sdk-testing" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
 opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
 aws-sdk-kotlin-bedrock = { module = "aws.sdk.kotlin:bedrock", version.ref = "aws-sdk-kotlin" }

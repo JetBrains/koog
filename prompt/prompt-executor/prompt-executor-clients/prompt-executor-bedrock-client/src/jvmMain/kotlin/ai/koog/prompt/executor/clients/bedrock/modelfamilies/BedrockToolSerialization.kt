@@ -17,11 +17,22 @@ internal object BedrockToolSerialization {
         explicitNulls = false
     }
 
-    // Helper method to build tool parameter schema
+    /**
+     * Builds a JSON schema for a tool parameter, including description.
+     */
     internal fun buildToolParameterSchema(param: ToolParameterDescriptor): JsonObject = buildJsonObject {
         put("description", param.description)
+        buildTypeSchema(param.type).forEach { (key, value) ->
+            put(key, value)
+        }
+    }
 
-        when (val type = param.type) {
+    /**
+     * Builds a JSON schema for a parameter type without description.
+     * This helper function handles recursive type serialization cleanly.
+     */
+    private fun buildTypeSchema(type: ToolParameterType): JsonObject = buildJsonObject {
+        when (type) {
             ToolParameterType.Boolean -> put("type", "boolean")
             ToolParameterType.Float -> put("type", "number")
             ToolParameterType.Integer -> put("type", "integer")
@@ -35,24 +46,12 @@ internal object BedrockToolSerialization {
 
             is ToolParameterType.List -> {
                 put("type", "array")
-                putJsonObject("items") {
-                    when (type.itemsType) {
-                        ToolParameterType.Boolean -> put("type", "boolean")
-                        ToolParameterType.Float -> put("type", "number")
-                        ToolParameterType.Integer -> put("type", "integer")
-                        ToolParameterType.String -> put("type", "string")
-                        else -> put("type", "string")
-                    }
-                }
+                put("items", buildTypeSchema(type.itemsType))
             }
 
             is ToolParameterType.AnyOf -> {
                 putJsonArray("anyOf") {
-                    addAll(
-                        type.types.map { parameterType ->
-                            buildToolParameterSchema(parameterType)
-                        }
-                    )
+                    addAll(type.types.map { buildToolParameterSchema(it) })
                 }
             }
 

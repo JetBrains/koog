@@ -21,20 +21,48 @@ import kotlin.uuid.Uuid
  *
  * @property checkpointId The unique identifier of the checkpoint. This allows tracking and restoring the agent's session to a specific state.
  * @property messageHistory A list of messages exchanged in the session up to the checkpoint. Messages include interactions between the user, system, assistant, and tools.
- * @property nodeId The identifier of the node where the checkpoint was created.
- * @property lastInput Serialized input received for node with [nodeId]
+ * @property nodePath The identifier of the node where the checkpoint was created.
+ * @property lastInput Serialized input received for node with [nodePath]
+ * @property lastOutput Serialized output received from node with [nodePath]
  * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
+ * @property createdAt The timestamp when the checkpoint was created.
+ * @property version The version of the checkpoint data structure
  */
 @Serializable
 public data class AgentCheckpointData(
     val checkpointId: String,
     val createdAt: Instant,
-    val nodeId: String,
-    val lastInput: JsonElement,
+    val nodePath: String,
+    @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
+    val lastInput: JsonElement? = null,
+    val lastOutput: JsonElement? = null,
     val messageHistory: List<Message>,
     val version: Long,
     val properties: Map<String, JsonElement>? = null
-)
+) {
+    init {
+        if (nodePath != PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) {
+            require(lastInput == null || lastOutput == null) { "`lastInput` and `lastOutput` cannot be both set" }
+            require(lastInput != null || lastOutput != null) { "`lastInput` (until 0.6.0) or `lastOutput` (since 0.6.1) must be set" }
+        }
+    }
+
+    private fun eq(json1: JsonElement?, json2: JsonElement?): Boolean =
+        json1 == json2 || ((json1 == null || json1 == JsonNull) && (json2 == null || json2 == JsonNull))
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AgentCheckpointData) return false
+        return checkpointId == other.checkpointId &&
+            nodePath == other.nodePath &&
+            createdAt == other.createdAt &&
+            eq(lastInput, other.lastInput) &&
+            eq(lastOutput, other.lastOutput) &&
+            messageHistory == other.messageHistory &&
+            version == other.version &&
+            properties == other.properties
+    }
+}
 
 /**
  * Creates a tombstone checkpoint for an agent's session.
@@ -48,8 +76,8 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
     return AgentCheckpointData(
         checkpointId = Uuid.random().toString(),
         createdAt = time,
-        nodeId = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
-        lastInput = JsonNull,
+        nodePath = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
+        lastOutput = JsonNull,
         messageHistory = emptyList(),
         properties = mapOf(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JsonPrimitive(true)),
         version = version
@@ -59,7 +87,7 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
 /**
  * Converts an instance of [AgentCheckpointData] to [AgentContextData].
  *
- * The conversion maps the `messageHistory`, `nodeId`, and `lastInput` properties of
+ * The conversion maps the `messageHistory`, `nodeId`, and `lastOutput` properties of
  * [AgentCheckpointData] directly to a new [AgentContextData] instance.
  *
  * @return A new [AgentContextData] instance containing the message history, node ID,
@@ -69,10 +97,12 @@ public fun AgentCheckpointData.toAgentContextData(
     rollbackStrategy: RollbackStrategy,
     additionalRollbackAction: suspend (AIAgentContext) -> Unit = {}
 ): AgentContextData {
+    @Suppress("DEPRECATION")
     return AgentContextData(
         messageHistory = messageHistory,
-        nodeId = nodeId,
+        nodePath = nodePath,
         lastInput = lastInput,
+        lastOutput = lastOutput,
         rollbackStrategy,
         additionalRollbackAction
     )

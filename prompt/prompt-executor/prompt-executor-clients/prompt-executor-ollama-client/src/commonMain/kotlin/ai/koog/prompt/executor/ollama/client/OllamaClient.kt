@@ -46,18 +46,22 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.jvm.JvmOverloads
 
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
@@ -73,11 +77,11 @@ import kotlinx.serialization.json.Json
  * @param contextWindowStrategy The [ContextWindowStrategy] to use for computing context window lengths.
  *   Defaults to [ContextWindowStrategy.None].
  */
-public class OllamaClient(
+public class OllamaClient @JvmOverloads constructor(
     public val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-    private val clock: Clock = Clock.System,
+    private val clock: Clock = kotlin.time.Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
 ) : LLMClient, LLMEmbeddingProvider {
@@ -287,31 +291,31 @@ public class OllamaClient(
             )
         )
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
+        client.preparePost(DEFAULT_MESSAGE_PATH) {
+            contentType(ContentType.Application.Json)
             setBody(request)
-        }
+        }.execute { response: HttpResponse ->
+            val channel: ByteReadChannel = response.bodyAsChannel()
 
-        val channel = response.bodyAsChannel()
+            while (!channel.isClosedForRead) {
+                val line = channel.readUTF8Line() ?: break
+                if (line.isBlank()) continue
 
-        while (!channel.isClosedForRead) {
-            val line = channel.readUTF8Line() ?: break
-            if (line.isBlank()) continue
-
-            try {
-                val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
-                chunk.message?.let { message ->
-                    emitAppend(message.content)
-                    message.toolCalls?.forEach { toolCall ->
-                        emitToolCall(
-                            id = null,
-                            name = toolCall.function.name,
-                            content = toolCall.function.arguments.toString()
-                        )
+                try {
+                    val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
+                    chunk.message?.let { message ->
+                        emitAppend(message.content)
+                        message.toolCalls?.forEach { toolCall ->
+                            emitToolCall(
+                                id = null,
+                                name = toolCall.function.name,
+                                content = toolCall.function.arguments.toString()
+                            )
+                        }
                     }
+                } catch (_: Exception) {
+                    // Skip malformed JSON lines
                 }
-            } catch (_: Exception) {
-                // Skip malformed JSON lines
-                continue
             }
         }
     }
@@ -395,7 +399,7 @@ public class OllamaClient(
     }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-        if (!model.capabilities.contains(LLMCapability.Moderation)) {
+        if (!model.supports(LLMCapability.Moderation)) {
             throw LLMClientException(clientName, "Model ${model.id} does not support moderation")
         }
 

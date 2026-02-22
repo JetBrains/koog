@@ -1,3 +1,100 @@
+# 0.6.2
+> Published 10 February 2026
+
+## Improvements
+- **Structured output with examples**: Include examples in the prompt with `StructuredRequest.Native` to help LLMs better understand desired data format (#1328, #1396)
+
+## Bug fixes
+- **Kotlin/Wasm support**: Applied workaround for Kotlin/Wasm compiler bug which produced invalid Wasm files ([KT-83728](https://youtrack.jetbrains.com/issue/KT-83728), #1365)
+
+# 0.6.1
+> Published 28 January 2026
+
+## Major Features
+**Block of changes**:
+- **Converse API support in Bedrock LLM client**: Added support for the Converse API in the Bedrock LLM client, enabling richer prompt-based interactions ([KG-543](https://youtrack.jetbrains.com/issue/KG-543), #1384)
+- **Tool choice heuristics**: Introduced heuristic-based required tool selection via `LLMBasedToolCallFixProcessor` for models that do not support explicit tool choice ([KG-200](https://youtrack.jetbrains.com/issue/KG-200), #1389)
+
+## Improvements
+- **Prompt parameter preservation**: Ensured that `LLMParams` fields are preserved after calling `Prompt.withUpdatedParams` (#1194)
+- **Error handling for tools**: Improved error handling for tool argument parsing, result serialization, and subgraph tool execution failures ([KG-597](https://youtrack.jetbrains.com/issue/KG-597), #1329)
+- **OpenTelemetry**:
+    - Updated span attributes and names to better align with semantic conventions ([KG-646](https://youtrack.jetbrains.com/issue/KG-646), #1351; [KG-647](https://youtrack.jetbrains.com/issue/KG-647), #1359)
+    - Replaced agent data propagation through the coroutine context with the `AIAgentContext` instance for agent events ([KG-178](https://youtrack.jetbrains.com/issue/KG-178), #1336)
+- **ACP SDK update**: Updated the ACP SDK to version 0.13.1 to enable connections from IntelliJ-based IDE clients ([KG-671](https://youtrack.jetbrains.com/issue/KG-671), #1363)
+
+## Bug fixes
+- **OpenAI client**:
+    - Restored the `minimal` option in `ReasonEffort` within `OpenAIDataModels` (#1412)
+    - Fixed missing token usage information in streaming mode (#1072, #1404)
+- **Bedrock client**:
+    - Fixed JSON schema generation for Bedrock tools to correctly handle nested objects (#1259, #1361)
+    - Fixed parsing of tool usage in Bedrock Anthropic streaming responses ([KG-627](https://youtrack.jetbrains.com/issue/KG-627), #1310)
+- **DeepSeek structured output**: Fixed structured output handling for DeepSeek ([KG-537](https://youtrack.jetbrains.com/issue/KG-537), #1385)
+- **Gemini 3.0 tool calls**: Fixed thought signature handling for tool calls ([KG-596](https://youtrack.jetbrains.com/issue/KG-596), #1317)
+- **Subtask completion flow**: Ensured that subtasks return after a tool call finishes, before issuing a new LLM request (#1322, #1362)
+
+## Examples
+- Updated the ACP example to use the latest ACP SDK version (#1363)
+- Updated the Compose Demo App to use the latest Koog version (#1227)
+
+# 0.6.0
+> Published 22 December 2025
+
+## Major Features
+
+- **ACP Integration**: Introduce initial ACP (Agent Communication Protocol) integration to create ACP-compatible agents in Koog (#1253)
+- **Planner Agent Type**: Introduce new "planner" agent type with iterative planning capabilities. Provide two out-of-the box strategies: simple LLM planner and GOAP (Goal-Oriented Action Planning) (#1232)
+- **Response Processor**: Introduce `ResponseProcessor` to fix tool call messages from weak models that fail to properly generate tool calls ([KG-212](https://youtrack.jetbrains.com/issue/KG-212), #871)
+
+## Improvements
+
+- **Event ID Propagation**: Integrate event ID and execution info propagation across all pipeline events, agent execution flow, and features including Debugger and Tracing ([KG-178](https://youtrack.jetbrains.com/issue/KG-178))
+- **Bedrock Enhancements**:
+  - Add fallback model support and warning mechanism for unsupported Bedrock models with custom families ([KG-595](https://youtrack.jetbrains.com/issue/KG-595), #1224)
+  - Add global inference profile prefix support to Bedrock models for improved availability and latency (#1139)
+  - Add Bedrock support in Ktor integration for configuring and initializing Bedrock LLM clients (#1141)
+  - Improve Bedrock moderation implementation with conditional guardrails API calls (#1105)
+- **Ollama**: Add support for file attachments in Ollama client (#1221)
+- **Tool Schema**: Add extension point for custom tool schemas to allow clients to provide custom schemas or modify existing ones (#1158)
+- **Google Client**:
+  - Add support for `/models` request in Google LLM Client (#1181)
+  - Add text embedding support for Google's **Gemini models** via `gemini-embedding-001` ([KG-314](https://youtrack.jetbrains.com/issue/KG-314), #1235)
+- **HTTP Client**: Make `KoogHttpClient` auto-closable and add `clientName` parameter (#1184)
+- Update MCP SDK version to 0.7.7 (#1154)
+- Use SEQUENTIAL mode as default for `singleRunStrategy` (#1195)
+
+## Bug Fixes
+
+- **Streaming**: Fix streaming + tool call issues for Google and OpenRouter clients - Google client now passes tools parameter, OpenRouter uses CIO engine for SSE, improved SSE error handling ([KG-616](https://youtrack.jetbrains.com/issue/KG-616), #1262)
+- **Tool Calling**: Fix `requestLLMOnlyCallingTools` ignoring tool calls after reasoning messages from models with Chain of Thought ([KG-545](https://youtrack.jetbrains.com/issue/KG-545), #1198)
+- **File Tools**:
+  - Handle empty filters in `ListDirectoryTool` ([KG-628](https://youtrack.jetbrains.com/issue/KG-628), #1285)
+  - Fix directory collapse in `ListDirectoryUtil` ([KG-583](https://youtrack.jetbrains.com/issue/KG-583), #1260)
+  - Clamp `endLine` to file length and add warnings for overflow in `ReadFileTool` ([KG-534](https://youtrack.jetbrains.com/issue/KG-534), #1182)
+- **Model-Specific Fixes**:
+  - Pass `jsonObject` as `responseFormat` for DeepSeek to fix JSON mode ([KG-537](https://youtrack.jetbrains.com/issue/KG-537), #1258)
+  - Remove `LLMCapability.Temperature` from GPT-5 model capabilities (#1277)
+  - Fix OpenAI streaming with tools in Responses API ([KG-584](https://youtrack.jetbrains.com/issue/KG-584), #1255)
+  - Fix Bedrock timeout setting propagation to `BedrockRuntimeClient.HttpClient` (#1190)
+  - Add handler for `GooglePart.InlineData` to support binary content responses ([KG-487](https://youtrack.jetbrains.com/issue/KG-487), #1094)
+- **Other Fixes**:
+  - Fix reasoning message handling in provided simple strategies (#1166)
+  - Fix empty list condition check in `onMultipleToolResults` and `onMultipleAssistantMessages` (#1192)
+  - Fix timeout not respected in executor because `join()` was called before timeout check (#1005)
+  - Fix `ContentPartsBuilder` to flush whenever `textBuilder` is not empty ([KG-504](https://youtrack.jetbrains.com/issue/KG-504), #1123)
+  - Fix and simplify `McpTool` to properly support updated Tool serialization (#1128)
+  - Fix `OpenAIConfig.moderationsPath` to be mutable (`var` instead of `val`) (#1097)
+  - Finalize pipeline feature processors after agent run for `StatefulSingleUseAIAgent` ([KG-576](https://youtrack.jetbrains.com/issue/KG-576))
+
+## Breaking Changes
+
+- **Persistence**: Remove requirement for unique graph node names in Persistence feature, migrate to node path usage (#1288)
+- **Tool API**: Update Tool API to fix name and descriptor discrepancy - moved configurable tool properties to constructors, removed `doExecute` in favor of `execute` ([KG-508](https://youtrack.jetbrains.com/issue/KG-508), #1226)
+- **OpenAI Models**: GPT-5-Codex and GPT-5.1 reasoning models moved from Chat section to Reasoning section ([KG-562](https://youtrack.jetbrains.com/issue/KG-562), #1146)
+- **Structured Output**: Rename structured output classes - `StructuredOutput` → `StructuredRequest`, `StructuredData` → `Structure`, `JsonStructuredData` → `JsonStructure` (#1107)
+- **Module Organization**: Move `LLMChoice` from `prompt-llm` to `prompt-executor-model` module (#1109)
+
 # 0.5.4
 > Published 03 December 2025
 
@@ -445,3 +542,4 @@ Kotlin.
 
 - JVM (requires JDK 17 or higher)
 - JavaScript
+

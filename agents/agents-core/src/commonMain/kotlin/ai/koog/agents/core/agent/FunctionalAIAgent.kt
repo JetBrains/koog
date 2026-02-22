@@ -42,10 +42,10 @@ public class FunctionalAIAgent<Input, Output>(
     override val strategy: AIAgentFunctionalStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    public val clock: Clock = Clock.System,
+    public val clock: Clock = kotlin.time.Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<Input, Output, AIAgentFunctionalContext>(
+) : AIAgentBase<Input, Output, AIAgentFunctionalContext>(
     logger = logger,
     id = id,
 ) {
@@ -53,7 +53,7 @@ public class FunctionalAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
+    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(agentConfig, clock)
 
     /**
      * Represents a context for managing and configuring features in an AI agent.
@@ -78,7 +78,7 @@ public class FunctionalAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentFunctionalContext {
+    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentFunctionalContext {
         val environment = GenericAgentEnvironment(
             agentId = id,
             logger = logger,

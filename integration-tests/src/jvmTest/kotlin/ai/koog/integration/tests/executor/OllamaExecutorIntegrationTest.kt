@@ -275,7 +275,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
         val ollamaException =
             "Ollama API error: Failed to create new sequence: failed to process inputs"
-        assumeTrue(visionModel.capabilities.contains(Vision.Image), "Model must support vision capability")
+        assumeTrue(visionModel.supports(Vision.Image), "Model must support vision capability")
 
         val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
 

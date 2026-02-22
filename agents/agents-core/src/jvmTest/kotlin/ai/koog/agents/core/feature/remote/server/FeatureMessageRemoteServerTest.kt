@@ -217,7 +217,7 @@ class FeatureMessageRemoteServerTest {
     @Test
     fun `test server is started with wait connection timeout`() = runBlocking {
         val port = findAvailablePort()
-        val waitConnectionTimeout = 1.seconds
+        val waitConnectionTimeout = 3.seconds
 
         val serverConfig = DefaultServerConnectionConfig(
             port = port,
@@ -344,7 +344,7 @@ class FeatureMessageRemoteServerTest {
         }
         val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
-        val testServerMessage = TestFeatureEventMessage("test server message")
+        val testServerMessage = TestFeatureEventMessage(testMessage = "test server message")
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()

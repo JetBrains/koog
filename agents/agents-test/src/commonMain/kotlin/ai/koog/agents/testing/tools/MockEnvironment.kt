@@ -58,7 +58,7 @@ public class MockEnvironment(
      * @param toolCalls The list of tool calls to execute
      * @return A list of [ReceivedToolResult] objects containing the results of the tool calls
      */
-    public suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
+    public override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
         return toolCalls.map {
             executeTool(it)
         }

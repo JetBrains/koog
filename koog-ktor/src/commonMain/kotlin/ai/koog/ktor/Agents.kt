@@ -75,7 +75,7 @@ public suspend inline fun <reified Input, reified Output> RoutingContext.aiAgent
     strategy: AIAgentGraphStrategy<Input, Output>,
     model: LLModel,
     input: Input
-): Output = aiAgent(strategy, model) { it.run(input) }
+): Output = aiAgent(strategy, model) { it.run(input, null) }
 
 /**
  * Creates an AI agent using the provided AI agent strategy within the specified route.
@@ -110,4 +110,4 @@ public suspend fun RoutingContext.aiAgent(
     input: String,
     model: LLModel,
     runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL,
-): String = aiAgent(runMode, model) { it.run(input) }
+): String = aiAgent(runMode, model) { it.run(input, null) }

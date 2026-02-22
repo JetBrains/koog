@@ -4,10 +4,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
 import com.jetbrains.example.koog.compose.screens.agentdemo.AgentDemoScreen
 import com.jetbrains.example.koog.compose.screens.settings.SettingsScreen
 import com.jetbrains.example.koog.compose.screens.start.StartScreen
@@ -27,49 +28,47 @@ fun ComposeApp() = AppTheme {
         color = MaterialTheme.colorScheme.background
     ) {
         val koin = getKoin()
-        val navController = rememberNavController()
-        NavHost(
-            navController = navController,
-            startDestination = NavRoute.StartScreen,
-        ) {
-            composable<NavRoute.StartScreen> {
-                StartScreen(
-                    onNavigateToSettings = {
-                        navController.navigate(NavRoute.SettingsScreen)
-                    },
-                    onNavigateToAgentDemo = { demoRoute ->
-                        navController.navigate(demoRoute)
-                    },
-                    viewModel = koin.get()
-                )
-            }
+        val backStack = mutableStateListOf<NavKey>(NavRoute.StartScreen)
+        val appNavigation = AppNavigation(backStack = backStack)
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryProvider = entryProvider {
+                entry<NavRoute.StartScreen> {
+                    StartScreen(
+                        viewModel = koin.get { parametersOf(appNavigation) }
+                    )
+                }
 
-            composable<NavRoute.SettingsScreen> {
-                SettingsScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onSaveSettings = {
-                        navController.popBackStack()
-                    },
-                    viewModel = koin.get()
-                )
-            }
+                entry<NavRoute.SettingsScreen> {
+                    SettingsScreen(
+                        viewModel = koin.get { parametersOf(appNavigation) }
+                    )
+                }
 
-            composable<NavRoute.AgentDemoRoute.CalculatorScreen> {
-                AgentDemoScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    viewModel = koin.get { parametersOf("calculator") }
-                )
-            }
+                entry<NavRoute.AgentDemoRoute.CalculatorScreen> {
+                    AgentDemoScreen(
+                        viewModel = koin.get {
+                            parametersOf(
+                                appNavigation,
+                                "calculator",
+                            )
+                        }
+                    )
+                }
 
-            composable<NavRoute.AgentDemoRoute.WeatherScreen> {
-                AgentDemoScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    viewModel = koin.get { parametersOf("weather") }
-                )
+                entry<NavRoute.AgentDemoRoute.WeatherScreen> {
+                    AgentDemoScreen(
+                        viewModel = koin.get {
+                            parametersOf(
+                                appNavigation,
+                                "weather",
+                            )
+                        }
+                    )
+                }
             }
-        }
+        )
     }
 }
 
@@ -77,7 +76,7 @@ fun ComposeApp() = AppTheme {
  * Navigation routes for the app
  */
 @Serializable
-sealed interface NavRoute {
+sealed interface NavRoute : NavKey {
     @Serializable
     data object StartScreen : NavRoute
 

@@ -6,8 +6,8 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import io.ktor.util.logging.KtorSimpleLogger
 
 private val logger = KtorSimpleLogger("ai.koog.ktor.utils.LLMModelParser")
@@ -251,6 +251,7 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
     "opus_4" to AnthropicModels.Opus_4,
     "opus_4_1" to AnthropicModels.Opus_4_1,
     "opus_4_5" to AnthropicModels.Opus_4_5,
+    "opus_4_6" to AnthropicModels.Opus_4_6,
     "haiku_3" to AnthropicModels.Haiku_3,
     "haiku_3_5" to AnthropicModels.Haiku_3_5,
     "haiku_4_5" to AnthropicModels.Haiku_4_5,

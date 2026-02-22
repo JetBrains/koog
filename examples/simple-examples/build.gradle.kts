@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     implementation(platform(libs.kotlin.bom))
+    implementation(libs.mcp.server)
+    implementation(libs.mcp.client)
 
     /*
      Koog dependencies from composite build.
@@ -13,6 +15,8 @@ dependencies {
      */
     //noinspection UseTomlInstead
     implementation("ai.koog:koog-agents")
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-mcp-server")
     //noinspection UseTomlInstead
     implementation("ai.koog:koog-ktor")
     //noinspection UseTomlInstead
@@ -41,6 +45,7 @@ dependencies {
 
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.sse)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
@@ -118,7 +123,9 @@ registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.
 registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.snapshot.sql.SQLPersistentAgentExample")
 registerRunExampleTask("runExampleWebSearchAgent", "ai.koog.agents.example.websearch.WebSearchAgentKt")
 registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.streaming.StreamingAgentWithToolsKt")
+registerRunExampleTask("runExampleStreamingKtorServer", "ai.koog.agents.example.streaming.StreamingKtorServerKt")
 
+registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.GrouperAgentKt")
 /*
  A2A examples
 */
@@ -136,3 +143,8 @@ registerRunExampleTask("runExampleAdvancedJokeAgentClient", "ai.koog.agents.exam
  ACP examples
 */
 registerRunExampleTask("runExampleAcpApp", "ai.koog.agents.example.acp.KoogAcpAppKt")
+
+/*
+ Langfuse examples
+*/
+registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.langfuse.LangfuseKt")

@@ -48,7 +48,7 @@ class AgentExecutionInfoTest {
 
     @Test
     fun testDefaultPathSeparator() {
-        assertEquals("/", AgentExecutionInfo.defaultPathSeparator)
+        assertEquals("/", DEFAULT_AGENT_PATH_SEPARATOR)
     }
 
     @Test

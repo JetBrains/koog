@@ -143,7 +143,7 @@ class TraceFeatureMessageLogWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
 
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
@@ -361,7 +361,7 @@ class TraceFeatureMessageLogWriterTest {
                 }
             }
 
-            agent.run("")
+            agent.run("", null)
             agent.close()
 
             assertEquals(expectedEvents.size, targetLogger.messages.size)
@@ -390,7 +390,7 @@ class TraceFeatureMessageLogWriterTest {
             }
 
             val agentInput = "Hello World!"
-            agent.run(agentInput)
+            agent.run(agentInput, null)
             agent.close()
 
             val expectedLogMessages = listOf<String>()
@@ -487,7 +487,7 @@ class TraceFeatureMessageLogWriterTest {
                     addMessageProcessor(writer)
                 }
             }.use { agent ->
-                agent.run(userPrompt)
+                agent.run(userPrompt, null)
             }
 
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))

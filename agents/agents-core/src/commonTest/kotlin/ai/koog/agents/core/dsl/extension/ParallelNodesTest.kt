@@ -11,7 +11,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import io.ktor.util.reflect.instanceOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Ignore

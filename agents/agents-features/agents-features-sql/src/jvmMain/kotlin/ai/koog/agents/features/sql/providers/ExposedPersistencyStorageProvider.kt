@@ -2,7 +2,6 @@ package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistenceUtils
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
@@ -14,6 +13,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.upsert
+import kotlin.time.Clock
 
 /**
  * An abstract Exposed-based implementation of [SQLPersistenceStorageProvider] for managing
@@ -53,7 +53,7 @@ import org.jetbrains.exposed.sql.upsert
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
-public abstract class ExposedPersistenceStorageProvider(
+public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructor(
     protected val database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
@@ -82,6 +82,7 @@ public abstract class ExposedPersistenceStorageProvider(
      * 2. TTL is configured (ttlSeconds is not null)
      * 3. Enough time has passed since last cleanup
      */
+    @JvmOverloads
     public suspend fun conditionalCleanup(cleanupConfig: CleanupConfig = CleanupConfig.default()) {
         // Skip cleanup entirely if disabled or no TTL configured
         if (!cleanupConfig.enabled || ttlSeconds == null) {
@@ -116,12 +117,13 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun getCheckpoints(agentId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
+    @JvmOverloads
+    override suspend fun getCheckpoints(sessionId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
         if (filter == null) {
             val now = Clock.System.now().toEpochMilliseconds()
             return transaction {
                 checkpointsTable.select(checkpointsTable.checkpointJson).where {
-                    (checkpointsTable.persistenceId eq agentId) and
+                    (checkpointsTable.persistenceId eq sessionId) and
                         ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
                 }.mapNotNull { row ->
                     runCatching {
@@ -141,13 +143,13 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
         val checkpointJson = json.encodeToString(agentCheckpointData)
         val ttlTimestamp = calculateTtlTimestamp(agentCheckpointData.createdAt)
 
         transaction {
             checkpointsTable.upsert {
-                it[checkpointsTable.persistenceId] = agentId
+                it[checkpointsTable.persistenceId] = sessionId
                 it[checkpointsTable.checkpointId] = agentCheckpointData.checkpointId
                 it[checkpointsTable.createdAt] = agentCheckpointData.createdAt.toEpochMilliseconds()
                 it[checkpointsTable.checkpointJson] = checkpointJson
@@ -157,14 +159,14 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
         if (filter == null) {
             val now = Clock.System.now().toEpochMilliseconds()
             return transaction {
                 checkpointsTable
                     .select(checkpointsTable.checkpointJson)
                     .where {
-                        (checkpointsTable.persistenceId eq agentId) and
+                        (checkpointsTable.persistenceId eq sessionId) and
                             ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
                     }
                     .orderBy(checkpointsTable.version to SortOrder.DESC)

@@ -5,9 +5,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertNull
@@ -18,6 +17,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class PromptTest {
     companion object {
@@ -626,7 +627,13 @@ class PromptTest {
 
     @Test
     fun testWithUpdatedParamsFunction() {
-        val originalPrompt = Prompt.build("test") {
+        val originalParams = LLMParams(
+            temperature = 0.7,
+            speculation = "test speculation",
+            user = "test_user",
+            additionalProperties = mapOf("test_property_name" to JsonPrimitive("test_property_value")),
+        )
+        val originalPrompt = Prompt.build("test", originalParams) {
             system("You are a helpful assistant")
         }
 
@@ -637,6 +644,9 @@ class PromptTest {
 
         assertNotEquals(originalPrompt, tempUpdatedPrompt)
         assertEquals(0.8, tempUpdatedPrompt.params.temperature)
+        assertEquals(originalParams.speculation, tempUpdatedPrompt.params.speculation)
+        assertEquals(originalParams.user, tempUpdatedPrompt.params.user)
+        assertEquals(originalParams.additionalProperties, tempUpdatedPrompt.params.additionalProperties)
 
         // Test updating multiple parameters
         val multiUpdatedPrompt = originalPrompt.withUpdatedParams {

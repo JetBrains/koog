@@ -92,7 +92,7 @@ class FeatureMessageLogWriterTest {
     fun `test logger stream feature provider for multiple messages`() = runBlocking {
         val messages = listOf(
             FeatureStringMessage("test message 1"),
-            TestFeatureEventMessage("test event 1"),
+            TestFeatureEventMessage(testMessage = "test event 1"),
         )
 
         TestFeatureMessageLogWriter(targetLogger).use { writer ->
@@ -133,8 +133,8 @@ class FeatureMessageLogWriterTest {
     @Test
     fun `test logger with DEBUG log level for event message`() = runBlocking {
         val messages = listOf(
-            TestFeatureEventMessage("debug-test-event-1"),
-            TestFeatureEventMessage("debug-test-event-2"),
+            TestFeatureEventMessage(testMessage = "debug-test-event-1"),
+            TestFeatureEventMessage(testMessage = "debug-test-event-2"),
         )
 
         TestFeatureMessageLogWriter(targetLogger, LogLevel.DEBUG).use { writer ->
@@ -156,7 +156,7 @@ class FeatureMessageLogWriterTest {
 
         val messages = listOf(
             FeatureStringMessage("debug disabled message"),
-            TestFeatureEventMessage("debug disabled event")
+            TestFeatureEventMessage(testMessage = "debug disabled event")
         )
 
         // Even though we set LogLevel.DEBUG, messages should be added as debug logs.
@@ -172,7 +172,7 @@ class FeatureMessageLogWriterTest {
 
         val messages = listOf(
             FeatureStringMessage("info disabled message"),
-            TestFeatureEventMessage("info disabled event")
+            TestFeatureEventMessage(testMessage = "info disabled event")
         )
 
         // Even though we set LogLevel.INFO, messages should be added as info logs.

@@ -12,3 +12,4 @@ docs/src/main/kotlin/*.kt
 .venv
 .DS_Store
 /.claude/
+/.junie/memory

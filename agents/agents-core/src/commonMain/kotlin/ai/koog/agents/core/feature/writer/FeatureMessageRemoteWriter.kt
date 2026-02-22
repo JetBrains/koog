@@ -8,6 +8,7 @@ import ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig
 import ai.koog.agents.core.utils.MutexCheck.withLockCheck
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
+import kotlin.jvm.JvmOverloads
 
 /**
  * An abstract class that facilitates writing feature messages to a remote server.
@@ -15,7 +16,7 @@ import kotlinx.coroutines.sync.Mutex
  * @param connectionConfig Configuration for the server connection. If not provided,
  * a default configuration using port 50881 will be used.
  */
-public abstract class FeatureMessageRemoteWriter(
+public abstract class FeatureMessageRemoteWriter @JvmOverloads constructor(
     connectionConfig: ServerConnectionConfig? = null
 ) : FeatureMessageProcessor() {
 

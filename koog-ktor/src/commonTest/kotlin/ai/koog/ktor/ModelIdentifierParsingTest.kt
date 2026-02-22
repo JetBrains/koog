@@ -7,8 +7,8 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -199,6 +199,12 @@ class ModelIdentifierParsingTest {
         assertNotNull(opus4_5)
         assertEquals(LLMProvider.Anthropic, opus4_5.provider)
         assertEquals(AnthropicModels.Opus_4_5, opus4_5)
+
+        // Test Opus 4.6
+        val opus4_6 = getModelFromIdentifier("anthropic.opus_4_6")
+        assertNotNull(opus4_6)
+        assertEquals(LLMProvider.Anthropic, opus4_6.provider)
+        assertEquals(AnthropicModels.Opus_4_6, opus4_6)
 
         // Test Haiku 3
         val haiku3 = getModelFromIdentifier("anthropic.haiku_3")

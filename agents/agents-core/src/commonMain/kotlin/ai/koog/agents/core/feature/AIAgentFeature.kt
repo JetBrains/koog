@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 
 /**
  * A class for Agent Feature that can be added to an agent pipeline,
@@ -51,4 +52,18 @@ public interface AIAgentFunctionalFeature<TConfig : FeatureConfig, TFeatureImpl 
      * @return The implementation of the feature.
      */
     public fun install(config: TConfig, pipeline: AIAgentFunctionalPipeline): TFeatureImpl
+}
+
+/**
+ * Represents a planner-specific AI agent feature that can be installed into an [ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline].
+ *
+ * @param TConfig The type of configuration required for the feature, extending [FeatureConfig].
+ * @param TFeatureImpl The type representing the concrete implementation of the feature.
+ */
+public interface AIAgentPlannerFeature<TConfig : FeatureConfig, TFeatureImpl : Any> : AIAgentFeature<TConfig, TFeatureImpl> {
+    /**
+     * Installs the feature into the specified [pipeline].
+     * @return The implementation of the feature.
+     */
+    public fun install(config: TConfig, pipeline: AIAgentPlannerPipeline): TFeatureImpl
 }

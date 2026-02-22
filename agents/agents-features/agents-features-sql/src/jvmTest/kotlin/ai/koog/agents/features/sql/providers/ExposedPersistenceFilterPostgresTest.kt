@@ -6,8 +6,6 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.test.utils.DockerAvailableCondition
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
@@ -24,7 +22,9 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 /**
  * Tests ExposedPersistenceFilter in combination with PostgresPersistenceStorageProvider using Testcontainers.
@@ -132,8 +132,8 @@ class ExposedPersistenceFilterPostgresTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = createdAt,
-            nodeId = "test-node",
-            lastInput = JsonPrimitive("Test input"),
+            nodePath = "test-node",
+            lastOutput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),

@@ -14,6 +14,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.jvm.JvmOverloads
 import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -33,7 +34,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param delegate The LLMClient to wrap with retry logic
  * @param config Configuration for retry behavior
  */
-public class RetryingLLMClient(
+public class RetryingLLMClient @JvmOverloads constructor(
     private val delegate: LLMClient,
     internal val config: RetryConfig = RetryConfig()
 ) : LLMClient {
@@ -114,7 +115,7 @@ public class RetryingLLMClient(
         delegate.moderate(prompt, model)
     }
 
-    override suspend fun models(): List<String> = withRetry("models") {
+    override suspend fun models(): List<LLModel> = withRetry("models") {
         delegate.models()
     }
 

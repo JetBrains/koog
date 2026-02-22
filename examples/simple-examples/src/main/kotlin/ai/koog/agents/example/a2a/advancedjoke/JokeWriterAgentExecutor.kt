@@ -37,7 +37,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.xml.xml
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.typeOf
@@ -253,7 +253,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 status = TaskStatus(
                     state = TaskState.InputRequired,
                     message = A2AMessage(
-                        role = Role.User,
+                        role = Role.Agent,
                         parts = listOf(
                             TextPart(clarification.question)
                         ),
@@ -341,13 +341,13 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
     // Joke classification: Ask for clarification if needed
     edge(
         classifyJokeRequest forwardTo askMoreInfo
-            transformed { it.getOrThrow().structure }
+            transformed { it.getOrThrow().data }
             onIsInstance JokeRequestClassification.NeedsClarification::class
     )
     // Joke classification: Generate joke if we have all details
     edge(
         classifyJokeRequest forwardTo generateJoke
-            transformed { it.getOrThrow().structure }
+            transformed { it.getOrThrow().data }
             onIsInstance JokeRequestClassification.Ready::class
     )
 

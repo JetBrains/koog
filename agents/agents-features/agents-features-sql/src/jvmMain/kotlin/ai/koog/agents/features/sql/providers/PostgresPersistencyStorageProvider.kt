@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  *
  * @constructor Initializes the PostgreSQL persistence provider with connection details.
  */
-public class PostgresPersistenceStorageProvider(
+public class PostgresPersistenceStorageProvider @JvmOverloads constructor(
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
@@ -34,6 +34,69 @@ public class PostgresPersistenceStorageProvider(
      * Note: Currently uses TEXT for JSON storage. Future versions may use JSONB when Exposed adds better support.
      */
     public class PostgresCheckpointsTable(tableName: String) : CheckpointsTable(tableName)
+
+    /**
+     * Companion object of [ai.koog.agents.features.sql.providers.PostgresPersistenceStorageProvider]
+     * */
+    public companion object {
+        /**
+         * Gets an instance of the [PostgresPersistenceStorageProvider.Builder]
+         * */
+        @JvmStatic
+        public fun builder(): Builder = Builder()
+    }
+
+    /**
+     * Helps constructing the [PostgresPersistenceStorageProvider]
+     * */
+    public class Builder internal constructor() {
+        internal var database: Database? = null
+        internal var tableName: String = "agent_checkpoints"
+        internal var ttlSeconds: Long? = null
+        internal var migrator: SQLPersistenceSchemaMigrator? = null
+        internal var json: Json = PersistenceUtils.defaultCheckpointJson
+
+        /**
+         * Set the database connection
+         * */
+        public fun database(database: Database): Builder = apply { this.database = database }
+
+        /**
+         * Specify the pstgres table name to be used for saving agent checkpoints
+         * */
+        public fun tableName(tableName: String): Builder = apply { this.tableName = tableName }
+
+        /**
+         * Set TTL (in seconds) to be used by the database client
+         * */
+        public fun ttlSeconds(ttlSeconds: Long): Builder = apply { this.ttlSeconds = ttlSeconds }
+
+        /**
+         * Configure the [SQLPersistenceSchemaMigrator]
+         * */
+        public fun migrator(migration: SQLPersistenceSchemaMigrator): Builder = apply { this.migrator = migration }
+
+        /**
+         * Set custom [Json] instance to be used
+         * */
+        public fun json(json: Json): Builder = apply { this.json = json }
+
+        /**
+         * Create an instance of [PostgresPersistenceStorageProvider].
+         * [database] must be set before calling this method
+         * */
+        public fun build(): PostgresPersistenceStorageProvider {
+            assert(database != null) { "Database is required but was not set" }
+
+            return PostgresPersistenceStorageProvider(
+                database!!,
+                tableName,
+                ttlSeconds,
+                migrator ?: PostgresPersistenceSchemaMigrator(database!!, tableName),
+                json
+            )
+        }
+    }
 }
 
 /**

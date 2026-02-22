@@ -8,9 +8,10 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -66,7 +67,7 @@ internal object BedrockAmazonNovaSerialization {
                             toolUse = NovaToolUse(
                                 toolUseId = msg.id ?: Uuid.random().toString(),
                                 name = msg.tool,
-                                input = msg.contentJson,
+                                input = msg.contentJsonResult.getOrElse { JsonObject(emptyMap()) },
                             )
                         )
                     )
@@ -90,7 +91,7 @@ internal object BedrockAmazonNovaSerialization {
 
         val inferenceConfig = NovaInferenceConfig(
             maxTokens = prompt.params.maxTokens ?: NovaInferenceConfig.MAX_TOKENS_DEFAULT,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) {
+            temperature = if (model.supports(LLMCapability.Temperature)) {
                 prompt.params.temperature
             } else {
                 null

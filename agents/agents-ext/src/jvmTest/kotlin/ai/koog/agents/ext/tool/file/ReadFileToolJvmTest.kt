@@ -205,11 +205,17 @@ class ReadFileToolJvmTest {
     }
 
     @Test
-    fun `throws ValidationFailure when reading empty markdown file`() {
+    fun `reading empty markdown file renders empty fenced block`() = runBlocking {
         val f = createTestFile("empty.md", "")
-        assertThrows<ToolException.ValidationFailure> {
-            runBlocking { readFile(f) }
-        }
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath().toString().norm()} (0 bytes, 0 lines)"}
+            Content:
+            ```markdown
+            ```
+        """.trimIndent()
+
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -249,11 +255,17 @@ class ReadFileToolJvmTest {
     }
 
     @Test
-    fun `throws ValidationFailure when reading empty kotlin file`() {
+    fun `reading empty kotlin file renders empty fenced block`() = runBlocking {
         val f = createTestFile("Empty.kt", "")
-        assertThrows<ToolException.ValidationFailure> {
-            runBlocking { readFile(f) }
-        }
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath().toString().norm()} (0 bytes, 0 lines)"}
+            Content:
+            ```kotlin
+            ```
+        """.trimIndent()
+
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test

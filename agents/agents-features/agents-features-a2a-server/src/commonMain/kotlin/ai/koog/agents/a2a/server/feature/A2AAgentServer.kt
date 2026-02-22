@@ -9,9 +9,11 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -63,7 +65,8 @@ public class A2AAgentServer(
      */
     public companion object Feature :
         AIAgentGraphFeature<Config, A2AAgentServer>,
-        AIAgentFunctionalFeature<Config, A2AAgentServer> {
+        AIAgentFunctionalFeature<Config, A2AAgentServer>,
+        AIAgentPlannerFeature<Config, A2AAgentServer> {
 
         override val key: AIAgentStorageKey<A2AAgentServer> =
             createStorageKey<A2AAgentServer>("agents-features-a2a-server")
@@ -86,6 +89,13 @@ public class A2AAgentServer(
         override fun install(
             config: Config,
             pipeline: AIAgentFunctionalPipeline,
+        ): A2AAgentServer {
+            return createFeature(config)
+        }
+
+        override fun install(
+            config: Config,
+            pipeline: AIAgentPlannerPipeline,
         ): A2AAgentServer {
             return createFeature(config)
         }

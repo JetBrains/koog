@@ -1,13 +1,17 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
+import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.features.opentelemetry.OpenTelemetrySpanAsserts.assertSpans
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestData
+import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.utils.HiddenString
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,48 +34,53 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
+            userPrompt = userInput,
+            verbose = true,
         )
 
         val runId = collectedTestData.lastRunId
         val result = collectedTestData.result
 
         val actualSpans = collectedTestData.filterNodeExecutionSpans()
-        assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
+        assertTrue(actualSpans.isNotEmpty(), "Node spans should be created during agent execution")
 
         val expectedSpans = listOf(
             mapOf(
-                "node.__finish__.${collectedTestData.singleNodeIdByName("__finish__")}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__finish__",
-                        "koog.node.output" to "\"$result\"",
-                        "koog.node.input" to "\"$result\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.$nodeName.${collectedTestData.singleNodeIdByName(nodeName)}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to nodeName,
-                        "koog.node.input" to "\"$userInput\"",
-                        "koog.node.output" to "\"$nodeOutput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.__start__.${collectedTestData.singleNodeIdByName("__start__")}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__start__",
+                        "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
-            )
+            ),
+            mapOf(
+                "node $nodeName" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.conversation.id" to runId,
+                        "koog.node.id" to nodeName,
+                        "koog.node.input" to "\"$userInput\"",
+                        "koog.node.output" to "\"$nodeOutput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(nodeName),
+                    ),
+                    "events" to emptyMap()
+                )
+            ),
+            mapOf(
+                "node $FINISH_NODE_PREFIX" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.conversation.id" to runId,
+                        "koog.node.id" to FINISH_NODE_PREFIX,
+                        "koog.node.output" to "\"$result\"",
+                        "koog.node.input" to "\"$result\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX),
+                    ),
+                    "events" to emptyMap()
+                )
+            ),
         )
 
         assertSpans(expectedSpans, actualSpans)
@@ -91,6 +100,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
+            userPrompt = userInput,
             verbose = false,
         )
 
@@ -101,76 +111,77 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "node.__finish__.${collectedTestData.singleNodeIdByName("__finish__")}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__finish__",
-                        "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
             ),
             mapOf(
-                "node.$nodeName.${collectedTestData.singleNodeIdByName(nodeName)}" to mapOf(
+                "node $nodeName" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to nodeName,
+                        "koog.node.id" to nodeName,
                         "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(nodeName),
                     ),
                     "events" to emptyMap()
                 )
             ),
             mapOf(
-                "node.__start__.${collectedTestData.singleNodeIdByName("__start__")}" to mapOf(
+                "node $FINISH_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__start__",
-                        "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.node.id" to FINISH_NODE_PREFIX,
                         "koog.node.output" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.node.input" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
-            )
+            ),
         )
 
         assertSpans(expectedSpans, actualSpans)
     }
 
     @Test
-    fun `test node execute spans with parallel nodes execution`() = runTest {
-        val userInput = "Generate a joke"
+    fun `test node execute spans with parallel nodes execution`() = runBlocking {
+        val userInput = "Test input"
 
-        val nodeGenerateJokesName = "node-generate-jokes"
-        val nodeFirstJokeName = "node-first-joke"
-        val nodeSecondJokeName = "node-second-joke"
-        val nodeThirdJokeName = "node-third-joke"
+        val nodeParallelName = "node-select-by-index-parallel"
+        val node1Name = "node-1-id"
+        val node2Name = "node-2-id"
+        val node3Name = "node-3-id"
 
-        val nodeFirstJokeOutput = "First joke: Why do programmers prefer dark mode? Because light attracts bugs!"
-        val nodeSecondJokeOutput = "Second joke: Why do Java developers wear glasses? Because they don't C#!"
-        val nodeThirdJokeOutput = "Third joke: A SQL query walks into a bar, walks up to two tables and asks, 'Can I join you?'"
+        val node1Output = "first"
+        val node2Output = "second"
+        val node3Output = "third"
 
-        val strategy = strategy("test-parallel-strategy") {
-            val nodeFirstJoke by node<String, String>(nodeFirstJokeName) { nodeFirstJokeOutput }
-            val nodeSecondJoke by node<String, String>(nodeSecondJokeName) { nodeSecondJokeOutput }
-            val nodeThirdJoke by node<String, String>(nodeThirdJokeName) { nodeThirdJokeOutput }
+        val strategy = strategy<String, String>("test-select-by-index") {
+            val node1 by node<String, String>(node1Name) { node1Output }
+            val node2 by node<String, String>(node2Name) { node2Output }
+            val node3 by node<String, String>(node3Name) { node3Output }
 
-            // Define a node to run joke generation in parallel
-            val nodeGenerateJokes by parallel(nodeFirstJoke, nodeSecondJoke, nodeThirdJoke, name = nodeGenerateJokesName) {
-                selectByIndex {
-                    // Always select the first joke for testing purposes
-                    0
-                }
+            val parallelNode by parallel(node1, node2, node3, name = nodeParallelName) {
+                val selected = selectByIndex { 1 }
+                ParallelNodeExecutionResult(selected.output, this)
             }
 
-            edge(nodeStart forwardTo nodeGenerateJokes)
-            edge(nodeGenerateJokes forwardTo nodeFinish)
+            edge(nodeStart forwardTo parallelNode)
+            edge(parallelNode forwardTo nodeFinish)
         }
 
         val collectedTestData = runAgentWithStrategy(
             strategy = strategy,
             userPrompt = userInput,
+            verbose = true,
         )
 
         val runId = collectedTestData.lastRunId
@@ -178,7 +189,7 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val actualSpans = collectedTestData.filterNodeExecutionSpans()
             .sortedWith { one, other ->
-                if (one.name.contains("-joke.") && other.name.contains("-joke.")) {
+                if (one.name.contains("node-") && other.name.contains("node-")) {
                     one.name.compareTo(other.name)
                 } else {
                     0
@@ -187,73 +198,87 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         assertTrue(actualSpans.isNotEmpty(), "Spans should be created during agent execution")
 
+        // Extract event IDs in the order they appear in sorted spans
+        val startNodeEventId = collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX)
+        val node1EventId = collectedTestData.singleNodeEventIdByNodeId(node1Name)
+        val node2EventId = collectedTestData.singleNodeEventIdByNodeId(node2Name)
+        val node3EventId = collectedTestData.singleNodeEventIdByNodeId(node3Name)
+        val parallelNodeEventId = collectedTestData.singleNodeEventIdByNodeId(nodeParallelName)
+        val finishNodeEventId = collectedTestData.singleNodeEventIdByNodeId(FINISH_NODE_PREFIX)
+
         val expectedSpans = listOf(
             mapOf(
-                "node.__finish__.${collectedTestData.singleNodeIdByName("__finish__")}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__finish__",
-                        "koog.node.output" to "\"$result\"",
-                        "koog.node.input" to "\"$result\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.$nodeGenerateJokesName.${collectedTestData.singleNodeIdByName(nodeGenerateJokesName)}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to nodeGenerateJokesName,
-                        "koog.node.output" to "\"$nodeFirstJokeOutput\"",
-                        "koog.node.input" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.$nodeFirstJokeName.${collectedTestData.singleNodeIdByName(nodeFirstJokeName)}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to nodeFirstJokeName,
-                        "koog.node.output" to "\"$nodeFirstJokeOutput\"",
-                        "koog.node.input" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.$nodeSecondJokeName.${collectedTestData.singleNodeIdByName(nodeSecondJokeName)}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to nodeSecondJokeName,
-                        "koog.node.output" to "\"$nodeSecondJokeOutput\"",
-                        "koog.node.input" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.$nodeThirdJokeName.${collectedTestData.singleNodeIdByName(nodeThirdJokeName)}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to nodeThirdJokeName,
-                        "koog.node.output" to "\"$nodeThirdJokeOutput\"",
-                        "koog.node.input" to "\"$userInput\"",
-                    ),
-                    "events" to emptyMap()
-                )
-            ),
-            mapOf(
-                "node.__start__.${collectedTestData.singleNodeIdByName("__start__")}" to mapOf(
-                    "attributes" to mapOf(
-                        "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__start__",
+                        "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to "\"$userInput\"",
                         "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to startNodeEventId,
                     ),
                     "events" to emptyMap()
                 )
-            )
+            ),
+            mapOf(
+                "node $node1Name" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.conversation.id" to runId,
+                        "koog.node.id" to node1Name,
+                        "koog.node.output" to "\"$node1Output\"",
+                        "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to node1EventId,
+                    ),
+                    "events" to emptyMap()
+                )
+            ),
+            mapOf(
+                "node $node2Name" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.conversation.id" to runId,
+                        "koog.node.id" to node2Name,
+                        "koog.node.output" to "\"$node2Output\"",
+                        "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to node2EventId,
+                    ),
+                    "events" to emptyMap()
+                )
+            ),
+            mapOf(
+                "node $node3Name" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.conversation.id" to runId,
+                        "koog.node.id" to node3Name,
+                        "koog.node.output" to "\"$node3Output\"",
+                        "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to node3EventId,
+                    ),
+                    "events" to emptyMap()
+                )
+            ),
+            mapOf(
+                "node $nodeParallelName" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.conversation.id" to runId,
+                        "koog.node.id" to nodeParallelName,
+                        "koog.node.output" to "\"$node2Output\"",
+                        "koog.node.input" to "\"$userInput\"",
+                        "koog.event.id" to parallelNodeEventId,
+                    ),
+                    "events" to emptyMap()
+                )
+            ),
+            mapOf(
+                "node $FINISH_NODE_PREFIX" to mapOf(
+                    "attributes" to mapOf(
+                        "gen_ai.conversation.id" to runId,
+                        "koog.node.id" to FINISH_NODE_PREFIX,
+                        "koog.node.output" to "\"$result\"",
+                        "koog.node.input" to "\"$result\"",
+                        "koog.event.id" to finishNodeEventId,
+                    ),
+                    "events" to emptyMap()
+                )
+            ),
         )
 
         assertSpans(expectedSpans, actualSpans)
@@ -264,10 +289,11 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
         val userInput = USER_PROMPT_PARIS
         val nodeWithErrorName = "node-with-error"
         val testErrorMessage = "Test error"
+        val error = IllegalStateException(testErrorMessage)
 
         val strategy = strategy("test-strategy") {
             val nodeWithError by node<String, String>(nodeWithErrorName) {
-                throw IllegalStateException(testErrorMessage)
+                throw error
             }
 
             nodeStart then nodeWithError then nodeFinish
@@ -279,7 +305,8 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
             runAgentWithStrategy(
                 userPrompt = userInput,
                 strategy = strategy,
-                collectedTestData = collectedTestData
+                collectedTestData = collectedTestData,
+                verbose = true,
             )
         }
 
@@ -291,27 +318,29 @@ class OpenTelemetryNodeExecuteSpanTest : OpenTelemetryTestBase() {
 
         val expectedSpans = listOf(
             mapOf(
-                "node.$nodeWithErrorName.${collectedTestData.singleNodeIdByName(nodeWithErrorName)}" to mapOf(
+                "node $START_NODE_PREFIX" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to nodeWithErrorName,
+                        "koog.node.id" to START_NODE_PREFIX,
                         "koog.node.input" to "\"$userInput\"",
+                        "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(START_NODE_PREFIX),
                     ),
                     "events" to emptyMap()
                 )
             ),
-
             mapOf(
-                "node.__start__.${collectedTestData.singleNodeIdByName("__start__")}" to mapOf(
+                "node $nodeWithErrorName" to mapOf(
                     "attributes" to mapOf(
                         "gen_ai.conversation.id" to runId,
-                        "koog.node.name" to "__start__",
+                        "koog.node.id" to nodeWithErrorName,
                         "koog.node.input" to "\"$userInput\"",
-                        "koog.node.output" to "\"$userInput\"",
+                        "koog.event.id" to collectedTestData.singleNodeEventIdByNodeId(nodeWithErrorName),
+                        "error.type" to error::class.java.canonicalName,
                     ),
                     "events" to emptyMap()
                 )
-            )
+            ),
         )
 
         assertSpans(expectedSpans, actualSpans)

@@ -1,4 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import ai.koog.gradle.xcframework.XCFrameworkConfig.configureFrameworkExportsIfRequested
 
 group = rootProject.group
 version = rootProject.version
@@ -49,6 +50,7 @@ val included = setOf(
     ":agents:agents-features:agents-features-tokenizer",
     ":agents:agents-features:agents-features-snapshot",
     ":agents:agents-mcp",
+    ":agents:agents-mcp-metadata",
     ":agents:agents-tools",
     ":agents:agents-utils",
     ":embeddings:embeddings-base",
@@ -86,14 +88,16 @@ val included = setOf(
 )
 
 kotlin {
+    val projects = rootProject.subprojects
+        .filterNot { it.path in excluded }
+        .filter { it.buildFile.exists() }
+    val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
+
+    configureFrameworkExportsIfRequested(project, projectsPaths)
+
     sourceSets {
         commonMain {
             dependencies {
-                val projects = rootProject.subprojects
-                    .filterNot { it.path in excluded }
-                    .filter { it.buildFile.exists() }
-
-                val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 
                 val obsoleteIncluded = included - projectsPaths
                 require(obsoleteIncluded.isEmpty()) {

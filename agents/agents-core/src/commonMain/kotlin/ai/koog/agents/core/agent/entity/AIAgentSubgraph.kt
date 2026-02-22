@@ -3,8 +3,6 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
-import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.context.with
@@ -26,11 +24,9 @@ import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
@@ -162,67 +158,65 @@ public open class AIAgentSubgraph<TInput, TOutput>(
      */
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class, ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
-        context.with { executionInfo ->
-            withContext(NodeInfoContextElement(Uuid.random().toString(), getNodeInfoElement()?.id, name, input, inputType)) {
-                val newTools = selectTools(context)
+        context.with { executionInfo, eventId ->
+            val newTools = selectTools(context)
 
-                // Copy inner context with new tools, model and LLM params.
-                val initialLLMContext = context.llm
+            // Copy inner context with new tools, model and LLM params.
+            val initialLLMContext = context.llm
 
-                context.replace(
-                    context.copy(
-                        llm = context.llm.copy(
-                            tools = newTools,
-                            model = llmModel ?: context.llm.model,
-                            prompt = context.llm.prompt.copy(params = llmParams ?: context.llm.prompt.params),
-                            responseProcessor = responseProcessor
-                        ),
+            context.replace(
+                context.copy(
+                    llm = context.llm.copy(
+                        tools = newTools,
+                        model = llmModel ?: context.llm.model,
+                        prompt = context.llm.prompt.copy(params = llmParams ?: context.llm.prompt.params),
+                        responseProcessor = responseProcessor ?: context.llm.responseProcessor,
                     ),
-                )
+                ),
+            )
 
-                runIfNotStrategy(context) {
-                    pipeline.onSubgraphExecutionStarting(executionInfo, this@AIAgentSubgraph, context, input, inputType)
-                }
-
-                // Execute the subgraph with an inner context and get the result and updated prompt.
-                val result = try {
-                    executeWithInnerContext(context, input)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    logger.error(e) { "Exception during executing subgraph '$name': ${e.message}" }
-                    runIfNotStrategy(context) {
-                        pipeline.onSubgraphExecutionFailed(executionInfo, this@AIAgentSubgraph, context, input, inputType, e)
-                    }
-                    throw e
-                }
-
-                // Restore original LLM context with updated message history.
-                context.replace(
-                    context.copy(
-                        llm = initialLLMContext.copy(
-                            prompt = context.llm.prompt.copy(params = initialLLMContext.prompt.params)
-                        ),
-                    ),
-                )
-
-                val innerForcedData = context.getAgentContextData()
-
-                if (innerForcedData != null) {
-                    context.store(innerForcedData)
-                }
-
-                runIfNotStrategy(context) {
-                    pipeline.onSubgraphExecutionCompleted(executionInfo, this@AIAgentSubgraph, context, input, inputType, result, outputType)
-                }
-
-                result
+            runIfNotStrategy(context) {
+                pipeline.onSubgraphExecutionStarting(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType)
             }
+
+            // Execute the subgraph with an inner context and get the result and updated prompt.
+            val result = try {
+                executeWithInnerContext(context, input)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error(e) { "Exception during executing subgraph '$name': ${e.message}" }
+                runIfNotStrategy(context) {
+                    pipeline.onSubgraphExecutionFailed(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, e)
+                }
+                throw e
+            }
+
+            // Restore original LLM context with updated message history.
+            context.replace(
+                context.copy(
+                    llm = initialLLMContext.copy(
+                        prompt = context.llm.prompt.copy(params = initialLLMContext.prompt.params)
+                    ),
+                ),
+            )
+
+            val innerForcedData = context.getAgentContextData()
+
+            if (innerForcedData != null) {
+                context.store(innerForcedData)
+            }
+
+            runIfNotStrategy(context) {
+                pipeline.onSubgraphExecutionCompleted(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, result, outputType)
+            }
+
+            result
         }
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
-        logger.info { formatLog(context, "Executing subgraph '$name'") }
+        logger.debug { formatLog(context, "Executing subgraph '$name'") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
@@ -264,7 +258,9 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
             // find the suitable edge to move to the next node, get the transformed output
             val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput)
-                ?: // In we are in the finish node, we need to exit, otherwise we stuck in the node
+
+            // In we are in the finish node, we need to exit, otherwise we stuck in the node
+            if (resolvedEdge == null) {
                 if (currentNode == finish) {
                     currentInput = nodeOutput
                     break
@@ -272,6 +268,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                     logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
                     throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
                 }
+            }
 
             currentNode = resolvedEdge.edge.toNode
             currentInput = resolvedEdge.output
@@ -328,14 +325,14 @@ public open class AIAgentSubgraph<TInput, TOutput>(
      */
     @OptIn(InternalAgentsApi::class)
     private inline fun <T> AIAgentContext.with(
-        block: (executionInfo: AgentExecutionInfo) -> T
+        block: (executionInfo: AgentExecutionInfo, eventId: String) -> T
     ): T {
         // Check the agent execution path to recognize a strategy.
         // Ignore the strategy as it is handled separately in the [AIAgentGraphStrategy] class.
         // Strategy execution path: Agent | Run | Strategy
         val isStrategy = id == strategyName
         return if (isStrategy) {
-            block(this.executionInfo)
+            this.with(this.executionInfo, block)
         } else {
             this.with(id, block)
         }

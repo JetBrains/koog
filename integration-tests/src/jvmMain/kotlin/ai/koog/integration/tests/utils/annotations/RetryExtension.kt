@@ -13,6 +13,11 @@ class RetryExtension : InvocationInterceptor {
     companion object {
         private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
         private const val GOOGLE_429_ERROR = "Error from GoogleAI API: 429 Too Many Requests"
+        private const val GOOGLE_RESOURCE_EXHAUSTED =
+            "You exceeded your current quota, please check your plan and billing details"
+        private const val GOOGLE_QUOTA_EXCEEDED = "Quota exceeded"
+        private const val GOOGLE_RESOURCE_EXHAUSTED_STATUS = "RESOURCE_EXHAUSTED"
+        private const val GOOGLE_429_STATUS = "Status code: 429"
         private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
         private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
         private const val ANTHROPIC_502_ERROR = "Error from Anthropic API: 502 Bad Gateway"
@@ -27,6 +32,10 @@ class RetryExtension : InvocationInterceptor {
             listOf(
                 GOOGLE_API_ERROR,
                 GOOGLE_429_ERROR,
+                GOOGLE_429_STATUS,
+                GOOGLE_RESOURCE_EXHAUSTED,
+                GOOGLE_QUOTA_EXCEEDED,
+                GOOGLE_RESOURCE_EXHAUSTED_STATUS,
                 GOOGLE_500_ERROR,
                 GOOGLE_503_ERROR,
                 ANTHROPIC_502_ERROR,
@@ -35,7 +44,8 @@ class RetryExtension : InvocationInterceptor {
                 MISTRAL_503_ERROR,
                 OPENROUTER_API_ERROR,
             )
-        return e.message?.let { message -> message in errorMessages } == true
+        val message = e.message
+        return message != null && errorMessages.any { message.contains(it, ignoreCase = true) }
     }
 
     override fun interceptTestMethod(

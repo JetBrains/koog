@@ -9,12 +9,17 @@ import org.testcontainers.DockerClientFactory
  * Helper test condition method to skip test suite if Docker is not available.
  */
 public class DockerAvailableCondition : ExecutionCondition {
-    override fun evaluateExecutionCondition(context: ExtensionContext): ConditionEvaluationResult {
-        return try {
-            DockerClientFactory.instance().client()
-            ConditionEvaluationResult.enabled("Docker is available")
-        } catch (e: Exception) {
-            ConditionEvaluationResult.disabled("Docker is not available, skipping this test")
+
+    private companion object {
+        private val isAvailable: ConditionEvaluationResult by lazy {
+            try {
+                DockerClientFactory.instance().client()
+                ConditionEvaluationResult.enabled("Docker is available")
+            } catch (_: Exception) {
+                ConditionEvaluationResult.disabled("Docker is not available, skipping this test")
+            }
         }
     }
+
+    override fun evaluateExecutionCondition(context: ExtensionContext): ConditionEvaluationResult = isAvailable
 }

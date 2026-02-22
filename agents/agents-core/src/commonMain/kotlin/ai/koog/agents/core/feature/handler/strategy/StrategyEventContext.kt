@@ -22,6 +22,7 @@ public interface StrategyEventContext : AgentLifecycleEventContext
  * @property context The context associated with the strategy's execution.
  */
 public class StrategyStartingContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     public val strategy: AIAgentStrategy<*, *, *>,
     public val context: AIAgentContext,
@@ -50,6 +51,7 @@ public class StrategyStartingContext(
  * @property resultType [KType] representing the type of the [result]
  */
 public class StrategyCompletedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     public val strategy: AIAgentStrategy<*, *, *>,
     public val context: AIAgentContext,

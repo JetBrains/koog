@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -15,6 +17,7 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -32,9 +35,9 @@ import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
@@ -416,7 +419,7 @@ public class Testing {
          * This enables test scenarios that require precise control over time
          * by allowing the use of custom clock instances, such as mock or fixed clocks.
          */
-        public var clock: Clock = Clock.System
+        public var clock: Clock = kotlin.time.Clock.System
 
         /**
          * Defines the tokenizer to be used for estimating token counts in text strings.
@@ -934,8 +937,8 @@ public class Testing {
             pipeline: AIAgentGraphPipeline,
         ): Testing {
             val testing = Testing()
-            pipeline.interceptEnvironmentCreated(this) { agentEnvironment ->
-                MockEnvironment(agent.toolRegistry, agent.promptExecutor, agentEnvironment)
+            pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
+                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, environment)
             }
 
             if (config.enableGraphTesting) {

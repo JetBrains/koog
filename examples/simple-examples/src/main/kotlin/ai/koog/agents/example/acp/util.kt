@@ -40,6 +40,9 @@ fun SessionUpdate.render() {
             println("User: ${this.content.render()}")
         }
 
+        else -> {
+            println("Unsupported chunk: [${this::class.simpleName}]")
+        }
     }
 }
 

@@ -1,7 +1,10 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * A strategy for implementing AI agent behavior that operates in a loop-based manner.
@@ -16,14 +19,12 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
  * @property func A suspending function representing the loop logic for the strategy. It accepts
  * input data of type [TInput] and an [ai.koog.agents.core.agent.context.AIAgentFunctionalContext] to execute the loop and produce the output.
  */
-public class AIAgentFunctionalStrategy<TInput, TOutput>(
-    override val name: String,
-    public val func: suspend AIAgentFunctionalContext.(TInput) -> TOutput
-) : AIAgentStrategy<TInput, TOutput, AIAgentFunctionalContext> {
-    override suspend fun execute(
-        context: AIAgentFunctionalContext,
-        input: TInput
-    ): TOutput = context.func(input)
+public interface AIAgentFunctionalStrategy<TInput, TOutput> :
+    AIAgentStrategy<TInput, TOutput, AIAgentFunctionalContext> {
+
+    private companion object {
+        private val logger = KotlinLogging.logger { }
+    }
 }
 
 /**
@@ -41,5 +42,9 @@ public class AIAgentFunctionalStrategy<TInput, TOutput>(
 public fun <Input, Output> functionalStrategy(
     name: String = "funStrategy",
     func: suspend AIAgentFunctionalContext.(input: Input) -> Output
-): AIAgentFunctionalStrategy<Input, Output> =
-    AIAgentFunctionalStrategy(name, func)
+): AIAgentFunctionalStrategy<Input, Output> = object : AIAgentFunctionalStrategy<Input, Output> {
+    override val name: String = name
+    override suspend fun execute(context: AIAgentFunctionalContext, input: Input): Output {
+        return context.func(input)
+    }
+}

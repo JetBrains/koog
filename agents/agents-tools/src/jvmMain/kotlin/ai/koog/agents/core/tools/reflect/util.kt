@@ -229,7 +229,7 @@ public fun ToolRegistry.Builder.tool(
     thisRef: Any? = null,
     name: String? = null,
     description: String? = null
-) {
+): ToolRegistry.Builder = apply {
     tool(toolFunction.asTool(json, thisRef, name, description))
 }
 
@@ -339,7 +339,7 @@ public fun KFunction<*>.asToolDescriptor(name: String? = null, description: Stri
  * such as its name, type, and description.
  * @property isOptional Indicates whether this parameter is optional.
  */
-private class ParamInfo(
+internal class ParamInfo(
     val descriptor: ToolParameterDescriptor,
     val isOptional: Boolean
 )

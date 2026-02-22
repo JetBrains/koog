@@ -10,7 +10,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Clock
 
 @TestInstance(Lifecycle.PER_METHOD)
 @ExtendWith(DockerAvailableCondition::class)
@@ -54,7 +54,7 @@ class H2PersistenceStorageProviderTest {
 
         latest1 shouldNotBe null
         latest1?.checkpointId shouldBe "cp-1"
-        latest1?.nodeId shouldBe "test-node"
+        latest1?.nodePath shouldBe "test-node"
         latest1?.messageHistory?.size shouldBe 3
         latest1?.isTombstone() shouldBe false
 
@@ -99,8 +99,8 @@ class H2PersistenceStorageProviderTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
-            nodeId = "test-node",
-            lastInput = JsonPrimitive("Test input"),
+            nodePath = "test-node",
+            lastOutput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),

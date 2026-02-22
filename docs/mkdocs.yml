@@ -12,7 +12,17 @@ nav:
           - Basic agents: basic-agents.md
           - Functional agents: functional-agents.md
           - Complex workflow agents: complex-workflow-agents.md
-      - Prompts: prompt-api.md
+          - Planner agents: planner-agents.md
+      - Prompts:
+          - prompts/index.md
+          - Creating prompts:
+            - prompts/prompt-creation/index.md
+            - Multimodal content: prompts/prompt-creation/multimodal-content.md
+          - Running prompts:
+            - LLM clients: prompts/llm-clients.md
+            - Prompt executors: prompts/prompt-executors.md
+          - Handling failures: prompts/handling-failures.md
+          - LLM response caching: prompts/llm-response-caching.md
       - Tools:
           - Overview: tools-overview.md
           - Built-in tools: built-in-tools.md
@@ -86,15 +96,19 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets:
-      # Check whether snippets are loaded correctly
-      # check_paths: true
-      base_path: ["docs/snippets"]
+      auto_append:
+        - includes/abbreviations.md
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - admonition
   - attr_list
+  - abbr
+  - footnotes
   - md_in_html
-  - admonition
   - pymdownx.tabbed:
       alternate_style: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify
@@ -129,7 +143,14 @@ plugins:
           - functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
         Prompts:
-          - prompt-api.md: This page includes detailed instructions about the use of Prompt API, which provides a comprehensive toolkit for interacting with Large Language Models in production applications.
+          - prompts/index.md: This page includes an overview of how to create and run prompts with Koog.
+          - prompts/prompt-creation/index.md: This page provides details about structured prompts created using the Kotlin DSL.
+          - prompts/prompt-creation/multimodal-content.md: This page provides details about multimodal inputs, which allow you to send text, images, audio, video, and documents in your prompts.
+          - prompts/handling-failures.md: This page provides details about handling failures in prompts.
+          - prompts/llm-response-caching.md: This page provides details about prompt caching, which lets you cache responses from LLMs to avoid repeated requests.
+        Running prompts:
+          - prompts/llm-clients.md: This page provides details about LLM clients, which are used to run prompts and receive responses from LLMs. They allow working with a single LLM provider only.
+          - prompts/prompt-executors.md: This page provides details about prompt executors, which wrap LLM clients and are used to run prompts and receive responses from LLMs. They allow working with multiple LLM providers in a unified way.
         Tools:
           - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
           - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.
@@ -195,6 +216,8 @@ plugins:
 
 
 theme:
+  icon:
+    repo: fontawesome/brands/github
   name: material
   custom_dir: overrides
   favicon: img/favicon.ico
@@ -203,6 +226,7 @@ theme:
     - content.code.copy
     - content.action.edit
     - content.tabs.link
+    - content.footnote.tooltips
     - navigation.expand
     - navigation.tabs
     - navigation.tabs.sticky
@@ -240,3 +264,9 @@ extra:
     - icon: fontawesome/brands/slack
       link: https://docs.koog.ai/koog-slack-channel/
       name: Koog on Slack
+
+watch:
+  - includes
+
+hooks:
+  - process-api-links.py

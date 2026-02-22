@@ -48,19 +48,13 @@ fun main() = runBlocking {
     // Give the process a moment to start
     Thread.sleep(2000)
 
-    println("Creating STDIO transport...")
-
     try {
-        // Create the STDIO transport
-        val transport = McpToolRegistryProvider.defaultStdioTransport(process)
-
         println("Creating tool registry...")
 
         // Create a tool registry with tools from the Bright Data MCP server
-        val toolRegistry = McpToolRegistryProvider.fromTransport(
-            transport = transport,
-            name = "bright-data-client",
-            version = "1.0.0"
+        val toolRegistry = McpToolRegistryProvider.fromProcess(
+            process = process,
+            clientInfo = Implementation("bright-data-client", "1.0.0")
         )
 
         // Print available tools (optional - for debugging)

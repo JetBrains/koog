@@ -29,6 +29,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -68,6 +69,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -97,11 +99,11 @@ public class GoogleClientSettings(
  * @param baseClient Optional custom HTTP client
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
-public open class GoogleLLMClient(
+public open class GoogleLLMClient @JvmOverloads constructor(
     private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    private val clock: Clock = Clock.System
+    private val clock: Clock = kotlin.time.Clock.System
 ) : LLMClient, LLMEmbeddingProvider {
 
     @OptIn(InternalStructuredOutputApi::class)
@@ -152,10 +154,10 @@ public open class GoogleLLMClient(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+        require(model.supports(LLMCapability.Tools) || tools.isEmpty()) {
             "Model ${model.id} does not support tools"
         }
 
@@ -169,7 +171,7 @@ public open class GoogleLLMClient(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = streamFrameFlow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
 
@@ -226,13 +228,13 @@ public open class GoogleLLMClient(
         tools: List<ToolDescriptor>
     ): List<LLMChoice> {
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
+        require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+        require(model.supports(LLMCapability.Tools) || tools.isEmpty()) {
             "Model ${model.id} does not support tools"
         }
-        require(model.capabilities.contains(LLMCapability.MultipleChoices)) {
+        require(model.supports(LLMCapability.MultipleChoices)) {
             "Model ${model.id} does not support multiple choices"
         }
 
@@ -288,12 +290,26 @@ public open class GoogleLLMClient(
         val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
+        val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
+        var lastSignature: String? = null
 
         fun flushCalls() {
             if (pendingCalls.isNotEmpty()) {
                 contents += GoogleContent(role = "model", parts = pendingCalls.toList())
                 pendingCalls.clear()
             }
+        }
+
+        fun flushResults() {
+            if (pendingResults.isNotEmpty()) {
+                contents += GoogleContent(role = "user", parts = pendingResults.toList())
+                pendingResults.clear()
+            }
+        }
+
+        fun flushAll() {
+            flushCalls()
+            flushResults()
         }
 
         for (message in prompt.messages) {
@@ -303,13 +319,13 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.User -> {
-                    flushCalls()
+                    flushAll()
                     // User messages become 'user' role content
                     contents.add(message.toGoogleContent(model))
                 }
 
                 is Message.Assistant -> {
-                    flushCalls()
+                    flushAll()
                     contents.add(
                         GoogleContent(
                             role = "model",
@@ -319,51 +335,64 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Reasoning -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "model",
-                            parts = listOf(
-                                GooglePart.Text(
-                                    text = message.content,
-                                    thoughtSignature = message.encrypted,
-                                    thought = true,
+                    // Reasoning indicates a new step - flush previous step
+                    flushAll()
+
+                    if (message.content.isNotBlank()) {
+                        // If content is present, it's a "Thought Summary" -> Convert to Text part with thought=true
+                        contents.add(
+                            GoogleContent(
+                                role = "model",
+                                parts = listOf(
+                                    GooglePart.Text(
+                                        text = message.content,
+                                        thought = true,
+                                        thoughtSignature = message.encrypted
+                                    )
                                 )
                             )
                         )
-                    )
+                    } else {
+                        // If content is empty/blank, it's strictly a signature carrier for the next Tool.Call
+                        lastSignature = message.encrypted
+                    }
                 }
 
                 is Message.Tool.Result -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "user",
-                            parts = listOf(
-                                GooglePart.FunctionResponse(
-                                    functionResponse = GoogleData.FunctionResponse(
-                                        id = message.id,
-                                        name = message.tool,
-                                        response = buildJsonObject { put("result", message.content) }
-                                    )
-                                )
+                    // Just buffer results. We only flush when we know the current tool turn is complete.
+                    pendingResults.add(
+                        GooglePart.FunctionResponse(
+                            functionResponse = GoogleData.FunctionResponse(
+                                id = message.id,
+                                name = message.tool,
+                                response = buildJsonObject { put("result", message.content) }
                             )
                         )
                     )
                 }
 
                 is Message.Tool.Call -> {
+                    // First call in step needs to flush stale results
+                    if (pendingCalls.isEmpty()) {
+                        flushResults()
+                    }
+
+                    // Use signature from preceding Reasoning message
+                    val signature = lastSignature
+                    lastSignature = null // Consume: only first call gets the signature
+
                     pendingCalls += GooglePart.FunctionCall(
                         functionCall = GoogleData.FunctionCall(
                             id = message.id,
                             name = message.tool,
                             args = json.decodeFromString(message.content)
-                        )
+                        ),
+                        thoughtSignature = signature
                     )
                 }
             }
         }
-        flushCalls()
+        flushAll()
 
         val googleTools = tools
             .map { tool ->
@@ -391,7 +420,7 @@ public open class GoogleLLMClient(
         val googleParams = prompt.params.toGoogleParams()
 
         val responseFormat: GoogleResponseFormat? = googleParams.schema?.let { schema ->
-            require(schema.capability in model.capabilities) {
+            require(model.supports(schema.capability)) {
                 "Model ${model.id} does not support structured output schema ${schema.name}"
             }
 
@@ -416,8 +445,8 @@ public open class GoogleLLMClient(
             responseSchema = responseFormat?.responseSchema,
             responseJsonSchema = responseFormat?.responseJsonSchema,
             maxOutputTokens = googleParams.maxTokens,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) googleParams.temperature else null,
-            candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) googleParams.numberOfChoices else null,
+            temperature = if (model.supports(LLMCapability.Temperature)) googleParams.temperature else null,
+            candidateCount = if (model.supports(LLMCapability.MultipleChoices)) googleParams.numberOfChoices else null,
             topP = googleParams.topP,
             topK = googleParams.topK,
             thinkingConfig = googleParams.thinkingConfig,
@@ -456,7 +485,7 @@ public open class GoogleLLMClient(
                     }
 
                     is ContentPart.Image -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                        require(model.supports(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support images"
                         }
 
@@ -471,7 +500,7 @@ public open class GoogleLLMClient(
                     }
 
                     is ContentPart.Audio -> {
-                        require(model.capabilities.contains(LLMCapability.Audio)) {
+                        require(model.supports(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
 
@@ -486,7 +515,7 @@ public open class GoogleLLMClient(
                     }
 
                     is ContentPart.File -> {
-                        require(model.capabilities.contains(LLMCapability.Document)) {
+                        require(model.supports(LLMCapability.Document)) {
                             "Model ${model.id} does not support documents"
                         }
 
@@ -501,7 +530,7 @@ public open class GoogleLLMClient(
                     }
 
                     is ContentPart.Video -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Video)) {
+                        require(model.supports(LLMCapability.Vision.Video)) {
                             "Model ${model.id} does not support video"
                         }
 
@@ -600,23 +629,21 @@ public open class GoogleLLMClient(
         val responses = mutableListOf<Message.Response>()
         with(responses) {
             parts.forEach { part ->
-                if (part.thoughtSignature != null && part.thought == false) {
-                    add(
-                        Message.Reasoning(
-                            encrypted = part.thoughtSignature,
-                            content = "",
-                            metaInfo = metaInfo
-                        )
-                    )
+                // Create Reasoning for any part with signature (signature carrier),
+                // unless the part itself is a thought (in which case it carries the signature)
+                val signature = part.thoughtSignature
+                val isThought = part.thought == true
+                if (signature != null && !isThought) {
+                    add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
                 }
 
                 when (part) {
                     is GooglePart.Text -> {
-                        if (part.thought ?: false) {
+                        if (isThought) {
                             add(
                                 Message.Reasoning(
-                                    encrypted = part.thoughtSignature,
                                     content = part.text,
+                                    encrypted = signature,
                                     metaInfo = metaInfo
                                 )
                             )
@@ -631,14 +658,16 @@ public open class GoogleLLMClient(
                         }
                     }
 
-                    is GooglePart.FunctionCall -> add(
-                        Message.Tool.Call(
-                            id = Uuid.random().toString(),
-                            tool = part.functionCall.name,
-                            content = part.functionCall.args.toString(),
-                            metaInfo = metaInfo
+                    is GooglePart.FunctionCall -> {
+                        add(
+                            Message.Tool.Call(
+                                id = Uuid.random().toString(),
+                                tool = part.functionCall.name,
+                                content = part.functionCall.args.toString(),
+                                metaInfo = metaInfo
+                            )
                         )
-                    )
+                    }
 
                     is GooglePart.InlineData -> {
                         val inlineData = part.inlineData
@@ -670,8 +699,8 @@ public open class GoogleLLMClient(
         }
 
         return when {
-            // Fix the situation when the model decides to both call tools and talk
-            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+            // When the model calls tools, keep Reasoning (for signature) and Tool.Call, filter out Assistant text
+            responses.any { it is Message.Tool.Call } -> responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
@@ -734,7 +763,7 @@ public open class GoogleLLMClient(
      *
      * @return A list of strings, each representing a model identifier available for use.
      */
-    public override suspend fun models(): List<String> {
+    public override suspend fun models(): List<LLModel> {
         var response: GoogleModelsResponse? = null
         val models = mutableListOf<String>()
 
@@ -756,7 +785,9 @@ public open class GoogleLLMClient(
             }
         }
 
-        return models
+        val modelsById = GoogleModels.modelsById()
+
+        return models.map { id -> modelsById[id] ?: LLModel(provider = llmProvider(), id = id) }
     }
 
     override fun close() {

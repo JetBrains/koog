@@ -6,15 +6,20 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
-import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentClosing
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentCompleted
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentExecutionFailed
@@ -32,17 +37,17 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallCompl
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallFailed
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolCallStarting
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.ToolValidationFailed
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.Message.Role
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.js.JsName
 import kotlin.test.Test
@@ -50,7 +55,8 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class AIAgentPipelineTest {
 
@@ -88,7 +94,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run("Hello World!")
+            agent.run("Hello World!", null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -143,7 +149,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            val throwable = assertFails { agent.run(agentInput) }
+            val throwable = assertFails { agent.run(agentInput, null) }
             assertEquals(testErrorMessage, throwable.message)
         }
 
@@ -195,7 +201,7 @@ class AIAgentPipelineTest {
                     runIds = interceptedRunIds
                 }
             }.use { agent ->
-                agent.run(agentInput)
+                agent.run(agentInput, null)
             }
         }
 
@@ -250,7 +256,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -307,7 +313,7 @@ class AIAgentPipelineTest {
                 }
             }.use { agent ->
                 assertFailsWith<IllegalStateException> {
-                    agent.run(agentInput)
+                    agent.run(agentInput, null)
                 }
             }
 
@@ -364,7 +370,7 @@ class AIAgentPipelineTest {
                 }
             }.use { agent ->
                 assertFailsWith<CancellationException> {
-                    agent.run(agentInput)
+                    agent.run(agentInput, null)
                 }
             }
 
@@ -423,7 +429,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -484,7 +490,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -532,7 +538,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -580,7 +586,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -663,7 +669,7 @@ class AIAgentPipelineTest {
 
     @Test
     @JsName("testFilterLLMCallStartEvents")
-    fun `test filter llm call finish events`() = runTest(timeout = 10000.seconds) {
+    fun `test filter llm call finish events`() = runTest {
         val interceptedEvents = mutableListOf<String>()
         val interceptedRunIds = mutableListOf<String>()
 
@@ -693,7 +699,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -750,7 +756,7 @@ class AIAgentPipelineTest {
                 runIds = interceptedRunIds
             }
         }.use { agent ->
-            agent.run(agentInput)
+            agent.run(agentInput, null)
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
@@ -778,7 +784,223 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
+    @Test
+    fun `test AgentExecutionInfo path with loop nodes invocation`() = runTest {
+        val interceptedEvents = mutableListOf<String>()
+        val interceptedRunIds = mutableListOf<String>()
+
+        val agentId = "test-agent-id"
+        val agentInput = "test input"
+
+        val strategyName = "test-strategy"
+        val nodeRootName = "node-root"
+        val nodeRootOutput = "Root node output"
+        val nodeExecuteName = "node-execute"
+        val nodeExecuteOutput = "Execute output"
+
+        var isExecuted = false
+
+        val strategy = strategy(strategyName) {
+            val nodeRoot by node<String, String>(nodeRootName) { it }
+            val nodeExecute by node<String, String>(nodeExecuteName) {
+                isExecuted = true
+                it
+            }
+
+            edge(nodeStart forwardTo nodeRoot)
+            edge(nodeRoot forwardTo nodeExecute onCondition { !isExecuted })
+            edge(nodeRoot forwardTo nodeFinish onCondition { isExecuted } transformed { nodeRootOutput })
+            edge(nodeExecute forwardTo nodeRoot transformed { nodeExecuteOutput })
+        }
+
+        createAgent(
+            strategy = strategy,
+            promptExecutor = getMockExecutor { }
+        ) {
+            install(TestFeature) {
+                events = interceptedEvents
+                runIds = interceptedRunIds
+            }
+        }.use { agent ->
+            agent.run(agentInput, null)
+        }
+
+        val actualEvents = interceptedEvents.filter { collectedEvent ->
+            collectedEvent.startsWith(NodeExecutionStarting::class.simpleName.toString()) ||
+                collectedEvent.startsWith(NodeExecutionCompleted::class.simpleName.toString()) ||
+                collectedEvent.startsWith(NodeExecutionFailed::class.simpleName.toString())
+        }
+
+        val expectedEvents = listOf(
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, START_NODE_PREFIX)}, name: $START_NODE_PREFIX, input: $agentInput, output: $agentInput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeRootName)}, name: $nodeRootName, input: $agentInput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeRootName)}, name: $nodeRootName, input: $agentInput, output: $agentInput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeExecuteName)}, name: $nodeExecuteName, input: $agentInput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeExecuteName)}, name: $nodeExecuteName, input: $agentInput, output: $agentInput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeRootName)}, name: $nodeRootName, input: $nodeExecuteOutput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeRootName)}, name: $nodeRootName, input: $nodeExecuteOutput, output: $nodeExecuteOutput)",
+            "${NodeExecutionStarting::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, FINISH_NODE_PREFIX)}, name: $FINISH_NODE_PREFIX, input: $nodeRootOutput)",
+            "${NodeExecutionCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, FINISH_NODE_PREFIX)}, name: $FINISH_NODE_PREFIX, input: $nodeRootOutput, output: $nodeRootOutput)",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Miss intercepted node events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
+        )
+
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
     //endregion Execution Info
+
+    @Test
+    @JsName("testTwoHandlersRegisteredForSameFeatureAndEventAreBothCalled")
+    fun `test two handlers registered for same feature and event are both called`() = runTest {
+        val agentId = "test-agent-id"
+        val agentInput = "Test input"
+        val agentOutput = "Done"
+
+        val strategyName = "test-strategy"
+
+        val strategy = strategy<String, String>(strategyName) {
+            edge(nodeStart forwardTo nodeFinish transformed { agentOutput })
+        }
+
+        val actualEvents = mutableListOf<String>()
+        val multipleHandlers = object : AIAgentGraphFeature<FeatureConfig, Unit> {
+            override val key: AIAgentStorageKey<Unit> = createStorageKey("multiple-handlers-feature")
+            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+            override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
+                pipeline.interceptAgentStarting(this) { event ->
+                    actualEvents += "Handler 1: ${event.eventType::class.simpleName}"
+                }
+                pipeline.interceptAgentStarting(this) { event ->
+                    actualEvents += "Handler 2: ${event.eventType::class.simpleName}"
+                }
+            }
+        }
+
+        createAgent(id = agentId, strategy = strategy) {
+            install(multipleHandlers)
+        }.use { agent ->
+            agent.run(agentInput)
+        }
+
+        val expectedEvents = listOf(
+            "Handler 1: ${AgentStarting::class.simpleName}",
+            "Handler 2: ${AgentStarting::class.simpleName}"
+        )
+        assertContentEquals(expectedEvents, actualEvents, "Both handlers should have been called with expected events")
+    }
+
+    @Test
+    @JsName("testTwoEnvironmentTransformHandlersReceiveCorrectEnvironmentInstances")
+    fun `test two environment transform handlers receive correct environment instances`() = runTest {
+        val agentId = "test-agent-id"
+        val agentInput = "Test input"
+        val agentOutput = "Done"
+
+        val strategyName = "test-strategy"
+
+        val strategy = strategy<String, String>(strategyName) {
+            edge(nodeStart forwardTo nodeFinish transformed { agentOutput })
+        }
+
+        val actualEnvironments = mutableListOf<AIAgentEnvironment>()
+
+        data class WrapperEnvironment(val name: String, val delegate: AIAgentEnvironment) : AIAgentEnvironment {
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return delegate.executeTool(toolCall)
+            }
+
+            override suspend fun reportProblem(exception: Throwable) {
+                delegate.reportProblem(exception)
+            }
+        }
+
+        val environmentTransformFeature = object : AIAgentGraphFeature<FeatureConfig, Unit> {
+            override val key: AIAgentStorageKey<Unit> = createStorageKey("env-transform-feature")
+            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+            override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
+                pipeline.interceptEnvironmentCreated(this) { _, environment ->
+                    val updatedEnvironment = WrapperEnvironment("Modified environment 1", environment)
+                    actualEnvironments += updatedEnvironment
+                    updatedEnvironment
+                }
+
+                pipeline.interceptEnvironmentCreated(this) { _, environment ->
+                    val updatedEnvironment = WrapperEnvironment("Modified environment 2", environment)
+                    actualEnvironments += updatedEnvironment
+                    updatedEnvironment
+                }
+            }
+        }
+
+        createAgent(id = agentId, strategy = strategy) {
+            install(environmentTransformFeature)
+        }.use { agent ->
+            agent.run(agentInput)
+        }
+
+        val expectedEnvironmentNames = listOf(
+            "Modified environment 1",
+            "Modified environment 2"
+        )
+        val actualEnvironmentNames = actualEnvironments.mapNotNull { env -> (env as? WrapperEnvironment)?.name }
+        assertContentEquals(
+            expectedEnvironmentNames,
+            actualEnvironmentNames,
+            "Each handler should receive the correct environment instance"
+        )
+    }
+
+    @Test
+    @JsName("testHandlersAreCalledInFeatureInstallationOrder")
+    fun `test handlers are called in feature installation order`() = runTest {
+        val agentId = "test-agent-id"
+        val agentInput = "Test input"
+        val agentOutput = "Done"
+
+        val strategyName = "test-strategy"
+
+        val strategy = strategy<String, String>(strategyName) {
+            edge(nodeStart forwardTo nodeFinish transformed { agentOutput })
+        }
+
+        val actualEvents = mutableListOf<String>()
+
+        fun createFeature(name: String) = object : AIAgentGraphFeature<FeatureConfig, Unit> {
+            override val key: AIAgentStorageKey<Unit> = createStorageKey("$name-feature")
+            override fun createInitialConfig(): FeatureConfig = object : FeatureConfig() {}
+            override fun install(config: FeatureConfig, pipeline: AIAgentGraphPipeline) {
+                pipeline.interceptAgentStarting(this) { _ ->
+                    actualEvents += name
+                }
+            }
+        }
+
+        createAgent(id = agentId, strategy = strategy) {
+            install(createFeature("Feature Handler 1"))
+            install(createFeature("Feature Handler 2"))
+            install(createFeature("Feature Handler 3"))
+        }.use { agent ->
+            agent.run(agentInput)
+        }
+
+        val expectedEvents = listOf(
+            "Feature Handler 1",
+            "Feature Handler 2",
+            "Feature Handler 3"
+        )
+
+        assertContentEquals(
+            expectedEvents,
+            actualEvents,
+            "Handlers should be called in feature installation order"
+        )
+    }
 
     //region Private Methods
 
@@ -818,7 +1040,7 @@ class AIAgentPipelineTest {
         )
     }
 
-    private fun agentExecutionPath(vararg parts: String) = parts.joinToString(AgentExecutionInfo.defaultPathSeparator)
+    private fun agentExecutionPath(vararg parts: String) = parts.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
 
     //endregion Private Methods
 }

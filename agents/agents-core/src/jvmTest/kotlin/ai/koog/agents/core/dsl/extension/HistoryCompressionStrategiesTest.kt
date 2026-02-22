@@ -8,20 +8,20 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class HistoryCompressionStrategiesTest {
     private fun createMockExecutor() = getMockExecutor {
@@ -380,7 +380,7 @@ class HistoryCompressionStrategiesTest {
             toolRegistry = createToolRegistry()
         )
 
-        val resultMessages = agent.run("User input")
+        val resultMessages = agent.run("User input", null)
 
         assert(resultMessages.size == compressedMessages.size)
         resultMessages.forEachIndexed { index, message ->

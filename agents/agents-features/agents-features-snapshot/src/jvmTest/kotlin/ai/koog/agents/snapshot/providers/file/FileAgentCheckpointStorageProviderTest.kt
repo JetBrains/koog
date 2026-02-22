@@ -5,7 +5,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -14,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class FileAgentCheckpointStorageProviderTest {
     private lateinit var tempDir: java.nio.file.Path
@@ -49,8 +49,8 @@ class FileAgentCheckpointStorageProviderTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = createdAt,
-            nodeId = nodeId,
-            lastInput = lastInput,
+            nodePath = nodeId,
+            lastOutput = lastInput,
             messageHistory = messageHistory,
             version = 0L
         )
@@ -67,8 +67,8 @@ class FileAgentCheckpointStorageProviderTest {
         val retrievedCheckpoint = checkpoints.first()
         assertEquals(checkpointId, retrievedCheckpoint.checkpointId)
         assertEquals(createdAt, retrievedCheckpoint.createdAt)
-        assertEquals(nodeId, retrievedCheckpoint.nodeId)
-        assertEquals(lastInput, retrievedCheckpoint.lastInput)
+        assertEquals(nodeId, retrievedCheckpoint.nodePath)
+        assertEquals(lastInput, retrievedCheckpoint.lastOutput)
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
 
         // Check first message (User)
@@ -92,8 +92,8 @@ class FileAgentCheckpointStorageProviderTest {
         val laterCheckpoint = AgentCheckpointData(
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,
-            nodeId = nodeId,
-            lastInput = lastInput,
+            nodePath = nodeId,
+            lastOutput = lastInput,
             messageHistory = messageHistory,
             version = checkpoint.version.plus(1)
         )

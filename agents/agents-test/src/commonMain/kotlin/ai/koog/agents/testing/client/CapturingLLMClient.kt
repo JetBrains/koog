@@ -11,6 +11,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlin.jvm.JvmOverloads
 
 /**
  * A test double implementation of [LLMClient] that captures the last inputs provided to each API
@@ -25,7 +26,7 @@ import kotlinx.coroutines.flow.flowOf
  * @property moderationResult The [ModerationResult] to return from [moderate].
  * @property llmProvider [LLMProvider] associated with the client or [LLMProvider.OpenAI], if not defined
  */
-public class CapturingLLMClient(
+public class CapturingLLMClient @JvmOverloads constructor(
     private val executeResponses: List<Message.Response> = emptyList(),
     private val streamingChunks: List<StreamFrame> = emptyList(),
     private val choices: List<LLMChoice> = emptyList(),

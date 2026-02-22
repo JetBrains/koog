@@ -3,6 +3,8 @@ package ai.koog.agents.features.opentelemetry.attribute
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -11,37 +13,73 @@ class SpanAttributesTest {
     //region Tool
 
     @Test
-    fun `test input value empty string`() {
-        val actualAttribute = SpanAttributes.Tool.InputValue("")
-        assertEquals("input.value", actualAttribute.key)
-        assertEquals("", actualAttribute.value.toString())
+    fun `test tool call arguments with empty object value`() {
+        val arguments = JsonObject(emptyMap())
+        val actualAttribute = SpanAttributes.Tool.Call.Arguments(arguments)
+        assertEquals("gen_ai.tool.call.arguments", actualAttribute.key)
+        assertEquals(arguments.toString(), actualAttribute.value.value)
     }
 
     @Test
-    fun `test input value string hidden by default`() {
-        val inputValue = "sensitive user input"
-        val actualAttribute = SpanAttributes.Tool.InputValue(inputValue)
+    fun `test tool call arguments with valid json value`() {
+        val arguments = JsonObject(
+            mapOf(
+                "key1" to JsonPrimitive("value1"),
+                "key2" to JsonPrimitive("value2")
+            )
+        )
+        val actualAttribute = SpanAttributes.Tool.Call.Arguments(arguments)
+        assertEquals("gen_ai.tool.call.arguments", actualAttribute.key)
+        assertEquals(arguments.toString(), actualAttribute.value.value)
+    }
 
-        assertEquals("input.value", actualAttribute.key)
+    @Test
+    fun `test tool call arguments value string hidden by default`() {
+        val arguments = JsonObject(
+            mapOf(
+                "argument" to JsonPrimitive("sensitive user input")
+            )
+        )
+        val actualAttribute = SpanAttributes.Tool.Call.Arguments(arguments)
+
+        assertEquals("gen_ai.tool.call.arguments", actualAttribute.key)
         assertEquals("HIDDEN:non-empty", actualAttribute.value.toString())
-        assertEquals(inputValue, actualAttribute.value.value)
+        assertEquals(arguments.toString(), actualAttribute.value.value)
     }
 
     @Test
-    fun `test output value empty string`() {
-        val actualAttribute = SpanAttributes.Tool.OutputValue("")
-        assertEquals("output.value", actualAttribute.key)
-        assertEquals("", actualAttribute.value.toString())
+    fun `test tool result with empty string value`() {
+        val result = JsonObject(emptyMap())
+        val actualAttribute = SpanAttributes.Tool.Call.Result(result)
+        assertEquals("gen_ai.tool.call.result", actualAttribute.key)
+        assertEquals(result.toString(), actualAttribute.value.value)
     }
 
     @Test
-    fun `test output value string hidden by default`() {
-        val outputValue = "sensitive tool output"
-        val actualAttribute = SpanAttributes.Tool.OutputValue(outputValue)
+    fun `test tool call result with valid json value`() {
+        val result = JsonObject(
+            mapOf(
+                "key1" to JsonPrimitive("value1"),
+                "key2" to JsonPrimitive("value2")
+            )
+        )
+        val actualAttribute = SpanAttributes.Tool.Call.Result(result)
+        assertEquals("gen_ai.tool.call.result", actualAttribute.key)
+        assertEquals(result.toString(), actualAttribute.value.value)
+    }
 
-        assertEquals("output.value", actualAttribute.key)
+    @Test
+    fun `test tool call result string hidden by default`() {
+        val result = JsonObject(
+            mapOf(
+                "output" to JsonPrimitive("sensitive tool output")
+            )
+        )
+        val actualAttribute = SpanAttributes.Tool.Call.Result(result)
+
+        assertEquals("gen_ai.tool.call.result", actualAttribute.key)
         assertEquals("HIDDEN:non-empty", actualAttribute.value.toString())
-        assertEquals(outputValue, actualAttribute.value.value)
+        assertEquals(result.toString(), actualAttribute.value.value)
     }
 
     @Test

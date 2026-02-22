@@ -62,13 +62,11 @@ public class ExecuteShellCommandTool(
     /**
      * Result of attempting to run a command.
      *
-     * @property command The command string that was run (or denied)
      * @property exitCode The exit code returned by the process, or null if the command never started
      * @property output Everything the command printed to the screen, or an explanation if it didn't run (e.g., "Command timed out", "denied by user")
      */
     @Serializable
     public data class Result(
-        val command: String,
         val exitCode: Int?,
         val output: String
     )
@@ -89,20 +87,19 @@ public class ExecuteShellCommandTool(
     ) {
         is ShellCommandConfirmation.Approved -> try {
             val result = executor.execute(args.command, args.workingDirectory, args.timeoutSeconds)
-            Result(args.command, result.exitCode, result.output)
+            Result(result.exitCode, result.output)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result(args.command, null, "Failed to execute command: ${e.message}")
+            Result(null, "Failed to execute command: ${e.message}")
         }
 
         is ShellCommandConfirmation.Denied ->
-            Result(args.command, null, "Command execution denied with user response: ${confirmation.userResponse}")
+            Result(null, "Command execution denied with user response: ${confirmation.userResponse}")
     }
 
     override fun encodeResultToString(result: Result): String = with(result) {
         buildString {
-            appendLine("Command: $command")
             if (output.isNotEmpty()) {
                 appendLine(output)
             } else if (exitCode != null) {

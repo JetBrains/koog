@@ -8,8 +8,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
 import kotlin.jvm.JvmName
+import kotlin.time.Clock
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -940,7 +940,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
  *
  * @property response The text response to return
  */
-public class DefaultResponseReceiver(
+public open class DefaultResponseReceiver(
     internal val response: String,
     internal val builder: MockLLMBuilder,
 ) {
@@ -1032,7 +1032,7 @@ public class DefaultResponseReceiver(
  */
 public fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
-    clock: Clock = Clock.System,
+    clock: Clock = kotlin.time.Clock.System,
     tokenizer: Tokenizer? = null,
     handleLastAssistantMessage: Boolean = false,
     init: MockLLMBuilder.() -> Unit

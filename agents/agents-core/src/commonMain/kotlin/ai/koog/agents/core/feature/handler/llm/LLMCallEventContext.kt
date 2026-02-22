@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.handler.llm
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
@@ -24,12 +25,13 @@ public interface LLMCallEventContext : AgentLifecycleEventContext
  * @property tools The list of tool descriptors available for the LLM call.
  */
 public data class LLMCallStartingContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val runId: String,
-    val callId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
+    val context: AIAgentContext
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallStarting
 }
@@ -39,7 +41,6 @@ public data class LLMCallStartingContext(
  *
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property runId The unique identifier for this LLM call session.
- * @property callId Identifier for the current LLM call.
  * @property prompt The prompt that was sent to the language model.
  * @property model The language model instance that was used.
  * @property tools The list of tool descriptors that were available for the LLM call.
@@ -47,14 +48,15 @@ public data class LLMCallStartingContext(
  * @property moderationResponse The moderation response, if any, received from the language model.
  */
 public data class LLMCallCompletedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val runId: String,
-    val callId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
     val responses: List<Message.Response>,
-    val moderationResponse: ModerationResult?
+    val moderationResponse: ModerationResult?,
+    val context: AIAgentContext
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallCompleted
 }

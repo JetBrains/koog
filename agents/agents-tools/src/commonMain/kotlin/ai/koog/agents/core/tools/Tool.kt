@@ -19,11 +19,13 @@ import kotlinx.serialization.json.jsonObject
  * @property argsSerializer A [KSerializer] responsible for encoding and decoding the arguments required for the tool execution.
  * @property resultSerializer A [KSerializer] responsible for encoding and decoding the result returned by the tool execution.
  * @property descriptor A [ToolDescriptor] representing the tool's schema, including its name, description, and parameters.
+ * @property metadata A map of arbitrary metadata associated with the tool.
  */
 public abstract class Tool<TArgs, TResult>(
     public val argsSerializer: KSerializer<TArgs>,
     public val resultSerializer: KSerializer<TResult>,
     public val descriptor: ToolDescriptor,
+    public val metadata: Map<String, String> = emptyMap(),
 ) {
     /**
      * The name of the tool from the [descriptor]

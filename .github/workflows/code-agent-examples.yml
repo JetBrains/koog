@@ -16,7 +16,29 @@ env:
   JAVA_DISTRIBUTION: 'corretto'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
+      code-agent: ${{steps.filter.outputs.code-agent_any_changed }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+        name: Check changed files
+        id: filter
+        with:
+          write_output_files: 'true'
+          files_yaml_from_source_file: .github/file-filters.yml
+
+      - run: .github/scripts/print_changed_files.sh
+        name: 'Print changed files'
+
   compilation:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' || needs.changes.outputs.code-agent == 'true' }}
     name: Compile ${{ matrix.step }}
 
     runs-on: ubuntu-latest
@@ -30,6 +52,7 @@ jobs:
           - step-02-add-execution-tool
           - step-03-add-observability
           - step-04-add-subagent
+          - step-05-history
 
     steps:
       - name: Configure Git

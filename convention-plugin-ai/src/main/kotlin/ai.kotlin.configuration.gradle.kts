@@ -1,4 +1,5 @@
 import org.gradle.accessors.dm.LibrariesForLibs
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -13,8 +14,8 @@ val libs = the<LibrariesForLibs>()
 
   See: https://youtrack.jetbrains.com/issue/KT-66755/Native-non-JVM-targets-add-support-for-languageVersion
  */
-val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_1
-val kotlinApiVersion = KotlinVersion.KOTLIN_2_1
+val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_3
+val kotlinApiVersion = KotlinVersion.KOTLIN_2_3
 val kotlinBomVersion = requireNotNull(libs.kotlin.bom.get().version)
 
 extensions.getByType<KotlinProjectExtension>().apply {
@@ -57,11 +58,13 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
-        freeCompilerArgs.add("-Xjvm-default=all")
+        jvmDefault = JvmDefaultMode.ENABLE
+        javaParameters = true
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
+    this.options.compilerArgs.addAll(listOf("-parameters", "-g"))
     sourceCompatibility = JavaVersion.VERSION_11.toString()
     targetCompatibility = JavaVersion.VERSION_11.toString()
 }

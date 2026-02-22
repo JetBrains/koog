@@ -1,5 +1,7 @@
 package ai.koog.agents.core.agent.execution
 
+import kotlinx.serialization.Serializable
+
 /**
  * Represents execution information for an agent, including a reference to a parent execution
  * and a name identifying the specific part of the execution.
@@ -9,22 +11,11 @@ package ai.koog.agents.core.agent.execution
  *           the current instance is the root.
  * @property partName A string representing the name of the current part or segment of the execution.
  */
+@Serializable
 public data class AgentExecutionInfo(
     public val parent: AgentExecutionInfo?,
     public val partName: String
 ) {
-
-    /**
-     * A companion object for the `AgentExecutionInfo` class that provides utility constants.
-     */
-    public companion object {
-
-        /**
-         * The default separator used to join parts of a path.
-         */
-        public val defaultPathSeparator: CharSequence = "/"
-    }
-
     /**
      * Constructs a path string representing the sequence of `partName` values from the current
      * `AgentExecutionInfo` instance to the top-most parent, joined by the specified separator.
@@ -33,7 +24,7 @@ public data class AgentExecutionInfo(
      * @return A string representing the path constructed from `partName` values.
      */
     public fun path(separator: String? = null): String {
-        val separator = separator ?: defaultPathSeparator
+        val separator = separator ?: DEFAULT_AGENT_PATH_SEPARATOR
 
         return buildList {
             var current: AgentExecutionInfo? = this@AgentExecutionInfo

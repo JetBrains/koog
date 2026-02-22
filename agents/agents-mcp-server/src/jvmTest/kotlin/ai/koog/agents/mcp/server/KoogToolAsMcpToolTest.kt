@@ -1,5 +1,6 @@
 package ai.koog.agents.mcp.server
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -26,11 +27,11 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(InternalAgentsApi::class)
 class KoogToolAsMcpToolTest {
 
     private val logger = KotlinLogging.logger {}
 
-    @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testKoogToolAsMcpTool() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
         val args = buildJsonObject { put("seed", "42") }
@@ -159,9 +160,7 @@ class KoogToolAsMcpToolTest {
         try {
             val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    McpToolRegistryProvider.fromTransport(
-                        transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$port")
-                    )
+                    McpToolRegistryProvider.fromSseUrl("http://localhost:$port")
                 }
             }
 

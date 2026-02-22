@@ -120,8 +120,8 @@ Inject the auto-configured executors into your services:
 ```kotlin
 @Service
 class AIService(
-    private val openAIExecutor: SingleLLMPromptExecutor?,
-    private val anthropicExecutor: SingleLLMPromptExecutor?
+    private val openAIExecutor: MultiLLMPromptExecutor?,
+    private val anthropicExecutor: MultiLLMPromptExecutor?
 ) {
 
     suspend fun generateResponse(input: String): String {
@@ -155,7 +155,7 @@ Create a chat endpoint using auto-configured executors:
 @RestController
 @RequestMapping("/api/chat")
 class ChatController(
-    private val anthropicExecutor: SingleLLMPromptExecutor?
+    private val anthropicExecutor: MultiLLMPromptExecutor?
 ) {
 
     @PostMapping
@@ -191,9 +191,9 @@ Handle multiple providers with fallback logic:
 ```kotlin
 @Service
 class RobustAIService(
-    private val openAIExecutor: SingleLLMPromptExecutor?,
-    private val anthropicExecutor: SingleLLMPromptExecutor?,
-    private val openRouterExecutor: SingleLLMPromptExecutor?
+    private val openAIExecutor: MultiLLMPromptExecutor?,
+    private val anthropicExecutor: MultiLLMPromptExecutor?,
+    private val openRouterExecutor: MultiLLMPromptExecutor?
 ) {
 
     suspend fun generateWithFallback(input: String): String {
@@ -230,7 +230,7 @@ You can also inject configuration properties for custom logic:
 ```kotlin
 @Service
 class ConfigurableAIService(
-    private val openAIExecutor: SingleLLMPromptExecutor?,
+    private val openAIExecutor: MultiLLMPromptExecutor?,
     @Value("\${ai.koog.openai.api-key:}") private val openAIKey: String
 ) {
 
@@ -283,7 +283,7 @@ The auto-configuration creates the following beans (when configured):
 **Bean not found error:**
 
 ```
-No qualifying bean of type 'SingleLLMPromptExecutor' available
+No qualifying bean of type 'MultiLLMPromptExecutor' available
 ```
 
 **Solution:** Ensure you have configured at least one provider in your properties file.
@@ -291,7 +291,7 @@ No qualifying bean of type 'SingleLLMPromptExecutor' available
 **Multiple beans error:**
 
 ```
-Multiple qualifying beans of type 'SingleLLMPromptExecutor' available
+Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
 ```
 
 **Solution:** Use `@Qualifier` to specify which bean you want:
@@ -299,8 +299,8 @@ Multiple qualifying beans of type 'SingleLLMPromptExecutor' available
 ```kotlin
 @Service
 class MyService(
-    @Qualifier("openAIExecutor") private val openAIExecutor: SingleLLMPromptExecutor,
-    @Qualifier("anthropicExecutor") private val anthropicExecutor: SingleLLMPromptExecutor
+    @Qualifier("openAIExecutor") private val openAIExecutor: MultiLLMPromptExecutor,
+    @Qualifier("anthropicExecutor") private val anthropicExecutor: MultiLLMPromptExecutor
 ) {
     // ...
 }
@@ -317,7 +317,7 @@ API key is required but not provided
 ## Best Practices
 
 1. **Environment Variables**: Always use environment variables for API keys
-2. **Nullable Injection**: Use nullable types (`SingleLLMPromptExecutor?`) to handle cases where providers aren't
+2. **Nullable Injection**: Use nullable types (`MultiLLMPromptExecutor?`) to handle cases where providers aren't
    configured
 3. **Fallback Logic**: Implement fallback mechanisms when using multiple providers
 4. **Error Handling**: Always wrap executor calls in try-catch blocks for production code

@@ -8,7 +8,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
 
@@ -59,7 +59,7 @@ object SQLPersistentAgentExample {
 
         // Create and save checkpoint
         val checkpoint = createSampleCheckpoint("postgres-checkpoint-1", version = 0)
-        provider.saveCheckpoint(agentId = agentId, agentCheckpointData = checkpoint)
+        provider.saveCheckpoint(sessionId = agentId, agentCheckpointData = checkpoint)
         println("Saved checkpoint: ${checkpoint.checkpointId}")
 
         // Retrieve checkpoint
@@ -170,7 +170,7 @@ object SQLPersistentAgentExample {
         return AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = Clock.System.now(),
-            nodeId = "example-node",
+            nodePath = "example-node",
             lastInput = JsonPrimitive("Sample input for $checkpointId"),
             messageHistory = listOf(
                 Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),

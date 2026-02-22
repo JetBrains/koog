@@ -1,9 +1,13 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
@@ -22,6 +26,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -50,7 +55,8 @@ public class EventHandler {
      */
     public companion object Feature :
         AIAgentGraphFeature<EventHandlerConfig, EventHandler>,
-        AIAgentFunctionalFeature<EventHandlerConfig, EventHandler> {
+        AIAgentFunctionalFeature<EventHandlerConfig, EventHandler>,
+        AIAgentPlannerFeature<EventHandlerConfig, EventHandler> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -76,6 +82,17 @@ public class EventHandler {
         override fun install(
             config: EventHandlerConfig,
             pipeline: AIAgentFunctionalPipeline,
+        ): EventHandler {
+            val eventHandler = EventHandler()
+
+            registerCommonPipelineHandlers(config, pipeline)
+
+            return eventHandler
+        }
+
+        override fun install(
+            config: EventHandlerConfig,
+            pipeline: AIAgentPlannerPipeline
         ): EventHandler {
             val eventHandler = EventHandler()
 
