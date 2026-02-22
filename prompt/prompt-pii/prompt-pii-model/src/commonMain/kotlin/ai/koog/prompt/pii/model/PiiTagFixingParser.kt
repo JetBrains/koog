@@ -34,7 +34,7 @@ public class PiiTagFixingParser(
     ): String {
         var currentContent: String = content
         var unknownTags: Set<String> = extractUnknownTags(currentContent, knownTags, tagPattern)
-        var attempt: Int = 0
+        var attempt = 0
 
         while (unknownTags.isNotEmpty() && attempt < retries) {
             attempt += 1

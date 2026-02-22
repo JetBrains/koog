@@ -77,7 +77,7 @@ public class StructuredPiiDetector(
         if (needle.isEmpty()) return emptyList()
 
         val starts: MutableList<Int> = mutableListOf()
-        var fromIndex: Int = 0
+        var fromIndex = 0
 
         while (fromIndex <= text.length - needle.length) {
             val matchIndex: Int = text.indexOf(needle, startIndex = fromIndex)
@@ -126,7 +126,7 @@ public data class StructuredPiiDetectorConfig(
                         appendLine("Return only values that appear exactly in the input.")
                         appendLine("Do not return start/end positions.")
                         appendLine("Use only these PiiType enum values:")
-                        append(PiiType.values().joinToString(separator = ", ") { it.name })
+                        append(PiiType.entries.joinToString(separator = ", ") { it.name })
                     }
                 )
                 user(

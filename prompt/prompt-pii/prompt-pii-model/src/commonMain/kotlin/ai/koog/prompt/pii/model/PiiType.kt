@@ -70,7 +70,7 @@ public enum class PiiType {
  */
 public object PiiTypeMapper {
     private val aliases: Map<String, PiiType> = buildMap {
-        for (type in PiiType.values()) {
+        for (type in PiiType.entries) {
             if (type == PiiType.OTHER) continue
             put(type.name.lowercase(), type)
         }

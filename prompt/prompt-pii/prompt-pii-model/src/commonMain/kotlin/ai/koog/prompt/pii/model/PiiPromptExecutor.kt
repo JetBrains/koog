@@ -11,9 +11,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Transparent prompt executor wrapper that anonymizes PII before model call
@@ -24,7 +23,7 @@ public class PiiPromptExecutor(
     private val nested: PromptExecutor,
     private val config: PiiPromptExecutorConfig = PiiPromptExecutorConfig(),
     private val fixingParser: PiiTagFixingParser? = null,
-    private val clock: Clock = kotlin.time.Clock.System,
+    private val clock: Clock = Clock.System,
 ) : PromptExecutor {
     override suspend fun execute(
         prompt: Prompt,
@@ -69,7 +68,7 @@ public class PiiPromptExecutor(
                 return@flow
             }
 
-            var appendCarry: String = ""
+            var appendCarry = ""
 
             nested.executeStreaming(context.prompt, model, tools).collect { frame ->
                 when (frame) {
@@ -178,7 +177,7 @@ public class PiiPromptExecutor(
         if (detections.isEmpty()) return text
 
         val builder = StringBuilder(text.length)
-        var cursor: Int = 0
+        var cursor = 0
 
         for (detection in detections) {
             builder.append(text.substring(cursor, detection.start))
@@ -280,7 +279,7 @@ public class PiiPromptExecutor(
         val lastTagEnd: Int = text.lastIndexOf(TAG_SUFFIX)
 
         return if (lastTagStart > lastTagEnd) {
-            text.substring(0, lastTagStart) to text.substring(lastTagStart)
+            text.take(lastTagStart) to text.substring(lastTagStart)
         } else {
             text to ""
         }
@@ -329,7 +328,7 @@ public class PiiPromptExecutor(
             return tagByKey.getOrPut(key) {
                 val next: Int = (countersByToken[token] ?: 0) + 1
                 countersByToken[token] = next
-                val tag: String = "[[$token $next]]"
+                val tag = "[[$token $next]]"
                 valueByTag[tag] = value
                 tag
             }

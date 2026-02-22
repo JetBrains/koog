@@ -50,6 +50,9 @@ public class RegexPiiDetector(
         return detections
     }
 
+    /**
+     * Default regex implementation
+     */
     public companion object {
         /**
          * Default deterministic regex profile aligned to high-confidence Presidio entity formats.
@@ -229,11 +232,11 @@ public class RegexPiiDetector(
                 ),
                 Rule(
                     type = PiiType.URL,
-                    pattern = Regex("""https?:\/\/(?:[-\w.])+(?:\:[0-9]+)?(?:\/(?:[\w\/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?""")
+                    pattern = Regex("""https?://[-\w.]+(?::[0-9]+)?(?:/[\w/_.]*(?:\?[\w&=%.]*)?(?:#[\w.]*)?)?""")
                 ),
                 Rule(
                     type = PiiType.DATE_TIME,
-                    pattern = Regex("""\b(?:0[1-9]|1[0-2])[-\/](?:0[1-9]|[12][0-9]|3[01])[-\/](?:19|20)\d{2}\b""")
+                    pattern = Regex("""\b(?:0[1-9]|1[0-2])[-/](?:0[1-9]|[12][0-9]|3[01])[-/](?:19|20)\d{2}\b""")
                 ),
             )
         )
@@ -314,8 +317,9 @@ public class RegexPiiDetector(
                 val weight: Int = 10 - index
                 (digits[index] - '0') * weight
             }
-            val remainder: Int = 11 - (sum % 11)
-            val expectedCheckDigit: Int = when (remainder) {
+            val expectedCheckDigit: Int = when (
+                val remainder: Int = 11 - (sum % 11)
+            ) {
                 11 -> 0
                 10 -> return false
                 else -> remainder
@@ -326,7 +330,7 @@ public class RegexPiiDetector(
         private fun isValidEsNif(value: String): Boolean {
             val input = value.uppercase()
             if (!Regex("""\d{8}[A-Z]""").matches(input)) return false
-            val number: Int = input.substring(0, 8).toIntOrNull() ?: return false
+            val number: Int = input.take(8).toIntOrNull() ?: return false
             val expectedLetter: Char = ES_NIF_CHECKSUM[number % 23]
             return input.last() == expectedLetter
         }
@@ -376,7 +380,7 @@ public class RegexPiiDetector(
         }
 
         private fun isValidPeselDate(digits: String): Boolean {
-            val year: Int = digits.substring(0, 2).toIntOrNull() ?: return false
+            val year: Int = digits.take(2).toIntOrNull() ?: return false
             val monthCode: Int = digits.substring(2, 4).toIntOrNull() ?: return false
             val day: Int = digits.substring(4, 6).toIntOrNull() ?: return false
 
@@ -468,7 +472,7 @@ public class RegexPiiDetector(
             val gstin: String = value.filter { it.isLetterOrDigit() }.uppercase()
             if (gstin.length != 15) return false
 
-            val expected: Char = calculateGstinCheckChar(gstin.substring(0, 14))
+            val expected: Char = calculateGstinCheckChar(gstin.take(14))
             return expected == gstin.last()
         }
 
@@ -491,7 +495,7 @@ public class RegexPiiDetector(
             val input = value.uppercase()
             if (!Regex("""\d{6}[+\-A]\d{3}[0-9A-Y]""").matches(input)) return false
 
-            val day: Int = input.substring(0, 2).toIntOrNull() ?: return false
+            val day: Int = input.take(2).toIntOrNull() ?: return false
             val month: Int = input.substring(2, 4).toIntOrNull() ?: return false
             val yearPart: Int = input.substring(4, 6).toIntOrNull() ?: return false
             val separator: Char = input[6]
@@ -508,7 +512,7 @@ public class RegexPiiDetector(
             if (!isValidDate(year, month, day)) return false
             if (individualNumber !in 2..899) return false
 
-            val checksumInput: Int = (input.substring(0, 6) + individual).toIntOrNull() ?: return false
+            val checksumInput: Int = (input.take(6) + individual).toIntOrNull() ?: return false
             val expected: Char = FI_PIC_CHECKSUM[checksumInput % 31]
             return input.last() == expected
         }
@@ -531,7 +535,7 @@ public class RegexPiiDetector(
             val digits = value.filter(Char::isDigit)
             if (digits.length != 13) return false
 
-            val yearPart: Int = digits.substring(0, 2).toIntOrNull() ?: return false
+            val yearPart: Int = digits.take(2).toIntOrNull() ?: return false
             val month: Int = digits.substring(2, 4).toIntOrNull() ?: return false
             val day: Int = digits.substring(4, 6).toIntOrNull() ?: return false
             val categoryDigit: Int = digits[6] - '0'
