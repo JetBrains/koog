@@ -63,16 +63,4 @@ class ActionBuilderTest {
                 .build()
         }
     }
-
-    @Test
-    fun testMissingExecuteFails() {
-        shouldThrow<IllegalArgumentException> {
-            Action.builder<String>()
-                .name(NAME)
-                .description(DESCRIPTION)
-                .precondition { true }
-                .belief { it }
-                .build()
-        }
-    }
 }

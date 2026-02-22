@@ -53,15 +53,4 @@ public class ActionBuilderJavaTest {
                 .build();
         });
     }
-
-    @Test
-    public void testMissingExecuteFails() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            Action.<String>builder()
-                .name("test")
-                .precondition(state -> true)
-                .belief(state -> state)
-                .build();
-        });
-    }
 }

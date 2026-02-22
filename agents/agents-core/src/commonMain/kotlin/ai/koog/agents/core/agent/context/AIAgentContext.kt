@@ -4,12 +4,25 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
+import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -239,4 +252,80 @@ public inline fun <T> AIAgentContext.with(executionInfo: AgentExecutionInfo, blo
 public inline fun <T> AIAgentContext.with(partName: String, block: (executionInfo: AgentExecutionInfo, eventId: String) -> T): T {
     val executionInfo = AgentExecutionInfo(parent = this.executionInfo, partName = partName)
     return with(executionInfo = executionInfo, block = block)
+}
+
+// subgraph utils
+
+@Serializable
+private data class SelectedTools(
+    @property:LLMDescription("List of selected tools for the given subtask")
+    val tools: List<String>
+)
+
+@OptIn(DetachedPromptExecutorAPI::class)
+internal suspend fun selectTools(
+    context: AIAgentContext,
+    toolSelectionStrategy: ToolSelectionStrategy
+) = when (toolSelectionStrategy) {
+    is ToolSelectionStrategy.ALL -> context.llm.tools
+    is ToolSelectionStrategy.NONE -> emptyList()
+    is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
+    is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
+        val initialPrompt = prompt
+
+        replaceHistoryWithTLDR()
+
+        appendPrompt {
+            user {
+                selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+            }
+        }
+
+        val selectedTools = this.requestLLMStructured(
+            config = StructuredRequestConfig(
+                default = StructuredRequest.Manual(
+                    JsonStructure.create<SelectedTools>(
+                        schemaGenerator = StandardJsonSchemaGenerator,
+                        examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                    ),
+                ),
+                fixingParser = toolSelectionStrategy.fixingParser,
+            )
+        ).getOrThrow()
+
+        prompt = initialPrompt
+
+        tools.filter { it.name in selectedTools.data.tools.toSet() }
+    }
+}
+
+@OptIn(DetachedPromptExecutorAPI::class)
+internal suspend fun <T> withUpdatedContext(
+    context: AIAgentContext,
+    tools: List<ToolDescriptor>?,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    responseProcessor: ResponseProcessor? = null,
+    block: suspend (AIAgentContext) -> T
+): T {
+    // Copy inner context with new tools, model and LLM params.
+    val initialLLMContext = context.llm.copy()
+
+    context.llm.writeSession {
+        this.tools = tools ?: this.tools
+        this.model = llmModel ?: this.model
+        this.prompt = prompt.copy(params = llmParams ?: prompt.params)
+        this.responseProcessor = responseProcessor ?: this.responseProcessor
+    }
+
+    val result = block(context)
+
+    context.llm.writeSession {
+        this.tools = initialLLMContext.tools
+        this.model = initialLLMContext.model
+        this.prompt = prompt.withParams(initialLLMContext.prompt.params)
+        this.responseProcessor = initialLLMContext.responseProcessor
+    }
+
+    return result
 }

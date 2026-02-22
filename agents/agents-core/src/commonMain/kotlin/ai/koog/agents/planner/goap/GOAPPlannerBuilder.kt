@@ -1,6 +1,10 @@
 package ai.koog.agents.planner.goap
 
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.utils.BuilderChainAction
 import ai.koog.agents.core.utils.ConfigureAction
+import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.params.LLMParams
 import kotlin.jvm.JvmOverloads
 import kotlin.math.exp
 import kotlin.reflect.KType
@@ -29,9 +33,9 @@ public open class GOAPPlannerBuilder<State : GoapAgentState<*, *>> @JvmOverloads
      */
     public fun action(
         name: String,
-        configure: ConfigureAction<ActionBuilder<State>>
+        configure: BuilderChainAction<ActionBuilder<State>, ActionTerminalBuilder<State>>
     ): GOAPPlannerBuilder<State> = apply {
-        action(ActionBuilder<State>().apply { name(name) }.apply(configure::configure).build())
+        action(configure.configure(ActionBuilder<State>().name(name)).build())
     }
 
     /**
@@ -42,6 +46,9 @@ public open class GOAPPlannerBuilder<State : GoapAgentState<*, *>> @JvmOverloads
      * @param precondition Condition determining if the action can be performed.
      * @param belief Optimistic belief of the state after performing the action.
      * @param cost Heuristic estimate for the cost of performing the action. Default is 1.0.
+     * @param tools Optional list of tools available during subtask execution.
+     * @param llmModel Optional specific LLM model to use for the subtask.
+     * @param llmParams Optional LLM parameters (temperature, etc.) for the subtask.
      * @param execute Subgraph defining how the action is performed.
      */
     @JvmOverloads
@@ -51,9 +58,56 @@ public open class GOAPPlannerBuilder<State : GoapAgentState<*, *>> @JvmOverloads
         precondition: Condition<State>,
         belief: Belief<State>,
         cost: Cost<State> = { 1.0 },
+        tools: List<Tool<*, *>>? = null,
+        llmModel: LLModel? = null,
+        llmParams: LLMParams? = null,
         execute: Execute<State>,
     ): GOAPPlannerBuilder<State> = apply {
         action(Action(name, description, precondition, belief, cost, execute))
+    }
+
+    /**
+     * Defines an action available to the GOAP agent using a structured subtask approach.
+     *
+     * This method creates an action where the execute function is automatically constructed to run a subtask
+     *
+     * @param T The type of structured output expected from the LLM subtask.
+     * @param name The name of the action.
+     * @param description Optional description of the action.
+     * @param precondition Condition determining if the action can be performed.
+     * @param belief Function that predicts what structured result [T] will be returned.
+     * @param updateState Function that applies the structured result [T] to update the state.
+     * @param cost Heuristic estimate for the cost of performing the action. Default is 1.0.
+     * @param tools Optional list of tools available during subtask execution.
+     * @param llmModel Optional specific LLM model to use for the subtask.
+     * @param llmParams Optional LLM parameters (temperature, etc.) for the subtask.
+     * @param taskDescription Function that generates the task description from the current state.
+     */
+    public inline fun <reified T : Any> action(
+        name: String,
+        description: String? = null,
+        noinline precondition: Condition<State>,
+        noinline belief: (State) -> State,
+        noinline cost: Cost<State> = { 1.0 },
+        tools: List<Tool<*, *>>? = null,
+        llmModel: LLModel? = null,
+        llmParams: LLMParams? = null,
+        noinline updateState: (State, T) -> State,
+        noinline taskDescription: (State) -> String
+    ): GOAPPlannerBuilder<State> = apply {
+        action(name) { builder ->
+            builder
+                .description(description)
+                .precondition(precondition)
+                .belief(belief)
+                .cost(cost)
+                .tools(tools)
+                .llmModel(llmModel)
+                .llmParams(llmParams)
+                .structuredOutputClass(T::class)
+                .taskDescription(taskDescription)
+                .updateState(updateState)
+        }
     }
 
     /**
