@@ -51,7 +51,7 @@ internal class MockLLMClient @JvmOverloads constructor(
                 Result.success(messages.map { Message.Assistant(it, ResponseMetaInfo.Empty) }.toList())
 
             fun executeStreamingSuccess(vararg messages: String) =
-                Result.success(flowOf(*messages).map(StreamFrame::Append))
+                Result.success(flowOf(*messages).map(StreamFrame::TextDelta))
         }
     }
 

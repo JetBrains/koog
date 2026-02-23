@@ -57,7 +57,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val response = executor.execute(prompt, AnthropicModels.Sonnet_3_7)
+        val response = executor.execute(prompt, AnthropicModels.Sonnet_4)
 
         // Then
         assertEquals(openAIClient.executeResponse.single().content, response.single().content)
@@ -75,7 +75,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.execute(prompt, AnthropicModels.Sonnet_3_7)
+            executor.execute(prompt, AnthropicModels.Sonnet_4)
         }
     }
 
@@ -108,7 +108,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val response = executor.executeStreaming(prompt, AnthropicModels.Sonnet_3_7)
+        val response = executor.executeStreaming(prompt, AnthropicModels.Sonnet_4)
             .filterTextOnly()
             .toList()
 
@@ -128,7 +128,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.executeStreaming(prompt, AnthropicModels.Sonnet_3_7).collect()
+            executor.executeStreaming(prompt, AnthropicModels.Sonnet_4).collect()
         }
     }
 
@@ -159,7 +159,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val choices = executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_3_7, emptyList())
+        val choices = executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
 
         // Then
         assertEquals(openAIClient.executeMultipleChoicesResponse, choices)
@@ -177,7 +177,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_3_7, emptyList())
+            executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
         }
     }
 
@@ -208,7 +208,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val result = executor.moderate(prompt, AnthropicModels.Sonnet_3_7)
+        val result = executor.moderate(prompt, AnthropicModels.Sonnet_4)
 
         // Then
         assertEquals(openAIClient.moderateResponse, result)
@@ -226,7 +226,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.moderate(prompt, AnthropicModels.Sonnet_3_7)
+            executor.moderate(prompt, AnthropicModels.Sonnet_4)
         }
     }
 
@@ -288,7 +288,7 @@ class RoutingLLMPromptExecutorTest {
         // Given
         val clients = listOf(
             MockLLMClient(provider = LLMProvider.OpenAI, models = listOf(OpenAIModels.Chat.GPT4o)),
-            MockLLMClient(provider = LLMProvider.Anthropic, models = listOf(AnthropicModels.Sonnet_3_7)),
+            MockLLMClient(provider = LLMProvider.Anthropic, models = listOf(AnthropicModels.Sonnet_4)),
             MockLLMClient(
                 provider = LLMProvider.Google,
                 models = listOf(GoogleModels.Gemini2_0Flash, GoogleModels.Gemini2_5Pro)

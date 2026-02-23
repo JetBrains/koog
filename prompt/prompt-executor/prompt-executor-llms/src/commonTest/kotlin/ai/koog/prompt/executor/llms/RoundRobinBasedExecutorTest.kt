@@ -76,7 +76,7 @@ class RoundRobinBasedExecutorTest {
             executor.execute(prompt, OpenAIModels.Chat.GPT4o)
         }
         val anthropicResponses = (1..5).map {
-            executor.execute(prompt, AnthropicModels.Sonnet_3_7)
+            executor.execute(prompt, AnthropicModels.Sonnet_4)
         }
 
         // Then
@@ -117,7 +117,7 @@ class RoundRobinBasedExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.execute(prompt, AnthropicModels.Sonnet_3_7)
+            executor.execute(prompt, AnthropicModels.Sonnet_4)
         }
     }
 
@@ -129,7 +129,7 @@ class RoundRobinBasedExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.executeStreaming(prompt, AnthropicModels.Sonnet_3_7).collect()
+            executor.executeStreaming(prompt, AnthropicModels.Sonnet_4).collect()
         }
     }
 
@@ -138,7 +138,7 @@ class RoundRobinBasedExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val anthropicClient = MockLLMClient(provider = LLMProvider.Anthropic)
-        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_3_7)
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_4)
         val executor = RoutingLLMPromptExecutor(openAIClient, anthropicClient, fallback = fallback)
 
         // When
@@ -165,7 +165,7 @@ class RoundRobinBasedExecutorTest {
     fun testFallbackClientNotFoundInRouterFails() = runTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
-        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_3_7)
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_4)
 
         // When, Then
         assertFailsWith<IllegalStateException> {
