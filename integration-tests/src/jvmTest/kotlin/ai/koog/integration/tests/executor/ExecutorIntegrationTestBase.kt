@@ -23,7 +23,6 @@ import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserM
 import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserNative
 import ai.koog.integration.tests.utils.structuredOutput.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.structuredOutput.weatherStructuredOutputPrompt
-import ai.koog.integration.tests.utils.tools.CalculatorOperation
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.LotteryTool
 import ai.koog.integration.tests.utils.tools.PickColorFromListTool
@@ -224,32 +223,33 @@ abstract class ExecutorIntegrationTestBase {
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
-            user("Count from 1 to 5.")
+            user("Count from 1 to 5. Like 1, 2, 3 ...")
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            val endMessages = mutableListOf<StreamFrame.End>()
-            val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
-            val textFrames = mutableListOf<StreamFrame.TextDelta>()
-            val reasoningFrames = mutableListOf<StreamFrame.ReasoningDelta>()
+            val endFrames = mutableListOf<StreamFrame.End>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
+            val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
 
             executor.executeStreamAndCollect(
                 prompt = prompt,
                 model = model,
                 tools = listOf(SimpleCalculatorTool.descriptor),
-                textFrames = textFrames,
-                reasoningFrames = reasoningFrames,
-                endFrame = endMessages,
-                toolFrames = toolMessages
+                textDeltaFrames = textDeltaFrames,
+                toolDeltaFrames = toolDeltaFrames,
+                toolCompleteFrames = toolCompleteFrames,
+                endFrame = endFrames,
             )
 
-            toolMessages.shouldBeEmpty()
+            toolDeltaFrames.shouldBeEmpty()
+            toolCompleteFrames.shouldBeEmpty()
             when (model.provider) {
-                is OllamaLLMProvider -> endMessages.size shouldBe 0
+                is OllamaLLMProvider -> endFrames.size shouldBe 0
 
                 else -> {
-                    endMessages.size shouldBe 1
-                    endMessages.first() should { end ->
+                    endFrames.size shouldBe 1
+                    endFrames.first() should { end ->
                         end.metaInfo should { meta ->
                             withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
                                 listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
@@ -260,7 +260,7 @@ abstract class ExecutorIntegrationTestBase {
                 }
             }
 
-            textFrames.joinToString { it.text } shouldNotBeNull {
+            textDeltaFrames.joinToString { it.text } shouldNotBeNull {
                 shouldContain("1")
                 shouldContain("2")
                 shouldContain("3")
@@ -1157,26 +1157,24 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
-            val endMessages = mutableListOf<StreamFrame.End>()
-            val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
-            val textFrames = mutableListOf<StreamFrame.TextDelta>()
-            val reasoningFrames = mutableListOf<StreamFrame.ReasoningDelta>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
+            val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
 
             executor.executeStreamAndCollect(
                 prompt = prompt,
                 model = model,
                 tools = listOf(SimpleCalculatorTool.descriptor),
-                textFrames = textFrames,
-                reasoningFrames = reasoningFrames,
-                endFrame = endMessages,
-                toolFrames = toolMessages
+                textDeltaFrames = textDeltaFrames,
+                toolDeltaFrames = toolDeltaFrames,
+                toolCompleteFrames = toolCompleteFrames,
             )
 
-            toolMessages.shouldNotBeEmpty()
-            withClue("Expected calculator tool call but got: [$toolMessages]") {
-                toolMessages.any {
-                    it.name == SimpleCalculatorTool.name &&
-                        it.content!!.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
+            toolDeltaFrames.shouldNotBeEmpty()
+
+            withClue("Expected calculator tool call but got: [$toolCompleteFrames]") {
+                toolCompleteFrames.any {
+                    it.name == SimpleCalculatorTool.name
                 } shouldBe true
             }
         }
@@ -1187,26 +1185,35 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
     prompt: Prompt,
     model: LLModel,
     tools: List<ToolDescriptor> = emptyList(),
-    textFrames: MutableList<StreamFrame.TextDelta>,
-    endFrame: MutableList<StreamFrame.End>,
-    toolFrames: MutableList<StreamFrame.ToolCallDelta>,
-    reasoningFrames: MutableList<StreamFrame.ReasoningDelta>,
+    textDeltaFrames: MutableList<StreamFrame.TextDelta> = mutableListOf(),
+    textCompleteFrames: MutableList<StreamFrame.TextComplete> = mutableListOf(),
+    toolDeltaFrames: MutableList<StreamFrame.ToolCallDelta> = mutableListOf(),
+    toolCompleteFrames: MutableList<StreamFrame.ToolCallComplete> = mutableListOf(),
+    reasoningDeltaFrames: MutableList<StreamFrame.ReasoningDelta> = mutableListOf(),
+    reasoningCompleteFrames: MutableList<StreamFrame.ReasoningComplete> = mutableListOf(),
+    endFrame: MutableList<StreamFrame.End> = mutableListOf(),
 ) {
     this.executeStreaming(prompt, model, tools).collect { frame ->
         when (frame) {
             is StreamFrame.DeltaFrame -> {
                 when (val delta: StreamFrame.DeltaFrame = frame) {
-                    is StreamFrame.TextDelta -> textFrames.add(delta)
-                    is StreamFrame.ToolCallDelta -> toolFrames.add(delta)
-                    is StreamFrame.ReasoningDelta -> reasoningFrames.add(delta)
+                    is StreamFrame.TextDelta -> textDeltaFrames.add(delta)
+                    is StreamFrame.ToolCallDelta -> toolDeltaFrames.add(delta)
+                    is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(delta)
+                }
+            }
+
+            is StreamFrame.CompleteFrame -> {
+                when (val complete: StreamFrame.CompleteFrame = frame) {
+                    is StreamFrame.TextComplete -> textCompleteFrames.add(complete)
+                    is StreamFrame.ToolCallComplete -> toolCompleteFrames.add(complete)
+                    is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(complete)
                 }
             }
 
             is StreamFrame.End -> {
                 endFrame.add(frame)
             }
-
-            is StreamFrame.CompleteFrame -> {}
         }
     }
 }

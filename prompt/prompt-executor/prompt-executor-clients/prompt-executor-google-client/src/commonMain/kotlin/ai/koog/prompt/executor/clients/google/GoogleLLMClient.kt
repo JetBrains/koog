@@ -40,10 +40,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitEnd
-import ai.koog.prompt.streaming.emitTextDelta
-import ai.koog.prompt.streaming.emitToolCallComplete
-import ai.koog.prompt.streaming.streamFrameFlow
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
@@ -168,7 +165,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = streamFrameFlow {
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -195,16 +192,19 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     )
                 }
                 response.candidates.firstOrNull()?.let { candidate ->
-                    candidate.content?.parts?.forEach { part ->
+                    candidate.content?.parts?.forEachIndexed { index, part ->
                         when (part) {
-                            is GooglePart.FunctionCall -> emitToolCallComplete(
-                                id = part.functionCall.id,
-                                name = part.functionCall.name,
-                                content = part.functionCall.args?.toString() ?: "{}"
-                            )
+                            is GooglePart.FunctionCall -> {
+                                emitToolCallDelta(
+                                    id = part.functionCall.id,
+                                    name = part.functionCall.name,
+                                    args = part.functionCall.args?.toString() ?: "{}",
+                                    index = index
+                                )
+                            }
 
                             is GooglePart.Text -> {
-                                emitTextDelta(part.text)
+                                emitTextDelta(part.text, index)
                             }
 
                             else -> Unit
