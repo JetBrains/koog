@@ -349,7 +349,7 @@ internal object AIAgentFeatureTestAPI {
             params = LLMParams()
         ),
         model = mockLLModel.toModelInfo(),
-        frame = StreamFrame.Append("test-frame"),
+        frame = StreamFrame.TextDelta("test-frame"),
         timestamp = testClock.now().toEpochMilliseconds(),
     )
 

@@ -215,7 +215,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals(listOf(chunkContent).map(StreamFrame::Append), content)
+        assertEquals(listOf(chunkContent).map(StreamFrame::TextDelta), content)
     }
 
     @Test
@@ -231,7 +231,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals(listOf("").map(StreamFrame::Append), content)
+        assertEquals(listOf("").map(StreamFrame::TextDelta), content)
     }
 
     @Test

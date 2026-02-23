@@ -40,9 +40,9 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
 import ai.koog.prompt.streaming.emitEnd
-import ai.koog.prompt.streaming.emitToolCall
+import ai.koog.prompt.streaming.emitTextDelta
+import ai.koog.prompt.streaming.emitToolCallComplete
 import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
@@ -196,13 +196,16 @@ public open class GoogleLLMClient(
                 response.candidates.firstOrNull()?.let { candidate ->
                     candidate.content?.parts?.forEach { part ->
                         when (part) {
-                            is GooglePart.FunctionCall -> emitToolCall(
+                            is GooglePart.FunctionCall -> emitToolCallComplete(
                                 id = part.functionCall.id,
                                 name = part.functionCall.name,
                                 content = part.functionCall.args?.toString() ?: "{}"
                             )
 
-                            is GooglePart.Text -> emitAppend(part.text)
+                            is GooglePart.Text -> {
+                                emitTextDelta(part.text)
+                            }
+
                             else -> Unit
                         }
                     }

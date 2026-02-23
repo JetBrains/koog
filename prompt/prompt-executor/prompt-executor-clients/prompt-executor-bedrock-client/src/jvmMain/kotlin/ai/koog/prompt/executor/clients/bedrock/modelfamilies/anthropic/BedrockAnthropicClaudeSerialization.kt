@@ -255,11 +255,11 @@ internal object BedrockAnthropicClaudeSerialization {
                 AnthropicStreamEventType.CONTENT_BLOCK_START.value -> {
                     when (val contentBlock = response.contentBlock) {
                         is AnthropicContent.Text -> {
-                            emitAppend(contentBlock.text)
+                            emitTextDelta(contentBlock.text)
                         }
 
                         is AnthropicContent.ToolUse -> {
-                            upsertToolCall(
+                            emitToolCallDelta(
                                 index = response.index ?: error("Tool index is missing"),
                                 id = contentBlock.id,
                                 name = contentBlock.name,
@@ -279,14 +279,14 @@ internal object BedrockAnthropicClaudeSerialization {
 
                         when (delta.type) {
                             AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
-                                upsertToolCall(
+                                emitToolCallDelta(
                                     index = response.index ?: error("Tool index is missing"),
                                     args = delta.partialJson ?: error("Tool args are missing")
                                 )
                             }
 
                             AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
-                                emitAppend(
+                                emitTextDelta(
                                     delta.text ?: error("Text delta is missing")
                                 )
                             }

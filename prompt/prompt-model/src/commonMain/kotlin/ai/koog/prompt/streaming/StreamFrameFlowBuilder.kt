@@ -11,16 +11,21 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.experimental.ExperimentalTypeInference
 
 /**
- * Create a [Flow] of [StreamFrame.Append] objects from a list of [String] content.
+ * Create a [Flow] of [StreamFrame.TextDelta] objects from a list of [String] content.
  */
-public fun streamFrameFlowOf(vararg content: String): Flow<StreamFrame.Append> =
-    content.asFlow().map(StreamFrame::Append)
+public fun streamFrameFlowOf(vararg content: String): Flow<StreamFrame.TextDelta> =
+    content.asFlow().map(StreamFrame::TextDelta)
 
 /**
  * Builds a [Flow] of [StreamFrame] objects.
  *
- * @see emitAppend for emitting a [StreamFrame.Append] object.
- * @see emitToolCall for emitting a [StreamFrame.ToolCall] object.
+ * @see emitTextDelta for emitting a [StreamFrame.TextDelta] object.
+ * @see emitTextComplete for emitting a [StreamFrame.TextComplete] object.
+ * @see emitReasoningDelta for emitting a [StreamFrame.ReasoningDelta] object.
+ * @see emitReasoningComplete for emitting a [StreamFrame.ReasoningComplete] object.
+ * @see emitToolCallDelta for emitting a [StreamFrame.ToolCallDelta] object.
+ * @see emitToolCallComplete for emitting a [StreamFrame.ToolCallComplete] object.
+
  * @see emitEnd for emitting a [StreamFrame.End] object.
  */
 @OptIn(ExperimentalTypeInference::class)
@@ -28,10 +33,48 @@ public fun streamFrameFlow(@BuilderInference block: suspend FlowCollector<Stream
     flow(block)
 
 /**
- * Emits a [StreamFrame.Append] with the given [text].
+ * Emits a [StreamFrame.TextDelta] with the given [text].
  */
-public suspend fun FlowCollector<StreamFrame>.emitAppend(text: String): Unit =
-    emit(StreamFrame.Append(text))
+public suspend fun FlowCollector<StreamFrame>.emitTextDelta(text: String, index: Int? = null): Unit =
+    emit(StreamFrame.TextDelta(text, index))
+
+/**
+ * Emits a [StreamFrame.TextComplete] with the given [text].
+ */
+public suspend fun FlowCollector<StreamFrame>.emitTextComplete(text: String, index: Int? = null): Unit =
+    emit(StreamFrame.TextComplete(text, index))
+
+/**
+ * Emits a [StreamFrame.ReasoningDelta] with the given [text] and [summary].
+ */
+public suspend fun FlowCollector<StreamFrame>.emitReasoningDelta(
+    text: String? = null,
+    summary: String? = null,
+    index: Int? = null
+): Unit =
+    emit(StreamFrame.ReasoningDelta(text, summary, index))
+
+/**
+ * Emits a [StreamFrame.ReasoningComplete] with the given [text].
+ */
+public suspend fun FlowCollector<StreamFrame>.emitReasoningComplete(
+    text: String,
+    summary: String? = null,
+    encrypted: String? = null,
+    index: Int? = null
+): Unit =
+    emitReasoningComplete(listOf(text), summary?.let { listOf(it) }, encrypted, index)
+
+/**
+ * Emits a [StreamFrame.ReasoningComplete] with the given [text].
+ */
+public suspend fun FlowCollector<StreamFrame>.emitReasoningComplete(
+    text: List<String>,
+    summary: List<String>? = null,
+    encrypted: String? = null,
+    index: Int? = null
+): Unit =
+    emit(StreamFrame.ReasoningComplete(text, summary, encrypted, index))
 
 /**
  * Emits a [StreamFrame.End] with the given [finishReason].
@@ -43,13 +86,30 @@ public suspend fun FlowCollector<StreamFrame>.emitEnd(
     emit(StreamFrame.End(finishReason, metaInfo ?: ResponseMetaInfo.Empty))
 
 /**
- * Emits a [StreamFrame.ToolCall] with the given [id], [name] and [content].
+ * Emits a [StreamFrame.ToolCallDelta] with the given [id], [name] and [content].
  */
-public suspend fun FlowCollector<StreamFrame>.emitToolCall(id: String?, name: String, content: String): Unit =
-    emit(StreamFrame.ToolCall(id, name, content))
+public suspend fun FlowCollector<StreamFrame>.emitToolCallDelta(
+    id: String?,
+    name: String?,
+    content: String?,
+    index: Int? = null
+): Unit =
+    emit(StreamFrame.ToolCallDelta(id, name, content, index))
+
+/**
+ * Emits a [StreamFrame.ToolCallComplete] with the given [id], [name] and [content].
+ */
+public suspend fun FlowCollector<StreamFrame>.emitToolCallComplete(
+    id: String?,
+    name: String,
+    content: String,
+    index: Int? = null
+): Unit =
+    emit(StreamFrame.ToolCallComplete(id, name, content, index))
 
 /**
  * Builds a [Flow] of [StreamFrame] objects.
+ * Should be used only in case model does not produce completion events.
  */
 public fun buildStreamFrameFlow(block: suspend StreamFrameFlowBuilder.() -> Unit): Flow<StreamFrame> =
     streamFrameFlow {
@@ -70,13 +130,37 @@ public class StreamFrameFlowBuilder(
 ) {
 
     private val pendingToolCallRef = AtomicReference<PendingToolCall?>(null)
+    private val pendingTextRef = AtomicReference<PendingText?>(null)
+    private val pendingReasoningRef = AtomicReference<PendingReasoning?>(null)
 
     /**
-     * Emits a [StreamFrame.Append] with the given [text].
+     * Emits a [StreamFrame.TextDelta] with the given [text].
      */
-    public suspend fun emitAppend(text: String) {
+    public suspend fun emitTextDelta(text: String, index: Int? = null) {
         tryEmitPendingToolCall()
-        flowCollector.emitAppend(text)
+        tryEmitPendingReasoning()
+        val previous: PendingText? = pendingTextRef.load()
+        if (previous == null) {
+            pendingTextRef.store(PendingText(textDelta = text, index = index))
+        } else {
+            pendingTextRef.store(previous.appendTextDelta(text, index))
+        }
+        flowCollector.emitTextDelta(text, index)
+    }
+
+    /**
+     * Emits a [StreamFrame.ReasoningDelta] with the given [text].
+     */
+    public suspend fun emitReasoningDelta(text: String? = null, summary: String? = null, index: Int? = null) {
+        tryEmitPendingToolCall()
+        tryEmitPendingText()
+        val previous: PendingReasoning? = pendingReasoningRef.load()
+        if (previous == null) {
+            pendingReasoningRef.store(PendingReasoning(textDelta = text, summaryDelta = summary, index = index))
+        } else {
+            pendingReasoningRef.store(previous.appendDelta(text, summary, index))
+        }
+        flowCollector.emitReasoningDelta(text, summary, index)
     }
 
     /**
@@ -84,21 +168,9 @@ public class StreamFrameFlowBuilder(
      */
     public suspend fun emitEnd(finishReason: String? = null, metaInfo: ResponseMetaInfo? = null) {
         tryEmitPendingToolCall()
+        tryEmitPendingText()
+        tryEmitPendingReasoning()
         flowCollector.emitEnd(finishReason, metaInfo)
-    }
-
-    /**
-     * Emits a [pendingToolCallRef] if it exists and then clears it.
-     */
-    public suspend fun tryEmitPendingToolCall() {
-        val pendingToolCall = pendingToolCallRef.exchange(null)
-        if (pendingToolCall != null) {
-            flowCollector.emitToolCall(
-                id = pendingToolCall.id,
-                name = pendingToolCall.name ?: "",
-                content = pendingToolCall.argumentsDelta ?: "{}"
-            )
-        }
     }
 
     /**
@@ -107,15 +179,17 @@ public class StreamFrameFlowBuilder(
      *
      * @throws StreamFrameFlowBuilderError if there is
      */
-    public suspend fun upsertToolCall(
-        index: Int,
+    public suspend fun emitToolCallDelta(
         id: String? = null,
         name: String? = null,
-        args: String? = null
+        args: String? = null,
+        index: Int? = null
     ) {
+        tryEmitPendingText()
+        tryEmitPendingReasoning()
         val new: PendingToolCall = if (id != null) {
             tryEmitPendingToolCall()
-            PendingToolCall(index, id, name, args)
+            PendingToolCall(id, name, args, index)
         } else {
             val previous: PendingToolCall? = pendingToolCallRef.load()
             when {
@@ -130,15 +204,83 @@ public class StreamFrameFlowBuilder(
             }
         }
         pendingToolCallRef.store(new)
+        flowCollector.emitToolCallDelta(id, name, args, index)
+    }
+
+    /**
+     * Emits a [pendingTextRef] if it exists and then clears it.
+     */
+    public suspend fun tryEmitPendingText() {
+        val pendingText = pendingTextRef.exchange(null)
+        if (pendingText != null) {
+            flowCollector.emitTextComplete(
+                text = pendingText.textDelta ?: "",
+                index = pendingText.index
+            )
+        }
+    }
+
+    /**
+     * Emits a [pendingReasoningRef] if it exists and then clears it.
+     */
+    public suspend fun tryEmitPendingReasoning() {
+        val pendingReasoning = pendingReasoningRef.exchange(null)
+        if (pendingReasoning != null) {
+            flowCollector.emitReasoningComplete(
+                text = pendingReasoning.textDelta ?: "",
+                summary = pendingReasoning.summaryDelta,
+                index = pendingReasoning.index
+            )
+        }
+    }
+
+    /**
+     * Emits a [pendingToolCallRef] if it exists and then clears it.
+     */
+    public suspend fun tryEmitPendingToolCall() {
+        val pendingToolCall = pendingToolCallRef.exchange(null)
+        if (pendingToolCall != null) {
+            flowCollector.emitToolCallComplete(
+                id = pendingToolCall.id,
+                name = pendingToolCall.name ?: "",
+                content = pendingToolCall.argumentsDelta ?: "{}",
+                index = pendingToolCall.index
+            )
+        }
     }
 
     private data class PendingToolCall(
-        val index: Int,
         val id: String,
         val name: String?,
-        val argumentsDelta: String?
+        val argumentsDelta: String?,
+        val index: Int?,
     ) {
-        fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall =
-            copy(argumentsDelta = (this.argumentsDelta ?: "") + argumentsDelta)
+        fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall {
+            require(this.index == index)
+            return copy(argumentsDelta = (this.argumentsDelta ?: "") + argumentsDelta)
+        }
+    }
+
+    private data class PendingText(
+        val textDelta: String?,
+        val index: Int?,
+    ) {
+        fun appendTextDelta(textDelta: String?, index: Int?): PendingText {
+            require(this.index == index)
+            return copy(textDelta = (this.textDelta ?: "") + textDelta)
+        }
+    }
+
+    private data class PendingReasoning(
+        val textDelta: String?,
+        val summaryDelta: String?,
+        val index: Int?
+    ) {
+        fun appendDelta(textDelta: String?, summaryDelta: String?, index: Int?): PendingReasoning {
+            require(this.index == index)
+            val textDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
+            val summaryDelta = if (summaryDelta == null) this.summaryDelta else (this.summaryDelta ?: "") + summaryDelta
+            return copy(textDelta = textDelta, summaryDelta = summaryDelta)
+        }
     }
 }

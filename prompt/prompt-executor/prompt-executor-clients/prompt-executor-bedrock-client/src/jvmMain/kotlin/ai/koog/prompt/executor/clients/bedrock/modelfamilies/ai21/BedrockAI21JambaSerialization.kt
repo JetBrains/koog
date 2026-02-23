@@ -177,9 +177,9 @@ internal object BedrockAI21JambaSerialization {
         return buildList {
             val choice = streamResponse.choices.firstOrNull()
             choice?.delta?.let { delta ->
-                delta.content?.let(StreamFrame::Append)?.let(::add)
+                delta.content?.let(StreamFrame::TextDelta)?.let(::add)
                 delta.toolCalls?.map { jambaToolCall ->
-                    StreamFrame.ToolCall(
+                    StreamFrame.ToolCallDelta(
                         id = jambaToolCall.id,
                         name = jambaToolCall.function.name,
                         content = jambaToolCall.function.arguments

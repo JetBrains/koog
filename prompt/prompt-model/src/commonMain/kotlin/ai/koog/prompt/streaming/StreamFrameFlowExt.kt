@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 
 /**
- * Returns a transformed flow of [StreamFrame.Append] objects that contains only the textual content.
+ * Returns a transformed flow of [StreamFrame.TextDelta] objects that contains only the textual content.
  */
 public fun Flow<StreamFrame>.filterTextOnly(): Flow<String> =
-    filterIsInstance<StreamFrame.Append>()
+    filterIsInstance<StreamFrame.TextDelta>()
         .map { frame -> frame.text }
 
 /**
