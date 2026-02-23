@@ -15,6 +15,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmOverloads
 
 /**
@@ -69,7 +71,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         fallback: FallbackPromptExecutorSettings? = null
     ) : this(llmClients.groupBy { it.llmProvider() }, fallback)
 
-    public companion object {
+    private companion object {
         /**
          * Logger instance used for logging messages within the RoutingLLMPromptExecutor class.
          *
@@ -84,20 +86,21 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
-     * Fallback LLM client for interacting with a fallback LLM provider.
+     * Resolved fallback client and model, derived from [fallback] at construction time.
      *
-     * Retrieves client specified in `fallback` settings from `clientRouter` if available.
-     * If multiple clients are found for the fallback provider, the first one is used as the fallback client.
-     * This client is intended to handle cases where no specific client is matched during prompt execution.
+     * If [fallback] is provided, the corresponding client is looked up in [clientRouter] eagerly.
+     * If no client is found for the fallback provider, construction fails with an error.
+     * If multiple clients are registered for the fallback provider, the first one is used.
      *
-     * Returns `null` if `fallback` is not specified or corresponding client is not found in `clientRouter`.
+     * `null` when no fallback is configured.
      */
-    private val fallbackClient: LLMClient? = when {
+    private val effectiveFallback: ExecutionSubject? = when {
         fallback != null -> {
             val fallbackProvider = fallback.fallbackModel.provider
-            clientRouter.clients
+            val fallbackClient = clientRouter.clients
                 .firstOrNull { it.llmProvider() == fallbackProvider }
                 ?: error("Client for provider $fallbackProvider not found in router")
+            fallbackClient to fallback.fallbackModel
         }
 
         else -> null
@@ -136,10 +139,10 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-
-        val (client, effectiveModel) = chooseClientAndModel(model)
-
-        return client.executeStreaming(prompt, effectiveModel, tools)
+        return flow {
+            val (client, effectiveModel) = chooseClientAndModel(model)
+            emitAll(client.executeStreaming(prompt, effectiveModel, tools))
+        }
     }
 
     /**
@@ -194,14 +197,14 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         clientRouter.clients.forEach { it.close() }
     }
 
-    private fun chooseClientAndModel(requestedModel: LLModel): EffectiveExecutionSubject {
+    private fun chooseClientAndModel(requestedModel: LLModel): ExecutionSubject {
         val lbClient = clientRouter.clientFor(requestedModel)
         return when {
             lbClient != null -> lbClient to requestedModel
-            fallback != null -> fallbackClient!! to fallback.fallbackModel
+            effectiveFallback != null -> effectiveFallback
             else -> throw IllegalArgumentException("No client found for provider: ${requestedModel.provider}")
         }
     }
 }
 
-private typealias EffectiveExecutionSubject = Pair<LLMClient, LLModel>
+private typealias ExecutionSubject = Pair<LLMClient, LLModel>

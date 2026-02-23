@@ -58,11 +58,11 @@ public class RoundRobinRouter(clientsPerProvider: Map<LLMProvider, List<LLMClien
     private sealed class ClientPool {
         abstract fun next(): LLMClient
 
-        data class Single(val client: LLMClient) : ClientPool() {
+        class Single(val client: LLMClient) : ClientPool() {
             override fun next(): LLMClient = client
         }
 
-        data class Multiple(val clients: List<LLMClient>) : ClientPool() {
+        class Multiple(val clients: List<LLMClient>) : ClientPool() {
             private val counter = AtomicInt(0)
 
             override fun next(): LLMClient {

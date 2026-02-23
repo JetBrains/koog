@@ -249,10 +249,11 @@ class RoutingLLMPromptExecutorTest {
         val client = MockLLMClient.failingClientMock(LLMProvider.OpenAI)
         val executor = RoutingLLMPromptExecutor(SimpleTestRouter(client))
 
-        // When, Then
-        val exception = assertFailsWith<IllegalStateException> {
-            executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o).collect()
-        }
+        // When
+        val resultFlow = executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
+
+        // Then
+        val exception = assertFailsWith<IllegalStateException> { resultFlow.collect() }
         assertEquals(client.executeStreamingFailure, exception)
     }
 
