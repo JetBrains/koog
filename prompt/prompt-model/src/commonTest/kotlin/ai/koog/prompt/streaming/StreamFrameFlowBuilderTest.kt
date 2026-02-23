@@ -143,16 +143,6 @@ class StreamFrameFlowBuilderTest {
     }
 
     @Test
-    fun testEmitToolCallDeltaWithMismatchedIndexThrowsError() = runTest {
-        assertFailsWith<StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex> {
-            buildStreamFrameFlow {
-                emitToolCallDelta(id = "call_1", name = "tool", args = "{", index = 0)
-                emitToolCallDelta(args = "}", index = 1)
-            }.collect()
-        }
-    }
-
-    @Test
     fun testSwitchingFromToolCallToTextEmitsPendingToolCall() = runTest {
         val frames = buildStreamFrameFlow {
             emitToolCallDelta(id = "call_1", name = "calculator", args = "{\"a\": 5}", 0)

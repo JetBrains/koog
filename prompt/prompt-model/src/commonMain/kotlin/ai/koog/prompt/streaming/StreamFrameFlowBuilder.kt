@@ -187,11 +187,11 @@ public class StreamFrameFlowBuilder(
     ) {
         tryEmitPendingText()
         tryEmitPendingReasoning()
-        val new: PendingToolCall = if (id != null) {
+        val previous: PendingToolCall? = pendingToolCallRef.load()
+        val new: PendingToolCall = if (id != null || index != previous?.index) {
             tryEmitPendingToolCall()
             PendingToolCall(id, name, args, index)
         } else {
-            val previous: PendingToolCall? = pendingToolCallRef.load()
             when {
                 previous == null ->
                     throw StreamFrameFlowBuilderError.NoPartialToolCallToComplete()
@@ -250,7 +250,7 @@ public class StreamFrameFlowBuilder(
     }
 
     private data class PendingToolCall(
-        val id: String,
+        val id: String?,
         val name: String?,
         val argumentsDelta: String?,
         val index: Int?,
