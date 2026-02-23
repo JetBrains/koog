@@ -165,14 +165,14 @@ public open class MistralAILLMClient(
 
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
-                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.content?.let { emitTextDelta(it) }
 
                 choice.delta.toolCalls?.forEach { toolCall ->
-                    val index = toolCall.index
                     val id = toolCall.id
                     val name = toolCall.function?.name
                     val arguments = toolCall.function?.arguments
-                    upsertToolCall(index, id, name, arguments)
+                    val index = toolCall.index
+                    emitToolCallDelta(id, name, arguments, index)
                 }
 
                 choice.finishReason?.let { finishReason = it }

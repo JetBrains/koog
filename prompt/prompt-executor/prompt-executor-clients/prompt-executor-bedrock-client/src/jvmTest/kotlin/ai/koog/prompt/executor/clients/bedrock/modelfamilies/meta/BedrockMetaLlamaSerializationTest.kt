@@ -154,7 +154,7 @@ class BedrockMetaLlamaSerializationTest {
         """.trimIndent()
 
         val content = BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJson)
-        assertEquals(listOf("Hello, ").map(StreamFrame::Append), content)
+        assertEquals(listOf("Hello, ").map(StreamFrame::TextDelta), content)
     }
 
     @Test
@@ -166,7 +166,7 @@ class BedrockMetaLlamaSerializationTest {
         """.trimIndent()
 
         val content = BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJson)
-        assertEquals(listOf("").map(StreamFrame::Append), content)
+        assertEquals(listOf("").map(StreamFrame::TextDelta), content)
     }
 
     @Test

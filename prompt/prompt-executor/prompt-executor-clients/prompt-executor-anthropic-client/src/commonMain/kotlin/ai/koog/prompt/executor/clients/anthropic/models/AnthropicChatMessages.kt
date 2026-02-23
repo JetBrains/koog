@@ -550,6 +550,7 @@ public enum class AnthropicStreamEventType(public val value: String) {
 public enum class AnthropicStreamDeltaContentType(public val value: String) {
     TEXT_DELTA("text_delta"),
     INPUT_JSON_DELTA("input_json_delta"),
+    THINKING_DELTA("thinking_delta"),
 }
 
 /**

@@ -24,6 +24,7 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition
 import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
+import ai.koog.prompt.executor.ollama.client.dto.generateToolCallId
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
@@ -34,9 +35,9 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
-import ai.koog.prompt.streaming.emitToolCall
-import ai.koog.prompt.streaming.streamFrameFlow
+import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.prompt.streaming.emitTextDelta
+import ai.koog.prompt.streaming.emitToolCallDelta
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -272,7 +273,7 @@ public class OllamaClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = streamFrameFlow {
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         val request = ollamaJson.encodeToString(
@@ -299,13 +300,17 @@ public class OllamaClient(
             try {
                 val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                 chunk.message?.let { message ->
-                    emitAppend(message.content)
-                    message.toolCalls?.forEach { toolCall ->
-                        emitToolCall(
-                            id = null,
+                    emitTextDelta(message.content)
+                    message.toolCalls?.forEachIndexed { index, toolCall ->
+                        val name = toolCall.function.name
+                        val args = toolCall.function.arguments.toString()
+                        emitToolCallDelta(
+                            id = generateToolCallId(name, args, index),
                             name = toolCall.function.name,
-                            content = toolCall.function.arguments.toString()
+                            args = args,
+                            index = index
                         )
+                        tryEmitPendingToolCall()
                     }
                 }
             } catch (_: Exception) {

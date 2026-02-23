@@ -9,7 +9,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toStreamFrame
+import ai.koog.prompt.streaming.toStreamFrames
 import ai.koog.prompt.tokenizer.Tokenizer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -98,9 +98,7 @@ internal class MockLLMExecutor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = flow {
-        execute(prompt = prompt, model = model).forEach {
-            emit(it.toStreamFrame())
-        }
+        execute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
     }
 
     /**

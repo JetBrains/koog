@@ -36,7 +36,7 @@ suspend fun main() {
                     println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
                 }
                 onLLMStreamingFrameReceived { context ->
-                    (context.streamFrame as? StreamFrame.Append)?.let { frame ->
+                    (context.streamFrame as? StreamFrame.TextDelta)?.let { frame ->
                         print(frame.text)
                     }
                 }

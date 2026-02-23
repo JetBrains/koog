@@ -9,10 +9,19 @@ Koog’s **Streaming API** lets you consume **LLM output incrementally** as a `F
 - detect **tool calls** live and act on them,
 - know when a stream **ends** and why.
 
-The stream carries **typed frames**:
+The stream carries **typed frames** organized into two categories:
 
-- `StreamFrame.Append(text: String)` — incremental assistant text
-- `StreamFrame.ToolCall(id: String?, name: String, content: String)` — tool invocation (combined safely)
+**Delta frames** (incremental/partial content):
+- `StreamFrame.TextDelta(text: String, index: Int?)` — incremental assistant text
+- `StreamFrame.ReasoningDelta(text: String?, summary: String?, index: Int?)` — incremental reasoning text and summary
+- `StreamFrame.ToolCallDelta(id: String?, name: String?, content: String?, index: Int?)` — partial tool invocation
+
+**Complete frames** (full content):
+- `StreamFrame.TextComplete(text: String)` — complete assistant text
+- `StreamFrame.ReasoningComplete(text: List<String>, summary: List<String>?)` — complete reasoning with optional summary
+- `StreamFrame.ToolCallComplete(id: String?, name: String, content: String)` — complete tool invocation
+
+**End marker**:
 - `StreamFrame.End(finishReason: String?)` — end-of-stream marker
 
 Helpers are provided to extract plain text, convert frames to `Message.Response` objects, and safely **combine chunked tool calls**.
@@ -27,8 +36,19 @@ With streaming you can:
 - Parse structured info on the fly (Markdown/JSON/etc.)
 - Emit objects as they complete
 - Trigger tools in real time
+- Access model reasoning in real-time (for supported models)
 
 You can operate either on the **frames** themselves or on **plain text** derived from frames.
+
+### Delta vs Complete Frames
+
+The streaming API distinguishes between two types of frames:
+
+- **Delta frames** (`DeltaFrame`) — Incremental/partial content that arrives in chunks. These are ideal for real-time display as content streams in. Examples: `TextDelta`, `ReasoningDelta`, `ToolCallDelta`.
+
+- **Complete frames** (`CompleteFrame`) — Full content emitted after all deltas for that content type have been received. These are useful for final processing and conversion to `Message.Response` objects. Examples: `TextComplete`, `ReasoningComplete`, `ToolCallComplete`.
+
+Typically, you'll work with delta frames for UI updates and complete frames for extracting final structured data.
 
 ---
 ## Usage
@@ -56,13 +76,15 @@ llm.writeSession {
 
     stream.collect { frame ->
         when (frame) {
-            is StreamFrame.Append -> print(frame.text)
-            is StreamFrame.ToolCall -> {
+            is StreamFrame.TextDelta -> print(frame.text)
+            is StreamFrame.ReasoningDelta -> print("[Reasoning] text=${frame.text} summary=${frame.summary}")
+            is StreamFrame.ToolCallComplete -> {
                 println("\n🔧 Tool call: ${frame.name} args=${frame.content}")
                 // Optionally parse lazily:
                 // val json = frame.contentJson
             }
             is StreamFrame.End -> println("\n[END] reason=${frame.finishReason}")
+            else -> {} // Handle other frame types (TextComplete, ToolCallDelta, etc.)
         }
     }
 }
@@ -103,9 +125,58 @@ llm.writeSession {
 ```
 <!--- KNIT example-streaming-api-02.kt -->
 
+### Working with reasoning frames
+
+Models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1) emit reasoning frames during streaming. You can access both the reasoning process and its summary:
+
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.prompt.streaming.StreamFrame
+
+val strategy = strategy<String, String>("strategy_name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
+```kotlin
+llm.writeSession {
+    appendPrompt { user("Solve this complex problem: ...") }
+
+    val stream = requestLLMStreaming()
+    val reasoningSteps = mutableListOf<String>()
+    val summarySteps = mutableListOf<String>()
+
+    stream.collect { frame ->
+        when (frame) {
+            is StreamFrame.ReasoningDelta -> {
+                frame.text?.let { 
+                    reasoningSteps.add(it)
+                    print(frame.text) // Display reasoning as it arrives
+                }
+                frame.summary?.let {
+                    summarySteps.add(it)
+                    print(frame.summary) // Display reasoning summary as it arrives
+                }
+            }
+            is StreamFrame.ReasoningComplete -> {
+                // Access complete reasoning
+                println("\nComplete reasoning: ${frame.text.joinToString("")}")
+                println("Summary: ${frame.summary?.joinToString("") ?: "N/A"}")
+            }
+            is StreamFrame.TextDelta -> print(frame.text)
+            is StreamFrame.End -> println("\n[END]")
+            else -> {}
+        }
+    }
+}
+```
+<!--- KNIT example-streaming-api-reasoning-01.kt -->
+
 ### Working with a raw text stream (derived)
 
-If you have existing streaming parsers that expect `Flow<String>`, 
+If you have existing streaming parsers that expect `Flow<String>`,
 derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
 
 <!--- INCLUDE
@@ -156,11 +227,13 @@ handleEvents {
         println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
     }
     onLLMStreamingFrameReceived { context ->
-        (context.streamFrame as? StreamFrame.Append)?.let { frame ->
-            print(frame.text)
+        when (val frame = context.streamFrame) {
+            is StreamFrame.TextDelta -> print(frame.text)
+            is StreamFrame.ReasoningDelta -> print("[Reasoning] text=${frame.text} summary=${frame.summary}")
+            else -> {} // Handle other frame types if needed
         }
     }
-    onLLMStreamingFailed { context -> 
+    onLLMStreamingFailed { context ->
         println("❌ Error: ${context.error}")
     }
     onLLMStreamingCompleted {
@@ -173,9 +246,10 @@ handleEvents {
 ### Converting frames to `Message.Response`
 
 You can transform a collected list of frames to standard message objects:
-- `toAssistantMessageOrNull()`
-- `toToolCallMessages()`
-- `toMessageResponses()`
+- `toAssistantMessageOrNull()` — extracts `Message.Assistant` from text frames
+- `toReasoningMessageOrNull()` — extracts `Message.Reasoning` from reasoning frames
+- `toToolCallMessages()` — extracts `Message.Tool.Call` from tool call frames
+- `toMessageResponses()` — converts all complete frames to their corresponding `Message.Response` objects
 
 ---
 

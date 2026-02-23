@@ -173,7 +173,7 @@ internal fun OllamaChatMessageDTO.getToolCalls(responseMetadata: ResponseMetaInf
  * @param index Optional index for multiple tool calls in the same message
  * @return A unique identifier for this specific tool call
  */
-private fun generateToolCallId(toolName: String, content: String, index: Int = 0): String {
+internal fun generateToolCallId(toolName: String, content: String, index: Int = 0): String {
     // Create a deterministic ID using tool name, content hash, and index
     val combined = "$toolName:$content:$index"
     val hashCode = combined.hashCode()

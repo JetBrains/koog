@@ -78,7 +78,6 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
@@ -225,43 +224,44 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            with(StringBuilder()) {
-                val endMessages = mutableListOf<StreamFrame.End>()
-                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+            val endMessages = mutableListOf<StreamFrame.End>()
+            val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
+            val textFrames = mutableListOf<StreamFrame.TextDelta>()
+            val reasoningFrames = mutableListOf<StreamFrame.ReasoningDelta>()
 
-                executor.executeStreamAndCollect(
-                    prompt = prompt,
-                    model = model,
-                    appendable = this,
-                    endMessages = endMessages,
-                    toolMessages = toolMessages
-                )
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                tools = listOf(SimpleCalculatorTool.descriptor),
+                textFrames = textFrames,
+                reasoningFrames = reasoningFrames,
+                endFrame = endMessages,
+                toolFrames = toolMessages
+            )
 
-                length shouldNotBe (0)
-                toolMessages.shouldBeEmpty()
-                when (model.provider) {
-                    is LLMProvider.Ollama -> endMessages.size shouldBe 0
+            toolMessages.shouldBeEmpty()
+            when (model.provider) {
+                is LLMProvider.Ollama -> endMessages.size shouldBe 0
 
-                    else -> {
-                        endMessages.size shouldBe 1
-                        endMessages.first() should { end ->
-                            end.metaInfo should { meta ->
-                                withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
-                                    listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
-                                        .shouldForAny { it != null }
-                                }
+                else -> {
+                    endMessages.size shouldBe 1
+                    endMessages.first() should { end ->
+                        end.metaInfo should { meta ->
+                            withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
+                                listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
+                                    .shouldForAny { it != null }
                             }
                         }
                     }
                 }
+            }
 
-                toString() shouldNotBeNull {
-                    shouldContain("1")
-                    shouldContain("2")
-                    shouldContain("3")
-                    shouldContain("4")
-                    shouldContain("5")
-                }
+            textFrames.joinToString { it.text } shouldNotBeNull {
+                shouldContain("1")
+                shouldContain("2")
+                shouldContain("3")
+                shouldContain("4")
+                shouldContain("5")
             }
         }
     }
@@ -1153,26 +1153,27 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
-            with(StringBuilder()) {
-                val endMessages = mutableListOf<StreamFrame.End>()
-                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+            val endMessages = mutableListOf<StreamFrame.End>()
+            val toolMessages = mutableListOf<StreamFrame.ToolCallDelta>()
+            val textFrames = mutableListOf<StreamFrame.TextDelta>()
+            val reasoningFrames = mutableListOf<StreamFrame.ReasoningDelta>()
 
-                executor.executeStreamAndCollect(
-                    prompt = prompt,
-                    model = model,
-                    tools = listOf(SimpleCalculatorTool.descriptor),
-                    appendable = this,
-                    endMessages = endMessages,
-                    toolMessages = toolMessages
-                )
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                tools = listOf(SimpleCalculatorTool.descriptor),
+                textFrames = textFrames,
+                reasoningFrames = reasoningFrames,
+                endFrame = endMessages,
+                toolFrames = toolMessages
+            )
 
-                toolMessages.shouldNotBeEmpty()
-                withClue("Expected calculator tool call but got: [$toolMessages]") {
-                    toolMessages.any {
-                        it.name == SimpleCalculatorTool.name &&
-                            it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
-                    } shouldBe true
-                }
+            toolMessages.shouldNotBeEmpty()
+            withClue("Expected calculator tool call but got: [$toolMessages]") {
+                toolMessages.any {
+                    it.name == SimpleCalculatorTool.name &&
+                        it.content!!.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
+                } shouldBe true
             }
         }
     }
@@ -1182,15 +1183,26 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
     prompt: Prompt,
     model: LLModel,
     tools: List<ToolDescriptor> = emptyList(),
-    appendable: Appendable,
-    endMessages: MutableList<StreamFrame.End>,
-    toolMessages: MutableList<StreamFrame.ToolCall>
+    textFrames: MutableList<StreamFrame.TextDelta>,
+    endFrame: MutableList<StreamFrame.End>,
+    toolFrames: MutableList<StreamFrame.ToolCallDelta>,
+    reasoningFrames: MutableList<StreamFrame.ReasoningDelta>,
 ) {
     this.executeStreaming(prompt, model, tools).collect { frame ->
         when (frame) {
-            is StreamFrame.Append -> appendable.append(frame.text)
-            is StreamFrame.End -> endMessages.add(frame)
-            is StreamFrame.ToolCall -> toolMessages.add(frame)
+            is StreamFrame.DeltaFrame -> {
+                when (val delta: StreamFrame.DeltaFrame = frame) {
+                    is StreamFrame.TextDelta -> textFrames.add(delta)
+                    is StreamFrame.ToolCallDelta -> toolFrames.add(delta)
+                    is StreamFrame.ReasoningDelta -> reasoningFrames.add(delta)
+                }
+            }
+
+            is StreamFrame.End -> {
+                endFrame.add(frame)
+            }
+
+            is StreamFrame.CompleteFrame -> {}
         }
     }
 }

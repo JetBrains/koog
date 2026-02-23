@@ -8,7 +8,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toStreamFrame
+import ai.koog.prompt.streaming.toStreamFrames
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -60,9 +60,7 @@ object CalculatorChatExecutor : PromptExecutor {
     ): Flow<StreamFrame> =
         flow {
             try {
-                execute(prompt, model, tools).forEach {
-                    emit(it.toStreamFrame())
-                }
+                execute(prompt, model, tools).toStreamFrames().forEach { emit(it) }
             } catch (t: CancellationException) {
                 throw t
             } catch (t: Throwable) {

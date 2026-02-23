@@ -12,7 +12,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitTextDelta
 import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.streaming.streamFrameFlowOf
 import kotlinx.coroutines.CancellationException
@@ -278,7 +278,7 @@ class RetryingLLMClientTest {
 
         val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
 
-        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::Append), result)
+        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::TextDelta), result)
         assertEquals(1, mockClient.streamCalls)
     }
 
@@ -300,7 +300,7 @@ class RetryingLLMClientTest {
 
         val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
 
-        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::Append), result)
+        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::TextDelta), result)
         assertEquals(2, mockClient.streamCalls)
     }
 
@@ -309,7 +309,7 @@ class RetryingLLMClientTest {
         // Mock that emits one token then fails
         val mockClient = MockLLMClient(
             streamResponse = streamFrameFlow {
-                emitAppend("first-token")
+                emitTextDelta("first-token")
                 throw RuntimeException("Connection lost after first token")
             }
         )

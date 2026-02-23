@@ -48,7 +48,7 @@ class MultiLLMPromptExecutorTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Flow<StreamFrame> =
-            flowOf("Anthropic", " streaming", " response").map(StreamFrame::Append)
+            flowOf("Anthropic", " streaming", " response").map(StreamFrame::TextDelta)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
@@ -76,7 +76,7 @@ class MultiLLMPromptExecutorTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Flow<StreamFrame> =
-            flowOf("Gemini", " streaming", " response").map(StreamFrame::Append)
+            flowOf("Gemini", " streaming", " response").map(StreamFrame::TextDelta)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
