@@ -19,15 +19,14 @@ import java.util.stream.Collectors;
 
 @Service
 record AIService(
-    @NonNull JavaPromptExecutor executor,
-    kotlinx.datetime.Clock clock
+    @NonNull JavaPromptExecutor executor
 ) {
 
     private static final Logger log = LoggerFactory.getLogger(AIService.class);
 
     Mono<String> generateResponse(String input) {
 
-        RequestMetaInfo metaInfo = RequestMetaInfo.Companion.create(clock);
+        RequestMetaInfo metaInfo = RequestMetaInfo.now();
         final var systemPrompt = new Message.System("You are a helpful pirate", metaInfo);
         final var userPrompt = new Message.User(input, metaInfo);
         final var params = new LLMParams();
