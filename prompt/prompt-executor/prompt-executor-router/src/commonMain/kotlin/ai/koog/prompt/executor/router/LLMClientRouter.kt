@@ -9,6 +9,7 @@ import ai.koog.prompt.llm.LLModel
  * Responsible for selecting which client should handle a request for a given model,
  * based on factors like load distribution, availability, or health.
  */
+@OptIn(ExperimentalRoutingApi::class)
 public interface LLMClientRouter {
 
     /**

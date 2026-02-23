@@ -60,6 +60,10 @@ val multiExecutor = MultiLLMPromptExecutor(
 
 ## Creating a routing executor
 
+!!! warning "Experimental API"
+    Routing capabilities are experimental and may change in future releases.
+    To use them, opt in with `@OptIn(ExperimentalRoutingApi::class)`.
+
 To create a prompt executor that distributes requests across multiple LLM client instances using routing strategies, do the following:
 
 1. Configure multiple client instances (they can be for the same or different LLM providers) with the corresponding API keys.
@@ -89,6 +93,7 @@ val routingExecutor = RoutingLLMPromptExecutor(router)
 <!--- KNIT example-prompt-executors-03.kt -->
 
 When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
+Requests to Anthropic models always go to the single `anthropic` client, as round-robin maintains an independent counter per provider.
 
 You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-router::ai.koog.prompt.executor.router.LLMClientRouter) interface.
 

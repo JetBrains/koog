@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.router.ExperimentalRoutingApi
 import ai.koog.prompt.executor.router.LLMClientRouter
 import ai.koog.prompt.executor.router.RoundRobinRouter
 import ai.koog.prompt.llm.LLMProvider
@@ -26,6 +27,7 @@ import kotlin.jvm.JvmOverloads
  * @param clientRouter Router responsible for selecting appropriate clients for each request
  * @param fallback Optional fallback configuration when no client is available for the requested model
  */
+@OptIn(ExperimentalRoutingApi::class)
 public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     private val clientRouter: LLMClientRouter,
     private val fallback: FallbackPromptExecutorSettings? = null,

@@ -15,7 +15,7 @@ import kotlin.concurrent.atomics.fetchAndIncrement
  *
  * @param clientsPerProvider Map of providers to their available clients
  */
-@OptIn(ExperimentalAtomicApi::class)
+@OptIn(ExperimentalAtomicApi::class, ExperimentalRoutingApi::class)
 public class RoundRobinRouter(clientsPerProvider: Map<LLMProvider, List<LLMClient>>) : LLMClientRouter {
 
     init {
