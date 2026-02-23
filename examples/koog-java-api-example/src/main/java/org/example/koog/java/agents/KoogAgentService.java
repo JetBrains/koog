@@ -134,7 +134,7 @@ public class KoogAgentService {
                                     .subtask("You must resolve the following issues: " + verification.getFeedback())
                                     .withInput(orderRequest)
                                     .withOutput(OrderUpdateSummary.class)
-                                    .useLLM(AnthropicModels.Opus_4_6)
+                                    .useLLM(AnthropicModels.Haiku_4_5)
                                     .withTools(userTools.asTools())
                                     .run();
                         }

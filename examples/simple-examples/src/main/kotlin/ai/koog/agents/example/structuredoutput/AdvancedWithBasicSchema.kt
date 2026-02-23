@@ -215,7 +215,7 @@ suspend fun main() {
 
                     // Helper parser to attempt a fix if a malformed output is produced.
                     fixingParser = StructureFixingParser(
-                        model = AnthropicModels.Haiku_3_5,
+                        model = AnthropicModels.Haiku_4_5,
                         retries = 2,
                     ),
                 )

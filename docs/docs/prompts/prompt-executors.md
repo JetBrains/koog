@@ -188,7 +188,7 @@ val p = prompt("demo") { user("Summarize this.") }
 val openAIResult = executor.execute(p, OpenAIModels.Chat.GPT4o)
 
 // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
-val anthropicResult = executor.execute(p, AnthropicModels.Sonnet_3_5)
+val anthropicResult = executor.execute(p, AnthropicModels.Opus_4_6)
 ```
 <!--- KNIT example-prompt-executors-05.kt -->
 

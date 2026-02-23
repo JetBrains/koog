@@ -422,7 +422,7 @@ class MyCustomCompressionStrategy : HistoryCompressionStrategy() {
         }.filterIsInstance<Message.Response>()
         
         // Note: you can also make LLM requests using the `llmSession` and ask the LLM to do some job for you using, for example, `llmSession.requestLLMWithoutTools()`
-        // Or you can change the current model: `llmSession.model = AnthropicModels.Sonnet_3_7` and ask some other LLM model -- but don't forget to change it back after
+        // Or you can change the current model: `llmSession.model = AnthropicModels.Opus_4_6` and ask some other LLM model -- but don't forget to change it back after
 
         // Compose the prompt with the filtered messages
         val compressedMessages = composeMessageHistory(

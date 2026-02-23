@@ -214,7 +214,7 @@ suspend fun main() {
         },
         model = GoogleModels.Gemini2_5Flash,
         // model = OpenAIModels.Chat.GPT4o,
-        // model = AnthropicModels.Sonnet_3_7,
+        // model = AnthropicModels.Opus_4_6,
         maxAgentIterations = 5
     )
 

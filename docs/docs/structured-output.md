@@ -581,7 +581,7 @@ val structuredResponse = promptExecutor.executeStructured(
         ),
         default = StructuredRequest.Manual(genericStructure),
         fixingParser = StructureFixingParser(
-            model = AnthropicModels.Haiku_3_5,
+            model = AnthropicModels.Haiku_4_5,
             retries = 2
         )
     )
