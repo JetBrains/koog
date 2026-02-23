@@ -8,6 +8,8 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -88,14 +90,14 @@ class MultipleLLMPromptExecutorMockTest {
             flowOf("Gemini", " streaming", " response").map(StreamFrame::TextDelta)
     }
 
-    private lateinit var executor: DefaultMultiLLMPromptExecutor
+    private lateinit var executor: MultiLLMPromptExecutor
 
     @BeforeTest
     fun initializeExecutor() {
-        executor = DefaultMultiLLMPromptExecutor(
-            openAIClient = MockOpenAILLMClient(),
-            anthropicClient = MockAnthropicLLMClient(),
-            googleClient = MockGoogleLLMClient()
+        executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.Anthropic to MockAnthropicLLMClient(),
+            LLMProvider.Google to MockGoogleLLMClient(),
         )
     }
 
@@ -122,7 +124,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = AnthropicModels.Sonnet_3_7).single()
+        val response = executor.execute(prompt = prompt, model = AnthropicModels.Opus_4_6).single()
 
         assertEquals(
             "Anthropic response",
@@ -173,7 +175,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, AnthropicModels.Sonnet_3_7)
+        val responseChunks = executor.executeStreaming(prompt, AnthropicModels.Opus_4_6)
             .filterTextOnly()
             .toList()
 

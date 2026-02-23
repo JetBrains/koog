@@ -28,7 +28,7 @@ class AnthropicModelsTest {
     fun `AnthropicMessageRequest should use custom maxTokens when provided`() {
         val customMaxTokens = 4000
         val request = AnthropicMessageRequest(
-            model = AnthropicModels.Opus_3.id,
+            model = AnthropicModels.Opus_4_6.id,
             messages = emptyList(),
             maxTokens = customMaxTokens
         )
@@ -39,7 +39,7 @@ class AnthropicModelsTest {
     @Test
     fun `AnthropicMessageRequest should use default maxTokens when not provided`() {
         val request = AnthropicMessageRequest(
-            model = AnthropicModels.Opus_3.id,
+            model = AnthropicModels.Opus_4_6.id,
             messages = emptyList()
         )
 
@@ -50,7 +50,7 @@ class AnthropicModelsTest {
     fun `AnthropicMessageRequest should reject zero maxTokens`() {
         val exception = assertFailsWith<IllegalArgumentException> {
             AnthropicMessageRequest(
-                model = AnthropicModels.Opus_3.id,
+                model = AnthropicModels.Opus_4_6.id,
                 messages = emptyList(),
                 maxTokens = 0
             )

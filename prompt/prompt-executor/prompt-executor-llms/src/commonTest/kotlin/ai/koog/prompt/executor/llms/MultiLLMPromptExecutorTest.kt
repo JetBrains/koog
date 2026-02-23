@@ -112,7 +112,7 @@ class MultiLLMPromptExecutorTest {
             LLMProvider.Google to MockGoogleLLMClient()
         )
 
-        val model = AnthropicModels.Sonnet_3_5
+        val model = AnthropicModels.Opus_4_6
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -175,7 +175,7 @@ class MultiLLMPromptExecutorTest {
             MockGoogleLLMClient()
         )
 
-        val model = AnthropicModels.Sonnet_3_7
+        val model = AnthropicModels.Opus_4_6
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -221,7 +221,7 @@ class MultiLLMPromptExecutorTest {
     fun testExecuteWithUnsupportedProvider() = runTest {
         val executor = MultiLLMPromptExecutor()
 
-        val model = AnthropicModels.Sonnet_3_7
+        val model = AnthropicModels.Opus_4_6
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -235,7 +235,7 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithUnsupportedProvider() = runTest {
         val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock))
-        val model = AnthropicModels.Sonnet_3_7
+        val model = AnthropicModels.Opus_4_6
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")

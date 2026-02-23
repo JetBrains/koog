@@ -243,7 +243,7 @@ suspend fun main() {
             "participant3",
             "Taylor",
             "A 19-year-old college student who responds to emotional appeals",
-            AnthropicModels.Sonnet_4_5,
+            AnthropicModels.Opus_4_6,
             LLMParams(temperature = 1.0)
         )
 
@@ -268,7 +268,7 @@ suspend fun main() {
             "creative3",
             "Riley",
             "A behavioral psychologist who understands persuasive messaging techniques",
-            AnthropicModels.Sonnet_4_5,
+            AnthropicModels.Opus_4_6,
             LLMParams(temperature = 0.8)
         )
 

@@ -72,7 +72,7 @@ class JambaDataModelsTest {
     fun `JambaRequest serialization with maxTokens less than 1`() {
         val exception = assertFailsWith<IllegalArgumentException> {
             AnthropicMessageRequest(
-                model = AnthropicModels.Opus_3.id,
+                model = AnthropicModels.Opus_4_6.id,
                 messages = emptyList(),
                 maxTokens = 0
             )

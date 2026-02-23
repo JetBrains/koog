@@ -376,7 +376,7 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `test_complex_subtasks_multistep_no_parallel_tools`() = runTest {
+    fun test_complex_subtasks_multistep_no_parallel_tools() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val testToolRegistry = ToolRegistry {
@@ -548,7 +548,7 @@ class FunctionalAIAgentTest {
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         input = architecture,
         tools = BuildEngineTools.tools,
-        llmModel = AnthropicModels.Sonnet_4_5,
+        llmModel = AnthropicModels.Opus_4_6,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
     )
 
@@ -565,7 +565,7 @@ class FunctionalAIAgentTest {
     )
 
     @Test
-    fun `subtask_default_sequential_finish_only`() = runTest {
+    fun subtask_default_sequential_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
@@ -604,7 +604,7 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `subtask_sequential_with_normal_tool_then_finish`() = runTest {
+    fun subtask_sequential_with_normal_tool_then_finish() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val testToolRegistry = ToolRegistry { tool(DummyTool) }
@@ -654,7 +654,7 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `subtask_parallel_finish_only`() = runTest {
+    fun subtask_parallel_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
@@ -690,7 +690,7 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `subtask_single_run_sequential_finish_only`() = runTest {
+    fun subtask_single_run_sequential_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
@@ -727,7 +727,7 @@ class FunctionalAIAgentTest {
 
     @OptIn(InternalAgentsApi::class)
     @Test
-    fun `subtask_withVerification_success`() = runTest {
+    fun subtask_withVerification_success() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {

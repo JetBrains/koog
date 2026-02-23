@@ -176,12 +176,6 @@ class ModelIdentifierParsingTest {
     // Anthropic model identifier tests
     @Test
     fun testAnthropicModels() = runTest {
-        // Test Opus 3
-        val opus3 = getModelFromIdentifier("anthropic.opus_3")
-        assertNotNull(opus3)
-        assertEquals(LLMProvider.Anthropic, opus3.provider)
-        assertEquals(AnthropicModels.Opus_3, opus3)
-
         // Test Opus 4
         val opus4 = getModelFromIdentifier("anthropic.opus_4")
         assertNotNull(opus4)
@@ -212,29 +206,11 @@ class ModelIdentifierParsingTest {
         assertEquals(LLMProvider.Anthropic, haiku3.provider)
         assertEquals(AnthropicModels.Haiku_3, haiku3)
 
-        // Test Haiku 3.5
-        val haiku3_5 = getModelFromIdentifier("anthropic.haiku_3_5")
-        assertNotNull(haiku3_5)
-        assertEquals(LLMProvider.Anthropic, haiku3_5.provider)
-        assertEquals(AnthropicModels.Haiku_3_5, haiku3_5)
-
         // Test Haiku 4.5
         val haiku4_5 = getModelFromIdentifier("anthropic.haiku_4_5")
         assertNotNull(haiku4_5)
         assertEquals(LLMProvider.Anthropic, haiku4_5.provider)
         assertEquals(AnthropicModels.Haiku_4_5, haiku4_5)
-
-        // Test Sonnet 3.5
-        val sonnet3_5 = getModelFromIdentifier("anthropic.sonnet_3_5")
-        assertNotNull(sonnet3_5)
-        assertEquals(LLMProvider.Anthropic, sonnet3_5.provider)
-        assertEquals(AnthropicModels.Sonnet_3_5, sonnet3_5)
-
-        // Test Sonnet 3.7
-        val sonnet3_7 = getModelFromIdentifier("anthropic.sonnet_3_7")
-        assertNotNull(sonnet3_7)
-        assertEquals(LLMProvider.Anthropic, sonnet3_7.provider)
-        assertEquals(AnthropicModels.Sonnet_3_7, sonnet3_7)
 
         // Test Sonnet 4
         val sonnet4 = getModelFromIdentifier("anthropic.sonnet_4")
