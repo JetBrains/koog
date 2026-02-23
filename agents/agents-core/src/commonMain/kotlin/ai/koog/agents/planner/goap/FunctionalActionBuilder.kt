@@ -18,7 +18,7 @@ public class FunctionalActionBuilder<State> internal constructor(
     llmModel: LLModel?,
     llmParams: LLMParams?,
     private val execute: Execute<State>
-) : ActionTerminalBuilder<State>, ActionBuilderCommonBase<State, FunctionalActionBuilder<State>>(
+) : ActionTerminalBuilder<State>, ActionBuilderCommon<State, FunctionalActionBuilder<State>>(
     name = name,
     description = description,
     precondition = precondition,

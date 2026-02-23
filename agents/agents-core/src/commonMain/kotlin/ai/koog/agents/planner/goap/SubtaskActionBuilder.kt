@@ -25,7 +25,7 @@ public class SubtaskActionBuilder<State, T : Any>(
     private var outputClass: KClass<T>? = null,
     private var taskDescription: ((State) -> String)? = null,
     private var updateState: ((State, T) -> State)? = null,
-) : ActionTerminalBuilder<State>, ActionBuilderCommonBase<State, SubtaskActionBuilder<State, T>>(
+) : ActionTerminalBuilder<State>, ActionBuilderCommon<State, SubtaskActionBuilder<State, T>>(
     name = name,
     description = description,
     precondition = precondition,

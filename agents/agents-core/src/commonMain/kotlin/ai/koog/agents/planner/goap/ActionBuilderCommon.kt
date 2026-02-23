@@ -7,7 +7,7 @@ import ai.koog.prompt.params.LLMParams
 /**
  * Common functionality for building [Action] instances.
  */
-public abstract class ActionBuilderCommonBase<State, TBuilder : ActionBuilderCommonBase<State, TBuilder>> internal constructor(
+public abstract class ActionBuilderCommon<State, TBuilder : ActionBuilderCommon<State, TBuilder>> internal constructor(
     protected var name: String? = null,
     protected var description: String? = null,
     protected var precondition: Condition<State>? = null,

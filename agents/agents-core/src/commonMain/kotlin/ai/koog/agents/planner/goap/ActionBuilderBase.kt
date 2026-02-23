@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 /**
  * Common api for
  */
-public abstract class ActionBuilderBase<State> : ActionBuilderCommonBase<State, ActionBuilder<State>>() {
+public abstract class ActionBuilderBase<State> : ActionBuilderCommon<State, ActionBuilder<State>>() {
     /**
      * Sets action execution function.
      */
