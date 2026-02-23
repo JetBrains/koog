@@ -6,7 +6,6 @@ import ai.koog.prompt.llm.LLMProvider
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.config.mergeWith
 import io.ktor.server.engine.applicationEnvironment
-import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -15,86 +14,12 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Configuration loading tests that work on all platforms (JVM, JS, etc).
+ * These tests use runTest and applicationEnvironment which work in browser environments.
+ * Tests using testApplication are in ConfigurationLoadingJvmTest (JVM-only).
+ */
 class ConfigurationLoadingTest {
-
-    @Test
-    fun testEmptyConfiguration() = testApplication {
-        environment {
-            config = MapApplicationConfig()
-        }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testOllamaConfig() = testApplication {
-        environment { config = buildOllamaConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testOpenAI() = testApplication {
-        environment { config = buildOpenAIConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testAnthropic() = testApplication {
-        environment { config = buildAnthropicConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testGoogle() = testApplication {
-        environment { config = buildGoogleConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testMistral() = testApplication {
-        environment { config = buildMistralConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testOpenRouter() = testApplication {
-        environment { config = buildOpenAIConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testComplete() = testApplication {
-        environment { config = buildCompleteConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testDeepSeek() = testApplication {
-        environment { config = buildDeepSeekConfig() }
-        install(Koog)
-        startApplication()
-    }
-
-    @Test
-    fun testInvalid() {
-        val message = assertFailsWith<IllegalArgumentException> {
-            testApplication {
-                environment { config = buildInvalidConfig() }
-                install(Koog)
-            }
-        }.message
-        assertEquals(
-            "Found koog.openai but apiKey was missing.",
-            message
-        )
-    }
 
     @Test
     fun testLoadCompleteConfiguration() = runTest {

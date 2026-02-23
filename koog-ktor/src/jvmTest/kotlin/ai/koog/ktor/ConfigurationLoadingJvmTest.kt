@@ -1,0 +1,177 @@
+package ai.koog.ktor
+
+import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.config.mergeWith
+import io.ktor.server.testing.testApplication
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+
+/**
+ * JVM-specific tests for configuration loading using testApplication.
+ * These tests use Ktor's testApplication which requires Node.js modules
+ * that are not available in browser-based JS tests.
+ */
+class ConfigurationLoadingJvmTest {
+
+    @Test
+    fun testEmptyConfiguration() = testApplication {
+        environment {
+            config = MapApplicationConfig()
+        }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testOllamaConfig() = testApplication {
+        environment { config = buildOllamaConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testOpenAI() = testApplication {
+        environment { config = buildOpenAIConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testAnthropic() = testApplication {
+        environment { config = buildAnthropicConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testGoogle() = testApplication {
+        environment { config = buildGoogleConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testMistral() = testApplication {
+        environment { config = buildMistralConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testOpenRouter() = testApplication {
+        environment { config = buildOpenAIConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testComplete() = testApplication {
+        environment { config = buildCompleteConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testDeepSeek() = testApplication {
+        environment { config = buildDeepSeekConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testInvalid() {
+        val message = assertFailsWith<IllegalArgumentException> {
+            testApplication {
+                environment { config = buildInvalidConfig() }
+                install(Koog)
+            }
+        }.message
+        assertEquals(
+            "Found koog.openai but apiKey was missing.",
+            message
+        )
+    }
+
+    private fun buildCompleteConfig() =
+        buildOpenAIConfig()
+            .mergeWith(buildAnthropicConfig())
+            .mergeWith(buildGoogleConfig())
+            .mergeWith(buildMistralConfig())
+            .mergeWith(buildOpenRouterConfig())
+            .mergeWith(buildDeepSeekConfig())
+            .mergeWith(buildOllamaConfig())
+            .mergeWith(buildFallbackConfig())
+            .mergeWith(MapApplicationConfig("koog.llm.default" to "openai.chat.gpt4o"))
+
+    private fun buildFallbackConfig() = MapApplicationConfig(
+        "koog.llm.fallback.provider" to "anthropic",
+        "koog.llm.fallback.model" to "sonnet_3_5"
+    )
+
+    private fun buildOpenAIConfig() = MapApplicationConfig(
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.baseUrl" to "https://api.openai.com/v1",
+        "koog.openai.timeout.requestTimeoutMillis" to "60000",
+        "koog.openai.timeout.connectTimeoutMillis" to "30000",
+        "koog.openai.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildAnthropicConfig() = MapApplicationConfig(
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        "koog.anthropic.baseUrl" to "https://api.anthropic.com",
+        "koog.anthropic.timeout.requestTimeoutMillis" to "60000",
+        "koog.anthropic.timeout.connectTimeoutMillis" to "30000",
+        "koog.anthropic.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildGoogleConfig() = MapApplicationConfig(
+        "koog.google.apikey" to "test-google-api-key",
+        "koog.google.baseUrl" to "https://generativelanguage.googleapis.com",
+        "koog.google.timeout.requestTimeoutMillis" to "60000",
+        "koog.google.timeout.connectTimeoutMillis" to "30000",
+        "koog.google.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildMistralConfig() = MapApplicationConfig(
+        "koog.mistral.apikey" to "test-mistralai-api-key",
+        "koog.mistral.baseUrl" to "https://api.mistral.ai",
+        "koog.mistral.timeout.requestTimeoutMillis" to "60000",
+        "koog.mistral.timeout.connectTimeoutMillis" to "30000",
+        "koog.mistral.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildOpenRouterConfig() = MapApplicationConfig(
+        "koog.openrouter.apikey" to "test-openrouter-api-key",
+        "koog.openrouter.baseUrl" to "https://openrouter.ai/api/v1",
+        "koog.openrouter.timeout.requestTimeoutMillis" to "60000",
+        "koog.openrouter.timeout.connectTimeoutMillis" to "30000",
+        "koog.openrouter.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildDeepSeekConfig() = MapApplicationConfig(
+        "koog.deepseek.apikey" to "test-deepseek-api-key",
+        "koog.deepseek.baseUrl" to "https://api.deepseek.com",
+        "koog.deepseek.timeout.requestTimeoutMillis" to "60000",
+        "koog.deepseek.timeout.connectTimeoutMillis" to "30000",
+        "koog.deepseek.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildOllamaConfig() = MapApplicationConfig(
+        "koog.ollama.enable" to "true",
+        "koog.ollama.baseUrl" to "http://localhost:11434",
+        "koog.ollama.timeout.requestTimeoutMillis" to "60000",
+        "koog.ollama.timeout.connectTimeoutMillis" to "30000",
+        "koog.ollama.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildInvalidConfig() = MapApplicationConfig(
+        // Missing API key for OpenAI - should not load
+        "koog.openai.baseUrl" to "https://api.openai.com/v1",
+        // Invalid timeout for Anthropic - should load with defaults
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        "koog.anthropic.timeout.requestTimeoutMillis" to "invalid-timeout",
+        // Invalid fallback configuration - missing model
+        "koog.llm.fallback.provider" to "google"
+    )
+}
