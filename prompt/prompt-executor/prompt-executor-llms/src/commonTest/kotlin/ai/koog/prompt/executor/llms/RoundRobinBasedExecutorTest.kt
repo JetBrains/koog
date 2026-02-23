@@ -138,10 +138,7 @@ class RoundRobinBasedExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val anthropicClient = MockLLMClient(provider = LLMProvider.Anthropic)
-        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
-            fallbackProvider = LLMProvider.Anthropic,
-            fallbackModel = AnthropicModels.Sonnet_3_7
-        )
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_3_7)
         val executor = RoutingLLMPromptExecutor(openAIClient, anthropicClient, fallback = fallback)
 
         // When
@@ -168,10 +165,7 @@ class RoundRobinBasedExecutorTest {
     fun testFallbackClientNotFoundInRouterFails() = runTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
-        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
-            fallbackProvider = LLMProvider.Anthropic,
-            fallbackModel = AnthropicModels.Sonnet_3_7
-        )
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_3_7)
 
         // When, Then
         assertFailsWith<IllegalStateException> {

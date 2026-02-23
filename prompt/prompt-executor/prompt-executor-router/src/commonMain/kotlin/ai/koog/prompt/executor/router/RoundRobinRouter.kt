@@ -51,7 +51,7 @@ public class RoundRobinRouter(clientsPerProvider: Map<LLMProvider, List<LLMClien
         }
     }
 
-    override fun chooseRouteFor(model: LLModel): LLMClient? {
+    override fun clientFor(model: LLModel): LLMClient? {
         return clientPoolsPerProvider[model.provider]?.next()
     }
 

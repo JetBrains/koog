@@ -26,7 +26,7 @@ class RoutingLLMPromptExecutorTest {
     private class SimpleTestRouter(override val clients: List<LLMClient>) : LLMClientRouter {
         constructor(vararg clients: LLMClient) : this(clients.toList())
 
-        override fun chooseRouteFor(model: LLModel): LLMClient? =
+        override fun clientFor(model: LLModel): LLMClient? =
             clients.firstOrNull { it.llmProvider() == model.provider }
     }
 
@@ -49,7 +49,6 @@ class RoutingLLMPromptExecutorTest {
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
         val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
-            fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
         val executor = RoutingLLMPromptExecutor(
@@ -101,7 +100,6 @@ class RoutingLLMPromptExecutorTest {
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
         val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
-            fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
         val executor = RoutingLLMPromptExecutor(
@@ -153,7 +151,6 @@ class RoutingLLMPromptExecutorTest {
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
         val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
-            fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
         val executor = RoutingLLMPromptExecutor(
@@ -203,7 +200,6 @@ class RoutingLLMPromptExecutorTest {
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
         val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
-            fallbackProvider = LLMProvider.OpenAI,
             fallbackModel = OpenAIModels.Chat.GPT4o
         )
         val executor = RoutingLLMPromptExecutor(
@@ -301,7 +297,7 @@ class RoutingLLMPromptExecutorTest {
         // And
         val router = object : LLMClientRouter {
             override val clients = clients
-            override fun chooseRouteFor(model: LLModel) = error("Not implemented")
+            override fun clientFor(model: LLModel) = error("Not implemented")
         }
 
         // When

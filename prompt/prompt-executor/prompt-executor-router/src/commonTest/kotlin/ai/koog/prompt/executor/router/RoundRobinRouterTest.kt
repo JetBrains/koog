@@ -25,7 +25,7 @@ class RoundRobinRouterTest {
         val model = LLModel(LLMProvider.OpenAI, "gpt-4")
 
         // When: Making multiple requests
-        val chosenClients = (1..5).map { router.chooseRouteFor(model) }
+        val chosenClients = (1..5).map { router.clientFor(model) }
 
         // Then: Clients alternate in round-robin fashion
         assertEquals(
@@ -48,11 +48,11 @@ class RoundRobinRouterTest {
 
         // When: Interleaving requests across providers
         val chosenClients = listOf(
-            router.chooseRouteFor(gpt4),
-            router.chooseRouteFor(claude),
-            router.chooseRouteFor(gpt4),
-            router.chooseRouteFor(claude),
-            router.chooseRouteFor(gpt4)
+            router.clientFor(gpt4),
+            router.clientFor(claude),
+            router.clientFor(gpt4),
+            router.clientFor(claude),
+            router.clientFor(gpt4)
         )
 
         // Then: Each provider maintains independent round-robin state
@@ -70,7 +70,7 @@ class RoundRobinRouterTest {
 
         // When: Requesting a model from Anthropic (unsupported provider)
         val anthropicModel = LLModel(LLMProvider.Anthropic, "claude-3")
-        val result = router.chooseRouteFor(anthropicModel)
+        val result = router.clientFor(anthropicModel)
 
         // Then: Returns null
         assertNull(result)
@@ -86,7 +86,7 @@ class RoundRobinRouterTest {
         val model = LLModel(LLMProvider.OpenAI, "gpt-4")
 
         // When: Making multiple requests
-        val chosenClients = (1..3).map { router.chooseRouteFor(model) }
+        val chosenClients = (1..3).map { router.clientFor(model) }
 
         // Then: Always returns the same client
         assertEquals(
@@ -115,7 +115,7 @@ class RoundRobinRouterTest {
         val model = LLModel(LLMProvider.Google, "gemini-pro")
 
         // When: Making requests
-        val chosenClients = (1..7).map { router.chooseRouteFor(model) }
+        val chosenClients = (1..7).map { router.clientFor(model) }
 
         // Then: Cycles through all 3 clients and wraps around
         assertEquals(

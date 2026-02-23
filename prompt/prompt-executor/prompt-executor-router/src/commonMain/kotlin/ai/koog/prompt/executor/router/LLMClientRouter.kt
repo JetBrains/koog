@@ -22,5 +22,5 @@ public interface LLMClientRouter {
      * @param model The model to route
      * @return A client capable of serving the model, or null if none available
      */
-    public fun chooseRouteFor(model: LLModel): LLMClient?
+    public fun clientFor(model: LLModel): LLMClient?
 }

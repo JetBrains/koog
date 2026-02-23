@@ -193,7 +193,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     private fun chooseClientAndModel(requestedModel: LLModel): EffectiveExecutionSubject {
-        val lbClient = clientRouter.chooseRouteFor(requestedModel)
+        val lbClient = clientRouter.clientFor(requestedModel)
         return when {
             lbClient != null -> lbClient to requestedModel
             fallback != null -> fallbackClient!! to fallback.fallbackModel
