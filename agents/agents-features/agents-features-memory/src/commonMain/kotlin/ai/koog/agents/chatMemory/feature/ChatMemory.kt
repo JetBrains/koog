@@ -7,6 +7,7 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.prompt.message.Message
 
 /**
  * A feature that allows storing and loading conversation history between an agent and a user.
@@ -28,7 +29,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
  * val agent = AIAgent(...) {
  *     installChatMemory {
  *         chatHistoryProvider = MyChatHistoryProvider()
- *         windowSize = 20 // keep only the last 20 messages
+ *         windowSize(20) // keep only the last 20 messages
  *     }
  * }
  * ```
@@ -65,20 +66,27 @@ public class ChatMemory {
             return chatMemory
         }
 
+        private fun applyPreProcessors(
+            messages: List<Message>,
+            preProcessors: List<ChatMemoryPreProcessor>,
+        ): List<Message> {
+            return preProcessors.fold(messages) { acc, processor -> processor.preprocess(acc) }
+        }
+
         private fun installInternal(config: ChatMemoryConfig, pipeline: AIAgentPipeline) {
             pipeline.interceptStrategyStarting(this) {
                 val history = config.chatHistoryProvider.load(it.context.runId)
-                val windowed = config.windowSize?.let { size -> history.takeLast(size) } ?: history
+                val processed = applyPreProcessors(history, config.preprocessors)
 
                 it.context.llm.writeSession {
-                    prompt = prompt.withMessages { windowed }
+                    prompt = prompt.withMessages { processed }
                 }
             }
 
             pipeline.interceptStrategyCompleted(this) {
                 val history = it.context.llm.prompt.messages
-                val windowed = config.windowSize?.let { size -> history.takeLast(size) } ?: history
-                config.chatHistoryProvider.store(it.context.runId, windowed)
+                val processed = applyPreProcessors(history, config.preprocessors)
+                config.chatHistoryProvider.store(it.context.runId, processed)
             }
         }
     }

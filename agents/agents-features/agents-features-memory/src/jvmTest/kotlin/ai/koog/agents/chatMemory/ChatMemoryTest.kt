@@ -2,7 +2,6 @@ package ai.koog.agents.chatMemory
 
 import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.ChatMemory
-import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.testing.tools.MockLLMBuilder
@@ -71,7 +70,7 @@ class ChatMemoryTest {
         ) {
             install(ChatMemory) {
                 chatHistoryProvider = historyProvider
-                this.windowSize = windowSize
+                windowSize?.let { windowSize(it) }
             }
         }
     }
@@ -91,7 +90,7 @@ class ChatMemoryTest {
         ) {
             install(ChatMemory) {
                 chatHistoryProvider = historyProvider
-                this.windowSize = windowSize
+                windowSize(windowSize ?: Int.MAX_VALUE)
             }
         }
     }
@@ -743,7 +742,7 @@ class ChatMemoryTest {
         val historyProvider = InMemoryChatHistoryProvider()
 
         // Window of 4: each run produces a user+assistant pair (2 messages)
-        // After 3 runs we have 6 messages, but only last 4 should be kept
+        // After 3 runs we have 6 messages, but only the last 4 should be kept
         val agent = createGraphAgent(historyProvider, windowSize = 4) {
             mockLLMAnswer("Reply 1") onRequestContains "Q1"
             mockLLMAnswer("Reply 2") onRequestContains "Q2"

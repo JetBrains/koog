@@ -19,14 +19,54 @@ public class ChatMemoryConfig : FeatureConfig() {
     public var chatHistoryProvider: ChatHistoryProvider = InMemoryChatHistoryProvider()
 
     /**
-     * Maximum number of messages to keep in the conversation window.
+     * Ordered list of preprocessors applied to messages when loading from and storing to history.
      *
-     * When set, only the most recent [windowSize] messages are loaded into the prompt
-     * and stored after each run. This prevents unbounded prompt growth in long conversations.
+     * Preprocessors are applied sequentially in the order they were added.
      *
-     * A value of `null` means no limit — all messages are kept.
+     * @see ChatMemoryPreProcessor
+     * @see addPreProcessor
+     * @see windowSize
      */
-    public var windowSize: Int? = null
+    public val preprocessors: MutableList<ChatMemoryPreProcessor> = mutableListOf()
+
+    /**
+     * Adds a [ChatMemoryPreProcessor] to the preprocessing chain.
+     *
+     * Preprocessors are applied in the order they are added, both when loading
+     * messages from history and when storing them.
+     *
+     * Example:
+     * ```kotlin
+     * installChatMemory {
+     *     addPreProcessor(myCustomPreProcessor)
+     * }
+     * ```
+     *
+     * @param preProcessor The preprocessor to add.
+     */
+    public fun addPreProcessor(preProcessor: ChatMemoryPreProcessor) {
+        preprocessors.add(preProcessor)
+    }
+
+    /**
+     * Adds a [WindowSizePreProcessor] that limits messages to the most recent [size] entries.
+     *
+     * This prevents unbounded prompt growth in long conversations by keeping only a
+     * sliding window of messages.
+     *
+     * Example:
+     * ```kotlin
+     * installChatMemory {
+     *     chatHistoryProvider = MyChatHistoryProvider()
+     *     windowSize(20)
+     * }
+     * ```
+     *
+     * @param size The maximum number of recent messages to keep.
+     */
+    public fun windowSize(size: Int) {
+        addPreProcessor(WindowSizePreProcessor(size))
+    }
 }
 
 /**

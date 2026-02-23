@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
  * Demonstrates the ChatMemory feature with a sliding window that limits
  * the number of messages kept in the conversation history.
  *
- * Setting [windowSize] prevents unbounded prompt growth in long conversations
+ * Setting a window size prevents unbounded prompt growth in long conversations
  * by keeping only the N most recent messages when loading history into the
  * prompt and when persisting it after each run.
  *
@@ -29,7 +29,7 @@ suspend fun main() {
         ) {
             install(ChatMemory) {
                 chatHistoryProvider = historyProvider
-                windowSize = 20 // keep only the last 20 messages
+                windowSize(20) // keep only the last 20 messages
             }
         }
 
