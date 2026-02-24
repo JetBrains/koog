@@ -5,11 +5,11 @@ ktor:
 
 koog:
   openai:
-  apikey: "your-openai-api-key"
-  timeout:
-    requestTimeoutMillis: 900000
-    connectTimeoutMillis: 60000
-    socketTimeoutMillis: 900000
+    apikey: "your-openai-api-key"
+    timeout:
+      requestTimeoutMillis: 900000
+      connectTimeoutMillis: 60000
+      socketTimeoutMillis: 900000
   anthropic:
     apikey: "your-anthropic-api-key"
     timeout:

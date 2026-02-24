@@ -299,6 +299,13 @@ class ConfigurationLoadingTest {
         )
     }
 
+    @Test
+    fun testConfigWithoutSpecificTimeouts() = testApplication {
+        environment { config = buildConfigWithoutSpecificTimeouts() }
+        install(Koog)
+        startApplication()
+    }
+
     private fun buildCompleteConfig() =
         buildOpenAIConfig()
             .mergeWith(buildAnthropicConfig())
@@ -379,6 +386,11 @@ class ConfigurationLoadingTest {
         "koog.anthropic.timeout.requestTimeoutMillis" to "invalid-timeout",
         // Invalid fallback configuration - missing model
         "koog.llm.fallback.provider" to "google"
+    )
+
+    private fun buildConfigWithoutSpecificTimeouts() = MapApplicationConfig(
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.baseUrl" to "https://api.openai.com/v1"
     )
 
     private fun buildTimeoutConfig() = MapApplicationConfig(
