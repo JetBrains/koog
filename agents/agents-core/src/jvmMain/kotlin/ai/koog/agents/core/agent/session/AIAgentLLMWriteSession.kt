@@ -24,7 +24,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
 import kotlin.reflect.KClass

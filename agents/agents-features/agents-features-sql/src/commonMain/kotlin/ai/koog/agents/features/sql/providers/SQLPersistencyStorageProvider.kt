@@ -1,7 +1,7 @@
 package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlin.jvm.JvmOverloads
 
 /**

@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature.pipeline
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents a specific implementation of an AI agent pipeline that uses a planner approach.

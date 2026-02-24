@@ -25,7 +25,7 @@ import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.KSerializer
 import kotlin.jvm.JvmName
 import kotlin.reflect.KClass

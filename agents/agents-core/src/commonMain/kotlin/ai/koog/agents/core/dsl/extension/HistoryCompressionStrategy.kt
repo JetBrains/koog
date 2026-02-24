@@ -4,7 +4,7 @@ import ai.koog.agents.annotations.KtLintIgnoreNaming
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 

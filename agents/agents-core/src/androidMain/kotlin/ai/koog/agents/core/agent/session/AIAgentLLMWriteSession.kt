@@ -15,7 +15,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.reflect.KClass
 
 public actual class AIAgentLLMWriteSession internal constructor(

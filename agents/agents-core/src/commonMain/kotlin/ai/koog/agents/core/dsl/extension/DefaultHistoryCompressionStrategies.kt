@@ -2,7 +2,7 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlin.collections.chunked
 
 /**

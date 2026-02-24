@@ -12,7 +12,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * A builder for creating [PlannerAIAgent] instances.

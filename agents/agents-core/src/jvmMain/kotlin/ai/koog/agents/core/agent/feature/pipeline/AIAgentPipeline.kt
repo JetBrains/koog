@@ -26,7 +26,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.utils.submitToMainDispatcher
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 public actual abstract class AIAgentPipeline actual constructor(
     agentConfig: AIAgentConfig,

@@ -12,7 +12,7 @@ import com.agentclientprotocol.model.SessionUpdate
 import com.agentclientprotocol.model.SessionUpdate.AgentMessageChunk
 import com.agentclientprotocol.model.ToolCallId
 import com.agentclientprotocol.model.ToolCallStatus
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /** Constant to use for an unknown content part format */
 public const val UNKNOWN_FORMAT: String = "unknown"

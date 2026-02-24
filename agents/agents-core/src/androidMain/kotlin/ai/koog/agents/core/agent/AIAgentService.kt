@@ -9,7 +9,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> actual constructor() {
     public actual abstract val promptExecutor: PromptExecutor

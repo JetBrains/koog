@@ -16,7 +16,7 @@ import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilderAPI {
     private val delegate: AIAgentBuilderImpl = AIAgentBuilderImpl()
