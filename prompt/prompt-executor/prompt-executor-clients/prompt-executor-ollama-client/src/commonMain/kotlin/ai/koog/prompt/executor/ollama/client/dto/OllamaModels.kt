@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonElement
 internal data class OllamaChatMessageDTO(
     val role: String,
     val content: String,
+    val thinking: String? = null,
     val images: List<String>? = null,
     @SerialName("tool_calls") val toolCalls: List<OllamaToolCallDTO>? = null
 )
@@ -63,6 +64,7 @@ internal data class OllamaChatRequestDTO(
     val format: JsonElement? = null,
     val options: Options? = null,
     val stream: Boolean,
+    val think: Boolean = true,
     @SerialName("keep_alive") val keepAlive: String? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) {
