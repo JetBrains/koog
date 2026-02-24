@@ -88,13 +88,13 @@ class OpenRouterEmbeddingTest {
         val jsonString = """
         {
             "data": [],
-            "model": "",
             "error": {"message": "Invalid API key", "type": "invalid_request_error", "code": "401"}
         }
         """.trimIndent()
 
         val response = json.decodeFromString(OpenRouterEmbeddingResponse.serializer(), jsonString)
         response.data shouldHaveSize 0
+        response.model shouldBe null
         response.error shouldNotBe null
         response.error?.message shouldBe "Invalid API key"
         response.error?.type shouldBe "invalid_request_error"
@@ -132,7 +132,8 @@ class OpenRouterEmbeddingTest {
     @Test
     fun `all embedding models have Embed capability`() {
         allEmbeddingModels.forEach { model ->
-            model.capabilities shouldContain LLMCapability.Embed
+            model.capabilities shouldNotBe null
+            model.capabilities!! shouldContain LLMCapability.Embed
         }
     }
 
@@ -154,7 +155,8 @@ class OpenRouterEmbeddingTest {
     @Test
     fun `chat model does not have Embed capability`() {
         val chatModel = OpenRouterModels.GPT4oMini
-        chatModel.capabilities shouldNotContain LLMCapability.Embed
+        chatModel.capabilities shouldNotBe null
+        chatModel.capabilities!! shouldNotContain LLMCapability.Embed
     }
 
     @Test

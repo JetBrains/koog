@@ -12,7 +12,7 @@ internal data class OpenRouterEmbeddingRequest(
 @Serializable
 internal data class OpenRouterEmbeddingResponse(
     val data: List<OpenRouterEmbeddingData> = emptyList(),
-    val model: String = "",
+    val model: String? = null,
     val usage: OpenAIUsage? = null,
     val error: OpenRouterError? = null
 )
