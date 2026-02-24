@@ -145,6 +145,8 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
         is ContentPart.Video -> {
             throw IllegalArgumentException("Video content is not supported yet in Acp content blocks.")
         }
+
+        is ContentPart.Thought -> TODO("Thought content part type does not have a clear mapping to Acp content blocks and is not supported yet.")
     }
 }
 

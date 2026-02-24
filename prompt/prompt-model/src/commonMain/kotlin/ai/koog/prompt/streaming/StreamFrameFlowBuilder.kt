@@ -83,6 +83,12 @@ public suspend fun FlowCollector<StreamFrame>.emitAppendThinking(text: String): 
     emit(StreamFrame.AppendThinking(text))
 
 /**
+ * Emits a [StreamFrame.Append] with the given [text].
+ */
+public suspend fun FlowCollector<StreamFrame>.emitAppendThinking(text: String): Unit =
+    emit(StreamFrame.AppendThinking(text))
+
+/**
  * Emits a [StreamFrame.End] with the given [finishReason].
  */
 public suspend fun FlowCollector<StreamFrame>.emitEnd(

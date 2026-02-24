@@ -518,6 +518,13 @@ internal object BedrockConverseConverters {
                     }
                 )
             }
+            is ContentPart.Thought -> ContentBlock.ReasoningContent(
+                ReasoningContentBlock.ReasoningText(
+                    ReasoningTextBlock{
+                        this.text = part.text
+                    }
+                )
+            )
         }
     }
 
