@@ -6,7 +6,6 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterEmbeddingResp
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterError
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
-
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotContain
