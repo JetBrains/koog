@@ -19,8 +19,8 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import kotlin.time.Clock
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Builder for creating AIAgentService instances.

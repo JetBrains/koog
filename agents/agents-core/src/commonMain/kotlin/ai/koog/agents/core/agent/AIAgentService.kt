@@ -14,12 +14,12 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.time.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import kotlin.jvm.JvmStatic
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
+import kotlin.time.Clock
 
 /**
  * [AIAgentService] is a core interface for managing AI agents. The service allows creation, removal, and

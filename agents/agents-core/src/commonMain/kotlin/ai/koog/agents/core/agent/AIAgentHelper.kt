@@ -11,9 +11,9 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.time.Clock
 import kotlin.jvm.JvmStatic
 import kotlin.reflect.typeOf
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 
 @PublishedApi

@@ -1,12 +1,12 @@
 package ai.koog.prompt.message
 
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 public typealias LLMChoice = List<Message.Response>
 

@@ -21,8 +21,8 @@ import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlin.time.Clock
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Represents a configurational builder for setting up and customizing the execution parameters and
