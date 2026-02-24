@@ -78,6 +78,7 @@ ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor3" }
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor3" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor3" }
+ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }

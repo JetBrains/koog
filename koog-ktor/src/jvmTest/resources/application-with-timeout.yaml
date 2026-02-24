@@ -1,0 +1,8 @@
+koog:
+  openai:
+    apikey: test-openai-api-key
+    baseUrl: https://api.openai.com
+    timeout:
+      requestTimeoutMillis: 900000
+      connectTimeoutMillis: 60000
+      socketTimeoutMillis: 900000
