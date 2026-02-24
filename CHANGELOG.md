@@ -1,3 +1,35 @@
+# 0.6.3
+> Published 24 February 2026
+
+## Improvements
+- **Streaming reasoning support**: Models with reasoning capabilities (like Claude Sonnet 4.5 or GPT-o1) now stream their reasoning process in real-time, allowing you to see how the model thinks through problems as it generates responses ([KG-592](https://youtrack.jetbrains.com/issue/KG-592), #1264)
+- **LLModel API enhancement**: LLM clients now return `List<LLModel>` instead of `List<String>` for improved type safety and direct access to model metadata (#1452)
+- **Multiple event handlers per feature**: Features can register multiple handlers for the same event type, enabling more flexible event processing ([KG-678](https://youtrack.jetbrains.com/issue/KG-678), #1446)
+- **Dependency updates**: Updated Kotlin libraries ([KG-544](https://youtrack.jetbrains.com/issue/KG-544), #1475):
+  - `Kotlin` from `2.2.21` to `2.3.10`
+  - `kotlinx-serialization` from `1.8.1` to `1.10.0`
+  - `kotlinx-datetime` from `0.6.2` to `0.7.1`
+
+## Bug Fixes
+- **OpenRouter streaming**: Fixed parsing errors when receiving reasoning content from models with reasoning capabilities by adding missing `reasoning` and `reasoningDetails` fields to the streaming response (#854)
+- **ReadFileTool**: Fixed incorrect binary file detection for empty files ([KG-533](https://youtrack.jetbrains.com/issue/KG-533), #1340)
+- **DevstralMedium model**: Added missing `LLMCapability.Document` capability (#1482)
+- **Ktor integration**: Fixed custom timeout values being ignored when configuring LLM providers in `application.yaml` ([KTOR-8881](https://youtrack.jetbrains.com/issue/KTOR-8881), #807)
+
+## Breaking Changes
+- **Streaming API redesign**: Restructured `StreamFrame` types to distinguish between delta frames (incremental content like `TextDelta`, `ReasoningDelta`) and complete frames (full content like `TextComplete`, `ReasoningComplete`). Added `End` frame type to signal stream completion (#1264)
+- **Kotlin version update**: Migrated from Kotlin `2.2.21` to `2.3.10`; replaced `kotlinx.datetime.Clock`/`Instant` with `kotlin.time.Clock`/`Instant` (#1475)
+- **LLModel API changes**: `LLMClient.models()` now returns `List<LLModel>` instead of `List<String>`; `LLModel.capabilities` and `LLModel.contextLength` are now nullable (#1452)
+
+## Documentation
+- Updated documentation for the `singleRunStrategy` API and `AIAgentService` class.
+
+## Refactoring
+- **Module restructuring**: Moved file-system abstractions (`GlobPattern`, `FileSize`, `FileSystemEntry`, `FileSystemEntryBuilders`) from `agents-ext` to `rag-base` module to reduce transitive dependencies (#1278)
+
+## Examples
+- Added the ACP (Agent Communication Protocol) agent example project (#1438)
+
 # 0.6.2
 > Published 10 February 2026
 
