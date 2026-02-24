@@ -72,6 +72,7 @@ class FileCheckpointsTests {
         ) {
             install(Persistence) {
                 storage = provider
+                enableAutomaticPersistence = false
             }
         }
 
@@ -265,8 +266,6 @@ class FileCheckpointsTests {
         ) {
             install(Persistence) {
                 storage = provider
-
-                enableAutomaticPersistence = true
             }
         }
 

@@ -625,7 +625,6 @@ class CheckpointsTests {
         ) {
             install(Persistence) {
                 storage = checkpointStorage
-                enableAutomaticPersistence = true
             }
 
             install(Tracing) {
@@ -799,7 +798,6 @@ class CheckpointsTests {
         ) {
             install(Persistence) {
                 storage = checkpointStorage
-                enableAutomaticPersistence = true
             }
 
             install(Tracing) {

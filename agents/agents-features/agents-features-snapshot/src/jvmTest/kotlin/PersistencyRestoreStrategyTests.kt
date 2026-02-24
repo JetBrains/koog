@@ -45,8 +45,6 @@ class PersistenceRestoreStrategyTests {
         ) {
             install(Persistence) {
                 storage = provider
-                // We only need restore on start; automatic persistence doesn't matter here
-                enableAutomaticPersistence = true
             }
         }
 

@@ -39,7 +39,7 @@ public class PersistenceFeatureConfig : FeatureConfig() {
      * Set this property to `true` to turn on automatic state persistence,
      * or `false` to disable it.
      */
-    public var enableAutomaticPersistence: Boolean = false
+    public var enableAutomaticPersistence: Boolean = true
 
     @Deprecated(
         message = "rollbackStrategy is deprecated. Use ChatMemory feature is you want to preserve only message history."

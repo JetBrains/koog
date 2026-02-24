@@ -35,7 +35,6 @@ class PersistenceRunsTwiceTest {
         ) {
             install(Persistence) {
                 storage = provider
-                enableAutomaticPersistence = true
             }
         }
 
@@ -90,7 +89,6 @@ class PersistenceRunsTwiceTest {
         ) {
             install(Persistence) {
                 storage = provider
-                enableAutomaticPersistence = true
             }
         }
 

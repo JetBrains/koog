@@ -39,7 +39,6 @@ suspend fun main() {
         ) {
             install(Persistence) {
                 storage = snapshotProvider
-                enableAutomaticPersistence = true
             }
 
             install(EventHandler) {
@@ -70,7 +69,6 @@ suspend fun main() {
         ) {
             install(Persistence) {
                 storage = snapshotProvider
-                enableAutomaticPersistence = true
             }
         }
 
