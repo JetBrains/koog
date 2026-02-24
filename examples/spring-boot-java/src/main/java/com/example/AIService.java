@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 record AIService(
     @NonNull JavaPromptExecutor executor,
-    kotlin.time.Clock clock
+    kotlinx.datetime.Clock clock
 ) {
 
     private static final Logger log = LoggerFactory.getLogger(AIService.class);
