@@ -4,9 +4,11 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.prompt.message.Message
 
 /**
@@ -41,7 +43,8 @@ public class ChatMemory {
      */
     public companion object Feature :
         AIAgentGraphFeature<ChatMemoryConfig, ChatMemory>,
-        AIAgentFunctionalFeature<ChatMemoryConfig, ChatMemory> {
+        AIAgentFunctionalFeature<ChatMemoryConfig, ChatMemory>,
+        AIAgentPlannerFeature<ChatMemoryConfig, ChatMemory> {
 
         override val key: AIAgentStorageKey<ChatMemory> =
             AIAgentStorageKey("agents-features-chat-memory")
@@ -60,6 +63,15 @@ public class ChatMemory {
         override fun install(
             config: ChatMemoryConfig,
             pipeline: AIAgentFunctionalPipeline,
+        ): ChatMemory {
+            val chatMemory = ChatMemory()
+            installInternal(config, pipeline)
+            return chatMemory
+        }
+
+        override fun install(
+            config: ChatMemoryConfig,
+            pipeline: AIAgentPlannerPipeline
         ): ChatMemory {
             val chatMemory = ChatMemory()
             installInternal(config, pipeline)
