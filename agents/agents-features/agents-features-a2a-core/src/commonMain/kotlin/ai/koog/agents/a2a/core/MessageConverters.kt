@@ -108,7 +108,6 @@ public fun Message.toA2AMessage(
  */
 public fun ContentPart.toA2APart(): Part = when (this) {
     is ContentPart.Text -> TextPart(this.text)
-    is ContentPart.Thought -> TODO("Koog's Thought part doesn't have a direct equivalent in A2A, need to decide how to handle it.")
     is ContentPart.Attachment -> {
         val file = when (val content = this.content) {
             // Plain text files are not supported, convert them to binary files.

@@ -547,8 +547,6 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
                         add(InlineData(blob))
                     }
-
-                    is ContentPart.Thought -> TODO("Thought content parts are not yet supported in user messages")
                 }
             }
         }

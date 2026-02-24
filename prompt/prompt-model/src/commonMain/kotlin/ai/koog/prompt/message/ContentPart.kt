@@ -46,16 +46,6 @@ public sealed interface ContentPart {
      * @property text The text content.
      */
     @Serializable
-    @SerialName("thought")
-    public data class Thought(public val text: String) : ContentPart
-
-    /**
-     * Text content part in the OpenAI chat completion API.
-     *
-     *
-     * @property text The text content.
-     */
-    @Serializable
     @SerialName("text")
     public data class Text(public val text: String) : ContentPart
 

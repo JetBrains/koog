@@ -475,12 +475,6 @@ internal object SpanAttributes {
                     part.fileName?.let { name -> put("fileName", JsonPrimitive(name)) }
                 }
             }
-
-            is ContentPart.Thought ->
-                addJsonObject {
-                    put("type", JsonPrimitive("thought"))
-                    put("content", JsonPrimitive(part.text))
-                }
         }
     }
 
