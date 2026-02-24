@@ -10,11 +10,11 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.PromptTokenizer
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.test.runTest
-import kotlin.time.Clock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.Clock
 
 class ContextWindowStrategyTest {
     @Test
@@ -196,4 +196,3 @@ private fun makeDummyResponse(
     promptEvalCount = promptEvalCount,
     evalCount = evalCount,
 )
-

@@ -57,9 +57,9 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlin.time.Clock
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
 
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
@@ -301,10 +301,10 @@ public class OllamaClient @JvmOverloads constructor(
                 try {
                     val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                     chunk.message?.let { message ->
-                        if(message.content.isNotEmpty()){
+                        if (message.content.isNotEmpty()) {
                             emitTextDelta(message.content)
                         }
-                        if(message.thinking.isNullOrEmpty().not()){
+                        if (message.thinking.isNullOrEmpty().not()) {
                             emitReasoningDelta(message.thinking)
                         }
                         message.toolCalls?.forEachIndexed { index, toolCall ->
