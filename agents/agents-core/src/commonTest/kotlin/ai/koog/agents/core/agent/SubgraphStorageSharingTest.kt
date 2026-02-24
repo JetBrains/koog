@@ -11,13 +11,9 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.test.runTest
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertFailsWith
-import kotlin.test.assertSame
 
 class SubgraphStorageSharingTest {
 
@@ -129,130 +125,6 @@ class SubgraphStorageSharingTest {
     }
 
     @Test
-    fun test_storage_modification_in_first_subgraph_visible_in_second() = runTest {
-        val counterKey: AIAgentStorageKey<Int> = createStorageKey("counter")
-
-        var counterInSubgraph2: Int? = null
-
-        val testStrategy = strategy<String, String>("modify_storage") {
-            val subgraph1 by subgraph<String, String>("subgraph1") {
-                val incrementNode by node<String, String>("increment") { input ->
-                    val current = storage.get(counterKey) ?: 0
-                    storage.set(counterKey, current + 10)
-                    input
-                }
-                val llmCall by nodeLLMRequest()
-
-                edge(nodeStart forwardTo incrementNode)
-                edge(incrementNode forwardTo llmCall)
-                edge(llmCall forwardTo nodeFinish onAssistantMessage { true })
-            }
-
-            val subgraph2 by subgraph<String, String>("subgraph2") {
-                val readNode by node<String, String>("readCounter") { input ->
-                    counterInSubgraph2 = storage.get(counterKey)
-                    input
-                }
-
-                edge(nodeStart forwardTo readNode)
-                edge(readNode forwardTo nodeFinish)
-            }
-
-            edge(nodeStart forwardTo subgraph1)
-            edge(subgraph1 forwardTo subgraph2)
-            edge(subgraph2 forwardTo nodeFinish)
-        }
-
-        val mockLLMApi = getMockExecutor {
-            mockLLMAnswer("done").asDefaultResponse
-        }
-
-        val agent = AIAgent(
-            mockLLMApi,
-            OllamaModels.Meta.LLAMA_3_2,
-            strategy = testStrategy,
-            toolRegistry = ToolRegistry { }
-        )
-
-        agent.run("test input", null)
-
-        assertEquals(10, counterInSubgraph2, "Subgraph2 should see the counter value set by subgraph1")
-    }
-
-    @Test
-    fun test_storage_keys_registry_returns_same_instance() = runTest {
-        val key1: AIAgentStorageKey<String> = AIAgentStorageKeys.get("my_key")
-        val key2: AIAgentStorageKey<String> = AIAgentStorageKeys.get("my_key")
-
-        assertSame(key1, key2, "Registry should return the same key instance for the same name")
-    }
-
-    @Test
-    fun test_storage_keys_registry_rejects_same_name_with_different_type() = runTest {
-        // Clear registry state to avoid interference from other tests
-        AIAgentStorageKeys.clear()
-
-        AIAgentStorageKeys.get<String>("typed_key")
-
-        assertFailsWith<IllegalArgumentException> {
-            AIAgentStorageKeys.get<Int>("typed_key")
-        }
-
-        AIAgentStorageKeys.clear()
-    }
-
-    @Test
-    fun test_storage_accessible_with_registry_keys_across_subgraphs() = runTest {
-        // Simulates the user scenario: keys obtained from the registry in different subgraphs
-        val testStrategy = strategy<String, String>("registry_keys") {
-            val subgraph1 by subgraph<String, String>("subgraph1") {
-                val writeNode by node<String, String>("write") { input ->
-                    val key: AIAgentStorageKey<String> = AIAgentStorageKeys.get("registry_key")
-                    storage.set(key, "registry_value")
-                    input
-                }
-                val llmCall by nodeLLMRequest()
-
-                edge(nodeStart forwardTo writeNode)
-                edge(writeNode forwardTo llmCall)
-                edge(llmCall forwardTo nodeFinish onAssistantMessage { true })
-            }
-
-            val subgraph2 by subgraph<String, String>("subgraph2") {
-                val readNode by node<String, String>("read") { _ ->
-                    // Obtain the key from the registry — same instance as in subgraph1
-                    val key: AIAgentStorageKey<String> = AIAgentStorageKeys.get("registry_key")
-                    val value = storage.get(key)
-                    assertNotNull(value, "Should find value using a registry key obtained in a different subgraph")
-                    assertEquals("registry_value", value)
-                    value
-                }
-
-                edge(nodeStart forwardTo readNode)
-                edge(readNode forwardTo nodeFinish)
-            }
-
-            edge(nodeStart forwardTo subgraph1)
-            edge(subgraph1 forwardTo subgraph2)
-            edge(subgraph2 forwardTo nodeFinish)
-        }
-
-        val mockLLMApi = getMockExecutor {
-            mockLLMAnswer("done").asDefaultResponse
-        }
-
-        val agent = AIAgent(
-            mockLLMApi,
-            OllamaModels.Meta.LLAMA_3_2,
-            strategy = testStrategy,
-            toolRegistry = ToolRegistry { }
-        )
-
-        val result = agent.run("test input", null)
-        assertEquals("registry_value", result)
-    }
-
-    @Test
     fun test_storage_accessible_via_event_handler_context() = runTest {
         val storageKey: AIAgentStorageKey<String> = createStorageKey("event_key")
         val collectedValues = mutableListOf<String?>()
@@ -307,26 +179,5 @@ class SubgraphStorageSharingTest {
         assertEquals(2, collectedValues.size, "Should have collected values from 2 subgraph completions")
         assertEquals("from_subgraph1", collectedValues[0], "First subgraph completion should see its own value")
         assertEquals("from_subgraph2", collectedValues[1], "Second subgraph completion should see updated value")
-    }
-}
-
-
-object AIAgentStorageKeys {
-    private val registry = mutableMapOf<String, Pair<AIAgentStorageKey<*>, KType>>()
-
-    fun clear() {
-        registry.clear()
-    }
-
-    internal inline fun <reified T : Any> get(name: String): AIAgentStorageKey<T> {
-        val requestedType = typeOf<T>()
-        val (key, existingType) = registry.getOrPut(name) {
-            AIAgentStorageKey<T>(name) to requestedType
-        }
-        require(existingType == requestedType) {
-            "Key '$name' was registered as $existingType but requested as $requestedType"
-        }
-        @Suppress("UNCHECKED_CAST")
-        return key as AIAgentStorageKey<T>
     }
 }

@@ -8,16 +8,16 @@ package ai.koog.agents.core.agent.entity
  * The generic type parameter [T] specifies the type of data associated with this key, ensuring
  * type safety when storing and retrieving data in the context of an AI agent.
  *
- * @param name The string identifier that uniquely represents the storage key.
+ * @param name The name of the storage key used only for its string representation.
  */
 public class AIAgentStorageKey<T : Any>(public val name: String) {
     override fun toString(): String = "${super.toString()}(name=$name)"
 }
 
 /**
- * Creates a storage key for a specific type, allowing identification and retrieval of values associated with it.
+ * Creates a unique storage key for a specific type, allowing identification and retrieval of values associated with it.
  *
- * @param name The name of the storage key, used to uniquely identify it.
+ * @param name The name of the storage key used only for its string representation.
  * @return A new instance of [AIAgentStorageKey] for the specified type.
  */
 public fun <T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAgentStorageKey(name)
