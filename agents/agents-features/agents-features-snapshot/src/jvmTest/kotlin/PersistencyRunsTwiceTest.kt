@@ -91,7 +91,6 @@ class PersistenceRunsTwiceTest {
             install(Persistence) {
                 storage = provider
                 enableAutomaticPersistence = true
-                rollbackStrategy = RollbackStrategy.Default
             }
         }
 

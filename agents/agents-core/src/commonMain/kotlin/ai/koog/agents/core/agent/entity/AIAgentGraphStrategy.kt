@@ -71,10 +71,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     ) {
         val additionalContextData: AgentContextData = agentContext.getAgentContextData() ?: return
 
-        when (additionalContextData.rollbackStrategy) {
-            RollbackStrategy.Default -> restoreDefault(agentContext, additionalContextData)
-            RollbackStrategy.MessageHistoryOnly -> restoreMessageOnly(agentContext, additionalContextData)
-        }
+        restoreDefault(agentContext, additionalContextData)
         agentContext.removeAgentContextData()
     }
 
