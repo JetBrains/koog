@@ -15,6 +15,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -28,6 +29,12 @@ suspend fun globalTool(
     @LLMDescription("Count parameter") count: Int,
 ): String {
     return "Global tool called: $count"
+}
+
+@Tool
+@LLMDescription("Global tool that always throws a RuntimeException")
+suspend fun globalToolThatThrows(): String {
+    throw RuntimeException("test exception")
 }
 
 object ObjectArgumentTool {
@@ -515,6 +522,12 @@ class ToolsFromCallableTest {
             tool.encodeResultToStringUnsafe(result, serializer),
             "Incorrect result for $callable with argument $argumentJson"
         )
+    }
+
+    @Test
+    fun testCorrectExceptionThrown(): Unit = runBlocking {
+        val exception = assertThrows<RuntimeException> { ::globalToolThatThrows.asTool().execute(ToolFromCallable.Args(emptyMap())) }
+        assertEquals("test exception", exception.message)
     }
 
     @ParameterizedTest
