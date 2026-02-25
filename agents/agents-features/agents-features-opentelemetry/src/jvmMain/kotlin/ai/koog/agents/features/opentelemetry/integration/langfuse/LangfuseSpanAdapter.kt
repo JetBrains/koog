@@ -44,10 +44,6 @@ internal class LangfuseSpanAdapter(
                 runId?.let { runId ->
                     span.addAttribute(CustomAttribute("langfuse.session.id", runId))
                 }
-
-                traceAttributes.forEach { attribute ->
-                    span.addAttribute(attribute)
-                }
             }
 
             SpanType.INFERENCE -> {
@@ -89,6 +85,9 @@ internal class LangfuseSpanAdapter(
             }
 
             else -> {}
+        }
+        traceAttributes.forEach { attribute ->
+            span.addAttribute(attribute)
         }
     }
 
