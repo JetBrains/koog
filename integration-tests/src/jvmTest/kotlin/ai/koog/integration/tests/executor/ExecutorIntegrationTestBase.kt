@@ -218,6 +218,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities!!.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val executor = getExecutor(model)
 
@@ -1127,6 +1128,83 @@ abstract class ExecutorIntegrationTestBase {
             val answer = response2.filter { it is Message.Assistant || it is Message.Reasoning }
                 .joinToString("") { it.content }
             answer.shouldContain("20")
+        }
+    }
+
+    open fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model.provider == LLMProvider.OpenAI,
+            "This test is specific to OpenAI Responses API reasoning streaming"
+        )
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-streaming-test", params = params) {
+            system("You are a helpful assistant.")
+            user("Think about this step by step: What is 12 * 15?")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testReasoningStreamingSummaryDeltas[${model.id}]") {
+            val reasoningDeltaFrames = mutableListOf<StreamFrame.ReasoningDelta>()
+            val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val endFrames = mutableListOf<StreamFrame.End>()
+
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                reasoningDeltaFrames = reasoningDeltaFrames,
+                reasoningCompleteFrames = reasoningCompleteFrames,
+                textDeltaFrames = textDeltaFrames,
+                endFrame = endFrames
+            )
+
+            reasoningDeltaFrames.shouldNotBeEmpty()
+
+            val reasoningText = reasoningDeltaFrames.mapNotNull { it.text }.joinToString("")
+            val reasoningSummary = reasoningDeltaFrames.mapNotNull { it.summary }.joinToString("")
+            (reasoningText + reasoningSummary).length shouldBeGreaterThan 0
+
+            val finalAnswer = textDeltaFrames.joinToString("") { it.text }
+            finalAnswer.shouldContain("180")
+        }
+    }
+
+    open fun integration_testReasoningStreamingWithEncryptedContent(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model.provider == LLMProvider.OpenAI,
+            "This test is specific to OpenAI Responses API encrypted reasoning in stateless mode"
+        )
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-streaming-encryption-test", params = params) {
+            system("You are a helpful assistant.")
+            user("Think about this step by step: What is 8 * 9?")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testReasoningStreamingWithEncryptedContent[${model.id}]") {
+            val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                reasoningCompleteFrames = reasoningCompleteFrames,
+                textDeltaFrames = textDeltaFrames
+            )
+
+            reasoningCompleteFrames.shouldNotBeEmpty()
+            val reasoningComplete = reasoningCompleteFrames.first()
+            reasoningComplete.encrypted.shouldNotBeNull()
+            reasoningComplete.encrypted!!.length shouldBeGreaterThan 0
+
+            val finalAnswer = textDeltaFrames.joinToString("") { it.text }
+            finalAnswer.shouldContain("72")
         }
     }
 
