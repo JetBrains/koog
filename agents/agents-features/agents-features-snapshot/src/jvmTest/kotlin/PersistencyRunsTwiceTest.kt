@@ -1,6 +1,5 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
