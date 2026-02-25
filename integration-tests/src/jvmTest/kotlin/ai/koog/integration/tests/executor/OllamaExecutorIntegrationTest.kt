@@ -20,13 +20,16 @@ import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -63,6 +66,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val model get() = fixture.model
         val visionModel get() = fixture.visionModel
         val moderationModel get() = fixture.moderationModel
+        val thinkingModel get() = fixture.thinkingModel
         val client get() = fixture.client
 
         @JvmStatic
@@ -343,5 +347,36 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         val response = executor.execute(prompt, model).single()
         response.content.shouldNotBeBlank()
+    }
+
+    @Test
+    fun `ollama_test thinking feature in streaming mode`() = runTest(timeout = 600.seconds) {
+        val prompt = prompt("thinking-test") {
+            system("You are a helpful assistant. Think step by step.")
+            user("What is 15 * 23? Show your reasoning.")
+        }
+
+        val reasoningDeltaFrames = mutableListOf<StreamFrame.ReasoningDelta>()
+        val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
+        val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+
+        executor.executeStreaming(prompt, thinkingModel).collect { frame ->
+            when (frame) {
+                is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(frame)
+                is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)
+                is StreamFrame.TextDelta -> textDeltaFrames.add(frame)
+                else -> {}
+            }
+        }
+
+        reasoningDeltaFrames.shouldNotBeEmpty()
+        reasoningCompleteFrames.shouldNotBeEmpty()
+
+        val allThinking = reasoningDeltaFrames.joinToString("") { it.text.orEmpty() }
+        allThinking.shouldNotBeBlank()
+
+        val allContent = textDeltaFrames.joinToString("") { it.text }
+        allContent.shouldNotBeBlank()
+        allContent.shouldNotContain(allThinking)
     }
 }
