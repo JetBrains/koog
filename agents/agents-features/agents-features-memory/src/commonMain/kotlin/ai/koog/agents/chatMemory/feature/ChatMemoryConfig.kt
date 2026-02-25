@@ -30,6 +30,23 @@ public class ChatMemoryConfig : FeatureConfig() {
     public val preprocessors: MutableList<ChatMemoryPreProcessor> = mutableListOf()
 
     /**
+     * Sets the [ChatHistoryProvider] and returns this config for fluent chaining.
+     *
+     * This method is an alternative to the [chatHistoryProvider] property setter,
+     * designed for Java callers who want to chain configuration calls:
+     * ```java
+     * config.chatHistoryProvider(myProvider).windowSize(20)
+     * ```
+     *
+     * @param provider The provider responsible for persisting and retrieving conversation history.
+     * @return This [ChatMemoryConfig] instance for fluent chaining.
+     */
+    public fun chatHistoryProvider(provider: ChatHistoryProvider): ChatMemoryConfig {
+        chatHistoryProvider = provider
+        return this
+    }
+
+    /**
      * Adds a [ChatMemoryPreProcessor] to the preprocessing chain.
      *
      * Preprocessors are applied in the order they are added, both when loading
@@ -43,9 +60,11 @@ public class ChatMemoryConfig : FeatureConfig() {
      * ```
      *
      * @param preProcessor The preprocessor to add.
+     * @return This [ChatMemoryConfig] instance for fluent chaining.
      */
-    public fun addPreProcessor(preProcessor: ChatMemoryPreProcessor) {
+    public fun addPreProcessor(preProcessor: ChatMemoryPreProcessor): ChatMemoryConfig {
         preprocessors.add(preProcessor)
+        return this
     }
 
     /**
@@ -63,9 +82,33 @@ public class ChatMemoryConfig : FeatureConfig() {
      * ```
      *
      * @param size The maximum number of recent messages to keep.
+     * @return This [ChatMemoryConfig] instance for fluent chaining.
      */
-    public fun windowSize(size: Int) {
+    public fun windowSize(size: Int): ChatMemoryConfig {
         addPreProcessor(WindowSizePreProcessor(size))
+        return this
+    }
+
+    /**
+     * Adds a [FilterMessagesPreProcessor] that keeps only messages matching the given [predicate].
+     *
+     * The order in which `filterMessages` is called relative to other preprocessors matters:
+     * ```kotlin
+     * // Keeps at most 10 messages, then filters short ones from those 10
+     * windowSize(10)
+     * filterMessages { it.content.length <= 100 }
+     *
+     * // Filters short messages first, then keeps the last 10 of those
+     * filterMessages { it.content.length <= 100 }
+     * windowSize(10)
+     * ```
+     *
+     * @param predicate A [MessageFilter] that returns `true` for messages to keep.
+     * @return This [ChatMemoryConfig] instance for fluent chaining.
+     */
+    public fun filterMessages(predicate: MessageFilter): ChatMemoryConfig {
+        addPreProcessor(FilterMessagesPreProcessor(predicate))
+        return this
     }
 }
 

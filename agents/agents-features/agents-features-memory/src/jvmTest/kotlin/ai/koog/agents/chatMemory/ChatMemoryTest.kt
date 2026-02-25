@@ -830,4 +830,172 @@ class ChatMemoryTest {
         assertTrue(contents.any { it.contains("Q3") }, "Q3 should be in window")
         assertTrue(contents.any { it.contains("Q4") }, "Q4 should be in window")
     }
+
+    // ---- filterMessages ----
+
+    @Test
+    fun testFilterMessagesKeepsMatchingMessages() = runTest {
+        val sessionId = "filter-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Short").onRequestContains("short")
+            mockLLMAnswer("This is a very long reply that should be filtered out").onRequestContains("long")
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = mockExecutor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a helpful assistant.",
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+                filterMessages { it.content.length <= 20 }
+            }
+        }
+
+        agent.run("short", sessionId)
+        agent.run("long", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertTrue(
+            saved.none { it.content.contains("very long reply") },
+            "Long reply should have been filtered out"
+        )
+        assertTrue(
+            saved.any { it.content == "Short" },
+            "Short reply should be kept"
+        )
+    }
+
+    @Test
+    fun testFilterMessagesOnlyUserMessages() = runTest {
+        val sessionId = "filter-user-only"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val agent = createGraphAgent(historyProvider) {
+            mockLLMAnswer("Reply 1").onRequestContains("Q1")
+            mockLLMAnswer("Reply 2").onRequestContains("Q2")
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        // This agent does NOT use filterMessages, just to get baseline data.
+        // We need a separate agent that filters.
+        val filterAgent = run {
+            val exec = getMockExecutor {
+                mockLLMAnswer("Reply 1").onRequestContains("Q1")
+                mockLLMAnswer("Reply 2").onRequestContains("Q2")
+                mockLLMAnswer("mock reply").asDefaultResponse
+            }
+            AIAgent(
+                promptExecutor = exec,
+                llmModel = OpenAIModels.Chat.GPT4oMini,
+                systemPrompt = "You are a helpful assistant.",
+                maxIterations = 10,
+            ) {
+                install(ChatMemory) {
+                    chatHistoryProvider = historyProvider
+                    filterMessages { it is Message.User }
+                }
+            }
+        }
+
+        filterAgent.run("Q1", sessionId)
+        filterAgent.run("Q2", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertTrue(
+            saved.all { it is Message.User },
+            "Only user messages should remain after filtering"
+        )
+    }
+
+    @Test
+    fun testWindowSizeThenFilterMessages() = runTest {
+        // windowSize(4) first, then filterMessages(User)
+        // Since preprocessors run at both load AND store:
+        //   - Store after each run: window(4) keeps up to 4 raw messages, then filter drops Assistant
+        //   - The filter at store-time means the stored list only contains User messages,
+        //     so on subsequent loads the list is already short and the window rarely trims.
+        // Result after 3 runs: all 3 user messages [Q1, Q2, Q3] are preserved.
+        val sessionId = "window-then-filter"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Reply 1").onRequestContains("Q1")
+            mockLLMAnswer("Reply 2").onRequestContains("Q2")
+            mockLLMAnswer("Reply 3").onRequestContains("Q3")
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = mockExecutor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a helpful assistant.",
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+                windowSize(4)
+                filterMessages { it is Message.User }
+            }
+        }
+
+        agent.run("Q1", sessionId)
+        agent.run("Q2", sessionId)
+        agent.run("Q3", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertTrue(saved.all { it is Message.User }, "All saved messages should be User")
+        // All 3 user messages fit within the window because the filter keeps the list short
+        assertEquals(3, saved.size, "All 3 user messages should be kept")
+        assertTrue(saved.any { it.content.contains("Q1") }, "Q1 should be present")
+        assertTrue(saved.any { it.content.contains("Q2") }, "Q2 should be present")
+        assertTrue(saved.any { it.content.contains("Q3") }, "Q3 should be present")
+    }
+
+    @Test
+    fun testFilterMessagesThenWindowSize() = runTest {
+        // filterMessages(User) first, then windowSize(2)
+        // Since preprocessors run at both load AND store:
+        //   - Store after each run: filter drops Assistant messages, then window(2) keeps last 2
+        // Result after 3 runs: exactly [Q2, Q3] — the last 2 user messages.
+        val sessionId = "filter-then-window"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Reply 1").onRequestContains("Q1")
+            mockLLMAnswer("Reply 2").onRequestContains("Q2")
+            mockLLMAnswer("Reply 3").onRequestContains("Q3")
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = mockExecutor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a helpful assistant.",
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+                filterMessages { it is Message.User }
+                windowSize(2)
+            }
+        }
+
+        agent.run("Q1", sessionId)
+        agent.run("Q2", sessionId)
+        agent.run("Q3", sessionId)
+
+        val saved = historyProvider.history[sessionId]!!
+        // Filter keeps only User messages: Q1, Q2, Q3
+        // Window of 2 keeps: Q2, Q3
+        assertEquals(2, saved.size, "Exactly 2 messages after filter-then-window")
+        assertTrue(saved.all { it is Message.User }, "All should be User messages")
+        assertTrue(saved.none { it.content.contains("Q1") }, "Q1 should be outside the window")
+        assertTrue(saved.any { it.content.contains("Q2") }, "Q2 should be in the window")
+        assertTrue(saved.any { it.content.contains("Q3") }, "Q3 should be in the window")
+    }
 }
