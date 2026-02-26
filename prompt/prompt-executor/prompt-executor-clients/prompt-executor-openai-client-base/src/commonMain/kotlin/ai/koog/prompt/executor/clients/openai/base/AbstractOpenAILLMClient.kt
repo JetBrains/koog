@@ -31,8 +31,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
-import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -87,11 +85,11 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient {
 
-    override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+    override fun getBasicJsonSchemaGenerator(): OpenAIBasicJsonSchemaGenerator {
         return OpenAIBasicJsonSchemaGenerator
     }
 
-    override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+    override fun getStandardJsonSchemaGenerator(): OpenAIStandardJsonSchemaGenerator {
         return OpenAIStandardJsonSchemaGenerator
     }
 

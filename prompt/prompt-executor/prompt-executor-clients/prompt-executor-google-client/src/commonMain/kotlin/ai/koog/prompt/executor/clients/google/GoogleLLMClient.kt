@@ -42,8 +42,6 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
-import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
-import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -107,11 +105,11 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         private val logger = KotlinLogging.logger { }
     }
 
-    override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+    override fun getBasicJsonSchemaGenerator(): GoogleBasicJsonSchemaGenerator {
         return GoogleBasicJsonSchemaGenerator
     }
 
-    override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+    override fun getStandardJsonSchemaGenerator(): GoogleStandardJsonSchemaGenerator {
         return GoogleStandardJsonSchemaGenerator
     }
 
