@@ -38,17 +38,16 @@ import ai.koog.prompt.processor.ResponseProcessor
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.BeforeTest
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
 @ExtendWith(RetryExtension::class)
@@ -61,8 +60,8 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         private val modelsWithHallucinations get() = fixture.modelsWithHallucinations
 
         @JvmStatic
-        private fun modelsWithHallucinations(): Stream<LLModel> =
-            Stream.of(*modelsWithHallucinations.toTypedArray())
+        private fun modelsWithHallucinations(): Stream<Arguments> =
+            Stream.of(*modelsWithHallucinations.toTypedArray()).map { Arguments.of(it) }
     }
 
     @Serializable
@@ -208,7 +207,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
     @Retry
     @Test
-    fun ollama_testAgentClearContext() = runTest(timeout = 600.seconds) {
+    suspend fun ollama_testAgentClearContext() {
         createAgent(executor, createTestStrategy(), createToolRegistry())
             .run("What is the capital of France?")
             .shouldNotBeBlank()
@@ -217,7 +216,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("modelsWithHallucinations")
-    fun ollama_testFixToolCallLLMBased(llmModel: LLModel) = runTest(timeout = 600.seconds) {
+    fun ollama_testFixToolCallLLMBased(llmModel: LLModel) {
         withRetry(5) {
             val fileTools = FileOperationsTools()
             fileTools.createNewFileWithText(
@@ -282,7 +281,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
     @Retry
     @Test
-    fun ollama_testSubgraphWithTask() = runTest(timeout = 600.seconds) {
+    suspend fun ollama_testSubgraphWithTask() {
         val fileTools = FileOperationsTools()
         val toolRegistry = ToolRegistry {
             tool(fileTools.createNewFileWithTextTool)

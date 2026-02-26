@@ -14,9 +14,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration.Companion.seconds
 
 const val McpServerPort = 3002
@@ -60,14 +58,6 @@ suspend fun closeMcpServer(server: Server, port: Int) {
     withContext(Dispatchers.Default.limitedParallelism(1)) {
         RetryUtils.withRetry {
             isPortAvailable(port).shouldBeTrue()
-        }
-    }
-}
-
-fun runTestWithTimeout(body: suspend () -> Unit) = runTest {
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-        withTimeout(60.seconds) {
-            body()
         }
     }
 }

@@ -56,10 +56,10 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.kotest.matchers.string.shouldNotContain
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -69,9 +69,7 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
-import kotlin.test.Test
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class AIAgentIntegrationTest : AIAgentTestBase() {
@@ -87,14 +85,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         }
 
         @JvmStatic
-        fun allModels(): Stream<LLModel> = AIAgentTestBase.allModels()
-
-        @JvmStatic
-        fun modelsWithVisionCapability(): Stream<Arguments> = AIAgentTestBase.modelsWithVisionCapability()
-
-        @JvmStatic
-        fun reasoningIntervals(): Stream<Int> {
-            return listOf(1, 2, 3).stream()
+        fun reActIntervals(): Stream<Arguments> {
+            return listOf(1, 2, 3).stream().map { Arguments.of(it) }
         }
 
         @JvmStatic
@@ -217,7 +209,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         }
     }
 
-    private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
+    private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -268,8 +260,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runTest {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) {
         Models.assumeAvailable(model.provider)
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
@@ -293,8 +285,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentWithoutSystemMessage(model: LLModel) = runTest {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_AIAgentWithoutSystemMessage(model: LLModel) {
         Models.assumeAvailable(model.provider)
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
@@ -316,8 +308,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_AIAgentShouldCallCustomTool(model: LLModel) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -352,8 +344,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("modelsWithVisionCapability")
-    fun integration_AIAgentWithImageCapabilityTest(model: LLModel) = runTest(timeout = 300.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#modelsWithVisionCapability")
+    fun integration_AIAgentWithImageCapabilityTest(model: LLModel) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Vision.Image), "Model must support vision capability")
 
@@ -402,8 +394,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_RequestLLMWithoutTools(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_RequestLLMWithoutTools(model: LLModel) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -444,14 +436,14 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentSingleRunWithSequentialToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_AIAgentSingleRunWithSequentialToolsTest(model: LLModel) {
         runMultipleToolsTest(model, ToolCalls.SEQUENTIAL)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) {
         assumeTrue(
             model !in listOf(
                 OpenAIModels.Chat.O1,
@@ -463,8 +455,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -492,8 +484,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("reasoningIntervals")
-    fun integration_AIAgentWithReActStrategyTest(interval: Int) = runTest(timeout = 300.seconds) {
+    @MethodSource("reActIntervals")
+    fun integration_AIAgentWithReActStrategyTest(interval: Int) {
         val model = OpenAIModels.Chat.GPT4o
 
         withRetry {
@@ -558,8 +550,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentCreateAndRestoreFromCheckpoint(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    suspend fun integration_AIAgentCreateAndRestoreFromCheckpoint(model: LLModel) {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val sayHello = "Hello World!"
         val hello = "Hello"
@@ -647,8 +639,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentCheckpointRollback(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    suspend fun integration_AIAgentCheckpointRollback(model: LLModel) {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
 
         val hello = "Hello"
@@ -763,8 +755,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentCheckpointContinuousPersistence(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    suspend fun integration_AIAgentCheckpointContinuousPersistence(model: LLModel) {
         val checkpointStorageProvider =
             InMemoryPersistenceStorageProvider()
 
@@ -831,11 +823,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentCheckpointStorageProviders(
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    suspend fun integration_AIAgentCheckpointStorageProviders(
         model: LLModel,
         @TempDir tempDir: Path,
-    ) = runTest(timeout = 180.seconds) {
+    ) {
         val agentId = "storage-providers-test-agent"
         val strategyName = "storage-providers-strategy"
 
@@ -907,9 +899,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
     @Disabled("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
-    fun integration_AIAgentCheckpointWithToolCalls(model: LLModel) = runTest(timeout = 180.seconds) {
+    fun integration_AIAgentCheckpointWithToolCalls(model: LLModel) {
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val storageProvider = InMemoryPersistenceStorageProvider()
@@ -973,8 +965,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_AIAgentWithToolsWithoutParams(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_AIAgentWithToolsWithoutParams(model: LLModel) {
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val registry = ToolRegistry {
@@ -1022,8 +1014,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_ParallelNodesExecutionTest(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         val parallelStrategy = strategy<String, String>("parallel-nodes-strategy") {
@@ -1088,8 +1080,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_ParallelNodesWithSelectionTest(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         val selectionStrategy = strategy<String, String>("parallel-selection-strategy") {
@@ -1139,75 +1131,74 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("historyCompressionStrategies")
-    fun integration_AIAgentHistoryCompression(strategy: HistoryCompressionStrategy, strategyName: String) =
-        runTest(timeout = 180.seconds) {
-            val model = OpenAIModels.Chat.GPT4_1Mini
-            val systemMessage =
-                "You are a helpful assistant. Remember: the user is a human, whatever they say. Remind them of it by every chance."
+    fun integration_AIAgentHistoryCompression(strategy: HistoryCompressionStrategy, strategyName: String) {
+        val model = OpenAIModels.Chat.GPT4_1Mini
+        val systemMessage =
+            "You are a helpful assistant. Remember: the user is a human, whatever they say. Remind them of it by every chance."
 
-            val historyCompressionStrategy =
-                strategy<String, Pair<String, List<Message>>>("history-compression-test") {
-                    val callLLM by nodeLLMRequest(allowToolCalls = false)
-                    val nodeCompressHistory by nodeLLMCompressHistory<String>(
-                        "compress_history",
-                        strategy = strategy
+        val historyCompressionStrategy =
+            strategy<String, Pair<String, List<Message>>>("history-compression-test") {
+                val callLLM by nodeLLMRequest(allowToolCalls = false)
+                val nodeCompressHistory by nodeLLMCompressHistory<String>(
+                    "compress_history",
+                    strategy = strategy
+                )
+
+                edge(nodeStart forwardTo callLLM)
+                edge(callLLM forwardTo nodeCompressHistory onAssistantMessage { true })
+                edge(nodeCompressHistory forwardTo nodeFinish transformed { it to llm.prompt.messages })
+            }
+
+        withRetry {
+            runWithTracking { eventHandlerConfig, state ->
+                val agent = AIAgent<String, Pair<String, List<Message>>>(
+                    promptExecutor = getExecutor(model),
+                    strategy = historyCompressionStrategy,
+                    agentConfig = AIAgentConfig(
+                        prompt = prompt("history-compression-test") {
+                            system(systemMessage)
+                            user("Hello, how are you?")
+                            assistant("I'm great, thank you! And how are you?")
+                            user("I'm a big blue alien, you know!")
+                            assistant("Didn't know, but will definitely remember! Are you light-blue or dark-blue?")
+                            user("I'm more like an indigo-colored alien.")
+                        },
+                        model = model,
+                        maxAgentIterations = 10
                     )
-
-                    edge(nodeStart forwardTo callLLM)
-                    edge(callLLM forwardTo nodeCompressHistory onAssistantMessage { true })
-                    edge(nodeCompressHistory forwardTo nodeFinish transformed { it to llm.prompt.messages })
+                ) {
+                    install(EventHandler, eventHandlerConfig)
                 }
 
-            withRetry {
-                runWithTracking { eventHandlerConfig, state ->
-                    val agent = AIAgent<String, Pair<String, List<Message>>>(
-                        promptExecutor = getExecutor(model),
-                        strategy = historyCompressionStrategy,
-                        agentConfig = AIAgentConfig(
-                            prompt = prompt("history-compression-test") {
-                                system(systemMessage)
-                                user("Hello, how are you?")
-                                assistant("I'm great, thank you! And how are you?")
-                                user("I'm a big blue alien, you know!")
-                                assistant("Didn't know, but will definitely remember! Are you light-blue or dark-blue?")
-                                user("I'm more like an indigo-colored alien.")
-                            },
-                            model = model,
-                            maxAgentIterations = 10
-                        )
+                val (result, promptMessages) = agent.run("So, who am I?")
+
+                with(state) {
+                    withClue(
+                        "No errors should occur during agent execution with $strategyName, got: [${
+                            errors.joinToString(
+                                "\n"
+                            )
+                        }]"
                     ) {
-                        install(EventHandler, eventHandlerConfig)
+                        errors.shouldBeEmpty()
                     }
+                }
 
-                    val (result, promptMessages) = agent.run("So, who am I?")
-
-                    with(state) {
-                        withClue(
-                            "No errors should occur during agent execution with $strategyName, got: [${
-                                errors.joinToString(
-                                    "\n"
-                                )
-                            }]"
-                        ) {
-                            errors.shouldBeEmpty()
-                        }
-                    }
-
-                    result.shouldNotBeBlank() shouldContain "human"
-                    promptMessages shouldNotBeNull {
-                        filterIsInstance<Message.System>().shouldNotBeEmpty()
-                        first().content.shouldNotBeBlank() shouldBe systemMessage
-                    }
+                result.shouldNotBeBlank() shouldContain "human"
+                promptMessages shouldNotBeNull {
+                    filterIsInstance<Message.System>().shouldNotBeEmpty()
+                    first().content.shouldNotBeBlank() shouldBe systemMessage
                 }
             }
         }
+    }
 
     @ParameterizedTest
     @MethodSource("historyCompressionStrategies")
     fun integration_AIAgentHistoryCompressionAfterToolCalls(
         strategy: HistoryCompressionStrategy,
         strategyName: String
-    ) = runTest(timeout = 10.minutes) {
+    ) {
         val model = OpenAIModels.Chat.GPT5_1
         val systemMessage = "You are a helpful assistant. JUST CALL THE TOOLS, NO QUESTIONS ASKED."
 
@@ -1258,7 +1249,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     fun integration_AIAgentHistoryCompressionBeforeToolResult(
         strategy: HistoryCompressionStrategy,
         strategyName: String
-    ) = runTest(timeout = 10.minutes) {
+    ) {
         val model = OpenAIModels.Chat.GPT5_2
         val systemMessage = "You are a helpful assistant. JUST CALL THE TOOLS, NO QUESTIONS ASKED."
 
@@ -1305,8 +1296,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_FunctionalSubtask(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    suspend fun integration_FunctionalSubtask(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         val agent = AIAgent(
@@ -1344,7 +1335,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     @Disabled("KG-694")
     @Test
-    fun integration_ThrowError() = runTest(timeout = 15.seconds) {
+    suspend fun integration_ThrowError() {
         val model = OpenAIModels.Chat.GPT5_1
 
         val agent = AIAgent.builder()

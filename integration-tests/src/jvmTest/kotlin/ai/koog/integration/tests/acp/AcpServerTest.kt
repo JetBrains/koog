@@ -17,12 +17,11 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class AcpServerTest {
@@ -32,12 +31,12 @@ class AcpServerTest {
             OpenAIModels.Chat.GPT5_2,
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
-        )
+        ).map { Arguments.of(it) }
     }
 
     @ParameterizedTest
     @MethodSource("getModels")
-    fun integration_testACPWithTools(model: LLModel) = runTest(timeout = 1.minutes) {
+    suspend fun integration_testACPWithTools(model: LLModel) {
         MultiLLMPromptExecutor(getLLMClientForProvider(model.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {

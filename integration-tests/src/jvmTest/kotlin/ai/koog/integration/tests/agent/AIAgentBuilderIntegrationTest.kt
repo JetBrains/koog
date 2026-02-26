@@ -20,15 +20,12 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.time.Duration.Companion.seconds
 
 class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
-
     companion object {
         @JvmStatic
         @BeforeAll
@@ -38,8 +35,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_BuilderBasicUsage(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_BuilderBasicUsage(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
@@ -65,8 +62,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_BuilderWithToolRegistry(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_BuilderWithToolRegistry(model: LLModel) {
         Models.assumeAvailable(model.provider)
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -99,8 +96,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_BuilderWithGraphStrategy(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_BuilderWithGraphStrategy(model: LLModel) {
         Models.assumeAvailable(model.provider)
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -134,8 +131,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_FunctionalStrategyWithLambda(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_FunctionalStrategyWithLambda(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
@@ -175,8 +172,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_FunctionalStrategySimple(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_FunctionalStrategySimple(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         val strategy = functionalStrategy<String, String>("summarize") { input ->
@@ -216,8 +213,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_FunctionalStrategyWithMultipleSteps(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_FunctionalStrategyWithMultipleSteps(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         val strategy = functionalStrategy<String, String>("multi-step") { input ->
@@ -266,8 +263,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_BuilderMethodChaining(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#allCompletionModels")
+    fun integration_BuilderMethodChaining(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
@@ -298,8 +295,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_BuilderWithMultipleFeatures(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_BuilderWithMultipleFeatures(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
@@ -339,8 +336,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_FunctionalStrategyErrorHandling(model: LLModel) = runTest(timeout = 180.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_FunctionalStrategyErrorHandling(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         val strategy = functionalStrategy<String, String>("error-handling") { input ->
@@ -376,8 +373,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_BuilderWithTemperatureControl(model: LLModel) = runTest(timeout = 120.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_BuilderWithTemperatureControl(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
@@ -404,12 +401,12 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_BuilderWithMaxIterations(model: LLModel) = runTest(timeout = 120.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_BuilderWithMaxIterations(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
-            runWithTracking { eventHandlerConfig, state ->
+            runWithTracking { eventHandlerConfig, _ ->
                 val agent = AIAgent.builder()
                     .promptExecutor(getExecutor(model))
                     .llmModel(model)
@@ -420,20 +417,18 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
                 val result = agent.run("List 5 numbers from 1 to 5.")
 
-                with(state) {
-                    result.shouldNotBeBlank()
-                }
+                result.shouldNotBeBlank()
             }
         }
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_FunctionalStrategyWithExceptionHandling(model: LLModel) = runTest(timeout = 120.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_FunctionalStrategyWithExceptionHandling(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
-            runWithTracking { eventHandlerConfig, state ->
+            runWithTracking { eventHandlerConfig, _ ->
                 val strategyWithErrorHandling = functionalStrategy<String, String>("error-handling") { input ->
                     when (val response = requestLLM(input)) {
                         is Message.Assistant -> response.content
@@ -451,16 +446,14 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
                 val result = agent.run("Say hello")
 
-                with(state) {
-                    result.shouldNotBeBlank()
-                }
+                result.shouldNotBeBlank()
             }
         }
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_BuilderWithNumberOfChoices(model: LLModel) = runTest(timeout = 120.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_BuilderWithNumberOfChoices(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
@@ -485,8 +478,8 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun integration_FunctionalStrategyWithContextAccess(model: LLModel) = runTest(timeout = 120.seconds) {
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    fun integration_FunctionalStrategyWithContextAccess(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {

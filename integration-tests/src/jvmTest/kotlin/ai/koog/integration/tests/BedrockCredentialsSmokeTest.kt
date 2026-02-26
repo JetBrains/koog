@@ -3,7 +3,6 @@ package ai.koog.integration.tests
 import aws.sdk.kotlin.services.bedrock.BedrockClient
 import aws.sdk.kotlin.services.bedrock.listFoundationModels
 import io.kotest.matchers.collections.shouldNotBeEmpty
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
@@ -18,7 +17,7 @@ class BedrockCredentialsSmokeTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "AWS_ACCESS_KEY_ID", matches = ".+")
     @EnabledIfEnvironmentVariable(named = "KOOG_HEAVY_TESTS", matches = "true")
-    fun listFoundationModelsWorks() = runBlocking {
+    suspend fun listFoundationModelsWorks() {
         val region = System.getenv("AWS_REGION") ?: "us-west-2"
 
         BedrockClient { this.region = region }.use { bedrock ->
@@ -29,7 +28,7 @@ class BedrockCredentialsSmokeTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "AWS_BEARER_TOKEN_BEDROCK", matches = ".+")
     @EnabledIfEnvironmentVariable(named = "KOOG_HEAVY_TESTS", matches = "true")
-    fun bedrockApiKeyAuthenticationWorks() = runBlocking {
+    suspend fun bedrockApiKeyAuthenticationWorks() {
         val region = System.getenv("AWS_REGION") ?: "us-east-1"
 
         BedrockClient {

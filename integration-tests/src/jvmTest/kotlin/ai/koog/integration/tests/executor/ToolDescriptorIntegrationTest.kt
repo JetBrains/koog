@@ -18,7 +18,6 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.collections.shouldNotBeEmpty
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -26,7 +25,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.time.Duration.Companion.seconds
 
 class ToolDescriptorIntegrationTest {
 
@@ -308,7 +306,7 @@ class ToolDescriptorIntegrationTest {
 
     @ParameterizedTest(name = "{0} with {1}")
     @MethodSource("primitiveToolAndModelCombinations")
-    fun integration_testPrimitiveTools(tool: Tool<*, *>, model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_testPrimitiveTools(tool: Tool<*, *>, model: LLModel) {
         Models.assumeAvailable(model.provider)
         assumeTrue(
             model.capabilities?.containsAll(listOf(LLMCapability.Tools, LLMCapability.ToolChoice)) ?: false,

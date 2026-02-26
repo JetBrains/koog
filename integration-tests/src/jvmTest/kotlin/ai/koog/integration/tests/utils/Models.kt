@@ -53,22 +53,22 @@ object Models {
     )
 
     @JvmStatic
-    fun bedrockModels(): Stream<LLModel> {
+    fun bedrockModels(): Stream<Arguments> {
         return Stream.of(
             BedrockModels.MetaLlama3_1_70BInstruct,
             BedrockModels.AnthropicClaude4_5Sonnet,
-        )
+        ).map { Arguments.of(it) }
     }
 
     @JvmStatic
-    fun embeddingModels(): Stream<LLModel> {
+    fun embeddingModels(): Stream<Arguments> {
         return Stream.of(
             BedrockModels.Embeddings.AmazonTitanEmbedText,
             OpenAIModels.Embeddings.TextEmbedding3Large,
             MistralAIModels.Embeddings.MistralEmbed,
             GoogleModels.Embeddings.GeminiEmbedding001,
             OpenRouterModels.Embeddings.GoogleGeminiEmbedding001,
-        )
+        ).map { Arguments.of(it) }
     }
 
     /**
@@ -82,16 +82,16 @@ object Models {
      * in [getLLMClientForProvider], not by the model's capabilities.
      */
     @JvmStatic
-    fun moderationModels(): Stream<LLModel> {
+    fun moderationModels(): Stream<Arguments> {
         return Stream.of(
             OpenAIModels.Moderation.Omni,
             MistralAIModels.Moderation.MistralModeration,
             BedrockModels.AnthropicClaude4_5Haiku
-        )
+        ).map { Arguments.of(it) }
     }
 
     @JvmStatic
-    fun allCompletionModels(): Stream<LLModel> {
+    fun allCompletionModels(): Stream<Arguments> {
         return Stream.of(
             openAIModels(),
             anthropicModels(),
@@ -99,26 +99,26 @@ object Models {
             openRouterModels(),
             bedrockModels(),
             mistralModels(),
-        ).flatMap { it }
+        ).flatMap { it }.map { Arguments.of(it) }
     }
 
     @JvmStatic
-    fun reasoningCapableModels(): Stream<LLModel> {
+    fun reasoningCapableModels(): Stream<Arguments> {
         return Stream.of(
             // Replaced 5.2 with 5.1-Codex because of the unstable 5.2 behaviour, see KG-625
             OpenAIModels.Chat.GPT5_1Codex,
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini3_Pro_Preview,
-        )
+        ).map { Arguments.of(it) }
     }
 
     @JvmStatic
-    fun openAIReasoningModels(): Stream<LLModel> {
+    fun openAIReasoningModels(): Stream<Arguments> {
         return Stream.of(
             OpenAIModels.Chat.GPT5_1Codex,
             OpenAIModels.Chat.GPT5_2,
-        )
+        ).map { Arguments.of(it) }
     }
 
     @JvmStatic
