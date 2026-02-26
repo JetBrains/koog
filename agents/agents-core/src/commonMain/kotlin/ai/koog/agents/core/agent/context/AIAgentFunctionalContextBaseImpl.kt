@@ -42,20 +42,40 @@ import kotlin.reflect.KClass
 @Suppress("UNCHECKED_CAST")
 @PublishedApi
 internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
-    override val environment: AIAgentEnvironment,
+    environment: AIAgentEnvironment,
     override val agentId: String,
     override val runId: String,
     override val agentInput: Any?,
     override val config: AIAgentConfig,
-    override val llm: AIAgentLLMContext,
-    override val stateManager: AIAgentStateManager,
-    override val storage: AIAgentStorage,
+    llm: AIAgentLLMContext,
+    stateManager: AIAgentStateManager,
+    storage: AIAgentStorage,
     override val strategyName: String,
     override val pipeline: Pipeline,
-    override var executionInfo: AgentExecutionInfo,
+    executionInfo: AgentExecutionInfo,
     internal val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf(),
     override val parentContext: AIAgentContext? = null
 ) : AIAgentFunctionalContextBaseAPI<Pipeline> {
+
+    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage, environment, executionInfo)
+
+    override val llm: AIAgentLLMContext
+        get() = mutableAIAgentContext.llm
+
+    override val stateManager: AIAgentStateManager
+        get() = mutableAIAgentContext.stateManager
+
+    override val storage: AIAgentStorage
+        get() = mutableAIAgentContext.storage
+
+    override val environment: AIAgentEnvironment
+        get() = mutableAIAgentContext.environment
+
+    override var executionInfo: AgentExecutionInfo
+        get() = mutableAIAgentContext.executionInfo
+        set(value) {
+            mutableAIAgentContext.executionInfo = value
+        }
 
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         storeMap[key] = value
@@ -67,6 +87,16 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
 
     override suspend fun getHistory(): List<Message> {
         return llm.readSession { prompt.messages }
+    }
+
+    override suspend fun replace(context: AIAgentContext) {
+        mutableAIAgentContext.replace(
+            llm = context.llm,
+            stateManager = context.stateManager,
+            storage = context.storage,
+            environment = context.environment,
+            executionInfo = context.executionInfo
+        )
     }
 
     override suspend fun requestLLM(

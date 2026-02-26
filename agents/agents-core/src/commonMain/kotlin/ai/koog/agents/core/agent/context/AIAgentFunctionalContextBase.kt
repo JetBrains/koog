@@ -77,6 +77,8 @@ public expect abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
 
     override suspend fun getHistory(): List<Message>
 
+    override suspend fun replace(context: AIAgentContext)
+
     public override suspend fun requestLLM(
         message: String,
         allowToolCalls: Boolean

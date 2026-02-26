@@ -66,6 +66,15 @@ public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : A
     override suspend fun getHistory(): List<Message>
 
     /**
+     * Replaces the current context with the provided context.
+     * This method is used to update the current context with values from another context,
+     * particularly useful in scenarios like parallel node execution where contexts need to be merged.
+     *
+     * @param context The context to replace the current context with.
+     */
+    public suspend fun replace(context: AIAgentContext)
+
+    /**
      * Sends a message to a Large Language Model (LLM) and optionally allows the use of tools during the LLM interaction.
      * The message becomes part of the current prompt, and the LLM's response is processed accordingly,
      * either with or without tool integrations based on the provided parameters.
