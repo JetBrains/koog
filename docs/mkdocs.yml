@@ -94,6 +94,8 @@ nav:
   - API reference: https://api.koog.ai/
 
 markdown_extensions:
+  - toc:
+      title: On this page
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
