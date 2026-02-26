@@ -7,12 +7,16 @@ nav:
           - Key features: key-features.md
           - LLM providers: llm-providers.md
           - Glossary: glossary.md
-      - Getting started: getting-started.md
-      - Agent types:
-          - Basic agents: basic-agents.md
-          - Functional agents: functional-agents.md
-          - Complex workflow agents: complex-workflow-agents.md
-          - Planner agents: planner-agents.md
+      - Quickstart: quickstart.md
+      - Agents:
+          - agents/index.md
+          - Basic agents: agents/basic-agents.md
+          - Graph-based agents: agents/graph-based-agents.md
+          - Functional agents: agents/functional-agents.md
+          - Planner agents:
+              - agents/planner-agents/index.md
+              - LLM-based planners: agents/planner-agents/llm-based-planners.md
+              - GOAP agents: agents/planner-agents/goap-agents.md
       - Prompts:
           - prompts/index.md
           - Creating prompts:
@@ -23,19 +27,28 @@ nav:
             - Prompt executors: prompts/prompt-executors.md
           - Handling failures: prompts/handling-failures.md
           - LLM response caching: prompts/llm-response-caching.md
-      - Tools:
-          - Overview: tools-overview.md
-          - Built-in tools: built-in-tools.md
-          - Annotation-based tools: annotation-based-tools.md
-          - Class-based tools: class-based-tools.md
-          - Custom tools schema: tools/tool-descriptor-schemer.md
-      - Events: agent-events.md
       - Strategies:
           - Pre-defined nodes and components: nodes-and-components.md
           - Predefined strategies: predefined-agent-strategies.md
           - Custom strategy graphs: custom-strategy-graphs.md
           - Parallel node execution: parallel-node-execution.md
           - Data transfer between nodes: data-transfer-between-nodes.md
+      - Tools:
+          - Overview: tools-overview.md
+          - Built-in tools: built-in-tools.md
+          - Annotation-based tools: annotation-based-tools.md
+          - Class-based tools: class-based-tools.md
+          - Custom tools schema: tools/tool-descriptor-schemer.md
+      - Features:
+          - Overview: features-overview.md
+          - Event handlers: agent-event-handlers.md
+          - Tracing: tracing.md
+          - Memory: agent-memory.md
+          - Agent Persistence: agent-persistence.md
+          - OpenTelemetry:
+              - Overview: opentelemetry-support.md
+              - Langfuse Exporter: opentelemetry-langfuse-exporter.md
+              - Weave Exporter: opentelemetry-weave-exporter.md
       - History compression: history-compression.md
       - Model Context Protocol: model-context-protocol.md
       - A2A Protocol:
@@ -51,6 +64,7 @@ nav:
           - Ktor: ktor-plugin.md
           - Spring Boot: spring-boot.md
       - Advanced usage:
+          - Events: agent-events.md
           - Structured output: structured-output.md
           - Streaming API: streaming-api.md
           - Custom nodes: custom-nodes.md
@@ -60,16 +74,6 @@ nav:
               - Custom subgraphs: custom-subgraphs.md
           - Embeddings: embeddings.md
           - Ranked document storage: ranked-document-storage.md
-          - Features:
-              - Overview: features-overview.md
-              - Event handlers: agent-event-handlers.md
-              - Tracing: tracing.md
-              - Memory: agent-memory.md
-              - Agent Persistence: agent-persistence.md
-              - OpenTelemetry:
-                  - Overview: opentelemetry-support.md
-                  - Langfuse Exporter: opentelemetry-langfuse-exporter.md
-                  - Weave Exporter: opentelemetry-weave-exporter.md
       - Testing: testing.md
   - Why Koog: why-koog.md
   - Examples:
@@ -93,11 +97,11 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
-      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets:
+      base_path: docs/snippets
       auto_append:
-        - includes/abbreviations.md
+        - abbreviations.md
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
@@ -122,10 +126,14 @@ plugins:
   - search
   - redirects:
       redirect_maps:
-        'simple-api-getting-started.md': 'index.md'
+        'simple-api-getting-started.md': 'quickstart.md'
         'advanced-tool-implementation.md': 'class-based-tools.md'
         'key-concepts.md': 'glossary.md'
-        'single-run-agents.md': 'basic-agents.md'
+        'single-run-agents.md': 'agents/basic-agents.md'
+        'basic-agents.md': 'agents/basic-agents.md'
+        'functional-agents.md': 'agents/functional-agents.md'
+        'complex-workflow-agents.md': 'agents/graph-based-agents.md'
+        'planner-agents.md': 'agents/planner-agents/index.md'
   - llmstxt:
       markdown_description: Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin.
       full_output: llms-full.txt
@@ -136,12 +144,12 @@ plugins:
           - key-features.md: This page provides a list of key features of the Koog framework.
           - llm-providers.md: This page provides a list of LLM providers supported by Koog.
           - glossary.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
-        Getting started:
-          - getting-started.md: This page provides a guide on installing Koog and creating a minimal AI agent.
-        Agent types:
-          - basic-agents.md: This guide lets you build a basic agent with minimum required configuration.
-          - functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
-          - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
+        Quickstart:
+          - quickstart.md: This page provides a guide on installing Koog and creating a minimal AI agent.
+        Agents:
+          - agents/basic-agents.md: This guide lets you build a basic agent with minimum required configuration.
+          - agents/graph-based-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
+          - agents/functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
         Prompts:
           - prompts/index.md: This page includes an overview of how to create and run prompts with Koog.
           - prompts/prompt-creation/index.md: This page provides details about structured prompts created using the Kotlin DSL.
@@ -265,8 +273,8 @@ extra:
       link: https://docs.koog.ai/koog-slack-channel/
       name: Koog on Slack
 
-watch:
-  - includes
+extra_javascript:
+  - javascripts/mermaid.mjs
 
 hooks:
   - process-api-links.py
