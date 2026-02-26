@@ -1,0 +1,147 @@
+package ai.koog.spring.ai.embedding
+
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.asCoroutineDispatcher
+import org.slf4j.LoggerFactory
+import org.springframework.ai.embedding.EmbeddingModel
+import org.springframework.beans.factory.BeanFactory
+import org.springframework.beans.factory.DisposableBean
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.AsyncTaskExecutor
+import org.springframework.lang.Nullable
+import java.util.concurrent.Executors
+
+/**
+ * Auto-configuration for the Koog Spring AI Embedding Model adapter.
+ *
+ * This configuration:
+ * - Binds [KoogSpringAIEmbeddingProperties] under `koog.spring-ai.embedding.*`.
+ * - Creates an [LLMEmbeddingProvider] backed by a Spring AI [EmbeddingModel] when available.
+ * - Supports multi-model contexts via property-based bean-name selection.
+ * - Provides an injectable [CoroutineDispatcher] for blocking model calls.
+ *
+ * Gated by `koog.spring-ai.embedding.enabled=true` (default).
+ */
+@AutoConfiguration(
+    afterName = [
+        "org.springframework.ai.model.anthropic.autoconfigure.AnthropicEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.azure.openai.autoconfigure.AzureOpenAiEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.bedrock.cohere.autoconfigure.BedrockCohereEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.bedrock.titan.autoconfigure.BedrockTitanEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.google.genai.autoconfigure.embedding.GoogleGenAiTextEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.huggingface.autoconfigure.HuggingfaceEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.mistralai.autoconfigure.MistralAiEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.oci.genai.autoconfigure.OCIGenAiEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.transformers.autoconfigure.TransformersEmbeddingModelAutoConfiguration",
+        "org.springframework.ai.model.vertexai.autoconfigure.embedding.VertexAiTextEmbeddingAutoConfiguration",
+        "org.springframework.ai.model.zhipuai.autoconfigure.ZhiPuAiEmbeddingAutoConfiguration"
+    ]
+)
+@EnableConfigurationProperties(KoogSpringAIEmbeddingProperties::class)
+@ConditionalOnClass(EmbeddingModel::class)
+@ConditionalOnProperty(prefix = "koog.spring-ai.embedding", name = ["enabled"], havingValue = "true", matchIfMissing = true)
+public open class SpringAIEmbeddingAutoConfiguration {
+
+    private val logger = LoggerFactory.getLogger(SpringAIEmbeddingAutoConfiguration::class.java)
+
+    /**
+     * Creates a [CoroutineDispatcher] for blocking Spring AI embedding model calls.
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = ["koogSpringAIEmbeddingDispatcher"])
+    public open fun koogSpringAIEmbeddingDispatcher(
+        properties: KoogSpringAIEmbeddingProperties,
+        @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
+    ): CoroutineDispatcher {
+        return when (properties.dispatcher.type) {
+            KoogSpringAIEmbeddingProperties.DispatcherType.AUTO -> {
+                if (asyncTaskExecutor != null) {
+                    logger.info("Koog Spring AI Embedding: using Spring AsyncTaskExecutor as dispatcher for blocking model calls")
+                    asyncTaskExecutor.asCoroutineDispatcher()
+                } else {
+                    logger.info("Koog Spring AI Embedding: no AsyncTaskExecutor found, falling back to Dispatchers.IO for blocking model calls")
+                    Dispatchers.IO
+                }
+            }
+
+            KoogSpringAIEmbeddingProperties.DispatcherType.IO -> {
+                logger.info("Koog Spring AI Embedding: using Dispatchers.IO for blocking model calls")
+                Dispatchers.IO
+            }
+
+            KoogSpringAIEmbeddingProperties.DispatcherType.FIXED_THREAD_POOL -> {
+                val parallelism = properties.dispatcher.parallelism.takeIf { it > 0 }
+                    ?: Runtime.getRuntime().availableProcessors()
+                logger.info("Koog Spring AI Embedding: using fixed thread pool with parallelism=$parallelism for blocking model calls")
+                val executor = Executors.newFixedThreadPool(parallelism)
+                val delegate: ExecutorCoroutineDispatcher = executor.asCoroutineDispatcher()
+                object : ExecutorCoroutineDispatcher(), DisposableBean {
+                    override val executor: java.util.concurrent.Executor get() = executor
+                    override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) =
+                        delegate.dispatch(context, block)
+
+                    override fun close() = delegate.close()
+                    override fun destroy() {
+                        logger.info("Koog Spring AI Embedding: shutting down fixed thread pool dispatcher")
+                        close()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Embedding model configuration — activated when a bean-name selector is provided.
+     */
+    @Configuration
+    @ConditionalOnProperty(prefix = "koog.spring-ai.embedding", name = ["embedding-model-bean-name"])
+    public open class NamedEmbeddingModelConfiguration {
+        private val logger = LoggerFactory.getLogger(NamedEmbeddingModelConfiguration::class.java)
+
+        @Bean
+        @ConditionalOnMissingBean(LLMEmbeddingProvider::class)
+        public open fun springAIEmbeddingModelLLMEmbeddingProvider(
+            beanFactory: BeanFactory,
+            properties: KoogSpringAIEmbeddingProperties,
+            @Qualifier("koogSpringAIEmbeddingDispatcher") dispatcher: CoroutineDispatcher,
+        ): LLMEmbeddingProvider {
+            val beanName = properties.embeddingModelBeanName!!
+            logger.info("Koog Spring AI Embedding: resolving EmbeddingModel bean by name='$beanName'")
+            val embeddingModel = beanFactory.getBean(beanName, EmbeddingModel::class.java)
+            return SpringAILLMEmbeddingProvider(embeddingModel, dispatcher = dispatcher)
+        }
+    }
+
+    /**
+     * Embedding model configuration — activated when no bean-name selector is set and a single EmbeddingModel candidate exists.
+     */
+    @Configuration
+    @ConditionalOnMissingBean(LLMEmbeddingProvider::class)
+    @ConditionalOnSingleCandidate(EmbeddingModel::class)
+    public open class SingleEmbeddingModelConfiguration {
+        private val logger = LoggerFactory.getLogger(SingleEmbeddingModelConfiguration::class.java)
+
+        @Bean
+        public open fun springAIEmbeddingModelLLMEmbeddingProvider(
+            embeddingModel: EmbeddingModel,
+            @Qualifier("koogSpringAIEmbeddingDispatcher") dispatcher: CoroutineDispatcher,
+        ): LLMEmbeddingProvider {
+            logger.info("Koog Spring AI Embedding: using single EmbeddingModel candidate as LLMEmbeddingProvider backend")
+            return SpringAILLMEmbeddingProvider(embeddingModel, dispatcher = dispatcher)
+        }
+    }
+}
