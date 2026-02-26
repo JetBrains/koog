@@ -29,6 +29,8 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotContain
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -41,6 +43,7 @@ import java.nio.file.Paths
 import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.pathString
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
 @ExtendWith(OllamaTestFixtureExtension::class)
