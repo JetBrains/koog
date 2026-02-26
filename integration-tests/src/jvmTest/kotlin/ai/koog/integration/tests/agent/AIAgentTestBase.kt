@@ -175,7 +175,7 @@ open class AIAgentTestBase {
     protected class ReportingLLMClient(
         private val eventsChannel: Channel<Event>,
         private val underlyingClient: LLMClient
-    ) : LLMClient {
+    ) : LLMClient() {
 
         override fun llmProvider(): LLMProvider = underlyingClient.llmProvider()
         sealed interface Event {

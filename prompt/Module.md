@@ -42,7 +42,7 @@ For unit tests, you can use the same dependencies as in your main project. Consi
 
 ```kotlin
 // Example of a mock prompt executor for testing
-class MockPromptExecutor : PromptExecutor {
+class MockPromptExecutor : PromptExecutor() {
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         // Return predefined responses based on the prompt
         return listOf(Message.Response("Mock response for: ${prompt.id}"))

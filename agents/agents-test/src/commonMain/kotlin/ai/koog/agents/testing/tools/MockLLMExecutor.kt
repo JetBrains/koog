@@ -67,7 +67,7 @@ internal class MockLLMExecutor(
     val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: Clock = kotlin.time.Clock.System,
     private val tokenizer: Tokenizer? = null
-) : PromptExecutor {
+) : PromptExecutor() {
 
     /**
      * Executes a prompt with tools and returns a list of responses.

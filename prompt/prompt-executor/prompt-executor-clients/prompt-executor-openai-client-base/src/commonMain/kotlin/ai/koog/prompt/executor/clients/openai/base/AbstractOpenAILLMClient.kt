@@ -83,7 +83,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     protected val clock: Clock = kotlin.time.Clock.System,
     protected val logger: KLogger,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
-) : LLMClient {
+) : LLMClient() {
 
     override fun getBasicJsonSchemaGenerator(): OpenAIBasicJsonSchemaGenerator {
         return OpenAIBasicJsonSchemaGenerator

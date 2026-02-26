@@ -120,12 +120,14 @@ public sealed interface Message {
         /**
          * Single content part user message constructor
          */
+        @JvmOverloads
         public constructor(part: ContentPart, metaInfo: RequestMetaInfo) :
             this(listOf(part), metaInfo)
 
         /**
          * Text content user message constructor
          */
+        @JvmOverloads
         public constructor(content: String, metaInfo: RequestMetaInfo) :
             this(ContentPart.Text(content), metaInfo)
     }
@@ -140,7 +142,7 @@ public sealed interface Message {
      * @property role The role associated with the response, which is fixed as `Role.Assistant`.
      */
     @Serializable
-    public data class Assistant(
+    public data class Assistant @JvmOverloads constructor(
         override val parts: List<ContentPart>,
         override val metaInfo: ResponseMetaInfo,
         val finishReason: String? = null
@@ -150,12 +152,14 @@ public sealed interface Message {
         /**
          * Single content part assistant message constructor
          */
+        @JvmOverloads
         public constructor(part: ContentPart, metaInfo: ResponseMetaInfo, finishReason: String? = null) :
             this(listOf(part), metaInfo, finishReason)
 
         /**
          * Text content assistant message constructor
          */
+        @JvmOverloads
         public constructor(content: String, metaInfo: ResponseMetaInfo, finishReason: String? = null) :
             this(ContentPart.Text(content), metaInfo, finishReason)
 
@@ -308,7 +312,7 @@ public sealed interface Message {
      *
      */
     @Serializable
-    public data class System(
+    public data class System @JvmOverloads constructor(
         override val parts: List<ContentPart.Text>,
         override val metaInfo: RequestMetaInfo
     ) : Request {
@@ -317,12 +321,14 @@ public sealed interface Message {
         /**
          * Single content part system message constructor
          */
+        @JvmOverloads
         public constructor(part: ContentPart.Text, metaInfo: RequestMetaInfo) :
             this(listOf(part), metaInfo)
 
         /**
          * Text content system message constructor
          */
+        @JvmOverloads
         public constructor(content: String, metaInfo: RequestMetaInfo) :
             this(ContentPart.Text(content), metaInfo)
     }

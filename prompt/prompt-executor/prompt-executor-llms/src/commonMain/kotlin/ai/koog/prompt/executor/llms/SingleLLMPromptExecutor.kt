@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.Flow
 )
 public open class SingleLLMPromptExecutor(
     private val llmClient: LLMClient,
-) : PromptExecutor {
+) : PromptExecutor() {
     private companion object {
         private val logger = KotlinLogging.logger("ai.koog.prompt.executor.llms.LLMPromptExecutor")
     }

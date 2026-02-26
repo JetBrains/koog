@@ -23,6 +23,7 @@ kotlin {
         jvmMain {
             dependencies {
                 api(libs.kotlinx.coroutines.jdk8)
+                api(libs.kotlinx.coroutines.reactive)
             }
         }
 

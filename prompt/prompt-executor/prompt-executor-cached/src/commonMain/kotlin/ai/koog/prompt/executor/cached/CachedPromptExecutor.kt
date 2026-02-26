@@ -27,7 +27,7 @@ public class CachedPromptExecutor(
     private val cache: PromptCache,
     private val nested: PromptExecutor,
     private val clock: Clock = kotlin.time.Clock.System
-) : PromptExecutor {
+) : PromptExecutor() {
 
     override suspend fun execute(
         prompt: Prompt,

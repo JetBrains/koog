@@ -31,7 +31,7 @@ import kotlin.jvm.JvmOverloads
 public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     private val llmClients: Map<LLMProvider, LLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
-) : PromptExecutor {
+) : PromptExecutor() {
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *

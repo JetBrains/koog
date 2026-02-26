@@ -395,7 +395,7 @@ class RetryingLLMClientTest {
         private val failureMessage: String = "Mock failure",
         private val throwCancellation: Boolean = false,
         private val llmProvider: LLMProvider = LLMProvider.OpenAI,
-    ) : LLMClient {
+    ) : LLMClient() {
 
         var executeCalls = 0
         var streamCalls = 0

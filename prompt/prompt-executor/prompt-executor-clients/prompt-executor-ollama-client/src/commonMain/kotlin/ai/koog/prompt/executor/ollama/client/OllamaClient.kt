@@ -82,7 +82,7 @@ public class OllamaClient @JvmOverloads constructor(
     private val clock: Clock = kotlin.time.Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
-) : LLMClient, LLMEmbeddingProvider {
+) : LLMClient(), LLMEmbeddingProvider {
 
     private companion object {
         private val logger = KotlinLogging.logger { }

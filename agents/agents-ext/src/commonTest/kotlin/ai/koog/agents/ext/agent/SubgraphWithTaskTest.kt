@@ -725,7 +725,7 @@ class SubgraphWithTaskTest {
         private val finishToolName: String,
         private val invalidArgsJson: String,
         private val validArgsJson: String,
-    ) : PromptExecutor {
+    ) : PromptExecutor() {
         var callCount = 0
 
         override suspend fun execute(

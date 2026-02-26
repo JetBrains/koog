@@ -18,7 +18,7 @@ import kotlinx.serialization.json.put
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-object CalculatorChatExecutor : PromptExecutor {
+object CalculatorChatExecutor : PromptExecutor() {
     private val json = Json {
         ignoreUnknownKeys = true
         allowStructuredMapKeys = true

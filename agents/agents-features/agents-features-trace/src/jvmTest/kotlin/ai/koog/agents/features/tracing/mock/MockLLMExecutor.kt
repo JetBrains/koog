@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.flow
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class MockLLMExecutor : PromptExecutor {
+class MockLLMExecutor : PromptExecutor() {
 
     private val clock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")

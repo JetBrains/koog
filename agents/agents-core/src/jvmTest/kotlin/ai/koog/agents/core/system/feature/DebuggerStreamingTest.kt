@@ -268,7 +268,7 @@ class DebuggerStreamingTest {
         val testStreamingErrorMessage = "Test streaming error"
         var testStreamingStackTrace = ""
 
-        val testStreamingExecutor = object : PromptExecutor {
+        val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: LLModel,

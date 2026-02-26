@@ -98,7 +98,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     baseClient: HttpClient = HttpClient(),
     private val clock: Clock = kotlin.time.Clock.System
-) : LLMClient, LLMEmbeddingProvider {
+) : LLMClient(), LLMEmbeddingProvider {
 
     @OptIn(InternalStructuredOutputApi::class)
     private companion object {

@@ -139,7 +139,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     private val fallbackModelFamily: BedrockModelFamilies? = null,
     private val clock: Clock = kotlin.time.Clock.System,
-) : LLMClient, LLMEmbeddingProvider {
+) : LLMClient(), LLMEmbeddingProvider {
 
     private val logger = KotlinLogging.logger {}
 

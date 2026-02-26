@@ -54,7 +54,7 @@ class CachedPromptExecutorTest {
     }
 
     // Mock implementation of PromptExecutor
-    private class MockPromptExecutor : PromptExecutor {
+    private class MockPromptExecutor : PromptExecutor() {
         var executeCalled = false
         var executeStreamingCalled = false
 

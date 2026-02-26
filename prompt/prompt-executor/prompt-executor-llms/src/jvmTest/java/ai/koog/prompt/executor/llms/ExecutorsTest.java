@@ -2,7 +2,7 @@ package ai.koog.prompt.executor.llms;
 
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.LLMClient;
-import ai.koog.prompt.executor.model.JavaPromptExecutor;
+import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
@@ -15,13 +15,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,36 +36,34 @@ class ExecutorsTest {
     LLMClient llmClient = MockLLMClient.simpleClientMock(provider,"Hello from LLM");
     LLMClient failingClient = MockLLMClient.failingClientMock(provider);
 
-    Iterable<JavaPromptExecutor> promptExecutors() {
+    Iterable<PromptExecutor> promptExecutors() {
         return List.of(
-            Executors.promptExecutor(provider, llmClient),
-            Executors.promptExecutor(Map.of(provider, llmClient)),
-            Executors.promptExecutor(llmClient)
+            new MultiLLMPromptExecutor(Map.of(provider, llmClient)),
+            new MultiLLMPromptExecutor(Map.of(provider, llmClient)),
+            new SingleLLMPromptExecutor(llmClient)
         );
     }
 
-    Iterable<JavaPromptExecutor> failingPromptExecutors() {
+    Iterable<PromptExecutor> failingPromptExecutors() {
         return List.of(
-            Executors.promptExecutor(provider, failingClient),
-            Executors.promptExecutor(Map.of(provider, failingClient)),
-            Executors.promptExecutor(failingClient)
+            new MultiLLMPromptExecutor(Map.of(provider, failingClient)),
+            new MultiLLMPromptExecutor(Map.of(provider, failingClient)),
+            new SingleLLMPromptExecutor(failingClient)
         );
     }
 
     @ParameterizedTest
     @MethodSource("promptExecutors")
-    void shouldExecutePromptAsync(JavaPromptExecutor promptExecutor) {
+    void shouldExecutePromptAsync(PromptExecutor promptExecutor) {
         when(model.getProvider()).thenReturn(provider);
         // given
         assertThat(promptExecutor).isNotNull();
 
         final var requestMeta = RequestMetaInfo.Companion.getEmpty();
 
-        final var systemMessage = new Message.System(
-            "You are helpful assistant", requestMeta);
+        final var systemMessage = new Message.System("You are helpful assistant", requestMeta);
 
-        final var userMessage = new Message.User(
-            "Say Hello", requestMeta);
+        final var userMessage = new Message.User("Say Hello", requestMeta);
 
         final Prompt prompt = new Prompt(
             List.of(systemMessage, userMessage),
@@ -75,39 +72,32 @@ class ExecutorsTest {
         );
 
         // when
-        final var future = promptExecutor.executeAsync(prompt, model);
+        final var responses = promptExecutor.execute(prompt, model);
 
         // then
-        assertThat(future)
-            .succeedsWithin(Duration.ofSeconds(3))
-            .satisfies(responses -> {
-                    assertThat(responses)
-                        .hasSize(1)
-                        .first().satisfies(assistantResponse -> {
-                            assertThat(assistantResponse)
-                                .isNotNull()
-                                .isInstanceOf(Message.Assistant.class);
-                            assertThat(assistantResponse.getRole()).isEqualTo(Message.Role.Assistant);
-                            assertThat(assistantResponse.getContent()).isEqualTo("Hello from LLM");
-                        });
-                }
-            );
+        assertThat(responses.size()).isEqualTo(1);
+        assertThat(responses.get(0))
+            .satisfies(assistantResponse -> {
+                assertThat(assistantResponse)
+                    .isNotNull()
+                    .isInstanceOf(Message.Assistant.class);
+                assertThat(assistantResponse.getRole()).isEqualTo(Message.Role.Assistant);
+                assertThat(assistantResponse.getContent()).isEqualTo("Hello from LLM");
+            });
     }
 
     @ParameterizedTest
     @MethodSource("failingPromptExecutors")
-    void shouldExecutePromptAsyncWithError(JavaPromptExecutor promptExecutor) {
+    void shouldExecutePromptAsyncWithError(PromptExecutor promptExecutor) {
         when(model.getProvider()).thenReturn(provider);
         // given
         assertThat(promptExecutor).isNotNull();
 
         final var requestMeta = RequestMetaInfo.Companion.getEmpty();
 
-        final var systemMessage = new Message.System(
-            "You are helpful assistant", requestMeta);
+        final var systemMessage = new Message.System("You are helpful assistant", requestMeta);
 
-        final var userMessage = new Message.User(
-            "Say Hello", requestMeta);
+        final var userMessage = new Message.User("Say Hello", requestMeta);
 
         final Prompt prompt = new Prompt(
             List.of(systemMessage, userMessage),
@@ -116,14 +106,15 @@ class ExecutorsTest {
         );
 
         // when
-        final var future = promptExecutor.executeAsync(prompt, model);
+        Throwable exception = null;
+        try {
+            final var responses = promptExecutor.execute(prompt, model);
+        } catch (Throwable throwable) {
+            exception = throwable;
+        }
 
         // then
-        assertThat(future)
-            .completesExceptionallyWithin(Duration.ofSeconds(3))
-            .withThrowableThat().satisfies(throwable -> {
-                assertThat(throwable).isInstanceOf(ExecutionException.class);
-                assertThat(throwable).hasRootCauseMessage("Mock failed to execute");
-            });
+        assertThat(exception).hasMessageContaining("Mock failed to execute");
+        assertThat(exception).isInstanceOf(RuntimeException.class);
     }
 }

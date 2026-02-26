@@ -28,7 +28,7 @@ val result = executor.execute(prompt, model)
 
 ```kotlin
 // Creating a prompt executor implementation
-class MyPromptExecutor : PromptExecutor {
+class MyPromptExecutor : PromptExecutor() {
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         // Implementation details
     }

@@ -32,7 +32,7 @@ import kotlin.uuid.Uuid
 public class ContextualPromptExecutor(
     private val executor: PromptExecutor,
     private val context: AIAgentContext,
-) : PromptExecutor {
+) : PromptExecutor() {
 
     private companion object {
         private val logger = KotlinLogging.logger { }

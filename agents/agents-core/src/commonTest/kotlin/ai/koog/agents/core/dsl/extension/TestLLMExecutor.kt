@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.time.Clock
 
-class TestLLMExecutor : PromptExecutor {
+class TestLLMExecutor : PromptExecutor() {
     companion object {
         val testClock: Clock = object : Clock {
             override fun now(): kotlin.time.Instant = kotlin.time.Instant.parse("2023-01-01T00:00:00Z")
