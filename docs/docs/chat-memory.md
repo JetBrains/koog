@@ -6,10 +6,6 @@ The ChatMemory feature gives AI agents persistent conversation history across mu
 When installed, the agent automatically loads previous messages at the start of each run and
 stores the updated conversation when the run completes — enabling natural multi-turn chat.
 
-> **ChatMemory vs AgentMemory**: ChatMemory stores raw message history (the actual user/assistant
-> messages). [AgentMemory](agent-memory.md) extracts and stores structured *facts* from conversations.
-> They serve different purposes and can be used together.
-
 ### Key capabilities
 
 - Automatic load/store of conversation history per session ID

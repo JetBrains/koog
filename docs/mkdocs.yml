@@ -7,7 +7,9 @@ nav:
           - Key features: key-features.md
           - LLM providers: llm-providers.md
           - Glossary: glossary.md
-      - Quickstart: quickstart.md
+      - Quickstart:
+          - quickstart/index.md
+          - Chat agent with memory: quickstart/chat-agent.md
       - Agents:
           - agents/index.md
           - Basic agents: agents/basic-agents.md
@@ -128,7 +130,7 @@ plugins:
   - search
   - redirects:
       redirect_maps:
-        'simple-api-getting-started.md': 'quickstart.md'
+        'simple-api-getting-started.md': 'quickstart/index.md'
         'advanced-tool-implementation.md': 'class-based-tools.md'
         'key-concepts.md': 'glossary.md'
         'single-run-agents.md': 'agents/basic-agents.md'
@@ -147,7 +149,8 @@ plugins:
           - llm-providers.md: This page provides a list of LLM providers supported by Koog.
           - glossary.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
         Quickstart:
-          - quickstart.md: This page provides a guide on installing Koog and creating a minimal AI agent.
+          - quickstart/index.md: This page provides a guide on installing Koog and creating a minimal AI agent.
+          - quickstart/chat-agent.md: This page provides a quickstart guide for building a conversational chat agent with persistent memory using the ChatMemory feature.
         Agents:
           - agents/basic-agents.md: This guide lets you build a basic agent with minimum required configuration.
           - agents/graph-based-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
