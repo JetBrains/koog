@@ -31,6 +31,9 @@ import ai.koog.agents.features.opentelemetry.span.endExecuteToolSpan
 import ai.koog.agents.features.opentelemetry.span.endInferenceSpan
 import ai.koog.agents.features.opentelemetry.span.endInvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.endNodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.endPlanCompletionEvaluationSpan
+import ai.koog.agents.features.opentelemetry.span.endPlanCreationSpan
+import ai.koog.agents.features.opentelemetry.span.endStepExecutionSpan
 import ai.koog.agents.features.opentelemetry.span.endStrategySpan
 import ai.koog.agents.features.opentelemetry.span.endSubgraphExecuteSpan
 import ai.koog.agents.features.opentelemetry.span.enrichExecuteToolSpanWithMcpAttrs
@@ -39,6 +42,9 @@ import ai.koog.agents.features.opentelemetry.span.startExecuteToolSpan
 import ai.koog.agents.features.opentelemetry.span.startInferenceSpan
 import ai.koog.agents.features.opentelemetry.span.startInvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startNodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.startPlanCompletionEvaluationSpan
+import ai.koog.agents.features.opentelemetry.span.startPlanCreationSpan
+import ai.koog.agents.features.opentelemetry.span.startStepExecutionSpan
 import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.agents.mcp.metadata.McpMetadataKeys
@@ -266,6 +272,145 @@ public class OpenTelemetry {
             val spanCollector = SpanCollector()
 
             installCommon(config, pipeline, spanCollector)
+
+            // Inline install for Planner (no separate installPlanner function)
+            val spanAdapter = config.spanAdapter
+            val tracer = config.tracer
+
+            // Plan Creation
+            pipeline.interceptPlanCreationStarting(this) { eventContext ->
+                logger.debug { "Execute OpenTelemetry before plan creation starting handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val parentSpan = spanCollector.getParentSpanForEvent(patchedExecutionInfo)
+                val span = startPlanCreationSpan(
+                    tracer = tracer,
+                    parentSpan = parentSpan,
+                    id = eventContext.eventId,
+                    runId = eventContext.context.runId,
+                    stepIndex = eventContext.stepIndex,
+                    state = eventContext.state.toString(),
+                    currentPlan = eventContext.currentPlan?.toString(),
+                )
+
+                spanAdapter?.onBeforeSpanStarted(span)
+                spanCollector.collectSpan(
+                    span = span,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            pipeline.interceptPlanCreationCompleted(this) { eventContext ->
+                logger.debug { "Execute OpenTelemetry after plan creation completed handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val span = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.PLAN_CREATION
+                ) ?: return@interceptPlanCreationCompleted
+
+                spanAdapter?.onBeforeSpanFinished(span)
+                endPlanCreationSpan(
+                    span = span,
+                    newPlan = eventContext.newPlan.toString(),
+                    verbose = config.isVerbose
+                )
+                spanCollector.removeSpan(
+                    span = span,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            // Step Execution
+            pipeline.interceptStepExecutionStarting(this) { eventContext ->
+                logger.debug { "Execute OpenTelemetry before step execution starting handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val parentSpan = spanCollector.getParentSpanForEvent(patchedExecutionInfo)
+                val span = startStepExecutionSpan(
+                    tracer = tracer,
+                    parentSpan = parentSpan,
+                    id = eventContext.eventId,
+                    runId = eventContext.context.runId,
+                    stepIndex = eventContext.stepIndex,
+                    state = eventContext.state.toString(),
+                    plan = eventContext.plan.toString(),
+                )
+
+                spanAdapter?.onBeforeSpanStarted(span)
+                spanCollector.collectSpan(
+                    span = span,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            pipeline.interceptStepExecutionCompleted(this) { eventContext ->
+                logger.debug { "Execute OpenTelemetry after step execution completed handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val span = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.STEP_EXECUTION
+                ) ?: return@interceptStepExecutionCompleted
+
+                spanAdapter?.onBeforeSpanFinished(span)
+                endStepExecutionSpan(
+                    span = span,
+                    state = eventContext.state.toString(),
+                    verbose = config.isVerbose
+                )
+                spanCollector.removeSpan(
+                    span = span,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            // Plan Completion Evaluation
+            pipeline.interceptPlanCompletionEvaluationStarting(this) { eventContext ->
+                logger.debug { "Execute OpenTelemetry before plan completion evaluation starting handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val parentSpan = spanCollector.getParentSpanForEvent(patchedExecutionInfo)
+                val span = startPlanCompletionEvaluationSpan(
+                    tracer = tracer,
+                    parentSpan = parentSpan,
+                    id = eventContext.eventId,
+                    runId = eventContext.context.runId,
+                    stepIndex = eventContext.stepIndex,
+                    state = eventContext.state.toString(),
+                    plan = eventContext.plan.toString(),
+                )
+
+                spanAdapter?.onBeforeSpanStarted(span)
+                spanCollector.collectSpan(
+                    span = span,
+                    path = patchedExecutionInfo
+                )
+            }
+
+            pipeline.interceptPlanCompletionEvaluationCompleted(this) { eventContext ->
+                logger.debug { "Execute OpenTelemetry after plan completion evaluation completed handler" }
+
+                val patchedExecutionInfo = eventContext.executionInfo.appendRunId(eventContext.context.runId)
+                val span = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.PLAN_COMPLETION_EVALUATION
+                ) ?: return@interceptPlanCompletionEvaluationCompleted
+
+                spanAdapter?.onBeforeSpanFinished(span)
+                endPlanCompletionEvaluationSpan(
+                    span = span,
+                    isCompleted = eventContext.isCompleted,
+                    verbose = config.isVerbose
+                )
+                spanCollector.removeSpan(
+                    span = span,
+                    path = patchedExecutionInfo
+                )
+            }
 
             return openTelemetry
         }

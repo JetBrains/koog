@@ -8,4 +8,7 @@ internal enum class SpanType {
     SUBGRAPH,
     INFERENCE,
     EXECUTE_TOOL,
+    PLAN_CREATION,
+    STEP_EXECUTION,
+    PLAN_COMPLETION_EVALUATION,
 }
