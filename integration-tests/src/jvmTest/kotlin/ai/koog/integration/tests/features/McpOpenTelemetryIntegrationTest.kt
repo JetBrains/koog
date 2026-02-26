@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterAll
@@ -40,13 +41,13 @@ class McpOpenTelemetryIntegrationTest {
 
         @BeforeAll
         @JvmStatic
-        suspend fun cleanup() {
+        fun setup() = runBlocking {
             server = startMcpServer(ToolRegistry { tool(RandomNumberTool()) })
         }
 
         @AfterAll
         @JvmStatic
-        suspend fun teardown() {
+        fun teardown() = runBlocking {
             closeMcpServer(server, McpServerPort)
         }
     }

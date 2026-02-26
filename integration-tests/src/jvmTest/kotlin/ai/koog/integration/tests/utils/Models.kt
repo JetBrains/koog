@@ -53,11 +53,11 @@ object Models {
     )
 
     @JvmStatic
-    fun bedrockModels(): Stream<Arguments> {
+    fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
             BedrockModels.MetaLlama3_1_70BInstruct,
             BedrockModels.AnthropicClaude4_5Sonnet,
-        ).map { Arguments.of(it) }
+        )
     }
 
     @JvmStatic

@@ -50,7 +50,7 @@ class ToolSchemaExecutorIntegrationTest {
 
         @JvmStatic
         fun bedrockModels(): Stream<Arguments> {
-            return Models.bedrockModels()
+            return Models.bedrockModels().map { Arguments.of(it) }
         }
 
         @JvmStatic
@@ -96,7 +96,20 @@ class ToolSchemaExecutorIntegrationTest {
         }
     }
 
-    class FileTools : ToolSet
+    class FileTools : ToolSet {
+
+        @ai.koog.agents.core.tools.annotations.Tool
+        @ai.koog.agents.core.tools.annotations.LLMDescription(
+            "Writes content to a file (creates new or overwrites existing). BOTH filePath AND content parameters are REQUIRED."
+        )
+        fun writeFile(
+            @ai.koog.agents.core.tools.annotations.LLMDescription("Full path where the file should be created") filePath: String,
+            @ai.koog.agents.core.tools.annotations.LLMDescription("Content to write to the file - THIS IS REQUIRED AND CANNOT BE EMPTY") content: String,
+            @ai.koog.agents.core.tools.annotations.LLMDescription("Whether to overwrite if file exists (default: false)") overwrite: Boolean = false
+        ) {
+            println("Writing '$content' to file '$filePath' with overwrite=$overwrite")
+        }
+    }
 
     @Serializable
     data class FileOperation(
