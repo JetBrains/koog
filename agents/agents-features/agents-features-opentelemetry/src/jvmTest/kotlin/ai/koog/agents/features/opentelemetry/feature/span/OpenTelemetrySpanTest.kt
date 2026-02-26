@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
-import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.features.opentelemetry.AgentType
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
@@ -19,8 +18,6 @@ import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
-import ai.koog.agents.planner.AIAgentPlanner
-import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -162,6 +159,54 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
         )
     )
 
+    private fun getExpectedPlannerSpans(
+        runId: String,
+        userPrompt: String,
+        planCreationEvent: String,
+        executeStepEvent: String,
+        planCompletionAssessmentEvent: String
+    ) = listOf(
+        mapOf(
+            "plan creation 1" to mapOf(
+                "attributes" to mapOf(
+                    "gen_ai.conversation.id" to runId,
+                    "koog.planner.step_index" to 1.toLong(),
+                    "koog.planner.state" to userPrompt,
+                    "koog.planner.plan" to "no plan yet",
+                    "koog.planner.new_plan" to "do-nothing",
+                    "koog.event.id" to planCreationEvent,
+                ),
+                "events" to emptyMap()
+            )
+        ),
+        mapOf(
+            "step execution 1" to mapOf(
+                "attributes" to mapOf(
+                    "gen_ai.conversation.id" to runId,
+                    "koog.planner.step_index" to 1.toLong(),
+                    "koog.planner.state" to userPrompt,
+                    "koog.planner.plan" to "do-nothing",
+                    "koog.planner.new_state" to userPrompt,
+                    "koog.event.id" to executeStepEvent,
+                ),
+                "events" to emptyMap()
+            )
+        ),
+        mapOf(
+            "plan completion evaluation 1" to mapOf(
+                "attributes" to mapOf(
+                    "gen_ai.conversation.id" to runId,
+                    "koog.planner.step_index" to 1.toLong(),
+                    "koog.planner.state" to userPrompt,
+                    "koog.planner.plan" to "do-nothing",
+                    "koog.planner.is_completed" to true,
+                    "koog.event.id" to planCompletionAssessmentEvent,
+                ),
+                "events" to emptyMap()
+            )
+        )
+    )
+
     @ParameterizedTest
     @EnumSource(AgentType::class)
     fun `test spans for same agent run multiple times`(agentType: AgentType) = runTest {
@@ -254,7 +299,29 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
 
                 AgentType.Functional -> expectedCommonSpansFirstRun + expectedCommonSpansSecondRun
 
-                AgentType.Planner -> expectedCommonSpansFirstRun + expectedCommonSpansSecondRun
+                AgentType.Planner -> {
+                    val planCreationEvents = collectedTestData.filterPlanCreationEvents()
+                    val stepExecutionEvents = collectedTestData.filterStepExecutionEvents()
+                    val planCompletionEvaluationEvents = collectedTestData.filterPlanCompletionEvaluationEvents()
+
+                    val expectedNodeSpansFirstRun = getExpectedPlannerSpans(
+                        mockExporter.runIds[0],
+                        userPrompt0,
+                        planCreationEvents[0],
+                        stepExecutionEvents[0],
+                        planCompletionEvaluationEvents[0]
+                    )
+
+                    val expectedNodeSpansSecondRun = getExpectedPlannerSpans(
+                        mockExporter.runIds[1],
+                        userPrompt1,
+                        planCreationEvents[1],
+                        stepExecutionEvents[1],
+                        planCompletionEvaluationEvents[1]
+                    )
+
+                    expectedNodeSpansFirstRun + expectedCommonSpansFirstRun + expectedNodeSpansSecondRun + expectedCommonSpansSecondRun
+                }
             }
 
             assertSpans(expectedSpans, collectedSpans)

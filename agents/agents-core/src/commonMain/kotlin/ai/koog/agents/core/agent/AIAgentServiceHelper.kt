@@ -148,6 +148,7 @@ internal object AIAgentServiceHelper {
         strategy = strategy,
         installFeatures = installFeatures
     )
+
     @OptIn(InternalAgentsApi::class)
     internal operator fun <Input, Output> invoke(
         promptExecutor: PromptExecutor,

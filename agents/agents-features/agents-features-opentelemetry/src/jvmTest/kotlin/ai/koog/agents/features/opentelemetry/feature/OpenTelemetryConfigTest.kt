@@ -171,7 +171,10 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                 )
 
                 AgentType.Planner -> listOf(
+                    "plan creation 1",
                     "${OperationNameType.CHAT.id} ${defaultModel.id}",
+                    "step execution 1",
+                    "plan completion evaluation 1",
                     "strategy $DEFAULT_STRATEGY_NAME",
                     "${OperationNameType.INVOKE_AGENT.id} $DEFAULT_AGENT_ID",
                     "${OperationNameType.CREATE_AGENT.id} $DEFAULT_AGENT_ID"

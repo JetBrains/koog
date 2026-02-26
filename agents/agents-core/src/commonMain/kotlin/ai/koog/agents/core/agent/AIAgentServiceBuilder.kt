@@ -14,10 +14,10 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.dsl.prompt
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
@@ -494,7 +494,7 @@ public constructor(
     private var temperature: Double? = null,
     private var numberOfChoices: Int = 1,
     private var maxIterations: Int = 50,
-    private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing( ToolCallDescriber.JSON ),
+    private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
     private var clock: Clock = kotlin.time.Clock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf()
 ) {

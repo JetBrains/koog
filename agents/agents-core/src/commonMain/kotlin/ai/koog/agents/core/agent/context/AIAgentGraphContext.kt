@@ -10,7 +10,6 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 

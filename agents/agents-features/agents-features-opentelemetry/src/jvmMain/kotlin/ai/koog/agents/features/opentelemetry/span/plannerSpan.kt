@@ -28,11 +28,9 @@ internal fun startPlanCreationSpan(
     )
         .addAttribute(SpanAttributes.Conversation.Id(runId))
         .addAttribute(KoogAttributes.Koog.Event.Id(id))
-        .addAttribute(KoogAttributes.Koog.Planner.Step.Index(stepIndex))
-
-    builder.addAttribute(KoogAttributes.Koog.Planner.State.Input(state))
-
-    builder.addAttribute(KoogAttributes.Koog.Planner.Plan.Input(currentPlan ?: "no plan yet"))
+        .addAttribute(KoogAttributes.Koog.Planner.StepIndex(stepIndex))
+        .addAttribute(KoogAttributes.Koog.Planner.State(state))
+        .addAttribute(KoogAttributes.Koog.Planner.Plan(currentPlan ?: "no plan yet"))
 
     return builder.buildAndStart(tracer)
 }
@@ -54,7 +52,7 @@ internal fun endPlanCreationSpan(
         span.addAttribute(CommonAttributes.Error.Type(typeName))
     }
 
-    span.addAttribute(KoogAttributes.Koog.Planner.Plan.Output(newPlan))
+    span.addAttribute(KoogAttributes.Koog.Planner.NewPlan(newPlan))
 
     span.end(error.toSpanEndStatus(), verbose)
 }
@@ -80,10 +78,9 @@ internal fun startStepExecutionSpan(
     )
         .addAttribute(SpanAttributes.Conversation.Id(runId))
         .addAttribute(KoogAttributes.Koog.Event.Id(id))
-        .addAttribute(KoogAttributes.Koog.Planner.Step.Index(stepIndex))
-
-    builder.addAttribute(KoogAttributes.Koog.Planner.State.Input(state))
-    builder.addAttribute(KoogAttributes.Koog.Planner.Plan.Input(plan))
+        .addAttribute(KoogAttributes.Koog.Planner.StepIndex(stepIndex))
+        .addAttribute(KoogAttributes.Koog.Planner.State(state))
+        .addAttribute(KoogAttributes.Koog.Planner.Plan(plan))
 
     return builder.buildAndStart(tracer)
 }
@@ -105,7 +102,7 @@ internal fun endStepExecutionSpan(
         span.addAttribute(CommonAttributes.Error.Type(typeName))
     }
 
-    span.addAttribute(KoogAttributes.Koog.Planner.State.Output(state))
+    span.addAttribute(KoogAttributes.Koog.Planner.NewState(state))
 
     span.end(error.toSpanEndStatus(), verbose)
 }
@@ -131,10 +128,9 @@ internal fun startPlanCompletionEvaluationSpan(
     )
         .addAttribute(SpanAttributes.Conversation.Id(runId))
         .addAttribute(KoogAttributes.Koog.Event.Id(id))
-        .addAttribute(KoogAttributes.Koog.Planner.Step.Index(stepIndex))
-
-    builder.addAttribute(KoogAttributes.Koog.Planner.State.Input(state))
-    builder.addAttribute(KoogAttributes.Koog.Planner.Plan.Input(plan))
+        .addAttribute(KoogAttributes.Koog.Planner.StepIndex(stepIndex))
+        .addAttribute(KoogAttributes.Koog.Planner.State(state))
+        .addAttribute(KoogAttributes.Koog.Planner.Plan(plan))
 
     return builder.buildAndStart(tracer)
 }
@@ -156,7 +152,7 @@ internal fun endPlanCompletionEvaluationSpan(
         span.addAttribute(CommonAttributes.Error.Type(typeName))
     }
 
-    span.addAttribute(KoogAttributes.Koog.Planner.Completion.IsCompleted(isCompleted))
+    span.addAttribute(KoogAttributes.Koog.Planner.IsCompleted(isCompleted))
 
     span.end(error.toSpanEndStatus(), verbose)
 }

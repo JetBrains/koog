@@ -78,54 +78,34 @@ internal object KoogAttributes {
             override val key: String
                 get() = super.key.concatKey("planner")
 
-            sealed interface Plan : Planner {
-                override val key: String
-                    get() = super.key.concatKey("plan")
-
-                data class Input(private val plan: String) : Plan {
-                    override val key: String = super.key.concatKey("input")
-                    override val value: HiddenString = HiddenString(plan)
-                }
-
-                data class Output(private val plan: String) : Plan {
-                    override val key: String = super.key.concatKey("output")
-                    override val value: HiddenString = HiddenString(plan)
-                }
+            data class StepIndex(private val stepIndex: Int) : Planner {
+                override val key: String = super.key.concatKey("step_index")
+                override val value: Int = stepIndex
             }
 
-            sealed interface Step : Planner {
-                override val key: String
-                    get() = super.key.concatKey("step")
-
-                data class Index(private val index: Int) : Step {
-                    override val key: String = super.key.concatKey("index")
-                    override val value: Long = index.toLong()
-                }
+            data class Plan(private val plan: String) : Planner {
+                override val key: String = super.key.concatKey("plan")
+                override val value: HiddenString = HiddenString(plan)
             }
 
-            sealed interface State : Planner {
-                override val key: String
-                    get() = super.key.concatKey("state")
-
-                data class Input(private val state: String) : State {
-                    override val key: String = super.key.concatKey("input")
-                    override val value: HiddenString = HiddenString(state)
-                }
-
-                data class Output(private val state: String) : State {
-                    override val key: String = super.key.concatKey("output")
-                    override val value: HiddenString = HiddenString(state)
-                }
+            data class NewPlan(private val newPlan: String) : Planner {
+                override val key: String = super.key.concatKey("new_plan")
+                override val value: HiddenString = HiddenString(newPlan)
             }
 
-            sealed interface Completion : Planner {
-                override val key: String
-                    get() = super.key.concatKey("completion")
+            data class State(private val state: String) : Planner {
+                override val key: String = super.key.concatKey("state")
+                override val value: HiddenString = HiddenString(state)
+            }
 
-                data class IsCompleted(private val isCompleted: Boolean) : Completion {
-                    override val key: String = super.key.concatKey("is_completed")
-                    override val value: Boolean = isCompleted
-                }
+            data class NewState(private val newState: String) : Planner {
+                override val key: String = super.key.concatKey("new_state")
+                override val value: HiddenString = HiddenString(newState)
+            }
+
+            data class IsCompleted(private val isCompleted: Boolean) : Planner {
+                override val key: String = super.key.concatKey("is_completed")
+                override val value: Boolean = isCompleted
             }
         }
     }
