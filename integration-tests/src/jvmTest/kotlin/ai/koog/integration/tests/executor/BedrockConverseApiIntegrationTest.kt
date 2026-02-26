@@ -75,7 +75,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
 
         @JvmStatic
         fun allCompletionModels(): Stream<Arguments> {
-            return Models.bedrockModels()
+            return Models.bedrockModels().map { Arguments.of(it) }
         }
     }
 
