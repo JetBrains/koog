@@ -3,9 +3,12 @@
 package ai.koog.agents.planner
 
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.utils.BuilderChainAction
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.agents.planner.goap.Action
 import ai.koog.agents.planner.goap.ActionBuilder
+import ai.koog.agents.planner.goap.ActionTerminalBuilder
 import ai.koog.agents.planner.goap.Belief
 import ai.koog.agents.planner.goap.Condition
 import ai.koog.agents.planner.goap.Cost
@@ -16,6 +19,8 @@ import ai.koog.agents.planner.goap.GoalBuilder
 import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.agents.planner.llm.SimpleLLMPlanner
 import ai.koog.agents.planner.llm.SimpleLLMWithCriticPlanner
+import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.params.LLMParams
 import kotlin.jvm.JvmOverloads
 import kotlin.math.exp
 
@@ -49,13 +54,13 @@ public class GOAPStrategyBuilder<Input : Any, Output : Any, State : GoapAgentSta
      * Defines and configures an action available to the GOAP agent using the provided builder.
      *
      * @param name The name of the action.
-     * @param configure A configuration function used to customize the action builder.
+     * @param configure A configuration function used to customize the action.
      */
     public fun action(
         name: String,
-        configure: ConfigureAction<ActionBuilder<State>>
+        configure: BuilderChainAction<ActionBuilder<State>, ActionTerminalBuilder<State>>
     ): GOAPStrategyBuilder<Input, Output, State> = apply {
-        action(ActionBuilder<State>().apply { name(name) }.apply(configure::configure).build())
+        action(configure.configure(ActionBuilder<State>().name(name)).build())
     }
 
     /**
@@ -66,6 +71,9 @@ public class GOAPStrategyBuilder<Input : Any, Output : Any, State : GoapAgentSta
      * @param precondition Condition determining if the action can be performed.
      * @param belief Optimistic belief of the state after performing the action.
      * @param cost Heuristic estimate for the cost of performing the action. Default is 1.0.
+     * @param tools Optional list of tools available during action execution.
+     * @param llmModel Optional specific LLM model to use for the action.
+     * @param llmParams Optional specific LLM parameters to use for the action.
      * @param execute Subgraph defining how the action is performed.
      */
     @JvmOverloads
@@ -75,10 +83,66 @@ public class GOAPStrategyBuilder<Input : Any, Output : Any, State : GoapAgentSta
         precondition: Condition<State>,
         belief: Belief<State>,
         cost: Cost<State> = { 1.0 },
+        tools: List<Tool<*, *>>? = null,
+        llmModel: LLModel? = null,
+        llmParams: LLMParams? = null,
         execute: Execute<State>,
     ): GOAPStrategyBuilder<Input, Output, State> = apply {
-        action(Action(name, description, precondition, belief, cost, execute))
+        action(name) { builder ->
+            builder
+                .description(description)
+                .precondition(precondition)
+                .belief(belief)
+                .cost(cost)
+                .tools(tools)
+                .llmModel(llmModel)
+                .llmParams(llmParams)
+                .execute(execute)
+        }
     }
+
+    /**
+     * Defines an action available to the GOAP agent using a structured subtask approach.
+     *
+     * This method creates an action where the execute function runs a subtask
+     *
+     * @param T The type of structured output expected from the LLM subtask.
+     * @param name The name of the action.
+     * @param description Optional description of the action.
+     * @param precondition Condition determining if the action can be performed.
+     * @param belief Optimistic belief of the state after performing the action.
+     * @param updateState Function that applies the structured result [T] to update the state.
+     * @param cost Heuristic estimate for the cost of performing the action. Default is 1.0.
+     * @param tools Optional list of tools available during subtask execution.
+     * @param llmModel Optional specific LLM model to use for the subtask.
+     * @param llmParams Optional LLM parameters (temperature, etc.) for the subtask.
+     * @param taskDescription Function that generates the task description from the current state.
+     */
+    public inline fun <reified T : Any> action(
+        name: String,
+        description: String? = null,
+        noinline precondition: Condition<State>,
+        noinline belief: Belief<State>,
+        noinline updateState: (State, T) -> State,
+        noinline cost: Cost<State> = { 1.0 },
+        tools: List<Tool<*, *>>? = null,
+        llmModel: LLModel? = null,
+        llmParams: LLMParams? = null,
+        noinline taskDescription: (State) -> String
+    ): GOAPStrategyBuilder<Input, Output, State> =
+        action(name) { builder ->
+            builder
+                .description(description)
+                .precondition(precondition)
+                .belief(belief)
+                .cost(cost)
+                .tools(tools)
+                .llmModel(llmModel)
+                .llmParams(llmParams)
+                .structuredOutputClass(T::class)
+                .taskDescription(taskDescription)
+                .updateState(updateState)
+        }
 
     /**
      * Defines a goal for the GOAP agent.

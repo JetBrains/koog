@@ -4,27 +4,20 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.selectTools
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.exception.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
-import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredRequest
-import ai.koog.prompt.structure.StructuredRequestConfig
-import ai.koog.prompt.structure.json.JsonStructure
-import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.Serializable
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -108,46 +101,6 @@ public open class AIAgentSubgraph<TInput, TOutput>(
         forcedInput = input
     }
 
-    @Serializable
-    private data class SelectedTools(
-        @property:LLMDescription("List of selected tools for the given subtask")
-        val tools: List<String>
-    )
-
-    @OptIn(DetachedPromptExecutorAPI::class)
-    private suspend fun selectTools(context: AIAgentContext) = when (toolSelectionStrategy) {
-        is ToolSelectionStrategy.ALL -> context.llm.tools
-        is ToolSelectionStrategy.NONE -> emptyList()
-        is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
-        is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
-            val initialPrompt = prompt
-
-            replaceHistoryWithTLDR()
-
-            appendPrompt {
-                user {
-                    selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
-                }
-            }
-
-            val selectedTools = this.requestLLMStructured(
-                config = StructuredRequestConfig(
-                    default = StructuredRequest.Manual(
-                        JsonStructure.create<SelectedTools>(
-                            schemaGenerator = StandardJsonSchemaGenerator,
-                            examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
-                        ),
-                    ),
-                    fixingParser = toolSelectionStrategy.fixingParser,
-                )
-            ).getOrThrow()
-
-            prompt = initialPrompt
-
-            tools.filter { it.name in selectedTools.data.tools.toSet() }
-        }
-    }
-
     /**
      * Executes the desired operation based on the input and the provided context.
      * This function determines the execution strategy based on the tool selection strategy configured in the class.
@@ -159,7 +112,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class, ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
         context.with { executionInfo, eventId ->
-            val newTools = selectTools(context)
+            val newTools = selectTools(context, toolSelectionStrategy)
 
             // Copy inner context with new tools, model and LLM params.
             val initialLLMContext = context.llm

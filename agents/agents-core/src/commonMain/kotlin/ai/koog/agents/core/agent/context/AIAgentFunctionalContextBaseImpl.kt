@@ -361,58 +361,35 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
     ): OutputTransformed {
         val maxAssistantResponses = assistantResponseRepeatMax ?: SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
 
-        val toolsSubset = tools?.map { it.descriptor } ?: llm.readSession { this.tools.toList() }
-
-        val originalTools = llm.readSession { this.tools.toList() }
-        val originalModel = llm.readSession { this.model }
-        val originalParams = llm.readSession { this.prompt.params }
-        val originalResponseProcessor = llm.readSession { this.responseProcessor }
-
-        // setup:
-        llm.writeSession {
-            if (finishTool.descriptor !in toolsSubset) {
-                this.tools = toolsSubset + finishTool.descriptor
+        val toolsSubset = (tools?.map { it.descriptor } ?: llm.readSession { this.tools.toList() })
+            .let { tools ->
+                if (finishTool.descriptor in tools) tools else tools + finishTool.descriptor
             }
 
-            if (llmModel != null) {
-                model = llmModel
-            }
+        return withUpdatedContext(
+            context = this,
+            tools = toolsSubset,
+            llmModel = llmModel,
+            llmParams = llmParams,
+            responseProcessor = responseProcessor,
+        ) {
+            llm.writeSession { setToolChoiceRequired() }
 
-            if (llmParams != null) {
-                prompt = prompt.withParams(llmParams)
-            }
+            when (runMode) {
+                ToolCalls.SINGLE_RUN_SEQUENTIAL -> subtaskWithSingleToolMode(
+                    taskDescription,
+                    finishTool,
+                    maxAssistantResponses
+                )
 
-            if (responseProcessor != null) {
-                this.responseProcessor = responseProcessor
+                else -> subtaskWithMultiToolMode(
+                    taskDescription,
+                    finishTool,
+                    runMode,
+                    maxAssistantResponses
+                )
             }
-
-            setToolChoiceRequired()
         }
-
-        val result = when (runMode) {
-            ToolCalls.SINGLE_RUN_SEQUENTIAL -> subtaskWithSingleToolMode(
-                taskDescription,
-                finishTool,
-                maxAssistantResponses
-            )
-
-            else -> subtaskWithMultiToolMode(
-                taskDescription,
-                finishTool,
-                runMode,
-                maxAssistantResponses
-            )
-        }
-
-        // rollback
-        llm.writeSession {
-            this.tools = originalTools
-            this.model = originalModel
-            this.prompt = prompt.withParams(originalParams)
-            this.responseProcessor = originalResponseProcessor
-        }
-
-        return result
     }
 
     @OptIn(InternalAgentToolsApi::class)
