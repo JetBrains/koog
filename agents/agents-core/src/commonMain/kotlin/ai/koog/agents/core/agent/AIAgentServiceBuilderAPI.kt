@@ -6,6 +6,7 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -112,6 +113,13 @@ public interface AIAgentServiceBuilderAPI {
     public fun <Input, Output> functionalStrategy(
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentServiceBuilder<Input, Output>
+
+    /**
+     * Configure a planner strategy and continue with a planner service builder.
+     */
+    public fun <Input, Output> plannerStrategy(
+        strategy: AIAgentPlannerStrategy<Input, Output, *>
+    ): PlannerAgentServiceBuilder<Input, Output>
 
     /**
      * Convenience build for GraphAIAgentService<String, String> using singleRunStrategy.

@@ -19,6 +19,8 @@ import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
+import ai.koog.agents.planner.AIAgentPlanner
+import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -46,7 +48,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
     val agentId = "test-agent-id"
     val promptId = "test-prompt-id"
 
-    val strategyName = "test-strategy"
+    val strategyName = OpenTelemetryTestAPI.Parameter.DEFAULT_STRATEGY_NAME
     val nodeName = "test-node"
 
     private fun getExpectedCommonSpans(
@@ -178,7 +180,9 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     nodeStart then nodeBlank then nodeFinish
                 }
 
-                AgentType.Functional -> functionalStrategy(strategyName) { it }
+                AgentType.Functional -> OpenTelemetryTestAPI.Strategy.simpleFunctionalStrategy
+
+                AgentType.Planner -> OpenTelemetryTestAPI.Strategy.simplePlannerStrategy
             }
 
             val collectedTestData = OpenTelemetryTestData().apply {
@@ -249,6 +253,8 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                 }
 
                 AgentType.Functional -> expectedCommonSpansFirstRun + expectedCommonSpansSecondRun
+
+                AgentType.Planner -> expectedCommonSpansFirstRun + expectedCommonSpansSecondRun
             }
 
             assertSpans(expectedSpans, collectedSpans)

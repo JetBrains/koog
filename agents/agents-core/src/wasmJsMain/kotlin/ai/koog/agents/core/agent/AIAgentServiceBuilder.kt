@@ -5,6 +5,7 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -43,6 +44,9 @@ public actual class AIAgentServiceBuilder internal actual constructor() :
 
     actual override fun <Input, Output> functionalStrategy(strategy: AIAgentFunctionalStrategy<Input, Output>): FunctionalAgentServiceBuilder<Input, Output> =
         delegate.functionalStrategy(strategy)
+
+    actual override fun <Input, Output> plannerStrategy(strategy: AIAgentPlannerStrategy<Input, Output, *>): PlannerAgentServiceBuilder<Input, Output> =
+        delegate.plannerStrategy(strategy)
 
     actual override fun build(): GraphAIAgentService<String, String> = delegate.build()
 }

@@ -16,6 +16,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
@@ -56,6 +58,13 @@ public expect class AIAgentServiceBuilder internal constructor() : AIAgentServic
     public override fun <Input, Output> functionalStrategy(
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentServiceBuilder<Input, Output>
+
+    /**
+     * Configure a planner strategy and continue with a planner service builder.
+     */
+    public override fun <Input, Output> plannerStrategy(
+        strategy: AIAgentPlannerStrategy<Input, Output, *>
+    ): PlannerAgentServiceBuilder<Input, Output>
 
     public override fun build(): GraphAIAgentService<String, String>
 }
@@ -456,6 +465,119 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
         }
 
         return FunctionalAIAgentService(
+            promptExecutor = executor,
+            agentConfig = config,
+            toolRegistry = toolRegistry,
+            strategy = strategy,
+            installFeatures = installCombined
+        )
+    }
+}
+
+/**
+ * A builder class for creating instances of [PlannerAIAgentService].
+ *
+ * This builder provides methods to configure the necessary components for a planner AI agent,
+ * such as the prompt executor, language model, strategy, and feature installation.
+ *
+ * @param Input The input type that the planner AI agent processes.
+ * @param Output The output type that the planner AI agent produces.
+ */
+public class PlannerAgentServiceBuilder<Input, Output>
+@InternalAgentsApi
+public constructor(
+    private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    internal var promptExecutor: PromptExecutor? = null,
+    internal var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    private var prompt: Prompt = Prompt.Empty,
+    private var llmModel: LLModel? = null,
+    private var temperature: Double? = null,
+    private var numberOfChoices: Int = 1,
+    private var maxIterations: Int = 50,
+    private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing( ToolCallDescriber.JSON ),
+    private var clock: Clock = kotlin.time.Clock.System,
+    private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf()
+) {
+
+    public fun promptExecutor(promptExecutor: PromptExecutor): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.promptExecutor = promptExecutor
+    }
+
+    public fun llmModel(model: LLModel): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.llmModel = model
+    }
+
+    public fun toolRegistry(toolRegistry: ToolRegistry): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.toolRegistry = toolRegistry
+    }
+
+    public fun systemPrompt(systemPrompt: String): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.prompt = prompt(id = "agent") { system(systemPrompt) }
+    }
+
+    public fun prompt(prompt: Prompt): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.prompt = prompt
+    }
+
+    public fun temperature(temperature: Double): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.temperature = temperature
+    }
+
+    public fun numberOfChoices(numberOfChoices: Int): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.numberOfChoices = numberOfChoices
+    }
+
+    public fun maxIterations(maxIterations: Int): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.maxIterations = maxIterations
+    }
+
+    @JavaAPI
+    public fun agentConfig(config: AIAgentConfig): PlannerAgentServiceBuilder<Input, Output> = apply {
+        this.prompt = config.prompt
+        this.llmModel = config.model
+        this.maxIterations = config.maxAgentIterations
+        this.missingToolsConversionStrategy = config.missingToolsConversionStrategy
+    }
+
+    public fun install(
+        configure: PlannerAIAgent.FeatureContext.() -> Unit
+    ): PlannerAgentServiceBuilder<Input, Output> = apply {
+        featureInstallers.add(configure)
+    }
+
+    /**
+     * Builds and returns a [PlannerAIAgentService] instance using the current configuration.
+     *
+     * @return A configured [PlannerAIAgentService] instance.
+     * @throws IllegalArgumentException if mandatory fields like `promptExecutor` or `llmModel` are not set.
+     */
+    @OptIn(InternalAgentsApi::class)
+    public fun build(): PlannerAIAgentService<Input, Output> {
+        val executor = requireNotNull(promptExecutor) { "PromptExecutor must be provided" }
+        val model = requireNotNull(llmModel) { "LLModel must be provided" }
+
+        val config = AIAgentConfig(
+            prompt = if (prompt === Prompt.Empty) {
+                prompt(
+                    id = "chat",
+                    params = LLMParams(
+                        temperature = temperature,
+                        numberOfChoices = numberOfChoices
+                    )
+                ) {}
+            } else {
+                prompt
+            },
+            model = model,
+            maxAgentIterations = maxIterations,
+            missingToolsConversionStrategy = missingToolsConversionStrategy
+        )
+
+        val installCombined: PlannerAIAgent.FeatureContext.() -> Unit = {
+            featureInstallers.forEach { it(this) }
+        }
+
+        return PlannerAIAgentService(
             promptExecutor = executor,
             agentConfig = config,
             toolRegistry = toolRegistry,

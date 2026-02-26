@@ -9,6 +9,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
@@ -144,6 +146,26 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             noinline installFeatures: FeatureContext.() -> Unit = {},
         ): GraphAIAgentService<Input, Output>
+
+        /**
+         * Invokes the creation of a [PlannerAIAgentService] instance with the provided configuration, strategy,
+         * tool registry, and optional feature installation logic.
+         *
+         * @param promptExecutor The executor responsible for processing AI prompts and responses.
+         * @param agentConfig Configuration parameters for the AI agent.
+         * @param strategy A strategy defining the planner structure for AI agent interactions and processing.
+         * @param toolRegistry The registry containing tools available for the agent.
+         * @param installFeatures A lambda expression to configure and install additional features.
+         * @return An instance of [PlannerAIAgentService] initialized with the given parameters.
+         */
+        @OptIn(InternalAgentsApi::class)
+        public operator fun <Input, Output> invoke(
+            promptExecutor: PromptExecutor,
+            agentConfig: AIAgentConfig,
+            strategy: AIAgentPlannerStrategy<Input, Output, *>,
+            toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+            installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
+        ): PlannerAIAgentService<Input, Output>
 
         /**
          * Invokes the creation of a [GraphAIAgentService] with the provided dependencies, configuration,
@@ -402,6 +424,54 @@ public constructor(
         agentConfig: AIAgentConfig,
         clock: Clock,
     ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
+        promptExecutor = promptExecutor,
+        agentConfig = agentConfig,
+        toolRegistry = toolRegistry + additionalToolRegistry,
+        strategy = strategy,
+        id = id,
+        clock = clock,
+        installFeatures = installFeatures
+    )
+}
+
+/**
+ * A service for managing planner AI agents that operate based on a specified execution strategy.
+ *
+ * This class provides the infrastructure for creating and managing planner AI agents.
+ * It integrates an execution strategy with associated input and output types, a tool registry for
+ * additional functionalities, and a customizable feature installation context.
+ *
+ * @param Input The type of input data that the planner AI agent will process.
+ * @param Output The type of output data produced by the planner AI agent.
+ * @property promptExecutor The executor responsible for handling and executing prompts.
+ * @property agentConfig The configuration settings for the AI agent, including model and prompt behavior.
+ * @property strategy The planner strategy defining the agent's iteration logic and processing behavior.
+ */
+@Suppress("MissingKDocForPublicAPI")
+public class PlannerAIAgentService<Input, Output>
+@InternalAgentsApi
+public constructor(
+    override val promptExecutor: PromptExecutor,
+    override val agentConfig: AIAgentConfig,
+    public val strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    override val toolRegistry: ToolRegistry,
+    public val installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
+) : AIAgentServiceBase<Input, Output, PlannerAIAgent<Input, Output>>() {
+
+    /**
+     * Creates and returns a managed instance of [PlannerAIAgent].
+     *
+     * @param clock The clock instance used for time-related operations within the agent.
+     * @param id The identifier for the agent. Random UUID will be generated if set to null.
+     * @return A managed AI agent instance implementing the AIAgent interface.
+     */
+    @InternalAgentsApi
+    override fun createManagedAgent(
+        id: String?,
+        additionalToolRegistry: ToolRegistry,
+        agentConfig: AIAgentConfig,
+        clock: Clock,
+    ): PlannerAIAgent<Input, Output> = PlannerAIAgent(
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry + additionalToolRegistry,

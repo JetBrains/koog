@@ -196,4 +196,11 @@ internal data class OpenTelemetryTestData(
 
         return collectedSpans.filter { spanData -> spanData.attributes.get(expectedSubgraphKey) != null }
     }
+
+    fun filterPlannerSpans(spanType: String): List<SpanData> {
+        val attributeKey = AttributeKey.stringKey("koog.span.type")
+        return collectedSpans.filter { spanData ->
+            spanData.attributes.get(attributeKey) == spanType
+        }
+    }
 }

@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentFunctionalStrategy
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.functionalStrategy
@@ -27,8 +28,11 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSi
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSingleToolCallStrategy
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry.Feature.install
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
+import ai.koog.agents.planner.AIAgentPlanner
+import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -89,9 +93,19 @@ internal object OpenTelemetryTestAPI {
         internal val simpleFunctionalStrategy =
             functionalStrategy<String, String>(Parameter.DEFAULT_STRATEGY_NAME) { it }
 
+        internal val simplePlannerStrategy = AIAgentPlannerStrategy(
+            Parameter.DEFAULT_STRATEGY_NAME,
+            object : AIAgentPlanner<String, String>() {
+                override suspend fun buildPlan(context: AIAgentPlannerContext, state: String, plan: String?): String = "do-nothing"
+                override suspend fun executeStep(context: AIAgentPlannerContext, state: String, plan: String): String = state
+                override suspend fun isPlanCompleted(context: AIAgentPlannerContext, state: String, plan: String): Boolean = true
+            }
+        )
+
         internal fun getSimpleStrategy(agentType: AgentType) = when (agentType) {
             AgentType.Graph -> simpleGraphStrategy
             AgentType.Functional -> simpleFunctionalStrategy
+            AgentType.Planner -> simplePlannerStrategy
         }
 
         internal val singleLLMCallGraphStrategy = strategy(Parameter.DEFAULT_STRATEGY_NAME) {
@@ -105,9 +119,19 @@ internal object OpenTelemetryTestAPI {
                 requestLLM(input).content
             }
 
+        internal val singleLLMCallPlannerStrategy = AIAgentPlannerStrategy(
+            Parameter.DEFAULT_STRATEGY_NAME,
+            object : AIAgentPlanner<String, String>() {
+                override suspend fun buildPlan(context: AIAgentPlannerContext, state: String, plan: String?): String = "call-llm"
+                override suspend fun executeStep(context: AIAgentPlannerContext, state: String, plan: String): String = context.requestLLM(state).content
+                override suspend fun isPlanCompleted(context: AIAgentPlannerContext, state: String, plan: String): Boolean = true
+            }
+        )
+
         fun getSingleLLMCallStrategy(agentType: AgentType) = when (agentType) {
             AgentType.Graph -> singleLLMCallGraphStrategy
             AgentType.Functional -> singleLLMCallFunctionalStrategy
+            AgentType.Planner -> singleLLMCallPlannerStrategy
         }
 
         internal val singleToolCallGraphStrategy = strategy(Parameter.DEFAULT_STRATEGY_NAME) {
@@ -133,9 +157,29 @@ internal object OpenTelemetryTestAPI {
                 result.content
             }
 
+        internal val singleToolCallPlannerStrategy = AIAgentPlannerStrategy(
+            Parameter.DEFAULT_STRATEGY_NAME,
+            object : AIAgentPlanner<String, String>() {
+                override suspend fun buildPlan(context: AIAgentPlannerContext, state: String, plan: String?): String = "call-tool"
+
+                override suspend fun executeStep(context: AIAgentPlannerContext, state: String, plan: String): String {
+                    var result = context.requestLLM(state)
+
+                    while (result is Message.Tool.Call) {
+                        result = context.sendToolResult(context.executeTool(result))
+                    }
+
+                    return result.content
+                }
+
+                override suspend fun isPlanCompleted(context: AIAgentPlannerContext, state: String, plan: String): Boolean = true
+            }
+        )
+
         fun getSingleToolCallStrategy(agentType: AgentType) = when (agentType) {
             AgentType.Graph -> singleToolCallGraphStrategy
             AgentType.Functional -> singleToolCallFunctionalStrategy
+            AgentType.Planner -> singleToolCallPlannerStrategy
         }
     }
 
@@ -336,6 +380,15 @@ internal object OpenTelemetryTestAPI {
             }
 
             is AIAgentFunctionalStrategy -> AIAgentService(
+                promptExecutor = executor ?: getMockExecutor(clock = testClock) { },
+                strategy = strategy,
+                agentConfig = agentConfig,
+                toolRegistry = toolRegistry
+            ) {
+                install(OpenTelemetry) { configureOtel() }
+            }
+
+            is AIAgentPlannerStrategy<String, String, *> -> AIAgentService(
                 promptExecutor = executor ?: getMockExecutor(clock = testClock) { },
                 strategy = strategy,
                 agentConfig = agentConfig,
