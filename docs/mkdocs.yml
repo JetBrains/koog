@@ -235,7 +235,6 @@ theme:
     - content.action.edit
     - content.tabs.link
     - content.footnote.tooltips
-    - navigation.expand
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.instant
