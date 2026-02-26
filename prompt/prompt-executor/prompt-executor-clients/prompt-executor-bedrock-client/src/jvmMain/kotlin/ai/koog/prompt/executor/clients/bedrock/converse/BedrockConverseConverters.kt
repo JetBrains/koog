@@ -343,7 +343,7 @@ internal object BedrockConverseConverters {
      */
     fun transformConverseStreamChunks(
         chunkFlow: Flow<ConverseStreamOutput>,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
     ) = buildStreamFrameFlow {
         var finishReason: String? = null
 

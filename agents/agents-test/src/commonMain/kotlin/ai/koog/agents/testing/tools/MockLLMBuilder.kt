@@ -1032,7 +1032,7 @@ public open class DefaultResponseReceiver(
  */
 public fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
-    clock: Clock = kotlin.time.Clock.System,
+    clock: Clock = Clock.System,
     tokenizer: Tokenizer? = null,
     handleLastAssistantMessage: Boolean = false,
     init: MockLLMBuilder.() -> Unit

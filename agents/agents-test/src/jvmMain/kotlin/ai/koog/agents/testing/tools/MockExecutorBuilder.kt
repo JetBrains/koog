@@ -43,7 +43,7 @@ public class MockExecutorBuilder internal constructor() {
      * facilitate fine-grained control over time during executions, enabling scenarios such as testing
      * time-sensitive logic or simulating specific timestamps.
      */
-    private var clock: kotlin.time.Clock = kotlin.time.Clock.System
+    private var clock: kotlin.time.Clock = Clock.System
 
     /**
      * Holds the instance of the `Tokenizer` interface used for tokenizing text and counting tokens.

@@ -34,7 +34,7 @@ public annotation class PromptDSL
 public fun prompt(
     id: String,
     params: LLMParams = LLMParams(),
-    clock: Clock = kotlin.time.Clock.System,
+    clock: Clock = Clock.System,
     build: PromptBuilder.() -> Unit
 ): Prompt {
     return Prompt.build(id, params, clock, build)
@@ -72,7 +72,7 @@ public fun emptyPrompt(): Prompt = Prompt.build("") { }
  */
 public fun prompt(
     existing: Prompt,
-    clock: Clock = kotlin.time.Clock.System,
+    clock: Clock = Clock.System,
     build: PromptBuilder.() -> Unit
 ): Prompt {
     return Prompt.build(existing, clock, build)
