@@ -11,6 +11,7 @@ The Koog framework implements the following features:
 
 - [Event Handler](agent-event-handlers.md)
 - [Tracing](tracing.md)
+- [Chat Memory](chat-memory.md)
 - [Agent Memory](agent-memory.md)
 - [OpenTelemetry](opentelemetry-support.md)
 - [Agent Persistence (Snapshots)](agent-persistence.md)

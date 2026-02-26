@@ -103,14 +103,3 @@ public class ChatMemory {
         }
     }
 }
-
-/**
- * Installs the [ChatMemory] feature and configures conversation history storage for an agent.
- *
- * @param configure A lambda with a receiver that configures the [ChatMemoryConfig].
- */
-public fun FeatureContext.installChatMemory(configure: ChatMemoryConfig.() -> Unit = {}) {
-    install(ChatMemory) {
-        configure()
-    }
-}
