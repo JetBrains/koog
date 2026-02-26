@@ -21,7 +21,7 @@ To start using annotation-based tools in your project, you need to understand th
 ## @Tool annotation
 
 The `@Tool` annotation is used to mark functions that should be exposed as tools to LLMs.
-The functions annotated with `@Tool` are collected by reflection from objects that implement the `ToolSet` interface. For details, see [Implement the ToolSet interface](#implement-the-toolset-interface).
+The functions annotated with `@Tool` are collected by reflection from objects that implement the `ToolSet` interface. For details, see [Implement the ToolSet interface](#1-implement-the-toolset-interface).
 
 ### Definition
 

@@ -58,7 +58,7 @@ and educational resources to empower developers.
 
 ## Where to start
 
-* Explore Koog capabilities in [Overview](https://docs.koog.ai/).
-* Build your first Koog agent with our [Getting started](https://docs.koog.ai/getting-started/) guide.
+* Explore Koog capabilities in [Overview](index.md).
+* Build your first Koog agent with our [Quickstart](quickstart.md) guide.
 * See the latest updates in Koog [release notes](https://github.com/JetBrains/koog/blob/main/CHANGELOG.md).
 * Learn from [Examples](https://docs.koog.ai/examples/).
