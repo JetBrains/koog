@@ -1,7 +1,6 @@
 package ai.koog.agents.planner
 
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
-import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.planner.goap.GoapAgentState
@@ -22,7 +21,7 @@ import kotlin.jvm.JvmStatic
  * @property initializeState A function that initializes the planner state based on the given input.
  * @property provideOutput A function that produces the strategy's output based on the final planner state.
  */
-public class AIAgentPlannerStrategy<Input, Output, State>(
+public class AIAgentPlannerStrategy<Input, Output, State : Any>(
     override val name: String,
     private val planner: AIAgentPlanner<State, *>,
     private val initializeState: (Input) -> State,
@@ -33,15 +32,9 @@ public class AIAgentPlannerStrategy<Input, Output, State>(
         context: AIAgentPlannerContext,
         input: Input
     ): Output {
-        val state = initializeState(input)
         return try {
-            context.with(partName = name) { executionInfo, eventId ->
-                context.pipeline.onStrategyStarting(eventId, executionInfo, this, context)
-                val result = planner.execute(context, initializeState(input))
-                context.pipeline.onStrategyCompleted(eventId, executionInfo, this, context, result, planner.stateType)
-
-                provideOutput(result)
-            }
+            val result = planner.execute(context, initializeState(input))
+            provideOutput(result)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -61,7 +54,7 @@ public class AIAgentPlannerStrategy<Input, Output, State>(
          * @param planner The planner instance that defines the specific planning logic.
          * @return A new [AIAgentPlannerStrategy] instance where the input, output, and state types are the same.
          */
-        public operator fun <State> invoke(
+        public operator fun <State : Any> invoke(
             name: String,
             planner: AIAgentPlanner<State, *>,
         ): AIAgentPlannerStrategy<State, State, State> = AIAgentPlannerStrategy(name, planner, { it }, { it })
