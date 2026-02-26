@@ -15,7 +15,7 @@ Each function supports two ways of configuring attachment parameters, so you can
 - Create and pass a `ContentPart` object to the function for custom control over attachment parameters.
 
 !!! note
-    Multimodal content support varies by [LLM provider](../llm-providers.md).
+    Multimodal content support varies by [LLM provider](../../llm-providers.md).
     Check the provider documentation for supported content types.
 
 ### Auto-configured attachments

@@ -31,7 +31,7 @@ val myPrompt = prompt("hello-koog") {
 !!! note
     AI agents can take a simple text prompt as input.
     They automatically convert the text prompt to the Prompt object and send it to the LLM for execution.
-    This is useful for a [basic agent](../basic-agents.md)
+    This is useful for a [basic agent](../agents/basic-agents.md)
     that only needs to run a single request and does not require complex conversation logic.
 
 ## Running prompts
@@ -107,10 +107,11 @@ The prompt lifecycle in an agent usually includes several stages:
 
 ### Initial prompt setup
 
-When you [initialize an agent](../getting-started/#create-and-run-an-agent), you define 
-a [system message](prompt-creation/index.md#system-message) that sets the agent's behavior.
-Then, when you call the agent's `run()` method, you typically provide an initial [user message](prompt-creation/index.md#user-messages)
-as input. Together, these messages form the agent's initial prompt. For example: 
+When you [initialize an agent](../quickstart.md#create-your-first-koog-agent),
+you can define a [system message](prompt-creation/index.md#system-message) that sets the agent's behavior.
+Then, when you call the agent's `run()` method,
+you typically provide an initial [user message](prompt-creation/index.md#user-messages) as input.
+Together, these messages form the agent's initial prompt. For example: 
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -159,8 +160,7 @@ flowchart TB
     B -->|"result to"| A
 ```
 
-For more [advanced configurations](../complex-workflow-agents.md#4-configure-the-agent), you can also use 
-[AIAgentConfig](api:agents-core::ai.koog.agents.core.agent.config.AIAgentConfig)
+For more advanced configurations, you can also use [AIAgentConfig](api:agents-core::ai.koog.agents.core.agent.config.AIAgentConfig)
 to define the agent's initial prompt.
 
 ### Automatic prompt updates
@@ -168,9 +168,9 @@ to define the agent's initial prompt.
 As the agent runs its strategy, [predefined nodes](../nodes-and-components.md) automatically update the prompt.
 For example:
 
-- [`nodeLLMRequest`](../nodes-and-components/#nodellmrequest): Appends a user message to the prompt and captures the LLM response.
-- [`nodeLLMSendToolResult`](../nodes-and-components/#nodellmsendtoolresult): Appends tool execution results to the conversation.
-- [`nodeAppendPrompt`](../nodes-and-components/#nodeappendprompt): Inserts specific messages into the prompt at any point in the workflow.
+- [`nodeLLMRequest`](../nodes-and-components.md#nodellmrequest): Appends a user message to the prompt and captures the LLM response.
+- [`nodeLLMSendToolResult`](../nodes-and-components.md#nodellmsendtoolresult): Appends tool execution results to the conversation.
+- [`nodeAppendPrompt`](../nodes-and-components.md#nodeappendprompt): Inserts specific messages into the prompt at any point in the workflow.
 
 ### Context window management
 
