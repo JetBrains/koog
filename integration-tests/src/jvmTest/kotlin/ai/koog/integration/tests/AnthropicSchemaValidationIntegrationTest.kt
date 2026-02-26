@@ -11,7 +11,6 @@ import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -71,50 +70,48 @@ class AnthropicSchemaValidationIntegrationTest {
      */
     @Retry
     @Test
-    fun integration_testAnthropicComplexNestedStructures() {
+    suspend fun integration_testAnthropicComplexNestedStructures() {
         // Skip the test if the Anthropic API key is not available
         assumeTrue(apiKeyAvailable, "Anthropic API key is not available")
 
-        runBlocking {
-            AIAgent(
-                promptExecutor = simpleAnthropicExecutor(anthropicApiKey!!),
-                llmModel = AnthropicModels.Opus_4_6,
-                systemPrompt = "You are a helpful assistant that can process user profiles. Please use the complex_nested_tool to process the user profile I provide.",
-                toolRegistry = ToolRegistry {
-                    tool(ComplexNestedTool)
-                },
-                installFeatures = {
-                    install(EventHandler) {
-                        onAgentExecutionFailed { eventContext ->
-                            println(
-                                "ERROR: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})"
-                            )
-                            println(eventContext.throwable.stackTraceToString())
-                        }
-                        onToolCallStarting { eventContext ->
-                            println("Calling tool: ${eventContext.toolName}")
-                            println("Arguments: ${eventContext.toolArgs.toString().take(100)}...")
-                        }
+        AIAgent(
+            promptExecutor = simpleAnthropicExecutor(anthropicApiKey!!),
+            llmModel = AnthropicModels.Opus_4_6,
+            systemPrompt = "You are a helpful assistant that can process user profiles. Please use the complex_nested_tool to process the user profile I provide.",
+            toolRegistry = ToolRegistry {
+                tool(ComplexNestedTool)
+            },
+            installFeatures = {
+                install(EventHandler) {
+                    onAgentExecutionFailed { eventContext ->
+                        println(
+                            "ERROR: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})"
+                        )
+                        println(eventContext.throwable.stackTraceToString())
+                    }
+                    onToolCallStarting { eventContext ->
+                        println("Calling tool: ${eventContext.toolName}")
+                        println("Arguments: ${eventContext.toolArgs.toString().take(100)}...")
                     }
                 }
-            ).run(
-                """
+            }
+        ).run(
+            """
                 Please process this user profile:
-                
+
                 Name: John Doe
                 Email: john.doe@example.com
                 Addresses:
                 1. HOME: 123 Main St, Springfield, IL 62701
                 2. WORK: 456 Business Ave, Springfield, IL 62701
-                """.trimIndent()
-            ) shouldNotBeNull {
-                shouldNotBeBlank()
-                lowercase()
-                    .shouldContain("john doe")
-                    .shouldContain("john.doe@example.com")
-                    .shouldContain("main st")
-                    .shouldContain("business ave")
-            }
+            """.trimIndent()
+        ) shouldNotBeNull {
+            shouldNotBeBlank()
+            lowercase()
+                .shouldContain("john doe")
+                .shouldContain("john.doe@example.com")
+                .shouldContain("main st")
+                .shouldContain("business ave")
         }
     }
 }

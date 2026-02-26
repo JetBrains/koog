@@ -29,8 +29,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeBlank
-import io.kotest.matchers.string.shouldNotContain
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -43,7 +41,6 @@ import java.nio.file.Paths
 import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.pathString
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
 @ExtendWith(OllamaTestFixtureExtension::class)
@@ -70,7 +67,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val client get() = fixture.client
 
         @JvmStatic
-        fun imageScenarios(): Stream<ImageTestScenario> {
+        fun imageScenarios(): Stream<Arguments> {
             return ImageTestScenario.entries
                 .minus(
                     setOf(
@@ -79,6 +76,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                         ImageTestScenario.CORRUPTED_IMAGE,
                     )
                 )
+                .map { Arguments.of(it) }
                 .stream()
         }
 
@@ -95,25 +93,25 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     // Use base class methods through parameterized tests
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testExecute(model: LLModel) {
+    suspend fun ollama_testExecute(model: LLModel) {
         super.integration_testExecute(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testExecuteStreaming(model: LLModel) {
+    suspend fun ollama_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolsWithRequiredParams(model: LLModel) {
+    suspend fun ollama_testToolsWithRequiredParams(model: LLModel) {
         super.integration_testToolWithRequiredParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolsWithRequiredOptionalParams(
+    suspend fun ollama_testToolsWithRequiredOptionalParams(
         model: LLModel
     ) {
         super.integration_testToolWithNotRequiredOptionalParams(model)
@@ -121,55 +119,55 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolsWithOptionalParams(model: LLModel) {
+    suspend fun ollama_testToolsWithOptionalParams(model: LLModel) {
         super.integration_testToolWithOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolsWithNoParams(model: LLModel) {
+    suspend fun ollama_testToolsWithNoParams(model: LLModel) {
         super.integration_testToolWithNoParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolsWithListEnumParams(model: LLModel) {
+    suspend fun ollama_testToolsWithListEnumParams(model: LLModel) {
         super.integration_testToolWithListEnumParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolsWithNestedListParams(model: LLModel) {
+    suspend fun ollama_testToolsWithNestedListParams(model: LLModel) {
         super.integration_testToolWithNestedListParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testStructuredDataStreaming(model: LLModel) {
+    suspend fun ollama_testStructuredDataStreaming(model: LLModel) {
         integration_testMarkdownStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolChoiceRequired(model: LLModel) {
+    suspend fun ollama_testToolChoiceRequired(model: LLModel) {
         integration_testToolChoiceRequired(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolChoiceNone(model: LLModel) {
+    suspend fun ollama_testToolChoiceNone(model: LLModel) {
         integration_testToolChoiceNone(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun ollama_testToolChoiceNamed(model: LLModel) {
+    suspend fun ollama_testToolChoiceNamed(model: LLModel) {
         integration_testToolChoiceNamed(model)
     }
 
     // Ollama-specific moderation tests
     @Test
-    fun `ollama_test moderate single message`() = runTest(timeout = 600.seconds) {
+    suspend fun `ollama_test moderate single message`() {
         val prompt = Prompt.build("test-harmful-content") {
             user(
                 String(
@@ -191,7 +189,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @Test
-    fun `ollama_test moderate multiple messages`() = runTest(timeout = 600.seconds) {
+    suspend fun `ollama_test moderate multiple messages`() {
         val safeQuestion = String(
             Base64.getDecoder()
                 .decode(
@@ -245,7 +243,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     // Ollama-specific client tests
     @Test
-    fun `ollama_test load models`() = runTest(timeout = 600.seconds) {
+    suspend fun `ollama_test load models`() {
         val modelCards = client.getModels()
 
         val modelCard = modelCards.findByNameOrNull(model.id)
@@ -253,7 +251,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @Test
-    fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
+    suspend fun `ollama_test get model`() {
         client.getModelOrNull(model.id) shouldNotBeNull {
             name shouldBe model.id
             family shouldBe "llama"
@@ -276,7 +274,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     // Ollama-specific image processing test
     @ParameterizedTest
     @MethodSource("imageScenarios")
-    fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
+    suspend fun `ollama_test image processing`(scenario: ImageTestScenario) {
         val ollamaException =
             "Ollama API error: Failed to create new sequence: failed to process inputs"
         assumeTrue(visionModel.supports(Vision.Image), "Model must support vision capability")
@@ -327,7 +325,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @Test
-    fun `ollama_test txt file processing`() = runTest(timeout = 600.seconds) {
+    suspend fun `ollama_test txt file processing`() {
         val textFile = MediaTestUtils.createTextFileForScenario(
             MediaTestScenarios.TextTestScenario.BASIC_TEXT,
             testResourcesDir

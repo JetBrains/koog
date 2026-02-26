@@ -20,7 +20,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Test
@@ -29,7 +28,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class AcpProtocolTest {
@@ -47,7 +45,7 @@ class AcpProtocolTest {
     }
 
     @Test
-    fun integration_testNotificationDelivery() = runTest(timeout = 1.minutes) {
+    suspend fun integration_testNotificationDelivery() {
         MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
@@ -84,11 +82,11 @@ class AcpProtocolTest {
 
     @ParameterizedTest
     @MethodSource("getCapabilities")
-    fun integration_testCapabilitiesSetup(
+    suspend fun integration_testCapabilitiesSetup(
         loadSession: Boolean,
         audio: Boolean,
         image: Boolean
-    ) = runTest(timeout = 1.minutes) {
+    ) {
         MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
@@ -145,7 +143,7 @@ class AcpProtocolTest {
     }
 
     @Test
-    fun integration_testAuthenticationWithAuthMethod() = runTest(timeout = 1.minutes) {
+    suspend fun integration_testAuthenticationWithAuthMethod() {
         MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(2)) {
                 withTimeout(30.seconds) {
@@ -175,7 +173,7 @@ class AcpProtocolTest {
     }
 
     @Test
-    fun integration_testAuthenticationError() = runTest(timeout = 1.minutes) {
+    suspend fun integration_testAuthenticationError() {
         MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(2)) {
                 withTimeout(10.seconds) {

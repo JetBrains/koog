@@ -12,11 +12,9 @@ import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.annotations.RetryExtension
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotBeEmpty
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
 @ExtendWith(RetryExtension::class)
@@ -43,7 +41,7 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
 
     @Retry
     @Test
-    fun ollama_simpleTest() = runTest(timeout = 600.seconds) {
+    suspend fun ollama_simpleTest() {
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
         }

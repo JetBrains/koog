@@ -3,10 +3,7 @@ package ai.koog.integration.tests.executor
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.getLLMClientForProvider
@@ -20,7 +17,6 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -29,7 +25,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.assertFailsWith
-import kotlin.time.Duration.Companion.seconds
 
 class ToolSchemaExecutorIntegrationTest {
     companion object {
@@ -54,7 +49,7 @@ class ToolSchemaExecutorIntegrationTest {
         }
 
         @JvmStatic
-        fun bedrockModels(): Stream<LLModel> {
+        fun bedrockModels(): Stream<Arguments> {
             return Models.bedrockModels()
         }
 
@@ -101,20 +96,7 @@ class ToolSchemaExecutorIntegrationTest {
         }
     }
 
-    class FileTools : ToolSet {
-
-        @Tool
-        @LLMDescription(
-            "Writes content to a file (creates new or overwrites existing). BOTH filePath AND content parameters are REQUIRED."
-        )
-        fun writeFile(
-            @LLMDescription("Full path where the file should be created") filePath: String,
-            @LLMDescription("Content to write to the file - THIS IS REQUIRED AND CANNOT BE EMPTY") content: String,
-            @LLMDescription("Whether to overwrite if file exists (default: false)") overwrite: Boolean = false
-        ) {
-            println("Writing '$content' to file '$filePath' with overwrite=$overwrite")
-        }
-    }
+    class FileTools : ToolSet
 
     @Serializable
     data class FileOperation(
@@ -132,7 +114,7 @@ class ToolSchemaExecutorIntegrationTest {
         "bedrockModels",
         "mistralModels"
     )
-    fun integration_testToolSchemaExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_testToolSchemaExecutor(model: LLModel) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -162,23 +144,22 @@ class ToolSchemaExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("invalidToolDescriptors")
-    fun integration_testInvalidToolDescriptorShouldFail(invalidToolDescriptor: ToolDescriptor, message: String) =
-        runTest(timeout = 300.seconds) {
-            val model = OpenAIModels.Chat.GPT4o
+    suspend fun integration_testInvalidToolDescriptorShouldFail(invalidToolDescriptor: ToolDescriptor, message: String) {
+        val model = OpenAIModels.Chat.GPT4o
 
-            assertFailsWith<Exception> {
-                getLLMClientForProvider(model.provider).execute(
-                    prompt("test-invalid-tool", params = LLMParams(toolChoice = ToolChoice.Required)) {
-                        system("You are a helpful assistant with access to tools.")
-                        user("Hi.")
-                    },
-                    model,
-                    listOf(invalidToolDescriptor)
-                )
-            }.message.shouldNotBeNull {
-                shouldContain(
-                    message
-                )
-            }
+        assertFailsWith<Exception> {
+            getLLMClientForProvider(model.provider).execute(
+                prompt("test-invalid-tool", params = LLMParams(toolChoice = ToolChoice.Required)) {
+                    system("You are a helpful assistant with access to tools.")
+                    user("Hi.")
+                },
+                model,
+                listOf(invalidToolDescriptor)
+            )
+        }.message.shouldNotBeNull {
+            shouldContain(
+                message
+            )
         }
+    }
 }

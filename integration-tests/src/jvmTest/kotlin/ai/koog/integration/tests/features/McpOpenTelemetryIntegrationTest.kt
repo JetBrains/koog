@@ -20,12 +20,13 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SpanExporter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -39,58 +40,70 @@ class McpOpenTelemetryIntegrationTest {
 
         @BeforeAll
         @JvmStatic
-        fun cleanup() {
-            server = runBlocking {
-                startMcpServer(ToolRegistry { tool(RandomNumberTool()) })
-            }
+        suspend fun cleanup() {
+            server = startMcpServer(ToolRegistry { tool(RandomNumberTool()) })
         }
 
         @AfterAll
         @JvmStatic
-        fun teardown() {
-            runBlocking {
-                closeMcpServer(server, McpServerPort)
+        suspend fun teardown() {
+            closeMcpServer(server, McpServerPort)
+        }
+    }
+
+    @Test
+    suspend fun `should create OpenTelemetry spans for MCP tool calls`() =
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(60.seconds) {
+                runAgentWithMcpAndOtel({
+                    mockLLMToolCall(RandomNumberTool(), RandomNumberTool.Args(42)) onRequestEquals "test"
+                }) { spans ->
+                    val mcpToolCall = spans.single { it.attributes.has("mcp.method.name") }
+                    verifyMcpSpanAttributes(
+                        mcpToolCall = mcpToolCall,
+                        port = McpServerPort,
+                        toolName = RandomNumberTool().name
+                    )
+                }
             }
         }
-    }
 
     @Test
-    fun `should create OpenTelemetry spans for MCP tool calls`() = runTestWithTimeout {
-        runAgentWithMcpAndOtel({
-            mockLLMToolCall(RandomNumberTool(), RandomNumberTool.Args(42)) onRequestEquals "test"
-        }) { spans ->
-            val mcpToolCall = spans.single { it.attributes.has("mcp.method.name") }
-            verifyMcpSpanAttributes(mcpToolCall = mcpToolCall, port = McpServerPort, toolName = RandomNumberTool().name)
+    suspend fun `should create OpenTelemetry spans for regular tool calls`() =
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(60.seconds) {
+                runAgentWithMcpAndOtel({
+                    mockLLMToolCall(
+                        CalculatorTool,
+                        SimpleCalculatorArgs(CalculatorOperation.ADD, 1, 1)
+                    ) onRequestEquals "test"
+                }) { spans ->
+                    val mcpToolCalls = spans.filter { it.attributes.has("mcp.method.name") }
+                    mcpToolCalls.size shouldBe 0
+                    val toolCalls = spans.filter { it.attributes.has("gen_ai.tool.name") }
+                    toolCalls.size shouldBe 1
+                    toolCalls.first().attributes[AttributeKey.stringKey("gen_ai.tool.name")] shouldBe CalculatorTool.name
+                }
+            }
         }
-    }
 
     @Test
-    fun `should create OpenTelemetry spans for regular tool calls`() = runTestWithTimeout {
-        runAgentWithMcpAndOtel({
-            mockLLMToolCall(CalculatorTool, SimpleCalculatorArgs(CalculatorOperation.ADD, 1, 1)) onRequestEquals "test"
-        }) { spans ->
-            val mcpToolCalls = spans.filter { it.attributes.has("mcp.method.name") }
-            mcpToolCalls.size shouldBe 0
-            val toolCalls = spans.filter { it.attributes.has("gen_ai.tool.name") }
-            toolCalls.size shouldBe 1
-            toolCalls.first().attributes[AttributeKey.stringKey("gen_ai.tool.name")] shouldBe CalculatorTool.name
+    suspend fun `should trace multiple MCP tool calls in OpenTelemetry`() =
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(60.seconds) {
+                runAgentWithMcpAndOtel({
+                    mockLLMToolCall(
+                        listOf(
+                            RandomNumberTool() to RandomNumberTool.Args(1),
+                            RandomNumberTool() to RandomNumberTool.Args(2),
+                        )
+                    ) onRequestEquals "test"
+                }) { spans ->
+                    val mcpToolCall = spans.filter { it.attributes.has("mcp.method.name") }
+                    mcpToolCall.size shouldBe 2
+                }
+            }
         }
-    }
-
-    @Test
-    fun `should trace multiple MCP tool calls in OpenTelemetry`() = runTestWithTimeout {
-        runAgentWithMcpAndOtel({
-            mockLLMToolCall(
-                listOf(
-                    RandomNumberTool() to RandomNumberTool.Args(1),
-                    RandomNumberTool() to RandomNumberTool.Args(2),
-                )
-            ) onRequestEquals "test"
-        }) { spans ->
-            val mcpToolCall = spans.filter { it.attributes.has("mcp.method.name") }
-            mcpToolCall.size shouldBe 2
-        }
-    }
 
     private fun verifyMcpSpanAttributes(mcpToolCall: SpanData, port: Int, toolName: String) {
         mcpToolCall.attributes[AttributeKey.stringKey("mcp.protocol.version")] shouldBe LATEST_PROTOCOL_VERSION

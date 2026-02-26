@@ -22,12 +22,11 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.server.netty.Netty
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentsApi::class)
@@ -37,12 +36,12 @@ class McpServerTest {
         @JvmStatic
         fun getModels() = listOf(
             OpenAIModels.Chat.GPT4o,
-        )
+        ).map { Arguments.of(it) }
     }
 
     @ParameterizedTest
     @MethodSource("getModels")
-    fun integration_testMcpServerWithSSETransport(model: LLModel) = runTest(timeout = 1.minutes) {
+    suspend fun integration_testMcpServerWithSSETransport(model: LLModel) {
         val randomNumberTool = RandomNumberTool()
         randomNumberTool.metadata shouldBe emptyMap()
 

@@ -16,7 +16,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.getLLMClientForProvider
@@ -64,10 +63,10 @@ open class AIAgentTestBase {
         lateinit var testResourcesDir: Path
 
         @JvmStatic
-        fun getLatestModels() = listOf(
+        fun getLatestModels(): Stream<Arguments?>? = Stream.of(
             AnthropicModels.Opus_4_6,
             OpenAIModels.Chat.GPT5_1,
-        ).stream()
+        ).map { Arguments.of(it) }
 
         @JvmStatic
         @BeforeAll
@@ -75,12 +74,6 @@ open class AIAgentTestBase {
             testResourcesDir = AIAgentTestBase::class.java.getResource("/media")!!.toURI().toPath()
             testResourcesDir.shouldExist()
         }
-
-        @JvmStatic
-        fun allModels(): Stream<LLModel> = Models.allCompletionModels()
-
-        @JvmStatic
-        fun modelsWithVisionCapability(): Stream<Arguments> = Models.modelsWithVisionCapability()
     }
 
     protected val testScope = TestScope()

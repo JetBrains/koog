@@ -26,6 +26,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -35,28 +36,20 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotContain
 import io.ktor.util.encodeBase64
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
-import java.util.stream.Stream
 import kotlin.test.fail
-import kotlin.time.Duration.Companion.minutes
 
 class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
-    companion object {
-        @JvmStatic
-        fun getLatestModels(): Stream<LLModel> = AIAgentTestBase.getLatestModels()
-    }
-
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
 
     @Test
     @Retry(5)
-    fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 10.minutes) {
+    suspend fun integration_testOpenAIAnthropicAgent() {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -115,65 +108,63 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     @Disabled("See KG-520 Agent with an empty tool registry is stuck into a loop if a subgraph has tools")
-    fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) =
-        runTest(timeout = 10.minutes) {
-            Models.assumeAvailable(LLMProvider.OpenAI)
-            Models.assumeAvailable(LLMProvider.Anthropic)
+    suspend fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) {
+        Models.assumeAvailable(LLMProvider.OpenAI)
+        Models.assumeAvailable(LLMProvider.Anthropic)
 
-            val fs = MockFileSystem()
-            val agent = createTestAgentWithToolsInSubgraph(fs = fs, model = model)
+        val fs = MockFileSystem()
+        val agent = createTestAgentWithToolsInSubgraph(fs = fs, model = model)
 
-            try {
-                val result = agent.run(
-                    "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
-                )
-                fail("Expected AIAgentException but got result: $result")
-            } catch (e: IllegalArgumentException) {
-                (e.message ?: "").shouldContain("Tool \"create_file\" is not defined")
-            }
+        try {
+            val result = agent.run(
+                "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
+            )
+            fail("Expected AIAgentException but got result: $result")
+        } catch (e: IllegalArgumentException) {
+            (e.message ?: "").shouldContain("Tool \"create_file\" is not defined")
         }
+    }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
-    fun `integration_test agent with registered subgraph tool result runs`(model: LLModel) =
-        runTest(timeout = 10.minutes) {
-            Models.assumeAvailable(LLMProvider.OpenAI)
-            Models.assumeAvailable(LLMProvider.Anthropic)
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    suspend fun `integration_test agent with registered subgraph tool result runs`(model: LLModel) {
+        Models.assumeAvailable(LLMProvider.OpenAI)
+        Models.assumeAvailable(LLMProvider.Anthropic)
 
-            val fs = MockFileSystem()
-            val calledTools = mutableListOf<String>()
-            val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-                onToolCallStarting { eventContext ->
-                    calledTools.add(eventContext.toolName)
-                }
+        val fs = MockFileSystem()
+        val calledTools = mutableListOf<String>()
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCallStarting { eventContext ->
+                calledTools.add(eventContext.toolName)
             }
-
-            val agent = createTestAgentWithToolsInSubgraph(fs, eventHandlerConfig, model, false)
-
-            agent.run(
-                "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
-            ).shouldNotBeBlank()
-
-            fs.fileCount() shouldBeGreaterThan 0
-
-            when (val readResult = fs.read("test.txt")) {
-                is OperationResult.Success -> {
-                    readResult.result shouldContain ("Hello from subgraph tools!")
-                }
-
-                is OperationResult.Failure -> {
-                    fail("Failed to read file: ${readResult.error}")
-                }
-            }
-            val expectedToolName = CreateFile(fs).name
-
-            calledTools.shouldForAny { it == expectedToolName }
         }
 
+        val agent = createTestAgentWithToolsInSubgraph(fs, eventHandlerConfig, model, false)
+
+        agent.run(
+            "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
+        ).shouldNotBeBlank()
+
+        fs.fileCount() shouldBeGreaterThan 0
+
+        when (val readResult = fs.read("test.txt")) {
+            is OperationResult.Success -> {
+                readResult.result shouldContain ("Hello from subgraph tools!")
+            }
+
+            is OperationResult.Failure -> {
+                fail("Failed to read file: ${readResult.error}")
+            }
+        }
+        val expectedToolName = CreateFile(fs).name
+
+        calledTools.shouldForAny { it shouldBeEqual expectedToolName }
+    }
+
     @Test
-    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 10.minutes) {
+    suspend fun integration_testTerminationOnIterationsLimitExhaustion() {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -199,41 +190,39 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
     }
 
     @Test
-    fun integration_testAnthropicAgentEnumSerialization() {
-        runTest(timeout = 10.minutes) {
-            val llmModel = AnthropicModels.Opus_4_6
-            Models.assumeAvailable(llmModel.provider)
+    suspend fun integration_testAnthropicAgentEnumSerialization() {
+        val llmModel = AnthropicModels.Opus_4_6
+        Models.assumeAvailable(llmModel.provider)
 
-            AIAgent(
-                promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
-                llmModel = llmModel,
-                systemPrompt = "You are a calculator with access to the calculator tools. You MUST call tools!!!",
-                toolRegistry = ToolRegistry {
-                    tool(CalculatorTool)
-                },
-                installFeatures = {
-                    install(EventHandler) {
-                        onAgentExecutionFailed { eventContext ->
-                            println(
-                                "error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}"
-                            )
-                        }
-                        onToolCallStarting { eventContext ->
-                            println(
-                                "Calling tool ${eventContext.toolName} with arguments ${
-                                    eventContext.toolArgs.toString().lines().first().take(100)
-                                }"
-                            )
-                        }
+        AIAgent(
+            promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
+            llmModel = llmModel,
+            systemPrompt = "You are a calculator with access to the calculator tools. You MUST call tools!!!",
+            toolRegistry = ToolRegistry {
+                tool(CalculatorTool)
+            },
+            installFeatures = {
+                install(EventHandler) {
+                    onAgentExecutionFailed { eventContext ->
+                        println(
+                            "error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}"
+                        )
+                    }
+                    onToolCallStarting { eventContext ->
+                        println(
+                            "Calling tool ${eventContext.toolName} with arguments ${
+                                eventContext.toolArgs.toString().lines().first().take(100)
+                            }"
+                        )
                     }
                 }
-            ).run("calculate 10 plus 15, and then subtract 8") shouldNotBeNull { shouldContain("17") }
-        }
+            }
+        ).run("calculate 10 plus 15, and then subtract 8") shouldNotBeNull { shouldContain("17") }
     }
 
     @ParameterizedTest
-    @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 10.minutes) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#modelsWithVisionCapability")
+    fun integration_testAgentWithImageCapability(model: LLModel) {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
 
@@ -271,8 +260,8 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 10.minutes) {
+    @MethodSource("ai.koog.integration.tests.utils.Models#modelsWithVisionCapability")
+    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) {
         Models.assumeAvailable(model.provider)
 
         val fs = MockFileSystem()
@@ -310,14 +299,14 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 prompt = prompt,
             )
 
-            with(agent.run("Hi! Please analyse my image.")) {
-                shouldNotBeBlank()
-                length shouldBeGreaterThan 20
-                lowercase()
-                    .shouldNotContain("error processing")
-                    .shouldNotContain("unable to process")
-                    .shouldNotContain("cannot process")
-            }
+            val result = agent.run("Hi! Please analyse my image.")
+            result.shouldNotBeNull()
+            result.shouldNotBeBlank()
+            result.length shouldBeGreaterThan 20
+            result.lowercase()
+                .shouldNotContain("error processing")
+                .shouldNotContain("unable to process")
+                .shouldNotContain("cannot process")
         }
     }
 }
