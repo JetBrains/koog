@@ -449,7 +449,8 @@ This example demonstrates how to create an ACP-enabled agent and connect to Inte
 7. The agent should become available in the **AI Chat** tool window.
 
 For more information about adding custom agents to your IDE,
-see [AI Assistant documentation](https://www.jetbrains.com/help/ai-assistant/acp.html#add-custom-agent).
+see [AI Assistant documentation](https://www.jetbrains.com/help/ai-assistant/acp.html#add-custom-agent)
+and [this blog post](https://blog.jetbrains.com/ai/2026/02/koog-x-acp-connect-an-agent-to-your-ide-and-more/).
 
 
 [Agent Client Protocol]: https://agentclientprotocol.com
