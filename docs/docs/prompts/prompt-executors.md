@@ -67,7 +67,7 @@ val multiExecutor = MultiLLMPromptExecutor(
 To create a prompt executor that distributes requests across multiple LLM client instances using routing strategies, do the following:
 
 1. Configure multiple client instances (they can be for the same or different LLM providers) with the corresponding API keys.
-2. Create a router using a routing strategy, such as [`RoundRobinRouter`](api:prompt-executor-router::ai.koog.prompt.executor.router.RoundRobinRouter).
+2. Create a router using a routing strategy, such as [`RoundRobinRouter`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoundRobinRouter).
 3. Pass the router to the [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) class constructor.
 
 This is useful for avoiding rate limits, improving throughput, and implementing failover strategies.
@@ -75,7 +75,7 @@ This is useful for avoiding rate limits, improving throughput, and implementing 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.router.RoundRobinRouter
+import ai.koog.prompt.executor.llms.RoundRobinRouter
 import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
 -->
 ```kotlin
@@ -95,7 +95,7 @@ val routingExecutor = RoutingLLMPromptExecutor(router)
 When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
 Requests to Anthropic models always go to the single `anthropic` client, as round-robin maintains an independent counter per provider.
 
-You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-router::ai.koog.prompt.executor.router.LLMClientRouter) interface.
+You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.LLMClientRouter) interface.
 
 ## Pre-defined prompt executors
 

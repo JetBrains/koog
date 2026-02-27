@@ -73,7 +73,6 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-llms",
     ":prompt:prompt-executor:prompt-executor-llms-all",
     ":prompt:prompt-executor:prompt-executor-model",
-    ":prompt:prompt-executor:prompt-executor-router",
     ":prompt:prompt-llm",
     ":prompt:prompt-markdown",
     ":prompt:prompt-model",

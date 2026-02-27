@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.router
+package ai.koog.prompt.executor.llms
 
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMProvider

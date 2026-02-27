@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.router
+package ai.koog.prompt.executor.llms
 
 /**
  * Marks an API as part of the experimental routing and load balancing layer for LLM clients.

@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.router
+package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
