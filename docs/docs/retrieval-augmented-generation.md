@@ -357,7 +357,7 @@ For more information, see the [JVMTextDocumentEmbedder](api:vector-storage::ai.k
 Combines a document embedder and a vector storage to provide a complete solution for storing and searching documents.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleRankedDocumentStorage02.documentEmbedder
+import ai.koog.agents.example.exampleRetrievalAugmentedGeneration02.documentEmbedder
 import ai.koog.rag.vector.store.EmbeddingVectorStore
 import ai.koog.rag.vector.storage.InMemoryVectorStorage
 import java.nio.file.Path
@@ -380,7 +380,7 @@ For more information, see the [EmbeddingVectorStore](api:vector-storage::ai.koog
 An in-memory implementation of `EmbeddingVectorStore`.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleRankedDocumentStorage03.documentEmbedder
+import ai.koog.agents.example.exampleRetrievalAugmentedGeneration03.documentEmbedder
 import ai.koog.rag.vector.store.InMemoryDocumentEmbeddingStore
 import java.nio.file.Path
 
@@ -423,7 +423,7 @@ For more information, see the [FileDocumentEmbeddingStore](api:vector-storage::a
 A JVM-specific implementation of `FileDocumentEmbeddingStore`.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleRankedDocumentStorage03.documentEmbedder
+import ai.koog.agents.example.exampleRetrievalAugmentedGeneration03.documentEmbedder
 import ai.koog.rag.vector.store.JVMFileDocumentEmbeddingStore
 import java.nio.file.Path
 -->
@@ -442,7 +442,7 @@ For more information, see the [JVMFileDocumentEmbeddingStore](api:vector-storage
 A file-based implementation that combines `TextDocumentEmbedder` and `FileVectorStorage`.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleRankedDocumentStorage08.embedder
+import ai.koog.agents.example.exampleRetrievalAugmentedGeneration08.embedder
 import ai.koog.rag.vector.store.TextFileDocumentEmbeddingStore
 import java.nio.file.Path
 -->
