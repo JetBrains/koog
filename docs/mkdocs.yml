@@ -279,3 +279,13 @@ extra_javascript:
 
 hooks:
   - process-api-links.py
+
+exclude_docs: |
+  /snippets/
+
+validation:
+  omitted_files: warn
+  links:
+    absolute_links: relative_to_docs
+    anchors: warn
+    unrecognized_links: warn
