@@ -71,11 +71,11 @@ val agent = AIAgent(
 Key configuration options:
 
 *   **`sessionId`**: A unique string identifying the current conversation session.
-*   **`protocol`**: An instance of `com.agentclientprotocol.protocol.Protocol` used for low-level communication.
+*   **`protocol`**: An instance of [`com.agentclientprotocol.protocol.Protocol`](https://github.com/agentclientprotocol/kotlin-sdk/blob/master/acp/src/commonMain/kotlin/com/agentclientprotocol/protocol/Protocol.kt) used for low-level communication.
 *   **`eventsProducer`**: A `kotlinx.coroutines.channels.ProducerScope<Event>` where ACP events are sent.
     For more information, see [Event streaming](#event-streaming).
 *   **`setDefaultNotifications`**: Whether to register default notification handlers for agent lifecycle events.
-    For more information, see [Notification handlers](#handling-agent-notifications).
+    For more information, see [Handling agent notifications](#handling-agent-notifications).
 
 This agent must run within the scope of an ACP session as described in the next chapter.
 
@@ -254,7 +254,7 @@ because ACP should not trigger a new agent execution until the previous one fini
 For this, creating and running the agent happens in the scope of `withLock` for the defined mutex.
 
 You also run the agent asynchronously within the `channelFlow` scope
-as a deffered job `agentJob` to ensure that the agent is not cancelled prematurely.
+as a deferred job `agentJob` to ensure that the agent is not cancelled prematurely.
 
 ## Handling ACP client input
 
@@ -393,24 +393,64 @@ val strategy = strategy<Unit, Unit>("my-strategy") {
 ```
 <!--- KNIT example-agent-client-protocol-06.kt -->
 
-## Example
+## Examples
 
-You can find a complete working implementation of an ACP-enabled Koog agent
-in the Koog repository under [examples/simple-examples/src/main/kotlin/ai/koog/agents/example/acp](https://github.com/JetBrains/koog/tree/develop/examples/simple-examples/src/main/kotlin/ai/koog/agents/example/acp).
+You can find working examples of Koog agents in the Koog repository under [/examples](https://github.com/JetBrains/koog/tree/develop/examples/).
 
-1. Run the ACP example application from the project root:
+### Running a console-based ACP client
 
-    ```shell
-    ./gradlew :examples:simple-examples:run
-    ```
+This example runs a console-based ACP client that interacts with a simple Koog agent.
 
-2. The example starts a terminal-based ACP client. You can enter a request like:
-
+1. Open [/examples/simple-examples](https://github.com/JetBrains/koog/blob/develop/examples/simple-examples/).
+2. See the [README](https://github.com/JetBrains/koog/blob/develop/examples/simple-examples/README.md)
+   for information about configuring your API key for an LLM provider.
+3. Run the `runExampleAcpApp` Gradle task.
+4. When the ACP client starts in the console, type a request for the agent, like:
     ```text
     List files in the current directory and create a new file named 'acp-test.txt' with the content 'Hello from ACP!'.
     ```
+5. Observe the event traces in the console,
+   which show how Koog events are converted to ACP events and sent to the client.
 
-3. Observe the event traces in the console, which show how Koog events are translated into ACP events and sent to the client.
+### Connecting an ACP-enabled Koog agent to IntelliJ IDEA
+
+This example demonstrates how to create an ACP-enabled agent and connect to IntelliJ IDEA.
+
+1. Open [/examples/acp-agent](https://github.com/JetBrains/koog/tree/develop/examples/acp-agent)
+2. Run the `installDist` Gradle task.
+3. This should create the agent executable: `build/install/acp-agent/bin/acp-agent`
+   (`acp-agent.bat` for Windows).
+4. Open IntelliJ IDEA.
+5. Go to **AI Chat** > **Options** > **Add Custom Agent**.
+6. In the opened `acp.json` file, paste the following:
+
+    ```json
+    {
+        "agent_servers": {
+            "Koog Agent": {
+                "command": "/absolute/path/to/acp-agent/build/install/acp-agent/bin/acp-agent",
+                "args": [],
+                "env": {
+                    "OPENAI_API_KEY": "paste-your-api-key-here"
+                }
+            }
+        }
+    }
+    ```
+
+    Configuration parameters:
+
+    - `agent_servers`: Object containing one or more agent configurations
+    - `Koog Agent`: Display name shown in IDE's agent selector
+    - `command`: Absolute path to the agent executable
+    - `args`: Command-line arguments (empty for this agent)
+    - `env`: Environment variables passed to the agent process (OpenAI API key in this example)
+
+7. The agent should become available in the **AI Chat** tool window.
+
+For more information about adding custom agents to your IDE,
+see [AI Assistant documentation](https://www.jetbrains.com/help/ai-assistant/acp.html#add-custom-agent).
+
 
 [Agent Client Protocol]: https://agentclientprotocol.com
 [ACP Kotlin SDK]: https://github.com/agentclientprotocol/kotlin-sdk
