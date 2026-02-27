@@ -34,8 +34,8 @@ class ExecutorsTest {
 
     LLMProvider provider = mock(LLMProvider.class);
 
-    LLMClient llmClient = new MockOpenAILLMClient("Hello from LLM");
-    LLMClient failingClient = new MockOpenAILLMClient("Hello from LLM", true);
+    LLMClient llmClient = MockLLMClient.simpleClientMock(provider,"Hello from LLM");
+    LLMClient failingClient = MockLLMClient.failingClientMock(provider);
 
     Iterable<JavaPromptExecutor> promptExecutors() {
         return List.of(
@@ -123,7 +123,7 @@ class ExecutorsTest {
             .completesExceptionallyWithin(Duration.ofSeconds(3))
             .withThrowableThat().satisfies(throwable -> {
                 assertThat(throwable).isInstanceOf(ExecutionException.class);
-                assertThat(throwable).hasRootCauseMessage("Throw exception for test");
+                assertThat(throwable).hasRootCauseMessage("Mock failed to execute");
             });
     }
 }
