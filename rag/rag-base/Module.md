@@ -6,78 +6,57 @@ A foundational module that provides core interfaces for document storage and ret
 
 The rag-base module defines the fundamental abstractions for working with document storage in RAG applications. It includes:
 
-- The `DocumentStorage` interface that defines core operations for storing, reading, and deleting documents
-- The `DocumentStorageWithPayload` interface that extends document storage with support for associated metadata or payload
-- The `RankedDocumentStorage` interface that extends document storage with ranking capabilities based on query relevance
-- The `TextDocumentReader` interface for transforming documents into text representation
+- The `ReadStorage` interface for reading documents by their identifiers or retrieving all documents
+- The `IngestionStorage` interface for adding and updating documents
+- The `DeletionStorage` interface for deleting documents by their identifiers
+- The `RetrievalStorage` interface that provides ranking capabilities based on query relevance, returning `SearchResult` items with similarity scores
+- The `SearchRequest` interface and `SimilaritySearchRequest` implementation for defining search parameters
+- The `DocumentWithPayload` data class for associating documents with metadata or payload
 - Support for generic document types, allowing flexibility in the types of documents that can be stored and retrieved
 
-This module serves as the base for all RAG submodules (e.g., rag-vector-storage) by providing a consistent API for document operations. It is designed to be implementation-agnostic, allowing different storage backends to be used interchangeably while maintaining a consistent interface for document management and retrieval.
+This module serves as the base for all RAG submodules (e.g., vector-storage) by providing a consistent API for document operations. It is designed to be implementation-agnostic, allowing different storage backends to be used interchangeably while maintaining a consistent interface for document management and retrieval.
 
 ### Example of usage
 
 ```kotlin
-// Example of using DocumentStorage
-suspend fun storeAndRetrieveDocument(storage: DocumentStorage<TextDocument>) {
-    // Create a document
-    val document = TextDocument("This is a sample document about artificial intelligence.")
+// Example of using IngestionStorage and ReadStorage
+suspend fun storeAndRetrieveDocuments(
+    ingestion: IngestionStorage<TextDocument, String>,
+    reader: ReadStorage<TextDocument, String>
+) {
+    // Create documents
+    val documents = listOf(
+        TextDocument("This is a sample document about artificial intelligence."),
+        TextDocument("Another document about machine learning.")
+    )
 
-    // Store the document and get its ID
-    val documentId = storage.store(document)
-    println("Document stored with ID: $documentId")
+    // Store the documents and get their IDs
+    val documentIds = ingestion.add(documents)
+    println("Documents stored with IDs: $documentIds")
 
-    // Retrieve the document using its ID
-    val retrievedDocument = storage.read(documentId)
-    println("Retrieved document: ${retrievedDocument?.content}")
-
-    // Delete the document
-    val deleted = storage.delete(documentId)
-    println("Document deleted: $deleted")
+    // Retrieve the documents using their IDs
+    val retrievedDocuments = reader.read(documentIds)
+    retrievedDocuments.forEach { (id, doc) ->
+        println("Retrieved document $id: ${doc.content}")
+    }
 }
 
-// Example of using DocumentStorageWithPayload
-suspend fun storeAndRetrieveDocumentWithMetadata(storage: DocumentStorageWithPayload<TextDocument, DocumentMetadata>) {
-    // Create a document and its metadata
-    val document = TextDocument("This is a document about machine learning.")
-    val metadata = DocumentMetadata(author = "John Doe", creationDate = "2023-05-15")
-
-    // Store the document with its metadata
-    val documentId = storage.store(document, metadata)
-
-    // Retrieve the document with its metadata
-    val docWithPayload = storage.readWithPayload(documentId)
-    println("Document: ${docWithPayload?.document?.content}")
-    println("Author: ${docWithPayload?.payload?.author}")
-
-    // Retrieve just the metadata
-    val justMetadata = storage.getPayload(documentId)
-    println("Creation date: ${justMetadata?.creationDate}")
+// Example of using DeletionStorage
+suspend fun deleteDocuments(deletion: DeletionStorage<String>) {
+    val idsToDelete = listOf("doc1", "doc2")
+    val deletedIds = deletion.delete(idsToDelete)
+    println("Deleted documents: $deletedIds")
 }
 
-// Example of using TextDocumentReader
-suspend fun extractTextFromDocument(reader: TextDocumentReader<PDFDocument>) {
-    // Create a PDF document
-    val pdfDocument = PDFDocument("path/to/document.pdf")
-
-    // Extract text from the PDF
-    val extractedText = reader.read(pdfDocument)
-    println("Extracted text: $extractedText")
-}
-
-// Example of using RankedDocumentStorage
-suspend fun findRelevantDocuments(storage: RankedDocumentStorage<TextDocument>) {
-    // Store multiple documents
-    val docId1 = storage.store(TextDocument("Artificial intelligence is transforming industries."))
-    val docId2 = storage.store(TextDocument("Machine learning is a subset of AI."))
-    val docId3 = storage.store(TextDocument("The weather is nice today."))
-
-    // Find documents relevant to a query
+// Example of using RetrievalStorage with search
+suspend fun findRelevantDocuments(storage: RetrievalStorage<TextDocument>) {
+    // Find documents relevant to a query using search
     val query = "What is artificial intelligence?"
-    val relevantDocs = storage.mostRelevantDocuments(query, count = 2, similarityThreshold = 0.5)
+    val results = storage.search(SimilaritySearchRequest(query, limit = 2, similarityThreshold = 0.5))
 
     println("Most relevant documents for query '$query':")
-    relevantDocs.forEach { doc ->
-        println("- ${doc.content}")
+    results.forEach { result ->
+        println("- ${result.document.content} (similarity: ${result.similarity})")
     }
 }
 ```

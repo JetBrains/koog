@@ -80,7 +80,7 @@ nav:
               - Overview: subgraphs-overview.md
               - Custom subgraphs: custom-subgraphs.md
           - Embeddings: embeddings.md
-          - Ranked document storage: ranked-document-storage.md
+          - RAG: retrieval-augmented-generation.md
           - Serialization: serialization.md
       - Testing: testing.md
   - Why Koog: why-koog.md
@@ -225,8 +225,8 @@ plugins:
           - custom-subgraphs.md: This guide provides code templates and common patterns in the creation of custom subgraphs for agentic workflows in Koog.
         Embeddings:
           - embeddings.md: This page provides information on how to generate and compare embeddings of text and code. The page includes a getting started section for local embeddings, details about OpenAI embeddings and examples of comparison of embeddings.
-        Ranked document storage:
-          - ranked-document-storage.md: This guide provides details about the implementation and use of Resource-Augmented Generation (RAG) systems in Koog. The page includes sections about existing RAG implementations and how to implement your own RAG systems in Koog.
+        RAG:
+          - retrieval-augmented-generation.md: This guide provides details about the implementation and use of Retrieval-Augmented Generation (RAG) systems in Koog. The page includes sections about existing RAG implementations and how to implement your own RAG systems in Koog.
           - serialization.md: This page explains Koog's library-agnostic serialization abstraction for tool arguments and results, how JSONElement works, and how to configure KotlinxSerializer or JacksonSerializer via AIAgentConfig.
         Testing:
           - testing.md: This guide provides a detailed overview of the Testing feature that provides a comprehensive framework for testing AI agent pipelines, subgraphs, and tool interactions in Koog. The page includes configuration and initialization details, basic and advanced examples and an FAQ and troubleshooting section.
