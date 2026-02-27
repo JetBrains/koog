@@ -37,7 +37,7 @@ Key features of Koog include:
 - **Integration with JVM and Kotlin applications**: Build AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
 - **Model Context Protocol integration**: Use Model Context Protocol (MCP) tools in AI agents.
 - **Agent Client Protocol integration**: Build ACP-compliant agents that can communicate with standardized client applications using the Agent Client Protocol (ACP).
-- **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, ranked document storage, and shared agent memory.
+- **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, RAG, and shared agent memory.
 - **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
