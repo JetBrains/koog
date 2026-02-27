@@ -7,9 +7,40 @@ across multiple interactions using the [ChatMemory](../chat-memory.md) feature.
 
 --8<-- "quickstart-snippets.md:prerequisites"
 
-## Install Koog
+## Install Koog and Memory feature
 
---8<-- "quickstart-snippets.md:dependencies"
+=== "Gradle (Kotlin)"
+
+    ```kotlin title="build.gradle.kts"
+    dependencies {
+        implementation("ai.koog:koog-agents:0.7.0")
+        implementation("ai.koog:agents-features-memory:0.7.0")
+    }
+    ```
+
+=== "Gradle (Groovy)"
+
+    ```groovy title="build.gradle"
+    dependencies {
+        implementation 'ai.koog:koog-agents:0.7.0'
+        implementation 'ai.koog:agents-features-memory:0.7.0'
+    }
+    ```
+
+=== "Maven"
+
+    ```xml title="pom.xml"
+    <dependency>
+        <groupId>ai.koog</groupId>
+        <artifactId>koog-agents-jvm</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.koog</groupId>
+        <artifactId>agents-features-memory-jvm</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    ```
 
 ## Set up an API key
 
@@ -46,7 +77,7 @@ messages before each run and storing the updated history afterward.
         simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")).use { executor ->
             val agent = AIAgent(
                 promptExecutor = executor,
-                llmModel = OpenAIModels.Chat.GPT4oMini,
+                llmModel = OpenAIModels.Chat.GPT5_2,
                 systemPrompt = "You are a friendly assistant. Keep your answers concise.",
             ) {
                 install(ChatMemory) {
@@ -189,7 +220,7 @@ ChatMemory is installed as a [feature](../features-overview.md) inside the agent
 ```kotlin
 AIAgent(
     promptExecutor = executor,
-    llmModel = OpenAIModels.Chat.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT5_2,
     systemPrompt = "You are a friendly assistant.",
 ) {
     install(ChatMemory) {
@@ -244,4 +275,6 @@ exchange before processing the third message.
 
 - Learn about [preprocessors](../chat-memory.md#preprocessors) to filter and transform conversation history
 - Implement a [custom history provider](../chat-memory.md#custom-history-providers) for persistent storage
+- See a [backend use case](../chat-memory.md#typical-use-case-backend-applications) with Spring Boot for managing chat sessions over HTTP
+- Understand the [difference between ChatMemory and Persistence](../chat-memory.md#chatmemory-vs-persistence) for crash recovery scenarios
 - Explore [Chat Memory](../chat-memory.md) for the full feature reference

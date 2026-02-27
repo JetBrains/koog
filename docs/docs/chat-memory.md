@@ -13,6 +13,45 @@ stores the updated conversation when the run completes — enabling natural mult
 - Built-in preprocessors to limit history size and filter messages
 - Custom preprocessor support for arbitrary message transformations
 
+## Install Koog and Memory feature
+
+=== "Gradle (Kotlin)"
+
+    ```kotlin title="build.gradle.kts"
+    dependencies {
+        implementation("ai.koog:koog-agents:0.7.0")
+        implementation("ai.koog:agents-features-memory:0.7.0")
+    }
+    ```
+
+=== "Gradle (Groovy)"
+
+    ```groovy title="build.gradle"
+    dependencies {
+        implementation 'ai.koog:koog-agents:0.7.0'
+        implementation 'ai.koog:agents-features-memory:0.7.0'
+    }
+    ```
+
+=== "Maven"
+
+    ```xml title="pom.xml"
+    <dependency>
+        <groupId>ai.koog</groupId>
+        <artifactId>koog-agents-jvm</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.koog</groupId>
+        <artifactId>agents-features-memory-jvm</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    ```
+
+!!! note
+    ChatMemory is available starting from version **0.7.0**, which has not been published to Maven Central yet.
+    In the meantime you can use it from a local build or a snapshot repository.
+
 ## Configuration and initialization
 
 ### Basic setup (Kotlin)
@@ -149,6 +188,109 @@ AIAgent<String, String> agent = AIAgent.builder()
 ```
 
 `MessageFilter` is a `fun interface`, so Java lambdas work directly.
+
+## Typical use case: backend applications
+
+A common pattern for ChatMemory is a backend service that manages agent interactions on behalf of
+clients. Each HTTP request carries a session ID, the agent loads the matching conversation history,
+generates a response, and stores the updated history — all transparently.
+
+```kotlin
+// --- Tools ---
+
+@Tool
+@LLMDescription("Looks up the current weather for a given city")
+fun getWeather(city: String): String {
+    return "Sunny, 22 °C" // call a real weather API here
+}
+
+@Tool
+@LLMDescription("Searches a knowledge base and returns relevant articles")
+fun searchKnowledgeBase(query: String): String {
+    return "Article: Getting started with Koog" // call a real search backend here
+}
+
+// --- Controller ---
+
+@RestController
+class ChatController(private val agentService: ChatAgentService) {
+    @PostMapping("/chat")
+    suspend fun chat(@RequestBody request: ChatRequest): ChatResponse {
+        val reply = agentService.chat(request.sessionId, request.message)
+        return ChatResponse(reply)
+    }
+}
+
+// --- Service ---
+
+@Service
+class ChatAgentService(private val executor: SingleLLMPromptExecutor) {
+    private val toolRegistry = ToolRegistry {
+        tool(::getWeather)
+        tool(::searchKnowledgeBase)
+    }
+
+    private val agent = AIAgent(
+        promptExecutor = executor,
+        llmModel = OpenAIModels.Chat.GPT4oMini,
+        systemPrompt = "You are a helpful assistant with access to weather and knowledge base tools.",
+        toolRegistry = toolRegistry,
+    ) {
+        install(ChatMemory) {
+            chatHistoryProvider = MyDatabaseProvider() // persistent storage
+            windowSize(50)
+        }
+    }
+
+    suspend fun chat(sessionId: String, message: String): String {
+        return agent.run(message, sessionId)
+    }
+}
+```
+
+For a full guide on setting up Koog with Spring Boot, see the
+[Spring Boot integration guide](spring-boot.md).
+
+## ChatMemory vs Persistence
+
+ChatMemory and [Agent Persistence](agent-persistence.md) serve different purposes and can be used
+together.
+
+**ChatMemory** treats each `agent.run()` call as an atomic, self-contained loop.
+Conversation history is loaded before the run starts and stored after the run completes
+successfully. If the agent crashes mid-execution, the in-progress messages are **not** saved —
+the history stays as it was before that run began.
+
+**Persistence** captures the agent's internal execution state (graph node, message history, inputs/outputs)
+as checkpoints during a run. If the agent crashes, it can resume from the last checkpoint
+instead of starting over.
+
+| | ChatMemory | Persistence |
+|---|---|---|
+| **What it saves** | Conversation messages across runs | Execution state within a run |
+| **When it saves** | After `agent.run()` completes | After each graph node (or manually) |
+| **Crash behavior** | In-progress run is lost; previous history intact | Can resume from last checkpoint |
+| **Typical use** | Multi-turn chat continuity | Long-running agents, crash recovery |
+
+If your agent performs long-running tasks where a mid-execution crash would be costly, consider
+installing both features:
+
+```kotlin
+val agent = AIAgent(
+    promptExecutor = executor,
+    llmModel = OpenAIModels.Chat.GPT4oMini,
+    systemPrompt = "You are a helpful assistant.",
+) {
+    install(ChatMemory) {
+        chatHistoryProvider = MyDatabaseProvider()
+        windowSize(50)
+    }
+    install(Persistence) {
+        storage = MyPersistenceStorageProvider()
+        enableAutomaticPersistence = true
+    }
+}
+```
 
 ## Best practices
 
