@@ -43,6 +43,6 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
 
 # --8<-- [start:api-key]
 Get an API key from an LLM provider or run a local LLM via Ollama.
-For more information, see [Quickstart](/quickstart).
+For more information, see [Quickstart](/quickstart.md).
 # --8<-- [end:api-key]
 
