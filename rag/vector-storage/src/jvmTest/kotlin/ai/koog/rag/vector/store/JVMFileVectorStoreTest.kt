@@ -1,6 +1,7 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Vector
+import ai.koog.rag.vector.storage.JVMFileVectorStorage
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
@@ -11,7 +12,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class JVMFileVectorStorageTest {
+class JVMFileVectorStoreTest {
 
     private fun createTestStorage(): JVMFileVectorStorage {
         val tempDir = Files.createTempDirectory("jvm-vector-storage-test")
@@ -38,6 +39,7 @@ class JVMFileVectorStorageTest {
             // Read document back
             val retrievedDocument = storage.read(documentId)
             assertNotNull(retrievedDocument)
+
             // Don't compare paths directly, as the storage returns the internal storage path
             // Instead, verify the content is the same
             assertEquals(
@@ -80,6 +82,7 @@ class JVMFileVectorStorageTest {
             // Read with payload
             val result = storage.readWithPayload(documentId)
             assertNotNull(result)
+
             // Compare file contents instead of paths
             assertEquals(
                 Files.readString(testFile),
@@ -191,7 +194,6 @@ class JVMFileVectorStorageTest {
     @Test
     fun testReadNonExistentDocument() = runTest {
         val storage = createTestStorage()
-
         val result = storage.read("non-existent-id")
         assertNull(result)
     }
@@ -199,7 +201,6 @@ class JVMFileVectorStorageTest {
     @Test
     fun testGetPayloadNonExistentDocument() = runTest {
         val storage = createTestStorage()
-
         val result = storage.getPayload("non-existent-id")
         assertNull(result)
     }
@@ -207,7 +208,6 @@ class JVMFileVectorStorageTest {
     @Test
     fun testDeleteNonExistentDocument() = runTest {
         val storage = createTestStorage()
-
         val result = storage.delete("non-existent-id")
         assertEquals(false, result)
     }

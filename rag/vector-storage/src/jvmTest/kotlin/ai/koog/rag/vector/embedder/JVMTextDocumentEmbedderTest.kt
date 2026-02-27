@@ -1,4 +1,4 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.embedder
 
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector

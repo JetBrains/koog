@@ -1,4 +1,4 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class TextFileDocumentEmbeddingStorageTest {
+class TextFileDocumentEmbeddingStoreTest {
 
     // Simple mock implementation of Embedder for testing
     private class MockEmbedder : Embedder {
@@ -30,13 +30,13 @@ class TextFileDocumentEmbeddingStorageTest {
         }
     }
 
-    private fun createTestStorage(): TextFileDocumentEmbeddingStorage<MockDocument, String> {
+    private fun createTestStorage(): TextFileDocumentEmbeddingStore<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
         val mockFileSystemProvider = MockFileSystemProvider(mockFileSystem)
         val mockEmbedder = MockEmbedder()
 
-        return TextFileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvider, "test-root")
+        return TextFileDocumentEmbeddingStore(mockEmbedder, mockDocumentProvider, mockFileSystemProvider, "test-root")
     }
 
     @Test
@@ -45,7 +45,7 @@ class TextFileDocumentEmbeddingStorageTest {
         val document = MockDocument("test document")
 
         // Store document
-        val documentId = storage.store(document, Unit)
+        val documentId = storage.store(document)
         assertNotNull(documentId)
 
         // Read document back
@@ -59,7 +59,7 @@ class TextFileDocumentEmbeddingStorageTest {
         val document = MockDocument("test document")
 
         // Store document
-        val documentId = storage.store(document, Unit)
+        val documentId = storage.store(document)
 
         // Verify it exists
         assertNotNull(storage.read(documentId))
@@ -80,7 +80,7 @@ class TextFileDocumentEmbeddingStorageTest {
 
         // Store multiple documents
         documents.forEach { doc ->
-            val id = storage.store(doc, Unit)
+            val id = storage.store(doc)
             documentIds.add(id)
         }
 
@@ -98,7 +98,7 @@ class TextFileDocumentEmbeddingStorageTest {
 
         // Store documents
         documents.forEach { doc ->
-            val id = storage.store(doc, Unit)
+            val id = storage.store(doc)
             documentIds.add(id)
         }
 
@@ -163,7 +163,7 @@ class TextFileDocumentEmbeddingStorageTest {
 
         // Store documents
         documents.forEach { doc ->
-            val id = storage.store(doc, Unit)
+            val id = storage.store(doc)
             documentIds.add(id)
         }
 

@@ -1,4 +1,4 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.embedder
 
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
@@ -29,7 +29,7 @@ public interface DocumentEmbedder<Document> : Embedder {
  * The embeddings can be used to analyze or compare the documents.
  *
  * @param Document The type representing the document to be processed.
- * @property reader Reads content from documents of type [Document].
+ * @property documentReader Reads content from documents of type [Document].
  * @property embedder Generates vector embeddings for given text and computes differences between embeddings.
  */
 public open class TextDocumentEmbedder<Document, Path>(

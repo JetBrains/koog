@@ -1,6 +1,7 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Vector
+import ai.koog.rag.vector.embedder.DocumentEmbedder
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
@@ -10,7 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class JVMFileDocumentEmbeddingStorageTest {
+class JVMFileDocumentEmbeddingStoreTest {
 
     // Simple mock implementation of DocumentEmbedder for testing
     private class MockDocumentEmbedder : DocumentEmbedder<Path> {
@@ -33,10 +34,10 @@ class JVMFileDocumentEmbeddingStorageTest {
         }
     }
 
-    private fun createTestStorage(): JVMFileDocumentEmbeddingStorage {
+    private fun createTestStorage(): JVMFileDocumentEmbeddingStore {
         val tempDir = Files.createTempDirectory("jvm-doc-embedding-storage-test")
         val mockEmbedder = MockDocumentEmbedder()
-        return JVMFileDocumentEmbeddingStorage(mockEmbedder, tempDir)
+        return JVMFileDocumentEmbeddingStore(mockEmbedder, tempDir)
     }
 
     private fun createTestFile(content: String): Path {
