@@ -1,6 +1,7 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Vector
+import ai.koog.rag.vector.embedder.DocumentEmbedder
 import ai.koog.rag.vector.mocks.MockDocument
 import ai.koog.rag.vector.mocks.MockDocumentProvider
 import ai.koog.rag.vector.mocks.MockFileSystem
@@ -12,7 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class FileDocumentEmbeddingStorageTest {
+class FileDocumentEmbeddingStoreTest {
 
     // Simple mock implementation of DocumentEmbedder for testing
     private class MockDocumentEmbedder : DocumentEmbedder<MockDocument> {
@@ -33,13 +34,13 @@ class FileDocumentEmbeddingStorageTest {
         }
     }
 
-    private fun createTestStorage(): FileDocumentEmbeddingStorage<MockDocument, String> {
+    private fun createTestStorage(): FileDocumentEmbeddingStore<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
         val mockFileSystemProvider = MockFileSystemProvider(mockFileSystem)
         val mockEmbedder = MockDocumentEmbedder()
 
-        return FileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvider, "test-root")
+        return FileDocumentEmbeddingStore(mockEmbedder, mockDocumentProvider, mockFileSystemProvider, "test-root")
     }
 
     @Test
@@ -79,7 +80,6 @@ class FileDocumentEmbeddingStorageTest {
     fun testAllDocuments() = runTest {
         val storage = createTestStorage()
         val documents = listOf(MockDocument("doc1"), MockDocument("doc2"), MockDocument("doc3"))
-        val documentIds = mutableListOf<String>()
 
         documents.forEach { doc -> storage.store(doc) }
 

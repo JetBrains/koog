@@ -1,4 +1,4 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.storage
 
 import ai.koog.embeddings.base.Vector
 import ai.koog.rag.vector.mocks.MockDocument
@@ -38,7 +38,7 @@ class InMemoryVectorStorageTest {
 
         // Act
         val id = storage.store(document, vector)
-        val retrievedVector = storage.getPayload(id)
+        val retrievedVector = storage.readWithPayload(id)?.payload
 
         // Assert
         assertNotNull(retrievedVector)

@@ -1,4 +1,4 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.storage
 
 import ai.koog.embeddings.base.Vector
 import ai.koog.rag.vector.mocks.MockDocument
@@ -14,6 +14,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class FileVectorStorageTest {
+
     private fun createTestStorage(): FileVectorStorage<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
@@ -114,7 +115,6 @@ class FileVectorStorageTest {
         val allDocs = storage.allDocuments().toList()
         assertEquals(documents.size, allDocs.size)
         assertTrue(allDocs.containsAll(documents))
-
         assertTrue(storage.read(documentIds[0]) in allDocs, "first document should be present in storage")
         assertTrue(storage.read(documentIds[1]) in allDocs, "second document should be present in storage")
         assertTrue(storage.read(documentIds[2]) in allDocs, "third document should be present in storage")
@@ -153,7 +153,6 @@ class FileVectorStorageTest {
     @Test
     fun testReadNonExistentDocument() = runTest {
         val storage = createTestStorage()
-
         val result = storage.read("non-existent-id")
         assertNull(result)
     }
@@ -161,7 +160,6 @@ class FileVectorStorageTest {
     @Test
     fun testGetPayloadNonExistentDocument() = runTest {
         val storage = createTestStorage()
-
         val result = storage.getPayload("non-existent-id")
         assertNull(result)
     }
@@ -169,7 +167,6 @@ class FileVectorStorageTest {
     @Test
     fun testDeleteNonExistentDocument() = runTest {
         val storage = createTestStorage()
-
         val result = storage.delete("non-existent-id")
         assertEquals(false, result)
     }

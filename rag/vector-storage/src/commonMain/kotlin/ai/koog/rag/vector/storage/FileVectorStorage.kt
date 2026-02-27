@@ -1,6 +1,5 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.storage
 
-import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
 import ai.koog.rag.base.DocumentWithPayload
 import ai.koog.rag.base.files.DocumentProvider
@@ -15,9 +14,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * FileVectorStorage is a class that manages the storage and retrieval of documents and their corresponding vector embeddings
- * within a file system. It uses a DocumentProvider to handle document content and a FileSystemProvider to interact with the
- * file system for storing and reading data.
+ * A file-system-based implementation of [VectorStorage] that manages the storage and retrieval of documents
+ * and their corresponding vector embeddings within a file system.
+ *
+ * Documents and vectors are stored in separate subdirectories under the root path.
  *
  * @param Document Type representing the document to be stored.
  * @param Path Type representing the file path in the storage system.
@@ -69,7 +69,7 @@ public open class FileVectorStorage<Document, Path>(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun store(document: Document, data: Vector): String {
+    override suspend fun store(document: Document, vector: Vector): String {
         // Ensure root directories exist
         val docsDir = documentsDir()
         val vecsDir = vectorsDir()
@@ -88,7 +88,7 @@ public open class FileVectorStorage<Document, Path>(
         val vecPath = fs.joinPath(vecsDir, documentId)
 
         // Serialize the vector to JSON and write it to the file system
-        val vectorJson = json.encodeToString(data)
+        val vectorJson = json.encodeToString(vector)
         fs.writeText(vecPath, vectorJson)
 
         return documentId
@@ -137,7 +137,13 @@ public open class FileVectorStorage<Document, Path>(
         return documentReader.document(docPath)
     }
 
-    override suspend fun getPayload(documentId: String): Vector? {
+    /**
+     * Retrieves the vector payload associated with the document identified by the given document ID.
+     *
+     * @param documentId The unique identifier of the document whose vector is being retrieved.
+     * @return The vector associated with the document, or null if no such document exists.
+     */
+    public suspend fun getPayload(documentId: String): Vector? {
         val vecPath = vectorPath(documentId)
 
         if (!fs.exists(vecPath)) {
@@ -184,56 +190,3 @@ public open class FileVectorStorage<Document, Path>(
         }
     }
 }
-
-/**
- * A file-based implementation of document embedding storage.
- *
- * This class facilitates the storage and retrieval of documents and their corresponding vector embeddings
- * in a file system. It utilizes a [FileVectorStorage] for managing the document embeddings and extends
- * [EmbeddingBasedDocumentStorage], inheriting capabilities such as ranking, storing, and deleting documents
- * based on their embeddings.
- *
- * @param Document The type of the documents being stored.
- * @param embedder A mechanism responsible for embedding the documents into vector representations.
- * @param fs Platform-specific file system provider for path manipulations
- * @param root Root directory where all vector storage will be located
- */
-public open class FileDocumentEmbeddingStorage<Document, Path>(
-    embedder: DocumentEmbedder<Document>,
-    documentProvider: DocumentProvider<Path, Document>,
-    fs: FileSystemProvider.ReadWrite<Path>,
-    root: Path
-) : EmbeddingBasedDocumentStorage<Document>(
-    embedder = embedder,
-    storage = FileVectorStorage(documentProvider, fs, root)
-)
-
-/**
- * A file-based implementation of document storage utilizing embeddings for ranking and retrieval.
- *
- * This class specializes in storing and ranking text documents in a file system using embeddings derived from their
- * textual content. It integrates several components:
- * - A `TextDocumentReader` to extract textual content from the provided documents.
- * - An `Embedder` to generate vector embeddings from this textual content.
- * - A file-based vector storage for storing documents alongside their embeddings.
- *
- * The storage system allows document ranking based on similarity to a given query, ensuring efficient,
- * persistent document search and retrieval.
- *
- * @param Document The type of document to be stored and processed.
- * @param embedder Converts text into vector embeddings and calculates similarity between embeddings.
- * @param reader Extracts text from documents of type [Document] for embedding purposes.
- * @param fs Platform-specific file system provider for path manipulations
- * @param root Root directory where all vector storage will be located
- */
-public open class TextFileDocumentEmbeddingStorage<Document, Path>(
-    embedder: Embedder,
-    documentProvider: DocumentProvider<Path, Document>,
-    fs: FileSystemProvider.ReadWrite<Path>,
-    root: Path
-) : FileDocumentEmbeddingStorage<Document, Path>(
-    embedder = TextDocumentEmbedder(documentProvider, embedder),
-    documentProvider = documentProvider,
-    fs = fs,
-    root = root
-)

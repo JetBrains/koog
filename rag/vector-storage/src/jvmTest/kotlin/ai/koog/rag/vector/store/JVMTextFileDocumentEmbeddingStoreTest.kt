@@ -1,4 +1,4 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class JVMTextFileDocumentEmbeddingStorageTest {
+class JVMTextFileDocumentEmbeddingStoreTest {
 
     // Simple mock implementation of Embedder for testing
     private class MockEmbedder : Embedder {
@@ -28,10 +28,10 @@ class JVMTextFileDocumentEmbeddingStorageTest {
         }
     }
 
-    private fun createTestStorage(): JVMTextFileDocumentEmbeddingStorage {
+    private fun createTestStorage(): JVMFileVectorStore {
         val tempDir = Files.createTempDirectory("jvm-text-doc-embedding-storage-test")
         val mockEmbedder = MockEmbedder()
-        return JVMTextFileDocumentEmbeddingStorage(mockEmbedder, tempDir)
+        return JVMFileVectorStore(mockEmbedder, tempDir)
     }
 
     private fun createTestFile(content: String): Path {
@@ -47,7 +47,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
 
         try {
             // Store document
-            val documentId = storage.store(testFile, Unit)
+            val documentId = storage.store(testFile)
             assertNotNull(documentId)
 
             // Read document back
@@ -70,7 +70,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
 
         try {
             // Store document
-            val documentId = storage.store(testFile, Unit)
+            val documentId = storage.store(testFile)
 
             // Verify it exists
             assertNotNull(storage.read(documentId))
@@ -98,7 +98,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
         try {
             // Store multiple documents
             testFiles.forEach { file ->
-                storage.store(file, Unit)
+                storage.store(file)
             }
 
             // Retrieve all documents
@@ -126,7 +126,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
         try {
             // Store documents
             testFiles.forEach { file ->
-                storage.store(file, Unit)
+                storage.store(file)
             }
 
             // Rank documents by similarity to "hello"
@@ -179,7 +179,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
         try {
             // Store multiple documents
             testFiles.forEach { file ->
-                val id = storage.store(file, Unit)
+                val id = storage.store(file)
                 documentIds.add(id)
             }
 
@@ -210,7 +210,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
         try {
             // Store documents
             testFiles.forEach { file ->
-                storage.store(file, Unit)
+                storage.store(file)
             }
 
             // Test ranking with different queries
@@ -244,7 +244,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
         try {
             // Store documents
             testFiles.forEach { file ->
-                storage.store(file, Unit)
+                storage.store(file)
             }
 
             // Test ranking
@@ -268,7 +268,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
 
         try {
             // Store empty document
-            val documentId = storage.store(emptyFile, Unit)
+            val documentId = storage.store(emptyFile)
             assertNotNull(documentId)
 
             // Read document back

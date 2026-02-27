@@ -1,6 +1,7 @@
-package ai.koog.rag.vector
+package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Vector
+import ai.koog.rag.vector.embedder.DocumentEmbedder
 import ai.koog.rag.vector.mocks.MockDocument
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -10,7 +11,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class InMemoryDocumentEmbeddingStorageTest {
+class InMemoryDocumentEmbeddingStoreTest {
 
     // Simple mock implementation of DocumentEmbedder for testing
     private class MockDocumentEmbedder : DocumentEmbedder<MockDocument> {
@@ -38,7 +39,7 @@ class InMemoryDocumentEmbeddingStorageTest {
     fun testStoreAndRead() = runTest {
         // Arrange
         val embedder = MockDocumentEmbedder()
-        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+        val storage = InMemoryDocumentEmbeddingStore(embedder)
         val document = MockDocument("Test document")
 
         // Act
@@ -54,7 +55,7 @@ class InMemoryDocumentEmbeddingStorageTest {
     fun testDelete() = runTest {
         // Arrange
         val embedder = MockDocumentEmbedder()
-        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+        val storage = InMemoryDocumentEmbeddingStore(embedder)
         val document = MockDocument("Test document")
 
         // Act
@@ -71,7 +72,7 @@ class InMemoryDocumentEmbeddingStorageTest {
     fun testAllDocuments() = runTest {
         // Arrange
         val embedder = MockDocumentEmbedder()
-        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+        val storage = InMemoryDocumentEmbeddingStore(embedder)
         val documents = listOf(MockDocument("Document 1"), MockDocument("Document 2"), MockDocument("Document 3"))
 
         // Act
@@ -89,7 +90,7 @@ class InMemoryDocumentEmbeddingStorageTest {
     fun testRankDocuments() = runTest {
         // Arrange
         val embedder = MockDocumentEmbedder()
-        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+        val storage = InMemoryDocumentEmbeddingStore(embedder)
         val documents = listOf(
             MockDocument("apple banana"),
             MockDocument("banana cherry"),
