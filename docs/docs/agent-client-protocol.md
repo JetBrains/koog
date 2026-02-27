@@ -412,7 +412,7 @@ This example runs a console-based ACP client that interacts with a simple Koog a
 5. Observe the event traces in the console,
    which show how Koog events are converted to ACP events and sent to the client.
 
-### Connecting an ACP-enabled Koog agent to IntelliJ IDEA
+### Connecting an ACP-enabled Koog agent to a JetBrains IDE
 
 This example demonstrates how to create an ACP-enabled agent and connect to IntelliJ IDEA.
 
@@ -420,7 +420,7 @@ This example demonstrates how to create an ACP-enabled agent and connect to Inte
 2. Run the `installDist` Gradle task.
 3. This should create the agent executable: `build/install/acp-agent/bin/acp-agent`
    (`acp-agent.bat` for Windows).
-4. Open IntelliJ IDEA.
+4. Open IntelliJ IDEA (or another JetBrains IDE).
 5. Go to **AI Chat** > **Options** > **Add Custom Agent**.
 6. In the opened `acp.json` file, paste the following:
 
