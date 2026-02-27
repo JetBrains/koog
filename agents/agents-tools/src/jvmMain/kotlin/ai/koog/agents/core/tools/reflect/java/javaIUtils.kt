@@ -9,13 +9,13 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ParamInfo
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.agents.core.tools.reflect.asToolType
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import java.lang.reflect.ParameterizedType
+import java.lang.reflect.TypeVariable
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
@@ -72,7 +72,7 @@ public fun <T : ToolSet> Class<out T>.asJavaTools(
  * @return A tool instance derived from the given `Method`, capable of being executed by the agent framework.
  */
 @InternalAgentToolsApi
-public fun java.lang.reflect.Method.asTool(
+public fun Method.asTool(
     json: Json = Json,
     thisRef: Any? = null,
     name: String? = null,
@@ -95,7 +95,7 @@ public fun java.lang.reflect.Method.asTool(
 internal fun Method.asToolDescriptor(
     name: String? = null,
     description: String? = null
-): ai.koog.agents.core.tools.ToolDescriptor {
+): ToolDescriptor {
     val toolName = name
         ?: this.getAnnotation(Tool::class.java)?.customName?.ifBlank { this.name }
         ?: this.name
@@ -272,11 +272,11 @@ private fun Method.getImplementedMethods(): Sequence<Method> {
  *         Throws an `IllegalArgumentException` or error for unsupported types.
  */
 @JavaAPI
-public fun java.lang.reflect.Type.asToolType(): ai.koog.agents.core.tools.ToolParameterType {
+public fun java.lang.reflect.Type.asToolType(): ToolParameterType {
     return when (this) {
         // Primitive types and their wrappers
         String::class.java, java.lang.String::class.java -> ToolParameterType.String
-        Int::class.java, java.lang.Integer::class.java, Integer.TYPE -> ToolParameterType.Integer
+        Int::class.java, Integer::class.java, Integer.TYPE -> ToolParameterType.Integer
         Long::class.java, java.lang.Long::class.java, java.lang.Long.TYPE -> ToolParameterType.Integer
         Float::class.java, java.lang.Float::class.java, java.lang.Float.TYPE -> ToolParameterType.Float
         Double::class.java, java.lang.Double::class.java, java.lang.Double.TYPE -> ToolParameterType.Float
@@ -296,6 +296,11 @@ public fun java.lang.reflect.Type.asToolType(): ai.koog.agents.core.tools.ToolPa
 
                 else -> error("Unsupported parameterized type: $rawType")
             }
+        }
+
+        is TypeVariable<*> -> {
+            // When type erasure occurs, we cannot determine the actual type, so we default to String
+            ToolParameterType.String
         }
 
         is Class<*> -> {
@@ -346,14 +351,14 @@ public fun java.lang.reflect.Type.asToolType(): ai.koog.agents.core.tools.ToolPa
 /**
  * Extracts properties from a Java class by introspecting its fields and getter methods.
  */
-private fun Class<*>.asJavaObjectProperties(): List<ai.koog.agents.core.tools.ToolParameterDescriptor> {
-    val properties = mutableListOf<ai.koog.agents.core.tools.ToolParameterDescriptor>()
+private fun Class<*>.asJavaObjectProperties(): List<ToolParameterDescriptor> {
+    val properties = mutableListOf<ToolParameterDescriptor>()
 
     // Extract from public fields
     this.fields.forEach { field ->
         val description = field.getAnnotation(LLMDescription::class.java)?.description ?: field.name
         properties.add(
-            ai.koog.agents.core.tools.ToolParameterDescriptor(
+            ToolParameterDescriptor(
                 name = field.name,
                 description = description,
                 type = field.genericType.asToolType()

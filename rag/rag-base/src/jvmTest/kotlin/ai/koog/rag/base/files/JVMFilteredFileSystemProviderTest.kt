@@ -5,6 +5,7 @@ import ai.koog.rag.base.files.filter.TraversalFilter
 import ai.koog.rag.base.files.filter.TraversalFilter.Companion.not
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.IOException
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.nio.file.Path
@@ -25,6 +26,7 @@ class JVMFilteredFileSystemProviderTest : KoogTestBase() {
     /* all the tests below have an assumption that JVMFileSystemProvider is covered by tests,
      and hence only the filtering should be verified */
 
+    @BeforeEach
     override fun setup() {
         super.setup()
         val filter = TraversalFilter.any<Path>() and not(none) and PathFilters.byRoot(src1)
