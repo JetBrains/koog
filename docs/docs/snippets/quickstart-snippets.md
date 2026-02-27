@@ -18,7 +18,7 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
 
     ``` kotlin title="build.gradle.kts"
     dependencies {
-        implementation("ai.koog:koog-agents:0.6.0")
+        implementation("ai.koog:koog-agents:0.6.3")
     }
     ```
 
@@ -26,7 +26,7 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
 
     ``` groovy title="build.gradle"
     dependencies {
-        implementation 'ai.koog:koog-agents:0.6.0'
+        implementation 'ai.koog:koog-agents:0.6.3'
     }
     ```
 
@@ -36,7 +36,7 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
-        <version>0.6.0</version>
+        <version>0.6.3</version>
     </dependency>
     ```
 # --8<-- [end:dependencies]
