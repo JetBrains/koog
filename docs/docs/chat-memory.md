@@ -112,7 +112,7 @@ install(ChatMemory) {
 
 ## Custom history providers
 
-The default `InMemoryChatHistoryProvider` is thread-safe but non-persistent.
+The default `InMemoryChatHistoryProvider` is thread-safe but non-persistent (history is lost on restart).
 For production use, implement `ChatHistoryProvider`:
 
 ```kotlin
