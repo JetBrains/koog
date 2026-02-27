@@ -604,6 +604,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -630,6 +631,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -729,6 +731,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -807,6 +810,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = true
                 }
             }
         )
@@ -884,6 +888,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = fileStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
