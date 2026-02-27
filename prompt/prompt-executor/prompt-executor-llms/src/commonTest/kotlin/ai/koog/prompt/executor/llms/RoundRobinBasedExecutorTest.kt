@@ -64,11 +64,12 @@ class RoundRobinBasedExecutorTest {
         val secondOpenAI = MockLLMClient(provider = LLMProvider.OpenAI, executeContent = "Second OpenAI")
         val firstAnthropicClient = MockLLMClient(provider = LLMProvider.Anthropic, executeContent = "First Anthropic")
         val secondAnthropicClient = MockLLMClient(provider = LLMProvider.Anthropic, executeContent = "Second Anthropic")
-        val clientsMap = mapOf(
-            LLMProvider.OpenAI to listOf(firstOpenAI, secondOpenAI),
-            LLMProvider.Anthropic to listOf(firstAnthropicClient, secondAnthropicClient)
+        val executor = RoutingLLMPromptExecutor(
+            mapOf(
+                LLMProvider.OpenAI to listOf(firstOpenAI, secondOpenAI),
+                LLMProvider.Anthropic to listOf(firstAnthropicClient, secondAnthropicClient)
+            )
         )
-        val executor = RoutingLLMPromptExecutor(clientsMap)
 
         // When
         val openAIResponses = (1..3).map {
