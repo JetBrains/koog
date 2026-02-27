@@ -34,8 +34,10 @@ makes one LLM call, then returns the content of the assistant message from the r
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.requestLLM
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
 -->
 ```kotlin
@@ -69,6 +71,8 @@ You can extend the previous strategy to make multiple sequential LLM calls:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.requestLLM
 -->
 ```kotlin
 val strategy = functionalStrategy<String, String> { input ->
@@ -106,13 +110,19 @@ Here is what you need to do:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.containsToolCalls
+import ai.koog.agents.core.dsl.extension.executeMultipleTools
+import ai.koog.agents.core.dsl.extension.extractToolCalls
+import ai.koog.agents.core.dsl.extension.requestLLMMultiple
+import ai.koog.agents.core.dsl.extension.sendMultipleToolResults
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
 -->
 ```kotlin
