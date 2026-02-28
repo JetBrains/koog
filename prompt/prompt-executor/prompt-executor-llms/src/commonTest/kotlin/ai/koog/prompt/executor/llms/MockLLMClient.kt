@@ -22,7 +22,7 @@ internal class MockLLMClient @JvmOverloads constructor(
     private val provider: LLMProvider = LLMProvider.OpenAI,
     val responseSpec: ResponseSpec = ResponseSpec.defaultSpec(provider),
     val models: List<LLModel> = emptyList(),
-) : LLMClient {
+) : LLMClient() {
 
     internal data class ResponseSpec(
         val execute: Result<List<Message.Assistant>>,

@@ -135,7 +135,7 @@ class RoundRobinRouterTest {
     private class TestLLMClient(
         override val clientName: String,
         private val provider: LLMProvider
-    ) : LLMClient {
+    ) : LLMClient() {
 
         override fun llmProvider(): LLMProvider = provider
 

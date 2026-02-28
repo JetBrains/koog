@@ -30,7 +30,7 @@ import kotlin.jvm.JvmOverloads
 public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     private val clientRouter: LLMClientRouter,
     private val fallback: FallbackPromptExecutorSettings? = null,
-) : PromptExecutor {
+) : PromptExecutor() {
 
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.

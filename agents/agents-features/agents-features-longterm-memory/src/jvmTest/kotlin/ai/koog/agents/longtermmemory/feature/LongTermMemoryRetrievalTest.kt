@@ -71,7 +71,7 @@ class LongTermMemoryRetrievalTest {
      * Creates a PromptExecutor that captures the full prompt content for inspection.
      * [onPrompt] receives the joined content of all prompt messages and returns the response text.
      */
-    private fun promptCapturingExecutor(onPrompt: (String) -> String): PromptExecutor = object : PromptExecutor {
+    private fun promptCapturingExecutor(onPrompt: (String) -> String): PromptExecutor = object : PromptExecutor() {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
