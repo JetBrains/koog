@@ -207,7 +207,11 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
     }
 
-    override suspend fun embed(text: String, model: LLModel): List<Double> {
+    override suspend fun embed(
+        text: String,
+        model: LLModel,
+        params: ai.koog.prompt.params.EmbeddingParams
+    ): List<Double> {
         model.requireCapability(LLMCapability.Embed)
         logger.debug { "Embedding text (${text.length} chars) with model: ${model.id}" }
 
