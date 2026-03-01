@@ -24,7 +24,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
       - name: Set up Python
