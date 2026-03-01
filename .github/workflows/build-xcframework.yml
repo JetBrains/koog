@@ -23,7 +23,7 @@ jobs:
         run: |
           git config --global core.autocrlf input
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Extract version
         id: version

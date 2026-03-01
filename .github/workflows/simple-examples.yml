@@ -23,7 +23,7 @@ jobs:
       koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
       simple-examples: ${{ steps.filter.outputs.simple-examples_any_changed  }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
         name: Check changed files
@@ -46,7 +46,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
@@ -83,7 +83,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
