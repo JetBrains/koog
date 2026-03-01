@@ -939,9 +939,10 @@ abstract class ExecutorIntegrationTestBase {
         if (client !is LLMEmbeddingProvider) {
             return@runTest
         }
+
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Embedding.Dimensions),
-            "Model ${model.id} does not support custom embedding dimensions"
+            model.supports(LLMCapability.Embedding.Dimensions),
+            "Model $model does not support custom embedding dimensions"
         )
 
         // Provider-specific params with dimension support
