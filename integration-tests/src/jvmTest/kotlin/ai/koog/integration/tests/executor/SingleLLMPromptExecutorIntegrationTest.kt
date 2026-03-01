@@ -20,18 +20,6 @@ import java.util.stream.Stream
 class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     companion object {
         @JvmStatic
-
-        @JvmStatic
-        fun embeddingModels(): Stream<Arguments> {
-            return Models.embeddingModels().map { model -> Arguments.of(model) }
-        }
-
-        @JvmStatic
-        fun dimensionCapableEmbeddingModels(): Stream<Arguments> {
-            return Models.dimensionCapableEmbeddingModels().map { model -> Arguments.of(model) }
-        }
-
-        @JvmStatic
         fun bedrockMarkdownScenarioModelCombinations(): Stream<Arguments> {
             return Models.bedrockModels().flatMap { model ->
                 listOf(
@@ -292,7 +280,7 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("dimensionCapableEmbeddingModels")
+    @MethodSource("ai.koog.integration.tests.utils.Models#dimensionCapableEmbeddingModels")
     override fun integration_testEmbedWithDimensions(model: LLModel) {
         super.integration_testEmbedWithDimensions(model)
     }

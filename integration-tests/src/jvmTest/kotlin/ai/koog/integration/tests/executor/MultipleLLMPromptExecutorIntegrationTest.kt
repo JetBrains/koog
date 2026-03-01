@@ -39,15 +39,6 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         fun audioScenarioModelCombinations(): Stream<Arguments> {
             return MediaTestScenarios.audioScenarioModelCombinations()
         }
-        @JvmStatic
-        fun embeddingModels(): Stream<Arguments> {
-            return Models.embeddingModels().map { model -> Arguments.of(model) }
-        }
-
-        @JvmStatic
-        fun dimensionCapableEmbeddingModels(): Stream<Arguments> {
-            return Models.dimensionCapableEmbeddingModels().map { model -> Arguments.of(model) }
-        }
     }
 
     private val executor: MultiLLMPromptExecutor = run {
@@ -241,13 +232,7 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("dimensionCapableEmbeddingModels")
-    override fun integration_testEmbedWithDimensions(model: LLModel) {
-        super.integration_testEmbedWithDimensions(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("dimensionCapableEmbeddingModels")
+    @MethodSource("ai.koog.integration.tests.utils.Models#dimensionCapableEmbeddingModels")
     override fun integration_testEmbedWithDimensions(model: LLModel) {
         super.integration_testEmbedWithDimensions(model)
     }
