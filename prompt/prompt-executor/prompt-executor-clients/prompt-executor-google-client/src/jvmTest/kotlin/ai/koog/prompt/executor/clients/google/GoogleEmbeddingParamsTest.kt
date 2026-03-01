@@ -2,7 +2,6 @@ package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.params.EmbeddingParams
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
