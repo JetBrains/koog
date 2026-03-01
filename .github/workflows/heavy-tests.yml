@@ -135,7 +135,7 @@ jobs:
 
       - name: Collect reports
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: reports-${{ matrix.os }}-${{ matrix.artifact-name }}
           path: |

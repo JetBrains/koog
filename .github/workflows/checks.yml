@@ -154,14 +154,14 @@ jobs:
 
       - name: Archive coverage data
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: gradle-coverage-data.zip
           path: .qodana/code-coverage
 
       - name: Collect reports
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: reports-${{ matrix.os }}
           path: |
