@@ -4,15 +4,14 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
-import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 
@@ -174,10 +173,11 @@ public interface AIAgentLLMSessionAPI : AutoCloseable {
      *
      * @param config A configuration defining structures and behavior.
      *
-     * @see [executeStructured]
+     * @see [ai.koog.prompt.executor.model.executeStructured]
      */
     public suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser? = null
     ): Result<StructuredResponse<T>>
 
     /**
@@ -215,7 +215,8 @@ public interface AIAgentLLMSessionAPI : AutoCloseable {
      */
     public suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
-        config: StructuredRequestConfig<T>
+        config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser? = null
     ): StructuredResponse<T>
 
     /**

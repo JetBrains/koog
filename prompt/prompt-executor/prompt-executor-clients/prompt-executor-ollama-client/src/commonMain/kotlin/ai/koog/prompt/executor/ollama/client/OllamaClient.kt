@@ -24,6 +24,7 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition
 import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
+import ai.koog.prompt.executor.ollama.client.dto.generateToolCallId
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
@@ -35,9 +36,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.EmbeddingParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
-import ai.koog.prompt.streaming.emitToolCall
-import ai.koog.prompt.streaming.streamFrameFlow
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -59,9 +58,9 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
 
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
@@ -84,7 +83,7 @@ public class OllamaClient @JvmOverloads constructor(
     private val clock: Clock = kotlin.time.Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
-) : LLMClient, LLMEmbeddingProvider {
+) : LLMClient(), LLMEmbeddingProvider {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
@@ -277,7 +276,7 @@ public class OllamaClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = streamFrameFlow {
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         val request = ollamaJson.encodeToString(
@@ -300,21 +299,30 @@ public class OllamaClient @JvmOverloads constructor(
             while (!channel.isClosedForRead) {
                 val line = channel.readUTF8Line() ?: break
                 if (line.isBlank()) continue
-
                 try {
                     val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                     chunk.message?.let { message ->
-                        emitAppend(message.content)
-                        message.toolCalls?.forEach { toolCall ->
-                            emitToolCall(
-                                id = null,
+                        if (message.content.isNotEmpty()) {
+                            emitTextDelta(message.content)
+                        }
+                        if (message.thinking.isNullOrEmpty().not()) {
+                            emitReasoningDelta(message.thinking)
+                        }
+                        message.toolCalls?.forEachIndexed { index, toolCall ->
+                            val name = toolCall.function.name
+                            val args = toolCall.function.arguments.toString()
+                            emitToolCallDelta(
+                                id = generateToolCallId(name, args, index),
                                 name = toolCall.function.name,
-                                content = toolCall.function.arguments.toString()
+                                args = args,
+                                index = index
                             )
+                            tryEmitPendingToolCall()
                         }
                     }
                 } catch (_: Exception) {
                     // Skip malformed JSON lines
+                    continue
                 }
             }
         }

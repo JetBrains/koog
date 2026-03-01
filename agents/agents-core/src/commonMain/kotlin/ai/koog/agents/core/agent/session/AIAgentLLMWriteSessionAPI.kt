@@ -9,13 +9,13 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
@@ -232,6 +232,7 @@ public interface AIAgentLLMWriteSessionAPI : AIAgentLLMSessionAPI {
      */
     override suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>>
 
     /**

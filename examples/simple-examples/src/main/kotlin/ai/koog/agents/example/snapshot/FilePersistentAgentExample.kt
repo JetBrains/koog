@@ -67,7 +67,6 @@ fun main() = runBlocking {
         ) {
             install(Persistence) {
                 storage = provider // Use the file-based checkpoint provider
-                enableAutomaticPersistence = true // Enable automatic checkpoint creation
             }
         }
 
@@ -107,7 +106,6 @@ fun main() = runBlocking {
         ) {
             install(Persistence) {
                 storage = provider // Use the file-based checkpoint provider
-                enableAutomaticPersistence = true // Enable automatic checkpoint creation
             }
         }
 

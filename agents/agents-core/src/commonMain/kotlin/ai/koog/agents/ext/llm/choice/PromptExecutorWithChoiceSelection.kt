@@ -1,10 +1,14 @@
 package ai.koog.agents.ext.llm.choice
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
+import kotlinx.coroutines.flow.Flow
 
 /**
  * A specialized implementation of `PromptExecutor` that enhances the standard execution process
@@ -24,10 +28,31 @@ import ai.koog.prompt.message.Message
 public class PromptExecutorWithChoiceSelection(
     private val executor: PromptExecutor,
     private val choiceSelectionStrategy: ChoiceSelectionStrategy,
-) : PromptExecutor by executor {
+) : PromptExecutor() {
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val choices = executor.executeMultipleChoices(prompt, model, tools)
 
         return choiceSelectionStrategy.choose(prompt, choices)
     }
+
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools)
+
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult = executor.moderate(prompt, model)
+
+    override fun close(): Unit = executor.close()
+
+    override suspend fun models(): List<LLModel> = executor.models()
+
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools)
 }

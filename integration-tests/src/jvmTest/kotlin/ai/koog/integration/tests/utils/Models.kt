@@ -67,6 +67,7 @@ object Models {
             OpenAIModels.Embeddings.TextEmbedding3Large,
             MistralAIModels.Embeddings.MistralEmbed,
             GoogleModels.Embeddings.GeminiEmbedding001,
+            OpenRouterModels.Embeddings.GoogleGeminiEmbedding001,
         )
     }
 
@@ -118,6 +119,14 @@ object Models {
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini3_Pro_Preview,
+        )
+    }
+
+    @JvmStatic
+    fun openAIReasoningModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Chat.GPT5_1Codex,
+            OpenAIModels.Chat.GPT5_2,
         )
     }
 

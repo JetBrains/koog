@@ -26,7 +26,7 @@ class AnthropicToolSerializationTest {
     @Test
     fun `createAnthropicRequest should handle Null parameter type`() {
         val client = AnthropicLLMClient(apiKey = "test-key")
-        val model = AnthropicModels.Sonnet_3_7
+        val model = AnthropicModels.Sonnet_4
 
         val tool = ToolDescriptor(
             name = "test_tool",
@@ -73,7 +73,7 @@ class AnthropicToolSerializationTest {
     @Test
     fun `createAnthropicRequest should throw exception for AnyOf parameter type`() {
         val client = AnthropicLLMClient(apiKey = "test-key")
-        val model = AnthropicModels.Sonnet_3_7
+        val model = AnthropicModels.Sonnet_4
 
         val tool = ToolDescriptor(
             name = "test_tool",
@@ -113,7 +113,7 @@ class AnthropicToolSerializationTest {
     @Test
     fun `createAnthropicRequest should handle multiple parameter types including Null`() {
         val client = AnthropicLLMClient(apiKey = "test-key")
-        val model = AnthropicModels.Sonnet_3_7
+        val model = AnthropicModels.Sonnet_4
 
         val tool = ToolDescriptor(
             name = "test_tool",

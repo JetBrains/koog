@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
@@ -18,7 +19,10 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletio
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterEmbeddingRequest
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterEmbeddingResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterModelsResponse
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -28,6 +32,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlin.jvm.JvmOverloads
@@ -38,12 +43,14 @@ import kotlin.jvm.JvmOverloads
  * @property baseUrl The base URL of the OpenRouter API. Default is "https://openrouter.ai/api/v1".
  * @property chatCompletionsPath The path of the OpenRouter Chat Completions API. Default is "api/v1/chat/completions".
  * @property modelsPath The path of the OpenRouter Models API. Default is "api/v1/models".
+ * @property embeddingsPath The path of the OpenRouter Embeddings API. Default is "api/v1/embeddings".
  * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
  */
 public class OpenRouterClientSettings(
     baseUrl: String = "https://openrouter.ai",
     chatCompletionsPath: String = "api/v1/chat/completions",
     public val modelsPath: String = "api/v1/models",
+    public val embeddingsPath: String = "api/v1/embeddings",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
 ) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
@@ -60,7 +67,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
     baseClient: HttpClient = HttpClient(),
     clock: Clock = kotlin.time.Clock.System,
-    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenRouterChatCompletionResponse, OpenRouterChatCompletionStreamResponse>(
     apiKey = apiKey,
     settings = settings,
@@ -68,15 +75,11 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
-) {
+),
+    LLMEmbeddingProvider {
 
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
-
-        init {
-            // On class load register custom OpenAI JSON schema generators for structured output.
-            registerOpenAIJsonSchemaGenerators(LLMProvider.OpenRouter)
-        }
     }
 
     /**
@@ -164,13 +167,13 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
 
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
-                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.content?.let { emitTextDelta(it) }
 
                 choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
                     val id = openAIToolCall.id
                     val name = openAIToolCall.function.name
                     val arguments = openAIToolCall.function.arguments
-                    upsertToolCall(index, id, name, arguments)
+                    emitToolCallDelta(id, name, arguments, index)
                 }
 
                 choice.finishReason?.let { finishReason = it }
@@ -202,5 +205,40 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
 
         val modelsById = OpenRouterModels.modelsById()
         return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
+    }
+
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
+        model.requireCapability(LLMCapability.Embed)
+        logger.debug { "Embedding text (${text.length} chars) with model: ${model.id}" }
+
+        val request = OpenRouterEmbeddingRequest(model = model.id, input = text)
+
+        val response = try {
+            httpClient.post(
+                path = settings.embeddingsPath,
+                request = request,
+                requestBodyType = OpenRouterEmbeddingRequest::class,
+                responseType = OpenRouterEmbeddingResponse::class
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(clientName, e.message, e)
+        }
+
+        response.error?.let { error ->
+            throw LLMClientException(
+                clientName,
+                "OpenRouter API error: ${error.message}${error.type?.let { " (type: $it)" } ?: ""}${error.code?.let { " (code: $it)" } ?: ""}"
+            )
+        }
+
+        if (response.data.isEmpty()) {
+            throw LLMClientException(clientName, "Empty data in OpenRouter embedding response")
+        }
+
+        val embedding = response.data.first().embedding
+        logger.debug { "Received embedding with ${embedding.size} dimensions" }
+        return embedding
     }
 }

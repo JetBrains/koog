@@ -242,11 +242,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
-
-        init {
-            // On class load register custom OpenAI JSON schema generators for structured output.
-            registerOpenAIJsonSchemaGenerators(LLMProvider.OpenAI)
-        }
     }
 
     override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<LLMChoice> {
@@ -273,14 +268,14 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
-                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.content?.let { emitTextDelta(it, choice.index) }
 
                 choice.delta.toolCalls?.forEach { openAIToolCall ->
                     val index = openAIToolCall.index
                     val id = openAIToolCall.id
                     val functionName = openAIToolCall.function?.name
                     val functionArgs = openAIToolCall.function?.arguments
-                    upsertToolCall(index, id, functionName, functionArgs)
+                    emitToolCallDelta(id, functionName, functionArgs, index)
                 }
 
                 choice.finishReason?.let { finishReason = it }
@@ -348,11 +343,43 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 request = request,
                 requestBodyType = String::class,
                 decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
-                processStreamingChunk = {
+                processStreamingChunk = { it ->
                     when (it) {
+                        is OpenAIStreamEvent.ResponseOutputTextDelta -> {
+                            StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
+                        }
+
+                        is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
+                            StreamFrame.ReasoningDelta(text = it.delta, index = it.outputIndex)
+                        }
+
+                        is OpenAIStreamEvent.ResponseReasoningSummaryTextDelta -> {
+                            StreamFrame.ReasoningDelta(summary = it.delta, index = it.outputIndex)
+                        }
+
+                        is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
+                            StreamFrame.ToolCallDelta(id = it.itemId, name = null, content = it.delta, index = it.outputIndex)
+                        }
+
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
                             when (val item = it.item) {
-                                is Item.FunctionToolCall -> StreamFrame.ToolCall(item.id, item.name, item.arguments)
+                                is Item.Text -> StreamFrame.TextComplete(item.value, it.outputIndex)
+                                is Item.Reasoning -> {
+                                    StreamFrame.ReasoningComplete(
+                                        text = item.content?.map { content -> content.text } ?: emptyList(),
+                                        summary = item.summary.map { content -> content.text },
+                                        encrypted = item.encryptedContent,
+                                        index = it.outputIndex
+                                    )
+                                }
+
+                                is Item.FunctionToolCall -> StreamFrame.ToolCallComplete(
+                                    id = item.id,
+                                    name = item.name,
+                                    content = item.arguments,
+                                    index = it.outputIndex
+                                )
+
                                 else -> null
                             }
                         }
@@ -369,10 +396,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                     )
                                 }
                             )
-                        }
-
-                        is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                            StreamFrame.Append(it.delta)
                         }
 
                         else -> null

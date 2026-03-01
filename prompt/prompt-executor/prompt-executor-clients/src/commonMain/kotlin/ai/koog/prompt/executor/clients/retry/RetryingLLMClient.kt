@@ -37,7 +37,7 @@ import kotlin.time.Duration.Companion.milliseconds
 public class RetryingLLMClient @JvmOverloads constructor(
     private val delegate: LLMClient,
     internal val config: RetryConfig = RetryConfig()
-) : LLMClient {
+) : LLMClient() {
 
     /**
      * Retrieves the configured instance of the `LLMProvider` in use.

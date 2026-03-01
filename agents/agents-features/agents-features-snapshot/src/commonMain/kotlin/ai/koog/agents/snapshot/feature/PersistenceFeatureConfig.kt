@@ -39,17 +39,11 @@ public class PersistenceFeatureConfig : FeatureConfig() {
      * Set this property to `true` to turn on automatic state persistence,
      * or `false` to disable it.
      */
-    public var enableAutomaticPersistence: Boolean = false
+    public var enableAutomaticPersistence: Boolean = true
 
-    /**
-     * Determines the strategy to be used for rolling back the agent's state to a previously saved checkpoint.
-     *
-     * This property uses the [RollbackStrategy] enum to specify the extent of data restoration during a rollback:
-     * - [RollbackStrategy.Default]: Restores the entire state, including message history and other context data.
-     * - [RollbackStrategy.MessageHistoryOnly]: Restores only the message history while retaining other parts of the context.
-     *
-     * Defaults to [RollbackStrategy.Default], ensuring complete rollback functionality unless explicitly configured otherwise.
-     */
+    @Deprecated(
+        message = "rollbackStrategy is deprecated. Use ChatMemory feature is you want to preserve only message history."
+    )
     public var rollbackStrategy: RollbackStrategy = RollbackStrategy.Default
 
     /**

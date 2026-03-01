@@ -44,6 +44,7 @@ val excluded = setOf(
 val included = setOf(
     ":agents:agents-core",
     ":agents:agents-features:agents-features-event-handler",
+    ":agents:agents-features:agents-features-longterm-memory",
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-opentelemetry",
     ":agents:agents-features:agents-features-trace",

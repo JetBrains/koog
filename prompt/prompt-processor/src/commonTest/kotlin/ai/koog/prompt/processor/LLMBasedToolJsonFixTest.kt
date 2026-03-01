@@ -48,7 +48,7 @@ class LLMBasedToolJsonFixTest {
 
     private class MockExecutor(
         private val responses: List<Message.Response>,
-    ) : PromptExecutor {
+    ) : PromptExecutor() {
         private var index = 0
         val prompts = mutableListOf<Prompt>()
 
@@ -63,6 +63,7 @@ class LLMBasedToolJsonFixTest {
             error("Not supported")
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = error("Not supported")
+
         override fun close() {}
     }
 

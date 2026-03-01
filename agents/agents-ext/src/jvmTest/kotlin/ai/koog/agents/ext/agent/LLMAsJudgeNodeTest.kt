@@ -18,6 +18,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -116,6 +118,9 @@ class LLMAsJudgeNodeTest {
                 metaInfo = ResponseMetaInfo.create(testClock),
             )
         )
+
+        coEvery { mockPromptExecutor.getStandardJsonSchemaGenerator(any()) } returns StandardJsonSchemaGenerator()
+        coEvery { mockPromptExecutor.getBasicJsonSchemaGenerator(any()) } returns BasicJsonSchemaGenerator()
 
         llmJudgeNode.execute(context, input = -200)
 

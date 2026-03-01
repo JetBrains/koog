@@ -253,7 +253,7 @@ val strategy = strategy("best-joke") {
 
    val nodeAnthropicSonnet by node<String, String> { topic ->
       llm.writeSession {
-         model = AnthropicModels.Sonnet_3_5
+         model = AnthropicModels.Sonnet_4_5
          appendPrompt {
             system("You are a comedian. Generate a funny joke about the given topic.")
             user("Tell me a joke about $topic.")
@@ -265,7 +265,7 @@ val strategy = strategy("best-joke") {
 
    val nodeAnthropicOpus by node<String, String> { topic ->
       llm.writeSession {
-         model = AnthropicModels.Opus_3
+         model = AnthropicModels.Opus_4_6
          appendPrompt {
             system("You are a comedian. Generate a funny joke about the given topic.")
             user("Tell me a joke about $topic.")

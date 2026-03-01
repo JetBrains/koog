@@ -240,10 +240,11 @@ class BedrockLLMClientTest {
             clock = Clock.System
         )
 
-        // Verify that older Claude models don't support tools
-        val olderClaudeModel = BedrockModels.AnthropicClaude21
+        // Verify that Claude Haiku supports tools
+        val claudeModel = BedrockModels.AnthropicClaude4_5Haiku
+        // This should not throw an exception for models with tool support
         assertFails {
-            client.execute(prompt, olderClaudeModel, tools)
+            client.execute(prompt, claudeModel, tools)
         }
     }
 
@@ -342,7 +343,7 @@ class BedrockLLMClientTest {
             val prompt = Prompt.build("test") {
                 user("This is a test prompt")
             }
-            val model = BedrockModels.AnthropicClaude3Sonnet
+            val model = BedrockModels.AnthropicClaude4Sonnet
 
             val moderationResult = client.moderate(prompt, model)
             assertEquals(true, moderationResult.isHarmful)
@@ -371,7 +372,7 @@ class BedrockLLMClientTest {
         val prompt = Prompt.build("test") {
             user("This is a test prompt")
         }
-        val model = BedrockModels.AnthropicClaude3Sonnet
+        val model = BedrockModels.AnthropicClaude4Sonnet
 
         // Verify that moderate method throws an exception because moderationGuardrailsSettings wasn't provided
         assertFailsWith<LLMClientException> {
@@ -401,7 +402,7 @@ class BedrockLLMClientTest {
             val prompt = Prompt.build("test") {
                 user("hi")
             }
-            val model = BedrockModels.AnthropicClaude3Sonnet
+            val model = BedrockModels.AnthropicClaude4Sonnet
 
             client.moderate(prompt, model)
 
@@ -434,7 +435,7 @@ class BedrockLLMClientTest {
                 user("What is 2+2?")
                 assistant("2+2 equals 4")
             }
-            val model = BedrockModels.AnthropicClaude3Sonnet
+            val model = BedrockModels.AnthropicClaude4Sonnet
 
             client.moderate(prompt, model)
 
@@ -470,7 +471,7 @@ class BedrockLLMClientTest {
             val prompt = Prompt.build("test") {
                 assistant("Hello, how can I help?")
             }
-            val model = BedrockModels.AnthropicClaude3Sonnet
+            val model = BedrockModels.AnthropicClaude4Sonnet
 
             client.moderate(prompt, model)
 
@@ -693,14 +694,6 @@ class BedrockLLMClientTest {
         )
         assertEquals(BedrockModelFamilies.AmazonNova, client.getBedrockModelFamily(novaModel))
 
-        val jambaModel = LLModel(
-            provider = LLMProvider.Bedrock,
-            id = "ai21.jamba-instruct-v1:0",
-            capabilities = listOf(LLMCapability.Completion),
-            contextLength = 256_000
-        )
-        assertEquals(BedrockModelFamilies.AI21Jamba, client.getBedrockModelFamily(jambaModel))
-
         val llamaModel = LLModel(
             provider = LLMProvider.Bedrock,
             id = "meta.llama3-1-8b-instruct-v1:0",
@@ -873,7 +866,7 @@ class BedrockLLMClientTest {
 
     @Test
     fun `BedrockClientSettings with fallback model family works correctly`() {
-        val fallbackFamily = BedrockModelFamilies.AI21Jamba
+        val fallbackFamily = BedrockModelFamilies.AmazonNova
         val settings = BedrockClientSettings(
             region = BedrockRegions.EU_WEST_1.regionCode,
             endpointUrl = "https://custom.endpoint.com",

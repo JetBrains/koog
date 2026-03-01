@@ -65,7 +65,7 @@ open class AIAgentTestBase {
 
         @JvmStatic
         fun getLatestModels() = listOf(
-            AnthropicModels.Sonnet_4_5,
+            AnthropicModels.Opus_4_6,
             OpenAIModels.Chat.GPT5_1,
         ).stream()
 
@@ -175,7 +175,7 @@ open class AIAgentTestBase {
     protected class ReportingLLMClient(
         private val eventsChannel: Channel<Event>,
         private val underlyingClient: LLMClient
-    ) : LLMClient {
+    ) : LLMClient() {
 
         override fun llmProvider(): LLMProvider = underlyingClient.llmProvider()
         sealed interface Event {

@@ -815,7 +815,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
-                    enableAutomaticPersistence = true // Enable continuous persistence
                 }
             }
         )
@@ -947,7 +946,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         install(EventHandler.Feature, eventHandlerConfig)
                         install(Persistence) {
                             storage = storageProvider
-                            enableAutomaticPersistence = true
                         }
                     },
                 )

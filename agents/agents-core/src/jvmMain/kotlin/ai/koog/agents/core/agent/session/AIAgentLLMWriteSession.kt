@@ -15,12 +15,12 @@ import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
@@ -227,9 +227,10 @@ public actual class AIAgentLLMWriteSession internal constructor(
     @JvmOverloads
     public fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser? = null,
         executorService: ExecutorService? = null
     ): Result<StructuredResponse<T>> = this.config.runOnStrategyDispatcher(executorService) {
-        requestLLMStructured(config)
+        requestLLMStructured(config, fixingParser)
     }
 
     /**
@@ -267,9 +268,10 @@ public actual class AIAgentLLMWriteSession internal constructor(
     public fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser? = null,
         executorService: ExecutorService? = null
     ): StructuredResponse<T> = this.config.runOnStrategyDispatcher(executorService) {
-        parseResponseToStructuredResponse(response, config)
+        parseResponseToStructuredResponse(response, config, fixingParser)
     }
 
     /**

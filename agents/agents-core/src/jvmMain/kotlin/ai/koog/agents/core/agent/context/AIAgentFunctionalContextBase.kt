@@ -20,12 +20,12 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.asCoroutineContext
 import ai.koog.agents.core.utils.runOnLLMDispatcher
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

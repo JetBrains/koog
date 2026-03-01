@@ -36,7 +36,7 @@ suspend fun main() {
                     println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
                 }
                 onLLMStreamingFrameReceived { context ->
-                    (context.streamFrame as? StreamFrame.Append)?.let { frame ->
+                    (context.streamFrame as? StreamFrame.TextDelta)?.let { frame ->
                         print(frame.text)
                     }
                 }
@@ -87,7 +87,7 @@ private fun anthropicAgent(
 ) = AIAgent(
     promptExecutor = executor,
     strategy = streamingWithToolsStrategy(),
-    llmModel = AnthropicModels.Sonnet_3_7,
+    llmModel = AnthropicModels.Opus_4_6,
     systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
     temperature = 0.0,
     toolRegistry = toolRegistry,

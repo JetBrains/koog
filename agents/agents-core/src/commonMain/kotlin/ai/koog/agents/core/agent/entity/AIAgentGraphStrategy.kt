@@ -3,7 +3,6 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AgentContextData
-import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
@@ -71,10 +70,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     ) {
         val additionalContextData: AgentContextData = agentContext.getAgentContextData() ?: return
 
-        when (additionalContextData.rollbackStrategy) {
-            RollbackStrategy.Default -> restoreDefault(agentContext, additionalContextData)
-            RollbackStrategy.MessageHistoryOnly -> restoreMessageOnly(agentContext, additionalContextData)
-        }
+        restoreDefault(agentContext, additionalContextData)
         agentContext.removeAgentContextData()
     }
 

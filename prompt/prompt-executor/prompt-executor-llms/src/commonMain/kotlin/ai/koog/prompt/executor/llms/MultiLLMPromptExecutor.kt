@@ -10,8 +10,12 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmOverloads
 
 /**
@@ -27,7 +31,7 @@ import kotlin.jvm.JvmOverloads
 public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     private val llmClients: Map<LLMProvider, LLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
-) : PromptExecutor {
+) : PromptExecutor() {
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *
@@ -106,11 +110,11 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     /**
      * Lazily initialized fallback client for interacting with a fallback LLM provider.
      *
-     * Utilizes the fallback provider specified in the `fallbackSettings` to retrieve a corresponding
+     * Utilizes the fallback provider specified in the `fallback` to retrieve a corresponding
      * `LLMClient` from the `llmClients` collection, if available. This client is intended to
      * handle cases where no specific provider is matched during prompt execution.
      *
-     * Returns `null` if `fallbackSettings` or its `fallbackProvider` is not specified.
+     * Returns `null` if `fallback` or its `fallbackProvider` is not specified.
      */
     private val fallbackClient: LLMClient? by lazy { fallback?.fallbackProvider?.let(llmClients::get) }
 
@@ -166,10 +170,11 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
-        val provider = model.provider
-        val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
-
-        return client.executeStreaming(prompt, model, tools)
+        return flow {
+            val provider = model.provider
+            val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
+            emitAll(client.executeStreaming(prompt, model, tools))
+        }
     }
 
     /**
@@ -229,6 +234,20 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         return llmClients.values.flatMap { client ->
             client.models()
         }
+    }
+
+    override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        val provider = model.provider
+        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+
+        return client.getStandardJsonSchemaGenerator()
+    }
+
+    override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        val provider = model.provider
+        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+
+        return client.getBasicJsonSchemaGenerator()
     }
 
     override fun close() {

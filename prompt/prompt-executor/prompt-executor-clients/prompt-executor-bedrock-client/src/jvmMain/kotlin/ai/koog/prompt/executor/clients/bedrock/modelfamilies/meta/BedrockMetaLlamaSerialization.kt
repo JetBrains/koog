@@ -64,7 +64,7 @@ internal object BedrockMetaLlamaSerialization {
     internal fun parseLlamaStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val chunk = json.decodeFromString<LlamaStreamChunk>(chunkJsonString)
         return buildList {
-            chunk.generation?.let(StreamFrame::Append)?.let(::add)
+            chunk.generation?.let(StreamFrame::TextDelta)?.let(::add)
             if (chunk.stopReason != null) {
                 add(
                     StreamFrame.End(

@@ -414,7 +414,25 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
-                        frame = StreamFrame.Append(testLLMResponse),
+                        frame = StreamFrame.TextDelta(testLLMResponse, index = 0),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMStreamingFrameReceivedEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.toModelInfo(),
+                        frame = StreamFrame.TextComplete(testLLMResponse, index = 0),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMStreamingFrameReceivedEvent(
+                        eventId = actualStreamingStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.toModelInfo(),
+                        frame = StreamFrame.End(null, ResponseMetaInfo.Empty),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(
@@ -457,7 +475,7 @@ class TraceFeatureMessageTestWriterTest {
         val testStreamingErrorMessage = "Test streaming error"
         var testStreamingStackTrace = ""
 
-        val testStreamingExecutor = object : PromptExecutor {
+        val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,

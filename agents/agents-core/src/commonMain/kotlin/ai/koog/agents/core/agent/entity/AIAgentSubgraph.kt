@@ -14,10 +14,10 @@ import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
@@ -138,8 +138,8 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                             examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
                         ),
                     ),
-                    fixingParser = toolSelectionStrategy.fixingParser,
-                )
+                ),
+                fixingParser = toolSelectionStrategy.fixingParser,
             ).getOrThrow()
 
             prompt = initialPrompt
@@ -176,7 +176,14 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             )
 
             runIfNotStrategy(context) {
-                pipeline.onSubgraphExecutionStarting(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType)
+                pipeline.onSubgraphExecutionStarting(
+                    eventId,
+                    executionInfo,
+                    this@AIAgentSubgraph,
+                    context,
+                    input,
+                    inputType
+                )
             }
 
             // Execute the subgraph with an inner context and get the result and updated prompt.
@@ -187,7 +194,15 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             } catch (e: Exception) {
                 logger.error(e) { "Exception during executing subgraph '$name': ${e.message}" }
                 runIfNotStrategy(context) {
-                    pipeline.onSubgraphExecutionFailed(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, e)
+                    pipeline.onSubgraphExecutionFailed(
+                        eventId,
+                        executionInfo,
+                        this@AIAgentSubgraph,
+                        context,
+                        input,
+                        inputType,
+                        e
+                    )
                 }
                 throw e
             }
@@ -208,7 +223,16 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             }
 
             runIfNotStrategy(context) {
-                pipeline.onSubgraphExecutionCompleted(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, result, outputType)
+                pipeline.onSubgraphExecutionCompleted(
+                    eventId,
+                    executionInfo,
+                    this@AIAgentSubgraph,
+                    context,
+                    input,
+                    inputType,
+                    result,
+                    outputType
+                )
             }
 
             result

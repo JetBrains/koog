@@ -63,7 +63,7 @@ fun interactiveSupportStrategy(
             OrderTools::contactCarrier.asTool(),
             userTools::issueRefund.asTool()
         ),
-        llmModel = AnthropicModels.Sonnet_4_5
+        llmModel = AnthropicModels.Opus_4_6
     ) { feedback ->
         "You must fix the following problems: $feedback"
     }

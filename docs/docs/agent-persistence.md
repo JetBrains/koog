@@ -43,26 +43,9 @@ val agent = AIAgent(
     install(Persistence) {
         // Use in-memory storage for snapshots
         storage = InMemoryPersistenceStorageProvider()
-        // Enable automatic persistence after each node
-        enableAutomaticPersistence = true
-        /* 
-         Select which state will be restored on a new agent run.
-     
-         Available options are:
-         1. Default: Restores the agent to the exact execution point (node in the strategy graph) where it stopped.
-            This is especially useful for building complex, fault-tolerant agents.
-         2. MessageHistoryOnly: Restores only the message history to the last saved state.
-            The agent will always restart from the first node in the strategy graph, but with history from previous runs.
-            This is useful for building conversational agents or chatbots.
-        */
-        rollbackStrategy = RollbackStrategy.MessageHistoryOnly
     }
 }
 ```
-
-!!! tip
-    Combine `enableAutomaticPersistence = true` with `RollbackStrategy.MessageHistoryOnly` to create agents that 
-    maintain conversation context across multiple sessions.    
 
 <!--- KNIT example-agent-persistence-01.kt -->
 
@@ -115,7 +98,7 @@ For more information, see [Custom storage providers](#custom-storage-providers).
 ### Continuous persistence
 
 Continuous persistence means that a checkpoint is automatically created after each node is run.
-To activate continuous persistence, use the code below:
+To disable continuous persistence, use the code below:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -135,91 +118,13 @@ val agent = AIAgent(
 
 ```kotlin
 install(Persistence) {
-    enableAutomaticPersistence = true
+    enableAutomaticPersistence = false
 }
 ```
 
 <!--- KNIT example-agent-persistence-03.kt -->
 
-When activated, the agent will automatically create a checkpoint after each node is executed,
-allowing for fine-grained recovery.
-
-### Rollback strategy
-
-The rollback strategy determines which state will be restored when the agent rolls back to a checkpoint or starts a new run.
-There are two available strategies:
-
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.snapshot.feature.Persistence
-import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
-import ai.koog.agents.core.agent.context.RollbackStrategy
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-
-val agent = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-) {
--->
-<!--- SUFFIX
-}
--->
-
-```kotlin
-install(Persistence) {
-    // Default strategy: restores the complete agent state including execution point
-    rollbackStrategy = RollbackStrategy.Default
-}
-```
-
-<!--- KNIT example-agent-persistence-04.kt -->
-
-**`RollbackStrategy.Default`**
-
-Restores the agent to the exact execution point (node in the strategy graph) where it stopped.
-This means the entire context is restored, including:
-
-- Message history
-- Current node being executed
-- Any other stateful data
-
-This strategy is especially useful for building complex, fault-tolerant agents that need to resume
-from the exact point where they left off.
-
-**`RollbackStrategy.MessageHistoryOnly`**
-
-Restores only the message history to the last saved state. The agent will always restart from the
-first node in the strategy graph, but with the conversation history from previous runs.
-
-This strategy is useful for building conversational agents or chatbots that need to maintain
-context across multiple sessions but should always start their execution flow from the beginning.
-
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.snapshot.feature.Persistence
-import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
-import ai.koog.agents.core.agent.context.RollbackStrategy
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-
-val agent = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-) {
--->
-<!--- SUFFIX
-}
--->
-
-```kotlin
-install(Persistence) {
-    // MessageHistoryOnly strategy: preserves conversation history but restarts execution
-    rollbackStrategy = RollbackStrategy.MessageHistoryOnly
-}
-```
-
-<!--- KNIT example-agent-persistence-05.kt -->
+If continuous persistence is disabled, you can still create checkpoints manually.
 
 ## Basic usage
 
@@ -253,7 +158,7 @@ suspend fun example(context: AIAgentContext) {
 }
 ```
 
-<!--- KNIT example-agent-persistence-06.kt -->
+<!--- KNIT example-agent-persistence-04.kt -->
 
 ### Restoring from a checkpoint
 
@@ -274,7 +179,7 @@ suspend fun example(context: AIAgentContext, checkpointId: String) {
 }
 ```
 
-<!--- KNIT example-agent-persistence-07.kt -->
+<!--- KNIT example-agent-persistence-05.kt -->
 
 #### Rolling back all side-effects produced by tools
 
@@ -331,7 +236,7 @@ install(Persistence) {
 }
 ```
 
-<!--- KNIT example-agent-persistence-08.kt -->
+<!--- KNIT example-agent-persistence-06.kt -->
 
 ### Using extension functions
 
@@ -339,8 +244,8 @@ The Agent Persistence feature provides convenient extension functions for workin
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.example.exampleAgentPersistence06.outputData
-import ai.koog.agents.example.exampleAgentPersistence06.outputType
+import ai.koog.agents.example.exampleAgentPersistence04.outputData
+import ai.koog.agents.example.exampleAgentPersistence04.outputType
 import ai.koog.agents.snapshot.feature.persistence
 import ai.koog.agents.snapshot.feature.withPersistence
 -->
@@ -364,7 +269,7 @@ suspend fun example(context: AIAgentContext) {
     }
 }
 ```
-<!--- KNIT example-agent-persistence-09.kt -->
+<!--- KNIT example-agent-persistence-07.kt -->
 
 ## Advanced usage
 
@@ -399,7 +304,7 @@ class MyCustomStorageProvider<MyFilterType> : PersistenceStorageProvider<MyFilte
 
 ```
 
-<!--- KNIT example-agent-persistence-10.kt -->
+<!--- KNIT example-agent-persistence-08.kt -->
 
 To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistence
 feature in your agent.
@@ -441,7 +346,7 @@ install(Persistence) {
 }
 ```
 
-<!--- KNIT example-agent-persistence-11.kt -->
+<!--- KNIT example-agent-persistence-09.kt -->
 
 ### Setting execution points
 
@@ -479,6 +384,6 @@ fun example(context: AIAgentContext) {
 
 ```
 
-<!--- KNIT example-agent-persistence-12.kt -->
+<!--- KNIT example-agent-persistence-10.kt -->
 
 This allows for more fine-grained control over the agent's state beyond just restoring from checkpoints.

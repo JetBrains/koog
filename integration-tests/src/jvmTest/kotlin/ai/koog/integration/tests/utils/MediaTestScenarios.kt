@@ -60,7 +60,7 @@ object MediaTestScenarios {
     }
 
     val models = listOf(
-        AnthropicModels.Sonnet_4_5,
+        AnthropicModels.Opus_4_6,
         GoogleModels.Gemini2_5Pro,
         OpenAIModels.Chat.GPT5_1,
     )
