@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.sse)
 
+    runtimeOnly(libs.postgresql)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
@@ -128,6 +130,7 @@ registerRunExampleTask("runExampleStreamingKtorServer", "ai.koog.agents.example.
 registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.GrouperAgentKt")
 registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemory.ChatMemoryExampleKt")
 registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
+registerRunExampleTask("runExampleChatMemoryPostgres", "ai.koog.agents.example.chatmemory.ChatMemoryPostgresExampleKt")
 /*
  A2A examples
 */
