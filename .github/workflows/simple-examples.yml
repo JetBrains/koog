@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
 
 env:
-  JAVA_VERSION: 21
+  JAVA_VERSION: 17
   JAVA_DISTRIBUTION: 'corretto'
 
 jobs:

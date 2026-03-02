@@ -9,6 +9,8 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(21)
+
     sourceSets {
         jvmMain {
             dependencies {
@@ -16,6 +18,8 @@ kotlin {
 
                 implementation(libs.testcontainers)
                 implementation(libs.ktor.server.netty)
+                implementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
+                implementation("org.junit.jupiter:junit-jupiter-engine:6.0.3")
                 implementation(kotlin("test-junit5"))
                 runtimeOnly(libs.ktor.client.cio)
                 runtimeOnly(libs.slf4j.simple)
@@ -44,7 +48,7 @@ kotlin {
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
                 )
-                implementation(libs.junit.jupiter.params)
+                implementation("org.junit.jupiter:junit-jupiter-params:6.0.3")
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotest.assertions.core)
@@ -56,6 +60,17 @@ kotlin {
             }
         }
     }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    sourceCompatibility = JavaVersion.VERSION_21.toString()
+    targetCompatibility = JavaVersion.VERSION_21.toString()
 }
 
 configurations.all {

@@ -55,7 +55,11 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.lincheck:lincheck:3.4")
                 implementation(libs.ktor.client.cio)
-                implementation(project(":integration-tests"))
+                implementation(project(":integration-tests")) {
+                    exclude(group = "org.junit.jupiter", module = "junit-jupiter-api")
+                    exclude(group = "org.junit.jupiter", module = "junit-jupiter-engine")
+                    exclude(group = "org.junit.jupiter", module = "junit-jupiter-params")
+                }
             }
         }
     }

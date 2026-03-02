@@ -57,7 +57,7 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
 
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget.set(JvmTarget.JVM_11)
         jvmDefault = JvmDefaultMode.ENABLE
         javaParameters = true
     }
@@ -65,8 +65,8 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 
 tasks.withType<JavaCompile>().configureEach {
     this.options.compilerArgs.addAll(listOf("-parameters", "-g"))
-    sourceCompatibility = JavaVersion.VERSION_17.toString()
-    targetCompatibility = JavaVersion.VERSION_17.toString()
+    sourceCompatibility = JavaVersion.VERSION_11.toString()
+    targetCompatibility = JavaVersion.VERSION_11.toString()
 }
 
 configurations.all {
