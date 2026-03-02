@@ -32,7 +32,6 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-markdown"))
 
-                api(libs.kotlinx.datetime)
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)

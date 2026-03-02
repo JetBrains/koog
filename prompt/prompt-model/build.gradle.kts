@@ -16,7 +16,6 @@ kotlin {
                 api(project(":utils"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(libs.kotlinx.datetime)
                 api(libs.kotlinx.io.core)
             }
         }
