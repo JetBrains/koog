@@ -1,6 +1,7 @@
 package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Vector
+import ai.koog.rag.base.storage.SimilaritySearchRequest
 import ai.koog.rag.vector.embedder.DocumentEmbedder
 import ai.koog.rag.vector.mocks.MockDocument
 import kotlinx.coroutines.flow.toList
@@ -43,8 +44,8 @@ class InMemoryDocumentEmbeddingStoreTest {
         val document = MockDocument("Test document")
 
         // Act
-        val id = storage.store(document)
-        val retrievedDocument = storage.read(id)
+        val id = storage.add(listOf(document)).first()
+        val retrievedDocument = storage.get(listOf(id)).firstOrNull()
 
         // Assert
         assertNotNull(id)
@@ -59,12 +60,12 @@ class InMemoryDocumentEmbeddingStoreTest {
         val document = MockDocument("Test document")
 
         // Act
-        val id = storage.store(document)
-        val deleteResult = storage.delete(id)
-        val retrievedDocument = storage.read(id)
+        val id = storage.add(listOf(document)).first()
+        val deletedIds = storage.delete(listOf(id))
+        val retrievedDocument = storage.get(listOf(id)).firstOrNull()
 
         // Assert
-        assertTrue(deleteResult)
+        assertEquals(listOf(id), deletedIds)
         assertNull(retrievedDocument)
     }
 
@@ -76,7 +77,7 @@ class InMemoryDocumentEmbeddingStoreTest {
         val documents = listOf(MockDocument("Document 1"), MockDocument("Document 2"), MockDocument("Document 3"))
 
         // Act
-        documents.forEach { storage.store(it) }
+        storage.add(documents)
         val allDocs = storage.allDocuments().toList()
 
         // Assert
@@ -84,6 +85,58 @@ class InMemoryDocumentEmbeddingStoreTest {
         documents.forEach { document ->
             assertTrue(allDocs.contains(document))
         }
+    }
+
+    @Test
+    fun testUpdatePreservesIds() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStore(embedder)
+        val document = MockDocument("original content")
+
+        val id = storage.add(listOf(document)).first()
+        val updatedDocument = MockDocument("updated content")
+
+        val updatedIds = storage.update(mapOf(id to updatedDocument))
+
+        assertEquals(listOf(id), updatedIds)
+        val retrieved = storage.get(listOf(id)).firstOrNull()
+        assertEquals(updatedDocument, retrieved)
+    }
+
+    @Test
+    fun testUpdateMultipleDocumentsPreservesIds() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStore(embedder)
+        val doc1 = MockDocument("first")
+        val doc2 = MockDocument("second")
+
+        val id1 = storage.add(listOf(doc1)).first()
+        val id2 = storage.add(listOf(doc2)).first()
+
+        val updatedDoc1 = MockDocument("first updated")
+        val updatedDoc2 = MockDocument("second updated")
+
+        val updatedIds = storage.update(mapOf(id1 to updatedDoc1, id2 to updatedDoc2))
+
+        assertEquals(setOf(id1, id2), updatedIds.toSet())
+        assertEquals(updatedDoc1, storage.get(listOf(id1)).firstOrNull())
+        assertEquals(updatedDoc2, storage.get(listOf(id2)).firstOrNull())
+    }
+
+    @Test
+    fun testUpdateDoesNotChangeDocumentCount() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStore(embedder)
+        val documents = listOf(MockDocument("doc1"), MockDocument("doc2"), MockDocument("doc3"))
+
+        val ids = storage.add(documents)
+        val allDocsBefore = storage.allDocuments().toList()
+        assertEquals(3, allDocsBefore.size)
+
+        storage.update(mapOf(ids[0] to MockDocument("doc1 updated")))
+
+        val allDocsAfter = storage.allDocuments().toList()
+        assertEquals(3, allDocsAfter.size)
     }
 
     @Test
@@ -98,30 +151,30 @@ class InMemoryDocumentEmbeddingStoreTest {
         )
 
         // Store all documents
-        documents.forEach { storage.store(it) }
+        storage.add(documents)
 
         // Act
         val query = "banana"
-        val rankedDocs = storage.rankDocuments(query).toList()
+        val rankedDocs = storage.search(SimilaritySearchRequest(queryText = query, limit = Int.MAX_VALUE))
 
         // Assert
         assertEquals(documents.size, rankedDocs.size)
 
         // The document containing "banana" should have higher similarity (lower diff)
         val bananaDocRanks = rankedDocs.filter { it.document.content.contains("banana") }
-            .map { it.similarity }
+            .map { it.score.value }
 
         val otherDocRanks = rankedDocs.filter { !it.document.content.contains("banana") }
-            .map { it.similarity }
+            .map { it.score.value }
 
         // In our mock implementation, documents containing the query should have similarity 1.0 (exact match)
         // and others should have similarity 0.0 (different)
-        bananaDocRanks.forEach { similarity ->
-            assertEquals(1.0, similarity)
+        bananaDocRanks.forEach { score ->
+            assertEquals(1.0, score)
         }
 
-        otherDocRanks.forEach { similarity ->
-            assertEquals(0.0, similarity)
+        otherDocRanks.forEach { score ->
+            assertEquals(0.0, score)
         }
     }
 }

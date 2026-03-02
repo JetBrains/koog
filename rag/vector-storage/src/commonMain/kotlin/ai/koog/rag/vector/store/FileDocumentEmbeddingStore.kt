@@ -10,7 +10,7 @@ import ai.koog.rag.vector.storage.FileVectorStorage
  *
  * This class facilitates the storage and retrieval of documents and their corresponding vector embeddings
  * in a file system. It utilizes a [FileVectorStorage] for managing the document embeddings and extends
- * [EmbeddingVectorStore], inheriting capabilities such as ranking, storing, and deleting documents
+ * [EmbeddingStore], inheriting capabilities such as ranking, storing, and deleting documents
  * based on their embeddings.
  *
  * @param Document The type of the documents being stored.
@@ -24,7 +24,7 @@ public open class FileDocumentEmbeddingStore<Document, Path>(
     documentProvider: DocumentProvider<Path, Document>,
     fs: FileSystemProvider.ReadWrite<Path>,
     root: Path
-) : EmbeddingVectorStore<Document>(
+) : EmbeddingStore<Document>(
     embedder = embedder,
     storage = FileVectorStorage(documentProvider, fs, root)
 )

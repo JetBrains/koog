@@ -26,6 +26,10 @@ public class InMemoryVectorStorage<Document> : VectorStorage<Document> {
         return docID
     }
 
+    override suspend fun store(id: String, document: Document, vector: Vector) {
+        documentById[id] = DocumentWithPayload(document, vector)
+    }
+
     override suspend fun delete(documentId: String): Boolean {
         return documentById.remove(documentId) != null
     }

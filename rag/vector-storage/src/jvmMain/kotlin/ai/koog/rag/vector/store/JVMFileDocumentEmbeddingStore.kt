@@ -8,7 +8,7 @@ import java.nio.file.Path
 /**
  * A file-system-based [VectorStore] implementation for managing and embedding documents represented by file paths.
  *
- * This class extends [EmbeddingVectorStore] and is specialized for JVM-based systems where documents
+ * This class extends [EmbeddingStore] and is specialized for JVM-based systems where documents
  * are represented as file paths ([java.nio.file.Path]). It combines a [DocumentEmbedder] for embedding the file content into vectors
  * and a [ai.koog.rag.vector.storage.JVMFileVectorStorage] for managing the storage and retrieval of these embeddings along with their associated documents.
  *

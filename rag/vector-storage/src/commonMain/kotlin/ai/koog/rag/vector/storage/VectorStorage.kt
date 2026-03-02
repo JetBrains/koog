@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  * Low-level storage interface for documents and their pre-computed vector embeddings.
  *
  * Implementations handle only persistence — no embedding logic. The embedding step
- * is handled by [ai.koog.rag.vector.store.EmbeddingVectorStore] which composes an embedder with a [VectorStorage].
+ * is handled by [ai.koog.rag.vector.store.EmbeddingStore] which composes an embedder with a [VectorStorage].
  *
  * @param Document The type of the document being stored.
  */
@@ -21,6 +21,16 @@ public interface VectorStorage<Document> {
      * @return A unique string identifier for the stored document.
      */
     public suspend fun store(document: Document, vector: Vector): String
+
+    /**
+     * Stores a document along with its pre-computed vector embedding under the specified ID.
+     * If a document with the given ID already exists, it is replaced.
+     *
+     * @param id The unique identifier to assign to the stored document.
+     * @param document The document to store.
+     * @param vector The pre-computed vector embedding for the document.
+     */
+    public suspend fun store(id: String, document: Document, vector: Vector)
 
     /**
      * Deletes the document with the specified ID.

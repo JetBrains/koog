@@ -2,6 +2,7 @@ package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
+import ai.koog.rag.base.storage.SimilaritySearchRequest
 import ai.koog.rag.vector.mocks.MockDocument
 import ai.koog.rag.vector.mocks.MockDocumentProvider
 import ai.koog.rag.vector.mocks.MockFileSystem
@@ -45,11 +46,11 @@ class TextFileDocumentEmbeddingStoreTest {
         val document = MockDocument("test document")
 
         // Store document
-        val documentId = storage.store(document)
+        val documentId = storage.add(listOf(document)).first()
         assertNotNull(documentId)
 
         // Read document back
-        val retrievedDocument = storage.read(documentId)
+        val retrievedDocument = storage.get(listOf(documentId)).firstOrNull()
         assertEquals(document, retrievedDocument)
     }
 
@@ -59,17 +60,17 @@ class TextFileDocumentEmbeddingStoreTest {
         val document = MockDocument("test document")
 
         // Store document
-        val documentId = storage.store(document)
+        val documentId = storage.add(listOf(document)).first()
 
         // Verify it exists
-        assertNotNull(storage.read(documentId))
+        assertNotNull(storage.get(listOf(documentId)).firstOrNull())
 
         // Delete it
-        val deleted = storage.delete(documentId)
-        assertTrue(deleted)
+        val deletedIds = storage.delete(listOf(documentId))
+        assertEquals(listOf(documentId), deletedIds)
 
         // Verify it's gone
-        assertEquals(null, storage.read(documentId))
+        assertEquals(null, storage.get(listOf(documentId)).firstOrNull())
     }
 
     @Test
@@ -79,10 +80,7 @@ class TextFileDocumentEmbeddingStoreTest {
         val documentIds = mutableListOf<String>()
 
         // Store multiple documents
-        documents.forEach { doc ->
-            val id = storage.store(doc)
-            documentIds.add(id)
-        }
+        documentIds.addAll(storage.add(documents))
 
         // Retrieve all documents
         val allDocs = storage.allDocuments().toList()
@@ -97,19 +95,16 @@ class TextFileDocumentEmbeddingStoreTest {
         val documentIds = mutableListOf<String>()
 
         // Store documents
-        documents.forEach { doc ->
-            val id = storage.store(doc)
-            documentIds.add(id)
-        }
+        documentIds.addAll(storage.add(documents))
 
         // Rank documents by similarity to "hello"
-        val rankedDocs = storage.rankDocuments("hello").toList()
+        val rankedDocs = storage.search(SimilaritySearchRequest(queryText = "hello", limit = Int.MAX_VALUE))
         assertEquals(documents.size, rankedDocs.size)
 
         // All documents should have a similarity score
         rankedDocs.forEach { rankedDoc ->
             assertNotNull(rankedDoc.document)
-            assertTrue(rankedDoc.similarity >= 0.0)
+            assertTrue(rankedDoc.score.value >= 0.0)
         }
 
         // Documents containing "hello" should be more similar (lower distance)
@@ -117,8 +112,8 @@ class TextFileDocumentEmbeddingStoreTest {
         val nonHelloDocuments = rankedDocs.filter { !it.document.content.contains("hello") }
 
         if (helloDocuments.isNotEmpty() && nonHelloDocuments.isNotEmpty()) {
-            val avgHelloSimilarity = helloDocuments.map { it.similarity }.average()
-            val avgNonHelloSimilarity = nonHelloDocuments.map { it.similarity }.average()
+            val avgHelloSimilarity = helloDocuments.map { it.score.value }.average()
+            val avgNonHelloSimilarity = nonHelloDocuments.map { it.score.value }.average()
             assertTrue(avgHelloSimilarity > avgNonHelloSimilarity, "Documents with 'hello' should be more similar")
         }
     }
@@ -128,7 +123,7 @@ class TextFileDocumentEmbeddingStoreTest {
         val storage = createTestStorage()
 
         // Rank documents in empty storage
-        val rankedDocs = storage.rankDocuments("test query").toList()
+        val rankedDocs = storage.search(SimilaritySearchRequest(queryText = "test query", limit = Int.MAX_VALUE))
         assertTrue(rankedDocs.isEmpty())
     }
 
@@ -143,14 +138,11 @@ class TextFileDocumentEmbeddingStoreTest {
         val documentIds = mutableListOf<String>()
 
         // Store multiple documents
-        documents.forEach { doc ->
-            val id = storage.store(doc)
-            documentIds.add(id)
-        }
+        documentIds.addAll(storage.add(documents))
 
         // Verify all documents can be retrieved
         documentIds.zip(documents).forEach { (id, expectedDoc) ->
-            val retrievedDoc = storage.read(id)
+            val retrievedDoc = storage.get(listOf(id)).firstOrNull()
             assertEquals(expectedDoc, retrievedDoc)
         }
     }
@@ -162,21 +154,18 @@ class TextFileDocumentEmbeddingStoreTest {
         val documentIds = mutableListOf<String>()
 
         // Store documents
-        documents.forEach { doc ->
-            val id = storage.store(doc)
-            documentIds.add(id)
-        }
+        documentIds.addAll(storage.add(documents))
 
         // Test ranking with different queries
-        val appleRanked = storage.rankDocuments("apple").toList()
-        val bananaRanked = storage.rankDocuments("banana").toList()
+        val appleRanked = storage.search(SimilaritySearchRequest(queryText = "apple", limit = Int.MAX_VALUE))
+        val bananaRanked = storage.search(SimilaritySearchRequest(queryText = "banana", limit = Int.MAX_VALUE))
 
         assertEquals(documents.size, appleRanked.size)
         assertEquals(documents.size, bananaRanked.size)
 
         // The exact document should have the best similarity (lowest distance)
-        val bestAppleMatch = appleRanked.maxBy { it.similarity }
-        val bestBananaMatch = bananaRanked.maxBy { it.similarity }
+        val bestAppleMatch = appleRanked.maxBy { it.score.value }
+        val bestBananaMatch = bananaRanked.maxBy { it.score.value }
 
         assertEquals("apple", bestAppleMatch.document.content)
         assertEquals("banana", bestBananaMatch.document.content)
