@@ -24,10 +24,10 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
 import kotlin.reflect.KClass
+import kotlin.time.Clock
 
 @Suppress("DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
 public actual class AIAgentLLMWriteSession internal constructor(

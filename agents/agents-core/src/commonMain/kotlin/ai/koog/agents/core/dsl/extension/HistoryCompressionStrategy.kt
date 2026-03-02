@@ -4,9 +4,9 @@ import ai.koog.agents.annotations.KtLintIgnoreNaming
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Instant
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
+import kotlin.time.Instant
 
 /**
  * Represents an abstract strategy for compressing the history of messages in a `AIAgentLLMWriteSession`.

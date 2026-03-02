@@ -57,9 +57,9 @@ import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.VisibleForTesting
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -138,7 +138,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     private val apiMethod: BedrockAPIMethod = BedrockAPIMethod.InvokeModel,
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     private val fallbackModelFamily: BedrockModelFamilies? = null,
-    private val clock: Clock = kotlin.time.Clock.System,
+    private val clock: Clock = Clock.System,
 ) : LLMClient(), LLMEmbeddingProvider {
 
     private val logger = KotlinLogging.logger {}
@@ -155,7 +155,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     public constructor(
         identityProvider: IdentityProvider,
         settings: BedrockClientSettings = BedrockClientSettings(),
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
     ) : this(
         bedrockClient = BedrockRuntimeClient {
             this.region = settings.region

@@ -7,7 +7,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * A builder class for creating prompts using a DSL approach.
@@ -32,12 +32,12 @@ import kotlinx.datetime.Clock
 public class PromptBuilder internal constructor(
     private val id: String,
     private val params: LLMParams = LLMParams(),
-    private val clock: Clock = kotlin.time.Clock.System
+    private val clock: Clock = Clock.System
 ) {
     private val messages = mutableListOf<Message>()
 
     internal companion object {
-        internal fun from(prompt: Prompt, clock: Clock = kotlin.time.Clock.System): PromptBuilder = PromptBuilder(
+        internal fun from(prompt: Prompt, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(
             prompt.id,
             prompt.params,
             clock

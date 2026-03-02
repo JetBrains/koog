@@ -48,13 +48,13 @@ import aws.sdk.kotlin.services.bedrockruntime.model.VideoSource
 import aws.smithy.kotlin.runtime.content.Document
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlin.time.Clock
 import aws.sdk.kotlin.services.bedrockruntime.model.Message as BedrockMessage
 import aws.sdk.kotlin.services.bedrockruntime.model.Tool as BedrockTool
 import aws.sdk.kotlin.services.bedrockruntime.model.ToolChoice as BedrockToolChoice
@@ -343,7 +343,7 @@ internal object BedrockConverseConverters {
      */
     fun transformConverseStreamChunks(
         chunkFlow: Flow<ConverseStreamOutput>,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
     ) = buildStreamFrameFlow {
         var finishReason: String? = null
 

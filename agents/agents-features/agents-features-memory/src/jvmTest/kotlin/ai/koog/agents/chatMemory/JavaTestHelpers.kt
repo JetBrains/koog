@@ -12,7 +12,6 @@ object JavaTestHelpers {
 
     /**
      * Creates a [MockLLMBuilder] using the system clock.
-     * This avoids Java tests needing to import [kotlinx.datetime.Clock] directly.
      */
     @JvmStatic
     fun createMockLLMBuilder(): MockLLMBuilder = MockLLMBuilder(Clock.System)

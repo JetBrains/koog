@@ -25,10 +25,10 @@ import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlin.jvm.JvmName
 import kotlin.reflect.KClass
+import kotlin.time.Clock
 
 /**
  * A session for managing interactions with a language learning model (LLM)

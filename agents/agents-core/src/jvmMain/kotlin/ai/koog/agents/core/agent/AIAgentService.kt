@@ -12,8 +12,8 @@ import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlinx.datetime.Clock
 import java.util.concurrent.ExecutorService
+import kotlin.time.Clock
 
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> {
     public actual abstract val promptExecutor: PromptExecutor
@@ -55,7 +55,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
         executorService: ExecutorService? = null,
-        clock: Clock = kotlin.time.Clock.System
+        clock: Clock = Clock.System
     ): TAgent = agentConfig.runOnStrategyDispatcher(executorService) {
         createAgent(id, additionalToolRegistry, agentConfig, clock)
     }

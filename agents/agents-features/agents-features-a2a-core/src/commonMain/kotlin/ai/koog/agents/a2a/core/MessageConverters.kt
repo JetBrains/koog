@@ -12,8 +12,8 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonObject
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -31,7 +31,7 @@ public typealias A2AMessage = ai.koog.a2a.model.Message
  * @param clock The clock to use for the timestamp. Defaults to [Clock.System].
  */
 public fun A2AMessage.toKoogMessage(
-    clock: Clock = kotlin.time.Clock.System,
+    clock: Clock = Clock.System,
 ): Message {
     // Create metadata
     val metadata = JsonObject(emptyMap()).withA2AMetadata(

@@ -33,6 +33,7 @@
         <koog.version>0.4.3-develop-20250927-0204</koog.version>
         <!-- Kotlinx-serialization version must be aligned -->
         <kotlinx-serialization.version>1.8.1</kotlinx-serialization.version>
+        <kotlinx-datetime.version>0.7.1</kotlinx-datetime.version>
         <ktor.version>3.2.3</ktor.version>
     </properties>
     <dependencyManagement>
@@ -41,6 +42,13 @@
                 <groupId>org.jetbrains.kotlinx</groupId>
                 <artifactId>kotlinx-serialization-bom</artifactId>
                 <version>${kotlinx-serialization.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-datetime-jvm</artifactId>
+                <version>${kotlinx-datetime.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>

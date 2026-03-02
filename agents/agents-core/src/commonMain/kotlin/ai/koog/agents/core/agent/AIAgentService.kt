@@ -14,12 +14,12 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import kotlin.jvm.JvmStatic
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
+import kotlin.time.Clock
 
 /**
  * [AIAgentService] is a core interface for managing AI agents. The service allows creation, removal, and
@@ -198,7 +198,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String? = null,
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
     ): TAgent
 
     /**
@@ -216,7 +216,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String? = null,
         additionalToolRegistry: ToolRegistry = this.toolRegistry,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
     ): Output
 }
 
@@ -264,7 +264,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String? = null,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
     ): TAgent
 
     /**
@@ -459,7 +459,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     parentAgentId: String? = null,
-    clock: Clock = kotlin.time.Clock.System
+    clock: Clock = Clock.System
 ): Tool<Input, AIAgentTool.AgentToolResult<Output>> = AIAgentTool(
     agentService = this,
     agentName = agentName,

@@ -14,8 +14,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlinx.datetime.Clock
 import kotlin.jvm.JvmName
+import kotlin.time.Clock
 
 /**
  * Represents the context for an AI agent LLM, managing tools, prompt handling, and interaction with the

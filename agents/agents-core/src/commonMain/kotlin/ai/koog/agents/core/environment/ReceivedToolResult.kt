@@ -4,10 +4,10 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.time.Clock
 
 /**
  * Represents the result or response received from a tool operation.
@@ -36,7 +36,7 @@ public data class ReceivedToolResult(
      * @param clock The clock to use for generating the timestamp in the metadata. Defaults to `Clock.System`.
      * @return A `Message.Tool.Result` instance representing the tool result with the current data and metadata.
      */
-    public fun toMessage(clock: Clock = kotlin.time.Clock.System): Message.Tool.Result = Message.Tool.Result(
+    public fun toMessage(clock: Clock = Clock.System): Message.Tool.Result = Message.Tool.Result(
         id = id,
         tool = tool,
         content = content,

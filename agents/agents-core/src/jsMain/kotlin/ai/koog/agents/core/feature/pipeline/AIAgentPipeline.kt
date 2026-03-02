@@ -3,7 +3,7 @@
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 public actual abstract class AIAgentPipeline actual constructor(
     agentConfig: AIAgentConfig,

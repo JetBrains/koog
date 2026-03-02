@@ -5,13 +5,13 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.math.absoluteValue
+import kotlin.time.Clock
 
 private val defaultJson = Json {
     ignoreUnknownKeys = true
@@ -216,7 +216,7 @@ public interface PromptCache {
 public suspend fun PromptCache.get(
     prompt: Prompt,
     tools: List<ToolDescriptor>,
-    clock: Clock = kotlin.time.Clock.System
+    clock: Clock = Clock.System
 ): List<Message.Response>? {
     return get(PromptCache.Request.create(prompt, tools))?.let { messages ->
         val metaInfo = prompt

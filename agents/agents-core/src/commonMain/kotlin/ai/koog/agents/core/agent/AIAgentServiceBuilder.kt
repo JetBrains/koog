@@ -19,8 +19,8 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import kotlinx.datetime.Clock
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Builder for creating AIAgentService instances.
@@ -94,7 +94,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
     ),
-    private var clock: Clock = kotlin.time.Clock.System,
+    private var clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
 ) {
 
@@ -292,7 +292,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
     ),
-    private var clock: Clock = kotlin.time.Clock.System,
+    private var clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) {
     /**

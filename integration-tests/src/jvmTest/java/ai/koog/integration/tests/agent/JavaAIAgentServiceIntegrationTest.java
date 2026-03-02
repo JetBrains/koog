@@ -9,6 +9,7 @@ import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import kotlin.time.Clock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -95,7 +96,7 @@ public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
 
         ToolRegistry emptyRegistry = ToolRegistry.builder().build();
         String result = service.createAgentAndRun("What is 2+2?", "one-shot-agent",
-            emptyRegistry, service.getAgentConfig(), null, kotlin.time.Clock.System.INSTANCE);
+            emptyRegistry, service.getAgentConfig(), null,  Clock.System.INSTANCE);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());

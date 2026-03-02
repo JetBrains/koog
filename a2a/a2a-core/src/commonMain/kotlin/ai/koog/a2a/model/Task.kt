@@ -1,11 +1,11 @@
 package ai.koog.a2a.model
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Represents a single, stateful operation or conversation between a client and an agent.

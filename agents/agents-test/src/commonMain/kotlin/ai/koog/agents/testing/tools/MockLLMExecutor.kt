@@ -65,7 +65,7 @@ internal class MockLLMExecutor(
     private val toolRegistry: ToolRegistry? = null,
     private val logger: KLogger = KotlinLogging.logger(MockLLMExecutor::class.simpleName.toString()),
     val toolActions: List<ToolCondition<*, *>> = emptyList(),
-    private val clock: Clock = kotlin.time.Clock.System,
+    private val clock: Clock = Clock.System,
     private val tokenizer: Tokenizer? = null
 ) : PromptExecutor() {
 

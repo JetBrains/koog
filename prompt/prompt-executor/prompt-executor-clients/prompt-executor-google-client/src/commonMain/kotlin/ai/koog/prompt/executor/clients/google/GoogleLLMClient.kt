@@ -53,7 +53,6 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
@@ -64,6 +63,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -97,7 +97,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    private val clock: Clock = kotlin.time.Clock.System
+    private val clock: Clock = Clock.System
 ) : LLMClient(), LLMEmbeddingProvider {
 
     @OptIn(InternalStructuredOutputApi::class)

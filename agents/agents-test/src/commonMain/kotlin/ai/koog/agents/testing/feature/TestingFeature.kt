@@ -419,7 +419,7 @@ public class Testing {
          * This enables test scenarios that require precise control over time
          * by allowing the use of custom clock instances, such as mock or fixed clocks.
          */
-        public var clock: Clock = kotlin.time.Clock.System
+        public var clock: Clock = Clock.System
 
         /**
          * Defines the tokenizer to be used for estimating token counts in text strings.

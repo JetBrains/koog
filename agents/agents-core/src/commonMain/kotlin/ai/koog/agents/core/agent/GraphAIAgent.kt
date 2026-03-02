@@ -20,8 +20,8 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -55,7 +55,7 @@ public open class GraphAIAgent<Input, Output>(
     override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    public val clock: Clock = kotlin.time.Clock.System,
+    public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(

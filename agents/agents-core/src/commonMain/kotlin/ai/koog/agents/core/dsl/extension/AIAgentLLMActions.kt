@@ -3,7 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Clears the history of messages in the current AI Agent LLM Write Session.

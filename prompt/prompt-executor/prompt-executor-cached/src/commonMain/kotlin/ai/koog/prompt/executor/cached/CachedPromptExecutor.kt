@@ -15,7 +15,7 @@ import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * A CodePromptExecutor that caches responses from a nested executor.
@@ -26,7 +26,7 @@ import kotlinx.datetime.Clock
 public class CachedPromptExecutor(
     private val cache: PromptCache,
     private val nested: PromptExecutor,
-    private val clock: Clock = kotlin.time.Clock.System
+    private val clock: Clock = Clock.System
 ) : PromptExecutor() {
 
     override suspend fun execute(

@@ -36,8 +36,8 @@ import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Memory implementation for AI agents that provides persistent storage and retrieval of facts.
@@ -458,7 +458,7 @@ public class AgentMemory(
 @OptIn(InternalAgentsApi::class)
 public suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     concept: Concept,
-    clock: Clock = kotlin.time.Clock.System,
+    clock: Clock = Clock.System,
 ): Fact {
     @Serializable
     @LLMDescription("Fact text")

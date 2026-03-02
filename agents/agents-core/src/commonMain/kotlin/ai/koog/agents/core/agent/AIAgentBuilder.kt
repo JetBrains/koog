@@ -21,8 +21,8 @@ import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlinx.datetime.Clock
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Represents a configurational builder for setting up and customizing the execution parameters and
@@ -131,7 +131,7 @@ public expect class AIAgentBuilder internal constructor() : AIAgentBuilderAPI {
      * Represents the clock used to determine the current time in the builder.
      * By default, it is set to the system clock, but can be customized for testing or specific time-related behaviors*/
     @property:PublishedApi
-    internal var clock: kotlin.time.Clock
+    internal var clock: Clock
 
     public override fun promptExecutor(promptExecutor: PromptExecutor): AIAgentBuilder
 
@@ -203,7 +203,7 @@ public class GraphAgentBuilder<Input, Output>(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
     private var maxIterations: Int = 50,
-    private var clock: Clock = kotlin.time.Clock.System,
+    private var clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
 ) {
 
@@ -404,7 +404,7 @@ public class FunctionalAgentBuilder<Input, Output>(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
     private var maxIterations: Int = 50,
-    private var clock: Clock = kotlin.time.Clock.System,
+    private var clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) {
 
@@ -596,7 +596,7 @@ public class PlannerAgentBuilder<Input, Output>(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
     private var maxIterations: Int = 50,
-    private var clock: Clock = kotlin.time.Clock.System,
+    private var clock: Clock = Clock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) {
 

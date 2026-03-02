@@ -11,9 +11,9 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlinx.datetime.Clock
 import kotlin.jvm.JvmStatic
 import kotlin.reflect.typeOf
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 
 @PublishedApi
@@ -50,7 +50,7 @@ internal object AIAgentHelper {
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
         noinline installFeatures: FeatureContext.() -> Unit = {},
     ): AIAgent<Input, Output> {
         return GraphAIAgent(
@@ -94,7 +94,7 @@ internal object AIAgentHelper {
         toolRegistry = toolRegistry,
         strategy = strategy,
         id = id,
-        clock = kotlin.time.Clock.System,
+        clock = Clock.System,
         installFeatures = installFeatures
     )
 
@@ -117,7 +117,7 @@ internal object AIAgentHelper {
         strategy: AIAgentFunctionalStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
         installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
     ): FunctionalAIAgent<Input, Output> {
         return FunctionalAIAgent(
@@ -208,7 +208,7 @@ internal object AIAgentHelper {
         responseProcessor: ResponseProcessor? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: Clock = kotlin.time.Clock.System,
+        clock: Clock = Clock.System,
         systemPrompt: String? = null,
         temperature: Double? = null,
         numberOfChoices: Int = 1,
