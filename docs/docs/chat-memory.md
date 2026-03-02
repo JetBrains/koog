@@ -60,10 +60,15 @@ Install ChatMemory using the `installChatMemory` DSL shortcut inside an agent bl
 By default it uses an in-memory provider with no preprocessors:
 
 ```kotlin
+val toolRegistry = ToolRegistry {
+    // your tools
+}
+
 val agent = AIAgent(
     promptExecutor = executor,
     llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You are a helpful assistant.",
+    toolRegistry = toolRegistry,
 ) {
     install(ChatMemory)
 }
@@ -76,6 +81,7 @@ val agent = AIAgent(
     promptExecutor = executor,
     llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You are a helpful assistant.",
+    toolRegistry = toolRegistry,
 ) {
     install(ChatMemory) {
         chatHistoryProvider = MyDatabaseProvider()
@@ -196,20 +202,6 @@ clients. Each HTTP request carries a session ID, the agent loads the matching co
 generates a response, and stores the updated history — all transparently.
 
 ```kotlin
-// --- Tools ---
-
-@Tool
-@LLMDescription("Looks up the current weather for a given city")
-fun getWeather(city: String): String {
-    return "Sunny, 22 °C" // call a real weather API here
-}
-
-@Tool
-@LLMDescription("Searches a knowledge base and returns relevant articles")
-fun searchKnowledgeBase(query: String): String {
-    return "Article: Getting started with Koog" // call a real search backend here
-}
-
 // --- Controller ---
 
 @RestController
@@ -226,14 +218,13 @@ class ChatController(private val agentService: ChatAgentService) {
 @Service
 class ChatAgentService(private val executor: SingleLLMPromptExecutor) {
     private val toolRegistry = ToolRegistry {
-        tool(::getWeather)
-        tool(::searchKnowledgeBase)
+        // register your tools here
     }
 
     private val agent = AIAgent(
         promptExecutor = executor,
         llmModel = OpenAIModels.Chat.GPT4oMini,
-        systemPrompt = "You are a helpful assistant with access to weather and knowledge base tools.",
+        systemPrompt = "You are a helpful assistant.",
         toolRegistry = toolRegistry,
     ) {
         install(ChatMemory) {

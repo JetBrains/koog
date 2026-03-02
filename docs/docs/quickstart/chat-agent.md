@@ -67,6 +67,7 @@ messages before each run and storing the updated history afterward.
     import ai.koog.agents.chatMemory.feature.ChatMemory
     import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
     import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     -->
@@ -74,11 +75,16 @@ messages before each run and storing the updated history afterward.
     suspend fun main() {
         val sessionId = "my-conversation"
 
+        val toolRegistry = ToolRegistry {
+            // register your tools here
+        }
+
         simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")).use { executor ->
             val agent = AIAgent(
                 promptExecutor = executor,
                 llmModel = OpenAIModels.Chat.GPT5_2,
-                systemPrompt = "You are a friendly assistant. Keep your answers concise.",
+                systemPrompt = "You are a helpful assistant.",
+                toolRegistry = toolRegistry,
             ) {
                 install(ChatMemory) {
                     windowSize(20) // keep only the last 20 messages
@@ -104,6 +110,7 @@ messages before each run and storing the updated history afterward.
     import ai.koog.agents.chatMemory.feature.ChatMemory
     import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
     import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
     import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
     -->
@@ -111,11 +118,16 @@ messages before each run and storing the updated history afterward.
     suspend fun main() {
         val sessionId = "my-conversation"
 
+        val toolRegistry = ToolRegistry {
+            // register your tools here
+        }
+
         simpleAnthropicExecutor(System.getenv("ANTHROPIC_API_KEY")).use { executor ->
             val agent = AIAgent(
                 promptExecutor = executor,
                 llmModel = AnthropicModels.Sonnet4_1,
-                systemPrompt = "You are a friendly assistant. Keep your answers concise.",
+                systemPrompt = "You are a helpful assistant.",
+                toolRegistry = toolRegistry,
             ) {
                 install(ChatMemory) {
                     windowSize(20)
@@ -141,6 +153,7 @@ messages before each run and storing the updated history afterward.
     import ai.koog.agents.chatMemory.feature.ChatMemory
     import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
     import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
     import ai.koog.prompt.executor.clients.google.GoogleModels
     import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
     -->
@@ -148,11 +161,16 @@ messages before each run and storing the updated history afterward.
     suspend fun main() {
         val sessionId = "my-conversation"
 
+        val toolRegistry = ToolRegistry {
+            // register your tools here
+        }
+
         simpleGoogleAIExecutor(System.getenv("GOOGLE_API_KEY")).use { executor ->
             val agent = AIAgent(
                 promptExecutor = executor,
                 llmModel = GoogleModels.Gemini2_5Pro,
-                systemPrompt = "You are a friendly assistant. Keep your answers concise.",
+                systemPrompt = "You are a helpful assistant.",
+                toolRegistry = toolRegistry,
             ) {
                 install(ChatMemory) {
                     windowSize(20)
@@ -178,6 +196,7 @@ messages before each run and storing the updated history afterward.
     import ai.koog.agents.chatMemory.feature.ChatMemory
     import ai.koog.agents.chatMemory.feature.InMemoryChatHistoryProvider
     import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
     -->
@@ -185,11 +204,16 @@ messages before each run and storing the updated history afterward.
     suspend fun main() {
         val sessionId = "my-conversation"
 
+        val toolRegistry = ToolRegistry {
+            // register your tools here
+        }
+
         simpleOllamaAIExecutor().use { executor ->
             val agent = AIAgent(
                 promptExecutor = executor,
                 llmModel = OllamaModels.Meta.LLAMA_3_2,
-                systemPrompt = "You are a friendly assistant. Keep your answers concise.",
+                systemPrompt = "You are a helpful assistant.",
+                toolRegistry = toolRegistry,
             ) {
                 install(ChatMemory) {
                     windowSize(20)
@@ -221,7 +245,8 @@ ChatMemory is installed as a [feature](../features-overview.md) inside the agent
 AIAgent(
     promptExecutor = executor,
     llmModel = OpenAIModels.Chat.GPT5_2,
-    systemPrompt = "You are a friendly assistant.",
+    systemPrompt = "You are a helpful assistant.",
+    toolRegistry = toolRegistry,
 ) {
     install(ChatMemory) {
         windowSize(20) // keep only the last 20 messages
@@ -261,15 +286,15 @@ Each iteration of the `while` loop:
 You: My name is Alice.
 Assistant: Nice to meet you, Alice! How can I help you today?
 
-You: What is the capital of France?
-Assistant: The capital of France is Paris.
+You: What's my favorite color? It's blue.
+Assistant: Got it — your favorite color is blue!
 
 You: What's my name?
 Assistant: Your name is Alice!
 ```
 
 The agent correctly answers "Your name is Alice!" because ChatMemory loaded the earlier
-exchange before processing the third message.
+exchanges before processing the third message.
 
 ## Next steps
 
