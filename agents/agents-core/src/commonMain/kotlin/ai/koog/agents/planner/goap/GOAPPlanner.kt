@@ -15,7 +15,7 @@ import kotlin.reflect.KType
  * @param goals The list of defined goals.
  */
 @Deprecated("Use AIAgentStrategy.builder(name).goap() DSL instead.")
-public open class GOAPPlanner<State> internal constructor(
+public open class GOAPPlanner<State : Any> internal constructor(
     private val actions: List<Action<State>>,
     private val goals: List<Goal<State>>,
     stateType: KType? = null,

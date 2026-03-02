@@ -73,5 +73,40 @@ internal object KoogAttributes {
                 override val value: HiddenString = HiddenString(output)
             }
         }
+
+        sealed interface Planner : Koog {
+            override val key: String
+                get() = super.key.concatKey("planner")
+
+            data class StepIndex(private val stepIndex: Int) : Planner {
+                override val key: String = super.key.concatKey("step_index")
+                override val value: Int = stepIndex
+            }
+
+            data class Plan(private val plan: String) : Planner {
+                override val key: String = super.key.concatKey("plan")
+                override val value: HiddenString = HiddenString(plan)
+            }
+
+            data class NewPlan(private val newPlan: String) : Planner {
+                override val key: String = super.key.concatKey("new_plan")
+                override val value: HiddenString = HiddenString(newPlan)
+            }
+
+            data class State(private val state: String) : Planner {
+                override val key: String = super.key.concatKey("state")
+                override val value: HiddenString = HiddenString(state)
+            }
+
+            data class NewState(private val newState: String) : Planner {
+                override val key: String = super.key.concatKey("new_state")
+                override val value: HiddenString = HiddenString(newState)
+            }
+
+            data class IsCompleted(private val isCompleted: Boolean) : Planner {
+                override val key: String = super.key.concatKey("is_completed")
+                override val value: Boolean = isCompleted
+            }
+        }
     }
 }

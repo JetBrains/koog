@@ -9,6 +9,7 @@ import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -97,6 +98,21 @@ internal class AIAgentServiceBuilderImpl : AIAgentServiceBuilderAPI {
     public override fun <Input, Output> functionalStrategy(
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentServiceBuilder<Input, Output> = FunctionalAgentServiceBuilder(
+        strategy = strategy,
+        prompt = this.prompt,
+        llmModel = this.llmModel,
+        temperature = this.temperature,
+        numberOfChoices = this.numberOfChoices,
+        maxIterations = this.maxIterations,
+        clock = this.clock,
+    ).also {
+        it.promptExecutor = this.promptExecutor
+        it.toolRegistry = this.toolRegistry
+    }
+
+    public override fun <Input, Output> plannerStrategy(
+        strategy: AIAgentPlannerStrategy<Input, Output, *>
+    ): PlannerAgentServiceBuilder<Input, Output> = PlannerAgentServiceBuilder(
         strategy = strategy,
         prompt = this.prompt,
         llmModel = this.llmModel,

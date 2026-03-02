@@ -7,6 +7,8 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -140,6 +142,21 @@ internal object AIAgentServiceHelper {
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
     ): FunctionalAIAgentService<Input, Output> = FunctionalAIAgentService(
+        promptExecutor = promptExecutor,
+        agentConfig = agentConfig,
+        toolRegistry = toolRegistry,
+        strategy = strategy,
+        installFeatures = installFeatures
+    )
+
+    @OptIn(InternalAgentsApi::class)
+    internal operator fun <Input, Output> invoke(
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        strategy: AIAgentPlannerStrategy<Input, Output, *>,
+        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+        installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
+    ): PlannerAIAgentService<Input, Output> = PlannerAIAgentService(
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,

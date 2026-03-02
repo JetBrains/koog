@@ -134,6 +134,30 @@ internal data class OpenTelemetryTestData(
             .mapNotNull { span -> span.attributes?.get(expectedEventIdKey) }
     }
 
+    fun filterPlanCreationEvents(stepIndex: Int = 1): List<String> {
+        val eventIdAttribute = KoogAttributes.Koog.Event.Id("")
+        val expectedEventIdKey = AttributeKey.stringKey(eventIdAttribute.key)
+        return collectedSpans
+            .filter { span -> span.name == "plan creation $stepIndex" }
+            .mapNotNull { span -> span.attributes?.get(expectedEventIdKey) }
+    }
+
+    fun filterStepExecutionEvents(stepIndex: Int = 1): List<String> {
+        val eventIdAttribute = KoogAttributes.Koog.Event.Id("")
+        val expectedEventIdKey = AttributeKey.stringKey(eventIdAttribute.key)
+        return collectedSpans
+            .filter { span -> span.name == "step execution $stepIndex" }
+            .mapNotNull { span -> span.attributes?.get(expectedEventIdKey) }
+    }
+
+    fun filterPlanCompletionEvaluationEvents(stepIndex: Int = 1): List<String> {
+        val eventIdAttribute = KoogAttributes.Koog.Event.Id("")
+        val expectedEventIdKey = AttributeKey.stringKey(eventIdAttribute.key)
+        return collectedSpans
+            .filter { span -> span.name == "plan completion evaluation $stepIndex" }
+            .mapNotNull { span -> span.attributes?.get(expectedEventIdKey) }
+    }
+
     fun singleAttributeValue(spanData: SpanData, key: String): String? {
         return spanData.attributes?.asMap()?.mapKeys { it.key.key }[key]?.toString()
     }
@@ -195,5 +219,12 @@ internal data class OpenTelemetryTestData(
         val expectedSubgraphKey = AttributeKey.stringKey(subgraphAttribute.key)
 
         return collectedSpans.filter { spanData -> spanData.attributes.get(expectedSubgraphKey) != null }
+    }
+
+    fun filterPlannerSpans(spanType: String): List<SpanData> {
+        val attributeKey = AttributeKey.stringKey("koog.span.type")
+        return collectedSpans.filter { spanData ->
+            spanData.attributes.get(attributeKey) == spanType
+        }
     }
 }

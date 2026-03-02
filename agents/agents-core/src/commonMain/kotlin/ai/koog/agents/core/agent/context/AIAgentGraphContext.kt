@@ -10,7 +10,6 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 
@@ -154,52 +153,6 @@ public class AIAgentGraphContext(
         set(value) {
             mutableAIAgentContext.executionInfo = value
         }
-
-    /**
-     * Mutable wrapper for AI agent context properties.
-     */
-    internal class MutableAIAgentContext(
-        var llm: AIAgentLLMContext,
-        var stateManager: AIAgentStateManager,
-        var storage: AIAgentStorage,
-        var environment: AIAgentEnvironment,
-        var executionInfo: AgentExecutionInfo
-    ) {
-        private val rwLock = RWLock()
-
-        /**
-         * Creates a copy of the current [MutableAIAgentContext].
-         * @return A new instance of [MutableAIAgentContext] with copies of all mutable properties.
-         */
-        suspend fun copy(): MutableAIAgentContext {
-            return rwLock.withReadLock {
-                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy(), environment, executionInfo.copy())
-            }
-        }
-
-        /**
-         * Replaces the current context with the provided context.
-         *
-         * @param llm The LLM context to replace the current context with.
-         * @param stateManager The state manager to replace the current context with.
-         * @param storage The storage to replace the current context with.
-         */
-        suspend fun replace(
-            llm: AIAgentLLMContext?,
-            stateManager: AIAgentStateManager?,
-            storage: AIAgentStorage?,
-            environment: AIAgentEnvironment?,
-            executionInfo: AgentExecutionInfo?,
-        ) {
-            rwLock.withWriteLock {
-                llm?.let { this.llm = it }
-                stateManager?.let { this.stateManager = it }
-                storage?.let { this.storage = it }
-                environment?.let { this.environment = it }
-                executionInfo?.let { this.executionInfo = it }
-            }
-        }
-    }
 
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
 

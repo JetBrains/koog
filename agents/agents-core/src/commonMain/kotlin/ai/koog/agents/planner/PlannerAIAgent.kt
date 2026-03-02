@@ -147,6 +147,8 @@ public class PlannerAIAgent<Input, Output>(
             parentRootContext = initialAgentContext.parentContext, // Keep the original parent context
         )
 
-        return updatedAgentContext
+        initialAgentContext.replace(updatedAgentContext)
+
+        return initialAgentContext
     }
 }

@@ -2,7 +2,9 @@ package ai.koog.agents.planner
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
+import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -19,7 +21,7 @@ import kotlin.reflect.typeOf
  *
  * @param stateType [KType] of the [State].
  */
-public abstract class AIAgentPlanner<State, Plan>(
+public abstract class AIAgentPlanner<State : Any, Plan : Any>(
     // FIXME: require the type explicitly when we decide, what to do with it in Java API
     stateType: KType? = null,
 ) {
@@ -71,16 +73,47 @@ public abstract class AIAgentPlanner<State, Plan>(
      * @throws AIAgentMaxNumberOfIterationsReachedException If the maximum number of iterations defined in the agent's
      * configuration is exceeded.
      */
-    public suspend fun execute(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun execute(
         context: AIAgentPlannerContext,
         input: State
     ): State {
         logger.debug { formatLog(context, "Starting planner execution") }
         var state = input
-        var plan: Plan = buildPlan(context, state, null)
+        var previousPlan: Plan? = null
 
-        while (!isPlanCompleted(context, state, plan)) {
-            val iterations = context.stateManager.withStateLock { state ->
+        while (true) {
+            val stepIndex = context.stateManager.withStateLock { state ->
+                state.iterations
+            }
+
+            val plan = context.with(partName = "buildPlan-${stepIndex + 1}") { executionInfo, eventId ->
+                context.pipeline.onPlanCreationStarting(eventId, executionInfo, context, state, previousPlan, stepIndex + 1)
+                val newPlan = buildPlan(context, state, previousPlan)
+                context.pipeline.onPlanCreationCompleted(eventId, executionInfo, context, state, newPlan, stepIndex + 1)
+                newPlan
+            }
+
+            logger.debug { formatLog(context, "Executing plan step #${stepIndex + 1}") }
+
+            // Execute step
+            context.with(partName = "executeStep-${stepIndex + 1}") { stepExecutionInfo, stepEventId ->
+                context.pipeline.onStepExecutionStarting(stepEventId, stepExecutionInfo, context, state, plan, stepIndex + 1)
+                state = executeStep(context, state, plan)
+                context.pipeline.onStepExecutionCompleted(stepEventId, stepExecutionInfo, context, state, plan, stepIndex + 1)
+            }
+
+            logger.debug { formatLog(context, "Finished executing plan step #${stepIndex + 1}") }
+
+            // Check if plan is completed
+            val isCompleted = context.with(partName = "isPlanCompleted-${stepIndex + 1}") { executionInfo, eventId ->
+                context.pipeline.onPlanCompletionEvaluationStarting(eventId, executionInfo, context, state, plan, stepIndex + 1)
+                val completed = isPlanCompleted(context, state, plan)
+                context.pipeline.onPlanCompletionEvaluationCompleted(eventId, executionInfo, context, state, plan, completed, stepIndex + 1)
+                completed
+            }
+
+            context.stateManager.withStateLock { state ->
                 if (++state.iterations > context.config.maxAgentIterations) {
                     logger.error {
                         formatLog(
@@ -90,14 +123,11 @@ public abstract class AIAgentPlanner<State, Plan>(
                     }
                     throw AIAgentMaxNumberOfIterationsReachedException(context.config.maxAgentIterations)
                 }
-
-                state.iterations
             }
 
-            logger.debug { formatLog(context, "Executing plan step #$iterations") }
-            state = executeStep(context, state, plan)
-            plan = buildPlan(context, state, plan)
-            logger.debug { formatLog(context, "Finished executing plan step #$iterations") }
+            if (isCompleted) break
+
+            previousPlan = plan
         }
 
         logger.debug { formatLog(context, "Finished planner execution") }
