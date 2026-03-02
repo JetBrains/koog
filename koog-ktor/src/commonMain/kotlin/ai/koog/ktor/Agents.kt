@@ -11,6 +11,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.utils.io.use
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.routing.RoutingContext
+import io.ktor.server.sse.ServerSSESession
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
@@ -18,6 +19,12 @@ import kotlin.reflect.typeOf
  * Retrieve the configured llm, or [PromptExecutor] instance from the underlying [Koog] plugin.
  */
 public fun RoutingContext.llm(): PromptExecutor =
+    requireNotNull(call.application.pluginOrNull(Koog)) { "Plugin $Koog is not configured" }.promptExecutor
+
+/**
+ * Retrieve the configured llm, or [PromptExecutor] instance from the underlying [Koog] plugin.
+ */
+public fun ServerSSESession.llm(): PromptExecutor =
     requireNotNull(call.application.pluginOrNull(Koog)) { "Plugin $Koog is not configured" }.promptExecutor
 
 /**
