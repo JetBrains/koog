@@ -51,7 +51,7 @@ class ChoiceSelectionStrategyTest {
     @JsName("PromptExecutorChoice_should_delegate_to_strategy")
     fun `PromptExecutorWithChoiceSelection should delegate to strategy`() = runTest {
         // Arrange
-        val mockExecutor = object : PromptExecutor {
+        val mockExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: LLModel,

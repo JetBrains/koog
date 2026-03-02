@@ -201,7 +201,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
         runTest(timeout = 10.minutes) {
-            val llmModel = AnthropicModels.Sonnet_4_5
+            val llmModel = AnthropicModels.Opus_4_6
             Models.assumeAvailable(llmModel.provider)
 
             AIAgent(

@@ -724,7 +724,7 @@ val strategy = strategy<String, String>("strategy_name") {
 ```kotlin
 val verifyCode by subgraphWithVerification<String>(
     tools = listOf(runTestsTool, analyzeTool, readFileTool),
-    llmModel = AnthropicModels.Sonnet_3_7,
+    llmModel = AnthropicModels.Opus_4_6,
     runMode = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax = 3,
 ) { codeToVerify ->

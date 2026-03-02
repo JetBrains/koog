@@ -9,6 +9,9 @@ import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.StructureFixingParser
+import ai.koog.prompt.executor.model.executeStructured
+import ai.koog.prompt.executor.model.parseResponseToStructuredResponse
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -16,11 +19,8 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.processor.executeProcessed
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
-import ai.koog.prompt.structure.executeStructured
-import ai.koog.prompt.structure.parseResponseToStructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
@@ -144,6 +144,7 @@ internal class AIAgentLLMReadSessionImpl(
 
     override suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>> {
         validateSession()
 
@@ -196,8 +197,9 @@ internal class AIAgentLLMReadSessionImpl(
 
     override suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
-        config: StructuredRequestConfig<T>
-    ): StructuredResponse<T> = executor.parseResponseToStructuredResponse(response, config, model)
+        config: StructuredRequestConfig<T>,
+        fixingParser: StructureFixingParser?
+    ): StructuredResponse<T> = executor.parseResponseToStructuredResponse(response, config, model, fixingParser)
 
     override suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
         validateSession()

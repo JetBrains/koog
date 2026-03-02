@@ -333,6 +333,39 @@ public object OllamaModels : LLModelDefinitions {
     }
 
     /**
+     * The `DeepSeek` object represents the configuration for DeepSeek large language models (LLMs).
+     * It contains the predefined model specifications for DeepSeek's LLMs, including their identifiers
+     * and supported capabilities.
+     */
+    public object DeepSeek {
+        /**
+         * Represents the DeepSeek-R1-Distill-Llama-1.5B model.
+         *
+         * This is a distilled version of DeepSeek-R1 based on Llama with 1.5B parameters.
+         * The model supports thinking/reasoning capability, which allows it to generate internal
+         * reasoning traces before providing the final answer through the `thinking` field in responses.
+         *
+         * Supported capabilities:
+         * - `Temperature`: Allows adjustment of the temperature setting for controlling the randomness in responses.
+         * - `Schema.JSON.Basic`: Supports JSON schema-based tasks.
+         * - `Tools`: Enables interaction with external tools.
+         *
+         * @see <a href="https://ollama.com/library/deepseek-r1">DeepSeek-R1 on Ollama</a>
+         */
+        @JvmField
+        public val DEEPSEEK_R1_DISTILL_LLAMA_1_5B: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "deepseek-r1:1.5b",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Tools
+            ),
+            contextLength = 32_768,
+        )
+    }
+
+    /**
      * Ollama embedding models.
      *
      * Models are sourced from https://ollama.com/blog/embedding-models and other official Ollama resources.
@@ -428,7 +461,7 @@ public object OllamaModels : LLModelDefinitions {
     }
 
     /**
-     * List of the supported models by the Anthropic provider.
+     * List of the supported models by the Ollama provider.
      */
     private val supportedModels: List<LLModel> = listOf(
         Groq.LLAMA_3_GROK_TOOL_USE_8B,
@@ -443,6 +476,7 @@ public object OllamaModels : LLModelDefinitions {
         Alibaba.QWQ,
         Alibaba.QWEN_CODER_2_5_32B,
         Granite.GRANITE_3_2_VISION,
+        DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B,
         Embeddings.NOMIC_EMBED_TEXT,
         Embeddings.ALL_MINI_LM,
         Embeddings.MULTILINGUAL_E5,
@@ -451,7 +485,7 @@ public object OllamaModels : LLModelDefinitions {
     )
 
     /**
-     * Custom models added to the Anthropic provider.
+     * Custom models added to the Ollama provider.
      */
     private val customModels: MutableList<LLModel> = mutableListOf()
 

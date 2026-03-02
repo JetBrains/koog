@@ -71,7 +71,15 @@ fun main() = runBlocking {
     Available for all LLM clients.
 
 When you need to process responses as they are generated,
-you can use the `executeStreaming()` method to stream the model output:
+you can use the `executeStreaming()` method to stream the model output.
+
+The streaming API provides different frame types:
+- **Delta frames** (`TextDelta`, `ReasoningDelta`, `ToolCallDelta`) — incremental content that arrives in chunks
+- **Complete frames** (`TextComplete`, `ReasoningComplete`, `ToolCallComplete`) — full content after all deltas are received
+- **End frame** (`End`) — signals stream completion with finish reason
+
+For models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1), reasoning frames will be emitted during streaming.
+See the [Streaming API documentation](../streaming-api.md) for more details on working with frames.
 
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
@@ -95,11 +103,13 @@ val response = client.executeStreaming(
     model = OpenAIModels.Chat.GPT4_1
 )
 
-response.collect { event ->
-    when (event) {
-        is StreamFrame.Append -> println(event.text)
-        is StreamFrame.ToolCall -> println("\nTool call: ${event.name}")
-        is StreamFrame.End -> println("\n[done] Reason: ${event.finishReason}")
+response.collect { frame ->
+    when (frame) {
+        is StreamFrame.TextDelta -> print(frame.text)
+        is StreamFrame.ReasoningDelta -> print("[Reasoning] ${frame.text}")
+        is StreamFrame.ToolCallComplete -> println("\nTool call: ${frame.name}")
+        is StreamFrame.End -> println("\n[done] Reason: ${frame.finishReason}")
+        else -> {} // Handle other frame types if needed
     }
 }
 ```

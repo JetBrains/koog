@@ -59,7 +59,7 @@ class SingleLLMPromptExecutorTest {
 
     @Test
     fun testExecuteStreaming() = runTest {
-        val chunks = listOf("hello", " ", "world").map(StreamFrame::Append)
+        val chunks = listOf("hello", " ", "world").map(StreamFrame::TextDelta)
         val client = CapturingLLMClient(streamingChunks = chunks)
         val executor = SingleLLMPromptExecutor(client)
         val prompt = Prompt.build("p2") { user("Hello!") }

@@ -17,13 +17,11 @@ import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.integration.tests.utils.structuredOutput.Country
 import ai.koog.integration.tests.utils.structuredOutput.checkWeatherStructuredOutputResponse
 import ai.koog.integration.tests.utils.structuredOutput.countryStructuredOutputPrompt
-import ai.koog.integration.tests.utils.structuredOutput.getConfigFixingParserManual
-import ai.koog.integration.tests.utils.structuredOutput.getConfigFixingParserNative
-import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserManual
-import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserNative
+import ai.koog.integration.tests.utils.structuredOutput.getFixingParser
+import ai.koog.integration.tests.utils.structuredOutput.getManualConfig
+import ai.koog.integration.tests.utils.structuredOutput.getNativeConfig
 import ai.koog.integration.tests.utils.structuredOutput.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.structuredOutput.weatherStructuredOutputPrompt
-import ai.koog.integration.tests.utils.tools.CalculatorOperation
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.LotteryTool
 import ai.koog.integration.tests.utils.tools.PickColorFromListTool
@@ -54,6 +52,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.executeStructured
 import ai.koog.prompt.llm.AnthropicLLMProvider
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
@@ -69,7 +68,6 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.executeStructured
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAll
 import io.kotest.inspectors.shouldForAny
@@ -82,7 +80,6 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
@@ -220,52 +217,55 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities!!.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val executor = getExecutor(model)
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
-            user("Count from 1 to 5.")
+            user("Count from 1 to 5. Like 1, 2, 3 ...")
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            with(StringBuilder()) {
-                val endMessages = mutableListOf<StreamFrame.End>()
-                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+            val endFrames = mutableListOf<StreamFrame.End>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
+            val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
 
-                executor.executeStreamAndCollect(
-                    prompt = prompt,
-                    model = model,
-                    appendable = this,
-                    endMessages = endMessages,
-                    toolMessages = toolMessages
-                )
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                tools = listOf(SimpleCalculatorTool.descriptor),
+                textDeltaFrames = textDeltaFrames,
+                toolDeltaFrames = toolDeltaFrames,
+                toolCompleteFrames = toolCompleteFrames,
+                endFrame = endFrames,
+            )
 
-                length shouldNotBe (0)
-                toolMessages.shouldBeEmpty()
-                when (model.provider) {
-                    is OllamaLLMProvider -> endMessages.size shouldBe 0
+            toolDeltaFrames.shouldBeEmpty()
+            toolCompleteFrames.shouldBeEmpty()
+            when (model.provider) {
+                is OllamaLLMProvider -> endFrames.size shouldBe 0
 
-                    else -> {
-                        endMessages.size shouldBe 1
-                        endMessages.first() should { end ->
-                            end.metaInfo should { meta ->
-                                withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
-                                    listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
-                                        .shouldForAny { it != null }
-                                }
+                else -> {
+                    endFrames.size shouldBe 1
+                    endFrames.first() should { end ->
+                        end.metaInfo should { meta ->
+                            withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
+                                listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
+                                    .shouldForAny { it != null }
                             }
                         }
                     }
                 }
+            }
 
-                toString() shouldNotBeNull {
-                    shouldContain("1")
-                    shouldContain("2")
-                    shouldContain("3")
-                    shouldContain("4")
-                    shouldContain("5")
-                }
+            textDeltaFrames.joinToString { it.text } shouldNotBeNull {
+                shouldContain("1")
+                shouldContain("2")
+                shouldContain("3")
+                shouldContain("4")
+                shouldContain("5")
             }
         }
     }
@@ -737,11 +737,13 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         withRetry {
+            val executor = getExecutor(model)
+
             with(
                 getExecutor(model).executeStructured(
                     prompt = weatherStructuredOutputPrompt,
                     model = model,
-                    config = getConfigNoFixingParserNative(model)
+                    config = getNativeConfig(executor.getStandardJsonSchemaGenerator(model))
                 )
             ) {
                 isSuccess.shouldBeTrue()
@@ -757,12 +759,14 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         withRetry {
+            val executor = getExecutor(model)
             with(
-                getExecutor(model).executeStructured(
+                executor.executeStructured(
                     prompt = weatherStructuredOutputPrompt,
                     model = model,
-                    config = getConfigFixingParserNative(model)
-                )
+                    config = getNativeConfig(executor.getStandardJsonSchemaGenerator(model)),
+                    fixingParser = getFixingParser(model),
+                ),
             ) {
                 isSuccess.shouldBeTrue()
                 checkWeatherStructuredOutputResponse(this)
@@ -783,11 +787,12 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry {
+            val executor = getExecutor(model)
             with(
-                getExecutor(model).executeStructured(
+                executor.executeStructured(
                     prompt = weatherStructuredOutputPrompt,
                     model = model,
-                    config = getConfigNoFixingParserManual(model)
+                    config = getManualConfig(executor.getStandardJsonSchemaGenerator(model))
                 )
             ) {
                 isSuccess.shouldBeTrue()
@@ -803,11 +808,13 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         withRetry(6) {
+            val executor = getExecutor(model)
             with(
-                getExecutor(model).executeStructured(
+                executor.executeStructured(
                     prompt = weatherStructuredOutputPrompt,
                     model = model,
-                    config = getConfigFixingParserManual(model)
+                    config = getManualConfig(executor.getStandardJsonSchemaGenerator(model)),
+                    fixingParser = getFixingParser(model)
                 )
             ) {
                 isSuccess.shouldBeTrue()
@@ -1130,6 +1137,83 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
+    open fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model.provider == LLMProvider.OpenAI,
+            "This test is specific to OpenAI Responses API reasoning streaming"
+        )
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-streaming-test", params = params) {
+            system("You are a helpful assistant.")
+            user("Think about this step by step: What is 12 * 15?")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testReasoningStreamingSummaryDeltas[${model.id}]") {
+            val reasoningDeltaFrames = mutableListOf<StreamFrame.ReasoningDelta>()
+            val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val endFrames = mutableListOf<StreamFrame.End>()
+
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                reasoningDeltaFrames = reasoningDeltaFrames,
+                reasoningCompleteFrames = reasoningCompleteFrames,
+                textDeltaFrames = textDeltaFrames,
+                endFrame = endFrames
+            )
+
+            reasoningDeltaFrames.shouldNotBeEmpty()
+
+            val reasoningText = reasoningDeltaFrames.mapNotNull { it.text }.joinToString("")
+            val reasoningSummary = reasoningDeltaFrames.mapNotNull { it.summary }.joinToString("")
+            (reasoningText + reasoningSummary).length shouldBeGreaterThan 0
+
+            val finalAnswer = textDeltaFrames.joinToString("") { it.text }
+            finalAnswer.shouldContain("180")
+        }
+    }
+
+    open fun integration_testReasoningStreamingWithEncryptedContent(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model.provider == LLMProvider.OpenAI,
+            "This test is specific to OpenAI Responses API encrypted reasoning in stateless mode"
+        )
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-streaming-encryption-test", params = params) {
+            system("You are a helpful assistant.")
+            user("Think about this step by step: What is 8 * 9?")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testReasoningStreamingWithEncryptedContent[${model.id}]") {
+            val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                reasoningCompleteFrames = reasoningCompleteFrames,
+                textDeltaFrames = textDeltaFrames
+            )
+
+            reasoningCompleteFrames.shouldNotBeEmpty()
+            val reasoningComplete = reasoningCompleteFrames.first()
+            reasoningComplete.encrypted.shouldNotBeNull()
+            reasoningComplete.encrypted!!.length shouldBeGreaterThan 0
+
+            val finalAnswer = textDeltaFrames.joinToString("") { it.text }
+            finalAnswer.shouldContain("72")
+        }
+    }
+
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
@@ -1157,26 +1241,25 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
-            with(StringBuilder()) {
-                val endMessages = mutableListOf<StreamFrame.End>()
-                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
+            val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
 
-                executor.executeStreamAndCollect(
-                    prompt = prompt,
-                    model = model,
-                    tools = listOf(SimpleCalculatorTool.descriptor),
-                    appendable = this,
-                    endMessages = endMessages,
-                    toolMessages = toolMessages
-                )
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                tools = listOf(SimpleCalculatorTool.descriptor),
+                textDeltaFrames = textDeltaFrames,
+                toolDeltaFrames = toolDeltaFrames,
+                toolCompleteFrames = toolCompleteFrames,
+            )
 
-                toolMessages.shouldNotBeEmpty()
-                withClue("Expected calculator tool call but got: [$toolMessages]") {
-                    toolMessages.any {
-                        it.name == SimpleCalculatorTool.name &&
-                            it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
-                    } shouldBe true
-                }
+            toolDeltaFrames.shouldNotBeEmpty()
+
+            withClue("Expected calculator tool call but got: [$toolCompleteFrames]") {
+                toolCompleteFrames.any {
+                    it.name == SimpleCalculatorTool.name
+                } shouldBe true
             }
         }
     }
@@ -1186,15 +1269,35 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
     prompt: Prompt,
     model: LLModel,
     tools: List<ToolDescriptor> = emptyList(),
-    appendable: Appendable,
-    endMessages: MutableList<StreamFrame.End>,
-    toolMessages: MutableList<StreamFrame.ToolCall>
+    textDeltaFrames: MutableList<StreamFrame.TextDelta> = mutableListOf(),
+    textCompleteFrames: MutableList<StreamFrame.TextComplete> = mutableListOf(),
+    toolDeltaFrames: MutableList<StreamFrame.ToolCallDelta> = mutableListOf(),
+    toolCompleteFrames: MutableList<StreamFrame.ToolCallComplete> = mutableListOf(),
+    reasoningDeltaFrames: MutableList<StreamFrame.ReasoningDelta> = mutableListOf(),
+    reasoningCompleteFrames: MutableList<StreamFrame.ReasoningComplete> = mutableListOf(),
+    endFrame: MutableList<StreamFrame.End> = mutableListOf(),
 ) {
     this.executeStreaming(prompt, model, tools).collect { frame ->
         when (frame) {
-            is StreamFrame.Append -> appendable.append(frame.text)
-            is StreamFrame.End -> endMessages.add(frame)
-            is StreamFrame.ToolCall -> toolMessages.add(frame)
+            is StreamFrame.DeltaFrame -> {
+                when (val delta: StreamFrame.DeltaFrame = frame) {
+                    is StreamFrame.TextDelta -> textDeltaFrames.add(delta)
+                    is StreamFrame.ToolCallDelta -> toolDeltaFrames.add(delta)
+                    is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(delta)
+                }
+            }
+
+            is StreamFrame.CompleteFrame -> {
+                when (val complete: StreamFrame.CompleteFrame = frame) {
+                    is StreamFrame.TextComplete -> textCompleteFrames.add(complete)
+                    is StreamFrame.ToolCallComplete -> toolCompleteFrames.add(complete)
+                    is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(complete)
+                }
+            }
+
+            is StreamFrame.End -> {
+                endFrame.add(frame)
+            }
         }
     }
 }

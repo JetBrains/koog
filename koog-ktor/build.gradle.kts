@@ -53,6 +53,7 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.server.config.yaml)
             }
         }
 

@@ -148,7 +148,7 @@ fun createCustomerSupportAgent(
     // Agent configuration
     val agentConfig = AIAgentConfig(
         prompt = prompt("customer-support") {},
-        model = AnthropicModels.Sonnet_3_7,
+        model = AnthropicModels.Opus_4_6,
         maxAgentIterations = maxAgentIterations
     )
 

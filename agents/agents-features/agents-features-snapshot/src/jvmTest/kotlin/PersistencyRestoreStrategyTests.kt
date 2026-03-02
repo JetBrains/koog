@@ -1,6 +1,5 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
@@ -45,9 +44,6 @@ class PersistenceRestoreStrategyTests {
         ) {
             install(Persistence) {
                 storage = provider
-                // We only need restore on start; automatic persistence doesn't matter here
-                enableAutomaticPersistence = true
-                rollbackStrategy = RollbackStrategy.Default
             }
         }
 
@@ -57,42 +53,6 @@ class PersistenceRestoreStrategyTests {
             "History: History Before\n" +
                 "Node 2 output",
             result
-        )
-    }
-
-    @Test
-    fun `rollback MessageHistoryOnly starts from beginning`() = runTest {
-        val provider = InMemoryPersistenceStorageProvider()
-
-        val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
-            strategy = restoreStrategyGraph(),
-            agentConfig = AIAgentConfig(
-                prompt = prompt("test") { system("You are a test agent.") },
-                model = OllamaModels.Meta.LLAMA_3_2,
-                maxAgentIterations = 10
-            ),
-        ) {
-            install(Persistence) {
-                storage = provider
-                enableAutomaticPersistence = true
-                rollbackStrategy = RollbackStrategy.MessageHistoryOnly
-            }
-        }
-
-        // run first time to create a history
-        agent.run("Agent Input", sessionId = "same-id")
-
-        val result2 = agent.run("Agent Input2", sessionId = "same-id")
-        assertEquals(
-            "History: You are a test agent.\n" +
-                "Agent Input\n" +
-                "Node 1 output\n" +
-                "Node 2 output\n" +
-                "Agent Input2\n" +
-                "Node 1 output\n" +
-                "Node 2 output",
-            result2
         )
     }
 }

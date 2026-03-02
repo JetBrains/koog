@@ -5,9 +5,9 @@ package ai.koog.agents.core.agent.context
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.Tool
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredResponse
 
 @Suppress("MissingKDocForPublicAPI")

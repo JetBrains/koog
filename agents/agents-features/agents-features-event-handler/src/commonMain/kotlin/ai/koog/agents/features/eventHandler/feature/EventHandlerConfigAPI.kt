@@ -218,8 +218,10 @@ public interface EventHandlerConfigAPI {
      * ```
      * onLLMStreamingFrameReceived { eventContext ->
      *     when (val frame = eventContext.streamFrame) {
-     *         is StreamFrame.Append -> processText(frame.text)
-     *         is StreamFrame.ToolCall -> processTool(frame)
+     *         is StreamFrame.TextDelta -> processText(frame.text)
+     *         is StreamFrame.ReasoningDelta -> processReasoning(frame.text, frame.summary)
+     *         is StreamFrame.ToolCallComplete -> processTool(frame)
+     *         else -> {} // Handle other frame types
      *     }
      * }
      * ```

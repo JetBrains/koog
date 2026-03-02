@@ -31,12 +31,6 @@ public sealed class BedrockModelFamilies(
     public data object AmazonNova : BedrockModelFamilies("bedrock.amazon", "AWS Bedrock (Amazon Nova)")
 
     /**
-     * Represents the AI21 sub-provider under AWS Bedrock.
-     */
-    @Serializable
-    public data object AI21Jamba : BedrockModelFamilies("bedrock.ai21", "AWS Bedrock (AI21 Jamba)")
-
-    /**
      * Represents the Meta sub-provider under AWS Bedrock.
      */
     @Serializable

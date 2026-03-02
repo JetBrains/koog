@@ -326,8 +326,8 @@ API key is required but not provided
 
 ## Next Steps
 
-- Learn about the [basic agents](basic-agents.md) to build minimal AI workflows
-- Explore [complex workflow agents](complex-workflow-agents.md) for advanced use cases
+- Learn about the [basic agents](agents/basic-agents.md) to build minimal AI workflows
+- Explore [graph-based agents](agents/graph-based-agents.md) for advanced use cases
 - See the [tools overview](tools-overview.md) to extend your agents' capabilities
 - Check out [examples](examples.md) for real-world implementations
 - Read the [glossary](glossary.md) to understand the framework better

@@ -120,12 +120,14 @@ public sealed interface Message {
         /**
          * Single content part user message constructor
          */
+        @JvmOverloads
         public constructor(part: ContentPart, metaInfo: RequestMetaInfo) :
             this(listOf(part), metaInfo)
 
         /**
          * Text content user message constructor
          */
+        @JvmOverloads
         public constructor(content: String, metaInfo: RequestMetaInfo) :
             this(ContentPart.Text(content), metaInfo)
     }
@@ -140,7 +142,7 @@ public sealed interface Message {
      * @property role The role associated with the response, which is fixed as `Role.Assistant`.
      */
     @Serializable
-    public data class Assistant(
+    public data class Assistant @JvmOverloads constructor(
         override val parts: List<ContentPart>,
         override val metaInfo: ResponseMetaInfo,
         val finishReason: String? = null
@@ -150,12 +152,14 @@ public sealed interface Message {
         /**
          * Single content part assistant message constructor
          */
+        @JvmOverloads
         public constructor(part: ContentPart, metaInfo: ResponseMetaInfo, finishReason: String? = null) :
             this(listOf(part), metaInfo, finishReason)
 
         /**
          * Text content assistant message constructor
          */
+        @JvmOverloads
         public constructor(content: String, metaInfo: ResponseMetaInfo, finishReason: String? = null) :
             this(ContentPart.Text(content), metaInfo, finishReason)
 
@@ -168,6 +172,8 @@ public sealed interface Message {
      *
      * @property id An optional identifier for the reasoning process.
      * @property encrypted The encrypted content of the reasoning message.
+     * @property parts The parts of the reasoning message. Only the [ContentPart.Text] part is allowed.
+     * @property summary An optional summary of the reasoning process. Only the [ContentPart.Text] part is allowed.
      * @property content The content of the message as a string.
      * @property role The [Role] of the message, indicating its source or function in the chat (e.g., assistant, user).
      *                Defaults to [Role.Assistant].
@@ -179,14 +185,26 @@ public sealed interface Message {
         public val id: String? = null,
         public val encrypted: String? = null,
         override val parts: List<ContentPart.Text>,
+        public val summary: List<ContentPart.Text>? = null,
         override val metaInfo: ResponseMetaInfo
     ) : Response {
 
         /**
          * Single content part reasoning message constructor
          */
-        public constructor(id: String? = null, encrypted: String? = null, content: String, metaInfo: ResponseMetaInfo) :
-            this(id, encrypted, listOf(ContentPart.Text(content)), metaInfo)
+        public constructor(
+            id: String? = null,
+            encrypted: String? = null,
+            summary: String? = null,
+            content: String,
+            metaInfo: ResponseMetaInfo
+        ) : this(
+            id = id,
+            encrypted = encrypted,
+            parts = listOf(ContentPart.Text(content)),
+            summary = summary?.let { listOf(ContentPart.Text(it)) },
+            metaInfo = metaInfo
+        )
 
         override val role: Role = Role.Reasoning
 
@@ -294,7 +312,7 @@ public sealed interface Message {
      *
      */
     @Serializable
-    public data class System(
+    public data class System @JvmOverloads constructor(
         override val parts: List<ContentPart.Text>,
         override val metaInfo: RequestMetaInfo
     ) : Request {
@@ -303,12 +321,14 @@ public sealed interface Message {
         /**
          * Single content part system message constructor
          */
+        @JvmOverloads
         public constructor(part: ContentPart.Text, metaInfo: RequestMetaInfo) :
             this(listOf(part), metaInfo)
 
         /**
          * Text content system message constructor
          */
+        @JvmOverloads
         public constructor(content: String, metaInfo: RequestMetaInfo) :
             this(ContentPart.Text(content), metaInfo)
     }

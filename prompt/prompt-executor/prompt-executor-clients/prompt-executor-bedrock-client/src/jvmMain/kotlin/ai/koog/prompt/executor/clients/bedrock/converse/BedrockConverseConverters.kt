@@ -355,7 +355,7 @@ internal object BedrockConverseConverters {
 
                 is ConverseStreamOutput.ContentBlockStart -> when (val start = chunk.value.start) {
                     is ContentBlockStart.ToolUse -> {
-                        upsertToolCall(
+                        emitToolCallDelta(
                             index = chunk.value.contentBlockIndex,
                             id = start.value.toolUseId,
                             name = start.value.name,
@@ -377,11 +377,11 @@ internal object BedrockConverseConverters {
 
                 is ConverseStreamOutput.ContentBlockDelta -> when (val delta = chunk.value.delta) {
                     is ContentBlockDelta.Text -> {
-                        emitAppend(delta.value)
+                        emitTextDelta(delta.value)
                     }
 
                     is ContentBlockDelta.ToolUse -> {
-                        upsertToolCall(
+                        emitToolCallDelta(
                             index = chunk.value.contentBlockIndex,
                             args = delta.value.input
                         )

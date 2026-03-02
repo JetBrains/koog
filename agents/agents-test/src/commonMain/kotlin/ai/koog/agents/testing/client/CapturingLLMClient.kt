@@ -32,7 +32,7 @@ public class CapturingLLMClient @JvmOverloads constructor(
     private val choices: List<LLMChoice> = emptyList(),
     private val moderationResult: ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap()),
     private val llmProvider: LLMProvider = LLMProvider.OpenAI
-) : LLMClient {
+) : LLMClient() {
 
     /** The last [Prompt] passed to [execute], or null if it hasn't been called yet. */
     public var lastExecutedPrompt: Prompt? = null

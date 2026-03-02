@@ -27,7 +27,7 @@ val multiExecutor = MultiLLMPromptExecutor(
 
 val agent = AIAgent(
     promptExecutor = multiExecutor,
-    llmModel = AnthropicModels.Sonnet_4_5,
+    llmModel = AnthropicModels.Opus_4_6,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))

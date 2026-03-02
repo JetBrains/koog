@@ -21,7 +21,7 @@ import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.structure.StructureFixingParser
+import ai.koog.prompt.executor.model.StructureFixingParser
 import kotlinx.coroutines.runBlocking
 
 suspend fun main() {

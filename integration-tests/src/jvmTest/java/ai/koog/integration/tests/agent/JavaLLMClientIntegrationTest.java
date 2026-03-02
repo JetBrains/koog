@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Hello from OpenAI'")
             .build();
 
-        List<Message.Response> responses = JavaUtils.executeClientBlocking(client, prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+        List<Message.Response> responses = client.execute(prompt, OpenAIModels.Chat.GPT4o);
 
         assertValidResponse(responses);
     }
@@ -61,7 +62,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Hello from Anthropic'")
             .build();
 
-        List<Message.Response> responses = JavaUtils.executeClientBlocking(client, prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
+        List<Message.Response> responses = client.execute(prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
 
         assertValidResponse(responses);
     }
@@ -86,7 +87,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'OpenAI response'")
             .build();
 
-        List<Message.Response> openAIResponses = JavaUtils.executeExecutorBlocking(executor, openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+        List<Message.Response> openAIResponses = executor.execute(openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
         assertValidResponse(openAIResponses);
 
         Prompt anthropicPrompt = Prompt.builder("test-multi-anthropic")
@@ -94,7 +95,7 @@ public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Anthropic response'")
             .build();
 
-        List<Message.Response> anthropicResponses = JavaUtils.executeExecutorBlocking(executor, anthropicPrompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
+        List<Message.Response> anthropicResponses = executor.execute(anthropicPrompt, AnthropicModels.Haiku_4_5);
         assertValidResponse(anthropicResponses);
     }
 }

@@ -77,7 +77,7 @@ suspend fun main() {
             system("You are helpful assistant")
             user("What time is it now?")
         },
-        model = AnthropicModels.Sonnet_3_5
+        model = AnthropicModels.Opus_4_6
     )
 
     println(response)
@@ -95,7 +95,7 @@ val imageResponse = client.execute(
             image("/path/to/image.jpg")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // PDF document processing
@@ -106,7 +106,7 @@ val pdfResponse = client.execute(
             document("/path/to/document.pdf")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // PDF from URL
@@ -117,7 +117,7 @@ val pdfUrlResponse = client.execute(
             document("https://example.com/paper.pdf")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // Text file processing
@@ -128,7 +128,7 @@ val textResponse = client.execute(
             document("/path/to/readme.md")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // Mixed content
@@ -141,6 +141,6 @@ val mixedResponse = client.execute(
             text("What insights can you provide?")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 ```

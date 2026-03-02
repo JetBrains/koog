@@ -13,8 +13,9 @@ kotlin {
             dependencies {
                 api(project(":prompt:prompt-model"))
                 api(project(":agents:agents-tools"))
-                api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(libs.kotlinx.coroutines.core)
+                api(project(":prompt:prompt-structure"))
+                api(libs.oshai.kotlin.logging)
             }
         }
         androidMain {
@@ -25,6 +26,7 @@ kotlin {
         jvmMain {
             dependencies {
                 api(kotlin("reflect"))
+                api(libs.kotlinx.coroutines.reactive)
             }
         }
         commonTest {
