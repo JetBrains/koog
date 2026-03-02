@@ -285,7 +285,7 @@ class StructuredPiiDetectorTest {
 
     private class ScriptedPromptExecutor(
         responsesByPromptId: Map<String, List<Message.Response>>,
-    ) : PromptExecutor {
+    ) : PromptExecutor() {
         val executedPromptIds: MutableList<String> = mutableListOf()
         val executedPrompts: MutableList<Prompt> = mutableListOf()
 

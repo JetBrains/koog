@@ -3,12 +3,12 @@ package ai.koog.prompt.pii.structured
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.StructureFixingParser
+import ai.koog.prompt.executor.model.executeStructured
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.pii.model.PiiDetection
 import ai.koog.prompt.pii.model.PiiDetector
 import ai.koog.prompt.pii.model.PiiType
-import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.executeStructured
 import kotlinx.serialization.Serializable
 
 /**

@@ -77,7 +77,7 @@ class PiiTagFixingParserTest {
 
     private class FixedResponseExecutor(
         private val responses: List<Message.Response>,
-    ) : PromptExecutor {
+    ) : PromptExecutor() {
         private var idx: Int = 0
 
         override suspend fun execute(

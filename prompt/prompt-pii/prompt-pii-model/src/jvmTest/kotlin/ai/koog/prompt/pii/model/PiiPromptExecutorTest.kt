@@ -187,9 +187,9 @@ class PiiPromptExecutorTest {
             onExecute = { _, _, _ -> error("Not used") },
             onExecuteStreaming = { _, _, _ ->
                 streamFrameFlow {
-                    emit(StreamFrame.Append("Hello [[per"))
-                    emit(StreamFrame.Append("son 1]]!"))
-                    emit(StreamFrame.End())
+                    emit(StreamFrame.TextDelta("Hello [[per"))
+                    emit(StreamFrame.TextDelta("son 1]]!"))
+                    emit(StreamFrame.End(metaInfo = ResponseMetaInfo.Empty))
                 }
             }
         )
@@ -199,7 +199,10 @@ class PiiPromptExecutorTest {
 
         val frames: List<StreamFrame> = executor.executeStreaming(prompt, testModel, emptyList()).toList()
 
-        val text = frames.filterIsInstance<StreamFrame.Append>().joinToString(separator = "") { it.text }
+        val text = frames
+            .filterIsInstance<StreamFrame.TextDelta>()
+            .joinToString(separator = "") { it.text }
+
         assertEquals("Hello John Doe!", text)
     }
 
@@ -216,8 +219,8 @@ class PiiPromptExecutorTest {
             },
             onExecuteStreaming = { _, _, _ ->
                 streamFrameFlow {
-                    emit(StreamFrame.Append("Hi [[person 2]]"))
-                    emit(StreamFrame.End())
+                    emit(StreamFrame.TextDelta("Hi [[person 2]]"))
+                    emit(StreamFrame.End(metaInfo = ResponseMetaInfo.Empty))
                 }
             }
         )
@@ -235,7 +238,7 @@ class PiiPromptExecutorTest {
         private val onExecute: suspend (Prompt, LLModel, List<ToolDescriptor>) -> List<Message.Response>,
         private val onExecuteStreaming: (Prompt, LLModel, List<ToolDescriptor>) -> Flow<StreamFrame> =
             { _, _, _ -> streamFrameFlow { emit(StreamFrame.End()) } },
-    ) : PromptExecutor {
+    ) : PromptExecutor() {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,

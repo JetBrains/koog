@@ -24,7 +24,7 @@ public class PiiPromptExecutor(
     private val config: PiiPromptExecutorConfig = PiiPromptExecutorConfig(),
     private val fixingParser: PiiTagFixingParser? = null,
     private val clock: Clock = Clock.System,
-) : PromptExecutor {
+) : PromptExecutor() {
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
@@ -61,6 +61,7 @@ public class PiiPromptExecutor(
         flow {
             val context: AnonymizationContext = anonymizePrompt(prompt)
 
+            // If there were no tags created, just proxy frames through unchanged.
             if (!context.hasTags) {
                 nested.executeStreaming(context.prompt, model, tools).collect { frame ->
                     emit(frame)
@@ -68,47 +69,105 @@ public class PiiPromptExecutor(
                 return@flow
             }
 
-            var appendCarry = ""
+            var textCarry = ""
+
+            suspend fun flushTextCarryIfAny() {
+                if (textCarry.isNotEmpty()) {
+                    val validated = validateNoUnknownTags(textCarry, context)
+                    val deanonymized = deanonymizeKnownTags(validated, context.tagToValue)
+                    if (deanonymized.isNotEmpty()) {
+                        emit(StreamFrame.TextDelta(text = deanonymized))
+                    }
+                    textCarry = ""
+                }
+            }
 
             nested.executeStreaming(context.prompt, model, tools).collect { frame ->
                 when (frame) {
-                    is StreamFrame.Append -> {
-                        val (processable, newCarry) = splitByPotentialTagBoundary(appendCarry + frame.text)
-                        appendCarry = newCarry
+                    is StreamFrame.TextDelta -> {
+                        val incoming = textCarry + frame.text
+                        val (processable, newCarry) = splitByPotentialTagBoundary(incoming)
+                        textCarry = newCarry
 
                         if (processable.isNotEmpty()) {
-                            val validated: String = validateNoUnknownTags(processable, context)
-                            val deanonymized: String = deanonymizeKnownTags(validated, context.tagToValue)
+                            val validated = validateNoUnknownTags(processable, context)
+                            val deanonymized = deanonymizeKnownTags(validated, context.tagToValue)
                             if (deanonymized.isNotEmpty()) {
-                                emit(StreamFrame.Append(deanonymized))
+                                emit(frame.copy(text = deanonymized))
                             }
                         }
                     }
 
-                    is StreamFrame.ToolCall -> {
-                        val validated: String = validateNoUnknownTags(frame.content, context)
-                        val deanonymized: String = deanonymizeKnownTags(validated, context.tagToValue)
+                    is StreamFrame.TextComplete -> {
+                        // Complete text part: flush any prior carry first, then process the full text.
+                        flushTextCarryIfAny()
+
+                        val validated = validateNoUnknownTags(frame.text, context)
+                        val deanonymized = deanonymizeKnownTags(validated, context.tagToValue)
+                        emit(frame.copy(text = deanonymized))
+                    }
+
+                    is StreamFrame.ToolCallDelta -> {
+                        // Tool call args are commonly streamed as JSON chunks.
+                        // Validate/deanonymize only if we have content; otherwise pass through.
+                        val content = frame.content
+                        if (content == null || content.isEmpty()) {
+                            emit(frame)
+                        } else {
+                            val validated = validateNoUnknownTags(content, context)
+                            val deanonymized = deanonymizeKnownTags(validated, context.tagToValue)
+                            emit(frame.copy(content = deanonymized))
+                        }
+                    }
+
+                    is StreamFrame.ToolCallComplete -> {
+                        val validated = validateNoUnknownTags(frame.content, context)
+                        val deanonymized = deanonymizeKnownTags(validated, context.tagToValue)
                         emit(frame.copy(content = deanonymized))
                     }
 
-                    is StreamFrame.End -> {
-                        if (appendCarry.isNotEmpty()) {
-                            val deanonymizedCarry: String = deanonymizeKnownTags(appendCarry, context.tagToValue)
-                            if (deanonymizedCarry.isNotEmpty()) {
-                                emit(StreamFrame.Append(deanonymizedCarry))
-                            }
-                            appendCarry = ""
+                    is StreamFrame.ReasoningDelta -> {
+                        // Reasoning may contain tags too (depends on your model/provider),
+                        // so handle both fields safely.
+                        val newText = frame.text?.let {
+                            val validated = validateNoUnknownTags(it, context)
+                            deanonymizeKnownTags(validated, context.tagToValue)
                         }
+                        val newSummary = frame.summary?.let {
+                            val validated = validateNoUnknownTags(it, context)
+                            deanonymizeKnownTags(validated, context.tagToValue)
+                        }
+                        emit(frame.copy(text = newText, summary = newSummary))
+                    }
+
+                    is StreamFrame.ReasoningComplete -> {
+                        val newText = frame.text.map { s ->
+                            val validated = validateNoUnknownTags(s, context)
+                            deanonymizeKnownTags(validated, context.tagToValue)
+                        }
+                        val newSummary = frame.summary?.map { s ->
+                            val validated = validateNoUnknownTags(s, context)
+                            deanonymizeKnownTags(validated, context.tagToValue)
+                        }
+                        emit(frame.copy(text = newText, summary = newSummary))
+                    }
+
+                    is StreamFrame.End -> {
+                        // Before ending, flush any buffered partial tag.
+                        flushTextCarryIfAny()
                         emit(frame)
                     }
                 }
             }
 
-            if (appendCarry.isNotEmpty()) {
-                val deanonymizedCarry: String = deanonymizeKnownTags(appendCarry, context.tagToValue)
-                if (deanonymizedCarry.isNotEmpty()) {
-                    emit(StreamFrame.Append(deanonymizedCarry))
+            // Safety flush in case upstream ends without End frame (some implementations do).
+            if (textCarry.isNotEmpty()) {
+                val validated = validateNoUnknownTags(textCarry, context)
+                val deanonymized = deanonymizeKnownTags(validated, context.tagToValue)
+                if (deanonymized.isNotEmpty()) {
+                    emit(StreamFrame.TextDelta(text = deanonymized))
                 }
+                textCarry = ""
             }
         }
 
