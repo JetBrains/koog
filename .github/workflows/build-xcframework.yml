@@ -51,11 +51,11 @@ jobs:
           echo "XCFramework binary assembled"
 
       # Uploading XCF binary on manual runs without polluting the release - for debugging & testing
-      # Note that 'actions/upload-artifact@v4' always zips the artifact, so we don't have to do it for manual runs
+      # Note that 'actions/upload-artifact@v7' always zips the artifact, so we don't have to do it for manual runs
       - name: Upload XCFramework artifact for manual runs
         # disable for branch test
         #if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Koog-xcframework-${{ steps.version.outputs.version }}
           path: koog-agents/build/XCFrameworks/release/
