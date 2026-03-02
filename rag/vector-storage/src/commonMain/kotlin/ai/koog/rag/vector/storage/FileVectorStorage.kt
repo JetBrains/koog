@@ -70,28 +70,22 @@ public open class FileVectorStorage<Document, Path>(
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun store(document: Document, vector: Vector): String {
-        // Ensure root directories exist
+        val documentId = Uuid.random().toString()
+        store(documentId, document, vector)
+        return documentId
+    }
+
+    override suspend fun store(id: String, document: Document, vector: Vector) {
         val docsDir = documentsDir()
         val vecsDir = vectorsDir()
 
-        // Generate a unique ID for the document
-        val documentId = Uuid.random().toString()
-
-        // Create a temporary file path for the document
-        val docPath = fs.joinPath(docsDir, documentId)
-
-        // Write the document to the file system
+        val docPath = fs.joinPath(docsDir, id)
         val docText = documentReader.text(document).toString()
         fs.writeText(docPath, docText)
 
-        // Create a temporary file path for the vector
-        val vecPath = fs.joinPath(vecsDir, documentId)
-
-        // Serialize the vector to JSON and write it to the file system
+        val vecPath = fs.joinPath(vecsDir, id)
         val vectorJson = json.encodeToString(vector)
         fs.writeText(vecPath, vectorJson)
-
-        return documentId
     }
 
     override suspend fun delete(documentId: String): Boolean {

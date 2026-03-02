@@ -47,7 +47,7 @@ import ai.koog.embeddings.local.LLMEmbedder
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.storage.SimilaritySearchRequest
-import ai.koog.rag.vector.store.EmbeddingVectorStore
+import ai.koog.rag.vector.store.EmbeddingStore
 import ai.koog.rag.vector.storage.InMemoryVectorStorage
 import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
 import kotlinx.coroutines.runBlocking
@@ -70,7 +70,7 @@ val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_T
 val documentEmbedder = JVMTextDocumentEmbedder(embedder)
 
 // Create a vector store using in-memory vector storage
-val vectorStore = EmbeddingVectorStore(documentEmbedder, InMemoryVectorStorage())
+val vectorStore = EmbeddingStore(documentEmbedder, InMemoryVectorStorage())
 
 // Store documents in the storage
 vectorStore.add(listOf(
@@ -83,11 +83,11 @@ vectorStore.add(listOf(
 
 // Find the most relevant documents for a user query
 val query = "I want to open a bank account but I'm getting a 404 when I open your website. I used to be your client with a different account 5 years ago before you changed your firm name"
-val results = vectorStore.search(SimilaritySearchRequest(query, limit = 3))
+val results = vectorStore.search(SimilaritySearchRequest(queryText = query, limit = 3))
 
 // Process the relevant files
 results.forEach { result ->
-    println("Relevant file: ${result.document.toAbsolutePath()} (similarity: ${result.similarity})")
+    println("Relevant file: ${result.document.toAbsolutePath()} (score: ${result.score.value})")
     // Process the file content as needed
 }
 ```
@@ -110,7 +110,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.storage.SimilaritySearchRequest
-import ai.koog.rag.vector.store.EmbeddingVectorStore
+import ai.koog.rag.vector.store.EmbeddingStore
 import ai.koog.rag.vector.storage.InMemoryVectorStorage
 import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
 import kotlin.io.path.pathString
@@ -124,7 +124,7 @@ val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_T
 val documentEmbedder = JVMTextDocumentEmbedder(embedder)
 
 // Create a vector store using in-memory vector storage
-val vectorStore = EmbeddingVectorStore(documentEmbedder, InMemoryVectorStorage())
+val vectorStore = EmbeddingStore(documentEmbedder, InMemoryVectorStorage())
 
 const val apiKey = "apikey"
 
@@ -132,7 +132,7 @@ const val apiKey = "apikey"
 ```kotlin
 suspend fun solveUserRequest(query: String) {
     // Retrieve top-5 documents from the document provider
-    val results = vectorStore.search(SimilaritySearchRequest(query, limit = 5))
+    val results = vectorStore.search(SimilaritySearchRequest(queryText = query, limit = 5))
 
     // Create an AI Agent with the relevant context
     val agentConfig = AIAgentConfig(
@@ -183,7 +183,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.storage.SimilaritySearchRequest
-import ai.koog.rag.vector.store.EmbeddingVectorStore
+import ai.koog.rag.vector.store.EmbeddingStore
 import ai.koog.rag.vector.storage.InMemoryVectorStorage
 import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
 import kotlinx.coroutines.runBlocking
@@ -198,7 +198,7 @@ val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_T
 val documentEmbedder = JVMTextDocumentEmbedder(embedder)
 
 // Create a vector store using in-memory vector storage
-val vectorStore = EmbeddingVectorStore(documentEmbedder, InMemoryVectorStorage())
+val vectorStore = EmbeddingStore(documentEmbedder, InMemoryVectorStorage())
 
 const val apiKey = "apikey"
 
@@ -213,7 +213,7 @@ suspend fun searchDocuments(
     count: Int
 ): String {
     val results =
-        vectorStore.search(SimilaritySearchRequest(query, limit = count, similarityThreshold = 0.9))
+        vectorStore.search(SimilaritySearchRequest(queryText = query, limit = count, minScore = 0.9))
 
     if (results.isEmpty()) {
         return "No relevant documents found for the query: $query"
@@ -352,13 +352,13 @@ For more information, see the [JVMTextDocumentEmbedder](api:vector-storage::ai.k
 
 ### Combined storage implementations
 
-#### EmbeddingVectorStore
+#### EmbeddingStore
 
 Combines a document embedder and a vector storage to provide a complete solution for storing and searching documents.
 
 <!--- INCLUDE
 import ai.koog.agents.example.exampleRetrievalAugmentedGeneration02.documentEmbedder
-import ai.koog.rag.vector.store.EmbeddingVectorStore
+import ai.koog.rag.vector.store.EmbeddingStore
 import ai.koog.rag.vector.storage.InMemoryVectorStorage
 import java.nio.file.Path
 
@@ -366,18 +366,18 @@ val vectorStorage = InMemoryVectorStorage<Path>()
 
 -->
 ```kotlin
-val embeddingStore = EmbeddingVectorStore(
+val embeddingStore = EmbeddingStore(
     embedder = documentEmbedder,
     storage = vectorStorage
 )
 ```
 <!--- KNIT example-retrieval-augmented-generation-09.kt -->
 
-For more information, see the [EmbeddingVectorStore](api:vector-storage::ai.koog.rag.vector.store.EmbeddingVectorStore) reference.
+For more information, see the [EmbeddingStore](api:vector-storage::ai.koog.rag.vector.store.EmbeddingStore) reference.
 
 #### InMemoryDocumentEmbeddingStore
 
-An in-memory implementation of `EmbeddingVectorStore`.
+An in-memory implementation of `EmbeddingStore`.
 
 <!--- INCLUDE
 import ai.koog.agents.example.exampleRetrievalAugmentedGeneration03.documentEmbedder
@@ -398,7 +398,7 @@ For more information, see the [InMemoryDocumentEmbeddingStore](api:vector-storag
 
 #### FileDocumentEmbeddingStore
 
-A file-based implementation of `EmbeddingVectorStore`.
+A file-based implementation of `EmbeddingStore`.
 
 <!--- INCLUDE
 /*
@@ -442,9 +442,10 @@ For more information, see the [JVMFileDocumentEmbeddingStore](api:vector-storage
 A file-based implementation that combines `TextDocumentEmbedder` and `FileVectorStorage`.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleRetrievalAugmentedGeneration08.embedder
-import ai.koog.rag.vector.store.TextFileDocumentEmbeddingStore
-import java.nio.file.Path
+/*
+-->
+<!--- SUFFIX
+*/
 -->
 ```kotlin
 val textFileEmbeddingStore = TextFileDocumentEmbeddingStore<Document, Path>(
@@ -473,6 +474,10 @@ import ai.koog.embeddings.local.LLMEmbedder
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.rag.base.storage.SearchResult
+import ai.koog.rag.base.storage.Score
+import ai.koog.rag.base.storage.ScoreMetric
+import ai.koog.rag.base.storage.HasTextQuery
+import ai.koog.rag.base.storage.HasScoreThreshold
 import ai.koog.rag.base.storage.RetrievalStorage
 import ai.koog.rag.base.storage.SearchRequest
 import ai.koog.rag.base.files.DocumentProvider
@@ -530,33 +535,30 @@ class PDFVectorStorage(
     private val embedder: PDFDocumentEmbedder,
     private val storage: VectorStorage<PDFDocument>
 ) : RetrievalStorage<PDFDocument> {
-    override fun rankDocuments(query: String): Flow<SearchResult<PDFDocument>> = flow {
-        val queryVector = embedder.embed(query)
-        storage.allDocumentsWithPayload().collect { (document, documentVector) ->
-            emit(
-                SearchResult(
-                    document = document,
-                    similarity = 1.0 - embedder.diff(queryVector, documentVector)
-                )
-            )
-        }
-    }
-
     override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<PDFDocument>> {
+        val queryText = (request as? HasTextQuery)?.queryText
+            ?: error("PDFVectorStorage requires a request implementing HasTextQuery")
+        val minScore = (request as? HasScoreThreshold)?.minScore ?: 0.0
         val results = mutableListOf<SearchResult<PDFDocument>>()
-        val queryVector = embedder.embed(request.query)
+        val queryVector = embedder.embed(queryText)
+        var index = 0
         storage.allDocumentsWithPayload().collect { (document, documentVector) ->
             val similarity = 1.0 - embedder.diff(queryVector, documentVector)
-            if (similarity >= request.similarityThreshold) {
-                results.add(SearchResult(document = document, similarity = similarity))
+            if (similarity >= minScore) {
+                results.add(SearchResult(id = "result-${index++}", document = document, score = Score(value = similarity, metric = ScoreMetric.COSINE_SIMILARITY)))
             }
         }
-        return results.sortedByDescending { it.similarity }.take(request.limit)
+        return results.sortedByDescending { it.score.value }.take(request.limit)
     }
 
     suspend fun store(document: PDFDocument): String {
         val vector = embedder.embed(document)
         return storage.store(document, vector)
+    }
+
+    suspend fun storeFromPath(path: Path): String? {
+        val document = pdfProvider.document(path) ?: return null
+        return store(document)
     }
 
     suspend fun delete(documentId: String): Boolean {
@@ -582,12 +584,11 @@ suspend fun main() {
     val storage = InMemoryVectorStorage<PDFDocument>()
     val pdfStorage = PDFVectorStorage(pdfProvider, pdfEmbedder, storage)
 
-    // Store PDF documents
-    val pdfDocument = PDFDocument(Path.of("./documents/sample.pdf"))
-    pdfStorage.store(pdfDocument)
+    // Store PDF documents from file paths using the provider
+    pdfStorage.storeFromPath(Path.of("./documents/sample.pdf"))
 
     // Query for relevant PDF documents
-    val relevantPDFs = pdfStorage.search(SimilaritySearchRequest("information about climate change", limit = 3))
+    val relevantPDFs = pdfStorage.search(SimilaritySearchRequest(queryText = "information about climate change", limit = 3))
 
 }
 ```
@@ -608,7 +609,11 @@ Here's an example of implementing a custom `RetrievalStorage` that uses a simple
 <!--- INCLUDE
 import ai.koog.rag.base.storage.RetrievalStorage
 import ai.koog.rag.base.storage.SearchResult
+import ai.koog.rag.base.storage.Score
+import ai.koog.rag.base.storage.ScoreMetric
 import ai.koog.rag.base.storage.SearchRequest
+import ai.koog.rag.base.storage.HasTextQuery
+import ai.koog.rag.base.storage.HasScoreThreshold
 import ai.koog.rag.base.files.DocumentProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -619,29 +624,6 @@ class KeywordBasedDocumentStorage<Document>(
     private val documentProvider: DocumentProvider<Path, Document>,
     private val documents: MutableList<Document> = mutableListOf()
 ) : RetrievalStorage<Document> {
-
-    override fun rankDocuments(query: String): Flow<SearchResult<Document>> = flow {
-        // Split the query into keywords
-        val keywords = query.lowercase().split(Regex("\\W+")).filter { it.length > 2 }
-
-        // Process each document
-        documents.forEach { document ->
-            // Get the document text
-            val documentText = documentProvider.text(document).toString().lowercase()
-
-            // Calculate a simple similarity score based on keyword frequency
-            var similarity = 0.0
-            for (keyword in keywords) {
-                val count = countOccurrences(documentText, keyword)
-                if (count > 0) {
-                    similarity += count.toDouble() / documentText.length * 1000
-                }
-            }
-
-            // Emit the document with its similarity score
-            emit(SearchResult(document, similarity))
-        }
-    }
 
     private fun countOccurrences(text: String, keyword: String): Int {
         var count = 0
@@ -657,13 +639,25 @@ class KeywordBasedDocumentStorage<Document>(
     }
 
     override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<Document>> {
+        val queryText = (request as? HasTextQuery)?.queryText ?: return emptyList()
+        val minScore = (request as? HasScoreThreshold)?.minScore ?: 0.0
+        val keywords = queryText.lowercase().split(Regex("\\W+")).filter { it.length > 2 }
         val results = mutableListOf<SearchResult<Document>>()
-        rankDocuments(request.query).collect { result ->
-            if (result.similarity >= request.similarityThreshold) {
-                results.add(result)
+        var index = 0
+        documents.forEach { document ->
+            val documentText = documentProvider.text(document).toString().lowercase()
+            var similarity = 0.0
+            for (keyword in keywords) {
+                val count = countOccurrences(documentText, keyword)
+                if (count > 0) {
+                    similarity += count.toDouble() / documentText.length * 1000
+                }
+            }
+            if (similarity >= minScore) {
+                results.add(SearchResult(id = "result-${index++}", document = document, score = Score(value = similarity, metric = ScoreMetric.BM25)))
             }
         }
-        return results.sortedByDescending { it.similarity }.take(request.limit)
+        return results.sortedByDescending { it.score.value }.take(request.limit)
     }
 }
 ```
@@ -676,7 +670,10 @@ Another example is a time-based ranking system that prioritizes recent documents
 <!--- INCLUDE
 import ai.koog.rag.base.storage.RetrievalStorage
 import ai.koog.rag.base.storage.SearchResult
+import ai.koog.rag.base.storage.Score
+import ai.koog.rag.base.storage.ScoreMetric
 import ai.koog.rag.base.storage.SearchRequest
+import ai.koog.rag.base.storage.HasScoreThreshold
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.lang.System.currentTimeMillis
@@ -687,28 +684,23 @@ class TimeBasedDocumentStorage<Document>(
     private val getDocumentTimestamp: (Document) -> Long
 ) : RetrievalStorage<Document> {
 
-    override fun rankDocuments(query: String): Flow<SearchResult<Document>> = flow {
+    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<Document>> {
+        val minScore = (request as? HasScoreThreshold)?.minScore ?: 0.0
         val currentTime = System.currentTimeMillis()
+        val results = mutableListOf<SearchResult<Document>>()
+        var index = 0
 
         documents.forEach { document ->
             val timestamp = getDocumentTimestamp(document)
             val ageInHours = (currentTime - timestamp) / (1000.0 * 60 * 60)
-
-            // Calculate a decay factor based on age (newer documents get higher scores)
             val decayFactor = Math.exp(-0.01 * ageInHours)
 
-            emit(SearchResult(document, decayFactor))
-        }
-    }
-
-    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<Document>> {
-        val results = mutableListOf<SearchResult<Document>>()
-        rankDocuments(request.query).collect { result ->
-            if (result.similarity >= request.similarityThreshold) {
-                results.add(result)
+            if (decayFactor >= minScore) {
+                results.add(SearchResult(id = "result-${index++}", document = document, score = Score(value = decayFactor, metric = ScoreMetric.CUSTOM)))
             }
         }
-        return results.sortedByDescending { it.similarity }.take(request.limit)
+
+        return results.sortedByDescending { it.score.value }.take(request.limit)
     }
 }
 ```

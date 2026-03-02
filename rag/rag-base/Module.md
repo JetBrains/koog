@@ -6,10 +6,10 @@ A foundational module that provides core interfaces for document storage and ret
 
 The rag-base module defines the fundamental abstractions for working with document storage in RAG applications. It includes:
 
-- The `ReadStorage` interface for reading documents by their identifiers or retrieving all documents
+- The `ReadStorage` interface for reading documents by their identifiers
 - The `IngestionStorage` interface for adding and updating documents
 - The `DeletionStorage` interface for deleting documents by their identifiers
-- The `RetrievalStorage` interface that provides ranking capabilities based on query relevance, returning `SearchResult` items with similarity scores
+- The `RetrievalStorage` interface that provides ranking capabilities based on query relevance, returning `SearchResult` items with scores
 - The `SearchRequest` interface and `SimilaritySearchRequest` implementation for defining search parameters
 - The `DocumentWithPayload` data class for associating documents with metadata or payload
 - Support for generic document types, allowing flexibility in the types of documents that can be stored and retrieved
@@ -21,8 +21,8 @@ This module serves as the base for all RAG submodules (e.g., vector-storage) by 
 ```kotlin
 // Example of using IngestionStorage and ReadStorage
 suspend fun storeAndRetrieveDocuments(
-    ingestion: IngestionStorage<TextDocument, String>,
-    reader: ReadStorage<TextDocument, String>
+    ingestion: IngestionStorage<TextDocument>,
+    reader: ReadStorage<TextDocument>
 ) {
     // Create documents
     val documents = listOf(
@@ -35,14 +35,14 @@ suspend fun storeAndRetrieveDocuments(
     println("Documents stored with IDs: $documentIds")
 
     // Retrieve the documents using their IDs
-    val retrievedDocuments = reader.read(documentIds)
+    val retrievedDocuments = reader.get(documentIds)
     retrievedDocuments.forEach { (id, doc) ->
         println("Retrieved document $id: ${doc.content}")
     }
 }
 
 // Example of using DeletionStorage
-suspend fun deleteDocuments(deletion: DeletionStorage<String>) {
+suspend fun deleteDocuments(deletion: DeletionStorage) {
     val idsToDelete = listOf("doc1", "doc2")
     val deletedIds = deletion.delete(idsToDelete)
     println("Deleted documents: $deletedIds")
@@ -52,11 +52,11 @@ suspend fun deleteDocuments(deletion: DeletionStorage<String>) {
 suspend fun findRelevantDocuments(storage: RetrievalStorage<TextDocument>) {
     // Find documents relevant to a query using search
     val query = "What is artificial intelligence?"
-    val results = storage.search(SimilaritySearchRequest(query, limit = 2, similarityThreshold = 0.5))
+    val results = storage.search(SimilaritySearchRequest(queryText = query, limit = 2, minScore = 0.5))
 
     println("Most relevant documents for query '$query':")
     results.forEach { result ->
-        println("- ${result.document.content} (similarity: ${result.similarity})")
+        println("- ${result.document.content} (score: ${result.score.value})")
     }
 }
 ```

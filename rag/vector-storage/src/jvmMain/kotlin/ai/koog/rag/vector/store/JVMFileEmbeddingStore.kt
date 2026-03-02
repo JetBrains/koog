@@ -10,11 +10,11 @@ import java.nio.file.Path
  * embedding and storage within a file system. This class utilizes a [ai.koog.rag.base.files.JVMDocumentProvider] to handle
  * document reading and manages embeddings using a provided [ai.koog.embeddings.base.Embedder].
  *
- * @constructor Creates an instance of [JVMFileVectorStore].
+ * @constructor Creates an instance of [JVMFileEmbeddingStore].
  * @param embedder The embedding implementation used to generate and compare vector embeddings.
  * @param root The root directory where the document storage system is initialized.
  */
-public class JVMFileVectorStore(
+public class JVMFileEmbeddingStore(
     embedder: Embedder,
     root: Path
 ) : TextFileDocumentEmbeddingStore<Path, Path>(

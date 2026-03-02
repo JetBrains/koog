@@ -2,6 +2,7 @@ package ai.koog.rag.vector.store
 
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
+import ai.koog.rag.base.storage.SimilaritySearchRequest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
@@ -28,10 +29,10 @@ class JVMTextFileDocumentEmbeddingStoreTest {
         }
     }
 
-    private fun createTestStorage(): JVMFileVectorStore {
+    private fun createTestStorage(): JVMFileEmbeddingStore {
         val tempDir = Files.createTempDirectory("jvm-text-doc-embedding-storage-test")
         val mockEmbedder = MockEmbedder()
-        return JVMFileVectorStore(mockEmbedder, tempDir)
+        return JVMFileEmbeddingStore(mockEmbedder, tempDir)
     }
 
     private fun createTestFile(content: String): Path {
@@ -47,11 +48,11 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store document
-            val documentId = storage.store(testFile)
+            val documentId = storage.add(listOf(testFile)).first()
             assertNotNull(documentId)
 
             // Read document back
-            val retrievedDocument = storage.read(documentId)
+            val retrievedDocument = storage.get(listOf(documentId)).firstOrNull()
             assertNotNull(retrievedDocument)
 
             // Compare content instead of file paths
@@ -70,17 +71,17 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store document
-            val documentId = storage.store(testFile)
+            val documentId = storage.add(listOf(testFile)).first()
 
             // Verify it exists
-            assertNotNull(storage.read(documentId))
+            assertNotNull(storage.get(listOf(documentId)).firstOrNull())
 
             // Delete it
-            val deleted = storage.delete(documentId)
-            assertTrue(deleted)
+            val deletedIds = storage.delete(listOf(documentId))
+            assertEquals(listOf(documentId), deletedIds)
 
             // Verify it's gone
-            assertEquals(null, storage.read(documentId))
+            assertEquals(null, storage.get(listOf(documentId)).firstOrNull())
         } finally {
             Files.deleteIfExists(testFile)
         }
@@ -97,9 +98,7 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store multiple documents
-            testFiles.forEach { file ->
-                storage.store(file)
-            }
+            storage.add(testFiles)
 
             // Retrieve all documents
             val allDocs = storage.allDocuments().toList()
@@ -125,18 +124,16 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store documents
-            testFiles.forEach { file ->
-                storage.store(file)
-            }
+            storage.add(testFiles)
 
             // Rank documents by similarity to "hello"
-            val rankedDocs = storage.rankDocuments("hello").toList()
+            val rankedDocs = storage.search(SimilaritySearchRequest(queryText = "hello", limit = Int.MAX_VALUE))
             assertEquals(testFiles.size, rankedDocs.size)
 
             // All documents should have a similarity score
             rankedDocs.forEach { rankedDoc ->
                 assertNotNull(rankedDoc.document)
-                assertTrue(rankedDoc.similarity >= 0.0)
+                assertTrue(rankedDoc.score.value >= 0.0)
             }
 
             // Documents containing "hello" should be more similar (lower distance)
@@ -148,8 +145,8 @@ class JVMTextFileDocumentEmbeddingStoreTest {
             }
 
             if (helloDocuments.isNotEmpty() && nonHelloDocuments.isNotEmpty()) {
-                val avgHelloSimilarity = helloDocuments.map { it.similarity }.average()
-                val avgNonHelloSimilarity = nonHelloDocuments.map { it.similarity }.average()
+                val avgHelloSimilarity = helloDocuments.map { it.score.value }.average()
+                val avgNonHelloSimilarity = nonHelloDocuments.map { it.score.value }.average()
                 assertTrue(avgHelloSimilarity > avgNonHelloSimilarity, "Documents with 'hello' should be more similar")
             }
         } finally {
@@ -161,8 +158,8 @@ class JVMTextFileDocumentEmbeddingStoreTest {
     fun testRankDocumentsEmptyStorage() = runTest {
         val storage = createTestStorage()
 
-        // Rank documents in empty storage
-        val rankedDocs = storage.rankDocuments("test query").toList()
+        // Search documents in empty storage
+        val rankedDocs = storage.search(SimilaritySearchRequest(queryText = "test query", limit = Int.MAX_VALUE))
         assertTrue(rankedDocs.isEmpty())
     }
 
@@ -178,14 +175,11 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store multiple documents
-            testFiles.forEach { file ->
-                val id = storage.store(file)
-                documentIds.add(id)
-            }
+            documentIds.addAll(storage.add(testFiles))
 
             // Verify all documents can be retrieved
             documentIds.zip(testFiles).forEach { (id, expectedFile) ->
-                val retrievedFile = storage.read(id)
+                val retrievedFile = storage.get(listOf(id)).firstOrNull()
                 assertNotNull(retrievedFile)
 
                 // Compare content instead of file paths
@@ -209,20 +203,18 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store documents
-            testFiles.forEach { file ->
-                storage.store(file)
-            }
+            storage.add(testFiles)
 
             // Test ranking with different queries
-            val appleRanked = storage.rankDocuments("apple").toList()
-            val bananaRanked = storage.rankDocuments("banana").toList()
+            val appleRanked = storage.search(SimilaritySearchRequest(queryText = "apple", limit = Int.MAX_VALUE))
+            val bananaRanked = storage.search(SimilaritySearchRequest(queryText = "banana", limit = Int.MAX_VALUE))
 
             assertEquals(testFiles.size, appleRanked.size)
             assertEquals(testFiles.size, bananaRanked.size)
 
             // The exact document should have the best similarity (lowest distance)
-            val bestAppleMatch = appleRanked.maxBy { it.similarity }
-            val bestBananaMatch = bananaRanked.maxBy { it.similarity }
+            val bestAppleMatch = appleRanked.maxBy { it.score.value }
+            val bestBananaMatch = bananaRanked.maxBy { it.score.value }
 
             assertEquals("apple", Files.readString(bestAppleMatch.document))
             assertEquals("banana", Files.readString(bestBananaMatch.document))
@@ -243,18 +235,16 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store documents
-            testFiles.forEach { file ->
-                storage.store(file)
-            }
+            storage.add(testFiles)
 
             // Test ranking
-            val rankedDocs = storage.rankDocuments("large document").toList()
+            val rankedDocs = storage.search(SimilaritySearchRequest(queryText = "large document", limit = Int.MAX_VALUE))
             assertEquals(testFiles.size, rankedDocs.size)
 
             // All documents should have similarity scores
             rankedDocs.forEach { rankedDoc ->
                 assertNotNull(rankedDoc.document)
-                assertTrue(rankedDoc.similarity >= 0.0)
+                assertTrue(rankedDoc.score.value >= 0.0)
             }
         } finally {
             testFiles.forEach { Files.deleteIfExists(it) }
@@ -268,11 +258,11 @@ class JVMTextFileDocumentEmbeddingStoreTest {
 
         try {
             // Store empty document
-            val documentId = storage.store(emptyFile)
+            val documentId = storage.add(listOf(emptyFile)).first()
             assertNotNull(documentId)
 
             // Read document back
-            val retrievedDocument = storage.read(documentId)
+            val retrievedDocument = storage.get(listOf(documentId)).firstOrNull()
             assertNotNull(retrievedDocument)
 
             // Compare content instead of file paths
@@ -281,7 +271,7 @@ class JVMTextFileDocumentEmbeddingStoreTest {
             assertEquals(originalContent, retrievedContent)
 
             // Test ranking with empty document
-            val rankedDocs = storage.rankDocuments("test").toList()
+            val rankedDocs = storage.search(SimilaritySearchRequest(queryText = "test", limit = Int.MAX_VALUE))
             assertEquals(1, rankedDocs.size)
             assertNotNull(rankedDocs.first().document)
         } finally {

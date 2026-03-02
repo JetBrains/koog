@@ -3,9 +3,8 @@ package ai.koog.rag.base.storage
 /**
  * Storage interface that provides the ability to delete documents by their identifiers.
  *
- * @param ID The type of the document identifier.
  */
-public interface DeletionStorage<ID> {
+public interface DeletionStorage {
     /**
      * Deletes documents with the specified identifiers from the storage.
      *
@@ -13,5 +12,5 @@ public interface DeletionStorage<ID> {
      * @param namespace An optional namespace to scope the deletion. If null, the default namespace is used.
      * @return The list of identifiers that were successfully deleted.
      */
-    public suspend fun delete(ids: List<ID>, namespace: String? = null): List<ID>
+    public suspend fun delete(ids: List<String>, namespace: String? = null): List<String>
 }
