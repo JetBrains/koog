@@ -11,6 +11,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.IncompleteStreamException
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitTextDelta
 import ai.koog.prompt.streaming.streamFrameFlow
@@ -382,6 +383,61 @@ class RetryingLLMClientTest {
 
         assertEquals(moderationResult, result)
         assertEquals(2, mockClient.moderateCalls)
+    }
+
+    @Test
+    fun testIncompleteStreamExceptionBeforeFirstFrameTriggersRetry() = runTest {
+        var callCount = 0
+        val mockClient = MockLLMClient(
+            streamResponse = flow {
+                callCount++
+                if (callCount == 1) {
+                    throw IncompleteStreamException()
+                }
+                emit(StreamFrame.TextDelta("success"))
+                emit(StreamFrame.End(finishReason = "stop"))
+            }
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 3,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
+
+        assertEquals(
+            listOf(StreamFrame.TextDelta("success"), StreamFrame.End(finishReason = "stop")),
+            result
+        )
+        assertEquals(2, mockClient.streamCalls)
+    }
+
+    @Test
+    fun testIncompleteStreamExceptionAfterFirstFramePropagates() = runTest {
+        val mockClient = MockLLMClient(
+            streamResponse = streamFrameFlow {
+                emitTextDelta("first-token")
+                throw IncompleteStreamException()
+            }
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 3,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        assertFailsWith<IncompleteStreamException> {
+            retryingClient.executeStreaming(testPrompt, testModel).collect()
+        }
+
+        assertEquals(1, mockClient.streamCalls) // No retry after first frame
     }
 
     // Mock LLMClient for testing

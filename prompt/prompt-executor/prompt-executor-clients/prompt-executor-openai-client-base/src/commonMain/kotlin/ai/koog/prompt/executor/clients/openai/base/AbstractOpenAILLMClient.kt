@@ -31,6 +31,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.requireEndFrame
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -193,7 +194,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     decodeStreamingResponse = ::decodeStreamingResponse,
                     processStreamingChunk = { it }
                 ).collect { send(it) }
-            }.let { processStreamingResponse(it) }
+            }.let { processStreamingResponse(it) }.requireEndFrame()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -36,6 +36,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.prompt.streaming.requireEndFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -334,7 +335,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                     cause = e
                 )
             }
-        }
+        }.requireEndFrame()
     }
 
     @OptIn(ExperimentalUuidApi::class)

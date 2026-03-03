@@ -8,8 +8,33 @@ env.properties
 local.properties
 **/kotlin-js-store
 docs/src/main/kotlin/*.kt
-**/.env
+**/.env*
 .venv
 .DS_Store
 /.claude/
 /.junie/memory
+
+# Logs
+/.taskmaster
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

@@ -41,6 +41,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -222,7 +223,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                 cause = e
             )
         }
-    }
+    }.requireEndFrame()
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,

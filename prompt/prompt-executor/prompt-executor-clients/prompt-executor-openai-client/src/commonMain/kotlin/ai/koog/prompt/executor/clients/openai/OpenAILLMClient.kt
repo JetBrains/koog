@@ -53,6 +53,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -342,7 +343,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 request = request,
                 requestBodyType = String::class,
                 decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
-                processStreamingChunk = { it ->
+                processStreamingChunk = {
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
                             StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
@@ -400,7 +401,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                         else -> null
                     }
                 }
-            ).filterNotNull()
+            ).filterNotNull().requireEndFrame()
         } catch (e: Exception) {
             throw LLMClientException(
                 clientName = clientName,
