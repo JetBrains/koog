@@ -3,7 +3,15 @@ name: Build XCFramework
 on:
   release:
     types: [published]
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Manual build target - use 'release' for production-like behavior (ie when fixing) and 'artifact' for testing"
+        required: true
+        type: choice
+        options:
+          - artifact  #  builds only, uploads as a 30-day artifact for testing, does not pollute release assets and does not trigger koog-spm
+          - release   #  uploads to GitHub release and triggers koog-spm, must be triggered from a version tag ref
 
 env:
   JAVA_VERSION: 17
@@ -25,16 +33,49 @@ jobs:
 
       - uses: actions/checkout@v6
 
-      - name: Extract version
-        id: version
+      - name: Resolve version and target
+        id: resolve
         run: |
           if [ "${{ github.event_name }}" == "release" ]; then
             VERSION="${{ github.event.release.tag_name }}"
+            TARGET="release"
+          elif [ "${{ inputs.target }}" == "release" ]; then
+            if [ "${{ github.ref_type }}" != "tag" ]; then
+              echo "target 'release' requires triggering from a tag ref, not a branch" >&2
+              exit 1
+            fi
+            VERSION="${{ github.ref_name }}"
+            TARGET="release"
           else
             VERSION="${{ github.sha }}"
+            TARGET="artifact"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION, target: $TARGET"
+
+      - name: Verify koog-spm app credentials
+        if: steps.resolve.outputs.target == 'release'
+        run: |
+          if [ -z "${{ vars.KOOG_SPM_APP_ID }}" ]; then
+            echo "KOOG_SPM_APP_ID is required for release dispatch but is not set." >&2
+            exit 1
+          fi
+          if [ -z "${{ secrets.KOOG_SPM_APP_KEY }}" ]; then
+            echo "KOOG_SPM_APP_KEY is required for release dispatch but is not set." >&2
+            exit 1
+          fi
+
+      - name: Generate koog-spm app token
+        if: steps.resolve.outputs.target == 'release'
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        env:
+          PRIVATE_KEY: ${{ secrets.KOOG_SPM_APP_KEY }}
+        with:
+          app-id: ${{ vars.KOOG_SPM_APP_ID }}
+          private-key: ${{ env.PRIVATE_KEY }}
+          repositories: koog-spm
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
@@ -50,34 +91,52 @@ jobs:
           ./gradlew :koog-agents:assembleKoogXCFramework -Pkoog.build.xcframework=true --no-daemon --stacktrace
           echo "XCFramework binary assembled"
 
-      # Uploading XCF binary on manual runs without polluting the release - for debugging & testing
-      # Note that 'actions/upload-artifact@v7' always zips the artifact, so we don't have to do it for manual runs
-      - name: Upload XCFramework artifact for manual runs
-        # disable for branch test
-        #if: github.event_name == 'workflow_dispatch'
+      # Uploads XCF as a 30-day artifact for manual testing runs — does not pollute GitHub releases
+      # We don't zip explicitly, because `upload-artifact` action does it for us
+      - name: Upload XCFramework artifact for testing
+        if: steps.resolve.outputs.target == 'artifact'
         uses: actions/upload-artifact@v7
         with:
-          name: Koog-xcframework-${{ steps.version.outputs.version }}
+          name: Koog-xcframework-${{ steps.resolve.outputs.version }}
           path: koog-agents/build/XCFrameworks/release/
           retention-days: 30
 
       - name: Create XCFramework zip for release
-        if: github.event_name == 'release'
+        if: steps.resolve.outputs.target == 'release'
         id: archive
         run: |
-          ARCHIVE_NAME="Koog-${{ steps.version.outputs.version }}.xcframework.zip"
+          ARCHIVE_NAME="Koog-${{ steps.resolve.outputs.version }}.xcframework.zip"
           cd koog-agents/build/XCFrameworks/release
           zip -r "$ARCHIVE_NAME" Koog.xcframework
           echo "archive_path=$(pwd)/$ARCHIVE_NAME" >> $GITHUB_OUTPUT
           echo "XCFramework zip created:"
           ls -lh "$ARCHIVE_NAME"
           # Calculate checksum for SPM
-          shasum -a 256 "$ARCHIVE_NAME"
+          CHECKSUM=$(shasum -a 256 "$ARCHIVE_NAME" | awk '{ print $1 }')
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+          echo "url=https://github.com/JetBrains/koog/releases/download/${{ steps.resolve.outputs.version }}/$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+          echo "Checksum: $CHECKSUM"
 
-      - name: Upload XCFramework artifact to release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.archive.outputs.archive_path }}
+      - name: Upload XCFramework zip to release
+        if: steps.resolve.outputs.target == 'release'
+        run: gh release upload "${{ steps.resolve.outputs.version }}" "${{ steps.archive.outputs.archive_path }}" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dispatch koog-spm release
+        if: steps.resolve.outputs.target == 'release'
+        run: |
+          gh api repos/JetBrains/koog-spm/dispatches \
+            --method POST \
+            --input - << EOF
+          {
+            "event_type": "update-package",
+            "client_payload": {
+              "version": "${{ steps.resolve.outputs.version }}",
+              "url": "${{ steps.archive.outputs.url }}",
+              "checksum": "${{ steps.archive.outputs.checksum }}"
+            }
+          }
+          EOF
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
