@@ -107,7 +107,17 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     override fun getExecutor(model: LLModel): PromptExecutor = executor
 
     override fun createReasoningParams(model: LLModel): LLMParams {
-        require(model in reasoningCapableModels().toArray()) {
+        val reasoningModels = reasoningCapableModels()
+            .map { it.get()[0] as LLModel }
+            .toList()
+
+        val isReasoningCapable = reasoningModels.any { reasoningModel ->
+            model.id == reasoningModel.id ||
+                model.id.substringAfter('.') == reasoningModel.id ||
+                model.id == reasoningModel.id.substringAfter('.')
+        }
+
+        require(isReasoningCapable) {
             "Model ${model.id} is not a reasoning capable model"
         }
 
