@@ -54,13 +54,28 @@ jobs:
           echo "target=$TARGET" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION, target: $TARGET"
 
-      - name: Verify koog-spm token
+      - name: Verify koog-spm app credentials
         if: steps.resolve.outputs.target == 'release'
         run: |
-          if [ -z "${{ secrets.KOOG_SPM_TOKEN }}" ]; then
-            echo "KOOG_SPM_TOKEN is required for release dispatch but is not set." >&2
+          if [ -z "${{ vars.KOOG_SPM_APP_ID }}" ]; then
+            echo "KOOG_SPM_APP_ID is required for release dispatch but is not set." >&2
             exit 1
           fi
+          if [ -z "${{ secrets.KOOG_SPM_APP_KEY }}" ]; then
+            echo "KOOG_SPM_APP_KEY is required for release dispatch but is not set." >&2
+            exit 1
+          fi
+
+      - name: Generate koog-spm app token
+        if: steps.resolve.outputs.target == 'release'
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        env:
+          PRIVATE_KEY: ${{ secrets.KOOG_SPM_APP_KEY }}
+        with:
+          app-id: ${{ vars.KOOG_SPM_APP_ID }}
+          private-key: ${{ env.PRIVATE_KEY }}
+          repositories: koog-spm
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
@@ -124,4 +139,4 @@ jobs:
           }
           EOF
         env:
-          GITHUB_TOKEN: ${{ secrets.KOOG_SPM_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
