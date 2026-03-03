@@ -76,6 +76,8 @@ tasks.withType<JavaCompile>().configureEach {
 configurations.all {
     // make sure we have Netty as a server, not CIO
     exclude(group = "io.ktor", module = "ktor-server-cio")
+    // Exclude JFR module that causes UTFDataFormatException during test discovery on Java 21
+    exclude(group = "org.junit.platform", module = "junit-platform-jfr")
 }
 
 val envs = credentialsResolver.resolve(
@@ -83,6 +85,12 @@ val envs = credentialsResolver.resolve(
 )
 
 tasks.withType<Test> {
+    // Workaround for JDK 21 JFR MetadataLoader bug (UTFDataFormatException during JFR initialization).
+    // JUnit Platform 2.x (bundled with JUnit 6) registers JFR listeners programmatically in JfrUtils.
+    // Setting this property makes JfrUtils.isJfrAvailable() return false, skipping JFR listener
+    // registration and avoiding the crash in jdk.jfr.internal.MetadataLoader.
+    systemProperty("org.graalvm.nativeimage.imagecode", "agent")
+
     // Forward system properties to the test JVM
     System.getProperties().forEach { key, value ->
         systemProperty(key.toString(), value)
