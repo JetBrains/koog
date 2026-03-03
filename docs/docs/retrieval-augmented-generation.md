@@ -615,8 +615,6 @@ import ai.koog.rag.base.storage.SearchRequest
 import ai.koog.rag.base.storage.HasTextQuery
 import ai.koog.rag.base.storage.HasScoreThreshold
 import ai.koog.rag.base.files.DocumentProvider
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.nio.file.Path
 -->
 ```kotlin
@@ -674,8 +672,6 @@ import ai.koog.rag.base.storage.Score
 import ai.koog.rag.base.storage.ScoreMetric
 import ai.koog.rag.base.storage.SearchRequest
 import ai.koog.rag.base.storage.HasScoreThreshold
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.lang.System.currentTimeMillis
 -->
 ```kotlin
