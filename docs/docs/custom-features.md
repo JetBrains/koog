@@ -37,11 +37,11 @@ functional, and planner agents:
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentPlannerFeature
+import ai.koog.agents.planner.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
+import ai.koog.agents.planner.AIAgentPlannerPipeline
 -->
 ```kotlin
 class MyFeature(val someProperty: String) {
@@ -248,11 +248,11 @@ methods.
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.planner.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
+import ai.koog.agents.planner.AIAgentPlannerPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -357,11 +357,11 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentPlannerFeature
+import ai.koog.agents.planner.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
+import ai.koog.agents.planner.AIAgentPlannerPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
