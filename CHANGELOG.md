@@ -1,3 +1,16 @@
+# 0.6.4
+> Published 4 March 2026
+
+## Major Features
+- **LLM Client Router**: Added support for routing requests across multiple LLM clients with pluggable load balancing strategies. Includes a built-in round-robin router and fallback handling when a provider is unavailable (#1503)
+
+## Improvements
+- **Anthropic models list**: Implemented `models()` for the Anthropic LLM client, consistent with other supported providers ([KG-527](https://youtrack.jetbrains.com/issue/KG-527), #1460)
+- **Dependency updates**: Updated `io.lettuce:lettuce-core` from `6.5.5.RELEASE` to `7.2.1.RELEASE` (#1304)
+
+## Breaking Changes
+- **OllamaModels relocation**: `OllamaModels` and `OllamaEmbeddingModels` moved from `prompt-llm` to `prompt-executor-ollama-client` module ([KG-121](https://youtrack.jetbrains.com/issue/KG-121), #1470)
+ 
 # 0.6.3
 > Published 24 February 2026
 
