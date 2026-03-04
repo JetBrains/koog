@@ -1,6 +1,5 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import aws.sdk.kotlin.services.bedrock.BedrockClient
 import aws.sdk.kotlin.services.bedrock.listFoundationModels
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -20,7 +19,6 @@ class BedrockCredentialsSmokeTest {
         @JvmStatic
         @BeforeAll
         fun setup() {
-            JdkWorkarounds.initializeNormalizer()
         }
     }
 

@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.executor
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.getLLMClientForProvider
@@ -33,7 +32,6 @@ class ToolDescriptorIntegrationTest {
         @JvmStatic
         @BeforeAll
         fun setup() {
-            JdkWorkarounds.initializeNormalizer()
         }
 
         @JvmStatic

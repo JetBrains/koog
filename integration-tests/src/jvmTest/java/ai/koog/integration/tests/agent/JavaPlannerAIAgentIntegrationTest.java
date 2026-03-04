@@ -8,7 +8,6 @@ import ai.koog.agents.planner.AIAgentPlannerStrategy;
 import ai.koog.agents.planner.JavaAIAgentPlanner;
 import ai.koog.agents.planner.PlannerAIAgent;
 import ai.koog.agents.planner.goap.*;
-import ai.koog.integration.tests.utils.JdkWorkarounds;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
@@ -48,14 +47,14 @@ public class JavaPlannerAIAgentIntegrationTest {
 
     private static final String STRATEGY_NAME = "my-strategy";
 
-    private static final LLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
-    private static final PromptExecutor promptExecutor = new MultiLLMPromptExecutor(client);
+    private static final LLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv() != null ? TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv() : "dummy");
+    private static final PromptExecutor promptExecutor = new MultiLLMPromptExecutor(new LLMClient[]{client});
     private static final String SYSTEM_PROMPT = "You are a helpful assistant.";
     private static final String REQUEST = "What's 1 + 1?";
 
     @BeforeAll
     public static void initializeJdkWorkarounds() {
-        JdkWorkarounds.initializeNormalizer();
+        // Redundant trigger removed
     }
 
     @SuppressWarnings("unchecked")

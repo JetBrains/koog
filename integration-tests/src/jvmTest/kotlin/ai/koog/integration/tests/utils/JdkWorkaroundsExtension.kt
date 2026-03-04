@@ -10,6 +10,6 @@ import org.junit.jupiter.api.extension.ExtensionContext
 class JdkWorkaroundsExtension : BeforeAllCallback {
     override fun beforeAll(context: ExtensionContext) {
         // Trigger JdkWorkarounds class loading, which will run its init block
-        JdkWorkarounds.initializeNormalizer()
+        JdkWorkarounds
     }
 }

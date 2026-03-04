@@ -9,7 +9,6 @@ import ai.koog.agents.mcp.metadata.McpMetadataKeys
 import ai.koog.agents.mcp.server.startSseMcpServer
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.getLLMClientForProviderOrSkip
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -38,7 +37,6 @@ class McpServerTest {
         @JvmStatic
         @BeforeAll
         fun setup() {
-            JdkWorkarounds.initializeNormalizer()
         }
 
         @JvmStatic

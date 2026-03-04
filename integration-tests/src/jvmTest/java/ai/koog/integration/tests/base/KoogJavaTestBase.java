@@ -1,6 +1,5 @@
 package ai.koog.integration.tests.base;
 
-import ai.koog.integration.tests.utils.JdkWorkarounds;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
@@ -24,7 +23,7 @@ public abstract class KoogJavaTestBase {
 
     @BeforeAll
     public static void initializeJdkWorkarounds() {
-        JdkWorkarounds.initializeNormalizer();
+        // Redundant trigger removed
     }
 
     protected final List<AutoCloseable> resourcesToClose = new ArrayList<>();
@@ -50,16 +49,24 @@ public abstract class KoogJavaTestBase {
     protected MultiLLMPromptExecutor createExecutor(LLModel model) {
         LLMClient client;
         if (model.getProvider() == LLMProvider.OpenAI) {
-            client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+            String apiKey = TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv();
+            if (apiKey == null) {
+                throw new IllegalStateException("OpenAI API key not found in environment");
+            }
+            client = new OpenAILLMClient(apiKey);
         } else if (model.getProvider() == LLMProvider.Anthropic) {
-            client = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+            String apiKey = TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv();
+            if (apiKey == null) {
+                throw new IllegalStateException("Anthropic API key not found in environment");
+            }
+            client = new AnthropicLLMClient(apiKey);
         } else {
             throw new IllegalArgumentException("Unsupported provider: " + model.getProvider());
         }
         if (client instanceof AutoCloseable) {
             resourcesToClose.add((AutoCloseable) client);
         }
-        return new MultiLLMPromptExecutor(client);
+        return new MultiLLMPromptExecutor(new LLMClient[]{client});
     }
 
     protected <T> T runBlocking(SuspendFunction<T> suspendFunction) {

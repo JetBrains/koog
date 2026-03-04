@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.acp
 
 import ai.koog.agents.testing.tools.RandomNumberTool
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.getLLMClientForProviderOrSkip
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -31,7 +30,6 @@ class AcpServerTest {
         @JvmStatic
         @BeforeAll
         fun setup() {
-            JdkWorkarounds.initializeNormalizer()
         }
 
         @JvmStatic

@@ -19,7 +19,6 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.integration.tests.InjectOllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixtureExtension
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.annotations.RetryExtension
@@ -58,7 +57,6 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         @JvmStatic
         @BeforeAll
         fun setup() {
-            JdkWorkarounds.initializeNormalizer()
         }
 
         @field:InjectOllamaTestFixture

@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.executor
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
@@ -113,7 +112,6 @@ abstract class ExecutorIntegrationTestBase {
         @JvmStatic
         @BeforeAll
         fun setupTestResourcesBase() {
-            JdkWorkarounds.initializeNormalizer()
             testResourcesDir =
                 Paths.get(ExecutorIntegrationTestBase::class.java.getResource("/media")!!.toURI())
         }

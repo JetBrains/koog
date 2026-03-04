@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.acp
 
 import ai.koog.agents.testing.tools.RandomNumberTool
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.getLLMClientForProviderOrSkip
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -42,7 +41,6 @@ class AcpProtocolTest {
         @JvmStatic
         @BeforeAll
         fun setup() {
-            JdkWorkarounds.initializeNormalizer()
         }
 
         @JvmStatic

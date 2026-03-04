@@ -1,6 +1,5 @@
 package ai.koog.integration.tests.capabilities
 
-import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestUtils.createAudioFileForScenario
 import ai.koog.integration.tests.utils.MediaTestUtils.createTextFileForScenario
@@ -72,7 +71,6 @@ class ModelCapabilitiesIntegrationTest {
 
     @BeforeAll
     fun setup() {
-        JdkWorkarounds.initializeNormalizer()
         val openAIKey = readTestOpenAIKeyFromEnv() ?: error("OpenAI API key not found")
         val anthropicKey = readTestAnthropicKeyFromEnv() ?: error("Anthropic API key not found")
         val googleKey = readTestGoogleAIKeyFromEnv() ?: error("Google API key not found")
