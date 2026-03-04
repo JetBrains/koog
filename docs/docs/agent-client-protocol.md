@@ -346,6 +346,7 @@ You can do this inside an `AIAgentContext`, for example, in a node:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.features.acp.withAcpAgent
 import com.agentclientprotocol.common.Event
 import com.agentclientprotocol.model.Plan
@@ -373,6 +374,7 @@ You can also access the underlying `protocol` to send custom requests to the cli
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.features.acp.withAcpAgent
 import com.agentclientprotocol.model.AcpMethod
 import com.agentclientprotocol.model.AuthMethodId

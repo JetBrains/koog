@@ -4,8 +4,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
@@ -97,7 +97,7 @@ class PostgresPersistenceAgentRunTest {
         edge(historyNode forwardTo nodeFinish)
     }
 
-    private fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
+    private fun simpleNode(
         name: String? = null,
         output: String,
     ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -107,7 +107,7 @@ class PostgresPersistenceAgentRunTest {
         return@node it + "\n" + output
     }
 
-    private fun AIAgentSubgraphBuilderBase<*, *>.collectHistoryNode(
+    private fun collectHistoryNode(
         name: String? = null,
     ): AIAgentNodeDelegate<String, String> = node(name) {
         return@node llm.readSession {

@@ -3,7 +3,7 @@ package ai.koog.agents.ext.agent
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -80,7 +80,7 @@ public class CriticResult<T>(
  * @param task The task or instruction to be presented to the language model for critical evaluation.
  */
 @OptIn(InternalAgentsApi::class)
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.llmAsAJudge(
+public inline fun <reified T> llmAsAJudge(
     llmModel: LLModel? = null,
     task: String
 ): AIAgentNodeDelegate<T, CriticResult<T>> = node<T, CriticResult<T>> { nodeInput ->

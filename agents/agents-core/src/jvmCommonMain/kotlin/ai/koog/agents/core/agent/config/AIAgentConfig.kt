@@ -1,5 +1,3 @@
-@file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-
 package ai.koog.agents.core.agent.config
 
 import ai.koog.agents.annotations.JavaAPI
@@ -21,7 +19,7 @@ public actual class AIAgentConfig actual constructor(
 ) : AIAgentConfigBase {
 
     /**
-     * [ExecutorService] for running agent strategy logic
+     * [java.util.concurrent.ExecutorService] for running agent strategy logic
      *
      * By default, all agent operations will be performed on [kotlinx.coroutines.Dispatchers.Default]
      *  */
@@ -30,7 +28,7 @@ public actual class AIAgentConfig actual constructor(
     internal var strategyExecutorService: ExecutorService? = null
 
     /**
-     * IO-bounded [ExecutorService] for performing LLM communications
+     * IO-bounded [java.util.concurrent.ExecutorService] for performing LLM communications
      *
      * By default, all IO/LLM operations will be performed on [kotlinx.coroutines.Dispatchers.IO]
      * */

@@ -4,7 +4,7 @@ package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -67,7 +67,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
+        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken
@@ -77,7 +77,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
+        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,
@@ -89,7 +89,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
+        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,

@@ -278,6 +278,8 @@ Here is an example of how nodes can be implemented in an agent strategy:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.koog.agents.memory.feature.withMemory
@@ -370,6 +372,8 @@ You can also use the memory from the `withMemory` clause inside any node. The re
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.Concept
@@ -412,6 +416,8 @@ You can also ask the LLM to detect all the facts from the agent's history using 
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 

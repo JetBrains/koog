@@ -1,3 +1,5 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -22,13 +24,30 @@ import kotlinx.serialization.json.JsonElement
  * @property nodeFinish The finishing node of the strategy, marking the subgraph's endpoint.
  * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
  */
-public class AIAgentGraphStrategy<TInput, TOutput>(
+public expect class AIAgentGraphStrategy<TInput, TOutput>(
+    name: String,
+    nodeStart: StartNode<TInput>,
+    nodeFinish: FinishNode<TOutput>,
+    toolSelectionStrategy: ToolSelectionStrategy,
+    serializer: Json = Json { prettyPrint = true }
+) : AIAgentGraphStrategyBase<TInput, TOutput>
+
+/**
+ * Base class for [AIAgentStrategy].
+ *
+ * @property name The unique identifier for the strategy.
+ * @property nodeStart The starting node of the strategy, initiating the subgraph execution.
+ * By default, the start node gets the agent input and returns
+ * @property nodeFinish The finishing node of the strategy, marking the subgraph's endpoint.
+ * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
+ */
+public open class AIAgentGraphStrategyBase<TInput, TOutput>(
     override val name: String,
     public val nodeStart: StartNode<TInput>,
     public val nodeFinish: FinishNode<TOutput>,
     toolSelectionStrategy: ToolSelectionStrategy,
     private val serializer: Json = Json { prettyPrint = true }
-) : AIAgentStrategy<TInput, TOutput, AIAgentGraphContextBase>, AIAgentSubgraph<TInput, TOutput>(
+) : AIAgentStrategy<TInput, TOutput, AIAgentGraphContextBase>, AIAgentSubgraphBase<TInput, TOutput>(
     name,
     nodeStart,
     nodeFinish,

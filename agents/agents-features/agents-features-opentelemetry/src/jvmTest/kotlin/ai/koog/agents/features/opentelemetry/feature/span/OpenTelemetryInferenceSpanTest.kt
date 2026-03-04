@@ -2,6 +2,7 @@ package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.features.opentelemetry.AgentType

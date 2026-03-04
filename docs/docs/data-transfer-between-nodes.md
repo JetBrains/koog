@@ -69,6 +69,7 @@ To save data using a created storage key, use the `storage.set(key: AIAgentStora
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.agent.entity.createStorageKey
 
 class UserData(
@@ -99,6 +100,7 @@ To retrieve the data, use the `storage.get` method in a node:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 class UserData(
     val name: String,

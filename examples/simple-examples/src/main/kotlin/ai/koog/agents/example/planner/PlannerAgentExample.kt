@@ -19,6 +19,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import ai.koog.agents.core.dsl.builder.node
 
 interface PlannerNode {
     suspend fun execute(dispatcher: CoroutineDispatcher)
@@ -84,7 +85,7 @@ class FailedToPlanSequentialNode(problemDescription: String) : FailureMessage(pr
 
 fun parse(message: String): ParsedMessage = ParsingErrorMessage("TODO: parsing is not implemented")
 
-inline fun <reified T : FailureMessage> AIAgentSubgraphBuilderBase<*, *>.retryPlanning(
+inline fun <reified T : FailureMessage> retryPlanning(
     nextNode: AIAgentNodeBase<String, Message.Response>
 ): AIAgentNodeBase<T, Message.Response> {
     val result by node<T, Message.Response> { parsedMessage ->

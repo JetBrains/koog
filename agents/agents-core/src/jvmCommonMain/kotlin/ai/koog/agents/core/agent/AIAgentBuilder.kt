@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.GraphStrategyBuilder
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
@@ -149,10 +150,7 @@ public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilde
         build: BuilderChainAction<GraphStrategyBuilder, AIAgentGraphStrategy<Input, Output>>
     ): GraphAgentBuilder<Input, Output> = graphStrategy(
         build.configure(
-            GraphStrategyBuilder(
-                strategyName = name,
-                agentConfig = delegate.agentConfig
-            )
+            GraphStrategyBuilder(strategyName = name)
         )
     )
 

@@ -51,6 +51,7 @@ Sessions are created using extension functions on the `AIAgentLLMContext` class:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -92,6 +93,7 @@ Within a session, you can access the prompt and tools:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -113,6 +115,7 @@ In a write session, you can also modify these properties:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.tools.ToolDescriptor
 
 val newTools = listOf<ToolDescriptor>()
@@ -161,6 +164,7 @@ Example:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -201,6 +205,7 @@ methods handle this transparently:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.message.Message
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -241,6 +246,7 @@ Example:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.example.exampleParallelNodeExecution07.JokeRating
 
 
@@ -273,6 +279,7 @@ In a write session, you can add messages to the prompt (conversation history) us
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import kotlin.time.Clock
@@ -316,6 +323,7 @@ You can also completely rewrite the prompt using the `rewritePrompt` method:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.message.Message
 
 val filteredMessages = emptyList<Message>()
@@ -343,6 +351,7 @@ When you make an LLM request in a write session, the response is automatically a
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -376,6 +385,7 @@ for compressing history:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 
@@ -416,6 +426,7 @@ Example:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.core.agent.session.callTool
 import ai.koog.agents.core.agent.session.callToolRaw
@@ -456,6 +467,7 @@ To run multiple tools in parallel, write sessions provide extension functions on
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.ext.tool.AskUser
 import kotlinx.coroutines.flow.flow
 
@@ -526,6 +538,7 @@ If your history becomes too large and consumes too many tokens, use history comp
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 

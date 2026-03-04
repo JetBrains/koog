@@ -3,7 +3,7 @@ package ai.koog.agents.memory.feature.nodes
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.Concept
@@ -30,7 +30,7 @@ import kotlin.time.Clock
  * @param concept A concept to load facts for
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
+public inline fun <reified T> nodeLoadFromMemory(
     name: String? = null,
     concept: Concept,
     subject: MemorySubject,
@@ -45,7 +45,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
  * @param concepts A list of concepts to load facts for
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
+public inline fun <reified T> nodeLoadFromMemory(
     name: String? = null,
     concepts: List<Concept>,
     subject: MemorySubject,
@@ -61,7 +61,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
+public inline fun <reified T> nodeLoadFromMemory(
     name: String? = null,
     concepts: List<Concept>,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
@@ -84,7 +84,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
+public inline fun <reified T> nodeLoadAllFactsFromMemory(
     name: String? = null,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
@@ -106,7 +106,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsF
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
+public inline fun <reified T> nodeSaveToMemory(
     name: String? = null,
     subject: MemorySubject,
     scope: MemoryScopeType,
@@ -137,7 +137,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  * @param retrievalModel LLM that will be used for fact retrieval from the history (by default, the same model as the current one will be used)
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
+public inline fun <reified T> nodeSaveToMemory(
     name: String? = null,
     concept: Concept,
     subject: MemorySubject,
@@ -157,7 +157,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
+public inline fun <reified T> nodeSaveToMemoryAutoDetectFacts(
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,

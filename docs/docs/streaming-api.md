@@ -59,6 +59,7 @@ This is the most general approach: react to each frame kind.
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.streaming.StreamFrame
 
 val strategy = strategy<String, String>("strategy_name") {
@@ -98,6 +99,7 @@ Here is a raw string stream with the Markdown definition of the output structure
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition
 
 val strategy = strategy<String, String>("strategy_name") {
@@ -131,6 +133,7 @@ Models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1) emit reasoni
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.streaming.StreamFrame
 
 val strategy = strategy<String, String>("strategy_name") {
@@ -181,6 +184,7 @@ derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.streaming.collectText
 
@@ -211,6 +215,7 @@ You can listen to stream events in [agent event handlers](agent-event-handlers.m
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.streaming.StreamFrame
@@ -408,6 +413,7 @@ fun parseMarkdownStreamToBooks(markdownStream: Flow<StreamFrame>): Flow<Book> {
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.example.exampleStreamingApi03.Book
 import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
 import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
@@ -483,6 +489,7 @@ class BookTool(): SimpleTool<Book>(
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
 import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
 import ai.koog.agents.example.exampleStreamingApi08.BookTool

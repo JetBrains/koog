@@ -39,12 +39,6 @@ kotlin {
             }
         }
 
-        jvmTest {
-            dependencies {
-                implementation(kotlin("test-junit5"))
-            }
-        }
-
         commonTest {
             dependencies {
                 implementation(project(":agents:agents-test"))
@@ -60,6 +54,7 @@ kotlin {
 
         jvmTest {
             dependencies {
+                implementation(kotlin("test-junit5"))
                 implementation(project(":test-utils"))
                 implementation(libs.mockito.junit.jupiter)
                 implementation(libs.assertj.core)

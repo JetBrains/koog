@@ -27,6 +27,7 @@ Here is how you can define a node that expects a string as input and returns the
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 val strategy = strategy<String, String>("strategy_name") {
 -->
@@ -72,6 +73,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 
 val strategy = strategy<String, String>("strategy_name") {
@@ -119,6 +121,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
 
 typealias Input = Unit
@@ -213,6 +216,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 
@@ -293,6 +297,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 
@@ -340,6 +345,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
@@ -391,6 +397,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCall
@@ -436,6 +443,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 
@@ -480,6 +488,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
 import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
@@ -525,6 +534,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
 
@@ -587,6 +597,7 @@ Transform the output of a custom node to a different data type:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 
 val strategy = strategy<String, Int>("strategy_name") {
@@ -611,6 +622,7 @@ Transform the output of built-in nodes like `nodeLLMRequest`:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 
 val strategy = strategy<String, Int>("strategy_name") {
@@ -661,6 +673,7 @@ You can provide a task to the subgraph as text, configure the LLM if needed, and
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.agents.ext.agent.subgraphWithTask
@@ -707,6 +720,7 @@ Here is an example:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.agents.ext.agent.subgraphWithVerification
@@ -759,6 +773,7 @@ You can use this strategy when you need to run straightforward processes that do
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.*
 
 -->
@@ -788,6 +803,7 @@ It typically executes tools based on the LLM decisions and processes the results
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.tools.ToolRegistry
 
@@ -842,6 +858,7 @@ streaming data, processes it, and potentially calls tools with the processed dat
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.example.exampleStreamingApi03.Book
 import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
 import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks

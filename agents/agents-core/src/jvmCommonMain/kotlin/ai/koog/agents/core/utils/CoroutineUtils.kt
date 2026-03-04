@@ -1,4 +1,5 @@
 @file:Suppress("MissingKDocForPublicAPI")
+
 package ai.koog.agents.core.utils
 
 import ai.koog.agents.core.agent.config.AIAgentConfig

@@ -1,9 +1,10 @@
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.snapshot.feature.withPersistence
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.typeToken
@@ -11,7 +12,7 @@ import ai.koog.serialization.typeToken
 /**
  * Creates a simple node that appends the output to the input.
  */
-fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
+fun simpleNode(
     name: String? = null,
     output: String,
 ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -21,7 +22,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     return@node it + "\n" + output
 }
 
-fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
+fun inputLogNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     llm.writeSession {
@@ -30,7 +31,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
     return@node it
 }
 
-internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(
+internal fun loggingNode(
     name: String? = null,
     message: String,
     collector: TestAgentLogsCollector
@@ -40,7 +41,7 @@ internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(
         return@node it
     }
 
-fun AIAgentSubgraphBuilderBase<*, *>.collectHistoryNode(
+fun collectHistoryNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     return@node llm.readSession {
@@ -97,7 +98,7 @@ private data class TeleportState(var teleported: Boolean = false)
  * Creates a teleport node that jumps to a specific execution point.
  * Only teleports once to avoid infinite loops.
  */
-private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
+private fun teleportOnceNode(
     name: String? = null,
     teleportToPath: String = "Node1",
     teleportState: TeleportState
@@ -115,7 +116,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
     }
 }
 
-private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
+private fun nodeForSecondTry(
     name: String? = null,
     teleportState: TeleportState,
     collector: TestAgentLogsCollector,
@@ -130,7 +131,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
 }
 
 @Suppress("DEPRECATION")
-private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? = null, checkpointId: String) =
+private fun createCheckpointNode(name: String? = null, checkpointId: String) =
     node<String, String>(name) { input ->
         withPersistence { ctx ->
             createCheckpoint(ctx, name!!, input, typeToken<String>(), 0L, checkpointId)
@@ -145,7 +146,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? 
         return@node "$input\nCheckpoint Created"
     }
 
-private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
+private fun nodeRollbackToCheckpoint(
     name: String? = null,
     checkpointId: String,
     teleportState: TeleportState
@@ -171,7 +172,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
 /**
  * Creates a checkpoint node that creates and saves a checkpoint.
  */
-private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
+private fun nodeCreateCheckpoint(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     val input = it

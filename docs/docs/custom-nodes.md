@@ -23,6 +23,7 @@ The simplest way to implement a custom node in a graph and define your own custo
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 typealias Input = String
 typealias Output = Int
@@ -48,6 +49,7 @@ the input's length:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 val str = strategy<String, Int>("my-strategy") {
 -->
@@ -69,6 +71,7 @@ calls the `node` function:
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 typealias Input = String
 typealias Output = String
@@ -100,6 +103,7 @@ You can create nodes that accept arguments to customize their behavior:
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 typealias Input = String
 typealias Output = String
@@ -132,6 +136,7 @@ You can define nodes with input and output parameters:
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 -->
 
 ```kotlin
@@ -156,6 +161,7 @@ If your node needs to maintain state between runs, you can use closure variables
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.node
 
 typealias Input = Unit
 typealias Output = Unit
@@ -182,6 +188,7 @@ Nodes can have different input and output types, which are specified as generic 
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 val strategy = strategy<String, String>("strategy_name") {
 -->
@@ -221,6 +228,7 @@ Nodes that perform an operation but return the input as the output.
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 val strategy = strategy<String, String>("strategy_name") {
 -->
@@ -242,6 +250,7 @@ Nodes that transform the input into a different output.
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 val strategy = strategy<String, String>("strategy_name") {
 -->
@@ -262,6 +271,7 @@ Nodes that interact with the LLM.
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 
 val strategy = strategy<String, String>("strategy_name") {
 -->
@@ -286,6 +296,7 @@ val summarizeTextNode by node<String, String>("node_name") { input ->
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlin.time.Clock

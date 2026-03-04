@@ -10,6 +10,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
@@ -152,7 +154,7 @@ public class FinishTool<Output>(
  */
 @OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     name: String? = null,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     llmModel: LLModel? = null,
@@ -199,7 +201,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
 @OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
 @InternalAgentsApi
-public fun <Input : Any, Output : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public fun <Input : Any, Output : Any> subgraphWithTask(
     name: String? = null,
     inputType: TypeToken,
     outputType: TypeToken,
@@ -221,7 +223,7 @@ public fun <Input : Any, Output : Any> AIAgentSubgraphBuilderBase<*, *>.subgraph
 ) {
     val finishTool = FinishTool<Output>(outputType)
 
-    setupSubgraphWithTask(
+    setupSubgraphWithTask<Input, Output, Output>(
         finishTool = finishTool,
         inputType = inputType,
         outputTransformedType = outputType,
@@ -246,7 +248,7 @@ public fun <Input : Any, Output : Any> AIAgentSubgraphBuilderBase<*, *>.subgraph
  * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     tools: List<Tool<*, *>>,
     name: String? = null,
     llmModel: LLModel? = null,
@@ -286,8 +288,8 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
 @InternalAgentsApi
-public fun <Input : Any, OutputTransformed : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
-    inputType: TypeToken, // TODO: @EugeneTheDev, change to type tokens
+public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
+    inputType: TypeToken,
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: Tool<*, OutputTransformed>,
     name: String? = null,
@@ -299,7 +301,7 @@ public fun <Input : Any, OutputTransformed : Any> AIAgentSubgraphBuilderBase<*, 
     defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph<Input, OutputTransformed>(
     inputType = inputType,
-    outputType = inputType, // TODO: @EugeneTheDev, change to OUTPUT TRANSFORMED TYPE, AND TO TYPE TOKENS!!!
+    outputType = inputType,
     name = name,
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
@@ -309,7 +311,7 @@ public fun <Input : Any, OutputTransformed : Any> AIAgentSubgraphBuilderBase<*, 
     setupSubgraphWithTask(
         finishTool = finishTool,
         inputType = inputType,
-        outputTransformedType = inputType, // TODO: @EugeneTheDev, change to OUTPUT TRANSFORMED TYPE, AND TO TYPE TOKENS!!!
+        outputTransformedType = finishTool.resultType,
         runMode = runMode,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
         defineTask = defineTask,
@@ -335,7 +337,7 @@ public fun <Input : Any, OutputTransformed : Any> AIAgentSubgraphBuilderBase<*, 
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output, reified OutputTransformed> subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: Tool<Output, OutputTransformed>,
     name: String? = null,
@@ -379,7 +381,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output, reified OutputTransformed> subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: Tool<Output, OutputTransformed>,
     name: String? = null,
@@ -426,7 +428,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 @Suppress("unused")
 @AIAgentBuilderDslMarker
 @InternalAgentsApi
-public fun <Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public fun <Input : Any> subgraphWithVerification(
     name: String? = null,
     inputType: TypeToken,
     toolSelectionStrategy: ToolSelectionStrategy,
@@ -489,7 +491,7 @@ public fun <Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerificati
 @OptIn(InternalAgentsApi::class)
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input : Any> subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
@@ -529,7 +531,7 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input : Any> subgraphWithVerification(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
@@ -596,8 +598,8 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 @InternalAgentsApi
 public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
     finishTool: Tool<Output, OutputTransformed>,
-    inputType: TypeToken, // TODO: @EugeneTheDev, change to type tokens!
-    outputTransformedType: TypeToken, // TODO: @EugeneTheDev, change to type tokens!
+    inputType: TypeToken,
+    outputTransformedType: TypeToken,
     runMode: ToolCalls,
     assistantResponseRepeatMax: Int? = null,
     defineTask: suspend AIAgentGraphContextBase.(Input) -> String
@@ -607,10 +609,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
 
     val maxAssistantResponses = assistantResponseRepeatMax ?: SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
 
-    val setupTask by node<Input, String>(
-        inputType = inputType,
-        outputType = typeToken<String>(),
-    ) { input ->
+    val setupTask by node<Input, String>(inputType = inputType, outputType = typeToken<String>()) { input ->
         llm.writeSession {
             // Save tools to restore after the subgraph is finished
             storage.set(originalToolsKey, tools)

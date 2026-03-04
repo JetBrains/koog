@@ -1,9 +1,10 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
@@ -751,7 +752,7 @@ class EventHandlerTest {
 
     //region Private Methods
 
-    private fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
+    private fun nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
         node(name) { throw IllegalStateException("Test exception") }
 
     //endregion Private Methods

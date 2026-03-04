@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.handler.subgraph
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
@@ -24,7 +24,7 @@ public interface SubgraphExecutionEventContext : AgentLifecycleEventContext
 public data class SubgraphExecutionStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val subgraph: AIAgentSubgraph<*, *>,
+    val subgraph: AIAgentSubgraphBase<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
     val inputType: TypeToken,
@@ -46,7 +46,7 @@ public data class SubgraphExecutionStartingContext(
 public data class SubgraphExecutionCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val subgraph: AIAgentSubgraph<*, *>,
+    val subgraph: AIAgentSubgraphBase<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
     val output: Any?,
@@ -69,7 +69,7 @@ public data class SubgraphExecutionCompletedContext(
 public data class SubgraphExecutionFailedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val subgraph: AIAgentSubgraph<*, *>,
+    val subgraph: AIAgentSubgraphBase<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
     val inputType: TypeToken,

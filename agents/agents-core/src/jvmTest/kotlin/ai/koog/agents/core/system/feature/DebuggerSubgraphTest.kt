@@ -1,7 +1,9 @@
 package ai.koog.agents.core.system.feature
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.message.FeatureMessage

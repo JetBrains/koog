@@ -134,7 +134,6 @@ public class AIAgentGraphContext(
     executionInfo: AgentExecutionInfo,
     override val parentContext: AIAgentGraphContextBase?,
 ) : AIAgentGraphContextBase {
-
     private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage, environment, executionInfo)
 
     override val llm: AIAgentLLMContext

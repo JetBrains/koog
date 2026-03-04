@@ -117,6 +117,7 @@ You can also call tools in parallel using the `toParallelToolCallsRaw` extension
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.collect

@@ -104,7 +104,7 @@ class LLMAsJudgeNodeTest {
 
         val anotherModel = OllamaModels.Meta.LLAMA_4_SCOUT
 
-        val llmJudgeNode by subgraphContext.llmAsAJudge<Int>(
+        val llmJudgeNode by llmAsAJudge<Int>(
             llmModel = anotherModel,
             task = CRITIC_TASK
         )

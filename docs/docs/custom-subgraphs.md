@@ -10,6 +10,8 @@ Custom subgraphs are typically created using the following patterns:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 
 typealias StrategyInput = Unit
 typealias StrategyOutput = Unit
@@ -36,6 +38,8 @@ strategy<StrategyInput, StrategyOutput>("strategy-name") {
 <!--- INCLUDE
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 
@@ -70,6 +74,8 @@ The following code sample shows an actual implementation of a custom subgraph:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
@@ -106,6 +112,8 @@ Tools can be configured for a subgraph in several ways:
 * Directly in the subgraph definition:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.ext.tool.AskUser
 
 val str = strategy<String, String>("my-strategy") {
@@ -125,6 +133,8 @@ val mySubgraph by subgraph<String, String>(
 * From a tool registry:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.tools.ToolRegistry
 
 val toolRegistry = ToolRegistry.EMPTY
@@ -145,6 +155,8 @@ val mySubgraph by subgraph<String, String>(
 * Dynamically during execution:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 
 val str = strategy<String, String>("my-strategy") {
     val node by node<Unit, Unit>("node_name") {
@@ -168,6 +180,8 @@ this.llm.writeSession {
 Complex workflows can be broken down into multiple subgraphs, each handling a specific part of the process:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 
@@ -247,6 +261,8 @@ The code sample includes three defined subgraphs, `researchSubgraph`, `planSubgr
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult

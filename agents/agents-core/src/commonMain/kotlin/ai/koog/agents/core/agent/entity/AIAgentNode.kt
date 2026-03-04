@@ -6,9 +6,11 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
 import ai.koog.agents.core.dsl.builder.EdgeTransformationDslMarker
 import ai.koog.agents.core.utils.Some
+import ai.koog.serialization.KotlinTypeToken
 import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
+import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
@@ -19,7 +21,7 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param TOutput The type of output data this node produces.
  */
 @OptIn(ExperimentalUuidApi::class)
-public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
+public abstract class AIAgentNodeBase<in TInput, TOutput> internal constructor() {
     /**
      * The name of the AI agent node.
      * This property serves as a unique identifier for the node within the strategy graph
@@ -152,16 +154,20 @@ public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
 }
 
 /**
- * Represents a simple implementation of an AI agent node, encapsulating a specific execution
- * logic that processes the input data and produces an output.
+ * Represents a simple implementation of an AI agent node within a graph-based structure.
  *
- * @param TInput The type of input data this node processes.
- * @param TOutput The type of output data this node produces.
- * @property name The name of the node, used for identification and debugging.
- * @property execute A suspending function that defines the execution logic for the node. It
- * processes the provided input within the given execution context and produces an output.
+ * This class facilitates the execution of a computation node, receiving an input of type [TInput] and producing
+ * an output of type [TOutput]. It is designed to be used within an AI agent graph context.
+ *
+ * @param TInput The type of the input data this node accepts.
+ * @param TOutput The type of the output data this node produces.
+ * @property name The name of the node, used for identification within the graph.
+ * @property inputType The [TypeToken] representing the expected type of input for the node.
+ * @property outputType The [TypeToken] representing the type of output produced by the node.
+ * @property execute A suspendable lambda function that defines the execution logic of the node. It operates
+ * in the context of an [AIAgentGraphContextBase], taking an input of type [TInput] and producing an output of type [TOutput].
  */
-public open class AIAgentNode<TInput, TOutput>(
+public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
     override val name: String,
     override val inputType: TypeToken,
     override val outputType: TypeToken,
@@ -177,7 +183,14 @@ public open class AIAgentNode<TInput, TOutput>(
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
         context.with(id) { executionInfo, eventId ->
             logger.debug { "Start executing node (name: $name)" }
-            context.pipeline.onNodeExecutionStarting(eventId, executionInfo, this@AIAgentNode, context, input, inputType)
+            context.pipeline.onNodeExecutionStarting(
+                eventId,
+                executionInfo,
+                this@SimpleAIAgentNodeImpl,
+                context,
+                input,
+                inputType
+            )
 
             val output =
                 try {
@@ -188,14 +201,49 @@ public open class AIAgentNode<TInput, TOutput>(
                     throw e
                 } catch (e: Exception) {
                     logger.error(e) { "Error executing node (name: $name): ${e.message}" }
-                    context.pipeline.onNodeExecutionFailed(eventId, executionInfo, this@AIAgentNode, context, input, inputType, e)
+                    context.pipeline.onNodeExecutionFailed(
+                        eventId,
+                        executionInfo,
+                        this@SimpleAIAgentNodeImpl,
+                        context,
+                        input,
+                        inputType,
+                        e
+                    )
                     throw e
                 }
 
-            context.pipeline.onNodeExecutionCompleted(eventId, executionInfo, this@AIAgentNode, context, input, inputType, output, outputType)
+            context.pipeline.onNodeExecutionCompleted(
+                eventId,
+                executionInfo,
+                this@SimpleAIAgentNodeImpl,
+                context,
+                input,
+                inputType,
+                output,
+                outputType
+            )
             output
         }
 }
+
+/**
+ * Represents a simple implementation of an AI agent node, encapsulating a specific execution
+ * logic that processes the input data and produces an output.
+ *
+ * @param TInput The type of input data this node processes.
+ * @param TOutput The type of output data this node produces.
+ * @property name The name of the node, used for identification and debugging.
+ * @property execute A suspending function that defines the execution logic for the node. It
+ * processes the provided input within the given execution context and produces an output.
+ */
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+public expect open class AIAgentNode<TInput, TOutput> internal constructor(
+    name: String,
+    inputType: TypeToken,
+    outputType: TypeToken,
+    execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
+) : SimpleAIAgentNodeImpl<TInput, TOutput>
 
 /**
  * Represents the base node for starting a subgraph in an AI agent strategy graph.
@@ -214,13 +262,34 @@ public open class AIAgentNode<TInput, TOutput>(
  */
 public class StartNode<TInput> internal constructor(
     subgraphName: String? = null,
-    type: TypeToken,
+    type: TypeToken
 ) : AIAgentNode<TInput, TInput>(
-    name = subgraphName?.let { "${AIAgentSubgraph.START_NODE_PREFIX}$it" } ?: AIAgentSubgraph.START_NODE_PREFIX,
+    name = subgraphName?.let { "${AIAgentSubgraphBase.START_NODE_PREFIX}$it" } ?: AIAgentSubgraphBase.START_NODE_PREFIX,
     inputType = type,
     outputType = type,
     execute = { input -> input }
-)
+) {
+    /**
+     * Constructs a `StartNode` using a `TypeToken` to represent the input and output type.
+     *
+     * This constructor is marked as deprecated and should be avoided in favor of the
+     * constructor which accepts a `TypeToken`. The use of `TypeToken` has been deprecated
+     * in graphs and nodes due to potential limitations and performance considerations.
+     *
+     * @param subgraphName An optional name for the subgraph this node is part of. If null,
+     * the default prefix "__start__" is used as the node name.
+     * @param type A `TypeToken` representing the type of `TInput` processed by this node.
+     * Internally converted to a `KotlinTypeToken`.
+     *
+     * @deprecated Use the constructor accepting `TypeToken` instead for better compatibility
+     * and performance within the graph structure.
+     */
+    @Deprecated("KTypes usage in graphs and nodes is deprecated. Please, use TypeTokens instead.")
+    public constructor(
+        subgraphName: String? = null,
+        type: KType,
+    ) : this(subgraphName, KotlinTypeToken(type))
+}
 
 /**
  * Represents a specialized node within an AI agent strategy graph that marks the endpoint of a subgraph.
@@ -242,7 +311,8 @@ public class FinishNode<TOutput> internal constructor(
     subgraphName: String? = null,
     type: TypeToken,
 ) : AIAgentNode<TOutput, TOutput>(
-    name = subgraphName?.let { "${AIAgentSubgraph.FINISH_NODE_PREFIX}$it" } ?: AIAgentSubgraph.FINISH_NODE_PREFIX,
+    name = subgraphName?.let { "${AIAgentSubgraphBase.FINISH_NODE_PREFIX}$it" }
+        ?: AIAgentSubgraphBase.FINISH_NODE_PREFIX,
     inputType = type,
     outputType = type,
     execute = { input -> input }
@@ -250,4 +320,20 @@ public class FinishNode<TOutput> internal constructor(
     override fun addEdge(edge: AIAgentEdge<TOutput, *>) {
         throw IllegalStateException("${this::class.simpleName} cannot have outgoing edges")
     }
+
+    /**
+     * Secondary constructor for `FinishNode` allowing initialization with a [KType] instead of a `TypeToken`.
+     *
+     * @param subgraphName Optional name of the corresponding subgraph associated with this `FinishNode`.
+     * If provided, it contributes to forming a unique identifier for the node.
+     * @param type The [KType] used as an alternative representation of the output type [TOutput].
+     *
+     * @deprecated Utilize the primary constructor with `KotlinTypeToken` for enhanced type handling
+     * and consistency within the framework.
+     */
+    @Deprecated("Use Kotlin TypeToken instead of KType for type representation")
+    public constructor(
+        subgraphName: String? = null,
+        type: KType,
+    ) : this(subgraphName, KotlinTypeToken(type))
 }

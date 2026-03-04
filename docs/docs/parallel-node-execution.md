@@ -27,6 +27,8 @@ To initiate parallel execution of nodes, use the `parallel` method in the follow
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = Unit
 typealias Output = String
@@ -53,6 +55,8 @@ Here is an actual example of running three nodes in parallel and selecting the r
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = Int
@@ -92,6 +96,8 @@ Selects a result based on a predicate function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = String
@@ -121,6 +127,8 @@ Selects the result with the maximum value based on a comparison function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = String
@@ -150,6 +158,8 @@ Selects a result based on an index returned by a selection function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.structure.json.JsonStructure
 
@@ -196,6 +206,8 @@ Folds the results into a single value using an operation function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = String
@@ -225,6 +237,8 @@ Here is a complete example that uses parallel execution to generate jokes from d
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels

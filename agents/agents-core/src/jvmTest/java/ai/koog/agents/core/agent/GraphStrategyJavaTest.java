@@ -1,5 +1,11 @@
 package ai.koog.agents.core.agent;
 
+import ai.koog.agents.core.agent.entity.AIAgentEdge;
+import ai.koog.agents.core.agent.entity.AIAgentNode;
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase;
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+import ai.koog.agents.core.agent.ToolCalls;
+import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate;
 import ai.koog.agents.core.dsl.builder.SimpleTransformation;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
 import ai.koog.agents.core.tools.ToolRegistry;
@@ -12,6 +18,7 @@ import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -25,18 +32,19 @@ public class GraphStrategyJavaTest {
         AIAgent<String, String> agent = (AIAgent<String, String>) AIAgent.builder()
             .promptExecutor(MockPromptExecutor.builder(serializer).mockLLMAnswer("ok").asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)
-            .<String, String>graphStrategy("minimal", b -> {
+            .graphStrategy("minimal", b -> {
                 var graph = b
                     .withInput(String.class)
                     .withOutput(String.class);
 
-                var node = graph.node("node")
+                var node = AIAgentNode.builder("node")
                     .withInput(String.class)
                     .withOutput(String.class)
-                    .withAction((input, ctx) -> "echo: " + input);
+                    .withAction((input, ctx) -> "echo: " + input)
+                    .build();
 
-                graph.edge(graph.nodeStart().forwardTo(node));
-                graph.edge(node.forwardTo(graph.nodeFinish()));
+                graph.edge(graph.nodeStart, node);
+                graph.edge(node, graph.nodeFinish);
 
                 return graph.build();
             })
@@ -56,18 +64,20 @@ public class GraphStrategyJavaTest {
                     .withInput(String.class)
                     .withOutput(String.class);
 
-                var llmNode = graph.node("llm").llmRequest();
+                var llmNode = AIAgentNode.llmRequest(false, "llm");
 
-                graph.edge(graph.nodeStart().forwardTo(llmNode));
-                graph.edge(llmNode.forwardTo(graph.nodeFinish()).transformed(new SimpleTransformation<Message.Response, String>() {
-                    @Override
-                    public String invoke(Message.Response response) {
+                graph.edge(graph.nodeStart, llmNode);
+                graph.edge(AIAgentEdge.builder()
+                    .from(llmNode)
+                    .to(graph.nodeFinish)
+                    .transformed(response -> {
                         if (response instanceof Message.Assistant) {
                             return ((Message.Assistant) response).getContent();
                         }
                         return "error";
-                    }
-                }));
+                    })
+                    .build()
+                );
 
                 return graph.build();
             })
@@ -84,36 +94,36 @@ public class GraphStrategyJavaTest {
                 .mockLLMAnswer("{\"isCorrect\": true, \"feedback\": \"all good\"}")
                 .asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)
-            .<String, Boolean>graphStrategy("complex", b -> {
+            .graphStrategy("complex", b -> {
                 var graph = b
                     .withInput(String.class)
                     .withOutput(Boolean.class);
 
-                var compress = graph.node("compress")
+                var compress = AIAgentNode
                     .llmCompressHistory("compress")
                     .withInput(String.class)
                     .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
                     .preserveMemory(true)
                     .build();
 
-                var judge = graph.node("judge")
+                var judge = AIAgentNode.builder("judge")
                     .withInput(String.class)
                     .llmAsAJudge("test task");
 
-                graph.edge(graph.nodeStart().forwardTo(compress));
-                graph.edge(compress.forwardTo(judge));
-                graph.edge(judge.forwardTo(graph.nodeFinish()).transformed(new SimpleTransformation<CriticResult<String>, Boolean>() {
-                    @Override
-                    public Boolean invoke(CriticResult<String> criticResult) {
-                        return criticResult.isSuccessful();
-                    }
-                }));
+                graph.edge(graph.nodeStart, compress);
+                graph.edge(compress, judge);
+                graph.edge(AIAgentEdge.builder()
+                    .from(judge)
+                    .to(graph.nodeFinish)
+                    .transformed(criticResult -> criticResult.isSuccessful())
+                    .build());
 
                 return graph.build();
             })
             .build();
 
         Boolean result = agent.run("test input", null);
+
         assertTrue(result);
     }
 
@@ -125,20 +135,20 @@ public class GraphStrategyJavaTest {
                 .asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)
             .toolRegistry(ToolRegistry.builder().build())
-            .<String, Long>graphStrategy("finish-tool", b -> {
+            .graphStrategy("finish-tool", b -> {
                 var graph = b
                     .withInput(String.class)
                     .withOutput(Long.class);
 
-                var sub = graph.subgraph("with-finish-tool")
+                var sub = AIAgentSubgraph.builder("with-finish-tool")
                     .withInput(String.class)
                     .withOutput(Long.class)
                     .limitedTools(Collections.emptyList())
                     .withTask(input -> "Use my_tool to return a value")
                     .build();
 
-                graph.edge(graph.nodeStart().forwardTo(sub));
-                graph.edge(sub.forwardTo(graph.nodeFinish()));
+                graph.edge(graph.nodeStart, sub);
+                graph.edge(sub, graph.nodeFinish);
 
                 return graph.build();
             })

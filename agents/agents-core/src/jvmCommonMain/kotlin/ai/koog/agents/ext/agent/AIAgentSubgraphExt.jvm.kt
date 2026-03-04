@@ -3,7 +3,6 @@ package ai.koog.agents.ext.agent
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -30,7 +29,7 @@ import kotlin.reflect.KFunction
  */
 @OptIn(InternalAgentToolsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishToolFunction: KFunction<Output>,
     llmModel: LLModel? = null,
@@ -62,7 +61,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
  */
 @OptIn(InternalAgentToolsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishToolFunction: KFunction<Output>,
     llmModel: LLModel? = null,

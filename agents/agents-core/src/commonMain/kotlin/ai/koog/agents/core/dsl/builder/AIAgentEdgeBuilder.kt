@@ -33,6 +33,7 @@ public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput, CompatibleOutput 
 ) : BaseBuilder<AIAgentEdge<IncomingOutput, OutgoingInput>> {
     override fun build(): AIAgentEdge<IncomingOutput, OutgoingInput> {
         return AIAgentEdge(
+            fromNode = edgeIntermediateBuilder.fromNode,
             toNode = edgeIntermediateBuilder.toNode,
             forwardOutput = edgeIntermediateBuilder.forwardOutputComposition
         )

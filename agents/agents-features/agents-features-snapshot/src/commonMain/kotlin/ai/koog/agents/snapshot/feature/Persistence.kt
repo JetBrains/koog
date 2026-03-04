@@ -8,7 +8,7 @@ import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.agent.session.feature
@@ -152,8 +152,8 @@ public class Persistence(
     }
 
     private fun isTechnicalNode(nodeId: String): Boolean =
-        nodeId.startsWith(AIAgentSubgraph.FINISH_NODE_PREFIX) ||
-            nodeId.startsWith(AIAgentSubgraph.START_NODE_PREFIX)
+        nodeId.startsWith(AIAgentSubgraphBase.FINISH_NODE_PREFIX) ||
+            nodeId.startsWith(AIAgentSubgraphBase.START_NODE_PREFIX)
 
     /**
      * Creates a checkpoint of the agent's current state.

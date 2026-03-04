@@ -281,6 +281,7 @@ Use the `requestLLMStructured` method within a `writeSession` for agent-based in
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
 import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -322,6 +323,7 @@ You can integrate structured data processing into your agent strategies:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -370,6 +372,7 @@ This creates an agent node that:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
@@ -424,6 +427,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription

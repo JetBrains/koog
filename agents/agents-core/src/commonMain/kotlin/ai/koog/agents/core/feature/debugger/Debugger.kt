@@ -104,7 +104,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,
-        ): DebuggerConfig = DebuggerConfig()
+        ): DebuggerConfig = DebuggerConfig(agentConfig.serializer)
 
         override fun install(config: DebuggerConfig, pipeline: AIAgentGraphPipeline): Debugger {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }

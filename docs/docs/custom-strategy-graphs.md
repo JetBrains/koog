@@ -38,6 +38,9 @@ An edge is created using the `edge` function and the `forwardTo` infix function:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 
 val strategy = strategy<String, String>("strategy_name") {
         val sourceNode by node<String, String> { input -> input }
@@ -68,6 +71,9 @@ You can transform the output before passing it to the target node by using the `
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 
 val strategy = strategy<String, String>("strategy_name") {
         val sourceNode by node<String, String> { input -> input }
@@ -92,6 +98,9 @@ The strategy graph can contain multiple subgraphs. Each subgraph is defined by u
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 
 typealias Input = String
 typealias Output = Int
@@ -119,6 +128,9 @@ However, you can specify a subset of tools from this registry that can be used i
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.ext.tool.SayToUser
 
 typealias Input = String
@@ -162,6 +174,9 @@ Here is an example of a basic strategy graph:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
@@ -195,6 +210,9 @@ For the graph created in the previous example, you can run:
 import ai.koog.agents.core.agent.asMermaidDiagram
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
@@ -258,6 +276,9 @@ For workflows that require executing multiple tools in parallel, you can use the
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
 import ai.koog.prompt.message.Message
@@ -300,6 +321,9 @@ To initiate parallel node runs, use the `parallel` method:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 
 val strategy = strategy<String, String>("strategy_name") {
     val nodeCalcTokens by node<String, Int> { 42 }
@@ -331,6 +355,9 @@ For complex workflows that require different paths based on certain conditions, 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 
 val strategy = strategy<String, String>("strategy_name") {
     val someNode by node<String, String> { it }
@@ -383,6 +410,9 @@ The tone analysis strategy is a good example of a tool-based strategy that inclu
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
