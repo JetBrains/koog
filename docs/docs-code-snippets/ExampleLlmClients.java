@@ -1,14 +1,16 @@
+import ai.koog.prompt.dsl.ModerationResult;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-import ai.koog.prompt.executor.llms.Executors;
-import ai.koog.prompt.executor.model.JavaPromptExecutor;
+import ai.koog.prompt.executor.ollama.client.OllamaModels;
+import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.params.LLMParams;
 import ai.koog.prompt.streaming.StreamFrame;
-import kotlinx.coroutines.flow.Flow;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
-import java.util.Collections;
 import java.util.List;
 
 public class ExampleLlmClients {
@@ -16,8 +18,8 @@ public class ExampleLlmClients {
 
         /* Running a prompt */
         // Create an OpenAI client
-        String token = System.getenv("OPENAI_API_KEY");
-        OpenAILLMClient client = new OpenAILLMClient(token);
+        String apiKey = System.getenv("OPENAI_API_KEY");
+        OpenAILLMClient client = new OpenAILLMClient(apiKey);
 
         // Create a prompt
         Prompt prompt = Prompt.builder("prompt_name")
@@ -27,9 +29,11 @@ public class ExampleLlmClients {
             .user("What are its key features?")
             .build();
 
-        // FAILED: Run the prompt (suspend function call from Java requires a Continuation)
-        // List<Message.Response> response = client.execute(prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList(), continuation);
-        // System.out.println(response);
+        // Run the prompt
+        List<Message.Response> response = client.execute(prompt, OpenAIModels.Chat.GPT4o);
+        // Print the response
+        System.out.println(response);
+
 
         /* Streaming responses */
         // Set up the OpenAI client with your API key
@@ -37,16 +41,44 @@ public class ExampleLlmClients {
         OpenAILLMClient client1 = new OpenAILLMClient(apiKey1);
 
         Prompt prompt1 = Prompt.builder("stream_demo")
-            .user("Stream this response in short chunks.")
-            .build();
+                .user("Stream this response in short chunks.")
+                .build();
 
-        // FAILED: executeStreaming returns a Kotlin Flow
-        // Flow<StreamFrame> response = client.executeStreaming(
-        //    prompt1,
-        //    OpenAIModels.Chat.GPT4_1,
-        //    Collections.emptyList()
-        // );
-        // FAILED: Consuming Kotlin Flow in Java usually requires FlowAdapters or runBlocking
+        Publisher<StreamFrame> response1 = client1.executeStreamingWithPublisher(prompt1, OpenAIModels.Chat.GPT4_1);
+
+        // Subscribe to the Publisher to consume frames
+        response1.subscribe(new Subscriber<StreamFrame>() {
+            private Subscription subscription;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                this.subscription = s;
+                s.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(StreamFrame frame) {
+                switch (frame) {
+                    case StreamFrame.TextDelta delta ->
+                            System.out.print(delta.getText());
+                    case StreamFrame.ReasoningDelta reasoning ->
+                            System.out.print("[Reasoning] " + reasoning.getText());
+                    case StreamFrame.ToolCallComplete toolCall ->
+                            System.out.println("\nTool call: " + toolCall.getName());
+                    case StreamFrame.End end ->
+                            System.out.println("\n[done] Reason: " + end.getFinishReason());
+                    default -> {} // Handle other frame types
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                t.printStackTrace();
+            }
+
+            @Override
+            public void onComplete() { }
+        });
 
         /* Multiple choises */
         String apiKey2 = System.getenv("OPENAI_API_KEY");
@@ -70,15 +102,31 @@ public class ExampleLlmClients {
             .build()
             .withParams(params);
 
-        // FAILED: executeMultipleChoices is a suspend function; call with Continuation from Java
-        // List<LLMChoice> choices = client.executeMultipleChoices(prompt2, OpenAIModels.Chat.GPT4o, Collections.emptyList(), continuation);
+        // LLMChoice is a type alias for List<Message.Response>
+        List<List<Message.Response>> choices = client2.executeMultipleChoices(
+                prompt2,
+                OpenAIModels.Chat.GPT4o
+        );
+
+        // Display the choices
+        for (int i = 0; i < choices.size(); i++) {
+            List<Message.Response> choice = choices.get(i);
+            StringBuilder text = new StringBuilder();
+            for (Message.Response msg : choice) {
+                text.append(msg.getContent()).append(" ");
+            }
+            System.out.println("Line #" + (i + 1) + ": " + text.toString().trim());
+        }
+
 
         /* Listing available models */
         String apiKey3 = System.getenv("OPENAI_API_KEY");
         OpenAILLMClient client3 = new OpenAILLMClient(apiKey3);
 
-        // FAILED: models() is a suspend function; call with Continuation from Java
-        // List<LLModel> models = client3.models(continuation);
+        List<LLModel> models = client3.models();
+        for (LLModel model : models) {
+            System.out.println(model.getId());
+        }
 
         /* Embeddings */
         String apiKey4 = System.getenv("OPENAI_API_KEY");
@@ -96,10 +144,11 @@ public class ExampleLlmClients {
         OpenAILLMClient client5 = new OpenAILLMClient(apiKey5);
 
         Prompt prompt5 = Prompt.builder("moderation")
-            .user("This is a test message that may contain offensive content.")
-            .build();
+                .user("This is a test message that may contain offensive content.")
+                .build();
 
-        // FAILED: moderate() is a suspend function; call with Continuation from Java
-        // ModerationResult result = client5.moderate(prompt5, OpenAIModels.Moderation.Omni, continuation);
+        ModerationResult result = client5.moderate(prompt5, OllamaModels.Meta.LLAMA_GUARD_3);
+        System.out.println(result);
+
     }
 }

@@ -94,25 +94,42 @@ To create a prompt executor that distributes requests across multiple LLM client
 
 This is useful for avoiding rate limits, improving throughput, and implementing failover strategies.
 
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.llms.RoundRobinRouter
-import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
--->
-```kotlin
-// Create multiple client instances
-val openAI1 = OpenAILLMClient(apiKey = "openai-key-1")
-val openAI2 = OpenAILLMClient(apiKey = "openai-key-2")
-val anthropic = AnthropicLLMClient(apiKey = "anthropic-key")
+=== "Kotlin"
 
-// Create router with round-robin strategy
-val router = RoundRobinRouter(openAI1, openAI2, anthropic)
+    <!--- INCLUDE
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+    import ai.koog.prompt.executor.llms.RoundRobinRouter
+    import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
+    -->
+    ```kotlin
+    // Create multiple client instances
+    val openAI1 = OpenAILLMClient(apiKey = "openai-key-1")
+    val openAI2 = OpenAILLMClient(apiKey = "openai-key-2")
+    val anthropic = AnthropicLLMClient(apiKey = "anthropic-key")
 
-// Create routing executor
-val routingExecutor = RoutingLLMPromptExecutor(router)
-```
-<!--- KNIT example-prompt-executors-03.kt -->
+    // Create router with round-robin strategy
+    val router = RoundRobinRouter(openAI1, openAI2, anthropic)
+
+    // Create routing executor
+    val routingExecutor = RoutingLLMPromptExecutor(router)
+    ```
+    <!--- KNIT example-prompt-executors-03.kt -->
+
+=== "Java"
+
+    ```java
+    // Create multiple client instances
+    OpenAILLMClient openAI1 = new OpenAILLMClient("openai-key-1");
+    OpenAILLMClient openAI2 = new OpenAILLMClient("openai-key-2");
+    AnthropicLLMClient anthropic = new AnthropicLLMClient("anthropic-key");
+
+    // Create router with round-robin strategy
+    RoundRobinRouter router = new RoundRobinRouter(openAI1, openAI2, anthropic);
+
+    // Create routing executor
+    RoutingLLMPromptExecutor routingExecutor = new RoutingLLMPromptExecutor(router);
+    ```
 
 When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
 Requests to Anthropic models always go to the single `anthropic` client, as round-robin maintains an independent counter per provider.
@@ -163,7 +180,7 @@ Here is an example of creating a pre-defined executor:
 === "Java"
 
     ```java
-    // Use SimplePromptExecutorsKt to access the static helper method
+    // Create an OpenAI executor
     PromptExecutor openAIExecutor = simpleOpenAIExecutor("OPENAI_API_KEY");
     ```
 
@@ -183,7 +200,6 @@ Here is an example:
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import kotlinx.coroutines.runBlocking
-
     fun main() {
         runBlocking {
     -->
@@ -208,23 +224,15 @@ Here is an example:
 
     ```java
     // Create an OpenAI executor
-    PromptExecutor promptExecutor = SimplePromptExecutorsKt.simpleOpenAIExecutor("OPENAI_API_KEY");
+    PromptExecutor promptExecutor = simpleOpenAIExecutor("OPENAI_API_KEY");
 
     // Create a prompt
     Prompt prompt = Prompt.builder("demo")
         .user("Summarize this.")
         .build();
 
-    // Execute a prompt
-    // Note: execute() is a suspend function in Kotlin. 
-    // In a Java-first environment, use a blocking wrapper or an asynchronous approach.
-    /*
-    List<Message.Response> response = promptExecutor.execute(
-        prompt,
-        OpenAIModels.Chat.GPT4o,
-        Collections.emptyList() // tools
-    );
-    */
+    // Run the prompt
+    List<Message.Response> response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
     ```
 
 This will run the prompt with the `GPT4o` model and return the response.
@@ -259,7 +267,6 @@ Here is an example of switching between providers:
     import ai.koog.prompt.llm.LLMProvider
     import ai.koog.prompt.dsl.prompt
     import kotlinx.coroutines.runBlocking
-
     fun main() = runBlocking {
     -->
     <!--- SUFFIX
@@ -286,7 +293,7 @@ Here is an example of switching between providers:
     val openAIResult = executor.execute(p, OpenAIModels.Chat.GPT4o)
 
     // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
-    val anthropicResult = executor.execute(p, AnthropicModels.Sonnet_3_5)
+    val anthropicResult = executor.execute(p, AnthropicModels.Sonnet_4_5)
     ```
     <!--- KNIT example-prompt-executors-05.kt -->
 
@@ -299,7 +306,7 @@ Here is an example of switching between providers:
     GoogleLLMClient googleClient = new GoogleLLMClient("GOOGLE_API_KEY");
 
     // Create a MultiLLMPromptExecutor that maps LLM providers to LLM clients
-    MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(
+    MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(
         Map.of(
             LLMProvider.OpenAI, openAIClient,
             LLMProvider.Anthropic, anthropicClient,
@@ -308,19 +315,15 @@ Here is an example of switching between providers:
     );
 
     // Create a prompt
-    Prompt p = Prompt.builder("demo")
+    Prompt prompt = Prompt.builder("demo")
         .user("Summarize this.")
         .build();
 
-    // Run the prompt with an OpenAI model
-    // Note: execute() is a suspend function in Kotlin. 
-    // In a Java-first environment, use a blocking wrapper or an asynchronous approach.
-    /*
-    List<Message.Response> openAIResult = executor.execute(p, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+    // Run the prompt with an OpenAI model; the prompt executor automatically switches to the OpenAI client
+    List<Message.Response> openAIResult = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
 
-    // Run the prompt with an Anthropic model
-    List<Message.Response> anthropicResult = executor.execute(p, AnthropicModels.Sonnet_3_5, Collections.emptyList());
-    */
+    // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
+    List<Message.Response> anthropicResult = promptExecutor.execute(prompt, AnthropicModels.Sonnet_4_5);
     ```
 
 You can optionally configure a fallback LLM provider and model to use when the requested client is unavailable.
@@ -388,10 +391,8 @@ the prompt executor will use the fallback model:
     ai.koog.prompt.executor.ollama.client.OllamaModels
     import ai.koog.prompt.llm.LLMProvider
     import kotlinx.coroutines.runBlocking
-
     val openAIClient = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
     val ollamaClient = OllamaClient()
-
     val multiExecutor = MultiLLMPromptExecutor(
         LLMProvider.OpenAI to openAIClient,
         LLMProvider.Ollama to ollamaClient,
@@ -400,7 +401,6 @@ the prompt executor will use the fallback model:
             fallbackModel = OllamaModels.Meta.LLAMA_3_2
         )
     )
-
     fun main() = runBlocking {
     -->
     <!--- SUFFIX
@@ -418,20 +418,13 @@ the prompt executor will use the fallback model:
 === "Java"
 
     ```java
-    // Assuming multiExecutor is already created as in the previous example
-    MultiLLMPromptExecutor multiExecutor = null; 
-
     // Create a prompt
     Prompt p = Prompt.builder("demo")
         .user("Summarize this")
         .build();
 
     // If you pass a Google model, the prompt executor will use the fallback model, as the Google client is not included
-    // Note: execute() is a suspend function in Kotlin. 
-    // In a Java-first environment, use a blocking wrapper or an asynchronous approach.
-    /*
-    List<Message.Response> response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro, Collections.emptyList());
-    */
+    List<Message.Response> response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro);
     ```
 
 !!! note

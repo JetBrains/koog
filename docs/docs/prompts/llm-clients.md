@@ -72,8 +72,8 @@ Here is an example that uses `OpenAILLMClient` to run prompts:
 
     ```java
     // Create an OpenAI client
-    String token = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(token);
+    String apiKey = System.getenv("OPENAI_API_KEY");
+    OpenAILLMClient client = new OpenAILLMClient(apiKey);
 
     // Create a prompt
     Prompt prompt = Prompt.builder("prompt_name")
@@ -83,9 +83,12 @@ Here is an example that uses `OpenAILLMClient` to run prompts:
         .user("What are its key features?")
         .build();
 
-    // FAILED: Run the prompt (suspend function call from Java requires a Continuation)
-    // List<Message.Response> response = client.execute(prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList(), continuation);
-    // System.out.println(response);
+    // Run the prompt
+    List<Message.Response> response = client.execute(prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+    // Print the response
+    System.out.println(response);
+
+    client.close();
     ```
 
 ## Streaming responses
@@ -136,8 +139,8 @@ See the [Streaming API documentation](../streaming-api.md) for more details on w
             else -> {} // Handle other frame types if needed
         }
     }
-```
-<!--- KNIT example-llm-clients-02.kt -->
+    ```
+    <!--- KNIT example-llm-clients-02.kt -->
 
 === "Java"
 
@@ -147,17 +150,44 @@ See the [Streaming API documentation](../streaming-api.md) for more details on w
     OpenAILLMClient client = new OpenAILLMClient(token);
 
     Prompt prompt = Prompt.builder("stream_demo")
-        .user("Stream this response in short chunks.")
-        .build();
+                .user("Stream this response in short chunks.")
+                .build();
+    
+    Publisher<StreamFrame> response = client.executeStreamingWithPublisher(prompt, OpenAIModels.Chat.GPT4_1);
 
-    // FAILED: executeStreaming returns a Kotlin Flow
-    Flow<StreamFrame> response = client.executeStreaming(
-        prompt,
-        OpenAIModels.Chat.GPT4_1,
-        Collections.emptyList()
-    );
+    // Subscribe to the Publisher to consume frames
+    response.subscribe(new Subscriber<StreamFrame>() {
+        private Subscription subscription;
 
-    // FAILED: Consuming Kotlin Flow in Java usually requires FlowAdapters or runBlocking
+        @Override
+        public void onSubscribe(Subscription s) {
+            this.subscription = s;
+            s.request(Long.MAX_VALUE);
+        }
+
+        @Override
+        public void onNext(StreamFrame frame) {
+            switch (frame) {
+                case StreamFrame.TextDelta delta ->
+                        System.out.print(delta.getText());
+                case StreamFrame.ReasoningDelta reasoning ->
+                        System.out.print("[Reasoning] " + reasoning.getText());
+                case StreamFrame.ToolCallComplete toolCall ->
+                        System.out.println("\nTool call: " + toolCall.getName());
+                case StreamFrame.End end ->
+                        System.out.println("\n[done] Reason: " + end.getFinishReason());
+                default -> {} // Handle other frame types
+            }
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            t.printStackTrace();
+        }
+
+        @Override
+        public void onComplete() { }
+    });
     ```
 
 ## Multiple choices
@@ -223,8 +253,20 @@ being executed.
         .build()
         .withParams(params);
 
-    // FAILED: executeMultipleChoices is a suspend function; call with Continuation from Java
-    // List<LLMChoice> choices = client.executeMultipleChoices(prompt, OpenAIModels.Chat.GPT4o, Collections.emptyList(), continuation);
+    // LLMChoice is a type alias for List<Message.Response>
+    List<List<Message.Response>> choices = client.executeMultipleChoices(
+        prompt, 
+        OpenAIModels.Chat.GPT4o
+    );
+
+    for (int i = 0; i < choices.size(); i++) {
+        List<Message.Response> choice = choices.get(i);
+        StringBuilder text = new StringBuilder();
+        for (Message.Response msg : choice) {
+            text.append(msg.getContent()).append(" ");
+        }
+        System.out.println("Line #" + (i + 1) + ": " + text.toString().trim());
+    }
     ```
 
 ## Listing available models
@@ -260,8 +302,10 @@ To get a list of available model IDs supported by the LLM client, use the `model
     String apiKey = System.getenv("OPENAI_API_KEY");
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
 
-    // FAILED: models() is a suspend function; call with Continuation from Java
-    // List<LLModel> models = client.models(continuation);
+    List<LLModel> models = client.models();
+    for (LLModel model : models) {
+        System.out.println(model.getId());
+    }
     ```
 
 ## Embeddings
@@ -301,7 +345,7 @@ Choose an embedding model and pass your text to this method:
     String apiKey = System.getenv("OPENAI_API_KEY");
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
 
-    // FAILED: embed() is a suspend function; call with Continuation from Java
+    // FAILED: embed() is a suspend function; the embed() method does not have a Java-friendly wrapper with ExecutorService support
     // List<Double> embedding = client.embed(
     //     "This is a sample text for embedding",
     //     OpenAIModels.Embeddings.TextEmbedding3Large,
@@ -351,8 +395,8 @@ You can use the `moderate()` method with a moderation model to check whether a p
         .user("This is a test message that may contain offensive content.")
         .build();
 
-    // FAILED: moderate() is a suspend function; call with Continuation from Java
-    // ModerationResult result = client.moderate(prompt, OpenAIModels.Moderation.Omni, continuation);
+    ModerationResult result = client.moderate(prompt, OpenAIModels.Moderation.Omni);
+    System.out.println(result);
     ```
 
 ## Integration with prompt executors
