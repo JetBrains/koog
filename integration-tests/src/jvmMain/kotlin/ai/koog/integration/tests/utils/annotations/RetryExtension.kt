@@ -5,7 +5,12 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.InvocationInterceptor
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext
 import org.opentest4j.TestAbortedException
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
+import java.util.concurrent.CountDownLatch
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
@@ -127,9 +132,40 @@ class RetryExtension : InvocationInterceptor {
         executeBeforeTestMethods(testInstance)
 
         try {
-            testMethod.invoke(testInstance, *arguments.toTypedArray())
+            if (isSuspendFunction(testMethod)) {
+                invokeSuspendMethod(testMethod, testInstance, arguments)
+            } else {
+                testMethod.invoke(testInstance, *arguments.toTypedArray())
+            }
+        } catch (e: InvocationTargetException) {
+            // Unwrap reflection wrapper so callers see the actual test exception,
+            // consistent with the first-attempt path via invocation.proceed()
+            throw e.cause ?: e
         } finally {
             executeAfterTestMethods(testInstance)
+        }
+    }
+
+    private fun isSuspendFunction(method: Method): Boolean {
+        val params = method.parameterTypes
+        return params.isNotEmpty() && Continuation::class.java.isAssignableFrom(params.last())
+    }
+
+    private fun invokeSuspendMethod(method: Method, testInstance: Any, arguments: List<Any?>) {
+        val latch = CountDownLatch(1)
+        var error: Throwable? = null
+
+        val continuation = Continuation<Any?>(EmptyCoroutineContext) { result ->
+            error = result.exceptionOrNull()
+            latch.countDown()
+        }
+
+        val allArgs = arguments.toTypedArray() + continuation
+        val result = method.invoke(testInstance, *allArgs)
+
+        if (result === COROUTINE_SUSPENDED) {
+            latch.await()
+            error?.let { throw it }
         }
     }
 
