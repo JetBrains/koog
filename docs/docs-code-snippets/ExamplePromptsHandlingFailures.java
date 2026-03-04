@@ -1,19 +1,21 @@
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig;
+import ai.koog.prompt.executor.clients.LLMClient;
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.clients.retry.RetryConfig;
 import ai.koog.prompt.executor.clients.retry.RetryingLLMClient;
-import ai.koog.prompt.executor.llms.Executors;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
-import ai.koog.prompt.executor.model.JavaPromptExecutor;
+import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class ExamplePromptsHandlingFailures {
     public static void main(String[] args) {
@@ -26,10 +28,8 @@ public class ExamplePromptsHandlingFailures {
         OpenAILLMClient client = new OpenAILLMClient(apiKey);
         RetryingLLMClient resilientClient = new RetryingLLMClient(client);
 
-        // FAILED
-        // Note: execute() is a suspend function in Kotlin
-        // In a Java-first environment, use a blocking wrapper or an asynchronous approach
-        // List<Message.Response> response = resilientClient.execute(prompt, OpenAIModels.Chat.GPT4o);
+        // Now all operations will automatically retry on transient errors
+        List<Message.Response> response = resilientClient.execute(prompt, OpenAIModels.Chat.GPT4o);
 
         /* Configuring retry behavior */
         RetryingLLMClient conservativeClient = new RetryingLLMClient(
@@ -84,13 +84,12 @@ d+")),
         // Flow<StreamFrame> stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o); // not Java-friendly
 
         /* Retry with prompt executors */
-        /*
         // Single provider executor with retry (Java)
-        RetryingLLMClient resilientClient = new RetryingLLMClient(
+        RetryingLLMClient resilientClient2 = new RetryingLLMClient(
             new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
             RetryConfig.Companion.getPRODUCTION()
         );
-        JavaPromptExecutor executor = Executors.promptExecutor(resilientClient);
+        MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(resilientClient2);
 
         // Multi-provider executor with flexible client configuration (Java)
         LLMClient openai = new RetryingLLMClient(
@@ -110,8 +109,7 @@ d+")),
                 LLMProvider.Anthropic, anthropic
                 // , LLMProvider.Bedrock, bedrock
         );
-        JavaPromptExecutor multiExecutor = Executors.promptExecutor(clients);
-         */
+        MultiLLMPromptExecutor multiExecutor = new MultiLLMPromptExecutor(clients);
 
         /* Timeout configuration */
         String apiKey1 = System.getenv("OPENAI_API_KEY");
@@ -133,14 +131,14 @@ d+")),
 
         /* Error handling */
         Logger logger = LoggerFactory.getLogger("Example");
-        RetryingLLMClient resilientClient1 = new RetryingLLMClient(
+        RetryingLLMClient resilientClient3 = new RetryingLLMClient(
             new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
             RetryConfig.Companion.getPRODUCTION()
         );
-        Prompt prompt1 = Prompt.builder("test")
+        Prompt prompt2 = Prompt.builder("test")
             .user("Hello")
             .build();
-        MultiLLMPromptExecutor exec = new MultiLLMPromptExecutor(resilientClient1);
+        MultiLLMPromptExecutor exec = new MultiLLMPromptExecutor(resilientClient3);
 
         // Example helpers (stubs)
         java.util.function.Consumer<List<Message.Response>> processResponse = (resp) -> { /* implementation */ };
@@ -148,12 +146,9 @@ d+")),
         Runnable notifyAdministrator = () -> { /* implementation */ };
         Runnable useDefaultResponse = () -> { /* implementation */ };
 
-        // FAILED
-        // Note: execute() is a suspend function in Kotlin
-        // In a Java-first environment, use a blocking wrapper or an asynchronous approach
-        /*try {
-            List<Message.Response> response = exec.execute(prompt1, OpenAIModels.Chat.GPT4o).get();
-            processResponse.accept(response);
+        try {
+            List<Message.Response> response2 = exec.execute(prompt2, OpenAIModels.Chat.GPT4o);
+            processResponse.accept(response2);
         } catch (Exception e) {
             logger.error("LLM operation failed", e);
             String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
@@ -164,7 +159,7 @@ d+")),
             } else {
                 useDefaultResponse.run();
             }
-        }*/
+        }
 
     }
 }

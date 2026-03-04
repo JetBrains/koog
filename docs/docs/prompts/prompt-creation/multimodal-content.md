@@ -30,7 +30,6 @@ The general format of the `user` message that includes a text message and a list
     <!--- INCLUDE
     import ai.koog.prompt.dsl.prompt
     import kotlinx.io.files.Path
-
     val prompt = prompt("image_analysis") {
     -->
     <!--- SUFFIX
@@ -81,7 +80,6 @@ The general format of the `user` message that includes a text message and a list
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.message.AttachmentContent
     import ai.koog.prompt.message.ContentPart
-
     val prompt = prompt("custom_image") {
     -->
     <!--- SUFFIX

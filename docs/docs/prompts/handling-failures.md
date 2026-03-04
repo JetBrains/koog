@@ -19,7 +19,6 @@ Wrap any existing client with the retry capability:
     import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
     import ai.koog.prompt.dsl.prompt
     import kotlinx.coroutines.runBlocking
-    
     fun main() {
         runBlocking {
             val apiKey = System.getenv("OPENAI_API_KEY")
@@ -44,15 +43,11 @@ Wrap any existing client with the retry capability:
 === "Java"
 
     ```java
-    // Wrap any client with the retry capability
-    String apiKey = System.getenv("OPENAI_API_KEY");
-    Prompt prompt = Prompt.builder("test").user("Hello").build();
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
     RetryingLLMClient resilientClient = new RetryingLLMClient(client);
 
-    // From Java, use a JavaPromptExecutor to call suspend APIs
-    JavaPromptExecutor exec = Executors.promptExecutor(resilientClient);
-    List<Message.Response> response = exec.executeAsync(prompt, OpenAIModels.Chat.GPT4o).get();
+    // Now all operations will automatically retry on transient errors
+    List<Message.Response> response = resilientClient.execute(prompt, OpenAIModels.Chat.GPT4o);
     ```
 
 ### Configuring retry behavior
@@ -68,7 +63,6 @@ For example:
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.clients.retry.RetryConfig
     import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
-    
     val apiKey = System.getenv("OPENAI_API_KEY")
     val client = OpenAILLMClient(apiKey)
     -->
@@ -84,7 +78,6 @@ For example:
 === "Java"
 
     ```java
-    String apiKey = System.getenv("OPENAI_API_KEY");
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
     RetryingLLMClient conservativeClient = new RetryingLLMClient(
         client,
@@ -103,48 +96,29 @@ Koog provides several predefined retry configurations:
 
 You can use them directly or create custom configurations:
 
-=== "Kotlin"
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.retry.RetryConfig
+import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
+import kotlin.time.Duration.Companion.seconds
 
-    <!--- INCLUDE
-    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-    import ai.koog.prompt.executor.clients.retry.RetryConfig
-    import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
-    import kotlin.time.Duration.Companion.seconds
-    
-    val apiKey = System.getenv("OPENAI_API_KEY")
-    val client = OpenAILLMClient(apiKey)
-    -->
-    ```kotlin
-    // Or create a custom configuration
-    val customClient = RetryingLLMClient(
-        delegate = client,
-        config = RetryConfig(
-            maxAttempts = 5,
-            initialDelay = 1.seconds,
-            maxDelay = 30.seconds,
-            backoffMultiplier = 2.0,
-            jitterFactor = 0.2
-        )
+val apiKey = System.getenv("OPENAI_API_KEY")
+val client = OpenAILLMClient(apiKey)
+-->
+```kotlin
+// Or create a custom configuration
+val customClient = RetryingLLMClient(
+    delegate = client,
+    config = RetryConfig(
+        maxAttempts = 5,
+        initialDelay = 1.seconds,
+        maxDelay = 30.seconds,
+        backoffMultiplier = 2.0,
+        jitterFactor = 0.2
     )
-    ```
-    <!--- KNIT example-handling-failures-03.kt -->
-
-=== "Java"
-
-    ```java
-    // FAILED: Creating a custom RetryConfig from Java is not supported because
-    // RetryConfig requires kotlin.time.Duration parameters and has no Java-friendly
-    // constructors or builders (@JvmOverloads is not present). Java cannot easily
-    // construct kotlin.time.Duration or use Kotlin default/named parameters.
-    // Use predefined configs instead, e.g., RetryConfig.Companion.getPRODUCTION().
-
-    String apiKey = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
-    RetryingLLMClient customClient = new RetryingLLMClient(
-        client,
-        RetryConfig.Companion.getPRODUCTION() // closest Java-accessible alternative
-    );
-    ```
+)
+```
+<!--- KNIT example-handling-failures-03.kt -->
 
 ### Retry error patterns
 
@@ -198,127 +172,70 @@ These default patterns are defined in Koog as [`RetryConfig.DEFAULT_PATTERNS`](a
 
 You can define custom patterns for your specific needs:
 
-=== "Kotlin"
-
-    <!--- INCLUDE
-    import ai.koog.prompt.executor.clients.retry.RetryConfig
-    import ai.koog.prompt.executor.clients.retry.RetryablePattern
-    -->
-    ```kotlin
-    val config = RetryConfig(
-        retryablePatterns = listOf(
-            RetryablePattern.Status(429),   // Specific status code
-            RetryablePattern.Keyword("quota"),  // Keyword in error message
-            RetryablePattern.Regex(Regex("ERR_\\d+")),  // Custom regex pattern
-            RetryablePattern.Custom { error ->  // Custom logic
-                error.contains("temporary") && error.length > 20
-            }
-        )
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.retry.RetryConfig
+import ai.koog.prompt.executor.clients.retry.RetryablePattern
+-->
+```kotlin
+val config = RetryConfig(
+    retryablePatterns = listOf(
+        RetryablePattern.Status(429),   // Specific status code
+        RetryablePattern.Keyword("quota"),  // Keyword in error message
+        RetryablePattern.Regex(Regex("ERR_\\d+")),  // Custom regex pattern
+        RetryablePattern.Custom { error ->  // Custom logic
+            error.contains("temporary") && error.length > 20
+        }
     )
-    ```
-    <!--- KNIT example-handling-failures-04.kt -->
-
-=== "Java"
-
-    ```java
-    // Prepare custom patterns
-    List<RetryablePattern> patterns = List.of(
-        new RetryablePattern.Status(429),
-        new RetryablePattern.Keyword("quota"),
-        new RetryablePattern.Regex(new kotlin.text.Regex("ERR_\\\d+")),
-        new RetryablePattern.Custom(new Function1<String, Boolean>() {
-            @Override public Boolean invoke(String error) {
-                return error.contains("temporary") && error.length() > 20;
-            }
-        })
-    );
-
-    // FAILED: Constructing RetryConfig with custom patterns from Java is not supported
-    // because RetryConfig does not expose Java-friendly constructors and relies on
-    // Kotlin default parameters. There is no builder or @JvmOverloads constructor.
-    // Use predefined RetryConfig via RetryConfig.Companion (e.g., getPRODUCTION()) instead.
-    // RetryConfig config = new RetryConfig(/* not available from Java */);
-    ```
+)
+```
+<!--- KNIT example-handling-failures-04.kt -->
 
 You can also append custom patterns to the default `RetryConfig.DEFAULT_PATTERNS`:
 
-=== "Kotlin"
-
-    <!--- INCLUDE
-    import ai.koog.prompt.executor.clients.retry.RetryConfig
-    import ai.koog.prompt.executor.clients.retry.RetryablePattern
-    -->
-    ```kotlin
-    val config = RetryConfig(
-        retryablePatterns = RetryConfig.DEFAULT_PATTERNS + listOf(
-            RetryablePattern.Keyword("custom_error")
-        )
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.retry.RetryConfig
+import ai.koog.prompt.executor.clients.retry.RetryablePattern
+-->
+```kotlin
+val config = RetryConfig(
+    retryablePatterns = RetryConfig.DEFAULT_PATTERNS + listOf(
+        RetryablePattern.Keyword("custom_error")
     )
-    ```
-    <!--- KNIT example-handling-failures-05.kt -->
-
-=== "Java"
-
-    ```java
-    // Start from defaults and append your own
-    List<RetryablePattern> defaults = RetryConfig.Companion.getDEFAULT_PATTERNS();
-    List<RetryablePattern> augmented = new ArrayList<>(defaults);
-    augmented.add(new RetryablePattern.Keyword("custom_error"));
-
-    // FAILED: As above, Java cannot construct a new RetryConfig instance with a custom
-    // list due to Kotlin-only constructor defaults and lack of a Java builder.
-    // RetryConfig config = new RetryConfig(/* not available from Java */);
-    ```
-
+)
+```
+<!--- KNIT example-handling-failures-05.kt -->
 
 ### Streaming with retry
 
 Streaming operations can optionally be retried. This feature is disabled by default.
 
-=== "Kotlin"
-
-    <!--- INCLUDE
-    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.prompt.executor.clients.retry.RetryConfig
-    import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
-    import ai.koog.prompt.dsl.prompt
-    import kotlinx.coroutines.runBlocking
-    
-    fun main() {
-        runBlocking {
-            val baseClient = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
-            val prompt = prompt("test") {
-                user("Generate a story")
-            }
-    -->
-    <!--- SUFFIX
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.retry.RetryConfig
+import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
+import ai.koog.prompt.dsl.prompt
+import kotlinx.coroutines.runBlocking
+fun main() {
+    runBlocking {
+        val baseClient = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
+        val prompt = prompt("test") {
+            user("Generate a story")
         }
+-->
+<!--- SUFFIX
     }
-    -->
-    ```kotlin
-    val config = RetryConfig(
-        maxAttempts = 3
-    )
+}
+-->
+```kotlin
+val config = RetryConfig(
+    maxAttempts = 3
+)
 
-    val client = RetryingLLMClient(baseClient, config)
-    val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
-    ```
-    <!--- KNIT example-handling-failures-06.kt -->
-
-=== "Java"
-
-    ```java
-    // FAILED: Streaming with retry from Java is not directly supported:
-    // 1) Creating a custom RetryConfig in Java is not available (no Java builder/overloads).
-    // 2) executeStreaming(...) returns a Kotlin Flow<StreamFrame>, and Koog does not
-    //    currently expose a Java-friendly streaming wrapper.
-    // As a workaround, prefer non-streaming execution via JavaPromptExecutor.
-    OpenAILLMClient baseClient = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
-    Prompt prompt = Prompt.builder("test").user("Generate a story").build();
-    RetryingLLMClient client = new RetryingLLMClient(baseClient, RetryConfig.Companion.getPRODUCTION());
-    // Flow<StreamFrame> stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o); // not Java-friendly
-    ```
+val client = RetryingLLMClient(baseClient, config)
+val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
+```
+<!--- KNIT example-handling-failures-06.kt -->
 
 !!!note
     Streaming retries only apply to connection failures that occur before the first token is received.
@@ -341,7 +258,6 @@ To learn more about prompt executors, see [Prompt executors](prompt-executors.md
     import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
     import ai.koog.prompt.llm.LLMProvider
     import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
-    
     -->
     ```kotlin
     // Single provider executor with retry
@@ -381,27 +297,26 @@ To learn more about prompt executors, see [Prompt executors](prompt-executors.md
         new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
         RetryConfig.Companion.getPRODUCTION()
     );
-    JavaPromptExecutor executor = Executors.promptExecutor(resilientClient);
+
+    MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(resilientClient);
 
     // Multi-provider executor with flexible client configuration (Java)
     LLMClient openai = new RetryingLLMClient(
         new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
         RetryConfig.Companion.getCONSERVATIVE()
     );
+
     LLMClient anthropic = new RetryingLLMClient(
         new AnthropicLLMClient(System.getenv("ANTHROPIC_API_KEY")),
         RetryConfig.Companion.getAGGRESSIVE()
     );
-    // FAILED: Creating BedrockLLMClient from Java with StaticCredentialsProvider (AWS Kotlin SDK)
-    // is not Java-first and requires Kotlin-specific identity providers; no simple Java overloads.
-    // LLMClient bedrock = new BedrockLLMClient(/* identityProvider = ... */);
 
     Map<LLMProvider, LLMClient> clients = Map.of(
         LLMProvider.OpenAI, openai,
         LLMProvider.Anthropic, anthropic
-        // , LLMProvider.Bedrock, bedrock
     );
-    JavaPromptExecutor multiExecutor = Executors.promptExecutor(clients);
+
+    MultiLLMPromptExecutor multiExecutor = new MultiLLMPromptExecutor(clients);
     ```
 
 ## Timeout configuration
@@ -426,7 +341,6 @@ You can customize these values for your specific needs. For example:
     import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
     import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-    
     val apiKey = System.getenv("OPENAI_API_KEY")    
     -->
     ```kotlin
@@ -488,43 +402,45 @@ Here is an example of error handling:
     import ai.koog.prompt.dsl.prompt
     import kotlinx.coroutines.runBlocking
     import org.slf4j.LoggerFactory
-    -->
-    ```kotlin
     fun main() {
         runBlocking {
-            val logger = LoggerFactory.getLogger("Example")
-            val resilientClient = RetryingLLMClient(
-                OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
-                RetryConfig.PRODUCTION
-            )
-            val prompt = prompt("test") { user("Hello") }
-            val model = OpenAIModels.Chat.GPT4o
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```kotlin
+    val logger = LoggerFactory.getLogger("Example")
+    val resilientClient = RetryingLLMClient(
+        OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
+        RetryConfig.PRODUCTION
+    )
+    val prompt = prompt("test") { user("Hello") }
+    val model = OpenAIModels.Chat.GPT4o
 
-            fun processResponse(response: Any) { /* implmenentation */ }
-            fun scheduleRetryLater() { /* implmenentation */ }
-            fun notifyAdministrator() { /* implmenentation */ }
-            fun useDefaultResponse() { /* implmenentation */ }
+    fun processResponse(response: Any) { /* implmenentation */ }
+    fun scheduleRetryLater() { /* implmenentation */ }
+    fun notifyAdministrator() { /* implmenentation */ }
+    fun useDefaultResponse() { /* implmenentation */ }
 
-            try {
-                val response = resilientClient.execute(prompt, model)
-                processResponse(response)
-            } catch (e: Exception) {
-                logger.error("LLM operation failed", e)
+    try {
+        val response = resilientClient.execute(prompt, model)
+        processResponse(response)
+    } catch (e: Exception) {
+        logger.error("LLM operation failed", e)
 
-                when {
-                    e.message?.contains("rate limit") == true -> {
-                        // Handle rate limiting specifically
-                        scheduleRetryLater()
-                    }
-                    e.message?.contains("invalid api key") == true -> {
-                        // Handle authentication errors
-                        notifyAdministrator()
-                    }
-                    else -> {
-                        // Fall back to an alternative solution
-                        useDefaultResponse()
-                    }
-                }
+        when {
+            e.message?.contains("rate limit") == true -> {
+                // Handle rate limiting specifically
+                scheduleRetryLater()
+            }
+            e.message?.contains("invalid api key") == true -> {
+                // Handle authentication errors
+                notifyAdministrator()
+            }
+            else -> {
+                // Fall back to an alternative solution
+                useDefaultResponse()
             }
         }
     }
@@ -535,26 +451,22 @@ Here is an example of error handling:
 
     ```java
     Logger logger = LoggerFactory.getLogger("Example");
-    RetryingLLMClient resilientClient1 = new RetryingLLMClient(
+    RetryingLLMClient resilientClient = new RetryingLLMClient(
         new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
         RetryConfig.Companion.getPRODUCTION()
     );
-    Prompt prompt1 = Prompt.builder("test")
+    Prompt prompt = Prompt.builder("test")
         .user("Hello")
         .build();
-    MultiLLMPromptExecutor exec = new MultiLLMPromptExecutor(resilientClient1);
+    MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(resilientClient);
 
-    // Example helpers (stubs)
     java.util.function.Consumer<List<Message.Response>> processResponse = (resp) -> { /* implementation */ };
     Runnable scheduleRetryLater = () -> { /* implementation */ };
     Runnable notifyAdministrator = () -> { /* implementation */ };
     Runnable useDefaultResponse = () -> { /* implementation */ };
 
-    // FAILED
-    // Note: execute() is a suspend function in Kotlin
-    // In a Java-first environment, use a blocking wrapper or an asynchronous approach
-    /*try {
-        List<Message.Response> response = exec.execute(prompt1, OpenAIModels.Chat.GPT4o).get();
+    try {
+        List<Message.Response> response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
         processResponse.accept(response);
     } catch (Exception e) {
         logger.error("LLM operation failed", e);
@@ -566,5 +478,5 @@ Here is an example of error handling:
         } else {
             useDefaultResponse.run();
         }
-    }*/
+    }
     ```

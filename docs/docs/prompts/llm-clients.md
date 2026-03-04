@@ -316,42 +316,26 @@ To get a list of available model IDs supported by the LLM client, use the `model
 You convert text into embedding vectors using the `embed()` method.
 Choose an embedding model and pass your text to this method:
 
-=== "Kotlin"
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+-->
+```kotlin
+fun main() = runBlocking {
+    val apiKey = System.getenv("OPENAI_API_KEY")
+    val client = OpenAILLMClient(apiKey)
 
-    <!--- INCLUDE
-    import ai.koog.prompt.dsl.prompt
-    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import kotlinx.coroutines.runBlocking
-    -->
-    ```kotlin
-    fun main() = runBlocking {
-        val apiKey = System.getenv("OPENAI_API_KEY")
-        val client = OpenAILLMClient(apiKey)
+    val embedding = client.embed(
+        text = "This is a sample text for embedding",
+        model = OpenAIModels.Embeddings.TextEmbedding3Large
+    )
 
-        val embedding = client.embed(
-            text = "This is a sample text for embedding",
-            model = OpenAIModels.Embeddings.TextEmbedding3Large
-        )
-
-        println("Embedding size: ${embedding.size}")
-    }
-    ```
-    <!--- KNIT example-llm-clients-05.kt -->
-
-=== "Java"
-
-    ```java
-    String apiKey = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
-
-    // FAILED: embed() is a suspend function; the embed() method does not have a Java-friendly wrapper with ExecutorService support
-    // List<Double> embedding = client.embed(
-    //     "This is a sample text for embedding",
-    //     OpenAIModels.Embeddings.TextEmbedding3Large,
-    //     continuation
-    // );
-    ```
+    println("Embedding size: ${embedding.size}")
+}
+```
+<!--- KNIT example-llm-clients-05.kt -->
 
 ## Moderation
 

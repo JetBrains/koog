@@ -134,9 +134,7 @@ Together, these messages form the agent's initial prompt. For example:
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import kotlinx.coroutines.runBlocking
-    
     val apiKey = System.getenv("OPENAI_API_KEY")
-    
     fun main() = runBlocking {
     -->
     <!--- SUFFIX
@@ -158,18 +156,13 @@ Together, these messages form the agent's initial prompt. For example:
 === "Java"
 
     ```java
-    public class Demo {
-        public static void main(String[] args) throws Exception {
-            AIAgent<String, String> agent = AIAgent.builder()
-                .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
-                .systemPrompt("You are a helpful assistant. Answer user questions concisely.")
-                .llmModel(OpenAIModels.Chat.GPT4o)
-                .build();
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are a helpful assistant. Answer user questions concisely.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .build();
 
-            var result = agent.run("What is Koog?");
-            System.out.println(result);
-        }
-    }
+    var result = agent.run("What is Koog?");
     ```
 
 In the example, the agent automatically converts the text prompt to the Prompt object and sends it to the prompt executor:

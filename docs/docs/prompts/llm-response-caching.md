@@ -25,15 +25,12 @@ Here is an example:
     import kotlin.system.measureTimeMillis
     import ai.koog.prompt.dsl.prompt
     import kotlin.io.path.Path
-    
     import kotlinx.coroutines.runBlocking
-    
     fun main() {
         runBlocking {
             val prompt = prompt("test") {
                 user("Hello")
             }
-    
     -->
     <!--- SUFFIX
         }
