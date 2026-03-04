@@ -88,10 +88,10 @@ tasks.withType<Test> {
     // Enable JUnit extension auto-detection for JdkWorkaroundsExtension
     systemProperty("junit.jupiter.extensions.autodetection.enabled", "true")
 
-    // Workaround for JDK 21 issues:
-    // 1. JFR MetadataLoader bug - handled by excluding junit-platform-jfr in configurations block
-    // 2. ICU Normalizer ExceptionInInitializerError - we CANNOT use --limit-modules as it breaks ICU data loading
-    // The JFR exclusion in configurations is sufficient since we don't actually need JFR profiling in tests.
+    // Workaround for JDK 21 JFR MetadataLoader bug by pretending we're in native image context.
+    // This makes JUnit skip JFR initialization without breaking ICU/Normalizer like --limit-modules does.
+    // JUnit checks ImageInfo.inImageCode() which reads this property.
+    systemProperty("org.graalvm.nativeimage.imagecode", "true")
 
     // Forward system properties to the test JVM
     System.getProperties().forEach { key, value ->
