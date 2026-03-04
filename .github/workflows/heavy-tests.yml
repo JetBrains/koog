@@ -82,6 +82,16 @@ jobs:
 
       - uses: actions/checkout@v6
 
+      # JDK 21 is required by integration-tests (jvmToolchain(21)).
+      # Install it first so Gradle toolchain resolution picks it up
+      # instead of auto-provisioning a potentially buggy distribution.
+      - name: Set up JDK 21 (for integration-tests toolchain)
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: corretto
+
+      # JDK 17 is set up last so it becomes JAVA_HOME (used by Gradle daemon).
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
@@ -102,11 +112,12 @@ jobs:
           role-duration-seconds: 10800  # 3 hours (3 * 60 * 60)
 
       - name: Verify AWS Identity and Bedrock access
+        if: contains(matrix.job-name, 'bedrock')
         run: |
           echo "Verifying AWS identity..."
           aws sts get-caller-identity
           echo "AWS region: $AWS_REGION"
-          
+
           echo "Testing Bedrock access..."
           aws bedrock list-foundation-models --query 'modelSummaries[*].[modelId,providerName]' --output table || {
             echo "Bedrock access test failed"
@@ -115,6 +126,7 @@ jobs:
           echo "Bedrock access verified!"
 
       - name: Run Bedrock Credentials Smoke Test
+        if: contains(matrix.job-name, 'bedrock')
         run: |
           echo "Running Bedrock credentials smoke test..."
           ./gradlew :integration-tests:cleanJvmTest :integration-tests:jvmTest --tests "ai.koog.integration.tests.BedrockCredentialsSmokeTest"
