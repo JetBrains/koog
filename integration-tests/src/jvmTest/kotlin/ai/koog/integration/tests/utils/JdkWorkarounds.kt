@@ -9,26 +9,28 @@ object JdkWorkarounds {
     private val lock = Object()
     private var initialized = false
 
-    init {
-        // Eagerly initialize Normalizer when this object is loaded.
-        // This static initializer runs once per JVM, preventing race conditions.
-        initializeNormalizer()
-    }
-
     /**
      * Workaround for JDK 21 ExceptionInInitializerError in ICUBinary during Normalizer2 initialization.
      * This happens in a race condition when multiple threads (coroutines) initialize SSL/TLS related classes.
      *
-     * Called automatically in init block, but can also be called explicitly from @BeforeAll methods.
+     * Must be called explicitly from @BeforeAll methods.
      * Uses synchronized block to prevent race condition when JUnit runs @BeforeAll methods in parallel.
+     *
+     * NOTE: This doesn't actually fix the race condition in CI, because the error happens
+     * during static initialization before any test code runs. Keeping this for documentation purposes.
      */
     @JvmStatic
     fun initializeNormalizer() {
         synchronized(lock) {
             if (!initialized) {
-                // Force ICU data loading in a synchronized context
-                Normalizer.normalize("test", Normalizer.Form.NFKD)
-                initialized = true
+                try {
+                    // Force ICU data loading in a synchronized context
+                    Normalizer.normalize("test", Normalizer.Form.NFKD)
+                    initialized = true
+                } catch (e: ExceptionInInitializerError) {
+                    // Swallow the error if it happens here - it means the race condition already occurred
+                    System.err.println("WARNING: Failed to initialize Normalizer: ${e.message}")
+                }
             }
         }
     }

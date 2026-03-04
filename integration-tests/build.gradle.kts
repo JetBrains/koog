@@ -88,37 +88,10 @@ tasks.withType<Test> {
     // Enable JUnit extension auto-detection for JdkWorkaroundsExtension
     systemProperty("junit.jupiter.extensions.autodetection.enabled", "true")
 
-    // Workaround for JDK 21 JFR MetadataLoader bug (UTFDataFormatException during JFR initialization).
-    // JUnit Platform 2.x (bundled with JUnit 6) registers JFR listeners programmatically in JfrUtils.
-    // JfrUtils.isJfrAvailable() checks if jdk.jfr.FlightRecorder class is loadable.
-    // By excluding jdk.jfr from the module graph, tryToLoadClass returns empty → no JFR listener.
-    // Unlike the org.graalvm.nativeimage.imagecode property approach, this doesn't affect Netty
-    // or other libraries that check for native image context.
-    jvmArgs(
-        "--limit-modules",
-        listOf(
-            "java.se",
-            "jdk.unsupported", // sun.misc.Unsafe (Netty)
-            "jdk.management", // MXBeans
-            "jdk.management.agent", // JMX remote agent
-            "jdk.crypto.ec", // TLS EC cipher suites
-            "jdk.crypto.cryptoki", // PKCS#11
-            "jdk.naming.dns", // DNS lookups
-            "jdk.naming.rmi", // RMI naming
-            "jdk.net", // Extended socket options
-            "jdk.zipfs", // Zip filesystem
-            "jdk.httpserver", // Simple HTTP server
-            "jdk.charsets", // Extended charsets
-            "jdk.localedata", // Locale data
-            "jdk.security.auth", // JAAS
-            "jdk.security.jgss", // GSS-API
-            "jdk.accessibility", // Accessibility
-            "jdk.dynalink", // Dynamic linking
-            "jdk.random", // Random generators
-            "jdk.xml.dom", // XML DOM
-            // Intentionally excluded: jdk.jfr, jdk.management.jfr
-        ).joinToString(",")
-    )
+    // Workaround for JDK 21 issues:
+    // 1. JFR MetadataLoader bug - handled by excluding junit-platform-jfr in configurations block
+    // 2. ICU Normalizer ExceptionInInitializerError - we CANNOT use --limit-modules as it breaks ICU data loading
+    // The JFR exclusion in configurations is sufficient since we don't actually need JFR profiling in tests.
 
     // Forward system properties to the test JVM
     System.getProperties().forEach { key, value ->
