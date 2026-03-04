@@ -1,7 +1,8 @@
 package ai.koog.integration.tests.acp
 
 import ai.koog.agents.testing.tools.RandomNumberTool
-import ai.koog.integration.tests.utils.getLLMClientForProvider
+import ai.koog.integration.tests.utils.JdkWorkarounds
+import ai.koog.integration.tests.utils.getLLMClientForProviderOrSkip
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import com.agentclientprotocol.common.SessionCreationParameters
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -38,6 +40,12 @@ class AcpProtocolTest {
         const val AUTH_ERROR = "Authentication required"
 
         @JvmStatic
+        @BeforeAll
+        fun setup() {
+            JdkWorkarounds.initializeNormalizer()
+        }
+
+        @JvmStatic
         fun getCapabilities() = listOf(
             Arguments.of(true, true, true),
             Arguments.of(false, false, false),
@@ -46,7 +54,7 @@ class AcpProtocolTest {
 
     @Test
     suspend fun integration_testNotificationDelivery() {
-        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProviderOrSkip(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
                     val randomNumberTool = RandomNumberTool()
@@ -87,7 +95,7 @@ class AcpProtocolTest {
         audio: Boolean,
         image: Boolean
     ) {
-        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProviderOrSkip(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
                     val randomNumberTool = RandomNumberTool()
@@ -144,7 +152,7 @@ class AcpProtocolTest {
 
     @Test
     suspend fun integration_testAuthenticationWithAuthMethod() {
-        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProviderOrSkip(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(2)) {
                 withTimeout(30.seconds) {
                     val setup = setupAcpClient(
@@ -174,7 +182,7 @@ class AcpProtocolTest {
 
     @Test
     suspend fun integration_testAuthenticationError() {
-        MultiLLMPromptExecutor(getLLMClientForProvider(DEFAULT_MODEL.provider)).use { promptExecutor ->
+        MultiLLMPromptExecutor(getLLMClientForProviderOrSkip(DEFAULT_MODEL.provider)).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(2)) {
                 withTimeout(10.seconds) {
                     val setup = setupAcpClient(

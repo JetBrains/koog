@@ -82,14 +82,14 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     private val client = run {
         BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
-                this.accessKeyId = readAwsAccessKeyIdFromEnv()
-                this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
+                this.accessKeyId = readAwsAccessKeyIdFromEnv() ?: error("AWS Access Key ID not found")
+                this.secretAccessKey = readAwsSecretAccessKeyFromEnv() ?: error("AWS Secret Access Key not found")
                 readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
             },
             settings = BedrockClientSettings(
                 moderationGuardrailsSettings = BedrockGuardrailsSettings(
-                    guardrailIdentifier = readAwsBedrockGuardrailIdFromEnv(),
-                    guardrailVersion = readAwsBedrockGuardrailVersionFromEnv()
+                    guardrailIdentifier = readAwsBedrockGuardrailIdFromEnv() ?: error("AWS Bedrock Guardrail ID not found"),
+                    guardrailVersion = readAwsBedrockGuardrailVersionFromEnv() ?: error("AWS Bedrock Guardrail Version not found")
                 ),
                 apiMethod = BedrockAPIMethod.Converse,
             )

@@ -3,6 +3,7 @@ package ai.koog.integration.tests
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.ComplexNestedTool
@@ -39,6 +40,7 @@ class AnthropicSchemaValidationIntegrationTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
+            JdkWorkarounds.initializeNormalizer()
             try {
                 anthropicApiKey = readTestAnthropicKeyFromEnv()
                 // Check that the API key is not empty or blank

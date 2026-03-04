@@ -1,3 +1,5 @@
+import java.text.Normalizer
+
 group = "${rootProject.group}.integration-tests"
 version = rootProject.version
 
@@ -85,6 +87,12 @@ val envs = credentialsResolver.resolve(
 )
 
 tasks.withType<Test> {
+    // Workaround for JDK 21 ExceptionInInitializerError in ICUBinary during Normalizer2 initialization.
+    // Force initialization of Normalizer before any tests run to prevent race condition.
+    doFirst {
+        Normalizer.normalize("test", Normalizer.Form.NFKD)
+    }
+
     // Workaround for JDK 21 JFR MetadataLoader bug (UTFDataFormatException during JFR initialization).
     // JUnit Platform 2.x (bundled with JUnit 6) registers JFR listeners programmatically in JfrUtils.
     // JfrUtils.isJfrAvailable() checks if jdk.jfr.FlightRecorder class is loadable.

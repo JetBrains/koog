@@ -74,7 +74,9 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     override fun getExecutor(model: LLModel): PromptExecutor {
-        return SingleLLMPromptExecutor(getLLMClientForProvider(model.provider))
+        val client = getLLMClientForProvider(model.provider)
+            ?: throw org.opentest4j.TestAbortedException("Credentials for ${model.provider} are not available")
+        return SingleLLMPromptExecutor(client)
     }
 
     @ParameterizedTest

@@ -19,6 +19,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.integration.tests.InjectOllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixtureExtension
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.annotations.RetryExtension
@@ -39,6 +40,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
@@ -53,6 +55,12 @@ import kotlin.test.assertEquals
 @ExtendWith(RetryExtension::class)
 class OllamaAgentIntegrationTest : AIAgentTestBase() {
     companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            JdkWorkarounds.initializeNormalizer()
+        }
+
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture
         private val executor get() = fixture.executor

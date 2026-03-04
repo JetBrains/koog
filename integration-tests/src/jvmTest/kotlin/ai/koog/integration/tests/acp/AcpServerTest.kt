@@ -1,7 +1,8 @@
 package ai.koog.integration.tests.acp
 
 import ai.koog.agents.testing.tools.RandomNumberTool
-import ai.koog.integration.tests.utils.getLLMClientForProvider
+import ai.koog.integration.tests.utils.JdkWorkarounds
+import ai.koog.integration.tests.utils.getLLMClientForProviderOrSkip
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -26,6 +28,12 @@ import kotlin.time.Duration.Companion.seconds
 
 class AcpServerTest {
     companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            JdkWorkarounds.initializeNormalizer()
+        }
+
         @JvmStatic
         fun getModels() = listOf(
             OpenAIModels.Chat.GPT5_2,
@@ -37,7 +45,8 @@ class AcpServerTest {
     @ParameterizedTest
     @MethodSource("getModels")
     suspend fun integration_testACPWithTools(model: LLModel) {
-        MultiLLMPromptExecutor(getLLMClientForProvider(model.provider)).use { promptExecutor ->
+        val client = getLLMClientForProviderOrSkip(model.provider)
+        MultiLLMPromptExecutor(client).use { promptExecutor ->
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(30.seconds) {
                     val result = runAcpAgent(promptExecutor, model)

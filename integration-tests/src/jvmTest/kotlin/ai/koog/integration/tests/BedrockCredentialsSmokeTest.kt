@@ -1,8 +1,10 @@
 package ai.koog.integration.tests
 
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import aws.sdk.kotlin.services.bedrock.BedrockClient
 import aws.sdk.kotlin.services.bedrock.listFoundationModels
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
@@ -14,6 +16,14 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
  * This test only runs when AWS credentials are available (typically in heavy-tests workflow).
  */
 class BedrockCredentialsSmokeTest {
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            JdkWorkarounds.initializeNormalizer()
+        }
+    }
+
     @Test
     @EnabledIfEnvironmentVariable(named = "AWS_ACCESS_KEY_ID", matches = ".+")
     @EnabledIfEnvironmentVariable(named = "KOOG_HEAVY_TESTS", matches = "true")

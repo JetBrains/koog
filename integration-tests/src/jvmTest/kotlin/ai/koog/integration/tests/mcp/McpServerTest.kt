@@ -9,8 +9,9 @@ import ai.koog.agents.mcp.metadata.McpMetadataKeys
 import ai.koog.agents.mcp.server.startSseMcpServer
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.RetryUtils
-import ai.koog.integration.tests.utils.getLLMClientForProvider
+import ai.koog.integration.tests.utils.getLLMClientForProviderOrSkip
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -24,6 +25,7 @@ import io.ktor.server.netty.Netty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -33,6 +35,12 @@ import kotlin.time.Duration.Companion.seconds
 class McpServerTest {
 
     companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            JdkWorkarounds.initializeNormalizer()
+        }
+
         @JvmStatic
         fun getModels() = listOf(
             OpenAIModels.Chat.GPT4o,
@@ -68,7 +76,7 @@ class McpServerTest {
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(40.seconds) {
                     AIAgent(
-                        promptExecutor = MultiLLMPromptExecutor(getLLMClientForProvider(model.provider)),
+                        promptExecutor = MultiLLMPromptExecutor(getLLMClientForProviderOrSkip(model.provider)),
                         strategy = singleRunStrategy(),
                         llmModel = model,
                         toolRegistry = toolRegistry,

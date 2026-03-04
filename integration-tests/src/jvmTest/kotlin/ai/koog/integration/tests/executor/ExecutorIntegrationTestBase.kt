@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.executor
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
@@ -112,6 +113,7 @@ abstract class ExecutorIntegrationTestBase {
         @JvmStatic
         @BeforeAll
         fun setupTestResourcesBase() {
+            JdkWorkarounds.initializeNormalizer()
             testResourcesDir =
                 Paths.get(ExecutorIntegrationTestBase::class.java.getResource("/media")!!.toURI())
         }
@@ -119,7 +121,9 @@ abstract class ExecutorIntegrationTestBase {
 
     abstract fun getExecutor(model: LLModel): PromptExecutor
 
-    open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
+    open fun getLLMClient(model: LLModel): LLMClient =
+        getLLMClientForProvider(model.provider)
+            ?: throw org.opentest4j.TestAbortedException("Credentials for ${model.provider} are not available")
 
     open fun createReasoningParams(model: LLModel): LLMParams {
         return when (model.provider) {
@@ -1038,8 +1042,10 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open suspend fun integration_testGetModels(provider: LLMProvider) {
+        val client = getLLMClientForProvider(provider)
+            ?: throw org.opentest4j.TestAbortedException("Credentials for $provider are not available")
         withClue("Models list should not be empty") {
-            getLLMClientForProvider(provider).models().shouldNotBeEmpty()
+            client.models().shouldNotBeEmpty()
         }
     }
 

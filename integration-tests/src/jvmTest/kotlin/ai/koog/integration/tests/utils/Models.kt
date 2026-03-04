@@ -79,7 +79,7 @@ object Models {
      * However, we need to provide a Bedrock model here so that the integration tests can
      * instantiate a [ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient] with the appropriate provider and guardrail settings.
      * The actual moderation behavior is determined by the guardrail configuration
-     * in [getLLMClientForProvider], not by the model's capabilities.
+     * in [getLLMClientForProvider] and [getLLMClientForProviderOrSkip], not by the model's capabilities.
      */
     @JvmStatic
     fun moderationModels(): Stream<Arguments> {
@@ -128,13 +128,13 @@ object Models {
                 .filter { model ->
                     model.supports(LLMCapability.Vision.Image)
                 }
-                .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
+                .map { model -> Arguments.of(model, getLLMClientForProviderOrSkip(model.provider)) },
 
             anthropicModels()
                 .filter { model ->
                     model.supports(LLMCapability.Vision.Image)
                 }
-                .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
+                .map { model -> Arguments.of(model, getLLMClientForProviderOrSkip(model.provider)) },
         )
     }
 

@@ -48,7 +48,9 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             .map { it.provider }
             .distinct()
 
-        val clients = providers.associateWith { getLLMClientForProvider(it) }
+        val clients = providers.mapNotNull { provider ->
+            getLLMClientForProvider(provider)?.let { provider to it }
+        }.toMap()
 
         MultiLLMPromptExecutor(clients)
     }

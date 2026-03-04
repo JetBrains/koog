@@ -8,6 +8,7 @@ import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.testing.tools.MockLLMBuilder
 import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.tools.CalculatorOperation
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorArgs
@@ -42,6 +43,7 @@ class McpOpenTelemetryIntegrationTest {
         @BeforeAll
         @JvmStatic
         fun setup() = runBlocking {
+            JdkWorkarounds.initializeNormalizer()
             server = startMcpServer(ToolRegistry { tool(RandomNumberTool()) })
         }
 

@@ -1,5 +1,6 @@
 package ai.koog.integration.tests.base;
 
+import ai.koog.integration.tests.utils.JdkWorkarounds;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
@@ -11,6 +12,7 @@ import kotlin.coroutines.Continuation;
 import kotlin.coroutines.EmptyCoroutineContext;
 import kotlinx.coroutines.BuildersKt;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Timeout;
 
 import java.util.ArrayList;
@@ -19,6 +21,11 @@ import java.util.concurrent.TimeUnit;
 
 @Timeout(value = 120, unit = TimeUnit.SECONDS)
 public abstract class KoogJavaTestBase {
+
+    @BeforeAll
+    public static void initializeJdkWorkarounds() {
+        JdkWorkarounds.initializeNormalizer();
+    }
 
     protected final List<AutoCloseable> resourcesToClose = new ArrayList<>();
 

@@ -16,9 +16,10 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.getLLMClientForProvider
+import ai.koog.integration.tests.utils.getLLMClientForProviderOrSkip
 import ai.koog.integration.tests.utils.tools.files.CreateFile
 import ai.koog.integration.tests.utils.tools.files.DeleteFile
 import ai.koog.integration.tests.utils.tools.files.ListFiles
@@ -71,6 +72,7 @@ open class AIAgentTestBase {
         @JvmStatic
         @BeforeAll
         fun setup() {
+            JdkWorkarounds.initializeNormalizer()
             testResourcesDir = AIAgentTestBase::class.java.getResource("/media")!!.toURI().toPath()
             testResourcesDir.shouldExist()
         }
@@ -86,7 +88,7 @@ open class AIAgentTestBase {
     val systemPrompt = "You are a helpful assistant."
 
     fun getExecutor(model: LLModel): MultiLLMPromptExecutor =
-        MultiLLMPromptExecutor(getLLMClientForProvider(model.provider))
+        MultiLLMPromptExecutor(getLLMClientForProviderOrSkip(model.provider))
 
     protected class State(
         var reasoningCallsCount: Int = 0,
@@ -255,8 +257,8 @@ open class AIAgentTestBase {
         initialExecutor: MultiLLMPromptExecutor? = null,
     ): AIAgent<String, String> {
         val executor = if (initialExecutor == null) {
-            val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
-            val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+            val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv() ?: error("OpenAI API key not found"))
+            val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv() ?: error("Anthropic API key not found"))
             MultiLLMPromptExecutor(
                 LLMProvider.OpenAI to openAIClient,
                 LLMProvider.Anthropic to anthropicClient
@@ -350,8 +352,8 @@ open class AIAgentTestBase {
         model: LLModel,
         emptyAgentRegistry: Boolean = true,
     ): AIAgent<String, String> {
-        val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
-        val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+        val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv() ?: error("OpenAI API key not found"))
+        val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv() ?: error("Anthropic API key not found"))
 
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient,

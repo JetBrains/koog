@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.executor
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.integration.tests.utils.JdkWorkarounds
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.getLLMClientForProvider
@@ -21,89 +22,20 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
 class ToolDescriptorIntegrationTest {
-
-    enum class ToolName(val value: String, val displayName: String, val testUserMessage: String) {
-        INT_TO_STRING(
-            "int_to_string",
-            "Tool<Int, String>",
-            "Convert the number 42 to its string representation using the tool."
-        ),
-        STRING_TO_INT("string_to_int", "Tool<String, Int>", "Get the length of the string 'hello' using the tool."),
-        INT_TO_INT("int_to_int", "Tool<Int, Int>", "Double the number 21 using the tool."),
-        STRING_TO_STRING(
-            "string_to_string",
-            "Tool<String, String>",
-            "Convert 'hello world' to uppercase using the tool."
-        ),
-        BOOLEAN_TO_STRING(
-            "boolean_to_string",
-            "Tool<Boolean, String>",
-            "Convert the boolean value true to its string representation using the tool."
-        ),
-        STRING_TO_BOOLEAN(
-            "string_to_boolean",
-            "Tool<String, Boolean>",
-            "Convert the string 'true' to a boolean using the tool."
-        ),
-        DOUBLE_TO_INT(
-            "double_to_int",
-            "Tool<Double, Int>",
-            "Convert the double value 3.7 to an integer using the tool."
-        ),
-        INT_TO_DOUBLE("int_to_double", "Tool<Int, Double>", "Convert the integer value 42 to a double using the tool."),
-        LONG_TO_DOUBLE(
-            "long_to_double",
-            "Tool<Long, Double>",
-            "Convert the long value 100 to a double with decimal places using the tool."
-        ),
-        DOUBLE_TO_LONG(
-            "double_to_long",
-            "Tool<Double, Long>",
-            "Convert the double value 15.8 to a long using the tool."
-        ),
-        FLOAT_TO_BOOLEAN(
-            "float_to_boolean",
-            "Tool<Float, Boolean>",
-            "Convert the float value 2.5 to a boolean using the tool."
-        ),
-        BOOLEAN_TO_FLOAT(
-            "boolean_to_float",
-            "Tool<Boolean, Float>",
-            "Convert the boolean value true to a float using the tool."
-        ),
-        LONG_TO_INT("long_to_int", "Tool<Long, Int>", "Convert the long value 12345 to an integer using the tool."),
-        INT_TO_LONG("int_to_long", "Tool<Int, Long>", "Convert the integer value 789 to a long using the tool."),
-        FLOAT_TO_STRING(
-            "float_to_string",
-            "Tool<Float, String>",
-            "Convert the float value 3.14 to its string representation using the tool."
-        ),
-        STRING_TO_FLOAT(
-            "string_to_float",
-            "Tool<String, Float>",
-            "Convert the string 'hello' to a float based on its length using the tool."
-        ),
-        DOUBLE_TO_STRING(
-            "double_to_string",
-            "Tool<Double, String>",
-            "Convert the double value 2.718 to its string representation using the tool."
-        ),
-        STRING_TO_DOUBLE(
-            "string_to_double",
-            "Tool<String, Double>",
-            "Convert the string 'world' to a double based on its length using the tool."
-        );
-
-        override fun toString(): String = displayName
-    }
-
     companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            JdkWorkarounds.initializeNormalizer()
+        }
+
         @JvmStatic
         fun allModels(): Stream<LLModel> {
             return Stream.of(
@@ -144,6 +76,85 @@ class ToolDescriptorIntegrationTest {
                     Arguments.arguments(tool, model)
                 }.stream()
             }
+        }
+
+        enum class ToolName(val value: String, val displayName: String, val testUserMessage: String) {
+            INT_TO_STRING(
+                "int_to_string",
+                "Tool<Int, String>",
+                "Convert the number 42 to its string representation using the tool."
+            ),
+            STRING_TO_INT("string_to_int", "Tool<String, Int>", "Get the length of the string 'hello' using the tool."),
+            INT_TO_INT("int_to_int", "Tool<Int, Int>", "Double the number 21 using the tool."),
+            STRING_TO_STRING(
+                "string_to_string",
+                "Tool<String, String>",
+                "Convert 'hello world' to uppercase using the tool."
+            ),
+            BOOLEAN_TO_STRING(
+                "boolean_to_string",
+                "Tool<Boolean, String>",
+                "Convert the boolean value true to its string representation using the tool."
+            ),
+            STRING_TO_BOOLEAN(
+                "string_to_boolean",
+                "Tool<String, Boolean>",
+                "Convert the string 'true' to a boolean using the tool."
+            ),
+            DOUBLE_TO_INT(
+                "double_to_int",
+                "Tool<Double, Int>",
+                "Convert the double value 3.7 to an integer using the tool."
+            ),
+            INT_TO_DOUBLE(
+                "int_to_double",
+                "Tool<Int, Double>",
+                "Convert the integer value 42 to a double using the tool."
+            ),
+            LONG_TO_DOUBLE(
+                "long_to_double",
+                "Tool<Long, Double>",
+                "Convert the long value 100 to a double with decimal places using the tool."
+            ),
+            DOUBLE_TO_LONG(
+                "double_to_long",
+                "Tool<Double, Long>",
+                "Convert the double value 15.8 to a long using the tool."
+            ),
+            FLOAT_TO_BOOLEAN(
+                "float_to_boolean",
+                "Tool<Float, Boolean>",
+                "Convert the float value 2.5 to a boolean using the tool."
+            ),
+            BOOLEAN_TO_FLOAT(
+                "boolean_to_float",
+                "Tool<Boolean, Float>",
+                "Convert the boolean value true to a float using the tool."
+            ),
+            LONG_TO_INT("long_to_int", "Tool<Long, Int>", "Convert the long value 12345 to an integer using the tool."),
+            INT_TO_LONG("int_to_long", "Tool<Int, Long>", "Convert the integer value 789 to a long using the tool."),
+            FLOAT_TO_STRING(
+                "float_to_string",
+                "Tool<Float, String>",
+                "Convert the float value 3.14 to its string representation using the tool."
+            ),
+            STRING_TO_FLOAT(
+                "string_to_float",
+                "Tool<String, Float>",
+                "Convert the string 'hello' to a float based on its length using the tool."
+            ),
+            DOUBLE_TO_STRING(
+                "double_to_string",
+                "Tool<Double, String>",
+                "Convert the double value 2.718 to its string representation using the tool."
+            ),
+            STRING_TO_DOUBLE(
+                "string_to_double",
+                "Tool<String, Double>",
+                "Convert the string 'world' to a double based on its length using the tool."
+            );
+
+            override fun toString(): String = displayName
         }
     }
 
@@ -314,6 +325,7 @@ class ToolDescriptorIntegrationTest {
         )
 
         val client = getLLMClientForProvider(model.provider)
+            ?: throw org.opentest4j.TestAbortedException("Credentials for ${model.provider} are not available")
 
         with(tool as TestTool<*, *>) {
             withRetry {

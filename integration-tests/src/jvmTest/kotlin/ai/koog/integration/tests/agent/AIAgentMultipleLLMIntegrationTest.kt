@@ -44,8 +44,8 @@ import java.io.File
 import kotlin.test.fail
 
 class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
-    private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
-    private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+    private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv() ?: error("OpenAI API key not found")
+    private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv() ?: error("Anthropic API key not found")
 
     @Test
     @Retry(5)
