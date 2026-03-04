@@ -12,7 +12,7 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationCompletedContext
 import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Default implementation of [AIAgentPlannerPipelineAPI] that delegates base pipeline operations
