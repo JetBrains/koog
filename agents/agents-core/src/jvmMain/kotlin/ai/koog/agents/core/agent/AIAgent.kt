@@ -40,7 +40,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
     @JavaAPI
     @JvmOverloads
     @JvmName("run")
-    public final fun javaRun(
+    public final fun javaNonSuspendRun(
         agentInput: Input,
         sessionId: String? = null,
         executorService: ExecutorService? = null

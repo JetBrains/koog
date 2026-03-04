@@ -73,3 +73,15 @@ public class JavaClassToken(
     public val klass: Class<*>,
     public val typeArguments: List<TypeToken> = emptyList(),
 ) : TypeToken
+
+
+/**
+ * Creates a [JavaTypeToken] from a Java [Type].
+ */
+public fun typeToken(type: Type): JavaTypeToken = JavaTypeToken(type)
+
+/**
+ * Creates a [JavaClassToken] from a Java [Class] with generic type arguments information.
+ */
+public fun typeToken(klass: Class<*>, typeArguments: List<TypeToken> = emptyList()): JavaClassToken =
+    JavaClassToken(klass, typeArguments)

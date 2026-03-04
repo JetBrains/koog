@@ -1,15 +1,15 @@
 package ai.koog.agents.planner.goap
 
 import ai.koog.agents.core.utils.ConfigureAction
+import ai.koog.serialization.TypeToken
 import kotlin.jvm.JvmOverloads
 import kotlin.math.exp
-import kotlin.reflect.KType
 
 /**
  * [GOAPPlanner] DSL builder.
  */
 public open class GOAPPlannerBuilder<State : GoapAgentState<*, *>> @JvmOverloads constructor(
-    private val stateType: KType? = null,
+    private val stateType: TypeToken? = null,
 ) {
     private val actions: MutableList<Action<State>> = mutableListOf()
     private val goals: MutableList<Goal<State>> = mutableListOf()
@@ -104,13 +104,13 @@ public open class GOAPPlannerBuilder<State : GoapAgentState<*, *>> @JvmOverloads
 /**
  * Creates a [GOAPPlanner] using a DSL for defining actions.
  *
- * @param stateType [KType] of the [State].
+ * @param stateType [TypeToken] of the [State].
  * @param init The initialization block for the builder.
  * @return A new [GOAPPlanner] instance with the defined actions.
  */
 @Deprecated("Use AIAgentStrategy.builder(name).goap() DSL instead.")
 public fun <State : GoapAgentState<*, *>> goap(
-    stateType: KType,
+    stateType: TypeToken,
     init: GOAPPlannerBuilder<State>.() -> Unit
 ): GOAPPlanner<State> {
     val builder = GOAPPlannerBuilder<State>(stateType)

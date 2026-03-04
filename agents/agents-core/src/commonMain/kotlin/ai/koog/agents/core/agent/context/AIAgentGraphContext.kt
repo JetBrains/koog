@@ -12,7 +12,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 
 /**
  * The `AIAgentGraphContextBase` interface extends the `AIAgentContextBase` interface
@@ -34,9 +34,9 @@ public interface AIAgentGraphContextBase : AIAgentContext {
     override val pipeline: AIAgentGraphPipeline
 
     /**
-     * [KType] representing the type of the [agentInput]
+     * [TypeToken] representing the type of the [agentInput]
      */
-    public val agentInputType: KType
+    public val agentInputType: TypeToken
 
     /**
      * Creates a copy of the current [AIAgentGraphContext], allowing for selective overriding of its properties.
@@ -54,7 +54,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
         environment: AIAgentEnvironment = this.environment,
         agentId: String = this.agentId,
         agentInput: Any? = this.agentInput,
-        agentInputType: KType = this.agentInputType,
+        agentInputType: TypeToken = this.agentInputType,
         config: AIAgentConfig = this.config,
         llm: AIAgentLLMContext = this.llm,
         stateManager: AIAgentStateManager = this.stateManager,
@@ -122,7 +122,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
 public class AIAgentGraphContext(
     environment: AIAgentEnvironment,
     override val agentId: String,
-    override val agentInputType: KType,
+    override val agentInputType: TypeToken,
     override val agentInput: Any?,
     override val config: AIAgentConfig,
     llm: AIAgentLLMContext,

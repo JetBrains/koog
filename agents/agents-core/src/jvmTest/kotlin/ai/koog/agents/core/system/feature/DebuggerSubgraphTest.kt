@@ -26,6 +26,7 @@ import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.singleEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.flow.first
@@ -34,7 +35,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.Disabled
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -126,10 +126,10 @@ class DebuggerSubgraphTest {
                 collectEventsJob.join()
 
                 val encodedUserInput = @OptIn(InternalAgentsApi::class)
-                SerializationUtils.encodeDataToJsonElement(userPrompt, typeOf<String>())
+                SerializationUtils.encodeDataToJsonElement(userPrompt, typeToken<String>())
 
                 val encodedSubgraphOutput = @OptIn(InternalAgentsApi::class)
-                SerializationUtils.encodeDataToJsonElement(subgraphNodeOutput, typeOf<String>())
+                SerializationUtils.encodeDataToJsonElement(subgraphNodeOutput, typeToken<String>())
 
                 val actualClientEvents = clientEventsCollector.collectedEvents
 
@@ -267,7 +267,7 @@ class DebuggerSubgraphTest {
                 collectEventsJob.join()
 
                 val encodedUserInput = @OptIn(InternalAgentsApi::class)
-                SerializationUtils.encodeDataToJsonElement(userPrompt, typeOf<String>())
+                SerializationUtils.encodeDataToJsonElement(userPrompt, typeToken<String>())
 
                 val actualClientEvents = clientEventsCollector.collectedEvents
 

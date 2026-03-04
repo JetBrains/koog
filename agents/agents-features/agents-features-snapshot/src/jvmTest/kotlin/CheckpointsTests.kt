@@ -44,6 +44,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,7 +60,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.math.absoluteValue
 import kotlin.random.Random
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -107,7 +107,7 @@ class CheckpointsTests {
                             agentContext = ctx,
                             nodePath = ctx.executionInfo.path(),
                             lastInput = input,
-                            lastInputType = typeOf<String>(),
+                            lastInputType = typeToken<String>(),
                             checkpointId = "cpt-100500",
                             version = 0
                         )
@@ -251,7 +251,7 @@ class CheckpointsTests {
                         ctx,
                         ctx.executionInfo.path(),
                         input,
-                        typeOf<String>(),
+                        typeToken<String>(),
                         checkpointId = checkpointId,
                         version = 0
                     )

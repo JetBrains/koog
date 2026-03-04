@@ -18,9 +18,9 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -84,8 +84,8 @@ class ToolCallFailureEventsTest {
         }
 
         val agent = GraphAIAgent(
-            inputType = typeOf<Message.Tool.Call>(),
-            outputType = typeOf<ReceivedToolResult>(),
+            inputType = typeToken<Message.Tool.Call>(),
+            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
@@ -121,8 +121,8 @@ class ToolCallFailureEventsTest {
         }
 
         val agent = GraphAIAgent(
-            inputType = typeOf<Message.Tool.Call>(),
-            outputType = typeOf<ReceivedToolResult>(),
+            inputType = typeToken<Message.Tool.Call>(),
+            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
@@ -157,8 +157,8 @@ class ToolCallFailureEventsTest {
         }
 
         val agent = GraphAIAgent(
-            inputType = typeOf<Message.Tool.Call>(),
-            outputType = typeOf<ReceivedToolResult>(),
+            inputType = typeToken<Message.Tool.Call>(),
+            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,

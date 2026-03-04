@@ -18,14 +18,14 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.KProperty
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -75,11 +75,26 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     public inline fun <reified Input, reified Output> node(
         name: String? = null,
         noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
+    ): AIAgentNodeDelegate<Input, Output> =
+        node(name, inputType = typeToken<Input>(), outputType = typeToken<Output>(), execute = execute)
+
+    /**
+     * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
+     *
+     * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
+     * @param execute A suspendable function that defines the node's execution logic.
+     */
+    @InternalAgentsApi
+    public fun <Input, Output> node(
+        name: String? = null,
+        inputType: TypeToken,
+        outputType: TypeToken,
+        execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(
             name = name,
-            inputType = typeOf<Input>(),
-            outputType = typeOf<Output>(),
+            inputType = inputType,
+            outputType = outputType,
             execute = execute
         )
     }
@@ -103,8 +118,39 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     ): AIAgentSubgraphDelegate<Input, Output> {
         return AIAgentSubgraphBuilder<Input, Output>(
             name,
-            inputType = typeOf<Input>(),
-            outputType = typeOf<Output>(),
+            inputType = typeToken<Input>(),
+            outputType = typeToken<Output>(),
+            toolSelectionStrategy = toolSelectionStrategy,
+            llmModel = llmModel,
+            llmParams = llmParams,
+            responseProcessor = responseProcessor,
+        ).also { it.define() }.build()
+    }
+
+    /**
+     * Creates a subgraph with a specified tool selection strategy.
+     * @param name Optional subgraph name
+     * @param toolSelectionStrategy Strategy for tool selection
+     * @param llmModel Initial LLM model used in this subgraph
+     * @param llmParams Initial LLM prompt parameters used in this subgraph
+     * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
+     * @param define Subgraph definition function
+     */
+    @InternalAgentsApi
+    public fun <Input : Any, Output : Any> subgraph(
+        name: String? = null,
+        inputType: TypeToken, // TODO: @EugeneTheDev, change to type tokens!
+        outputType: TypeToken, // TODO: @EugeneTheDev, change to type tokens!
+        toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+        llmModel: LLModel? = null,
+        llmParams: LLMParams? = null,
+        responseProcessor: ResponseProcessor? = null,
+        define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
+    ): AIAgentSubgraphDelegate<Input, Output> {
+        return AIAgentSubgraphBuilder<Input, Output>(
+            name,
+            inputType = inputType,
+            outputType = outputType,
             toolSelectionStrategy = toolSelectionStrategy,
             llmModel = llmModel,
             llmParams = llmParams,
@@ -306,8 +352,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
  */
 public class AIAgentSubgraphBuilder<Input, Output>(
     public val name: String? = null,
-    inputType: KType,
-    outputType: KType,
+    inputType: TypeToken,
+    outputType: TypeToken,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?,
@@ -322,7 +368,15 @@ public class AIAgentSubgraphBuilder<Input, Output>(
             "FinishSubgraphNode can't be reached from the StartNode of the agent's graph. Please, review how it was defined."
         }
 
-        return AIAgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy, llmModel, llmParams, responseProcessor)
+        return AIAgentSubgraphDelegate(
+            name,
+            nodeStart,
+            nodeFinish,
+            toolSelectionStrategy,
+            llmModel,
+            llmParams,
+            responseProcessor
+        )
     }
 }
 

@@ -3,9 +3,12 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
+import ai.koog.agents.core.dsl.builder.EdgeTransformationDslMarker
+import ai.koog.agents.core.utils.Some
+import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
@@ -25,14 +28,14 @@ public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
     public abstract val name: String
 
     /**
-     * The [KType] of the [TInput]
+     * The [TypeToken] of the [TInput]
      */
-    public abstract val inputType: KType
+    public abstract val inputType: TypeToken
 
     /**
-     * The [KType] of the [TOutput]
+     * The [TypeToken] of the [TOutput]
      */
-    public abstract val outputType: KType
+    public abstract val outputType: TypeToken
 
     /**
      * Represents the unique identifier of the AI agent node.
@@ -127,6 +130,25 @@ public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
     @Suppress("UNCHECKED_CAST")
     public suspend fun executeUnsafe(context: AIAgentGraphContextBase, input: Any?): Any? =
         execute(context, input as TInput)
+
+    /**
+     * Creates a directed edge from this [AIAgentNodeBase] to another [AIAgentNodeBase], allowing
+     * data to flow from the output of the current node to the input of the specified node.
+     *
+     * @param otherNode The destination [AIAgentNodeBase] to which the current node's output is forwarded.
+     * @return An [AIAgentEdgeBuilderIntermediate] that allows further customization
+     * of the edge's data transformation and conditions between the nodes.
+     */
+    @EdgeTransformationDslMarker
+    public infix fun <OutgoingInput> forwardTo(
+        otherNode: AIAgentNodeBase<OutgoingInput, *>
+    ): AIAgentEdgeBuilderIntermediate<TOutput, TOutput, OutgoingInput> {
+        return AIAgentEdgeBuilderIntermediate(
+            fromNode = this,
+            toNode = otherNode,
+            forwardOutputComposition = { _, output -> Some(output) }
+        )
+    }
 }
 
 /**
@@ -139,10 +161,10 @@ public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
-public open class AIAgentNode<TInput, TOutput> internal constructor(
+public open class AIAgentNode<TInput, TOutput>(
     override val name: String,
-    override val inputType: KType,
-    override val outputType: KType,
+    override val inputType: TypeToken,
+    override val outputType: TypeToken,
     public val execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
 ) : AIAgentNodeBase<TInput, TOutput>() {
 
@@ -188,11 +210,11 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
  *
  * @param TInput The type of input data this node processes and produces as output.
  * @param subgraphName The name of the related subgraph
- * @param type [KType] representing [TInput]
+ * @param type [TypeToken] representing [TInput]
  */
 public class StartNode<TInput> internal constructor(
     subgraphName: String? = null,
-    type: KType,
+    type: TypeToken,
 ) : AIAgentNode<TInput, TInput>(
     name = subgraphName?.let { "${AIAgentSubgraph.START_NODE_PREFIX}$it" } ?: AIAgentSubgraph.START_NODE_PREFIX,
     inputType = type,
@@ -214,11 +236,11 @@ public class StartNode<TInput> internal constructor(
  *
  * @param TOutput The type of data this node processes and produces.
  * @param subgraphName The name of the related subgraph
- * @param type [KType] representing [TOutput]
+ * @param type [TypeToken] representing [TOutput]
  */
 public class FinishNode<TOutput> internal constructor(
     subgraphName: String? = null,
-    type: KType,
+    type: TypeToken,
 ) : AIAgentNode<TOutput, TOutput>(
     name = subgraphName?.let { "${AIAgentSubgraph.FINISH_NODE_PREFIX}$it" } ?: AIAgentSubgraph.FINISH_NODE_PREFIX,
     inputType = type,

@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 
 /**
  * Represents the context for handling node-specific events within the framework.
@@ -19,7 +19,7 @@ public interface NodeExecutionEventContext : AgentLifecycleEventContext
  * @property node The node that is about to be executed.
  * @property context The stage context in which the node is being executed.
  * @property input The input data for the node execution.
- * @property inputType [KType] representing the type of the [input].
+ * @property inputType [TypeToken] representing the type of the [input].
  */
 public data class NodeExecutionStartingContext(
     override val eventId: String,
@@ -27,7 +27,7 @@ public data class NodeExecutionStartingContext(
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
-    val inputType: KType,
+    val inputType: TypeToken,
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionStarting
 }
@@ -39,9 +39,9 @@ public data class NodeExecutionStartingContext(
  * @property node The node that was executed.
  * @property context The stage context in which the node was executed.
  * @property input The input data that was provided to the node.
- * @property inputType [KType] representing the type of the [input].
+ * @property inputType [TypeToken] representing the type of the [input].
  * @property output The output data produced by the node execution.
- * @property outputType [KType] representing the type of the [output].
+ * @property outputType [TypeToken] representing the type of the [output].
  */
 public data class NodeExecutionCompletedContext(
     override val eventId: String,
@@ -49,9 +49,9 @@ public data class NodeExecutionCompletedContext(
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
-    val inputType: KType,
+    val inputType: TypeToken,
     val output: Any?,
-    val outputType: KType,
+    val outputType: TypeToken,
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionCompleted
 }
@@ -63,7 +63,7 @@ public data class NodeExecutionCompletedContext(
  * @property node The node where the error occurred.
  * @property context The stage context in which the node experienced the error.
  * @property input The input data for the node execution.
- * @property inputType [KType] representing the type of the [input].
+ * @property inputType [TypeToken] representing the type of the [input].
  * @property throwable The exception or error that occurred during node execution.
  */
 public data class NodeExecutionFailedContext(
@@ -72,7 +72,7 @@ public data class NodeExecutionFailedContext(
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
-    val inputType: KType,
+    val inputType: TypeToken,
     val throwable: Throwable
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionFailed

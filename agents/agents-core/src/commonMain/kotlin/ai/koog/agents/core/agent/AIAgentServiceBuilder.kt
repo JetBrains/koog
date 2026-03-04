@@ -19,7 +19,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 import kotlin.time.Clock
 
 /**
@@ -68,8 +68,8 @@ public expect class AIAgentServiceBuilder internal constructor() : AIAgentServic
  * @param Output The output type for the AI agent graph service.
  *
  * @property strategy The AI agent graph strategy governing the behavior and structure of the service.
- * @property inputType The KType representation of the input type.
- * @property outputType The KType representation of the output type.
+ * @property inputType The TypeToken representation of the input type.
+ * @property outputType The TypeToken representation of the output type.
  * @property promptExecutor The executor responsible for handling and orchestrating prompts.
  * @property toolRegistry The registry managing the tools available for the service.
  * @property prompt The system or user-defined prompt used in interactions.
@@ -82,8 +82,8 @@ public expect class AIAgentServiceBuilder internal constructor() : AIAgentServic
  */
 public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: KType,
-    private val outputType: KType,
+    private val inputType: TypeToken,
+    private val outputType: TypeToken,
     internal var promptExecutor: PromptExecutor? = null,
     internal var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private var prompt: Prompt = Prompt.Empty,

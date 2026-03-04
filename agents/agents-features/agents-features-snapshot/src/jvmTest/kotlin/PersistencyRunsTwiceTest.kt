@@ -8,12 +8,12 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import io.kotest.matchers.collections.shouldContainExactly
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
-import kotlin.reflect.typeOf
 
 class PersistenceRunsTwiceTest {
     private val serializer = KotlinxSerializer()
@@ -32,8 +32,8 @@ class PersistenceRunsTwiceTest {
         )
 
         val agent = GraphAIAgent(
-            inputType = typeOf<String>(),
-            outputType = typeOf<String>(),
+            inputType = typeToken<String>(),
+            outputType = typeToken<String>(),
             promptExecutor = getMockExecutor(serializer) {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },

@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.context.SubtaskBuilderWithInputAndOutput.OutputOption.Verification
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.prompt.llm.LLModel
@@ -189,6 +190,17 @@ public class SubtaskBuilderWithInputAndOutput<Input, Output : Any>(
      */
     public fun withTools(tools: List<Tool<*, *>>): SubtaskBuilderWithInputAndOutput<Input, Output> =
         apply { this.tools = tools }
+
+    /**
+     * Adds the specified sets of tools to the subtask configuration.
+     *
+     * @param toolSets A variable number of instances of [ToolSet], each representing a group of tools
+     *                 that can be used for the execution of the subtask. Each [ToolSet] will be
+     *                 converted into a list of tools using its `asTools` method.
+     * @return An updated instance of [SubtaskBuilderWithInputAndOutput] configured with the specified tools.
+     */
+    public fun withTools(vararg toolSets: ToolSet): SubtaskBuilderWithInputAndOutput<Input, Output> =
+        apply { this.tools = toolSets.flatMap { it.asTools() } }
 
     /**
      * Configures the builder to use the specified Large Language Model (LLM) for subsequent tasks.

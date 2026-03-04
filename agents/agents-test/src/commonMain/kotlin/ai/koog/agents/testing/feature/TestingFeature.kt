@@ -36,8 +36,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
 import org.jetbrains.annotations.TestOnly
-import kotlin.reflect.KType
 import kotlin.time.Clock
 
 /**
@@ -760,7 +760,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
-                    agentInputType: KType?,
+                    agentInputType: TypeToken?,
                     config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
@@ -869,7 +869,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
-                    agentInputType: KType?,
+                    agentInputType: TypeToken?,
                     config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,

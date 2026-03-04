@@ -4,9 +4,9 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.utils.Some
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlin.reflect.KProperty
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 /**
  * Creates a directed edge from this `AIAgentNodeBase` to another `AIAgentNodeBase`, allowing
@@ -17,6 +17,7 @@ import kotlin.reflect.typeOf
  * of the edge's data transformation and conditions between the nodes.
  */
 @EdgeTransformationDslMarker
+@Deprecated("Use non-extension AIAgentNodeBase.forwardTo instead")
 public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutput>.forwardTo(
     otherNode: AIAgentNodeBase<OutgoingInput, *>
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IncomingOutput, OutgoingInput> {
@@ -42,8 +43,8 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  */
 public open class AIAgentNodeDelegate<Input, Output>(
     public val name: String?,
-    public val inputType: KType,
-    public val outputType: KType,
+    public val inputType: TypeToken,
+    public val outputType: TypeToken,
     public val execute: suspend AIAgentGraphContextBase.(Input) -> Output
 ) {
     private var node: AIAgentNodeBase<Input, Output>? = null
@@ -81,7 +82,7 @@ public open class AIAgentNodeDelegate<Input, Output>(
         return AIAgentNodeDelegate(
             name = name,
             inputType = inputType,
-            outputType = typeOf<T>(),
+            outputType = typeToken<T>(),
             execute = { input ->
                 val result = execute.invoke(this, input)
                 transformation(result)

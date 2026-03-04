@@ -1,7 +1,11 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.session.callTool
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
@@ -53,14 +57,29 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeAppendPrompt(
     noinline body: PromptBuilder.() -> Unit
 ): AIAgentNodeDelegate<T, T> =
     node(name) { input ->
-        llm.writeSession {
-            appendPrompt {
-                body()
-            }
-        }
-
-        input
+        appendPromptImpl(input, body)
     }
+
+/**
+ * [InternalAgentsApi] method. Appends a prompt to the current LLM session.
+ *
+ * @param input The input object to be used for the operation. It serves as both input and output of this method.
+ * @param body A lambda to customize the construction of the prompt using the [PromptBuilder].
+ * @return The same input object, allowing for fluent usage patterns or further chaining.
+ */
+@InternalAgentsApi
+public suspend fun <T> AIAgentGraphContextBase.appendPromptImpl(
+    input: T,
+    body: PromptBuilder.() -> Unit
+): T {
+    llm.writeSession {
+        appendPrompt {
+            body()
+        }
+    }
+
+    return input
+}
 
 /**
  * A node that adds messages to the LLM prompt using the provided prompt builder.
@@ -266,7 +285,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
  * @param config A configuration defining structures and behavior.
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     name: String? = null,
     config: StructuredRequestConfig<T>,
     fixingParser: StructureFixingParser? = null
@@ -329,16 +348,33 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
 ): AIAgentNodeDelegate<String, Flow<T>> =
     node(name) { message ->
-        llm.writeSession {
-            appendPrompt {
-                user(message)
-            }
-
-            val stream = requestLLMStreaming(structureDefinition)
-
-            transformStreamData(stream)
-        }
+        requestStreamingImpl(message, structureDefinition, transformStreamData)
     }
+
+/**
+ * [InternalAgentsApi] method. Performs LLM streaming and transforms the stream data.
+ *
+ * @param message The message string representing user input or instructions to be used in the prompt.
+ * @param structureDefinition An optional structure definition that defines how the data should be structured
+ *        during the language model request. Can be null if no specific structure is required.
+ * @param transformStreamData A suspending function that takes a flow of raw streaming data ([StreamFrame])
+ *        and returns a flow of the transformed data of type [T].
+ * @return A flow of transformed data of type [T], resulting from the processing of the streaming request.
+ */
+@InternalAgentsApi
+public suspend fun <T> AIAgentGraphContextBase.requestStreamingImpl(
+    message: String,
+    structureDefinition: StructureDefinition?,
+    transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
+): Flow<T> = llm.writeSession {
+    appendPrompt {
+        user(message)
+    }
+
+    val stream = requestLLMStreaming(structureDefinition)
+
+    transformStreamData(stream)
+}
 
 /**
  * A node that appends a user message to the LLM prompt and streams LLM response without transformation.
@@ -387,6 +423,25 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHi
     retrievalModel: LLModel? = null,
     preserveMemory: Boolean = true
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
+    llmCompressHistoryImpl(input, retrievalModel, strategy, preserveMemory)
+}
+
+/**
+ * [InternalAgentsApi] method. Performs LLM history compression.
+ *
+ * @param retrievalModel The optional [LLModel] to be used temporarily for retrieval during history compression.
+ * @param strategy The [HistoryCompressionStrategy] to be applied to compress the conversation history.
+ * @param preserveMemory A flag indicating whether memory should be preserved, preventing permanent loss of history.
+ * @param input The input of type [T] that will be passed through and returned unchanged by the method.
+ * @return The input of type [T], passed through without modifications.
+ */
+@InternalAgentsApi
+public suspend fun <T> AIAgentGraphContextBase.llmCompressHistoryImpl(
+    input: T,
+    retrievalModel: LLModel?,
+    strategy: HistoryCompressionStrategy,
+    preserveMemory: Boolean
+): T {
     llm.writeSession {
         val initialModel = model
         if (retrievalModel != null) {
@@ -398,7 +453,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHi
         model = initialModel
     }
 
-    input
+    return input
 }
 
 /**
@@ -430,13 +485,26 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
     name: String? = null,
     structureDefinition: StructureDefinition? = null
 ): AIAgentNodeDelegate<T, List<Message.Response>> = node(name) { input ->
+    requestStreamingAndSendResultsImpl(structureDefinition)
+}
+
+/**
+ * [InternalAgentsApi] method. Performs LLM streaming and sends the results to the prompt.
+ *
+ * @param structureDefinition The optional structure defining the format of the textual content
+ *                             for the LLM streaming request. If null, a default structure is assumed.
+ *                             This parameter facilitates the construction and customization of content
+ *                             during the streaming process.
+ * @return A list of [Message.Response] objects containing the processed results from the LLM streaming request.
+ */
+@InternalAgentsApi
+public suspend fun AIAgentGraphContextBase.requestStreamingAndSendResultsImpl(structureDefinition: StructureDefinition?): List<Message.Response> =
     llm.writeSession {
         requestLLMStreaming(structureDefinition)
             .toList()
             .toMessageResponses()
             .also { appendPrompt { messages(it) } }
     }
-}
 
 // ==========
 // Tool nodes
@@ -606,34 +674,52 @@ public inline fun <reified ToolArg, reified TResult> AIAgentSubgraphBuilderBase<
     doAppendPrompt: Boolean = true
 ): AIAgentNodeDelegate<ToolArg, SafeTool.Result<TResult>> =
     node(name) { toolArgs ->
-        llm.writeSession {
-            if (doAppendPrompt) {
-                appendPrompt {
-                    // Why not tool message? Because it requires id != null to send it back to the LLM,
-                    // The only workaround is to generate it
-                    user(
-                        "Tool call: ${tool.name} was explicitly called with args: ${
-                            tool.encodeArgs(toolArgs, config.serializer)
-                        }"
-                    )
-                }
-            }
+        executeSingleToolImpl(tool, toolArgs, doAppendPrompt)
+    }
 
-            val toolResult = callTool<ToolArg, TResult>(tool, toolArgs)
-
-            if (doAppendPrompt) {
-                appendPrompt {
-                    user(
-                        "Tool call: ${tool.name} was explicitly called and returned result: ${
-                            toolResult.content
-                        }"
-                    )
-                }
-            }
-
-            toolResult
+/**
+ * [InternalAgentsApi] method. Executes a single tool with the provided arguments and returns the result.
+ *
+ * @param toolArgs The arguments to be passed to the tool during execution.
+ * @param doAppendPrompt Indicates whether to append prompts to the LLM session for the tool call
+ *                        and its result.
+ * @param tool The tool to be invoked, containing the logic for processing the input arguments
+ *             and producing the result.
+ *
+ * @return A [SafeTool.Result] containing the result of the tool execution.
+ */
+@InternalAgentsApi
+public suspend fun <TResult, ToolArg> AIAgentGraphContextBase.executeSingleToolImpl(
+    tool: Tool<ToolArg, TResult>,
+    toolArgs: ToolArg,
+    doAppendPrompt: Boolean
+): SafeTool.Result<TResult> = llm.writeSession {
+    if (doAppendPrompt) {
+        appendPrompt {
+            // Why not tool message? Because it requires id != null to send it back to the LLM,
+            // The only workaround is to generate it
+            user(
+                "Tool call: ${tool.name} was explicitly called with args: ${
+                    tool.encodeArgs(toolArgs, config.serializer)
+                }"
+            )
         }
     }
+
+    val toolResult = callTool<ToolArg, TResult>(tool, toolArgs)
+
+    if (doAppendPrompt) {
+        appendPrompt {
+            user(
+                "Tool call: ${tool.name} was explicitly called and returned result: ${
+                    toolResult.content
+                }"
+            )
+        }
+    }
+
+    toolResult
+}
 
 /**
  * Creates a node that sets up a structured output for an AI agent subgraph.
@@ -652,8 +738,23 @@ public inline fun <reified TInput, T> AIAgentSubgraphBuilderBase<*, *>.nodeSetSt
     config: StructuredRequestConfig<T>,
 ): AIAgentNodeDelegate<TInput, TInput> =
     node(name) { message ->
-        llm.writeSession {
-            prompt = config.updatePrompt(model, prompt)
-            message
-        }
+        setStructuredOutputImpl(config, message)
     }
+
+/**
+ * [InternalAgentsApi] method. Sets up structured output for an AI agent subgraph.
+ *
+ * @param T The type of the structured output.
+ * @param TInput The type of the input message.
+ * @param config The configuration used to update the agent's prompt in the context.
+ * @param message The input message to be processed and returned.
+ * @return The input message after processing.
+ */
+@InternalAgentsApi
+public suspend fun <T, TInput> AIAgentGraphContextBase.setStructuredOutputImpl(
+    config: StructuredRequestConfig<T>,
+    message: TInput
+): TInput = llm.writeSession {
+    prompt = config.updatePrompt(model, prompt)
+    message
+}

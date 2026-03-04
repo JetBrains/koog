@@ -15,7 +15,7 @@ import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlin.reflect.typeOf
+import ai.koog.serialization.typeToken
 import kotlin.time.Clock
 
 internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
@@ -155,8 +155,8 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         configure: ConfigureAction<TConfig>
     ): GraphAgentBuilder<String, String> = GraphAgentBuilder(
         strategy = singleRunStrategy(),
-        inputType = typeOf<String>(),
-        outputType = typeOf<String>(),
+        inputType = typeToken<String>(),
+        outputType = typeToken<String>(),
         id = this.id,
         prompt = this.prompt,
         llmModel = this.llmModel,
@@ -179,12 +179,14 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = AIAgentConfig(
-                prompt = prompt ?: Prompt.Empty,
-                model = requireNotNull(llmModel) { "llmModel must be set" },
-                maxAgentIterations = maxIterations,
-            ),
+            agentConfig = agentConfig,
             clock = clock
         )
     }
+
+    internal val agentConfig: AIAgentConfig get() = AIAgentConfig(
+        prompt = prompt,
+        model = requireNotNull(llmModel) { "llmModel must be set" },
+        maxAgentIterations = maxIterations,
+    )
 }

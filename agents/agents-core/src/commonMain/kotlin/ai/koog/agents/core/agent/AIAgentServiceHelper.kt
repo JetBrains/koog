@@ -12,7 +12,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.reflect.typeOf
+import ai.koog.serialization.typeToken
 
 @PublishedApi
 internal object AIAgentServiceHelper {
@@ -77,8 +77,8 @@ internal object AIAgentServiceHelper {
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         strategy = strategy,
-        inputType = typeOf<Input>(),
-        outputType = typeOf<Output>(),
+        inputType = typeToken<Input>(),
+        outputType = typeToken<Output>(),
         toolRegistry = toolRegistry,
         installFeatures = installFeatures
     )

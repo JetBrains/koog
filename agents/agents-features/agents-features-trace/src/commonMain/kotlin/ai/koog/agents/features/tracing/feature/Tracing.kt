@@ -33,12 +33,12 @@ import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.prompt.llm.toModelInfo
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.KType
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
@@ -211,7 +211,7 @@ public class Tracing {
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -223,8 +223,8 @@ public class Tracing {
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
-                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
+                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType, pipeline.config.serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -236,7 +236,7 @@ public class Tracing {
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -253,7 +253,7 @@ public class Tracing {
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -265,8 +265,8 @@ public class Tracing {
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
-                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
+                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType, pipeline.config.serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -278,7 +278,7 @@ public class Tracing {
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -452,13 +452,10 @@ public class Tracing {
          * Note: See [KG-485](https://youtrack.jetbrains.com/issue/KG-485)
          *       Workaround for processing non-serializable [ReceivedToolResult] type in the node input/output.
          */
-        private fun nodeDataToJsonElement(data: Any?, dataType: KType): JsonElement {
-            @OptIn(InternalAgentsApi::class)
-            return SerializationUtils.encodeDataToJsonElementOrDefault(data, dataType) {
-                when (data) {
-                    is ReceivedToolResult -> SerializationUtils.parseDataToJsonElementOrDefault(data.content)
-                    else -> JsonPrimitive(data?.toString())
-                }
+        private fun nodeDataToJsonElement(data: Any?, dataType: TypeToken, serializer: JSONSerializer): JSONElement {
+            return when (data) {
+                is ReceivedToolResult -> serializer.encodeToJSONElement(data.content, dataType)
+                else -> JSONPrimitive(data?.toString())
             }
         }
 

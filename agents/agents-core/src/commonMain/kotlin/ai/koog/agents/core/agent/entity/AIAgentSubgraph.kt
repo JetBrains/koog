@@ -22,10 +22,10 @@ import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
+import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
@@ -52,8 +52,8 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     private val llmParams: LLMParams? = null,
     private val responseProcessor: ResponseProcessor? = null,
 ) : AIAgentNodeBase<TInput, TOutput>(), ExecutionPointNode {
-    override val inputType: KType = start.inputType
-    override val outputType: KType = finish.outputType
+    override val inputType: TypeToken = start.inputType
+    override val outputType: TypeToken = finish.outputType
 
     /**
      * Companion object for the AIAgentSubgraph class.

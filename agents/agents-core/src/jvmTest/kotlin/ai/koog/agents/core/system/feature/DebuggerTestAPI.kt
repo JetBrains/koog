@@ -31,6 +31,7 @@ import ai.koog.agents.testing.feature.message.singleEvent
 import ai.koog.agents.testing.feature.message.singleNodeEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.prompt.llm.LLModel
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
@@ -41,7 +42,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
-import kotlin.reflect.typeOf
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -169,7 +169,7 @@ internal object DebuggerTestAPI {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -181,12 +181,12 @@ internal object DebuggerTestAPI {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -198,7 +198,7 @@ internal object DebuggerTestAPI {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -210,12 +210,12 @@ internal object DebuggerTestAPI {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),

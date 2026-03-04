@@ -8,11 +8,11 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.routing.RoutingContext
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 /**
  * Retrieve the configured llm, or [PromptExecutor] instance from the underlying [Koog] plugin.
@@ -30,8 +30,8 @@ public fun RoutingContext.llm(): PromptExecutor =
  * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
  */
 public suspend fun <Input, Output> RoutingContext.aiAgent(
-    inputType: KType,
-    outputType: KType,
+    inputType: TypeToken,
+    outputType: TypeToken,
     strategy: AIAgentGraphStrategy<Input, Output>,
     model: LLModel,
     tools: ToolRegistry = ToolRegistry.EMPTY,
@@ -65,7 +65,7 @@ public suspend inline fun <reified Input, reified Output> RoutingContext.aiAgent
     strategy: AIAgentGraphStrategy<Input, Output>,
     model: LLModel,
     tools: ToolRegistry = ToolRegistry.EMPTY,
-): AIAgent<Input, Output> = aiAgent(typeOf<Input>(), typeOf<Output>(), strategy, model, tools)
+): AIAgent<Input, Output> = aiAgent(typeToken<Input>(), typeToken<Output>(), strategy, model, tools)
 
 /**
  * Creates an agent using [aiAgent], and immediately runs it given the [input].

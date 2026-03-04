@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 
 /**
  * Represents the context for handling subgraph-specific events for graph strategies within the framework.
@@ -27,7 +27,7 @@ public data class SubgraphExecutionStartingContext(
     val subgraph: AIAgentSubgraph<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
-    val inputType: KType,
+    val inputType: TypeToken,
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionStarting
 }
@@ -50,8 +50,8 @@ public data class SubgraphExecutionCompletedContext(
     val context: AIAgentGraphContextBase,
     val input: Any?,
     val output: Any?,
-    val inputType: KType,
-    val outputType: KType,
+    val inputType: TypeToken,
+    val outputType: TypeToken,
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionCompleted
 }
@@ -72,7 +72,7 @@ public data class SubgraphExecutionFailedContext(
     val subgraph: AIAgentSubgraph<*, *>,
     val context: AIAgentGraphContextBase,
     val input: Any?,
-    val inputType: KType,
+    val inputType: TypeToken,
     val throwable: Throwable
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionFailed

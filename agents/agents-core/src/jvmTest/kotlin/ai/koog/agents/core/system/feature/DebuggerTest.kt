@@ -59,6 +59,7 @@ import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.flow.first
@@ -67,7 +68,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.Disabled
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -292,7 +292,7 @@ class DebuggerTest {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -304,12 +304,12 @@ class DebuggerTest {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -321,7 +321,7 @@ class DebuggerTest {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -356,7 +356,7 @@ class DebuggerTest {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = userPrompt,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
@@ -364,7 +364,7 @@ class DebuggerTest {
                                     dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                dataType = typeOf<Message>()
+                                dataType = typeToken<Message>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -379,7 +379,7 @@ class DebuggerTest {
                                     dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                dataType = typeOf<Message.Tool.Call>()
+                                dataType = typeToken<Message.Tool.Call>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -414,7 +414,7 @@ class DebuggerTest {
                                     toolName = dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                dataType = typeOf<Message.Tool.Call>()
+                                dataType = typeToken<Message.Tool.Call>()
                             ),
                             output = SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = ReceivedToolResult(
@@ -426,7 +426,7 @@ class DebuggerTest {
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
-                                dataType = typeOf<ReceivedToolResult>()
+                                dataType = typeToken<ReceivedToolResult>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -445,7 +445,7 @@ class DebuggerTest {
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
-                                dataType = typeOf<ReceivedToolResult>()
+                                dataType = typeToken<ReceivedToolResult>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -482,12 +482,12 @@ class DebuggerTest {
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
-                                dataType = typeOf<ReceivedToolResult>()
+                                dataType = typeToken<ReceivedToolResult>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = assistantMessage(mockResponse),
-                                dataType = typeOf<Message>()
+                                dataType = typeToken<Message>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -499,7 +499,7 @@ class DebuggerTest {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = mockResponse,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -511,12 +511,12 @@ class DebuggerTest {
                             input = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = mockResponse,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToJsonElementOrNull(
                                 data = mockResponse,
-                                dataType = typeOf<String>()
+                                dataType = typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),

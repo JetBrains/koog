@@ -10,7 +10,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
@@ -180,6 +179,59 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
 }
 
 /**
+ * Creates a subgraph, which performs one specific task, defined by [defineTask],
+ * using the tools defined by [toolSelectionStrategy].
+ *
+ * Use this function if you need the agent to perform a single task which outputs a structured result.
+ *
+ * @param Input The input type for the task to be defined in the subgraph.
+ * @param Output The output type for the subgraph's finalized result.
+ * @param toolSelectionStrategy The strategy used to select tools for the subgraph operations.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
+ * @param llmModel Optional language model to be used within the subgraph. Defaults to null.
+ * @param llmParams Optional parameters for configuring the language model behavior. Defaults to null.
+ * @param runMode The mode in which tools are executed. Defaults to sequential execution.
+ * @param assistantResponseRepeatMax The maximum number of assistant responses allowed before determining that the task cannot be completed.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param defineTask A suspending lambda function that defines the task for the subgraph, taking the input as a parameter.
+ * @return A delegate that represents the created subgraph, allowing input and output operations.
+ */
+@OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
+@AIAgentBuilderDslMarker
+@InternalAgentsApi
+public fun <Input : Any, Output : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+    name: String? = null,
+    inputType: TypeToken,
+    outputType: TypeToken,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
+    defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, Output> = subgraph(
+    name = name,
+    inputType = inputType,
+    outputType = outputType,
+    toolSelectionStrategy = toolSelectionStrategy,
+    llmModel = llmModel,
+    llmParams = llmParams,
+    responseProcessor = responseProcessor,
+) {
+    val finishTool = FinishTool<Output>(outputType)
+
+    setupSubgraphWithTask(
+        finishTool = finishTool,
+        inputType = inputType,
+        outputTransformedType = outputType,
+        runMode = runMode,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask
+    )
+}
+
+/**
  * Creates a subgraph with a task definition and specified tools. The subgraph uses the provided tools to process
  * input and execute the defined task, eventually producing a result through the provided finish tool.
  *
@@ -213,6 +265,56 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     responseProcessor = responseProcessor,
     defineTask = defineTask
 )
+
+/**
+ * Defines a subgraph with a specific task to be performed by an AI agent.
+ *
+ * @param Input The input type provided to the subgraph.
+ * @param Output The output type returned by the subgraph.
+ * @param OutputTransformed The transformed output type after finishing the task.
+ * @param toolSelectionStrategy The strategy to be used for selecting tools within the subgraph.
+ * @param finishTool The tool responsible for finalizing the task and producing the transformed output.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
+ * @param llmModel The optional language model to be used in the subgraph for processing requests.
+ * @param llmParams The optional parameters to customize the behavior of the language model.
+ * @param runMode The mode in which tools are executed. Defaults to sequential execution.
+ * @param assistantResponseRepeatMax The maximum number of assistant responses allowed before determining that the task cannot be completed.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param defineTask A lambda function to define the task logic, which accepts the input and returns a task description.
+ * @return A delegate object representing the constructed subgraph for the specified task.
+ */
+@OptIn(InternalAgentsApi::class)
+@AIAgentBuilderDslMarker
+@InternalAgentsApi
+public fun <Input : Any, OutputTransformed : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+    inputType: TypeToken, // TODO: @EugeneTheDev, change to type tokens
+    toolSelectionStrategy: ToolSelectionStrategy,
+    finishTool: Tool<*, OutputTransformed>,
+    name: String? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
+    defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph<Input, OutputTransformed>(
+    inputType = inputType,
+    outputType = inputType, // TODO: @EugeneTheDev, change to OUTPUT TRANSFORMED TYPE, AND TO TYPE TOKENS!!!
+    name = name,
+    toolSelectionStrategy = toolSelectionStrategy,
+    llmModel = llmModel,
+    llmParams = llmParams,
+    responseProcessor = responseProcessor,
+) {
+    setupSubgraphWithTask(
+        finishTool = finishTool,
+        inputType = inputType,
+        outputTransformedType = inputType, // TODO: @EugeneTheDev, change to OUTPUT TRANSFORMED TYPE, AND TO TYPE TOKENS!!!
+        runMode = runMode,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask,
+    )
+}
 
 /**
  * Defines a subgraph with a specific task to be performed by an AI agent.
@@ -323,24 +425,33 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 @OptIn(InternalAgentsApi::class)
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+@InternalAgentsApi
+public fun <Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+    name: String? = null,
+    inputType: TypeToken,
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
-    noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
-): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraph {
+    defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraph<Input, CriticResult<Input>>(
+    name = name,
+    inputType = inputType,
+    outputType = typeToken<CriticResult<Input>>()
+) {
     val inputKey = createStorageKey<Input>("subgraphWithVerification-input-key")
 
-    val saveInput by node<Input, Input> { input ->
+    val saveInput by node<Input, Input>(inputType = inputType, outputType = inputType) { input ->
         storage.set(inputKey, input)
 
         input
     }
 
     val verifyTask by subgraphWithTask<Input, CriticResultFromLLM>(
+        inputType = inputType,
+        outputType = typeToken<CriticResultFromLLM>(),
         toolSelectionStrategy = toolSelectionStrategy,
         llmModel = llmModel,
         llmParams = llmParams,
@@ -360,6 +471,42 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
 
     nodeStart then saveInput then verifyTask then provideResult then nodeFinish
 }
+
+/**
+ * [subgraphWithTask] with [CriticResult] result.
+ * It verifies if the task was performed correctly or not, and describes the problems if any.
+ *
+ * @param Input The input type accepted by the subgraph.
+ * @param toolSelectionStrategy The strategy used to select tools for the subgraph operations.
+ * @param llmModel Optional language model to be used within the subgraph. Defaults to null.
+ * @param llmParams Optional parameters for configuring the language model behavior. Defaults to null.
+ * @param runMode The mode in which tools are executed. Defaults to sequential execution.
+ * @param assistantResponseRepeatMax The maximum number of assistant responses allowed before determining that the task cannot be completed.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param defineTask A suspending lambda function that defines the task for the subgraph, taking the input as a parameter.
+ * @return A delegate representing the constructed subgraph with verification result.
+ */
+@OptIn(InternalAgentsApi::class)
+@Suppress("unused")
+@AIAgentBuilderDslMarker
+public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+    toolSelectionStrategy: ToolSelectionStrategy,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
+    noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraphWithVerification(
+    inputType = typeToken<Input>(),
+    toolSelectionStrategy = toolSelectionStrategy,
+    llmModel = llmModel,
+    llmParams = llmParams,
+    runMode = runMode,
+    assistantResponseRepeatMax = assistantResponseRepeatMax,
+    responseProcessor = responseProcessor,
+    defineTask = defineTask
+)
 
 /**
  * Constructs a subgraph within an AI agent's strategy graph with additional verification capabilities.
@@ -447,18 +594,23 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
  *        context of an AI agent graph and based on the given input data.
  */
 @InternalAgentsApi
-public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
+public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
     finishTool: Tool<Output, OutputTransformed>,
+    inputType: TypeToken, // TODO: @EugeneTheDev, change to type tokens!
+    outputTransformedType: TypeToken, // TODO: @EugeneTheDev, change to type tokens!
     runMode: ToolCalls,
     assistantResponseRepeatMax: Int? = null,
-    noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
+    defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
     val originalToolsKey = createStorageKey<List<ToolDescriptor>>("all-available-tools")
     val askAssistantToFinishCounterKey = createStorageKey<Int>("ask-assistant-to-finish-counter")
 
     val maxAssistantResponses = assistantResponseRepeatMax ?: SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
 
-    val setupTask by node<Input, String> { input ->
+    val setupTask by node<Input, String>(
+        inputType = inputType,
+        outputType = typeToken<String>(),
+    ) { input ->
         llm.writeSession {
             // Save tools to restore after the subgraph is finished
             storage.set(originalToolsKey, tools)
@@ -477,7 +629,10 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
         defineTask(input)
     }
 
-    val finalizeTask by node<ReceivedToolResult, OutputTransformed> { toolResult ->
+    val finalizeTask by node<ReceivedToolResult, OutputTransformed>(
+        inputType = typeToken<ReceivedToolResult>(),
+        outputType = outputTransformedType
+    ) { toolResult ->
         llm.writeSession {
             // Restore original tools
             tools = storage.get(originalToolsKey)!!
@@ -604,6 +759,37 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     }
 
     edge(finalizeTask forwardTo nodeFinish)
+}
+
+/**
+ * Configures and sets up a subgraph with task handling, including tool execution operations,
+ * assistant response management, and task finalization logic.
+ *
+ * @param Input the type of input data for the subgraph.
+ * @param Output the type of output data from the finish tool.
+ * @param OutputTransformed the transformed type of the output data after processing by the finish tool.
+ * @param finishTool the tool used to signify task completion and process task finalization.
+ * @param runMode the mode in which tools are executed, e.g., parallel or sequential execution.
+ * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
+ *        determining that the task cannot be completed. If not provided, a default is used.
+ * @param defineTask a suspend function defining the task description, executed within the
+ *        context of an AI agent graph and based on the given input data.
+ */
+@InternalAgentsApi
+public inline fun <reified Input, Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
+    finishTool: Tool<Output, OutputTransformed>,
+    runMode: ToolCalls,
+    assistantResponseRepeatMax: Int? = null,
+    noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
+) {
+    setupSubgraphWithTask(
+        finishTool = finishTool,
+        inputType = typeToken<Input>(),
+        outputTransformedType = typeToken<OutputTransformed>(),
+        runMode = runMode,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask,
+    )
 }
 
 @PublishedApi

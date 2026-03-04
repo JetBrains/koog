@@ -17,7 +17,7 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 import kotlin.time.Clock
 
 /**
@@ -67,7 +67,7 @@ public expect open class AIAgentGraphPipeline(
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType
+        inputType: TypeToken
     )
 
     /**
@@ -89,9 +89,9 @@ public expect open class AIAgentGraphPipeline(
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         output: Any?,
-        outputType: KType,
+        outputType: TypeToken,
     )
 
     /**
@@ -112,7 +112,7 @@ public expect open class AIAgentGraphPipeline(
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         throwable: Throwable
     )
 
@@ -137,7 +137,7 @@ public expect open class AIAgentGraphPipeline(
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType
+        inputType: TypeToken
     )
 
     /**
@@ -159,9 +159,9 @@ public expect open class AIAgentGraphPipeline(
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         output: Any?,
-        outputType: KType,
+        outputType: TypeToken,
     )
 
     /**
@@ -182,7 +182,7 @@ public expect open class AIAgentGraphPipeline(
         subgraph: AIAgentSubgraph<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         throwable: Throwable
     )
 

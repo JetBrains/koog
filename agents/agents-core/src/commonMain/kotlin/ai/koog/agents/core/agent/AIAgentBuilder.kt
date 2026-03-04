@@ -21,7 +21,7 @@ import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 import kotlin.time.Clock
 
 /**
@@ -186,13 +186,13 @@ public expect class AIAgentBuilder internal constructor() : AIAgentBuilderAPI {
  * @param Input The input type that the agent processes.
  * @param Output The output type that the agent produces.
  * @param strategy The execution strategy used by the agent for processing input and generating results.
- * @param inputType The [KType] representation of the input parameter type.
- * @param outputType The [KType] representation of the output parameter type.
+ * @param inputType The [TypeToken] representation of the input parameter type.
+ * @param outputType The [TypeToken] representation of the output parameter type.
  */
 public class GraphAgentBuilder<Input, Output>(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: KType,
-    private val outputType: KType,
+    private val inputType: TypeToken,
+    private val outputType: TypeToken,
     private var promptExecutor: PromptExecutor? = null,
     private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private var id: String? = null,

@@ -10,9 +10,9 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -42,8 +42,8 @@ class AIAgentToolTest {
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 5
         ),
-        inputType = typeOf<String>(),
-        outputType = typeOf<String>()
+        inputType = typeToken<String>(),
+        outputType = typeToken<String>()
     ) {
         constructor(result: String) : this({ result })
     }

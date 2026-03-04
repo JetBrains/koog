@@ -8,10 +8,10 @@ import ai.koog.agents.planner.AIAgentPlanner
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmOverloads
-import kotlin.reflect.typeOf
 
 /**
  * A simple planning strategy that uses LLM requests to build and execute a plan.
@@ -24,7 +24,7 @@ import kotlin.reflect.typeOf
 public open class SimpleLLMPlanner @JvmOverloads constructor(
     private val historyCompressionStrategy: HistoryCompressionStrategy = HistoryCompressionStrategy.NoCompression
 ) : AIAgentPlanner<String, SimplePlan>(
-    stateType = typeOf<String>(),
+    stateType = typeToken<String>(),
 ) {
     override suspend fun buildPlan(
         context: AIAgentPlannerContext,

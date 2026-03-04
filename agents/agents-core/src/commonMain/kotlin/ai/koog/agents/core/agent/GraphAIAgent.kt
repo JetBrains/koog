@@ -19,8 +19,8 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.reflect.KType
 import kotlin.time.Clock
 
 /**
@@ -34,8 +34,8 @@ import kotlin.time.Clock
  * @param Input Type of agent input.
  * @param Output Type of agent output.
  *
- * @property inputType [KType] representing [Input] - agent input.
- * @property outputType [KType] representing [Output] - agent output.
+ * @property inputType [TypeToken] representing [Input] - agent input.
+ * @property outputType [TypeToken] representing [Output] - agent output.
  * @property promptExecutor Executor used to manage and execute prompt strings.
  * @property strategy The execution strategy defining how the agent processes input and produces output.
  * @property agentConfig Configuration details for the local agent that define its operational parameters.
@@ -48,8 +48,8 @@ import kotlin.time.Clock
 @Suppress("ktlint:standard:wrapping")
 @OptIn(InternalAgentsApi::class)
 public open class GraphAIAgent<Input, Output>(
-    public val inputType: KType,
-    public val outputType: KType,
+    public val inputType: TypeToken,
+    public val outputType: TypeToken,
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     override val strategy: AIAgentGraphStrategy<Input, Output>,

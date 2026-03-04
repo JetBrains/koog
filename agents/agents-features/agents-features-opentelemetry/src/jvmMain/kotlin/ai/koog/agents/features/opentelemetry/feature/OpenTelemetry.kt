@@ -14,7 +14,6 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
@@ -46,10 +45,11 @@ import ai.koog.agents.mcp.metadata.McpMetadataKeys
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.reflect.KType
 
 /**
  * Represents the OpenTelemetry integration feature for tracking and managing spans and contexts
@@ -100,7 +100,7 @@ public class OpenTelemetry {
                     return@intercept
                 }
 
-                val nodeInput = nodeDataToString(eventContext.input, eventContext.inputType)
+                val nodeInput = nodeDataToString(eventContext.input, eventContext.inputType, pipeline.config.serializer)
 
                 val nodeExecuteSpan = startNodeExecuteSpan(
                     tracer = tracer,
@@ -129,7 +129,7 @@ public class OpenTelemetry {
                     spanType = SpanType.NODE
                 ) ?: return@intercept
 
-                val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType)
+                val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
                 spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
                 endNodeExecuteSpan(
@@ -179,7 +179,7 @@ public class OpenTelemetry {
                     executionInfo = patchedExecutionInfo,
                 ) ?: return@intercept
 
-                val subgraphInput = nodeDataToString(eventContext.input, eventContext.inputType)
+                val subgraphInput = nodeDataToString(eventContext.input, eventContext.inputType, pipeline.config.serializer)
 
                 val subgraphExecuteSpan = startSubgraphExecuteSpan(
                     tracer = tracer,
@@ -208,7 +208,7 @@ public class OpenTelemetry {
                     spanType = SpanType.SUBGRAPH
                 ) ?: return@intercept
 
-                val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType)
+                val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
                 spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
                 endSubgraphExecuteSpan(
@@ -703,11 +703,11 @@ public class OpenTelemetry {
         /**
          * Retrieves the [String] representation of the given data based on its type.
          */
-        private fun nodeDataToString(data: Any?, dataType: KType): String? {
+        private fun nodeDataToString(data: Any?, dataType: TypeToken, serializer: JSONSerializer): String? {
             data ?: return null
 
             @OptIn(InternalAgentsApi::class)
-            return SerializationUtils.encodeDataToStringOrDefault(data, dataType)
+            return serializer.encodeToString(data, dataType)
         }
 
         /**

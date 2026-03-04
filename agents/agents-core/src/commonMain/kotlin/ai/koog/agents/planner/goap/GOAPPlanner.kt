@@ -2,7 +2,7 @@ package ai.koog.agents.planner.goap
 
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.planner.AIAgentPlanner
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 
 /**
  * Goal-Oriented Action Planning (GOAP) implementation for AI agents.
@@ -18,7 +18,7 @@ import kotlin.reflect.KType
 public open class GOAPPlanner<State : Any> internal constructor(
     private val actions: List<Action<State>>,
     private val goals: List<Goal<State>>,
-    stateType: KType? = null,
+    stateType: TypeToken? = null,
 ) : AIAgentPlanner<State, GOAPPlan<State>>(
     stateType = stateType,
 ) {

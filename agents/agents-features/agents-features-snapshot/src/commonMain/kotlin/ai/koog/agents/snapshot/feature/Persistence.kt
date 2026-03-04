@@ -19,13 +19,12 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
+import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
-import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.reflect.KType
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -173,12 +172,12 @@ public class Persistence(
         agentContext: AIAgentContext,
         nodePath: String,
         lastInput: Any?,
-        lastInputType: KType,
+        lastInputType: TypeToken,
         version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
         val inputJson: JSONElement? = try {
-            agentContext.config.serializer.encodeToJSONElement(lastInput, typeToken(lastInputType))
+            agentContext.config.serializer.encodeToJSONElement(lastInput, lastInputType)
         } catch (_: Exception) {
             null
         }
@@ -221,12 +220,12 @@ public class Persistence(
         agentContext: AIAgentContext,
         nodePath: String,
         lastOutput: Any?,
-        lastOutputType: KType,
+        lastOutputType: TypeToken,
         version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
         val outputJson = try {
-            agentContext.config.serializer.encodeToJSONElement(lastOutput, typeToken(lastOutputType))
+            agentContext.config.serializer.encodeToJSONElement(lastOutput, lastOutputType)
         } catch (_: Exception) {
             null
         }

@@ -5,9 +5,9 @@ import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 /**
  * An abstract base planner component, which can be used to implement different types of AI agent planner execution flows.
@@ -19,16 +19,16 @@ import kotlin.reflect.typeOf
  * 2. Execute a step in the plan: [executeStep]
  * 3. Repeat steps 1 and 2 until the plan is considered completed. Then the final [State] is returned.
  *
- * @param stateType [KType] of the [State].
+ * @param stateType [TypeToken] of the [State].
  */
 public abstract class AIAgentPlanner<State : Any, Plan : Any>(
     // FIXME: require the type explicitly when we decide, what to do with it in Java API
-    stateType: KType? = null,
+    stateType: TypeToken? = null,
 ) {
     /**
-     * [KType] of the [State]
+     * [TypeToken] of the [State]
      */
-    public val stateType: KType = stateType ?: typeOf<Any?>().also {
+    public val stateType: TypeToken = stateType ?: typeToken<Any?>().also {
         logger.warn { "State type is not specified, some agent features might behave unexpectedly." }
     }
 

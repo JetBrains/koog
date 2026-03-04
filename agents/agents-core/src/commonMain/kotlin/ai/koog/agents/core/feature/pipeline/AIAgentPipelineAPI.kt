@@ -39,8 +39,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
+import ai.koog.serialization.TypeToken
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
 import kotlin.time.Clock
 
 /**
@@ -130,7 +130,7 @@ public interface AIAgentPipelineAPI {
         strategy: AIAgentStrategy<*, *, *>,
         context: AIAgentContext,
         result: Any?,
-        resultType: KType
+        resultType: TypeToken
     )
 
     //endregion Trigger Strategy Handlers

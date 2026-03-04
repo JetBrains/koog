@@ -9,6 +9,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -17,7 +18,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.js.JsName
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -43,7 +43,7 @@ class SerializationUtilsTest {
 
         val actualString =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToStringOrNull(data, typeOf<TestData>())
+            SerializationUtils.encodeDataToStringOrNull(data, typeToken<TestData>())
 
         val expectedJsonElement = JsonObject(
             mapOf(
@@ -70,7 +70,7 @@ class SerializationUtilsTest {
 
         val actualString =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToStringOrNull(data, typeOf<Any>())
+            SerializationUtils.encodeDataToStringOrNull(data, typeToken<Any>())
 
         assertNull(actualString)
     }
@@ -85,7 +85,7 @@ class SerializationUtilsTest {
         @OptIn(InternalAgentsApi::class)
         val serializedData = SerializationUtils.encodeDataToStringOrNull(
             data = testObjectWithoutSerializer,
-            dataType = typeOf<TestClassWithoutSerializer>()
+            dataType = typeToken<TestClassWithoutSerializer>()
         )
 
         assertNull(serializedData)
@@ -99,7 +99,7 @@ class SerializationUtilsTest {
         @OptIn(InternalAgentsApi::class)
         val serializedData = SerializationUtils.encodeDataToStringOrNull(
             data = testObjectWithStar,
-            dataType = typeOf<List<*>>()
+            dataType = typeToken<List<*>>()
         )
 
         assertNull(serializedData)
@@ -118,7 +118,7 @@ class SerializationUtilsTest {
 
         val actualJsonElement =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElementOrNull(data, typeOf<TestData>())
+            SerializationUtils.encodeDataToJsonElementOrNull(data, typeToken<TestData>())
 
         val expectedJsonElement = JsonObject(
             mapOf(
@@ -143,7 +143,7 @@ class SerializationUtilsTest {
 
         val actualJsonElement =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElementOrNull(data, typeOf<Any>())
+            SerializationUtils.encodeDataToJsonElementOrNull(data, typeToken<Any>())
 
         assertNull(actualJsonElement)
     }
@@ -158,7 +158,7 @@ class SerializationUtilsTest {
         @OptIn(InternalAgentsApi::class)
         val serializedData = SerializationUtils.encodeDataToJsonElementOrNull(
             data = testObjectWithoutSerializer,
-            dataType = typeOf<TestClassWithoutSerializer>()
+            dataType = typeToken<TestClassWithoutSerializer>()
         )
 
         assertNull(serializedData)
@@ -172,7 +172,7 @@ class SerializationUtilsTest {
         @OptIn(InternalAgentsApi::class)
         val serializedData = SerializationUtils.encodeDataToJsonElementOrNull(
             data = testObjectWithStar,
-            dataType = typeOf<List<*>>()
+            dataType = typeToken<List<*>>()
         )
 
         assertNull(serializedData)
@@ -191,7 +191,7 @@ class SerializationUtilsTest {
 
         val actualString =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToString(data, typeOf<TestData>())
+            SerializationUtils.encodeDataToString(data, typeToken<TestData>())
 
         val expectedJsonElement = JsonObject(
             mapOf(
@@ -218,7 +218,7 @@ class SerializationUtilsTest {
 
         val throwable = assertFailsWith<SerializationException> {
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToString(data, typeOf<Any>())
+            SerializationUtils.encodeDataToString(data, typeToken<Any>())
         }
 
         val actualMessage = throwable.message
@@ -237,7 +237,7 @@ class SerializationUtilsTest {
         val throwable = assertFailsWith<SerializationException> {
             SerializationUtils.encodeDataToString(
                 data = testObjectWithoutSerializer,
-                dataType = typeOf<TestClassWithoutSerializer>()
+                dataType = typeToken<TestClassWithoutSerializer>()
             )
         }
 
@@ -260,7 +260,7 @@ class SerializationUtilsTest {
         val throwable = assertFailsWith<IllegalArgumentException> {
             SerializationUtils.encodeDataToString(
                 data = testObjectWithStar,
-                dataType = typeOf<List<*>>()
+                dataType = typeToken<List<*>>()
             )
         }
 
@@ -304,7 +304,7 @@ class SerializationUtilsTest {
         @OptIn(InternalAgentsApi::class)
         val serializedString = SerializationUtils.encodeDataToString(
             data = moderatedMessage,
-            dataType = typeOf<ModeratedMessage>()
+            dataType = typeToken<ModeratedMessage>()
         )
 
         assertNotNull(serializedString)
@@ -323,7 +323,7 @@ class SerializationUtilsTest {
 
         val actualJsonElement =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElement(data, typeOf<TestData>())
+            SerializationUtils.encodeDataToJsonElement(data, typeToken<TestData>())
 
         val expectedJsonElement = JsonObject(
             mapOf(
@@ -348,7 +348,7 @@ class SerializationUtilsTest {
 
         val throwable = assertFailsWith<SerializationException> {
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElement(data, typeOf<Any>())
+            SerializationUtils.encodeDataToJsonElement(data, typeToken<Any>())
         }
 
         val actualMessage = throwable.message
@@ -367,7 +367,7 @@ class SerializationUtilsTest {
         val throwable = assertFailsWith<SerializationException> {
             SerializationUtils.encodeDataToJsonElement(
                 data = testObjectWithoutSerializer,
-                dataType = typeOf<TestClassWithoutSerializer>()
+                dataType = typeToken<TestClassWithoutSerializer>()
             )
         }
 
@@ -390,7 +390,7 @@ class SerializationUtilsTest {
         val throwable = assertFailsWith<IllegalArgumentException> {
             SerializationUtils.encodeDataToJsonElement(
                 data = testObjectWithStar,
-                dataType = typeOf<List<*>>()
+                dataType = typeToken<List<*>>()
             )
         }
 
@@ -434,7 +434,7 @@ class SerializationUtilsTest {
         @OptIn(InternalAgentsApi::class)
         val serializedString = SerializationUtils.encodeDataToJsonElement(
             data = moderatedMessage,
-            dataType = typeOf<ModeratedMessage>()
+            dataType = typeToken<ModeratedMessage>()
         )
 
         assertNotNull(serializedString)
@@ -533,7 +533,7 @@ class SerializationUtilsTest {
 
         val actualString =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToStringOrDefault(data, typeOf<TestData>())
+            SerializationUtils.encodeDataToStringOrDefault(data, typeToken<TestData>())
 
         val expectedJsonElement = JsonObject(
             mapOf(
@@ -560,7 +560,7 @@ class SerializationUtilsTest {
 
         val actualString =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToStringOrDefault(data, typeOf<Any>()) { defaultValue }
+            SerializationUtils.encodeDataToStringOrDefault(data, typeToken<Any>()) { defaultValue }
 
         assertEquals(defaultValue, actualString)
     }
@@ -579,7 +579,7 @@ class SerializationUtilsTest {
 
         val actualJsonElement =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElementOrDefault(data, typeOf<TestData>())
+            SerializationUtils.encodeDataToJsonElementOrDefault(data, typeToken<TestData>())
 
         val expectedJsonElement = JsonObject(
             mapOf(
@@ -608,7 +608,7 @@ class SerializationUtilsTest {
 
         val actualJsonElement =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElementOrDefault(data, typeOf<Any>()) { defaultElement }
+            SerializationUtils.encodeDataToJsonElementOrDefault(data, typeToken<Any>()) { defaultElement }
 
         assertEquals(defaultElement, actualJsonElement)
     }

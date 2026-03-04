@@ -20,8 +20,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.KSerializer
 import kotlin.jvm.JvmStatic
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 import kotlin.time.Clock
 
 /**
@@ -342,8 +340,8 @@ public constructor(
     override val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     public val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: KType,
-    private val outputType: KType,
+    private val inputType: TypeToken,
+    private val outputType: TypeToken,
     override val toolRegistry: ToolRegistry,
     public val installFeatures: FeatureContext.() -> Unit
 ) : AIAgentServiceBase<Input, Output, GraphAIAgent<Input, Output>>() {
@@ -433,8 +431,8 @@ public operator fun AIAgentService.Companion.invoke(
     promptExecutor = promptExecutor,
     agentConfig = agentConfig,
     strategy = strategy,
-    inputType = typeOf<String>(),
-    outputType = typeOf<String>(),
+    inputType = typeToken<String>(),
+    outputType = typeToken<String>(),
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
 )

@@ -21,9 +21,9 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.typeOf
 
 open class AgentTestBase {
     protected val testAgentId = "test-agent"
@@ -111,7 +111,7 @@ open class AgentTestBase {
         return AIAgentGraphContext(
             environment = environment,
             agentId = testAgentId,
-            agentInputType = typeOf<String>(),
+            agentInputType = typeToken<String>(),
             agentInput = agentInput,
             config = config,
             llm = llmContext,
