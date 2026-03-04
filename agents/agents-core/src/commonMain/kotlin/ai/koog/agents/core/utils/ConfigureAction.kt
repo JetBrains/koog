@@ -27,8 +27,8 @@ public fun interface BuilderChainAction<Builder, ResultingBuilder> {
     /**
      * Configures the current builder with the specified configuration settings.
      *
-     * @param config The builder instance containing the configuration settings to apply.
+     * @param builder The builder instance containing the configuration settings to apply.
      * @return The resulting builder after the configuration has been applied.
      */
-    public fun configure(config: Builder): ResultingBuilder
+    public fun configure(builder: Builder): ResultingBuilder
 }

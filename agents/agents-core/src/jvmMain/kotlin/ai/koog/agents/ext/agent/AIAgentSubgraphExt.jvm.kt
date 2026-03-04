@@ -30,7 +30,7 @@ import kotlin.reflect.KFunction
  */
 @OptIn(InternalAgentToolsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishToolFunction: KFunction<Output>,
     llmModel: LLModel? = null,
@@ -62,7 +62,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
  */
 @OptIn(InternalAgentToolsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishToolFunction: KFunction<Output>,
     llmModel: LLModel? = null,

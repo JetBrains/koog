@@ -81,7 +81,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         executorService: ExecutorService? = null,
         clock: Clock
     ): Output = createAgent(id, additionalToolRegistry, agentConfig, executorService, clock)
-        .javaRun(agentInput, null, executorService)
+        .javaNonSuspendRun(agentInput, null, executorService)
 
     /**
      * Removes the specified agent from the system.

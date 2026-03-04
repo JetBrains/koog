@@ -17,6 +17,7 @@ import kotlin.reflect.typeOf
  * of the edge's data transformation and conditions between the nodes.
  */
 @EdgeTransformationDslMarker
+@Deprecated("Use non-extension AIAgentNodeBase.forwardTo instead")
 public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutput>.forwardTo(
     otherNode: AIAgentNodeBase<OutgoingInput, *>
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IncomingOutput, OutgoingInput> {

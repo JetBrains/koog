@@ -142,20 +142,38 @@ public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilde
         }
     )
 
+    @JavaAPI
+    @JvmOverloads
+    public fun <Input, Output> graphStrategy(
+        name: String = "graphStrategy",
+        build: BuilderChainAction<GraphStrategyBuilder, AIAgentGraphStrategy<Input, Output>>
+    ): GraphAgentBuilder<Input, Output> = graphStrategy(
+        build.configure(
+            GraphStrategyBuilder(
+                strategyName = name,
+                agentConfig = delegate.agentConfig
+            )
+        )
+    )
+
     public actual override fun id(id: String?): AIAgentBuilder = apply { delegate.id(id) }
 
-    public actual override fun systemPrompt(systemPrompt: String): AIAgentBuilder = apply { delegate.systemPrompt(systemPrompt) }
+    public actual override fun systemPrompt(systemPrompt: String): AIAgentBuilder =
+        apply { delegate.systemPrompt(systemPrompt) }
 
     public actual override fun prompt(prompt: Prompt): AIAgentBuilder = apply { delegate.prompt(prompt) }
 
-    public actual override fun temperature(temperature: Double): AIAgentBuilder = apply { delegate.temperature(temperature) }
+    public actual override fun temperature(temperature: Double): AIAgentBuilder =
+        apply { delegate.temperature(temperature) }
 
     public actual override fun numberOfChoices(numberOfChoices: Int): AIAgentBuilder =
         apply { delegate.numberOfChoices(numberOfChoices) }
 
-    public actual override fun maxIterations(maxIterations: Int): AIAgentBuilder = apply { delegate.maxIterations(maxIterations) }
+    public actual override fun maxIterations(maxIterations: Int): AIAgentBuilder =
+        apply { delegate.maxIterations(maxIterations) }
 
-    public actual override fun agentConfig(config: AIAgentConfig): AIAgentBuilder = apply { delegate.agentConfig(config) }
+    public actual override fun agentConfig(config: AIAgentConfig): AIAgentBuilder =
+        apply { delegate.agentConfig(config) }
 
     public actual override fun <TConfig : FeatureConfig> install(
         feature: AIAgentGraphFeature<TConfig, *>,

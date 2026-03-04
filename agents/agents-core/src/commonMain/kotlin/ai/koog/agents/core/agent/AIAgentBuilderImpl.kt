@@ -179,12 +179,14 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = AIAgentConfig(
-                prompt = prompt ?: Prompt.Empty,
-                model = requireNotNull(llmModel) { "llmModel must be set" },
-                maxAgentIterations = maxIterations,
-            ),
+            agentConfig = agentConfig,
             clock = clock
         )
     }
+
+    internal val agentConfig: AIAgentConfig get() = AIAgentConfig(
+        prompt = prompt,
+        model = requireNotNull(llmModel) { "llmModel must be set" },
+        maxAgentIterations = maxIterations,
+    )
 }

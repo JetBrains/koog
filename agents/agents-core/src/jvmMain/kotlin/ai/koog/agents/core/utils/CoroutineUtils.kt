@@ -1,4 +1,5 @@
 @file:Suppress("MissingKDocForPublicAPI")
+
 package ai.koog.agents.core.utils
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -30,7 +31,7 @@ internal fun ExecutorService?.asCoroutineContext(
  * @return The result of the executed suspending [block].
  */
 @InternalAgentsApi
-public fun <T> AIAgentConfig.runOnLLMDispatcher(executorService: ExecutorService?, block: suspend () -> T): T {
+public fun <T> AIAgentConfig.runOnLLMDispatcher(executorService: ExecutorService? = null, block: suspend () -> T): T {
     val context = executorService.asCoroutineContext(
         defaultExecutorService = llmRequestExecutorService,
         fallbackDispatcher = Dispatchers.IO

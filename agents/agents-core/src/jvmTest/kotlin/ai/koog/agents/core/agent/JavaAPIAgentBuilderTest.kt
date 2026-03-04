@@ -143,7 +143,7 @@ class JavaAPIAgentBuilderTest {
             .promptExecutor(getMockExecutor(serializer) { })
             .build()
 
-        val result = agent.javaRun("hello", null, null)
+        val result = agent.javaNonSuspendRun("hello", null, null)
         assertEquals("Echo: hello", result)
     }
 
@@ -173,7 +173,7 @@ class JavaAPIAgentBuilderTest {
             .promptExecutor(getMockExecutor(serializer) { })
             .build()
 
-        val result = agent.javaRun("data")
+        val result = agent.javaNonSuspendRun("data")
         assertEquals("Processed: data", result)
     }
 

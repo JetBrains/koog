@@ -220,7 +220,7 @@ public expect class AIAgentLLMWriteSession internal constructor(
  * @param args the arguments required to execute the tool.
  * @return a `SafeTool.Result` containing the tool's execution result of type `TResult`.
  */
-public suspend inline fun <reified TArgs, reified TResult> AIAgentLLMWriteSession.callTool(
+public suspend fun <TArgs, TResult> AIAgentLLMWriteSession.callTool(
     tool: Tool<TArgs, TResult>,
     args: TArgs
 ): SafeTool.Result<TResult> {
@@ -234,7 +234,7 @@ public suspend inline fun <reified TArgs, reified TResult> AIAgentLLMWriteSessio
  * @param args The arguments required to execute the tool.
  * @return A [SafeTool.Result] containing the result of the tool execution, which is a subtype of [ai.koog.agents.core.tools.ToolResult].
  */
-public suspend inline fun <reified TArgs> AIAgentLLMWriteSession.callTool(
+public suspend fun <TArgs> AIAgentLLMWriteSession.callTool(
     toolName: String,
     args: TArgs
 ): SafeTool.Result<out Any?> {
@@ -248,7 +248,7 @@ public suspend inline fun <reified TArgs> AIAgentLLMWriteSession.callTool(
  * @param args The arguments to be passed to the tool.
  * @return The raw result of the tool's execution as a String.
  */
-public suspend inline fun <reified TArgs> AIAgentLLMWriteSession.callToolRaw(
+public suspend fun <TArgs> AIAgentLLMWriteSession.callToolRaw(
     toolName: String,
     args: TArgs
 ): String {
@@ -264,7 +264,7 @@ public suspend inline fun <reified TArgs> AIAgentLLMWriteSession.callToolRaw(
  * @param args The arguments to be passed to the tool for its execution.
  * @return A result wrapper containing either the successful result of the tool's execution or an error.
  */
-public suspend inline fun <reified TArgs, reified TResult> AIAgentLLMWriteSession.callTool(
+public suspend fun <TArgs, TResult> AIAgentLLMWriteSession.callTool(
     toolClass: KClass<out Tool<TArgs, TResult>>,
     args: TArgs
 ): SafeTool.Result<TResult> {
@@ -296,7 +296,7 @@ public suspend inline fun <reified ToolT : Tool<Any?, Any?>> AIAgentLLMWriteSess
  * @return the tool that matches the specified name and types
  * @throws IllegalArgumentException if the tool is not defined or the types are incompatible
  */
-public inline fun <reified TArgs, reified TResult> AIAgentLLMWriteSession.findToolByNameAndArgs(
+public fun <TArgs, TResult> AIAgentLLMWriteSession.findToolByNameAndArgs(
     toolName: String
 ): Tool<TArgs, TResult> =
     @Suppress("UNCHECKED_CAST")
@@ -313,7 +313,7 @@ public inline fun <reified TArgs, reified TResult> AIAgentLLMWriteSession.findTo
  * @throws IllegalArgumentException If the tool with the specified name is not defined or its arguments
  * are incompatible with the expected type.
  */
-public inline fun <reified TArgs> AIAgentLLMWriteSession.findToolByName(toolName: String): SafeTool<TArgs, *> {
+public fun <TArgs> AIAgentLLMWriteSession.findToolByName(toolName: String): SafeTool<TArgs, *> {
     @Suppress("UNCHECKED_CAST")
     val tool = (
         toolRegistry.getTool(toolName) as? Tool<TArgs, *>

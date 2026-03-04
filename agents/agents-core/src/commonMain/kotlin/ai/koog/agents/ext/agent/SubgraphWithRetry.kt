@@ -6,7 +6,8 @@ import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 
 /**
  * Represents the result of [subgraphWithRetry].
@@ -81,7 +82,7 @@ public val Boolean.asConditionResult: ConditionResult
  * @param defineAction A lambda defining the action subgraph to perform within the retry subgraph.
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetry(
+public inline fun <reified Input : Any, reified Output> subgraphWithRetry(
     noinline condition: suspend AIAgentGraphContextBase.(Output) -> ConditionResult,
     maxRetries: Int,
     conditionDescription: String? = null,
@@ -208,7 +209,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
  * ```
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
+public inline fun <reified Input : Any, reified Output> subgraphWithRetrySimple(
     noinline condition: suspend AIAgentGraphContextBase.(Output) -> ConditionResult,
     maxRetries: Int,
     conditionDescription: String? = null,

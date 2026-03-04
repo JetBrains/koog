@@ -41,7 +41,7 @@ class JavaAPIAgentCreationAndRunTest {
         val pool = Executors.newSingleThreadExecutor()
         try {
             // Use Java-facing overloads
-            val result = agent.javaRun("xyz", null, pool)
+            val result = agent.javaNonSuspendRun("xyz", null, pool)
             assertEquals("Echo: xyz", result)
         } finally {
             pool.shutdownNow()

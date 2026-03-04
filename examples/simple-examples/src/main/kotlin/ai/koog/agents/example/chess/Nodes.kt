@@ -2,12 +2,13 @@ package ai.koog.agents.example.chess
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.node
 
 /**
  * Chess position is (almost) completely defined by the board state,
  * So we can trim the history of the LLM to only contain the system prompt and the last move.
  */
-inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeTrimHistory(
+inline fun <reified T> nodeTrimHistory(
     name: String? = null
 ): AIAgentNodeDelegate<T, T> =
     node(name) { result ->
