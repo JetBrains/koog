@@ -5,7 +5,7 @@ package ai.koog.agents.core.feature.pipeline
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 public actual open class AIAgentPlannerPipeline actual constructor(
     agentConfig: AIAgentConfig,
