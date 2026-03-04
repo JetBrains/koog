@@ -52,7 +52,6 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      * ```
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptNodeExecutionStarting")
     public fun javaApiInterceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
@@ -80,7 +79,6 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      * ```
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptNodeExecutionCompleted")
     public fun javaApiInterceptNodeExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
@@ -108,7 +106,6 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      * ```
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptNodeExecutionFailed")
     public fun javaApiInterceptNodeExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
@@ -136,7 +133,6 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      * ```
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptSubgraphExecutionStarting")
     public fun javaApiInterceptSubgraphExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
@@ -164,7 +160,6 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      * ```
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptSubgraphExecutionCompleted")
     public fun javaApiInterceptSubgraphExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
@@ -192,7 +187,6 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      * ```
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptSubgraphExecutionFailed")
     public fun javaApiInterceptSubgraphExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,

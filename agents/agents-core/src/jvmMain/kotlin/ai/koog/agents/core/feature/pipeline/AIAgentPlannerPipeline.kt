@@ -53,7 +53,6 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      * JVM-friendly overload that accepts an async interceptor.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptPlanCreationStarting")
     public fun javaApiInterceptPlanCreationStarting(
         feature: AIAgentFeature<*, *>,
@@ -72,7 +71,6 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      * JVM-friendly overload that accepts an async interceptor.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptPlanCreationCompleted")
     public fun javaApiInterceptPlanCreationCompleted(
         feature: AIAgentFeature<*, *>,
@@ -97,7 +95,6 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptStepExecutionStarting")
     public fun javaApiInterceptStepExecutionStarting(
         feature: AIAgentFeature<*, *>,
@@ -122,7 +119,6 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptStepExecutionCompleted")
     public fun javaApiInterceptStepExecutionCompleted(
         feature: AIAgentFeature<*, *>,
@@ -141,7 +137,6 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      * JVM-friendly overload that accepts an async interceptor.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptPlanCompletionEvaluationStarting")
     public fun javaApiInterceptPlanCompletionEvaluationStarting(
         feature: AIAgentFeature<*, *>,
@@ -166,7 +161,6 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptPlanCompletionEvaluationCompleted")
     public fun javaApiInterceptPlanCompletionEvaluationCompleted(
         feature: AIAgentFeature<*, *>,
