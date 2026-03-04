@@ -270,7 +270,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @ParameterizedTest
     @MethodSource("allModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runTest {
-        false.shouldBeTrue()
         Models.assumeAvailable(model.provider)
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
