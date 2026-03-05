@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaUtils;
+import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.llm.LLModel;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,10 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for AIAgent builder with basic configuration, tools, and event handlers.
- */
-public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
+public class BuilderInteropIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
@@ -64,17 +61,16 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
     public void integration_BuilderWithToolRegistry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .systemPrompt("You are a calculator. Use the add and multiply tools as needed.")
+            .systemPrompt("You are a calculator. You MUST use the add and multiply tools as needed. DO NOT answer without calling tools.")
             .toolRegistry(toolRegistry)
             .build();
 
-        // Test with complex expression using both tools
         String result = runBlocking(continuation -> agent.run("Calculate (5 + 3) * 2", null, continuation));
 
         assertNotNull(result);
@@ -90,13 +86,13 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
         AtomicBoolean agentCompleted = new AtomicBoolean(false);
         AtomicInteger llmCallsCount = new AtomicInteger(0);
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .systemPrompt("You are a calculator. Use the add tool when needed.")
+            .systemPrompt("You are a calculator. You MUST use the add tool when needed. DO NOT answer without calling tools.")
             .toolRegistry(toolRegistry)
             .install(EventHandler.Feature, config -> {
                 config.onAgentStarting(ctx -> agentStarted.set(true));
@@ -120,13 +116,13 @@ public class JavaAIAgentBuilderInteropIntegrationTest extends KoogJavaTestBase {
     public void integration_BuilderWithMaxIterations(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .systemPrompt("You are a helpful assistant with calculator tools.")
+            .systemPrompt("You are a helpful assistant with calculator tools. You MUST use tools for calculations. DO NOT answer without calling tools.")
             .toolRegistry(toolRegistry)
             .maxIterations(5)
             .build();

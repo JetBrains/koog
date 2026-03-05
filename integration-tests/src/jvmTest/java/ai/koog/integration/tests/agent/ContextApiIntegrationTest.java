@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
+import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.StructuredResults;
@@ -22,7 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
+public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_RequestLLMStructuredSimple(LLModel model) {
@@ -152,7 +153,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"));
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -185,7 +186,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"), calculator.getTool("multiply"));
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -217,7 +218,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskSingleRunSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"));
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -250,12 +251,12 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_ExecuteMultipleToolsParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .systemPrompt("You are a calculator. Use add and multiply tools.")
+            .systemPrompt("You are a calculator. You MUST use add and multiply tools. DO NOT answer without calling tools.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Message.Response response = context.requestLLM(
@@ -290,7 +291,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_ExecuteSingleTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
@@ -353,7 +354,6 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
         assertTrue(result.matches(".*History contains \\d+ messages.*"));
     }
 
-    @Disabled("KG-694")
     @Test
     public void integration_ThrowError() {
         var model = OpenAIModels.Chat.GPT5_1;

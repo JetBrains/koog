@@ -1,17 +1,14 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.ToolRegistryBuilder;
-import ai.koog.agents.planner.AIAgentPlanner;
 import ai.koog.agents.planner.AIAgentPlannerStrategy;
 import ai.koog.agents.planner.JavaAIAgentPlanner;
 import ai.koog.agents.planner.PlannerAIAgent;
 import ai.koog.agents.planner.goap.*;
-import ai.koog.agents.planner.llm.SimpleLLMPlanner;
-import ai.koog.agents.planner.llm.SimplePlan;
+import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
@@ -47,8 +44,6 @@ public class JavaPlannerAIAgentIntegrationTest {
             return !state.equals(context.getAgentInput());
         }
     }
-
-    private static final String STRATEGY_NAME = "my-strategy";
 
     private static final LLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
     private static final PromptExecutor promptExecutor = new MultiLLMPromptExecutor(client);
@@ -95,7 +90,7 @@ public class JavaPlannerAIAgentIntegrationTest {
         var planner = new TestPlanner();
         var plannerStrategy = AIAgentPlannerStrategy.builder("test-planner").withPlanner(planner).build();
         var toolRegistry = new ToolRegistryBuilder()
-            .tools(new CalculatorTools())
+            .tools(new NumberTools())
             .build();
 
         testPlanner(plannerStrategy, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");

@@ -1,7 +1,6 @@
-package ai.koog.integration.tests.agent;
+package ai.koog.integration.tests.client;
 
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
@@ -12,7 +11,6 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,10 +18,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for LLM clients (OpenAI, Anthropic, MultiLLMPromptExecutor).
- */
-public class JavaLLMClientIntegrationTest extends KoogJavaTestBase {
+public class LLMClientIntegrationTest extends KoogJavaTestBase {
 
     private void assertValidResponse(List<Message.Response> responses) {
         assertNotNull(responses);

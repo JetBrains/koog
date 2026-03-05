@@ -166,6 +166,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         maxIterations = this.maxIterations,
         missingToolsConversionStrategy = this.missingToolsConversionStrategy,
         clock = this.clock,
+        toolRegistry = this.toolRegistry,
         featureInstallers = mutableListOf({
             install(feature) {
                 configure.configure(this)

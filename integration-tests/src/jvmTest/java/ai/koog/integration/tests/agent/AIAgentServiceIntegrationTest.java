@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.GraphAIAgent;
 import ai.koog.agents.core.agent.GraphAIAgentService;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaUtils;
+import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
@@ -15,10 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for AIAgentService (multi-agent management).
- */
-public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
+public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
@@ -107,13 +104,13 @@ public class JavaAIAgentServiceIntegrationTest extends KoogJavaTestBase {
     public void integration_AIAgentServiceWithCustomToolRegistry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         ToolRegistry serviceToolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         GraphAIAgentService<String, String> service = AIAgentService.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .systemPrompt("You are a calculator assistant. Use tools when needed.")
+            .systemPrompt("You are a calculator assistant. You MUST use tools when needed. DO NOT answer without calling tools.")
             .toolRegistry(serviceToolRegistry)
             .build();
 

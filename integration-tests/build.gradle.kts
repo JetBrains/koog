@@ -48,6 +48,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotest.assertions.core)
+                implementation(libs.assertj.core)
                 implementation(libs.aws.sdk.kotlin.sts)
                 implementation(libs.aws.sdk.kotlin.bedrock)
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
@@ -72,6 +73,13 @@ tasks.withType<Test> {
     System.getProperties().forEach { key, value ->
         systemProperty(key.toString(), value)
     }
+
+    // Use Java 21 toolchain to avoid class version conflicts
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
+    )
 }
 
 // Try loading envs from file for integration tests only.
