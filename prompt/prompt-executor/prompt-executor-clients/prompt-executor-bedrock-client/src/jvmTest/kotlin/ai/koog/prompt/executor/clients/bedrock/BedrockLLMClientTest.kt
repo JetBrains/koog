@@ -902,9 +902,10 @@ class BedrockLLMClientTest {
         assertEquals("moonshot.kimi-k2-thinking", model.id)
         assertEquals(LLMProvider.Bedrock, model.provider)
         assertEquals(256_000, model.contextLength)
-        assertTrue(model.capabilities.contains(LLMCapability.Completion))
-        assertTrue(model.capabilities.contains(LLMCapability.Tools))
-        assertTrue(model.capabilities.contains(LLMCapability.Temperature))
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.Temperature))
     }
 
     @Test
