@@ -682,6 +682,9 @@ public object BedrockModels : LLModelDefinitions {
         Embeddings.AmazonTitanEmbedTextV2,
         Embeddings.CohereEmbedEnglishV3,
         Embeddings.CohereEmbedMultilingualV3,
+
+        // Moonshot Kimi K2 Thinking
+        MoonshotKimiK2Thinking,
     )
 
     /**
