@@ -25,7 +25,7 @@ The functions annotated with `@Tool` are collected by reflection from objects th
 
 ### Definition
 
-```kotlin
+```text
 @Target(AnnotationTarget.FUNCTION)
 public annotation class Tool(val customName: String = "")
 ```
@@ -42,7 +42,7 @@ To mark a function as a tool, apply the `@Tool` annotation to this function in a
 
 === "Kotlin"
 
-     <!--- INCLUDE
+    <!--- INCLUDE
     import ai.koog.agents.core.tools.annotations.Tool
     import ai.koog.agents.core.tools.reflect.ToolSet
     -->
@@ -61,7 +61,7 @@ To mark a function as a tool, apply the `@Tool` annotation to this function in a
         }
     }
     ```
-    <!--- KNIT example-annotation-based-tools-02.kt -->
+    <!--- KNIT example-annotation-based-tools-01.kt -->
 
 === "Java"
 
@@ -88,7 +88,7 @@ This helps LLMs understand the purpose and usage of these elements.
 
 ### Definition
 
-```kotlin
+```text
 @Target(
     AnnotationTarget.PROPERTY,
     AnnotationTarget.CLASS,
@@ -125,7 +125,7 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
         return "Result"
     }
     ```
-    <!--- KNIT example-annotation-based-tools-04.kt -->
+    <!--- KNIT example-annotation-based-tools-02.kt -->
 
 === "Java"
 
@@ -160,7 +160,7 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
         return "Processed: $input with config: $config"
     }
     ```
-    <!--- KNIT example-annotation-based-tools-05.kt -->
+    <!--- KNIT example-annotation-based-tools-03.kt -->
 
 === "Java"
 
@@ -193,7 +193,7 @@ This interface marks your class as a container for tools.
         // Tools will go here
     }
     ```
-    <!--- KNIT example-annotation-based-tools-06.kt -->
+    <!--- KNIT example-annotation-based-tools-04.kt -->
 
 === "Java"
 
@@ -222,7 +222,7 @@ Add functions to your class and annotate them with `@Tool` to expose them as too
         }
     }
     ```
-    <!--- KNIT example-annotation-based-tools-07.kt -->
+    <!--- KNIT example-annotation-based-tools-05.kt -->
 
 === "Java"
 
@@ -261,7 +261,7 @@ Add `@LLMDescription` annotations to provide context for the LLM:
         }
     }
     ```
-    <!--- KNIT example-annotation-based-tools-08.kt -->
+    <!--- KNIT example-annotation-based-tools-06.kt -->
 
 === "Java"
 
@@ -317,7 +317,7 @@ Now you can use your tools with an agent:
         }
     }
     ```
-    <!--- KNIT example-annotation-based-tools-09.kt -->
+    <!--- KNIT example-annotation-based-tools-07.kt -->
 
 === "Java"
 
@@ -387,7 +387,7 @@ This example shows a simple tool set for controlling a switch:
         }
     }
     ```
-    <!--- KNIT example-annotation-based-tools-10.kt -->
+    <!--- KNIT example-annotation-based-tools-08.kt -->
 
 === "Java"
 
@@ -479,7 +479,7 @@ This example shows a more complex tool set for device diagnostics:
         }
     }
     ```
-    <!--- KNIT example-annotation-based-tools-11.kt -->
+    <!--- KNIT example-annotation-based-tools-09.kt -->
 
 === "Java"
 

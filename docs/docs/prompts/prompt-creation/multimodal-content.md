@@ -138,21 +138,21 @@ All `ContentPart.Attachment` types accept the following parameters:
 Implementations of the AttachmentContent interface define the type and source of content that is provided as input to the LLM:
 
 - [`AttachmentContent.URL`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.URL) defines the URL of the provided content:
-    ```kotlin
+    ```text
     AttachmentContent.URL("https://example.com/image.png")
     ```
 - [`AttachmentContent.Binary.Bytes`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a byte array:
-    ```kotlin
+    ```text
     AttachmentContent.Binary.Bytes(byteArrayOf(/* ... */))
     ```
 
 - [`AttachmentContent.Binary.Base64`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a Base64-encoded string containing file data:
-    ```kotlin
+    ```text
     AttachmentContent.Binary.Base64("iVBORw0KGgoAAAANS...")
     ```
 
 - [`AttachmentContent.PlainText`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.PlainText) defines the file content as plain text (for [`ContentPart.File`](api:prompt-model::ai.koog.prompt.message.ContentPart.File) only):
-    ```kotlin
+    ```text
     AttachmentContent.PlainText("This is the file content.")
     ```
 

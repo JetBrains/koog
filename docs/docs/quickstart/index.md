@@ -493,8 +493,8 @@ Koog requires either an API key from a [supported LLM provider](../llm-providers
             
             // Create an agent
             val agent = AIAgent(
-                .promptExecutor(simpleBedrockExecutorWithBearerToken(apiKey, new BedrockClientSettings()))
-                .llmModel(BedrockModels.INSTANCE.getAnthropicClaude4_5Sonnet())
+                promptExecutor = simpleBedrockExecutorWithBearerToken(apiKey),
+                llmModel = BedrockModels.AnthropicClaude4_5Sonnet
             )
         
             // Run the agent
@@ -515,8 +515,8 @@ Koog requires either an API key from a [supported LLM provider](../llm-providers
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleBedrockExecutorWithBearerToken(apiKey))
-            .llmModel(BedrockModels.AnthropicClaude4_5Sonnet)
+            .promptExecutor(simpleBedrockExecutorWithBearerToken(apiKey, new BedrockClientSettings()))
+            .llmModel(BedrockModels.INSTANCE.getAnthropicClaude4_5Sonnet())
             .build();
 
         // Run the agent
@@ -634,7 +634,7 @@ Koog requires either an API key from a [supported LLM provider](../llm-providers
             println(result)
         }
         ```
-        <!--- KNIT example-getting-started-07.kt -->
+        <!--- KNIT example-getting-started-08.kt -->
 
     === "Java"
 

@@ -356,7 +356,7 @@ Once converted to a tool, you can add the agent tool to another agent's tool reg
         llmModel = OpenAIModels.Chat.GPT4o,
         systemPrompt = "You coordinate different specialized services.",
         toolRegistry = ToolRegistry {
-            tools(analysisAgentTool)
+            tool(analysisAgentTool)
             // Add other tools as needed
         }
     )

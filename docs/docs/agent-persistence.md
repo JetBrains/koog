@@ -178,7 +178,7 @@ To learn how to create a checkpoint at a specific point in your agent's executio
         val checkpointId = checkpoint?.checkpointId
     }
     ```
-    <!--- KNIT example-agent-persistence-06.kt -->
+    <!--- KNIT example-agent-persistence-04.kt -->
 
 === "Java"
 
@@ -225,7 +225,7 @@ To restore the state of an agent from a specific checkpoint, follow the code sam
         context.persistence().rollbackToLatestCheckpoint(context)
     }
     ```
-    <!--- KNIT example-agent-persistence-07.kt -->
+    <!--- KNIT example-agent-persistence-05.kt -->
 
 === "Java"
 
@@ -298,7 +298,7 @@ With Koog Persistence you can achieve that by providing a `RollbackToolRegistry`
         }
     }
     ```
-    <!--- KNIT example-agent-persistence-08.kt -->
+    <!--- KNIT example-agent-persistence-06.kt -->
 
 === "Java"
 
@@ -344,8 +344,8 @@ The Agent Persistence feature provides convenient extension functions for workin
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.context.AIAgentContext
-    import ai.koog.agents.example.exampleAgentPersistence06.outputData
-    import ai.koog.agents.example.exampleAgentPersistence06.outputType
+    import ai.koog.agents.example.exampleAgentPersistence04.outputData
+    import ai.koog.agents.example.exampleAgentPersistence04.outputType
     import ai.koog.agents.snapshot.feature.persistence
     import ai.koog.agents.snapshot.feature.withPersistence
     -->
@@ -368,7 +368,7 @@ The Agent Persistence feature provides convenient extension functions for workin
         }
     }
     ```
-    <!--- KNIT example-agent-persistence-09.kt -->
+    <!--- KNIT example-agent-persistence-07.kt -->
 
 === "Java"
 
@@ -409,7 +409,7 @@ You can implement custom storage providers by implementing the `PersistenceStora
         }
     }
     ```
-    <!--- KNIT example-agent-persistence-10.kt -->
+    <!--- KNIT example-agent-persistence-08.kt -->
 
 === "Java"
 
@@ -454,7 +454,7 @@ feature in your agent.
         storage = MyCustomStorageProvider<Any>()
     }
     ```
-    <!--- KNIT example-agent-persistence-11.kt -->
+    <!--- KNIT example-agent-persistence-09.kt -->
 
 === "Java"
 
@@ -474,17 +474,6 @@ feature in your agent.
 
 For advanced control, you can directly set the execution point of an agent:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.snapshot.feature.persistence
-import ai.koog.prompt.message.Message.User
-import kotlinx.serialization.json.JsonPrimitive
-
-val customInput = JsonPrimitive("custom-input")
-val customOutput = JsonPrimitive("custom-output")
-val customMessageHistory = emptyList<User>()
--->
-
 === "Kotlin"
 
     <!--- INCLUDE
@@ -492,6 +481,7 @@ val customMessageHistory = emptyList<User>()
     import ai.koog.agents.snapshot.feature.persistence
     import ai.koog.prompt.message.Message.User
     import kotlinx.serialization.json.JsonPrimitive
+    
     val customInput = JsonPrimitive("custom-input")
     val customOutput = JsonPrimitive("custom-output")
     val customMessageHistory = emptyList<User>()
@@ -516,7 +506,7 @@ val customMessageHistory = emptyList<User>()
     }
 
     ```
-    <!--- KNIT example-agent-persistence-12.kt -->
+    <!--- KNIT example-agent-persistence-10.kt -->
 
 === "Java"
 

@@ -175,7 +175,7 @@ Here is an example of creating a pre-defined executor:
     // Create an OpenAI executor
     val promptExecutor = simpleOpenAIExecutor("OPENAI_API_KEY")
     ```
-    <!--- KNIT example-prompt-executors-03.kt -->
+    <!--- KNIT example-prompt-executors-04.kt -->
 
 === "Java"
 
@@ -218,7 +218,7 @@ Here is an example:
         model = OpenAIModels.Chat.GPT4o
     )
     ```
-    <!--- KNIT example-prompt-executors-04.kt -->
+    <!--- KNIT example-prompt-executors-05.kt -->
 
 === "Java"
 
@@ -295,7 +295,7 @@ Here is an example of switching between providers:
     // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
     val anthropicResult = executor.execute(p, AnthropicModels.Sonnet_4_5)
     ```
-    <!--- KNIT example-prompt-executors-05.kt -->
+    <!--- KNIT example-prompt-executors-06.kt -->
 
 === "Java"
 
@@ -340,7 +340,7 @@ To configure the fallback mechanism, provide the `fallback` parameter to the `Mu
     import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.ollama.client.OllamaClient
-    ai.koog.prompt.executor.ollama.client.OllamaModels
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
     import ai.koog.prompt.llm.LLMProvider
     -->
 
@@ -357,7 +357,7 @@ To configure the fallback mechanism, provide the `fallback` parameter to the `Mu
         )
     )
     ```
-    <!--- KNIT example-prompt-executors-06.kt -->
+    <!--- KNIT example-prompt-executors-07.kt -->
 
 === "Java"
 
@@ -388,7 +388,7 @@ the prompt executor will use the fallback model:
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.ollama.client.OllamaClient
     import ai.koog.prompt.executor.clients.google.GoogleModels
-    ai.koog.prompt.executor.ollama.client.OllamaModels
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
     import ai.koog.prompt.llm.LLMProvider
     import kotlinx.coroutines.runBlocking
     val openAIClient = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
@@ -413,7 +413,7 @@ the prompt executor will use the fallback model:
     // If you pass a Google model, the prompt executor will use the fallback model, as the Google client is not included
     val response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro)
     ```
-    <!--- KNIT example-prompt-executors-07.kt -->
+    <!--- KNIT example-prompt-executors-08.kt -->
 
 === "Java"
 

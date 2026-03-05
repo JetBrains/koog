@@ -634,7 +634,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             println(result)
         }
         ```
-        <!--- KNIT example-getting-started-07.kt -->
+        <!--- KNIT example-getting-started-08.kt -->
 
     === "Java"
 
