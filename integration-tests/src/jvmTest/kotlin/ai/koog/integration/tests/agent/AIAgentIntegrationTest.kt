@@ -44,6 +44,7 @@ import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -1342,7 +1343,58 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         }
     }
 
-    @Disabled("KG-694")
+    @ParameterizedTest
+    @MethodSource("allModels")
+    fun integration_RequestLLMForceOneToolDoesNotDuplicateMessages(model: LLModel) = runTest(timeout = 180.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+
+        runWithTracking { eventHandlerConfig, state ->
+            withRetry {
+                val testTool = SimpleCalculatorTool
+
+                val agent = AIAgent(
+                    promptExecutor = getExecutor(model),
+                    strategy = functionalStrategy<String, String>("force-one-tool-strategy") { input ->
+                        llm.writeSession {
+                            appendPrompt {
+                                user(input)
+                            }
+                            val response = requestLLMForceOneTool(testTool)
+
+                            assumeTrue(
+                                response is Message.Tool.Call,
+                                "Model returned ${response::class.simpleName} instead of Tool.Call"
+                            )
+
+                            val toolCallMessages = prompt.messages.filterIsInstance<Message.Tool.Call>()
+                                .filter { it.tool == testTool.name }
+                            toolCallMessages.shouldHaveSize(1)
+                        }
+
+                        "Tool call completed successfully without duplication"
+                    },
+                    agentConfig = AIAgentConfig(
+                        prompt = prompt("force-one-tool-test") {
+                            system("You are a helpful assistant that can use tools.")
+                        },
+                        model = model,
+                        maxAgentIterations = 10
+                    ),
+                    toolRegistry = ToolRegistry {
+                        tool(testTool)
+                    },
+                    installFeatures = {
+                        install(EventHandler.Feature, eventHandlerConfig)
+                    }
+                )
+
+                agent.run("Calculate 5 times 3") should contain("successfully")
+                state.errors.shouldBeEmpty()
+            }
+        }
+    }
+
     @Test
     fun integration_ThrowError() = runTest(timeout = 15.seconds) {
         val model = OpenAIModels.Chat.GPT5_1

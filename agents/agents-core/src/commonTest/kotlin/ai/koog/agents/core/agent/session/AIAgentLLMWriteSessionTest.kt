@@ -257,7 +257,7 @@ class AIAgentLLMWriteSessionTest {
         val testTool = TestTool()
         val session = createSession(mockExecutor, listOf(testTool))
 
-        val safeTool = session.findTool<TestTool.Args, String>(TestTool::class)
+        val safeTool = session.findTool(TestTool::class)
         assertNotNull(safeTool)
 
         val result = safeTool.execute(TestTool.Args("test input"))
@@ -319,7 +319,7 @@ class AIAgentLLMWriteSessionTest {
 
         val session = createSession(mockExecutor, prompt = initialPrompt)
 
-        session.rewritePrompt { oldPrompt ->
+        session.rewritePrompt { _ ->
             prompt("rewritten", clock = testClock) {
                 system("Rewritten system message")
                 user("Rewritten user message")
