@@ -166,16 +166,11 @@ Inject the auto-configured executors into your services:
                 .build();
 
             if (openAIExecutor != null) {
-                // FAILED: PromptExecutor.execute is a suspend function and requires an LLModel argument.
-                // From Java, call a non-suspending wrapper (e.g., runBlocking helper) and specify a model explicitly:
-                // List<Message.Response> result = JavaUtils.executeExecutorBlocking(openAIExecutor, prompt, OpenAIModels.Chat.GPT4o);
-                // return result.get(0).getContent();
-                throw new IllegalStateException("No non-suspending Java API available in this snippet");
+                List<Message.Response> result = openAIExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
+                return result.get(0).getContent();
             } else if (anthropicExecutor != null) {
-                // FAILED: Same limitation as above; also a model must be provided (e.g., AnthropicModels.Haiku_4_5).
-                // List<Message.Response> result = JavaUtils.executeExecutorBlocking(anthropicExecutor, prompt, AnthropicModels.Haiku_4_5);
-                // return result.get(0).getContent();
-                throw new IllegalStateException("No non-suspending Java API available in this snippet");
+                List<Message.Response> result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5);
+                return result.get(0).getContent();
             } else {
                 throw new IllegalStateException("No LLM provider configured");
             }
@@ -245,17 +240,13 @@ Create a chat endpoint using auto-configured executors:
                         .user(request.message)
                         .build();
 
-                    // FAILED: PromptExecutor.execute is suspend-only and requires a model argument.
-                    // From Java, use a blocking helper and specify a model, e.g.:
-                    // List<Message.Response> result = JavaUtils.executeExecutorBlocking(anthropicExecutor, prompt, AnthropicModels.Haiku_4_5);
-                    // return ResponseEntity.ok(new ChatResponse(result.get(0).getContent()));
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(new ChatResponse("Error processing request (suspend-only API)"));
+                    List<Message.Response> result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5);
+                    return ResponseEntity.ok(new ChatResponse(result.get(0).getContent()));
                 } catch (Exception e) {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(new ChatResponse("Error processing request"));
                 }
-            } else {[ExampleSpringBoot_ChatController.java](../../../koog-java-samples/src/main/java/ExampleSpringBoot_ChatController.java)
+            } else {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(new ChatResponse("AI service not configured"));
             }
@@ -318,16 +309,34 @@ Handle multiple providers with fallback logic:
     @Service
     public class RobustAIService {
         private static final Logger logger = LoggerFactory.getLogger(RobustAIService.class);
-        private final MultiLLMPromptExecutor openAIExecutor;
-        private final MultiLLMPromptExecutor anthropicExecutor;
-        private final MultiLLMPromptExecutor openRouterExecutor;
+
+        private static class ProviderConfig {
+            final String name;
+            final MultiLLMPromptExecutor executor;
+            final LLModel model;
+
+            ProviderConfig(String name, MultiLLMPromptExecutor executor, LLModel model) {
+                this.name = name;
+                this.executor = executor;
+                this.model = model;
+            }
+        }
+
+        private final List<ProviderConfig> providers;
 
         public RobustAIService(MultiLLMPromptExecutor openAIExecutor,
                                MultiLLMPromptExecutor anthropicExecutor,
                                MultiLLMPromptExecutor openRouterExecutor) {
-            this.openAIExecutor = openAIExecutor;
-            this.anthropicExecutor = anthropicExecutor;
-            this.openRouterExecutor = openRouterExecutor;
+            providers = new ArrayList<>();
+            if (openAIExecutor != null) {
+                providers.add(new ProviderConfig("OpenAI", openAIExecutor, OpenAIModels.Chat.GPT4oMini));
+            }
+            if (anthropicExecutor != null) {
+                providers.add(new ProviderConfig("Anthropic", anthropicExecutor, AnthropicModels.Haiku_4_5));
+            }
+            if (openRouterExecutor != null) {
+                providers.add(new ProviderConfig("OpenRouter", openRouterExecutor, OpenRouterModels.Claude3Haiku));
+            }
         }
 
         public String generateWithFallback(String input) {
@@ -336,22 +345,15 @@ Handle multiple providers with fallback logic:
                 .user(input)
                 .build();
 
-            List<MultiLLMPromptExecutor> executors = new ArrayList<>();
-            if (openAIExecutor != null) executors.add(openAIExecutor);
-            if (anthropicExecutor != null) executors.add(anthropicExecutor);
-            if (openRouterExecutor != null) executors.add(openRouterExecutor);
-
-            for (MultiLLMPromptExecutor executor : executors) {
+            for (ProviderConfig provider : providers) {
                 try {
-                    // FAILED: PromptExecutor.execute is suspend-only and requires an explicit model.
-                    // Example (requires helper):
-                    // List<Message.Response> result = JavaUtils.executeExecutorBlocking(executor, prompt, SomeModels.Default);
-                    // return result.get(0).getContent();
-                    throw new IllegalStateException("Suspend-only API, model required");
+                    List<Message.Response> result = provider.executor.execute(prompt, provider.model);
+                    return result.get(0).getContent();
                 } catch (Exception e) {
-                    logger.warn("Executor failed, trying next: {}", e.getMessage());
+                    logger.warn("{} executor failed, trying next: {}", provider.name, e.getMessage());
                 }
             }
+
             throw new IllegalStateException("All AI providers failed");
         }
     }
@@ -406,11 +408,8 @@ You can also inject configuration properties for custom logic:
 
             Prompt prompt = Prompt.builder("configurable").user(input).build();
 
-            // FAILED: PromptExecutor.execute is suspend-only and requires a model.
-            // Example with helper:
-            // List<Message.Response> result = JavaUtils.executeExecutorBlocking(openAIExecutor, prompt, OpenAIModels.Chat.GPT4o);
-            // return result.get(0).getContent();
-            return null;
+            List<Message.Response> result = openAIExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
+            return result.get(0).getContent();
         }
     }
     ```

@@ -130,13 +130,11 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
 === "Java"
 
     ```java
-    public class MyTools implements ToolSet {
-        @Tool
-        @LLMDescription(description = "Performs a specific operation and returns the result")
-        public String myTool() {
-            // Function implementation
-            return "Result";
-        }
+    @Tool
+    @LLMDescription(description = "Performs a specific operation and returns the result")
+    public String myTool() {
+        // Function implementation
+        return "Result";
     }
     ```
     
@@ -167,16 +165,14 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
 === "Java"
 
     ```java
-    public class ProcessingTools implements ToolSet {
-        @Tool
-        @LLMDescription(description = "Processes input data")
-        public String processTool(
-                @LLMDescription(description = "The input data to process") String input,
-                @LLMDescription(description = "Optional configuration parameters") String config
-        ) {
-            // Function implementation
-            return "Processed: " + input + " with config: " + config;
-        }
+    @Tool
+    @LLMDescription(description = "Processes input data")
+    public String processTool(
+            @LLMDescription(description = "The input data to process") String input,
+            @LLMDescription(description = "Optional configuration parameters") String config
+    ) {
+        // Function implementation
+        return "Processed: " + input + " with config: " + config;
     }
     ```
 

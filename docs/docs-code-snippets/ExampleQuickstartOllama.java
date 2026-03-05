@@ -3,13 +3,16 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels;
 
 import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
 
-public class GettingStarted {
-    public static void main(String[] args) throws Exception {
+public class ExampleQuickstartOllama {
+    public static void main(String[] args) {
+        // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+            .promptExecutor(simpleOllamaAIExecutor())
             .llmModel(OllamaModels.Meta.LLAMA_3_2)
             .build();
 
-        System.out.println(agent.run("Hello! How can you help me?"));
+        // Run the agent
+        String result = agent.run("Hello! How can you help me?");
+        System.out.println(result);
     }
 }

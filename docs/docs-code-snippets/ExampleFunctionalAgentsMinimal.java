@@ -8,18 +8,17 @@ import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOll
 public class ExampleFunctionalAgentsMinimal {
     public static void main(String[] args) {
         AIAgent<String, String> mathAgent = AIAgent.builder()
-            .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
-            .systemPrompt("You are a precise math assistant.")
-            .llmModel(OllamaModels.Meta.LLAMA_3_2)
-            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                // Make one LLM call
-                Message.Response response = context.requestLLM(input);
-                // Extract and return the assistant message content from the response
-                return ((Message.Assistant) response).getContent();
-            })
-            .build();
+                .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+                .llmModel(OllamaModels.Meta.LLAMA_3_2)
+                .functionalStrategy("mathStrategy", (AIAgentFunctionalContext context, String input) -> {
+                    Message.Response response = context.requestLLM(input);
+                    if (response instanceof Message.Assistant) {
+                        return ((Message.Assistant) response).getContent();
+                    }
+                    return "";
+                })
+                .build();
 
-        // Run the agent with a user input and print the result
         String result = mathAgent.run("What is 12 × 9?");
         System.out.println(result);
     }

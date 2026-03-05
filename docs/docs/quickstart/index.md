@@ -152,30 +152,34 @@ Koog requires either an API key from a [supported LLM provider](../llm-providers
 
     The following example creates and runs a simple Koog agent using the [`GPT-4o`](https://platform.openai.com/docs/models/gpt-4o) model via the OpenAI API.
 
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import kotlinx.coroutines.runBlocking
-    -->
-    ```kotlin
-    fun main() = runBlocking {
-        // Get the OpenAI API key from the OPENAI_API_KEY environment variable
-        val apiKey = System.getenv("OPENAI_API_KEY")
-            ?: error("The API key is not set.")
+    === "Kotlin"
+        <!--- INCLUDE
+        import ai.koog.agents.core.agent.AIAgent
+        import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+        import ai.koog.prompt.executor.clients.openai.OpenAIModels
+        import kotlinx.coroutines.runBlocking
+        -->
+        ```kotlin
+        fun main() = runBlocking {
+            // Get the OpenAI API key from the OPENAI_API_KEY environment variable
+            val apiKey = System.getenv("OPENAI_API_KEY")
+                ?: error("The API key is not set.")
+            
+            // Create an agent
+            val agent = AIAgent(
+                promptExecutor = simpleOpenAIExecutor(apiKey),
+                llmModel = OpenAIModels.Chat.GPT4o
+            )
         
-        // Create an agent
-        val agent = AIAgent(
-            promptExecutor = simpleOpenAIExecutor(apiKey),
-            llmModel = OpenAIModels.Chat.GPT4o
-        )
-    
-        // Run the agent
-        val result = agent.run("Hello! How can you help me?")
-        println(result)
-    }
-    ```
-    <!--- KNIT example-getting-started-01.kt -->
+            // Run the agent
+            val result = agent.run("Hello! How can you help me?")
+            println(result)
+        }
+        ```
+        <!--- KNIT example-getting-started-01.kt -->
+
+    === "Java"
+        
 
     The example can produce the following output:
     

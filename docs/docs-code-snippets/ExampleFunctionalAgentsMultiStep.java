@@ -9,27 +9,32 @@ import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOll
 
 public class ExampleFunctionalAgentsMultiStep {
     public static void main(String[] args) {
-        // Create prompt executor
-        OllamaClient ollamaClient = new OllamaClient("http://localhost:11434");
-        MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(ollamaClient);
-
         // Create an AIAgent instance using the builder
         AIAgent<String, String> mathAgent = AIAgent.builder()
             .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
             .systemPrompt("You are a precise math assistant.")
             .llmModel(OllamaModels.Meta.LLAMA_3_2)
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                // The first LLM call to produce an initial draft based on the user input
+                // The first LLM call produces an initial draft based on the user input
                 Message.Response draftResponse = context.requestLLM("Draft: " + input);
-                String draft = ((Message.Assistant) draftResponse).getContent();
+                String draft = "";
+                if (draftResponse instanceof Message.Assistant) {
+                    draft = ((Message.Assistant) draftResponse).getContent();
+                }
 
-                // The second LLM call to improve the draft
+                // The second LLM call improves the initial draft
                 Message.Response improvedResponse = context.requestLLM("Improve and clarify.");
-                String improved = ((Message.Assistant) improvedResponse).getContent();
+                String improved = "";
+                if (improvedResponse instanceof Message.Assistant) {
+                    improved = ((Message.Assistant) improvedResponse).getContent();
+                }
 
-                // The final LLM call to format the result
+                // The final LLM call formats the improved text and returns the result
                 Message.Response finalResponse = context.requestLLM("Format the result as bold.");
-                return ((Message.Assistant) finalResponse).getContent();
+                if (finalResponse instanceof Message.Assistant) {
+                    return ((Message.Assistant) finalResponse).getContent();
+                }
+                return "";
             })
             .build();
         // Run the agent with a user input and print the result
