@@ -7,6 +7,29 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 
+/**
+ * Default implementation of [ModelSelector] that executes a step-based model selection pipeline.
+ *
+ * Pipeline order:
+ * 1) Apply all [ModelFilter] steps (with bounded concurrency).
+ * 2) Apply [ModelRanker] steps lexicographically to accepted models.
+ *
+ * Lexicographic ranking semantics:
+ * - The first [ModelRanker] ranks the whole accepted model set.
+ * - Each next ranker is applied only to tie buckets (buckets with more than one model).
+ * - Buckets already resolved to a single model are preserved and never re-ordered.
+ * - If no rankers are provided, accepted models keep their original order.
+ *
+ * Selector-owned validation:
+ * - Input [models] must not contain duplicates.
+ * - Every ranker output must contain exactly the models it was asked to rank:
+ *   no missing models, no extra models, no duplicates.
+ *
+ * @constructor Creates selector with predefined [steps].
+ * @property steps Ordered selection steps.
+ * @property maxConcurrentlyFilteredModels Maximum number of models filtered concurrently.
+ * @throws IllegalArgumentException If [maxConcurrentlyFilteredModels] is not positive.
+ */
 public class DefaultModelSelector(
     private val steps: List<ModelSelectionStep> = emptyList(),
     private val maxConcurrentlyFilteredModels: Int = 8,

@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.model
 
 import ai.koog.prompt.executor.model.ModelFilter.Decision
-import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,9 +12,9 @@ class DefaultModelSelectorTest {
     private val maxConcurrentlyFilteredModels = 2
 
     @Test
-    fun filtersAndRanksModels() = runTest {
+    fun testFiltersAndRanksModels() = runTest {
         // Given: models
-        val gptMini = LLModel(provider = LLMProvider.OpenAI, id = "gpt-5-mini", maxOutputTokens = 1_000);
+        val gptMini = LLModel(provider = LLMProvider.OpenAI, id = "gpt-5-mini", maxOutputTokens = 1_000)
         val gpt = LLModel(provider = LLMProvider.OpenAI, id = "gpt-5", maxOutputTokens = 2_000)
         val gptCodex = LLModel(provider = LLMProvider.OpenAI, id = "gpt-5-codex", maxOutputTokens = 3_000)
         val gptPro = LLModel(provider = LLMProvider.OpenAI, id = "gpt-5-pro", maxOutputTokens = 3_000)
@@ -51,7 +51,7 @@ class DefaultModelSelectorTest {
     }
 
     @Test
-    fun returnsOnlyAcceptedModelsWhenNoRankersProvided() = runTest {
+    fun testReturnsOnlyAcceptedModelsWhenNoRankersProvided() = runTest {
         // Given
         val (modelA, modelB, modelC) = modelsWithIds("a", "b", "c")
 
@@ -70,7 +70,7 @@ class DefaultModelSelectorTest {
     }
 
     @Test
-    fun returnsEmptyListWhenNoModelsPassFiltering() = runTest {
+    fun testReturnsEmptyListWhenNoModelsPassFiltering() = runTest {
         // Given
         val rejectAll = ModelFilter { Decision.REJECTED }
 
@@ -84,7 +84,7 @@ class DefaultModelSelectorTest {
     }
 
     @Test
-    fun appliesSubsequentRankersToResolveTies() = runTest {
+    fun testAppliesSubsequentRankersToResolveTies() = runTest {
         // Given
         val modelA = LLModel(
             provider = LLMProvider.OpenAI,
@@ -118,7 +118,7 @@ class DefaultModelSelectorTest {
     }
 
     @Test
-    fun failsWhenRankerReturnsTooMany() = runTest {
+    fun testFailsWhenRankerReturnsTooMany() = runTest {
         // Given:
         val inputModels = models(count = 3)
 
@@ -140,7 +140,7 @@ class DefaultModelSelectorTest {
     }
 
     @Test
-    fun failsWhenRankerReturnsTooFewModels() = runTest {
+    fun testFailsWhenRankerReturnsTooFewModels() = runTest {
         // Given
         val inputModels = models(count = 3)
 
@@ -160,7 +160,7 @@ class DefaultModelSelectorTest {
     }
 
     @Test
-    fun failsWhenInputContainsDuplicateModels() = runTest {
+    fun testFailsWhenInputContainsDuplicateModels() = runTest {
         // Given
         val first = model("dup")
         val second = first.copy()
@@ -177,7 +177,7 @@ class DefaultModelSelectorTest {
     }
 
     @Test
-    fun failsWhenRankerReturnsDuplicateModels() = runTest {
+    fun testFailsWhenRankerReturnsDuplicateModels() = runTest {
         // Given
         val inputModels = models(count = 3)
 
