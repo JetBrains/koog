@@ -19,13 +19,11 @@ import kotlin.time.Clock
  * chat conversation history in SQL databases using JetBrains Exposed ORM.
  *
  * This class provides a generic SQL implementation that works with any database supported
- * by Exposed (PostgreSQL, MySQL, H2, SQLite, etc.). It handles the common operations
- * while allowing concrete implementations to provide database-specific configurations.
+ * by Exposed. It handles the common operations while allowing concrete implementations
+ * to provide database-specific configurations.
  *
  * ## Key Features:
  * - Uses Exposed's DSL for type-safe SQL operations
- * - One row per conversation with full message list replacement on store
- * - Compact JSON serialization (prettyPrint=false) for efficient storage
  * - Configurable TTL cleanup with interval throttling
  * - TTL based on updated_at so active conversations don't expire prematurely
  *
