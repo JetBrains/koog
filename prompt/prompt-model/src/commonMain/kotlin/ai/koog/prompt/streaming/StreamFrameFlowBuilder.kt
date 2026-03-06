@@ -257,7 +257,9 @@ public class StreamFrameFlowBuilder(
     ) {
         fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall {
             require(this.index == index)
-            return copy(argumentsDelta = (this.argumentsDelta ?: "") + argumentsDelta)
+            val newArgs =
+                if (argumentsDelta == null) this.argumentsDelta else (this.argumentsDelta ?: "") + argumentsDelta
+            return copy(argumentsDelta = newArgs)
         }
     }
 
@@ -267,7 +269,8 @@ public class StreamFrameFlowBuilder(
     ) {
         fun appendTextDelta(textDelta: String?, index: Int?): PendingText {
             require(this.index == index)
-            return copy(textDelta = (this.textDelta ?: "") + textDelta)
+            val newText = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
+            return copy(textDelta = newText)
         }
     }
 

@@ -308,11 +308,9 @@ public class OpenAIToolCall(
 public class OpenAIStreamToolCall(
     public val index: Int,
     public val id: String?,
-    public val function: OpenAIStreamFunction?
-) {
-    /** The type of the tool. Currently, only `function` is supported. */
-    public val type: String = "function"
-}
+    public val function: OpenAIStreamFunction?,
+    public val type: String? = "function"
+)
 
 /**
  * Function call from an OpenAI model, containing the function name and arguments.

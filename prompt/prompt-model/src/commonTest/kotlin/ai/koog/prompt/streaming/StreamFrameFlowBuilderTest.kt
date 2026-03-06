@@ -232,6 +232,27 @@ class StreamFrameFlowBuilderTest {
     }
 
     @Test
+    fun testEmitToolCallDeltaWithNullArgumentsDoesNotCorruptContent() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitToolCallDelta(id = "call_1", name = "search", args = "{\"query\":")
+            emitToolCallDelta(args = null)
+            emitToolCallDelta(args = "\"test\"}")
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("call_1", "search", "{\"query\":"),
+                StreamFrame.ToolCallDelta(null, null, null),
+                StreamFrame.ToolCallDelta(null, null, "\"test\"}"),
+                StreamFrame.ToolCallComplete("call_1", "search", "{\"query\":\"test\"}"),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
     fun testEmitEndFlushesAllPendingFrames() = runTest {
         val frames = buildStreamFrameFlow {
             emitToolCallDelta(id = "call_1", name = "tool", args = "{}")

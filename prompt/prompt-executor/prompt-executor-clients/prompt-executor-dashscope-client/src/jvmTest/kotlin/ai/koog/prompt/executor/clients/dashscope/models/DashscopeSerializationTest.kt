@@ -436,6 +436,51 @@ class DashscopeSerializationTest {
         }
 
     @Test
+    fun `test stream response deserialization with null type and id in tool call chunks`() =
+        runWithBothJsonConfigurations("stream response with null type and id in tool call chunks") { json ->
+            val jsonInput =
+                // language=json
+                """
+            {
+                "id": "chatcmpl-tool-1",
+                "object": "chat.completion.chunk",
+                "created": 1677652600,
+                "model": "qwen-plus",
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {
+                            "toolCalls": [
+                                {
+                                    "index": 0,
+                                    "id": null,
+                                    "type": null,
+                                    "function": {
+                                        "name": null,
+                                        "arguments": "{\"partial\":"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+                """.trimIndent()
+
+            val response = json.decodeFromString(DashscopeChatCompletionStreamResponse.serializer(), jsonInput)
+
+            response.id shouldBe "chatcmpl-tool-1"
+            response.choices.size shouldBe 1
+            val toolCalls = response.choices[0].delta.toolCalls
+            kotlin.test.assertNotNull(toolCalls)
+            toolCalls.size shouldBe 1
+            toolCalls[0].index shouldBe 0
+            toolCalls[0].id shouldBe null
+            toolCalls[0].type shouldBe null
+            toolCalls[0].function?.arguments shouldBe "{\"partial\":"
+        }
+
+    @Test
     fun `test deserialization of extended parameters`() =
         runWithBothJsonConfigurations("deserialization of extended parameters") { json ->
             val jsonInput =

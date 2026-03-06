@@ -132,7 +132,7 @@ public class DashscopeLLMClient @JvmOverloads constructor(
                 choice.delta.content?.let { emitTextDelta(it) }
 
                 choice.delta.toolCalls?.forEach { toolCall ->
-                    val id = toolCall.id
+                    val id = toolCall.id?.takeIf { it.isNotEmpty() }
                     val name = toolCall.function?.name
                     val arguments = toolCall.function?.arguments
                     val index = toolCall.index
