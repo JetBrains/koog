@@ -19,9 +19,11 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
+import ai.koog.serialization.kotlinx.toJSONElement
 import ai.koog.serialization.kotlinx.toJSONObject
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.JsonElement
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KType
 import kotlin.time.Clock
@@ -295,6 +297,16 @@ public class Persistence(
         return allCps.firstOrNull { it.checkpointId == checkpointId }
     }
 
+    @Deprecated("Use setExecutionPoint with JSONElement instead of JsonElement")
+    public fun setExecutionPoint(
+        agentContext: AIAgentContext,
+        nodePath: String,
+        messageHistory: List<Message>,
+        input: JsonElement,
+    ) {
+        return setExecutionPoint(agentContext, nodePath, messageHistory, input.toJSONElement())
+    }
+
     /**
      * Sets the execution point of an agent to a specific state.
      *
@@ -320,6 +332,16 @@ public class Persistence(
                 rollbackStrategy = rollbackStrategy
             )
         )
+    }
+
+    @Deprecated("Use setExecutionPointAfterNode with JSONElement instead of JsonElement")
+    public fun setExecutionPointAfterNode(
+        agentContext: AIAgentContext,
+        nodePath: String,
+        messageHistory: List<Message>,
+        output: JsonElement,
+    ) {
+        return setExecutionPointAfterNode(agentContext, nodePath, messageHistory, output.toJSONElement())
     }
 
     /**

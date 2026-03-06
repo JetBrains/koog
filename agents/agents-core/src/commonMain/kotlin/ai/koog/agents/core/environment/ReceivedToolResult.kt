@@ -5,7 +5,11 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
+import ai.koog.serialization.kotlinx.toJSONElement
+import ai.koog.serialization.kotlinx.toJSONObject
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlin.time.Clock
 
 /**
@@ -29,6 +33,25 @@ public data class ReceivedToolResult(
     val resultKind: ToolResultKind,
     val result: JSONElement?
 ) {
+    @Deprecated("Use the constructor with JSONElement instead of JsonElement")
+    public constructor(
+        id: String?,
+        tool: String,
+        toolArgs: JsonObject,
+        toolDescription: String?,
+        content: String,
+        resultKind: ToolResultKind,
+        result: JsonElement?
+    ) : this(
+        id = id,
+        tool = tool,
+        toolArgs = toolArgs.toJSONObject(),
+        toolDescription = toolDescription,
+        content = content,
+        resultKind = resultKind,
+        result = result?.toJSONElement()
+    )
+
     /**
      * Converts the current `ReceivedToolResult` instance into a `Message.Tool.Result` object.
      *

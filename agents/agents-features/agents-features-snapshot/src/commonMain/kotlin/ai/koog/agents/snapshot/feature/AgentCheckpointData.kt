@@ -12,7 +12,9 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONNull
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.toJSONElement
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -41,6 +43,28 @@ public data class AgentCheckpointData(
     val version: Long,
     val properties: JSONObject? = null
 ) {
+
+    @Deprecated("Use JSONElement constructor instead of JsonElement")
+    public constructor(
+        checkpointId: String,
+        createdAt: Instant,
+        nodePath: String,
+        lastInput: JsonElement? = null,
+        lastOutput: JsonElement? = null,
+        messageHistory: List<Message>,
+        version: Long,
+        properties: JSONObject? = null
+    ) : this(
+        checkpointId,
+        createdAt,
+        nodePath,
+        lastInput?.toJSONElement(),
+        lastOutput?.toJSONElement(),
+        messageHistory,
+        version,
+        properties
+    )
+
     init {
         if (nodePath != PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) {
             require(lastInput == null || lastOutput == null) { "`lastInput` and `lastOutput` cannot be both set" }

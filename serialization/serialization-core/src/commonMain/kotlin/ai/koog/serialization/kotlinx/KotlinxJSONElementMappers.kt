@@ -20,6 +20,7 @@ import kotlinx.serialization.json.buildJsonObject
 /**
  * Converts kotlinx-serialization [JsonElement] to [ai.koog.serialization.JSONElement].
  */
+// TODO rename all to toKoogJSONElement()
 public fun JsonElement.toJSONElement(): JSONElement = when (this) {
     is JsonObject -> toJSONObject()
     is JsonArray -> toJSONArray()

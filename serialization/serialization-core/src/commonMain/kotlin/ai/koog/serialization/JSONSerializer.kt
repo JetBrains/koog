@@ -3,6 +3,7 @@ package ai.koog.serialization
 /**
  * Serializer for converting values to and from JSON.
  */
+// TODO better KDoc
 public interface JSONSerializer {
     /**
      * Serializes a value to its JSON representation.

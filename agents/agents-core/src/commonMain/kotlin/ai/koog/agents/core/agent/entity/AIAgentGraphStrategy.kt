@@ -8,9 +8,11 @@ import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.serialization.JSONElement
+import ai.koog.serialization.kotlinx.toJSONElement
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 
 /**
@@ -164,6 +166,18 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
         // Note: completed node will be re-executed because the output wasn't saved in checkpoints
         // (this was the original behavior before 0.6.1)
         setExecutionPointImpl(segments, completedNode, actualInput)
+    }
+
+    /**
+     * Finds and sets the node for the strategy based on the provided context.
+     */
+    @Deprecated("Use setExecutionPointAfterNode with output: JSONElement instead")
+    public suspend fun setExecutionPointAfterNode(
+        nodePath: String,
+        output: JsonElement,
+        agentContext: AIAgentGraphContextBase
+    ) {
+        setExecutionPointAfterNode(nodePath, output.toJSONElement(), agentContext)
     }
 
     /**
