@@ -91,9 +91,9 @@ public class SpringAILLMClient @JvmOverloads constructor(
     override fun llmProvider(): LLMProvider = provider
 
     /**
-     * Returns the list of models available from the configured [ChatModel].
+     * Returns the list with one model based on the configured [LLMProvider] and [ChatModel] without capabilities or parameters.
      *
-     * The model name is extracted from [ChatModel.getDefaultOptions] at runtime,
+     * The model id is extracted from [ChatModel.getDefaultOptions] at runtime,
      * reflecting whatever model the Spring AI provider has been configured with.
      * If the underlying [ChatModel] does not expose a model name via its default options,
      * an empty list is returned.
