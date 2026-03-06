@@ -95,30 +95,6 @@ This sequence of steps represents a *relevance search* flow that returns the mos
 === "Java"
 
     ```java
-    // FAILED: The `store` and `mostRelevantDocuments` methods are suspend functions,
-    // which require a Continuation parameter in Java or a non-suspend wrapper API.
-    // The RAG module does not currently provide Java-friendly non-suspend APIs.
-
-    // Create an embedder using Ollama
-    LLMEmbedder embedder = new LLMEmbedder(new OllamaClient("http://localhost:11434"), OllamaModels.Embeddings.NOMIC_EMBED_TEXT);
-    // You may also use OpenAI embeddings with:
-    // LLMEmbedder embedder = new LLMEmbedder(new OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large);
-
-    // Create a JVM-specific document embedder
-    JVMTextDocumentEmbedder documentEmbedder = new JVMTextDocumentEmbedder(embedder);
-
-    // Create a ranked document storage using in-memory vector storage
-    EmbeddingBasedDocumentStorage<Path> rankedDocumentStorage = new EmbeddingBasedDocumentStorage<>(
-        documentEmbedder,
-        new InMemoryVectorStorage<>()
-    );
-
-    // Store documents in the storage (requires suspend - not directly callable from Java)
-    // rankedDocumentStorage.store(Path.of("./my/documents/doc1.txt"), null, continuation);
-
-    // Find the most relevant documents for a user query (requires suspend - not directly callable from Java)
-    String query = "I want to open a bank account but I'm getting a 404 when I open your website.";
-    // List<Path> relevantFiles = RankedDocumentsKt.mostRelevantDocuments(rankedDocumentStorage, query, 3, 0.0, continuation);
     ```
 
 
@@ -192,9 +168,6 @@ Here is an example of how to implement the defined RAG system for an AI agent to
 === "Java"
 
     ```java
-    // FAILED: The `mostRelevantDocuments` and `agent.run` methods are suspend functions.
-    // Additionally, the Prompt DSL for file attachments in user messages is Kotlin-specific
-    // and doesn't have a direct Java Builder equivalent.
     ```
 
 
@@ -283,9 +256,6 @@ Here is an example of how to implement a relevance search tool:
 === "Java"
 
     ```java
-    // FAILED: The `mostRelevantDocuments` and `agent.run` methods are suspend functions,
-    // requiring Continuation parameters in Java. Additionally, Kotlin's `asTool()` extension
-    // function for method references is not available in Java.
     ```
 
 With this approach, the agent can decide when to use the search tool based on your query. This is particularly useful for complex queries that may require information from multiple documents or when the agent needs to search for specific details.
@@ -343,8 +313,6 @@ A file-based implementation that stores documents and their vector embeddings on
 === "Java"
 
     ```java
-    // FAILED: FileVectorStorage constructor requires DocumentProvider and FileSystemProvider parameters
-    // which are not shown in the Kotlin pseudo-code example. This example is incomplete.
     ```
 
 For more information, see the [FileVectorStorage](api:vector-storage::ai.koog.rag.vector.FileVectorStorage) reference.
@@ -367,7 +335,6 @@ A JVM-specific implementation of `FileVectorStorage` that works with `java.nio.f
 === "Java"
 
     ```java
-    JVMFileVectorStorage jvmFileStorage = new JVMFileVectorStorage(Path.of("/path/to/storage"));
     ```
 
 For more information, see the [JVMFileVectorStorage](api:vector-storage::ai.koog.rag.vector.JVMFileVectorStorage) reference.
@@ -397,8 +364,6 @@ A generic implementation that works with any document type that can be converted
 === "Java"
 
     ```java
-    // FAILED: TextDocumentEmbedder constructor requires DocumentProvider and Embedder parameters
-    // which are not shown in the Kotlin pseudo-code example. This example is incomplete.
     ```
 
 For more information, see the [TextDocumentEmbedder](api:vector-storage::ai.koog.rag.vector.TextDocumentEmbedder) reference.
@@ -524,8 +489,6 @@ A file-based implementation of `EmbeddingBasedDocumentStorage`.
 === "Java"
 
     ```java
-    // FAILED: FileDocumentEmbeddingStorage constructor requires additional parameters
-    // (documentProvider, fs, rootPath) not shown in the Kotlin pseudo-code example.
     ```
 
 For more information, see the [FileDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.FileDocumentEmbeddingStorage) reference.
@@ -722,10 +685,6 @@ Here's an example of implementing a custom document embedder for PDF documents:
 === "Java"
 
     ```java
-    // FAILED: This example involves implementing multiple interfaces with suspend functions
-    // (DocumentProvider, DocumentEmbedder, RankedDocumentStorage), Kotlin Flow APIs, and
-    // custom document providers. Direct Java translation would require implementing
-    // Continuation-based APIs and Flow collectors, which is not practical without non-suspend wrappers.
     ```
 
 ## Implementing custom non-embedding-based RankedDocumentStorage
@@ -815,8 +774,6 @@ Here's an example of implementing a custom `RankedDocumentStorage` that uses a s
 === "Java"
 
     ```java
-    // FAILED: Requires implementing RankedDocumentStorage interface with suspend functions
-    // and Kotlin Flow APIs. Direct Java translation not practical without non-suspend wrappers.
     ```
 
 This implementation ranks documents based on the frequency of keywords from the query appearing in the document text. You could extend this approach with more sophisticated algorithms like TF-IDF (Term Frequency-Inverse Document Frequency) or BM25.
@@ -876,8 +833,6 @@ Another example is a time-based ranking system that prioritizes recent documents
 === "Java"
 
     ```java
-    // FAILED: Requires implementing RankedDocumentStorage interface with suspend functions
-    // and Kotlin Flow APIs. Direct Java translation not practical without non-suspend wrappers.
     ```
 
 By implementing the `RankedDocumentStorage` interface, you can create custom ranking mechanisms tailored to your specific use case while still leveraging the rest of the RAG infrastructure.

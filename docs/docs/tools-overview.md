@@ -242,20 +242,6 @@ You can also call tools in parallel using the `toParallelToolCallsRaw` extension
 === "Java"
 
     ```java
-    // Java sketch for parallel tool calls
-    // FAILED: The Kotlin API uses kotlinx.coroutines Flow, inline reified generics, and KFunction references
-    // (toParallelToolCallsRaw(BookTool::class)), which are not directly invokable from Java without
-    // specific Java-interop wrappers. In particular:
-    //  - Flow-based extensions with reified type params have no Java equivalents (require Class<T> params or wrappers).
-    //  - Referencing Kotlin function/class literals for tools (KFunction, ::class) is not straightforward from Java.
-    // If a Java-friendly API is added (e.g., session.emitParallelToolCallsRaw(flow, BookTool.class, concurrency)),
-    // the following structure could be used:
-    //
-    // AIAgentFunctionalContext ctx = ...;
-    // AIAgentLLMWriteSession session = ctx.getLlm().writeSession();
-    // Flow<Book> input = ...; // stream of Book args
-    // Flow<String> results = /* session.emitParallelToolCallsRaw(input, BookTool.class, 16) */;
-    // results.collect(/* consumer */);
     ```
 
 #### Calling tools from nodes
@@ -316,23 +302,6 @@ To convert an agent into a tool, use the `AIAgentService` and the `createAgentTo
 === "Java"
 
     ```java
-    // Create a specialized agent service for financial analysis
-    // NOTE: The Kotlin `createAgentTool` is an extension with reified generics and default serializers.
-    // From Java, there's no direct equivalent without explicit KSerializer instances.
-    // As of now, a Java-friendly overload is not exposed; thus this call cannot be reproduced exactly in Java.
-    // FAILED: `AIAgentService.createAgentTool` (extension with reified serializers) is not directly callable from Java.
-    // If a Java API becomes available (e.g., service.createAgentTool(String name, String desc, KSerializer<Input>, KSerializer<Output>, ...)),
-    // you could create the tool like this and then add it to a ToolRegistry.
-    // String apiKey = ""; // your API key
-    // ToolRegistry analysisToolRegistry = ToolRegistry.builder().build();
-    // AIAgentService<String, String, ?> analysisAgentService = AIAgentService.builder()
-    //     .promptExecutor(simpleOpenAIExecutor(apiKey))
-    //     .llmModel(OpenAIModels.Chat.GPT4o)
-    //     .systemPrompt("You are a financial analysis specialist.")
-    //     .toolRegistry(analysisToolRegistry)
-    //     .build();
-    //
-    // var analysisAgentTool = /* analysisAgentService.createAgentTool("analyzeTransactions", "Performs financial transaction analysis", "Transaction analysis request", inputSerializer, outputSerializer, null, clock) */;
     ```
 
 ### Using agent tools in other agents
@@ -366,21 +335,6 @@ Once converted to a tool, you can add the agent tool to another agent's tool reg
 === "Java"
 
     ```java
-    // Coordinator agent that uses previously created `analysisAgentTool`
-    // FAILED: Depends on creating `analysisAgentTool` in Java, which is blocked by the limitation explained above.
-    // The rest of the wiring is straightforward once the tool instance exists.
-    //
-    // String apiKey = "";
-    // ToolRegistry registry = ToolRegistry.builder()
-    //     .tools(analysisAgentTool)
-    //     .build();
-    //
-    // AIAgent<String, String> coordinatorAgent = AIAgent.builder()
-    //     .promptExecutor(simpleOpenAIExecutor(apiKey))
-    //     .llmModel(OpenAIModels.Chat.GPT4o)
-    //     .systemPrompt("You coordinate different specialized services.")
-    //     .toolRegistry(registry)
-    //     .build();
     ```
 
 ### Agent tool execution

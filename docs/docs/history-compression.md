@@ -79,13 +79,6 @@ Depending on which step you decide to perform compression, the following scenari
 === "Java"
 
     ```java
-    // FAILED: Strategy-graph DSL APIs like `strategy { ... }`, `subgraph { ... }`,
-    // and `nodeLLMCompressHistory<T>()` are Kotlin-only DSL constructs.
-    // - `nodeLLMCompressHistory<T>()` is an inline function with a reified generic parameter,
-    //   which is not callable from Java.
-    // - There is no Java builder to assemble graph strategies and nodes in Koog as of the current API.
-    // - The helper `historyIsTooLong()` relies on Kotlin coroutines (`llm.readSession { ... }`).
-    // Consequently, compressing history inside a graph from Java is not currently supported.
     ```
 
 In this example, the strategy checks if the history is too long after each tool call.
@@ -117,10 +110,6 @@ The history is compressed before sending the tool result back to the LLM. This p
 === "Java"
 
     ```java
-    // FAILED: The Kotlin DSL for strategies (`strategy {}`, `subgraph {}`, and
-    // `nodeLLMCompressHistory<String>()`) is not exposed via a Java builder API.
-    // `nodeLLMCompressHistory<T>()` uses a reified generic, which Java cannot call.
-    // There is currently no Java equivalent to insert a history-compression node between subgraphs.
     ```
 
 In this example, the history is compressed after completing the information collection phase, but before proceeding to the decision-making phase.

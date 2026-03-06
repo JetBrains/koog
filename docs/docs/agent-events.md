@@ -430,51 +430,6 @@ Use the `messageFilter` property to filter events. For example, to trace only no
 === "Java"
 
     ```java
-    // Note: outputPath in Kotlin comes from exampleTracing01; in Java we refer to the same variable via the generated class.
-    // If unavailable on classpath, replace with an explicit Path instance.
-    public class ExampleAgentEvents01 {
-        public static void main(String[] args) throws Exception {
-            AIAgent<String, String> agent = AIAgent.builder()
-                .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
-                .llmModel(OllamaModels.Meta.LLAMA_3_2)
-                .install(Tracing.Feature, new ConfigureAction<ai.koog.agents.features.tracing.feature.TraceFeatureConfig>() {
-                    @Override
-                    public void configure(ai.koog.agents.features.tracing.feature.TraceFeatureConfig cfg) {
-                        // Construct file writer; Path type is from kotlinx-io; use the same value as Kotlin sample via helper if available
-                        Object outputPath = ai.koog.agents.example.exampleTracing01.ExampleTracing01Kt.getOutputPath();
-
-                        TraceFeatureMessageFileWriter<Object> fileWriter = new TraceFeatureMessageFileWriter<>(
-                            outputPath,
-                            new Function1<Object, kotlinx.io.Sink>() {
-                                @Override
-                                public kotlinx.io.Sink invoke(Object path) {
-                                    // Kotlin SystemFileSystem.sink(path).buffered()
-                                    return kotlinx.io.files.SystemFileSystem.INSTANCE.sink((kotlinx.io.files.Path) path).buffered();
-                                }
-                            },
-                            null
-                        );
-
-                        cfg.addMessageProcessor(fileWriter);
-
-                        // Only trace LLM calls
-                        fileWriter.setMessageFilter(new Function1<FeatureMessage, Boolean>() {
-                            @Override
-                            public Boolean invoke(FeatureMessage message) {
-                                return (message instanceof LLMCallStartingEvent) || (message instanceof LLMCallCompletedEvent);
-                            }
-                        });
-                    }
-                })
-                .build();
-
-            System.out.println(agent.run("What's the weather like in New York?"));
-        }
-    }
-
-    // FAILED: This Java snippet relies on Kotlin classes like kotlinx.io.files.Path/SystemFileSystem and a top-level `outputPath` from examples.
-    // These may not be on the Java examples classpath, and Kotlin function types are required for sink opener and messageFilter.
-    // Ensure the Kotlin modules are on the classpath, or provide Java-accessible wrappers for Path/sink and message filtering.
     ```
 
 ### Can I use multiple message processors?
@@ -527,37 +482,6 @@ Yes, you can add multiple message processors to trace to different destinations 
 === "Java"
 
     ```java
-    public class ExampleAgentEvents02 {
-        public static void main(String[] args) throws Exception {
-            final KLogger logger = KotlinLogging.logger("AgentEvents");
-            final DefaultServerConnectionConfig connectionConfig = new DefaultServerConnectionConfig(
-                ai.koog.agents.example.exampleTracing06.ExampleTracing06Kt.getHost(),
-                ai.koog.agents.example.exampleTracing06.ExampleTracing06Kt.getPort()
-            );
-
-            AIAgent<String, String> agent = AIAgent.builder()
-                .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
-                .llmModel(OllamaModels.Meta.LLAMA_3_2)
-                .install(Tracing.Feature, (ConfigureAction<ai.koog.agents.features.tracing.feature.TraceFeatureConfig>) cfg -> {
-                    cfg.addMessageProcessor(new TraceFeatureMessageLogWriter(logger));
-
-                    Object outputPath = ai.koog.agents.example.exampleTracing01.ExampleTracing01Kt.getOutputPath();
-                    cfg.addMessageProcessor(new TraceFeatureMessageFileWriter<>(
-                        outputPath,
-                        (Function1<Object, kotlinx.io.Sink>) path -> kotlinx.io.files.SystemFileSystem.INSTANCE.sink((kotlinx.io.files.Path) path).buffered(),
-                        null
-                    ));
-
-                    cfg.addMessageProcessor(new TraceFeatureMessageRemoteWriter(connectionConfig));
-                })
-                .build();
-
-            System.out.println(agent.run("What's the weather like in New York?"));
-        }
-    }
-
-    // FAILED: This Java snippet depends on Kotlin-specific types (kotlinx.io.files.Path, SystemFileSystem) and top-level properties for host/port/outputPath.
-    // Ensure those modules are present or replace with Java-accessible alternatives. Otherwise, compilation will fail due to missing symbols or type casts.
     ```
 
 ### How can I create a custom message processor?
@@ -630,48 +554,6 @@ Implement the `FeatureMessageProcessor` interface:
 === "Java"
 
     ```java
-    // Java implementation of a custom processor
-    class CustomTraceProcessorJava extends FeatureMessageProcessor {
-        private final MutableStateFlow<Boolean> _isOpen = new MutableStateFlow<>(false);
-
-        @Override
-        public StateFlow<Boolean> getIsOpen() {
-            return _isOpen;
-        }
-
-        @Override
-        protected Object processMessage(FeatureMessage message, kotlin.coroutines.Continuation<? super Unit> cont) {
-            // Custom processing logic
-            if (message instanceof NodeExecutionStartingEvent) {
-                // Process node start event
-            } else if (message instanceof LLMCallCompletedEvent) {
-                // Process LLM call end event
-            }
-            return kotlin.coroutines.intrinsics.IntrinsicsKt.getCOROUTINE_SUSPENDED();
-        }
-
-        @Override
-        public Object close(kotlin.coroutines.Continuation<? super Unit> cont) {
-            // Close established connections if any
-            return Unit.INSTANCE;
-        }
-    }
-
-    public class ExampleAgentEvents03 {
-        public static void main(String[] args) throws Exception {
-            AIAgent<String, String> agent = AIAgent.builder()
-                .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
-                .llmModel(OllamaModels.Meta.LLAMA_3_2)
-                .install(Tracing.Feature, (ConfigureAction<ai.koog.agents.features.tracing.feature.TraceFeatureConfig>) cfg -> {
-                    cfg.addMessageProcessor(new CustomTraceProcessorJava());
-                })
-                .build();
-        }
-    }
-
-    // FAILED: FeatureMessageProcessor has suspend functions and exposes Kotlin Flow types.
-    // Directly subclassing and overriding suspend methods from Java requires Continuation plumbing and is not practical.
-    // Provide a Kotlin wrapper or factory for Java, or use existing writer implementations instead of custom Java processors.
     ```
 
 For more information about existing event types that can be handled by message processors, see [Predefined event types](#predefined-event-types).

@@ -91,21 +91,6 @@ This is the most general approach: react to each frame kind.
 === "Java"
 
     ```java
-    // Pseudo-usage inside a Java-accessible context
-    // FAILED: The requestLLMStreaming() call is available only inside the Kotlin DSL llm.writeSession { ... }
-    // and returns a Kotlin Flow<StreamFrame>. There is no Java NonSuspend wrapper for streaming yet,
-    // and collecting Kotlin Flow from Java requires coroutines and Continuation, which are not exposed by a Java API here.
-    // The frame-handling logic below illustrates the type switch that would be used once a Java streaming API is available.
-
-    StreamFrame frame = null; // placeholder
-    if (frame instanceof StreamFrame.Append) {
-        System.out.print(((StreamFrame.Append) frame).getText());
-    } else if (frame instanceof StreamFrame.ToolCall) {
-        StreamFrame.ToolCall tc = (StreamFrame.ToolCall) frame;
-        System.out.println("\n\uD83D\uDD27 Tool call: " + tc.getName() + " args=" + tc.getContent());
-    } else if (frame instanceof StreamFrame.End) {
-        System.out.println("\n[END] reason=" + ((StreamFrame.End) frame).getFinishReason());
-    }
     ```
 
 It is important to note that you can parse the output by working directly with a raw string stream.
@@ -146,14 +131,6 @@ Here is a raw string stream with the Markdown definition of the output structure
 === "Java"
 
     ```java
-    // FAILED: markdownBookDefinition() and requestLLMStreaming(definition) are part of the Kotlin DSL used within
-    // llm.writeSession { ... }. There is currently no Java builder/wrapper to start an LLM streaming session with a
-    // MarkdownStructureDefinition and to collect Kotlin Flow<String> chunks from Java without coroutines interop.
-    MarkdownStructureDefinition mdDefinition = new MarkdownStructureDefinition("name", schema -> {
-        // ... schema definition ...
-        return null;
-    }, examples -> null);
-    // String chunks streaming and collection would require a Java-facing streaming client which is not exposed.
     ```
 
 ### Working with reasoning frames
@@ -240,9 +217,6 @@ derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
 === "Java"
 
     ```java
-    // FAILED: filterTextOnly() and collectText() are Kotlin extension functions on Flow<StreamFrame> and Flow<String>,
-    // not directly accessible from Java without using the generated *Kt classes and coroutines Continuation machinery.
-    // A Java-friendly streaming API is required to replicate this example.
     ```
 
 ### Listening to stream events in event handlers
@@ -288,9 +262,6 @@ You can listen to stream events in [agent event handlers](agent-event-handlers.m
 === "Java"
 
     ```java
-    // FAILED: handleEvents { ... } is a Kotlin DSL for agent features. Java interop would require a Feature installation
-    // method with functional interfaces or builders, which is not exposed for streaming event hooks in the current API.
-    // If/when a Java Feature API is provided, equivalent handlers can be installed via .install(Feature, cfg -> { ... }).
     ```
 
 ### Converting frames to `Message.Response`
@@ -390,9 +361,6 @@ Create a definition that specifies how your data should be structured in Markdow
 === "Java"
 
     ```java
-    // FAILED: The Kotlin DSL builders (markdown { header(...); bulleted { ... } }) are Kotlin-only.
-    // Java can construct MarkdownStructureDefinition but cannot use the Kotlin lambda DSL for schema/examples directly.
-    MarkdownStructureDefinition def = new MarkdownStructureDefinition("bookList", schema -> null, examples -> null);
     ```
 
 #### 3. Create a parser for your data structure
@@ -432,8 +400,6 @@ The `markdownStreamingParser` provides several handlers for different Markdown e
 === "Java"
 
     ```java
-    // FAILED: markdownStreamingParser { ... } is a Kotlin DSL that relies on Kotlin function types.
-    // There is no Java-oriented builder for registering handlers at the time of writing.
     ```
 
 Using the defined handlers, you can implement a function that parses the Markdown stream and emits your data objects 
@@ -492,9 +458,6 @@ with the `markdownStreamingParser` function.
 === "Java"
 
     ```java
-    // FAILED: This implementation uses Kotlin Flow and the markdownStreamingParser DSL, both suspend/DSL-based.
-    // Java cannot call these without coroutine interop and Java builders. A future NonSuspend parser or Java builder
-    // would be needed to provide equivalent functionality.
     ```
 
 #### 4. Use the parser in your agent strategy
@@ -538,9 +501,6 @@ with the `markdownStreamingParser` function.
 === "Java"
 
     ```java
-    // FAILED: The strategy { ... } and llm.writeSession { ... } constructs are Kotlin DSLs.
-    // While Koog provides AIAgent.builder() for Java agents, there is no direct Java equivalent to define
-    // a streaming node with requestLLMStreaming(mdDefinition) and collect Kotlin Flow results without coroutine interop.
     ```
 
 ### Advanced usage: Streaming with tools
@@ -586,20 +546,6 @@ The following sections provide a brief step-by-step guide on how to define a too
 === "Java"
 
     ```java
-    // Java equivalent POJO (reused from earlier):
-    public class Book {
-        public final String title;
-        public final String author;
-        public final String description;
-        public Book(String title, String author, String description) {
-            this.title = title;
-            this.author = author;
-            this.description = description;
-        }
-    }
-
-    // FAILED: Extending Kotlin SimpleTool<Book> from Java and overriding a suspend execute(args: Book) is not possible.
-    // Java cannot implement a suspend function; a Java-facing Tool API (non-suspending) would be required.
     ```
 
 ### 2. Use the tool with streaming data
@@ -648,8 +594,6 @@ The following sections provide a brief step-by-step guide on how to define a too
 === "Java"
 
     ```java
-    // FAILED: The calls to callToolRaw / toParallelToolCallsRaw and the surrounding strategy/llm.writeSession are Kotlin DSL
-    // and suspend-based APIs. A Java NonSuspend* tool invocation or builder-based strategy definition would be needed.
     ```
 
 ### 3. Register the tool in your agent configuration

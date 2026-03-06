@@ -96,9 +96,6 @@ For more information about prompt creation, see [Prompts](prompts/prompt-creatio
 === "Java"
 
     ```java
-    // FAILED: SubgraphWithTask is a Kotlin DSL construct that relies on suspend functions and Kotlin-specific builders.
-    // The Java API does not provide a direct equivalent for `subgraphWithTask` with all these parameters.
-    // You would need to use the lower-level SubgraphBuilder API or define custom nodes in Java.
     ```
 
 For more information about existing subgraph types in Koog, see [Predefined subgraphs](nodes-and-components.md#predefined-subgraphs). To learn how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
@@ -132,9 +129,6 @@ For more information about existing subgraph types in Koog, see [Predefined subg
 === "Java"
 
     ```java
-    // FAILED: The `llm.writeSession` is a Kotlin DSL construct that operates within a suspend context.
-    // There is no direct Java equivalent for `writeSession` or `changeLLMParams` in the current public API.
-    // You would need to use the underlying session management APIs directly, which may not be exposed for Java.
     ```
 
 For more information about sessions, see [LLM sessions and manual history management](sessions.md).

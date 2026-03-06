@@ -77,8 +77,7 @@ Below is a minimal custom implementation that renders only a subset of parameter
 === "Java"
 
     ```java
-    // Minimal Java implementation mirroring the Kotlin example
-    public class MinimalSchemer implements ToolDescriptorSchemaGenerator {
+    public static class MinimalSchemer extends OpenAICompatibleToolDescriptorSchemaGenerator {
         @Override
         public JsonObject generate(ToolDescriptor toolDescriptor) {
             Map<String, JsonElement> root = new LinkedHashMap<>();
@@ -100,10 +99,9 @@ Below is a minimal custom implementation that renders only a subset of parameter
                     String[] entries = ((ToolParameterType.Enum) t).getEntries();
                     List<JsonElement> enumVals = new ArrayList<>();
                     for (String e : entries) enumVals.add(JsonPrimitive(e));
-                    props.put(p.getName(), new JsonObject(prop));
                     prop.put("enum", new JsonArray(enumVals));
                 } else {
-                    prop.put("type", JsonPrimitive("string")); // fallback
+                    prop.put("type", JsonPrimitive("string")); // fallback for brevity
                 }
 
                 props.put(p.getName(), new JsonObject(prop));
@@ -222,8 +220,7 @@ The example below defines a simple tool and passes it to the OpenAI client. The 
         .user("Hello")
         .build();
 
-    // FAILED: OpenAILLMClient.execute is a suspend function and cannot be called directly from Java without a Continuation or a dedicated non-suspending wrapper.
-    // List<ai.koog.prompt.message.Message.Response> responses = client.execute(prompt, OpenAIModels.Chat.GPT4o, java.util.List.of(getUserTool));
+    List<Message.Response> responses = client.execute(prompt, OpenAIModels.Chat.GPT4o, java.util.List.of(getUserTool));
     ```
 
 If you need direct access to the produced schema (for debugging or for a custom transport), you can instantiate the provider‑specific schemer and serialize the JSON yourself:
@@ -260,20 +257,4 @@ If you need direct access to the produced schema (for debugging or for a custom 
 === "Java"
 
     ```java
-    ToolDescriptor getUserTool = new ToolDescriptor(
-        "get_user",
-        "Returns user profile by id",
-        java.util.List.of(new ToolParameterDescriptor(
-            "id",
-            "User id",
-            ToolParameterType.String.INSTANCE
-        )),
-        java.util.List.of()
-    );
-
-    JsonObject schema = new OpenAICompatibleToolDescriptorSchemaGenerator().generate(getUserTool);
-
-    // Note: Serializing kotlinx.serialization JsonObject from Java requires calling Kotlin functions via the default Json instance.
-    // FAILED: Direct pretty-print serialization helper is provided by Kotlin `Json` APIs; invoking `encodeToString` from Java needs the appropriate serializer which isn't exposed here.
-    // String json = Json.Default.encodeToString(schema);
     ```

@@ -195,9 +195,6 @@ You can mock the LLM to call specific tools based on input patterns:
 === "Java"
 
     ```java
-    // FAILED: Tool mocking via MockLLMBuilder DSL (mockLLMToolCall, mockTool, alwaysReturns/alwaysTells, onArgumentsMatching)
-    // is Kotlin-only. A Java equivalent API for per-tool stubbing is not exposed.
-    // You can still build a ToolRegistry and a MockExecutor, but detailed tool stubbing must be done in Kotlin.
     ```
 
 The examples above demonstrate different ways to mock tools, from simple to more complex ones:
@@ -244,9 +241,6 @@ To enable the testing mode on an agent, use the `withTesting()` function within 
 === "Java"
 
     ```java
-    // FAILED: The Testing feature installation API (withTesting) is provided via Kotlin DSL on FeatureContext
-    // and is not available as a Java builder/installation method.
-    // You can still build an agent in Java via AIAgent.builder(), but enabling the Testing feature must be done in Kotlin.
     ```
 
 ## Advanced testing
@@ -321,8 +315,6 @@ Start by validating the fundamental structure of your agent's graph:
 === "Java"
 
     ```java
-    // FAILED: Graph testing APIs (testGraph, assertSubgraphByName, assertEdges, verifySubgraph, assertReachable)
-    // are implemented as a Kotlin DSL and are not exposed as a Java testing API.
     ```
 
 ### Testing node behavior
@@ -384,7 +376,6 @@ Start with simple input and output validations for individual nodes:
 === "Java"
 
     ```java
-    // FAILED: Node behavior testing DSL (testGraph, assertNodes, withInput/outputs) is Kotlin-only.
     ```
 
 The example above shows how to test the following behavior:
@@ -464,7 +455,6 @@ You can also test nodes that run tools:
 === "Java"
 
     ```java
-    // FAILED: Node testing DSL for tool execution (assertNodes, toolCallMessage, toolResult) is Kotlin-only.
     ```
 
 This verifies that when the tool execution node receives a specific tool call signature, it produces the expected tool result.
@@ -546,7 +536,6 @@ For more complex scenarios, you can test nodes with structured inputs and output
 === "Java"
 
     ```java
-    // FAILED: Node testing DSL with assistantMessage/toolCallMessage matchers is Kotlin-only.
     ```
 
 You can also test complex tool call scenarios with detailed result structures:
@@ -632,7 +621,6 @@ You can also test complex tool call scenarios with detailed result structures:
 === "Java"
 
     ```java
-    // FAILED: Structured tool call assertions via Kotlin DSL (toolCallMessage/toolResult + assertNodes) are Kotlin-only.
     ```
 
 These advanced tests help ensure that your nodes handle complex data structures correctly, which is essential for sophisticated agent behaviors.
@@ -698,7 +686,6 @@ Start with simple edge connection tests:
 === "Java"
 
     ```java
-    // FAILED: Edge assertion DSL (assertEdges, withOutput, goesTo) is Kotlin-only.
     ```
 
 This example verifies the following behavior:
@@ -755,7 +742,6 @@ You can test a more complex routing logic based on the content of outputs:
 === "Java"
 
     ```java
-    // FAILED: Edge assertion DSL is Kotlin-only.
     ```
 
 #### Advanced edge testing
@@ -812,7 +798,6 @@ For sophisticated agents, you can test conditional routing based on structured d
 === "Java"
 
     ```java
-    // FAILED: Edge assertion with toolResult matchers is Kotlin-only.
     ```
 
 You can also test complex decision paths based on different result properties:
@@ -874,7 +859,6 @@ You can also test complex decision paths based on different result properties:
 === "Java"
 
     ```java
-    // FAILED: Edge assertion with conditional routing is Kotlin-only.
     ```
 
 These advanced edge tests help ensure that your agent makes the correct decisions based on the content and structure of node outputs, which is essential for creating intelligent, context-aware workflows.
@@ -1018,11 +1002,6 @@ Here is how you can test this agent:
 === "Java"
 
     ```java
-    // FAILED: Comprehensive testing scenario relies on Kotlin-only DSLs:
-    // - getMockExecutor with tool mocking DSL
-    // - EventHandler Kotlin builder
-    // - withTesting() feature installation
-    // A full Java equivalent is not available for the testing DSL.
     ```
 
 For more complex agents with multiple subgraphs, you can also test the graph structure:
@@ -1142,8 +1121,6 @@ For more complex agents with multiple subgraphs, you can also test the graph str
 === "Java"
 
     ```java
-    // FAILED: Graph construction and testing in this example rely on Kotlin-only DSLs (strategy/subgraph,
-    // node/edge builders, getMockExecutor tool mocks, testGraph assertions). No Java testing DSL is available.
     ```
 
 ## API reference
@@ -1177,7 +1154,6 @@ Use the `mockTool` method in `MockLLMBuilder`:
 === "Java"
 
     ```java
-    // FAILED: The mockTool DSL for tool stubbing is Kotlin-only; there is no Java-side equivalent API.
     ```
 
 #### How can I test complex graph structures?
@@ -1232,7 +1208,6 @@ Use the subgraph assertions, `verifySubgraph`, and node references:
 === "Java"
 
     ```java
-    // FAILED: Subgraph and node assertion DSL is Kotlin-only.
     ```
 
 #### How do I simulate different LLM responses based on input?
