@@ -49,6 +49,12 @@ public abstract class ExposedChatHistoryProvider @JvmOverloads constructor(
      */
     protected open val chatHistoryTable: ChatHistoryTable = ChatHistoryTable(tableName)
 
+    /**
+     * Executes a database transaction with the given operations.
+     * Implementations should ensure proper transaction isolation and rollback on failure.
+     */
+    protected abstract suspend fun <T> transaction(block: suspend () -> T): T
+
     override suspend fun cleanupExpired() {
         if (ttlSeconds == null) {
             return

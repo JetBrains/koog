@@ -24,6 +24,8 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-chat-memory-sql")
     //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-chat-history-jdbc")
+    //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-server")
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-client")
@@ -133,6 +135,7 @@ registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.Gro
 registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemory.ChatMemoryExampleKt")
 registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
 registerRunExampleTask("runExampleChatMemoryPostgres", "ai.koog.agents.example.chatmemory.ChatMemoryPostgresExampleKt")
+registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.chatmemory.ChatMemoryJdbcExample")
 /*
  A2A examples
 */

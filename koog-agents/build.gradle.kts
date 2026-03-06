@@ -13,6 +13,7 @@ val excluded = setOf(
     ":agents:agents-ext",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
     ":agents:agents-features:agents-features-chat-memory-sql", // Optional SQL chat memory provider
+    ":agents:agents-features:agents-features-chat-history-jdbc", // Optional JDBC chat history provider
     ":agents:agents-mcp-server",
     ":integration-tests",
     ":test-utils",
