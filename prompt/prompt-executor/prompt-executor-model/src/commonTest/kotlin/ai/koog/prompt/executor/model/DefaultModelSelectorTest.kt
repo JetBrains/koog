@@ -1,6 +1,5 @@
 package ai.koog.prompt.executor.model
 
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.ModelFilter.Decision
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.LLMProvider
@@ -10,7 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class DefaultModelSelectorTest {
-    private val selector = DefaultModelSelector(maxConcurrentlyFilteredModels = 2)
+    private val maxConcurrentlyFilteredModels = 2
 
     @Test
     fun filtersAndRanksModels() = runTest {
@@ -43,9 +42,8 @@ class DefaultModelSelectorTest {
         val rankers = listOf(ModelRankers.mostOutputTokens(), preferCodex)
 
         // When
-        val selectedModels = selector.select(
+        val selectedModels = selector(filters + rankers).select(
             models = listOf(gptMini, gpt, gptCodex, gptPro, google),
-            steps = filters + rankers,
         )
 
         // Then
@@ -63,9 +61,8 @@ class DefaultModelSelectorTest {
         }
 
         // When
-        val result = selector.select(
+        val result = selector(listOf(rejectB)).select(
             models = listOf(modelA, modelB, modelC),
-            steps = listOf(rejectB),
         )
 
         // Then
@@ -78,9 +75,8 @@ class DefaultModelSelectorTest {
         val rejectAll = ModelFilter { Decision.REJECTED }
 
         // When
-        val result = selector.select(
+        val result = selector(listOf(rejectAll)).select(
             models = models(count = 5),
-            steps = listOf(rejectAll),
         )
 
         // Then
@@ -113,9 +109,8 @@ class DefaultModelSelectorTest {
         )
 
         // When:
-        val result = selector.select(
+        val result = selector(rankers).select(
             models = listOf(modelA, modelB, modelC),
-            steps = rankers,
         )
 
         // Then:
@@ -138,9 +133,8 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector.select(
+            selector(listOf(excessiveRanker)).select(
                 models = inputModels,
-                steps = listOf(excessiveRanker),
             )
         }
     }
@@ -159,9 +153,8 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector.select(
+            selector(listOf(modelDroppingRanker)).select(
                 models = inputModels,
-                steps = listOf(modelDroppingRanker),
             )
         }
     }
@@ -177,9 +170,8 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector.select(
+            selector().select(
                 models = inputModels,
-                steps = emptyList(),
             )
         }
     }
@@ -199,9 +191,8 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector.select(
+            selector(listOf(duplicateReturningRanker)).select(
                 models = inputModels,
-                steps = listOf(duplicateReturningRanker),
             )
         }
     }
@@ -216,5 +207,11 @@ class DefaultModelSelectorTest {
         LLModel(
             provider = LLMProvider.OpenAI,
             id = id,
+        )
+
+    private fun selector(steps: List<ModelSelectionStep> = emptyList()): DefaultModelSelector =
+        DefaultModelSelector(
+            steps = steps,
+            maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels
         )
 }

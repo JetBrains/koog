@@ -8,13 +8,14 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 
 public class DefaultModelSelector(
+    private val steps: List<ModelSelectionStep> = emptyList(),
     private val maxConcurrentlyFilteredModels: Int = 8,
 ) : ModelSelector {
     init {
         require(maxConcurrentlyFilteredModels > 0) { "maxConcurrentFilteredModels must be greater than 0." }
     }
 
-    override suspend fun select(models: List<LLModel>, steps: List<ModelSelectionStep>): ModelSelection {
+    override suspend fun select(models: List<LLModel>): ModelSelection {
         if (models.isEmpty()) return ModelSelection.EMPTY
         validateModelsInput(models)
 

@@ -3,10 +3,7 @@ package ai.koog.prompt.executor.model
 import ai.koog.prompt.llm.LLModel
 
 public fun interface ModelSelector {
-    public suspend fun select(
-        models: List<LLModel>,
-        steps: List<ModelSelectionStep>,
-    ): ModelSelection
+    public suspend fun select(models: List<LLModel>): ModelSelection
 }
 
 public data class ModelSelection(
@@ -19,6 +16,20 @@ public data class ModelSelection(
 }
 
 public sealed interface ModelSelectionStep
+
+public object ModelSelectors {
+    public fun specific(model: LLModel): ModelSelector =
+        withSteps(ModelFilters.specific(model))
+
+    public fun withSteps(
+        vararg steps: ModelSelectionStep,
+        maxConcurrentlyFilteredModels: Int = 8,
+    ): ModelSelector =
+        DefaultModelSelector(
+            steps = steps.toList(),
+            maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels,
+        )
+}
 
 public fun interface ModelFilter : ModelSelectionStep {
     public suspend fun evaluate(model: LLModel): Decision
@@ -56,4 +67,3 @@ public data class Ranking(val buckets: List<RankBucket>){
 
     public fun hasTies(): Boolean = buckets.any { it.hasTie() }
 }
-
