@@ -3,7 +3,7 @@ package ai.koog.agents.example.chatmemory
 import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.example.ApiKeyService
-import ai.koog.agents.features.sql.providers.chathistory.PostgresChatHistoryProvider
+import ai.koog.agents.features.chatmemory.sql.PostgresChatHistoryProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import org.jetbrains.exposed.sql.Database

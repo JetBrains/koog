@@ -1,4 +1,4 @@
-package ai.koog.agents.features.sql.providers.chathistory
+package ai.koog.agents.features.chatmemory.sql
 
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table

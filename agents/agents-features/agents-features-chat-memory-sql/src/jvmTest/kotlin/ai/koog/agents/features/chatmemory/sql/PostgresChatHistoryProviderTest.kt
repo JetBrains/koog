@@ -1,4 +1,4 @@
-package ai.koog.agents.features.sql.providers.chathistory
+package ai.koog.agents.features.chatmemory.sql
 
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -259,10 +259,6 @@ class PostgresChatHistoryProviderTest {
         assertEquals(1, p.getConversationCount())
     }
 
-    /**
-     * Simulates a multi-turn chat conversation that grows over time,
-     * as an agent would accumulate messages across a single session.
-     */
     @Test
     fun testChatConversationGrowsAcrossTurns() = runBlocking {
         val p = provider(tableName = "chat_grow_test")
@@ -320,11 +316,6 @@ class PostgresChatHistoryProviderTest {
         assertEquals(1, p.getConversationCount())
     }
 
-    /**
-     * Simulates the core use case: a conversation is persisted across independent "runs".
-     * A new provider instance (simulating a fresh application start) should be able
-     * to load previous conversation state and continue from where it left off.
-     */
     @Test
     fun testConversationPersistsAcrossProviderInstances() = runBlocking {
         val tableName = "chat_persist_runs_test"
@@ -341,12 +332,10 @@ class PostgresChatHistoryProviderTest {
         )
         run1Provider.store(conversationId, run1Messages)
 
-        // Verify run 1 stored correctly
         assertEquals(3, run1Provider.load(conversationId).size)
 
         // --- Run 2: new provider instance, load and continue ---
         val run2Provider = provider(tableName = tableName)
-        // migrate is idempotent (CREATE TABLE IF NOT EXISTS)
         run2Provider.migrate()
 
         val run2Loaded = run2Provider.load(conversationId)
@@ -354,7 +343,6 @@ class PostgresChatHistoryProviderTest {
         assertEquals("What is the capital of France?", run2Loaded[1].content)
         assertEquals("The capital of France is Paris.", run2Loaded[2].content)
 
-        // Continue the conversation in run 2
         val run2Messages = run2Loaded + listOf(
             Message.User("And what about Germany?", RequestMetaInfo.create(Clock.System)),
             Message.Assistant("The capital of Germany is Berlin.", ResponseMetaInfo.create(Clock.System))
@@ -370,7 +358,6 @@ class PostgresChatHistoryProviderTest {
         val run3Loaded = run3Provider.load(conversationId)
         assertEquals(5, run3Loaded.size)
 
-        // Verify full conversation history is intact across all runs
         assertEquals("You are a helpful assistant.", run3Loaded[0].content)
         assertEquals("What is the capital of France?", run3Loaded[1].content)
         assertEquals("The capital of France is Paris.", run3Loaded[2].content)
@@ -384,10 +371,6 @@ class PostgresChatHistoryProviderTest {
         assertTrue(run3Loaded[4] is Message.Assistant)
     }
 
-    /**
-     * Simulates multiple independent agent conversations sharing the same database,
-     * each persisting and loading across runs without interference.
-     */
     @Test
     fun testMultipleConversationsPersistAcrossRuns() = runBlocking {
         val tableName = "chat_multi_persist_test"
@@ -420,7 +403,6 @@ class PostgresChatHistoryProviderTest {
         val run2 = provider(tableName = tableName)
         run2.migrate()
 
-        // Alice continues
         val aliceHistory = run2.load("agent-alice")
         assertEquals(3, aliceHistory.size)
         val aliceUpdated = aliceHistory + listOf(
@@ -429,7 +411,6 @@ class PostgresChatHistoryProviderTest {
         )
         run2.store("agent-alice", aliceUpdated)
 
-        // Bob continues
         val bobHistory = run2.load("agent-bob")
         assertEquals(3, bobHistory.size)
         val bobUpdated = bobHistory + listOf(
@@ -457,9 +438,6 @@ class PostgresChatHistoryProviderTest {
         assertEquals("Neil Armstrong.", bobFinal[4].content)
     }
 
-    /**
-     * Tests the builder API for constructing the provider.
-     */
     @Test
     fun testBuilderApi() = runBlocking {
         val p = PostgresChatHistoryProvider.builder()

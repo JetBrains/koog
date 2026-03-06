@@ -12,12 +12,9 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":agents:agents-core"))
-                api(project(":agents:agents-features:agents-features-snapshot"))
-                api(project(":rag:rag-base"))
+                api(project(":agents:agents-features:agents-features-memory"))
 
                 api(libs.kotlinx.serialization.json)
-                api(libs.ktor.serialization.kotlinx.json)
             }
         }
 
@@ -39,16 +36,13 @@ kotlin {
                 compileOnly(libs.mysql)
                 compileOnly(libs.postgresql)
                 compileOnly(libs.sqlite)
-                implementation(libs.hikaricp)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
-                implementation(libs.mockk)
                 implementation(libs.testcontainers)
                 implementation(libs.testcontainers.postgresql)
                 implementation(libs.testcontainers.mysql)

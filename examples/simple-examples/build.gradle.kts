@@ -22,6 +22,8 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-sql")
     //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-chat-memory-sql")
+    //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-server")
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-client")

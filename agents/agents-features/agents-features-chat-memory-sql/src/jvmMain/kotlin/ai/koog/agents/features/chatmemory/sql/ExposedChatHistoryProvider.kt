@@ -1,4 +1,4 @@
-package ai.koog.agents.features.sql.providers.chathistory
+package ai.koog.agents.features.chatmemory.sql
 
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.builtins.ListSerializer
