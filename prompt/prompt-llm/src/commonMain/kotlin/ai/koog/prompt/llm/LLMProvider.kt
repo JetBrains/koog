@@ -114,6 +114,42 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          */
         @JvmField
         public val MistralAI: LLMProvider = MistralAILLMProvider()
+
+        /**
+         * Represents the Oracle Cloud Infrastructure (OCI) Generative AI provider.
+         */
+        @JvmField
+        public val OCI: LLMProvider = OCILLMProvider()
+
+        /**
+         * Represents the MiniMax Large Language Model provider.
+         */
+        @JvmField
+        public val MiniMax: LLMProvider = MiniMaxLLMProvider()
+
+        /**
+         * Represents the ZhipuAI (智谱AI) Large Language Model provider.
+         */
+        @JvmField
+        public val ZhipuAI: LLMProvider = ZhipuAILLMProvider()
+
+        /**
+         * Represents the Hugging Face Large Language Model provider.
+         */
+        @JvmField
+        public val HuggingFace: LLMProvider = HuggingFaceLLMProvider()
+
+        /**
+         * Represents the Azure OpenAI provider.
+         */
+        @JvmField
+        public val Azure: LLMProvider = AzureLLMProvider()
+
+        /**
+         * Represents the Google VertexAI provider.
+         */
+        @JvmField
+        public val Vertex: LLMProvider = VertexLLMProvider()
     }
 }
 
@@ -240,3 +276,51 @@ public class DeepSeekLLMProvider : LLMProvider("deepseek", "DeepSeek")
  */
 @Serializable
 public class MistralAILLMProvider : LLMProvider("mistralai", "MistralAI")
+
+/**
+ * Represents the Oracle Cloud Infrastructure (OCI) Generative AI provider.
+ *
+ * Oracle is identified by its unique ID ("oci") and display name ("OCI").
+ */
+@Serializable
+public class OCILLMProvider : LLMProvider("oci", "OCI")
+
+/**
+ * Represents the MiniMax Large Language Model provider.
+ *
+ * MiniMax is identified by its unique ID ("minimax") and display name ("MiniMax").
+ */
+@Serializable
+public class MiniMaxLLMProvider : LLMProvider("minimax", "MiniMax")
+
+/**
+ * Represents the ZhipuAI (智谱AI) Large Language Model provider.
+ *
+ * ZhipuAI is identified by its unique ID ("zhipuai") and display name ("ZhipuAI").
+ */
+@Serializable
+public class ZhipuAILLMProvider : LLMProvider("zhipuai", "ZhipuAI")
+
+/**
+ * Represents the Hugging Face Large Language Model provider.
+ *
+ * HuggingFace is identified by its unique ID ("huggingface") and display name ("Hugging Face").
+ */
+@Serializable
+public class HuggingFaceLLMProvider : LLMProvider("huggingface", "Hugging Face")
+
+/**
+ * Represents the Azure OpenAI provider.
+ *
+ * ElevenLabs is identified by its unique ID ("azure") and display name ("Azure OpenAI").
+ */
+@Serializable
+public class AzureLLMProvider : LLMProvider("azure", "Azure OpenAI")
+
+/**
+ * Represents the Google VertexAI provider.
+ *
+ * StabilityAI is identified by its unique ID ("vertex") and display name ("Google VertexAI").
+ */
+@Serializable
+public class VertexLLMProvider : LLMProvider("vertex", "Google VertexAI")

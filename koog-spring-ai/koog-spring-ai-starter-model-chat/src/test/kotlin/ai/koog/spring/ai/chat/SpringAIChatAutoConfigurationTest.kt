@@ -3,6 +3,7 @@ package ai.koog.spring.ai.chat
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -269,6 +270,91 @@ class SpringAIChatAutoConfigurationTest {
                 val rootCause = generateSequence(context.startupFailure) { it.cause }.last()
                 assertInstanceOf<NoSuchBeanDefinitionException>(rootCause)
                 assertTrue(rootCause.message?.contains("nonExistentModeration") == true)
+            }
+    }
+
+    // ---- LLMProvider resolution tests ----
+
+    @Test
+    fun `should use explicit provider property when set`() {
+        contextRunner()
+            .withPropertyValues("koog.spring-ai.chat.provider=google")
+            .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .run { context ->
+                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                assertSame(LLMProvider.Google, client.llmProvider())
+            }
+    }
+
+    @Test
+    fun `should use explicit provider property for openai`() {
+        contextRunner()
+            .withPropertyValues("koog.spring-ai.chat.provider=openai")
+            .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .run { context ->
+                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                assertSame(LLMProvider.OpenAI, client.llmProvider())
+            }
+    }
+
+    @Test
+    fun `should fail on invalid provider property`() {
+        contextRunner()
+            .withPropertyValues("koog.spring-ai.chat.provider=unknown-provider")
+            .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .run { context ->
+                assertTrue(context.startupFailure != null)
+                val rootCause = generateSequence(context.startupFailure) { it.cause }.last()
+                assertInstanceOf<IllegalArgumentException>(rootCause)
+                assertTrue(rootCause.message?.contains("unknown-provider") == true)
+            }
+    }
+
+    @Test
+    fun `should use user-provided LLMProvider bean over property`() {
+        contextRunner()
+            .withPropertyValues("koog.spring-ai.chat.provider=openai")
+            .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .withBean(LLMProvider::class.java, { LLMProvider.Anthropic })
+            .run { context ->
+                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                assertSame(LLMProvider.Anthropic, client.llmProvider())
+            }
+    }
+
+    @Test
+    fun `should fallback to SpringAILLMProvider when no property and unknown ChatModel`() {
+        contextRunner()
+            .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .run { context ->
+                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                assertInstanceOf<SpringAILLMProvider>(client.llmProvider())
+            }
+    }
+
+    @Test
+    fun `named config should use explicit provider property`() {
+        contextRunner()
+            .withPropertyValues(
+                "koog.spring-ai.chat.chat-model-bean-name=myChat",
+                "koog.spring-ai.chat.provider=google"
+            )
+            .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .run { context ->
+                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                assertSame(LLMProvider.Google, client.llmProvider())
+            }
+    }
+
+    @Test
+    fun `named config should use LLMProvider bean`() {
+        contextRunner()
+            .withPropertyValues("koog.spring-ai.chat.chat-model-bean-name=myChat")
+            .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .withBean(LLMProvider::class.java, { LLMProvider.Google })
+            .run { context ->
+                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                assertSame(LLMProvider.Google, client.llmProvider())
             }
     }
 }

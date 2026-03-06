@@ -3,6 +3,7 @@ package ai.koog.spring.ai.chat
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
@@ -27,6 +28,26 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.lang.Nullable
 import java.util.concurrent.Executors
+
+/**
+ * Resolves the [LLMProvider] to use for the [SpringAILLMClient].
+ *
+ * Priority: user-provided [LLMProvider] bean > explicit property > auto-detection > fallback.
+ */
+private fun resolveProvider(
+    chatModel: ChatModel,
+    properties: KoogSpringAIChatProperties,
+    llmProviderBean: LLMProvider?,
+    logger: org.slf4j.Logger
+): LLMProvider {
+    if (llmProviderBean != null) {
+        logger.info("Koog Spring AI Chat: using user-provided LLMProvider bean: id='{}', display='{}'", llmProviderBean.id, llmProviderBean.display)
+        return llmProviderBean
+    }
+    val detected = SpringAIChatModelProviderDetector.detect(chatModel, properties.provider)
+    logger.info("Koog Spring AI Chat: resolved LLMProvider: id='{}', display='{}'", detected.id, detected.display)
+    return detected
+}
 
 /**
  * Auto-configuration for the Koog Spring AI Chat Model adapter.
@@ -127,17 +148,20 @@ public open class SpringAIChatAutoConfiguration {
             properties: KoogSpringAIChatProperties,
             @Qualifier("koogSpringAIChatDispatcher") dispatcher: CoroutineDispatcher,
             @Autowired(required = false) @Nullable chatOptionsCustomizer: ChatOptionsCustomizer?,
+            @Autowired(required = false) @Nullable llmProvider: LLMProvider?,
             moderationModelProvider: ObjectProvider<ModerationModel>,
         ): LLMClient {
             val beanName = properties.chatModelBeanName!!
             logger.info("Koog Spring AI Chat: resolving ChatModel bean by name='$beanName'")
             val chatModel = beanFactory.getBean(beanName, ChatModel::class.java)
+            val resolvedProvider = resolveProvider(chatModel, properties, llmProvider, logger)
             val resolvedModerationModel: ModerationModel? = properties.moderationModelBeanName
                 ?.also { logger.info("Koog Spring AI Chat: resolving ModerationModel bean by name='$it'") }
                 ?.let { beanFactory.getBean(it, ModerationModel::class.java) }
                 ?: moderationModelProvider.ifUnique
             return SpringAILLMClient(
                 chatModel,
+                provider = resolvedProvider,
                 dispatcher = dispatcher,
                 chatOptionsCustomizer = chatOptionsCustomizer ?: ChatOptionsCustomizer.NOOP,
                 moderationModel = resolvedModerationModel,
@@ -161,15 +185,18 @@ public open class SpringAIChatAutoConfiguration {
             properties: KoogSpringAIChatProperties,
             @Qualifier("koogSpringAIChatDispatcher") dispatcher: CoroutineDispatcher,
             @Autowired(required = false) @Nullable chatOptionsCustomizer: ChatOptionsCustomizer?,
+            @Autowired(required = false) @Nullable llmProvider: LLMProvider?,
             moderationModelProvider: ObjectProvider<ModerationModel>,
         ): LLMClient {
             logger.info("Koog Spring AI Chat: using single ChatModel candidate as LLMClient backend")
+            val resolvedProvider = resolveProvider(chatModel, properties, llmProvider, logger)
             val moderationModel: ModerationModel? = properties.moderationModelBeanName
                 ?.also { logger.info("Koog Spring AI Chat: resolving ModerationModel bean by name='$it'") }
                 ?.let { beanFactory.getBean(it, ModerationModel::class.java) }
                 ?: moderationModelProvider.ifUnique
             return SpringAILLMClient(
                 chatModel,
+                provider = resolvedProvider,
                 dispatcher = dispatcher,
                 chatOptionsCustomizer = chatOptionsCustomizer ?: ChatOptionsCustomizer.NOOP,
                 moderationModel = moderationModel,
