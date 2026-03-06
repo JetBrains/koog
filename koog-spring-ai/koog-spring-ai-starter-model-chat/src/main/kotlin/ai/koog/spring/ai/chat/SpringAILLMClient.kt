@@ -214,16 +214,16 @@ public class SpringAILLMClient @JvmOverloads constructor(
             val toolCallbacks = tools.map { koogToolDescriptorToToolCallback(it) }
             ToolCallingChatOptions.builder()
                 .model(model.id)
-                .apply { params.temperature?.let { temperature(it) } }
-                .apply { params.maxTokens?.let { maxTokens(it) } }
+                .temperature(params.temperature)
+                .maxTokens(params.maxTokens)
                 .toolCallbacks(toolCallbacks)
                 .internalToolExecutionEnabled(false)
                 .build()
         } else {
             ChatOptions.builder()
                 .model(model.id)
-                .apply { params.temperature?.let { temperature(it) } }
-                .apply { params.maxTokens?.let { maxTokens(it) } }
+                .temperature(params.temperature)
+                .maxTokens(params.maxTokens)
                 .build()
         }
 
