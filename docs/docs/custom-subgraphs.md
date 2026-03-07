@@ -255,11 +255,11 @@ import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.prompt
-import kotlinx.serialization.KSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 class WebSearchTool: SimpleTool<WebSearchTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "web_search",
     description = "Search on the web"
 ) {
@@ -272,7 +272,7 @@ class WebSearchTool: SimpleTool<WebSearchTool.Args>(
 }
 
 class DoAction: SimpleTool<DoAction.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "do_action",
     description = "Do something"
 ) {
@@ -285,7 +285,7 @@ class DoAction: SimpleTool<DoAction.Args>(
 }
 
 class DoAnotherAction: SimpleTool<DoAnotherAction.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "do_another_action",
     description = "Do something other"
 ) {

@@ -118,9 +118,9 @@ You can also call tools in parallel using the `toParallelToolCallsRaw` extension
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 -->
 ```kotlin
@@ -132,7 +132,7 @@ data class Book(
 )
 
 class BookTool() : SimpleTool<Book>(
-    argsSerializer = Book.serializer(),
+    argsType = typeToken<Book>(),
     name = NAME,
     description = "A tool to parse book information from Markdown"
 ) {
@@ -194,6 +194,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.serialization.typeToken
 
 const val apiKey = ""
 val analysisToolRegistry = ToolRegistry {}
@@ -213,6 +214,7 @@ val analysisAgentTool = analysisAgentService.createAgentTool(
     agentName = "analyzeTransactions",
     agentDescription = "Performs financial transaction analysis",
     inputDescription = "Transaction analysis request",
+    inputType = typeToken<String>(),
 )
 ```
 <!--- KNIT example-tools-overview-05.kt -->

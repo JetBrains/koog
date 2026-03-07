@@ -34,6 +34,7 @@ The code sample below shows the general pattern for implementing a custom featur
 functional, and planner agents:
 
 <!--- INCLUDE
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -52,7 +53,7 @@ class MyFeature(val someProperty: String) {
     companion object Feature : AIAgentGraphFeature<Config, MyFeature>, AIAgentFunctionalFeature<Config, MyFeature>, AIAgentPlannerFeature<Config, MyFeature> {
         // Unique storage key for retrieval in contexts
         override val key = createStorageKey<MyFeature>("my-feature")
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(agentConfig: AIAgentConfig): Config = Config()
 
         // Feature installation for graph-based agents
         override fun install(config: Config, pipeline: AIAgentGraphPipeline) : MyFeature {
@@ -245,6 +246,7 @@ agent types are implemented in the `installGraphPipeline`, `installFunctionalPip
 methods.
 
 <!--- INCLUDE
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -270,7 +272,7 @@ class LoggingFeature(val loggerName: String) {
 
         override val key = createStorageKey<LoggingFeature>("logging-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(agentConfig: AIAgentConfig): Config = Config()
 
         override fun install(config: Config, pipeline: AIAgentGraphPipeline) : LoggingFeature {
             val logging = LoggingFeature(config.loggerName)
@@ -354,6 +356,7 @@ installation, along with the custom configuration property `loggerName` that let
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -380,7 +383,7 @@ class LoggingFeature(val loggerName: String) {
 
         override val key = createStorageKey<LoggingFeature>("logging-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(agentConfig: AIAgentConfig): Config = Config()
 
         override fun install(config: Config, pipeline: AIAgentGraphPipeline) : LoggingFeature {
             val logging = LoggingFeature(config.loggerName)

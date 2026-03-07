@@ -450,7 +450,7 @@ The following sections provide a brief step-by-step guide on how to define a too
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.example.exampleStreamingApi03.Book
-import kotlinx.serialization.KSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 -->
@@ -463,7 +463,7 @@ data class Book(
 )
 
 class BookTool(): SimpleTool<Book>(
-    argsSerializer = Book.serializer(),
+    argsType = typeToken<Book>(),
     name = NAME,
     description = "A tool to parse book information from Markdown"
 ) {

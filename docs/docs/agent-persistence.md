@@ -356,10 +356,10 @@ For advanced control, you can directly set the execution point of an agent:
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.snapshot.feature.persistence
 import ai.koog.prompt.message.Message.User
-import kotlinx.serialization.json.JsonPrimitive
+import ai.koog.serialization.JSONPrimitive
 
-val customInput = JsonPrimitive("custom-input")
-val customOutput = JsonPrimitive("custom-output")
+val customInput = JSONPrimitive("custom-input")
+val customOutput = JSONPrimitive("custom-output")
 val customMessageHistory = emptyList<User>()
 -->
 

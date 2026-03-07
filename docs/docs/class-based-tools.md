@@ -48,15 +48,15 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import ai.koog.agents.core.tools.annotations.LLMDescription
 -->
 ```kotlin
 // Implement a simple calculator tool that adds two digits
 object CalculatorTool : Tool<CalculatorTool.Args, Int>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Int.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Int>(),
     name = "calculator",
     description = "A simple calculator that can add two digits (0-9)."
 ) {
@@ -109,12 +109,13 @@ Here is an example of a custom tool implementation using `SimpleTool`:
 <!--- INCLUDE
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 -->
 ```kotlin
 // Create a tool that casts a string expression to a double value
 object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "cast_to_double",
     description = "casts the passed expression to double or returns 0.0 if the expression is not castable"
 ) {
@@ -153,6 +154,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.markdown.markdown
@@ -160,8 +162,8 @@ import ai.koog.prompt.markdown.markdown
 ```kotlin
 // A tool that edits file
 object EditFile : Tool<EditFile.Args, EditFile.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     name = "edit_file",
     description = "Edits the given file"
 ) {
