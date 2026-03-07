@@ -1,0 +1,213 @@
+{
+  "schemaVersion": "1.1.0",
+  "buildSystem": "Gradle",
+  "buildSystemVersion": "9.3.1",
+  "buildPlugin": "org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper",
+  "buildPluginVersion": "2.2.21",
+  "projectSettings": {
+    "isHmppEnabled": true,
+    "isCompatibilityMetadataVariantEnabled": false,
+    "isKPMEnabled": false
+  },
+  "projectTargets": [
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "ios_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithSimulatorTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "ios_simulator_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithSimulatorTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "ios_x64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget",
+      "platformType": "js",
+      "extras": {
+        "js": {
+          "isBrowserConfigured": true,
+          "isNodejsConfigured": true
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget",
+      "platformType": "jvm",
+      "extras": {
+        "jvm": {
+          "jvmTarget": "17",
+          "withJavaEnabled": false
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "linux_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithHostTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "linux_x64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithHostTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "macos_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithHostTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "macos_x64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget",
+      "platformType": "common"
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithHostTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "mingw_x64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "tvos_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithSimulatorTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "tvos_simulator_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithSimulatorTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "tvos_x64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget",
+      "platformType": "wasm",
+      "extras": {
+        "js": {
+          "isBrowserConfigured": true,
+          "isNodejsConfigured": true
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "watchos_arm32",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "watchos_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithSimulatorTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "watchos_simulator_arm64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "target": "org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithSimulatorTests",
+      "platformType": "native",
+      "extras": {
+        "native": {
+          "konanTarget": "watchos_x64",
+          "konanVersion": "2.2.21",
+          "konanAbiVersion": "2.2.0"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jetbrains.kotlinx</groupId>
+  <artifactId>kotlinx-schema-generator-core-mingwx64</artifactId>
+  <version>0.3.3-SNAPSHOT</version>
+  <packaging>klib</packaging>
+  <name>kotlinx-schema-generator-core</name>
+  <description>Schema Generator Core and Reflection Generator</description>
+  <url>https://github.com/Kotlin/kotlinx-schema</url>
+  <organization>
+    <name>JetBrains</name>
+    <url>https://www.jetbrains.com</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>kpavlov</id>
+      <name>Konstantin Pavlov</name>
+      <email>k.pavlov@jetbrains.com</email>
+      <organization>JetBrains</organization>
+      <organizationUrl>https://jetbrains.com/</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/Kotlin/kotlinx-schema.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/Kotlin/kotlinx-schema.git</developerConnection>
+    <url>https://github.com/Kotlin/kotlinx-schema</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-serialization-json-mingwx64</artifactId>
+      <version>1.8.1</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-schema-annotations-mingwx64</artifactId>
+      <version>0.3.3-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>2.2.21</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.oshai</groupId>
+      <artifactId>kotlin-logging-mingwx64</artifactId>
+      <version>8.0.01</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

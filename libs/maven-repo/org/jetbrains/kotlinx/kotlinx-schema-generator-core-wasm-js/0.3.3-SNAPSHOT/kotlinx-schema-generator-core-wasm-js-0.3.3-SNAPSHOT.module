@@ -1,0 +1,137 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kotlinx-schema-generator-core/0.3.3-SNAPSHOT/kotlinx-schema-generator-core-0.3.3-SNAPSHOT.module",
+    "group": "org.jetbrains.kotlinx",
+    "module": "kotlinx-schema-generator-core",
+    "version": "0.3.3-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.3.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "wasmJsApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-annotations",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-core-wasm-js-0.3.3-SNAPSHOT.klib",
+          "url": "kotlinx-schema-generator-core-wasm-js-0.3.3-SNAPSHOT.klib",
+          "size": 34387,
+          "sha512": "1a39037be024a6fe90d72feb57f279eb2049a259df70a28f96ace4b63bc4cc4da675039f93923e0a4b5099721ea8ba789f13ae01fea7261933d9db67b940ebb9",
+          "sha256": "12882957a90c17841933bc7de3f3469e1d6c49003eff81023a47e4525c786d4a",
+          "sha1": "496924bb6d14de8fd5d8cf82411bd024ebe09a50",
+          "md5": "1da5e7fa90cf2fa343676f9c8d7d265c"
+        }
+      ]
+    },
+    {
+      "name": "wasmJsRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-annotations",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        },
+        {
+          "group": "io.github.oshai",
+          "module": "kotlin-logging",
+          "version": {
+            "requires": "8.0.01"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-core-wasm-js-0.3.3-SNAPSHOT.klib",
+          "url": "kotlinx-schema-generator-core-wasm-js-0.3.3-SNAPSHOT.klib",
+          "size": 34387,
+          "sha512": "1a39037be024a6fe90d72feb57f279eb2049a259df70a28f96ace4b63bc4cc4da675039f93923e0a4b5099721ea8ba789f13ae01fea7261933d9db67b940ebb9",
+          "sha256": "12882957a90c17841933bc7de3f3469e1d6c49003eff81023a47e4525c786d4a",
+          "sha1": "496924bb6d14de8fd5d8cf82411bd024ebe09a50",
+          "md5": "1da5e7fa90cf2fa343676f9c8d7d265c"
+        }
+      ]
+    },
+    {
+      "name": "wasmJsSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "wasm",
+        "org.jetbrains.kotlin.wasm.target": "js"
+      },
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-core-wasm-js-0.3.3-SNAPSHOT-sources.jar",
+          "url": "kotlinx-schema-generator-core-wasm-js-0.3.3-SNAPSHOT-sources.jar",
+          "size": 11235,
+          "sha512": "45a37de25b8da704151900243cdf2494e4f60e01c95361ec58f2dc6e4f8eb4b62236dc2d3ee72ca34fee91b0a7f1e59676fe3899b85a087bf44b6a2405c0e6c8",
+          "sha256": "3aae8f956e9ebdd5a4745df868ac424b011ccd6ab7e8ca736f5948bd651a5946",
+          "sha1": "f2f6f2f183b3aeec8f1985eadfa0156807141f8b",
+          "md5": "0e00cc88d587dc148be8b9df8133c7b0"
+        }
+      ]
+    }
+  ]
+}

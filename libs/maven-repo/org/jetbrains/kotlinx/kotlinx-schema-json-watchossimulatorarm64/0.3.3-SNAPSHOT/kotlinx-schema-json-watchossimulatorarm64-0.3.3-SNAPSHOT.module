@@ -1,0 +1,118 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kotlinx-schema-json/0.3.3-SNAPSHOT/kotlinx-schema-json-0.3.3-SNAPSHOT.module",
+    "group": "org.jetbrains.kotlinx",
+    "module": "kotlinx-schema-json",
+    "version": "0.3.3-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.3.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "watchosSimulatorArm64ApiElements-published",
+      "attributes": {
+        "artifactType": "org.jetbrains.kotlin.klib",
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "watchos_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-json-watchosSimulatorArm64Main-0.3.3-SNAPSHOT.klib",
+          "url": "kotlinx-schema-json-watchossimulatorarm64-0.3.3-SNAPSHOT.klib",
+          "size": 348525,
+          "sha512": "89b7da76bfb9576b66ab94cde25e34cdd23402012652473bdc91a69695b79b4100ffdef63a2d817f5989a788c319a585187b130e8688ebc901016a3eb7d91975",
+          "sha256": "8baf5114ace291199fa19ff974980dd0f5feb3f4e1225cfc601abdc49f71b289",
+          "sha1": "28c1e6b3ece7ca9aee62ec2a262da4b47d48c49f",
+          "md5": "0526413a728314ee2239f11a9150a513"
+        }
+      ]
+    },
+    {
+      "name": "watchosSimulatorArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "watchos_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kotlinx-schema-json-watchossimulatorarm64-0.3.3-SNAPSHOT-sources.jar",
+          "url": "kotlinx-schema-json-watchossimulatorarm64-0.3.3-SNAPSHOT-sources.jar",
+          "size": 27709,
+          "sha512": "7d45f144625940c6cc32c87b23061518b61d1acfb5fdb83d92f6e8fa78d7599a5e621daddea545b1231e0c5ba499ace297df2b2ef62372bc6d3c725dbf06fded",
+          "sha256": "b0266ad5c0c964c542b8bf319f3510c219ea66a0bc0bb3488e9a315618a17b16",
+          "sha1": "4a9693ee4e62b074aa315f67b2b72948c822b9b5",
+          "md5": "5db25762770b5adb345cc085b69f94b2"
+        }
+      ]
+    },
+    {
+      "name": "watchosSimulatorArm64MetadataElements-published",
+      "attributes": {
+        "artifactType": "org.jetbrains.kotlin.klib",
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "watchos_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-json-watchossimulatorarm64-0.3.3-SNAPSHOT-metadata.jar",
+          "url": "kotlinx-schema-json-watchossimulatorarm64-0.3.3-SNAPSHOT-metadata.jar",
+          "size": 261,
+          "sha512": "1487e5a20c9e4d74f298e07c42e96a61be11b7a768c3fbc199ee138cd68e1fc2267d1cfe3f11f288acc05df755315344d052cc5f6f751f126ab4fe1caa5125ea",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "sha1": "2ad14aed781c4a73ed4dbb421966d408a0a06686",
+          "md5": "f43436d6bec321290f6af228ad602604"
+        }
+      ]
+    }
+  ]
+}

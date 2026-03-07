@@ -1,0 +1,160 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kotlinx-schema-generator-json/0.3.3-SNAPSHOT/kotlinx-schema-generator-json-0.3.3-SNAPSHOT.module",
+    "group": "org.jetbrains.kotlinx",
+    "module": "kotlinx-schema-generator-json",
+    "version": "0.3.3-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.3.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "iosSimulatorArm64ApiElements-published",
+      "attributes": {
+        "artifactType": "org.jetbrains.kotlin.klib",
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-annotations",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-generator-core",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-json",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-json-iosSimulatorArm64Main-0.3.3-SNAPSHOT.klib",
+          "url": "kotlinx-schema-generator-json-iossimulatorarm64-0.3.3-SNAPSHOT.klib",
+          "size": 79024,
+          "sha512": "8bb54dec8e7b036e2753e41f9409223ad3f90e1bc887912458e1c3b908f5d3a9b7e14e257596eb8a87ae58efee456fe0c86b6ba6d9c31975d09508c36c8d1292",
+          "sha256": "55c12616975a522281291f1ce09388e64c5582e4d57c59e2a6bf73ab5babe5db",
+          "sha1": "5ea7b5c3c1c2a532eadf4b0ebd9ef8b56bf767d1",
+          "md5": "105bf3d518d3d394d19fa12a4accc716"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-json-iossimulatorarm64-0.3.3-SNAPSHOT-sources.jar",
+          "url": "kotlinx-schema-generator-json-iossimulatorarm64-0.3.3-SNAPSHOT-sources.jar",
+          "size": 19683,
+          "sha512": "357f1227fe71824ffa8d4b42af5ac67a5af520b00f851b819dbabe1cdfc478ecaa59f9d6552e5add4e6d908b14faae16521c27258b35d67dd418660a976d34c3",
+          "sha256": "1460a400b213aed030f072bf7ce267907e9e7e7bf9768019da78afdeb7e4077d",
+          "sha1": "d7fa5b158e8eb64cd53fc26056bdc53e14bc8ba3",
+          "md5": "db04f032cfa18b9e8771b0091a9e3867"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64MetadataElements-published",
+      "attributes": {
+        "artifactType": "org.jetbrains.kotlin.klib",
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-annotations",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-generator-core",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-json",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-json-iossimulatorarm64-0.3.3-SNAPSHOT-metadata.jar",
+          "url": "kotlinx-schema-generator-json-iossimulatorarm64-0.3.3-SNAPSHOT-metadata.jar",
+          "size": 261,
+          "sha512": "1487e5a20c9e4d74f298e07c42e96a61be11b7a768c3fbc199ee138cd68e1fc2267d1cfe3f11f288acc05df755315344d052cc5f6f751f126ab4fe1caa5125ea",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "sha1": "2ad14aed781c4a73ed4dbb421966d408a0a06686",
+          "md5": "f43436d6bec321290f6af228ad602604"
+        }
+      ]
+    }
+  ]
+}

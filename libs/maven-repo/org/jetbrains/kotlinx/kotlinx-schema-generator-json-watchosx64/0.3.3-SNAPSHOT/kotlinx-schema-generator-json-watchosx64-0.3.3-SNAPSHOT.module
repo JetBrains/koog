@@ -1,0 +1,160 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kotlinx-schema-generator-json/0.3.3-SNAPSHOT/kotlinx-schema-generator-json-0.3.3-SNAPSHOT.module",
+    "group": "org.jetbrains.kotlinx",
+    "module": "kotlinx-schema-generator-json",
+    "version": "0.3.3-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.3.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "watchosX64ApiElements-published",
+      "attributes": {
+        "artifactType": "org.jetbrains.kotlin.klib",
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "watchos_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-annotations",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-generator-core",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-json",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-json-watchosX64Main-0.3.3-SNAPSHOT.klib",
+          "url": "kotlinx-schema-generator-json-watchosx64-0.3.3-SNAPSHOT.klib",
+          "size": 78971,
+          "sha512": "8537310b040707d8a50a2b4e3d57e98b2d58ab4051d173674cd6260b7e53b78a3d9f75b900f2d8a8f9f4013fb9571ae2f9809957bcf26c97fad1dfe6d009cce0",
+          "sha256": "17a409adc19c52a87270259733e84ab1244bccd99587bb17b1946af3c3f5b953",
+          "sha1": "c6ceddb9957e992787d18c007885a222d3d12ccb",
+          "md5": "9aa77b72038d63ae9e353b58e9dd008a"
+        }
+      ]
+    },
+    {
+      "name": "watchosX64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "watchos_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-json-watchosx64-0.3.3-SNAPSHOT-sources.jar",
+          "url": "kotlinx-schema-generator-json-watchosx64-0.3.3-SNAPSHOT-sources.jar",
+          "size": 19683,
+          "sha512": "357f1227fe71824ffa8d4b42af5ac67a5af520b00f851b819dbabe1cdfc478ecaa59f9d6552e5add4e6d908b14faae16521c27258b35d67dd418660a976d34c3",
+          "sha256": "1460a400b213aed030f072bf7ce267907e9e7e7bf9768019da78afdeb7e4077d",
+          "sha1": "d7fa5b158e8eb64cd53fc26056bdc53e14bc8ba3",
+          "md5": "db04f032cfa18b9e8771b0091a9e3867"
+        }
+      ]
+    },
+    {
+      "name": "watchosX64MetadataElements-published",
+      "attributes": {
+        "artifactType": "org.jetbrains.kotlin.klib",
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "watchos_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-annotations",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-generator-core",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-schema-json",
+          "version": {
+            "requires": "0.3.3-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-generator-json-watchosx64-0.3.3-SNAPSHOT-metadata.jar",
+          "url": "kotlinx-schema-generator-json-watchosx64-0.3.3-SNAPSHOT-metadata.jar",
+          "size": 261,
+          "sha512": "1487e5a20c9e4d74f298e07c42e96a61be11b7a768c3fbc199ee138cd68e1fc2267d1cfe3f11f288acc05df755315344d052cc5f6f751f126ab4fe1caa5125ea",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "sha1": "2ad14aed781c4a73ed4dbb421966d408a0a06686",
+          "md5": "f43436d6bec321290f6af228ad602604"
+        }
+      ]
+    }
+  ]
+}

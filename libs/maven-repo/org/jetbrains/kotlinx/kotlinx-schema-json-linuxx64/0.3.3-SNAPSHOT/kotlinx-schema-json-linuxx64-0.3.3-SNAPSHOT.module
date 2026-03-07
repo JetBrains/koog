@@ -1,0 +1,80 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../kotlinx-schema-json/0.3.3-SNAPSHOT/kotlinx-schema-json-0.3.3-SNAPSHOT.module",
+    "group": "org.jetbrains.kotlinx",
+    "module": "kotlinx-schema-json",
+    "version": "0.3.3-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.3.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "linuxX64ApiElements-published",
+      "attributes": {
+        "artifactType": "org.jetbrains.kotlin.klib",
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "linux_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.8.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "kotlinx-schema-json-linuxX64Main-0.3.3-SNAPSHOT.klib",
+          "url": "kotlinx-schema-json-linuxx64-0.3.3-SNAPSHOT.klib",
+          "size": 348433,
+          "sha512": "9e04b24766b299031dc8380eb438887f1f56c58b8e496b96267d93549dc4df74a2d6dd87bd3a76429da270647025bf2ff5243c2cf4ef14826fc6deb36f32d16a",
+          "sha256": "db1f4cc9122579022cb5ae0e93491f4434acb31ee0cde4ee152ab9c45eab90a1",
+          "sha1": "6c14383deaef473d73505b86300a722ce9e23d16",
+          "md5": "89a3d00017f8a866c1e43f632b44a0cc"
+        }
+      ]
+    },
+    {
+      "name": "linuxX64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "linux_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "kotlinx-schema-json-linuxx64-0.3.3-SNAPSHOT-sources.jar",
+          "url": "kotlinx-schema-json-linuxx64-0.3.3-SNAPSHOT-sources.jar",
+          "size": 27709,
+          "sha512": "7d45f144625940c6cc32c87b23061518b61d1acfb5fdb83d92f6e8fa78d7599a5e621daddea545b1231e0c5ba499ace297df2b2ef62372bc6d3c725dbf06fded",
+          "sha256": "b0266ad5c0c964c542b8bf319f3510c219ea66a0bc0bb3488e9a315618a17b16",
+          "sha1": "4a9693ee4e62b074aa315f67b2b72948c822b9b5",
+          "md5": "5db25762770b5adb345cc085b69f94b2"
+        }
+      ]
+    }
+  ]
+}
