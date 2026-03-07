@@ -19,7 +19,6 @@ import ai.koog.serialization.typeToken
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.serializer
 import kotlin.jvm.JvmStatic
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -491,8 +490,8 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     agentName: String,
     agentDescription: String,
     inputDescription: String? = null,
-    inputSerializer: KSerializer<Input> = serializer(),
-    outputSerializer: KSerializer<Output> = serializer(),
+    inputSerializer: KSerializer<Input>,
+    outputSerializer: KSerializer<Output>,
     parentAgentId: String? = null,
     clock: Clock = Clock.System
 ): Tool<Input, AIAgentTool.AgentToolResult<Output>> = createAgentTool(
