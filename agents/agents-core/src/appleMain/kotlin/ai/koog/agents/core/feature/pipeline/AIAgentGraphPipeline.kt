@@ -20,7 +20,7 @@ public actual open class AIAgentGraphPipeline actual constructor(
         feature: AIAgentGraphFeature<TConfig, TFeatureImpl>,
         configure: TConfig.() -> Unit,
     ) {
-        val featureConfig = feature.createInitialConfig().apply { configure() }
+        val featureConfig = feature.createInitialConfig(config).apply { configure() }
         val featureImpl = feature.install(
             config = featureConfig,
             pipeline = this,

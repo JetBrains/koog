@@ -44,6 +44,7 @@ public expect class AIAgentLLMReadSession internal constructor(
     override val tools: List<ToolDescriptor>
     override val model: LLModel
     override val responseProcessor: ResponseProcessor?
+    override val config: AIAgentConfig
 
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response>
     override suspend fun requestLLMWithoutTools(): Message.Response

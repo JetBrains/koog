@@ -30,23 +30,19 @@ import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
-import kotlin.jvm.JvmName
 import kotlin.reflect.KClass
 import kotlin.time.Clock
 
 @PublishedApi
 internal class AIAgentLLMWriteSessionImpl internal constructor(
-    @get:JvmName("environment")
     override val environment: AIAgentEnvironment,
     private val executor: PromptExecutor,
     tools: List<ToolDescriptor>,
-    @get:JvmName("toolRegistry")
     override val toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     override val config: AIAgentConfig,
-    @get:JvmName("clock")
     override val clock: Clock,
 ) : AIAgentLLMWriteSessionAPI {
     private val readSessionImpl

@@ -61,22 +61,14 @@ public expect class AIAgentLLMWriteSession internal constructor(
     @PublishedApi
     internal val delegate: AIAgentLLMWriteSessionImpl
 
-    @get:JvmName("environment")
-    public override val environment: AIAgentEnvironment
-
-    @get:JvmName("toolRegistry")
-    public override val toolRegistry: ToolRegistry
-
-    @get:JvmName("clock")
-    public override val clock: Clock
-
+    override val environment: AIAgentEnvironment
+    override val toolRegistry: ToolRegistry
+    override val clock: Clock
     override var prompt: Prompt
-
     override var tools: List<ToolDescriptor>
-
     override var model: LLModel
-
     override var responseProcessor: ResponseProcessor?
+    override val config: AIAgentConfig
 
     public override fun <TArgs, TResult> findTool(tool: Tool<TArgs, TResult>): SafeTool<TArgs, TResult>
 
