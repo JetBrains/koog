@@ -1,5 +1,6 @@
 package ai.koog.agents.testing.tools
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -10,10 +11,12 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
 import ai.koog.prompt.tokenizer.Tokenizer
+import ai.koog.serialization.JSONSerializer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
 
 /**
@@ -56,15 +59,20 @@ internal class ResponseMatcher<TResponse>(
  * @property clock: A clock that is used for mock message timestamps
  * @property tokenizer: Tokenizer that will be used to estimate token counts in mock messages
  */
-internal class MockPromptExecutor(
+public class MockPromptExecutor internal constructor(
     private val handleLastAssistantMessage: Boolean,
     private val responseMatcher: ResponseMatcher<List<Message.Response>>,
     private val moderationResponseMatcher: ResponseMatcher<ModerationResult>,
     private val logger: KLogger = KotlinLogging.logger(MockPromptExecutor::class.simpleName.toString()),
-    val toolActions: List<ToolCondition<*, *>> = emptyList(),
+    internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: Clock = Clock.System,
     private val tokenizer: Tokenizer? = null
 ) : PromptExecutor() {
+    public companion object {
+        @JvmStatic
+        @JavaAPI
+        public fun builder(serializer: JSONSerializer): MockExecutorBuilder = MockExecutorBuilder(serializer)
+    }
 
     /**
      * Executes a prompt with tools and returns a list of responses.
@@ -139,7 +147,7 @@ internal class MockPromptExecutor(
      * @param prompt The prompt to handle
      * @return The appropriate response based on the configured matches
      */
-    fun handlePrompt(prompt: Prompt): List<Message.Response> {
+    private fun handlePrompt(prompt: Prompt): List<Message.Response> {
         logger.debug { "Handling prompt with messages:" }
         prompt.messages.forEach { logger.debug { "Message content: ${it.content.take(300)}..." } }
 

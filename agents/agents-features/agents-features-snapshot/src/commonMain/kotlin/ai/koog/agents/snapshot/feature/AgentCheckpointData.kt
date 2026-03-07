@@ -13,8 +13,10 @@ import ai.koog.serialization.JSONNull
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.toJSONElement
+import ai.koog.serialization.kotlinx.toJSONObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -43,8 +45,21 @@ public data class AgentCheckpointData(
     val version: Long,
     val properties: JSONObject? = null
 ) {
-
-    @Deprecated("Use JSONElement constructor instead of JsonElement")
+    /**
+     * Constructs an instance of the class with the specified parameters.
+     * This constructor is marked as deprecated and may be removed in the future.
+     *
+     * @param checkpointId A unique identifier for the checkpoint.
+     * @param createdAt The timestamp indicating when the checkpoint was created.
+     * @param nodePath The path of the node associated with this checkpoint.
+     * @param lastInput The last input state, represented as a JSON element.
+     *                  This parameter is deprecated. Use `lastOutput` instead.
+     * @param lastOutput The last output state, represented as a JSON element.
+     * @param messageHistory The history of messages associated with this checkpoint.
+     * @param version The version number of the checkpoint data.
+     * @param properties Additional properties associated with the checkpoint, represented as a JSON object.
+     */
+    @Deprecated("Use AgentCheckpointData constructor that accepts koog.JSONElement instead of kotlinx.JsonElement")
     public constructor(
         checkpointId: String,
         createdAt: Instant,
@@ -53,7 +68,7 @@ public data class AgentCheckpointData(
         lastOutput: JsonElement? = null,
         messageHistory: List<Message>,
         version: Long,
-        properties: JSONObject? = null
+        properties: JsonObject? = null
     ) : this(
         checkpointId,
         createdAt,
@@ -62,7 +77,7 @@ public data class AgentCheckpointData(
         lastOutput?.toJSONElement(),
         messageHistory,
         version,
-        properties
+        properties?.toJSONObject()
     )
 
     init {

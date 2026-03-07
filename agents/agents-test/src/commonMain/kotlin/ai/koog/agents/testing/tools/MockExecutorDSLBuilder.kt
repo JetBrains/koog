@@ -8,6 +8,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toJSONObject
 import kotlin.jvm.JvmName
 import kotlin.time.Clock
@@ -1006,7 +1007,7 @@ public open class DefaultResponseReceiver(
  * ```
  */
 public fun getMockExecutor(
-    serializer: JSONSerializer,
+    serializer: JSONSerializer = KotlinxSerializer(),
     clock: Clock = Clock.System,
     tokenizer: Tokenizer? = null,
     handleLastAssistantMessage: Boolean = false,

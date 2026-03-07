@@ -7,6 +7,7 @@ import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor;
 import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
 import ai.koog.agents.testing.tools.MockExecutorBuilder;
+import ai.koog.agents.testing.tools.MockPromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
 import ai.koog.serialization.JSONSerializer;
@@ -33,7 +34,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                new MockExecutorBuilder(serializer)
+                MockPromptExecutor.builder(serializer)
                     .mockLLMAnswer("The capital of France is Paris.").asDefaultResponse()
                     .build()
             )
@@ -68,7 +69,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                new MockExecutorBuilder(serializer)
+                MockPromptExecutor.builder(serializer)
                     .mockLLMAnswer("answer").asDefaultResponse()
                     .build()
             )
@@ -102,7 +103,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                new MockExecutorBuilder(serializer)
+                MockPromptExecutor.builder(serializer)
                     .mockLLMAnswer("answer").asDefaultResponse()
                     .build()
             )
@@ -137,7 +138,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                new MockExecutorBuilder(serializer)
+                MockPromptExecutor.builder(serializer)
                     .mockLLMAnswer("full config answer").asDefaultResponse()
                     .build()
             )
