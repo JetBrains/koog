@@ -20,7 +20,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.reflect.typeOf
@@ -37,11 +37,11 @@ open class AgentTestBase {
         toolResult: ReceivedToolResult = ReceivedToolResult(
             id = "test-tool-id",
             tool = "test-tool",
-            toolArgs = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toJSONObject(),
+            toolArgs = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
             toolDescription = null,
             content = "Test tool result",
             resultKind = ToolResultKind.Success,
-            result = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toJSONObject(),
+            result = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
         )
     ): AIAgentEnvironment {
         return object : AIAgentEnvironment {

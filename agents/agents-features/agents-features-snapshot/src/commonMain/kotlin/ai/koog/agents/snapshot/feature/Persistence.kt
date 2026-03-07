@@ -19,8 +19,8 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
-import ai.koog.serialization.kotlinx.toJSONElement
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
@@ -304,7 +304,7 @@ public class Persistence(
         messageHistory: List<Message>,
         input: JsonElement,
     ) {
-        return setExecutionPoint(agentContext, nodePath, messageHistory, input.toJSONElement())
+        return setExecutionPoint(agentContext, nodePath, messageHistory, input.toKoogJSONElement())
     }
 
     /**
@@ -341,7 +341,7 @@ public class Persistence(
         messageHistory: List<Message>,
         output: JsonElement,
     ) {
-        return setExecutionPointAfterNode(agentContext, nodePath, messageHistory, output.toJSONElement())
+        return setExecutionPointAfterNode(agentContext, nodePath, messageHistory, output.toKoogJSONElement())
     }
 
     /**
@@ -404,7 +404,7 @@ public class Persistence(
                                 val toolArgs = try {
                                     toolCall.contentJsonResult
                                         .getOrNull()
-                                        ?.toJSONObject()
+                                        ?.toKoogJSONObject()
                                         ?.let { rollbackTool.decodeArgs(it, agentContext.config.serializer) }
                                 } catch (e: CancellationException) {
                                     throw e

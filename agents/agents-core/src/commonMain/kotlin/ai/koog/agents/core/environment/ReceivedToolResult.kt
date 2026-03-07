@@ -5,8 +5,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
-import ai.koog.serialization.kotlinx.toJSONElement
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -45,11 +45,11 @@ public data class ReceivedToolResult(
     ) : this(
         id = id,
         tool = tool,
-        toolArgs = toolArgs.toJSONObject(),
+        toolArgs = toolArgs.toKoogJSONObject(),
         toolDescription = toolDescription,
         content = content,
         resultKind = resultKind,
-        result = result?.toJSONElement()
+        result = result?.toKoogJSONElement()
     )
 
     /**

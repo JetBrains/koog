@@ -49,7 +49,7 @@ public class JacksonSerializer(
 
     override fun <T> encodeToJSONElement(value: T, typeToken: TypeToken): JSONElement {
         val jsonNode = objectMapper.valueToTree<JsonNode>(value)
-        return jsonNode.toJSONElement()
+        return jsonNode.toKoogJSONElement()
     }
 
     override fun <T> decodeFromJSONElement(value: JSONElement, typeToken: TypeToken): T {

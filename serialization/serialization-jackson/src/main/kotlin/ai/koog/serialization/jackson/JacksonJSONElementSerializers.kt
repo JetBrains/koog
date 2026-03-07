@@ -20,7 +20,10 @@ import com.fasterxml.jackson.databind.node.ValueNode
 import com.fasterxml.jackson.module.kotlin.addDeserializer
 import com.fasterxml.jackson.module.kotlin.addSerializer
 
-internal class JSONElementModule : SimpleModule() {
+/**
+ * Jackson module that handles [JSONElement] serialization and deserialization to a proper JSON.
+ */
+public class JSONElementModule : SimpleModule() {
     init {
         addSerializer(JSONElement::class, JSONElementSerializer)
         addSerializer(JSONObject::class, JSONObjectSerializer)
@@ -40,42 +43,42 @@ internal class JSONElementModule : SimpleModule() {
 
 // Serializers
 
-internal object JSONElementSerializer : JsonSerializer<JSONElement>() {
+public object JSONElementSerializer : JsonSerializer<JSONElement>() {
     override fun serialize(value: JSONElement, gen: JsonGenerator, serializers: SerializerProvider) {
         val jsonNode = value.toJacksonJsonNode()
         gen.writeTree(jsonNode)
     }
 }
 
-internal object JSONObjectSerializer : JsonSerializer<JSONObject>() {
+public object JSONObjectSerializer : JsonSerializer<JSONObject>() {
     override fun serialize(value: JSONObject, gen: JsonGenerator, serializers: SerializerProvider) {
         val jsonNode = value.toJacksonObjectNode()
         gen.writeTree(jsonNode)
     }
 }
 
-internal object JSONArraySerializer : JsonSerializer<JSONArray>() {
+public object JSONArraySerializer : JsonSerializer<JSONArray>() {
     override fun serialize(value: JSONArray, gen: JsonGenerator, serializers: SerializerProvider) {
         val jsonNode = value.toJacksonArrayNode()
         gen.writeTree(jsonNode)
     }
 }
 
-internal object JSONPrimitiveSerializer : JsonSerializer<JSONPrimitive>() {
+public object JSONPrimitiveSerializer : JsonSerializer<JSONPrimitive>() {
     override fun serialize(value: JSONPrimitive, gen: JsonGenerator, serializers: SerializerProvider) {
         val jsonNode = value.toJacksonJsonNode()
         gen.writeTree(jsonNode)
     }
 }
 
-internal object JSONLiteralSerializer : JsonSerializer<JSONLiteral>() {
+public object JSONLiteralSerializer : JsonSerializer<JSONLiteral>() {
     override fun serialize(value: JSONLiteral, gen: JsonGenerator, serializers: SerializerProvider) {
         val jsonNode = value.toJacksonJsonNode()
         gen.writeTree(jsonNode)
     }
 }
 
-internal object JSONNullSerializer : JsonSerializer<JSONNull>() {
+public object JSONNullSerializer : JsonSerializer<JSONNull>() {
     override fun serialize(value: JSONNull, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeNull()
     }
@@ -83,39 +86,39 @@ internal object JSONNullSerializer : JsonSerializer<JSONNull>() {
 
 // Deserializers
 
-internal object JSONElementDeserializer : JsonDeserializer<JSONElement>() {
+public object JSONElementDeserializer : JsonDeserializer<JSONElement>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): JSONElement {
         val jsonNode = p.readValueAsTree<JsonNode>()
-        return if (jsonNode == null || jsonNode.isNull) JSONNull else jsonNode.toJSONElement()
+        return if (jsonNode == null || jsonNode.isNull) JSONNull else jsonNode.toKoogJSONElement()
     }
 }
 
-internal object JSONObjectDeserializer : JsonDeserializer<JSONObject>() {
+public object JSONObjectDeserializer : JsonDeserializer<JSONObject>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): JSONObject {
         val jsonNode = p.readValueAsTree<ObjectNode>()
-        return jsonNode.toJSONObject()
+        return jsonNode.toKoogJSONObject()
     }
 }
 
-internal object JSONArrayDeserializer : JsonDeserializer<JSONArray>() {
+public object JSONArrayDeserializer : JsonDeserializer<JSONArray>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): JSONArray {
         val jsonNode = p.readValueAsTree<ArrayNode>()
-        return jsonNode.toJSONArray()
+        return jsonNode.toKoogJSONArray()
     }
 }
 
-internal object JSONPrimitiveDeserializer : JsonDeserializer<JSONPrimitive>() {
+public object JSONPrimitiveDeserializer : JsonDeserializer<JSONPrimitive>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): JSONPrimitive {
         val jsonNode = p.readValueAsTree<ValueNode>()
         return if (jsonNode == null || jsonNode.isNull) {
             JSONNull
         } else {
-            jsonNode.toJSONPrimitive()
+            jsonNode.toKoogJSONPrimitive()
         }
     }
 }
 
-internal object JSONLiteralDeserializer : JsonDeserializer<JSONLiteral>() {
+public object JSONLiteralDeserializer : JsonDeserializer<JSONLiteral>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): JSONLiteral {
         val primitive = JSONPrimitiveDeserializer.deserialize(p, ctxt)
         return primitive as? JSONLiteral
@@ -123,7 +126,7 @@ internal object JSONLiteralDeserializer : JsonDeserializer<JSONLiteral>() {
     }
 }
 
-internal object JSONNullDeserializer : JsonDeserializer<JSONNull>() {
+public object JSONNullDeserializer : JsonDeserializer<JSONNull>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): JSONNull {
         val primitive = JSONPrimitiveDeserializer.deserialize(p, ctxt)
         return primitive as? JSONNull

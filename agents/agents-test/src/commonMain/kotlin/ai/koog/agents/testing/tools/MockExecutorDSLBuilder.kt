@@ -9,7 +9,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlin.jvm.JvmName
 import kotlin.time.Clock
 
@@ -40,7 +40,7 @@ public class ToolCondition<Args, Result>(
      * @return True if the tool name matches and the arguments satisfy the condition
      */
     internal suspend fun satisfies(toolCall: Message.Tool.Call) =
-        tool.name == toolCall.tool && argsCondition(tool.decodeArgs(toolCall.contentJson.toJSONObject(), serializer))
+        tool.name == toolCall.tool && argsCondition(tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer))
 
     /**
      * Invokes the tool with the arguments from the tool call.
@@ -49,7 +49,7 @@ public class ToolCondition<Args, Result>(
      * @return The result produced by the tool
      */
     internal suspend fun invoke(toolCall: Message.Tool.Call) =
-        produceResult(tool.decodeArgs(toolCall.contentJson.toJSONObject(), serializer))
+        produceResult(tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer))
 
     /**
      * Invokes the tool and serializes the result.
@@ -58,7 +58,7 @@ public class ToolCondition<Args, Result>(
      * @return A pair of the result object and its serialized string representation
      */
     internal suspend fun invokeAndSerialize(toolCall: Message.Tool.Call): Pair<Result, String> {
-        val toolResult = produceResult(tool.decodeArgs(toolCall.contentJson.toJSONObject(), serializer))
+        val toolResult = produceResult(tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer))
         return toolResult to tool.encodeResultToString(toolResult, serializer)
     }
 }

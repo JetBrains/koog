@@ -6,7 +6,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -492,7 +492,7 @@ class ToolsFromCallableTest {
     @MethodSource("testVariants")
     fun testJsonBridge(callable: KFunction<*>, argumentJson: JsonObject, expectedResult: String) {
         val tool = callable.asTool()
-        val args = tool.decodeArgs(argumentJson.toJSONObject(), serializer)
+        val args = tool.decodeArgs(argumentJson.toKoogJSONObject(), serializer)
         val result = runBlocking {
             tool.execute(args)
         }
@@ -526,7 +526,7 @@ class ToolsFromCallableTest {
                 put("a", 42)
                 put("b", "test")
             }
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val decodedArgs = tool.decodeArgs(args, serializer)
 

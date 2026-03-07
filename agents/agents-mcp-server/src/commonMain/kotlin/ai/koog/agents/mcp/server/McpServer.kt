@@ -8,7 +8,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.EngineConnectorConfig
@@ -140,7 +140,7 @@ public fun Server.addTool(
     addTool(tool.descriptor.asSdkTool()) { request ->
         val args = try {
             tool.decodeArgs(
-                rawArgs = (request.arguments ?: EmptyJsonObject).toJSONObject(),
+                rawArgs = (request.arguments ?: EmptyJsonObject).toKoogJSONObject(),
                 serializer = serializer
             )
         } catch (e: CancellationException) {

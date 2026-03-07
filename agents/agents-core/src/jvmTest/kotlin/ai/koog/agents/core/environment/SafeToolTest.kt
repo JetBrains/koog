@@ -10,8 +10,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONElement
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -76,7 +76,7 @@ class SafeToolTest {
                 ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
-                    toolArgs = toolCall.contentJson.toJSONObject(),
+                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
                     toolDescription = null,
                     content = resultContent,
                     resultKind = ToolResultKind.Success,
@@ -86,7 +86,7 @@ class SafeToolTest {
                 ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
-                    toolArgs = toolCall.contentJson.toJSONObject(),
+                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
                     toolDescription = null,
                     content = TEST_ERROR,
                     resultKind = ToolResultKind.Failure(Exception(TEST_ERROR).toAgentError()),
@@ -148,7 +148,7 @@ class SafeToolTest {
             toolDescription = null,
             content = "Bad result",
             resultKind = ToolResultKind.Success,
-            result = badResult.toJSONElement(),
+            result = badResult.toKoogJSONElement(),
         )
 
         val safeResult = toolResult.toSafeResult(EchoTool, serializer)
@@ -229,7 +229,7 @@ class SafeToolTest {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        toolArgs = toolCall.contentJson.toJSONObject(),
+                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
                         toolDescription = null,
                         content = "Success: $result",
                         resultKind = ToolResultKind.Success,
@@ -239,7 +239,7 @@ class SafeToolTest {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        toolArgs = toolCall.contentJson.toJSONObject(),
+                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
                         toolDescription = null,
                         content = "Error: ${e.message}",
                         resultKind = ToolResultKind.Failure(e.toAgentError()),

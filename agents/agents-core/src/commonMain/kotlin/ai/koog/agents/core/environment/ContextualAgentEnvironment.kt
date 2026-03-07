@@ -6,7 +6,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONObject
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.ExperimentalUuidApi
@@ -40,7 +40,7 @@ public class ContextualAgentEnvironment(
         val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
 
         val toolArgs = try {
-            toolCall.contentJson.toJSONObject()
+            toolCall.contentJson.toKoogJSONObject()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

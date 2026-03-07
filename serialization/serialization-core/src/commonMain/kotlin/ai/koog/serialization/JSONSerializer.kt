@@ -2,8 +2,71 @@ package ai.koog.serialization
 
 /**
  * Serializer for converting values to and from JSON.
+ *
+ * This is the core abstraction for JSON serialization/deserialization operations in Koog.
+ * It provides a library-agnostic API that can be backed by different serialization libraries, such as
+ * kotlinx-serialization or Jackson.
+ *
+ * All methods use [TypeToken] to capture runtime type information.
+ * Use the [typeToken] factory functions to create tokens easily.
+ *
+ * ### Encoding and decoding to/from JSON strings
+ *
+ * ```kotlin
+ * val serializer: JSONSerializer = KotlinxSerializer()
+ *
+ * // Encode a data class to a JSON string
+ * @Serializable
+ * data class User(val name: String, val age: Int)
+ *
+ * val json: String = serializer.encodeToString(User("Alice", 30), typeToken<User>())
+ * // json == """{"name":"Alice","age":30}"""
+ *
+ * // Decode a JSON string back to a data class
+ * val user: User = serializer.decodeFromString(json, typeToken<User>())
+ * // user == User("Alice", 30)
+ * ```
+ *
+ * ### Working with [JSONElement] (library-agnostic JSON tree)
+ *
+ * ```kotlin
+ * val serializer: JSONSerializer = KotlinxSerializer()
+ *
+ * // Encode a value to a JSONElement tree
+ * val element: JSONElement = serializer.encodeToJSONElement(User("Bob", 25), typeToken<User>())
+ *
+ * // Decode a JSONElement tree back to a value
+ * val user: User = serializer.decodeFromJSONElement(element, typeToken<User>())
+ * ```
+ *
+ * ### Converting between JSON strings and [JSONElement]
+ *
+ * ```kotlin
+ * val serializer: JSONSerializer = KotlinxSerializer()
+ *
+ * val jsonString = """{"key": "value"}"""
+ * val element: JSONElement = serializer.decodeJSONElementFromString(jsonString)
+ * val backToString: String = serializer.encodeJSONElementToString(element)
+ * ```
+ *
+ * ### Java usage with [TypeToken]
+ * ```java
+ * JSONSerializer serializer = new JacksonSerializer();
+ *
+ * // Non-generic types
+ * String json = serializer.encodeToString(user, TypeToken.of(User.class));
+ * User decoded = serializer.decodeFromString(json, TypeToken.of(User.class));
+ *
+ * // Generic types: using TypeCapture to preserve type parameters
+ * List<String> list = serializer.decodeFromString(
+ *     jsonString,
+ *     TypeToken.of(new TypeCapture<List<String>>() {})
+ * );
+ * ```
+ *
+ * @see TypeToken for runtime type representation used by all methods
+ * @see JSONElement for the library-agnostic JSON tree model
  */
-// TODO better KDoc
 public interface JSONSerializer {
     /**
      * Serializes a value to its JSON representation.

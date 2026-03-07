@@ -6,7 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -87,7 +87,7 @@ class CheckpointSerializationTest {
                     }
                 }
             )
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-2",

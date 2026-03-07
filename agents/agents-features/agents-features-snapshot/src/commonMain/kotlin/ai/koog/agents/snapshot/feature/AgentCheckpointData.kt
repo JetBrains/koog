@@ -12,8 +12,8 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONNull
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
-import ai.koog.serialization.kotlinx.toJSONElement
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -73,11 +73,11 @@ public data class AgentCheckpointData(
         checkpointId,
         createdAt,
         nodePath,
-        lastInput?.toJSONElement(),
-        lastOutput?.toJSONElement(),
+        lastInput?.toKoogJSONElement(),
+        lastOutput?.toKoogJSONElement(),
         messageHistory,
         version,
-        properties?.toJSONObject()
+        properties?.toKoogJSONObject()
     )
 
     init {

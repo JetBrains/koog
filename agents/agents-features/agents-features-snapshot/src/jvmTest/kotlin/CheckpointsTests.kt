@@ -43,7 +43,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -894,7 +894,7 @@ class CheckpointsTests {
                         content = "{\"message\":\"Who discovered this?\"}",
                         metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-02T22:35:01+01:00"))
                     )
-                ).toJSONElement()
+                ).toKoogJSONElement()
             )
         )
 

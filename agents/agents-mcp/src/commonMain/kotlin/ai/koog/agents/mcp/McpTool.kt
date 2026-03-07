@@ -6,7 +6,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.kotlinx.toJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import ai.koog.serialization.typeToken
@@ -67,7 +67,7 @@ public class McpTool(
     }
 
     override fun encodeResult(result: CallToolResult?, serializer: JSONSerializer): JSONElement {
-        return json.encodeToJsonElement(resultSerializer, result).toJSONElement()
+        return json.encodeToJsonElement(resultSerializer, result).toKoogJSONElement()
     }
 
     /**
@@ -84,6 +84,6 @@ public class McpTool(
             }
             ?: JsonNull
 
-        return serializer.encodeJSONElementToString(preparedResultJson.toJSONElement())
+        return serializer.encodeJSONElementToString(preparedResultJson.toKoogJSONElement())
     }
 }

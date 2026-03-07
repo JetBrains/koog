@@ -8,7 +8,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KLogger
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -51,7 +51,7 @@ public class GenericAgentEnvironment(
         val id = toolCall.id
         val toolName = toolCall.tool
         val toolArgsJson = try {
-            toolCall.contentJson.toJSONObject()
+            toolCall.contentJson.toKoogJSONObject()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

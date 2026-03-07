@@ -20,8 +20,8 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
-import ai.koog.serialization.kotlinx.toJSONPrimitive
+import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONPrimitive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -168,11 +168,11 @@ class AIAgentLLMContextConcurrencyTest {
                 return ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
-                    toolArgs = toolCall.contentJson.toJSONObject(),
+                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
                     toolDescription = null,
                     content = "",
                     resultKind = ToolResultKind.Success,
-                    result = JsonPrimitive("").toJSONPrimitive()
+                    result = JsonPrimitive("").toKoogJSONPrimitive()
                 )
             }
 

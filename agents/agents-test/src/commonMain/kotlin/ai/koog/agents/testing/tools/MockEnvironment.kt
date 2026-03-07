@@ -9,7 +9,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 
 /**
  * A mock implementation of [AIAgentEnvironment] used for testing agent behavior.
@@ -88,7 +88,7 @@ public class MockEnvironment(
                     return ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        toolArgs = toolCall.contentJson.toJSONObject(),
+                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
                         toolDescription = tool.descriptor.description,
                         content = content,
                         resultKind = ToolResultKind.Success,
@@ -99,13 +99,13 @@ public class MockEnvironment(
 
         val tool = toolRegistry.getTool(toolCall.tool)
 
-        val args = tool.decodeArgs(toolCall.contentJson.toJSONObject(), serializer)
+        val args = tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer)
         val result = tool.executeUnsafe(args)
 
         return ReceivedToolResult(
             id = toolCall.id,
             tool = toolCall.tool,
-            toolArgs = toolCall.contentJson.toJSONObject(),
+            toolArgs = toolCall.contentJson.toKoogJSONObject(),
             toolDescription = tool.descriptor.description,
             content = tool.encodeResultToStringUnsafe(result, serializer),
             resultKind = ToolResultKind.Success,

@@ -1,3 +1,5 @@
+@file:JvmName("JacksonJSONElementMappers")
+
 package ai.koog.serialization.jackson
 
 import ai.koog.serialization.JSONArray
@@ -19,20 +21,20 @@ import com.fasterxml.jackson.databind.util.RawValue
 /**
  * Converts Jackson [JsonNode] to [JSONElement].
  */
-public fun JsonNode.toJSONElement(): JSONElement = when (this) {
-    is ObjectNode -> toJSONObject()
-    is ArrayNode -> toJSONArray()
-    is ValueNode -> toJSONPrimitive()
+public fun JsonNode.toKoogJSONElement(): JSONElement = when (this) {
+    is ObjectNode -> toKoogJSONObject()
+    is ArrayNode -> toKoogJSONArray()
+    is ValueNode -> toKoogJSONPrimitive()
     else -> throw IllegalArgumentException("Unsupported JsonNode type: ${this::class.simpleName}")
 }
 
 /**
  * Converts Jackson [ObjectNode] to [JSONObject].
  */
-public fun ObjectNode.toJSONObject(): JSONObject {
+public fun ObjectNode.toKoogJSONObject(): JSONObject {
     return JSONObject(
         entries = this.fieldNames().asSequence().associateWith { fieldName ->
-            this.get(fieldName).toJSONElement()
+            this.get(fieldName).toKoogJSONElement()
         }
     )
 }
@@ -40,16 +42,16 @@ public fun ObjectNode.toJSONObject(): JSONObject {
 /**
  * Converts Jackson [ArrayNode] to [JSONArray].
  */
-public fun ArrayNode.toJSONArray(): JSONArray {
+public fun ArrayNode.toKoogJSONArray(): JSONArray {
     return JSONArray(
-        elements = map { it.toJSONElement() }
+        elements = map { it.toKoogJSONElement() }
     )
 }
 
 /**
  * Converts Jackson primitive [JsonNode] to [JSONPrimitive].
  */
-public fun ValueNode.toJSONPrimitive(): JSONPrimitive = when {
+public fun ValueNode.toKoogJSONPrimitive(): JSONPrimitive = when {
     isNull -> JSONNull
     isTextual -> JSONLiteral(asText(), isString = true)
     else -> JSONLiteral(asText(), isString = false)

@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.kotest.assertions.json.shouldEqualJson
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -106,7 +106,7 @@ class McpToolTest {
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(1.minutes) {
-                    greetingTool.execute(args.toJSONObject())
+                    greetingTool.execute(args.toKoogJSONObject())
                 }
             }
 
@@ -119,7 +119,7 @@ class McpToolTest {
             }
             val resultWithTitle = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(1.minutes) {
-                    greetingTool.execute(argsWithTitle.toJSONObject())
+                    greetingTool.execute(argsWithTitle.toKoogJSONObject())
                 }
             }
 
@@ -139,7 +139,7 @@ class McpToolTest {
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(1.minutes) {
-                    emptyTool.execute(args.toJSONObject())
+                    emptyTool.execute(args.toKoogJSONObject())
                 }
             }
             assertEquals(emptyList(), result.content)

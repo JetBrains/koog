@@ -9,7 +9,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.jvm.JvmStatic
 
@@ -200,7 +200,7 @@ public class LLMBasedToolCallFixProcessor(
             return null
         }
         try {
-            tool.decodeArgs((message as Message.Tool.Call).contentJson.toJSONObject(), serializer)
+            tool.decodeArgs((message as Message.Tool.Call).contentJson.toKoogJSONObject(), serializer)
         } catch (e: Exception) {
             val errorMessage = e.message ?: "Unknown error"
             return invalidArgumentsFeedback(errorMessage, tool.descriptor)

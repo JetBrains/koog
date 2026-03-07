@@ -23,7 +23,7 @@ public class KotlinxSerializer(
     }
 
     override fun <T> encodeToJSONElement(value: T, typeToken: TypeToken): JSONElement {
-        return json.encodeToJsonElement(resolveSerializer(typeToken, json), value).toJSONElement()
+        return json.encodeToJsonElement(resolveSerializer(typeToken, json), value).toKoogJSONElement()
     }
 
     override fun <T> decodeFromJSONElement(value: JSONElement, typeToken: TypeToken): T {

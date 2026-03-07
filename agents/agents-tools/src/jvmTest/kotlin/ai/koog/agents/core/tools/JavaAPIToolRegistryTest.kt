@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -158,7 +158,7 @@ class JavaAPIToolRegistryTest {
         val args = buildJsonObject {
             put("a", JsonPrimitive(5))
             put("b", JsonPrimitive(3))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val result = addTool.execute(addTool.decodeArgs(args, serializer))
         assertEquals("8", addTool.encodeResultToStringUnsafe(result, serializer))

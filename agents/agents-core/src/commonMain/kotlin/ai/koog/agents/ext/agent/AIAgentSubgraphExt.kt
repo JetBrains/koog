@@ -33,7 +33,7 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlin.coroutines.cancellation.CancellationException
@@ -615,7 +615,7 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
     val toolDescription = finishTool.descriptor.description
     // Execute Finish tool directly and get a result
     val encodedResult = try {
-        val args = finishTool.decodeArgs(toolCall.contentJson.toJSONObject(), config.serializer)
+        val args = finishTool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), config.serializer)
         val toolResult = finishTool.execute(args = args)
         finishTool.encodeResult(toolResult, config.serializer)
     } catch (e: CancellationException) {
@@ -625,7 +625,7 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
             id = toolCall.id,
             tool = finishTool.name,
             toolArgs = toolCall.contentJsonResult
-                .map { it.toJSONObject() }
+                .map { it.toKoogJSONObject() }
                 .getOrElse { JSONObject(emptyMap()) },
             toolDescription = toolDescription,
             content = "Failed to execute '${finishTool.name}' with error: ${e.message}'",
@@ -647,7 +647,7 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
     return ReceivedToolResult(
         id = toolCall.id,
         tool = finishTool.name,
-        toolArgs = toolCall.contentJson.toJSONObject(),
+        toolArgs = toolCall.contentJson.toKoogJSONObject(),
         content = toolCall.content,
         resultKind = ToolResultKind.Success,
         toolDescription = toolDescription,

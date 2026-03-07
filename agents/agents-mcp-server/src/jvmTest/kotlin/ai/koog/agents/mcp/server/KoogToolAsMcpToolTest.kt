@@ -9,7 +9,7 @@ import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.cio.CIO
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
@@ -41,7 +41,7 @@ class KoogToolAsMcpToolTest {
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args.toJSONObject())
+                mcpTool.execute(args.toKoogJSONObject())
             }
         }
 
@@ -58,7 +58,7 @@ class KoogToolAsMcpToolTest {
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args.toJSONObject())
+                mcpTool.execute(args.toKoogJSONObject())
             }
         }
 
@@ -76,7 +76,7 @@ class KoogToolAsMcpToolTest {
 
             val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(errorArgs.toJSONObject())
+                    mcpTool.execute(errorArgs.toKoogJSONObject())
                 }
             }
 
@@ -89,7 +89,7 @@ class KoogToolAsMcpToolTest {
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(args.toJSONObject())
+                    mcpTool.execute(args.toKoogJSONObject())
                 }
             }
 
@@ -113,7 +113,7 @@ class KoogToolAsMcpToolTest {
 
                 val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args.toJSONObject())
+                        mcpTool.execute(args.toKoogJSONObject())
                     }
                 }
 
@@ -132,7 +132,7 @@ class KoogToolAsMcpToolTest {
 
                 val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args.toJSONObject())
+                        mcpTool.execute(args.toKoogJSONObject())
                     }
                 }
 

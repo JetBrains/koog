@@ -20,31 +20,30 @@ import kotlinx.serialization.json.buildJsonObject
 /**
  * Converts kotlinx-serialization [JsonElement] to [ai.koog.serialization.JSONElement].
  */
-// TODO rename all to toKoogJSONElement()
-public fun JsonElement.toJSONElement(): JSONElement = when (this) {
-    is JsonObject -> toJSONObject()
-    is JsonArray -> toJSONArray()
-    is JsonPrimitive -> toJSONPrimitive()
+public fun JsonElement.toKoogJSONElement(): JSONElement = when (this) {
+    is JsonObject -> toKoogJSONObject()
+    is JsonArray -> toKoogJSONArray()
+    is JsonPrimitive -> toKoogJSONPrimitive()
 }
 
 /**
  * Converts kotlinx-serialization [JsonObject] to [ai.koog.serialization.JSONObject].
  */
-public fun JsonObject.toJSONObject(): JSONObject = JSONObject(
-    entries = mapValues { (_, value) -> value.toJSONElement() }
+public fun JsonObject.toKoogJSONObject(): JSONObject = JSONObject(
+    entries = mapValues { (_, value) -> value.toKoogJSONElement() }
 )
 
 /**
  * Converts kotlinx-serialization [JsonArray] to [ai.koog.serialization.JSONArray].
  */
-public fun JsonArray.toJSONArray(): JSONArray = JSONArray(
-    elements = map { it.toJSONElement() }
+public fun JsonArray.toKoogJSONArray(): JSONArray = JSONArray(
+    elements = map { it.toKoogJSONElement() }
 )
 
 /**
  * Converts kotlinx-serialization [JsonPrimitive] to [ai.koog.serialization.JSONPrimitive].
  */
-public fun JsonPrimitive.toJSONPrimitive(): JSONPrimitive = when (this) {
+public fun JsonPrimitive.toKoogJSONPrimitive(): JSONPrimitive = when (this) {
     is JsonNull -> JSONNull
     else -> JSONLiteral(content = this.content, isString = this.isString)
 }

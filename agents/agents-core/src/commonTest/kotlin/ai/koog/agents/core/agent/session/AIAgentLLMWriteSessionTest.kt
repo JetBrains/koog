@@ -26,7 +26,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Ignore
@@ -53,13 +53,13 @@ class AIAgentLLMWriteSessionTest {
         @OptIn(InternalAgentToolsApi::class)
         override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
             val tool = toolRegistry.getTool(toolCall.tool)
-            val args = tool.decodeArgs(toolCall.contentJson.toJSONObject(), serializer)
+            val args = tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer)
             val result = tool.executeUnsafe(args)
 
             return ReceivedToolResult(
                 id = toolCall.id,
                 tool = toolCall.tool,
-                toolArgs = toolCall.contentJson.toJSONObject(),
+                toolArgs = toolCall.contentJson.toKoogJSONObject(),
                 toolDescription = null,
                 content = tool.encodeResultToStringUnsafe(result, serializer),
                 resultKind = ToolResultKind.Success,

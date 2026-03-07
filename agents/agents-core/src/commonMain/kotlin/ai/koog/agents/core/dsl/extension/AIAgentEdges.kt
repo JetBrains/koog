@@ -8,7 +8,7 @@ import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
@@ -104,7 +104,7 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Ar
                 tool.decodeArgs(
                     rawArgs = toolCall.contentJsonResult
                         .getOrNull()
-                        ?.toJSONObject()
+                        ?.toKoogJSONObject()
                         ?: return@onCondition false,
                     serializer = config.serializer,
                 )

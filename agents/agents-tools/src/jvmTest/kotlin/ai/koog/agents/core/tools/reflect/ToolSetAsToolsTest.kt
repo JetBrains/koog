@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -129,7 +129,7 @@ class ToolSetAsToolsTest {
         val addArgs = buildJsonObject {
             put("a", JsonPrimitive(5))
             put("b", JsonPrimitive(3))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val addResult = addTool.execute(addTool.decodeArgs(addArgs, serializer))
         assertEquals("8", addTool.encodeResultToStringUnsafe(addResult, serializer), "Add tool should return 8")
@@ -140,7 +140,7 @@ class ToolSetAsToolsTest {
         val multiplyArgs = buildJsonObject {
             put("a", JsonPrimitive(4))
             put("b", JsonPrimitive(7))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val multiplyResult = multiplyTool.execute(multiplyTool.decodeArgs(multiplyArgs, serializer))
         assertEquals("28", multiplyTool.encodeResultToStringUnsafe(multiplyResult, serializer), "Multiply tool should return 28")
@@ -160,7 +160,7 @@ class ToolSetAsToolsTest {
         val powerArgs = buildJsonObject {
             put("base", JsonPrimitive(2))
             put("exponent", JsonPrimitive(3))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val powerResult = powerTool.execute(powerTool.decodeArgs(powerArgs, serializer))
         assertEquals("8", powerTool.encodeResultToStringUnsafe(powerResult, serializer), "Power tool should return 8")
@@ -180,7 +180,7 @@ class ToolSetAsToolsTest {
         val subtractArgs = buildJsonObject {
             put("a", JsonPrimitive(10))
             put("b", JsonPrimitive(4))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val subtractResult = subtractTool.execute(subtractTool.decodeArgs(subtractArgs, serializer))
         assertEquals("6", subtractTool.encodeResultToStringUnsafe(subtractResult, serializer), "Subtract tool should return 6")
@@ -200,7 +200,7 @@ class ToolSetAsToolsTest {
         val concatArgs = buildJsonObject {
             put("a", JsonPrimitive("Hello, "))
             put("b", JsonPrimitive("World!"))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val concatResult = concatTool.execute(concatTool.decodeArgs(concatArgs, serializer))
         assertEquals("\"Hello, World!\"", concatTool.encodeResultToStringUnsafe(concatResult, serializer), "Concat tool should return \"Hello, World!\"")
@@ -218,7 +218,7 @@ class ToolSetAsToolsTest {
         val createPersonArgs = buildJsonObject {
             put("name", JsonPrimitive("John"))
             put("age", JsonPrimitive(30))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val createPersonResult =
             createPersonTool.execute(createPersonTool.decodeArgs(createPersonArgs, serializer))
@@ -231,7 +231,7 @@ class ToolSetAsToolsTest {
 
         val formatPersonArgs = buildJsonObject {
             put("person", Json.parseToJsonElement(personJson))
-        }.toJSONObject()
+        }.toKoogJSONObject()
 
         val formatPersonResult =
             formatPersonTool.execute(formatPersonTool.decodeArgs(formatPersonArgs, serializer))

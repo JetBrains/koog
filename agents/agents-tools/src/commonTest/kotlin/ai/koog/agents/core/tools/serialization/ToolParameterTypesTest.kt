@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -40,7 +40,7 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -64,7 +64,7 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -83,7 +83,7 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -102,7 +102,7 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -121,7 +121,7 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -137,7 +137,7 @@ class ToolParameterTypesTest {
                         put("custom1", "value1")
                         put("custom2", "value2")
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -159,7 +159,7 @@ class ToolParameterTypesTest {
                         put("custom1", "value1")
                         put("custom2", "value2")
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -180,7 +180,7 @@ class ToolParameterTypesTest {
                             put("age", 25)
                         }
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -198,7 +198,7 @@ class ToolParameterTypesTest {
             ListOfObjectsTool.decodeArgs(
                 rawArgs = buildJsonObject {
                     putJsonArray("people") {}
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -213,7 +213,7 @@ class ToolParameterTypesTest {
             ListOfObjectsTool.decodeArgs(
                 rawArgs = buildJsonObject {
                     put("people", JsonNull)
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -238,7 +238,7 @@ class ToolParameterTypesTest {
                     putJsonArray("optional") {
                         add("RED")
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -268,7 +268,7 @@ class ToolParameterTypesTest {
                         add("JANE")
                         add("JOHN")
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -298,7 +298,7 @@ class ToolParameterTypesTest {
                         add("JOHN")
                     }
                     putJsonArray("optional") {}
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -323,7 +323,7 @@ class ToolParameterTypesTest {
                         add("GREEN")
                         add("BLUE")
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -336,7 +336,7 @@ class ToolParameterTypesTest {
                 rawArgs = buildJsonObject {
                     putJsonArray("colors") {}
                     putJsonArray("names") {}
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -357,7 +357,7 @@ class ToolParameterTypesTest {
                     putJsonArray("names") {
                         add("JANE")
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -380,7 +380,7 @@ class ToolParameterTypesTest {
                     putJsonArray("optional") {
                         add("RED")
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
@@ -403,7 +403,7 @@ class ToolParameterTypesTest {
                             add(4)
                         }
                     }
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -425,7 +425,7 @@ class ToolParameterTypesTest {
             NestedListsTool.decodeArgs(
                 rawArgs = buildJsonObject {
                     putJsonArray("nestedList") {}
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         )
@@ -440,7 +440,7 @@ class ToolParameterTypesTest {
             NestedListsTool.decodeArgs(
                 rawArgs = buildJsonObject {
                     put("nestedList", JsonNull)
-                }.toJSONObject(),
+                }.toKoogJSONObject(),
                 serializer = serializer,
             )
         }
