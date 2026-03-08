@@ -187,6 +187,38 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * Claude Sonnet 4.6 delivers fast, efficient performance with strong reasoning capabilities
+     * for everyday tasks and agent workflows.
+     */
+    @JvmField
+    public val Claude4_6Sonnet: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-sonnet-4.6",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 64_000,
+    )
+
+    /**
+     * Claude Opus 4.6 is a frontier model with strong capabilities in software engineering,
+     * agentic tasks, and long context reasoning.
+     */
+    @JvmField
+    public val Claude4_6Opus: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-opus-4.6",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 1_000_000,
+    )
+
+    /**
      * Represents the GPT-4o-mini model hosted on OpenRouter.
      *
      * It leverages a standard set of capabilities for interaction.
@@ -615,6 +647,8 @@ public object OpenRouterModels : LLModelDefinitions {
         Claude4_5Haiku,
         Claude4_5Sonnet,
         Claude4_5Opus,
+        Claude4_6Sonnet,
+        Claude4_6Opus,
         Claude3VisionSonnet,
         Claude3VisionOpus,
         Claude3VisionHaiku,

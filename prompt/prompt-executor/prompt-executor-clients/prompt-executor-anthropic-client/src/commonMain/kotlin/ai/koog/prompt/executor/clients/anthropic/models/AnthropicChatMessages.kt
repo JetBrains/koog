@@ -10,6 +10,37 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
+ * Represents the output configuration for Anthropic structured output.
+ *
+ * @property format The output format configuration, currently supporting JSON schema.
+ */
+@InternalLLMClientApi
+@Serializable
+public data class AnthropicOutputConfig(
+    val format: AnthropicOutputFormat
+)
+
+/**
+ * Represents the output format for Anthropic structured output.
+ * Currently supports JSON schema format for constraining model output.
+ */
+@InternalLLMClientApi
+@Serializable
+@JsonClassDiscriminator("type")
+public sealed interface AnthropicOutputFormat {
+    /**
+     * JSON schema output format that constrains model output to match a given schema.
+     *
+     * @property schema The JSON schema that the model output must conform to.
+     */
+    @Serializable
+    @SerialName("json_schema")
+    public data class JsonSchema(
+        val schema: JsonObject
+    ) : AnthropicOutputFormat
+}
+
+/**
  * Represents a request for an Anthropic message-based interaction.
  *
  * This data class is used to configure the parameters for an Anthropic message request,
@@ -20,6 +51,7 @@ import kotlinx.serialization.json.JsonObject
  * @property maxTokens The maximum number of tokens to generate in the response. Defaults to 2048.
  * @property container Container identifier for reuse across requests.
  * @property mcpServers MCP servers to be used in this request
+ * @property outputConfig Optional output configuration for structured output (JSON schema).
  * @property serviceTier Determines whether to use priority capacity (if available) or standard capacity for this request.
  * @property stopSequence Custom text sequences that will cause the model to stop generating.
  * @property stream Whether responses should be returned as a stream. Defaults to false.
@@ -42,6 +74,8 @@ public data class AnthropicMessageRequest(
     val container: String? = null,
     @SerialName("mcp_servers")
     val mcpServers: List<AnthropicMCPServerURLDefinition>? = null,
+    @SerialName("output_config")
+    val outputConfig: AnthropicOutputConfig? = null,
     @SerialName("service_tier")
     val serviceTier: AnthropicServiceTier? = null,
     @SerialName("stop_sequence")

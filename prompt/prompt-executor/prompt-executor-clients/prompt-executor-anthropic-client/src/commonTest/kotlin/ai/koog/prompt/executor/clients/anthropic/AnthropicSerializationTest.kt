@@ -5,6 +5,8 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMCPServerURLDef
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicOutputConfig
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicOutputFormat
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicServiceTier
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
@@ -364,5 +366,94 @@ class AnthropicSerializationTest {
             s0.url shouldBe "https://mcp2.example"
             s0.authorizationToken shouldBe null
             s0.toolConfiguration?.enabled shouldBe false
+        }
+
+    @Test
+    fun `test serialization with output_config for structured output`() =
+        runWithBothJsonConfigurations("serialization with output_config") { json ->
+            val schema = JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("object"),
+                    "properties" to JsonObject(
+                        mapOf(
+                            "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                            "age" to JsonObject(mapOf("type" to JsonPrimitive("integer")))
+                        )
+                    ),
+                    "required" to kotlinx.serialization.json.JsonArray(
+                        listOf(JsonPrimitive("name"), JsonPrimitive("age"))
+                    )
+                )
+            )
+
+            val request = AnthropicMessageRequest(
+                model = "claude-opus-4-6",
+                messages = listOf(
+                    AnthropicMessage.User(
+                        content = listOf(AnthropicContent.Text("Extract user info"))
+                    )
+                ),
+                maxTokens = 1000,
+                outputConfig = AnthropicOutputConfig(
+                    format = AnthropicOutputFormat.JsonSchema(schema = schema)
+                )
+            )
+
+            val jsonString = json.encodeToString(AnthropicMessageRequestSerializer, request)
+
+            jsonString shouldEqualJson
+                // language=json
+                """
+            {
+              "model": "claude-opus-4-6",
+              "max_tokens": 1000,
+              "messages": [
+                {"role": "user", "content": [{"type": "text", "text": "Extract user info"}]}
+              ],
+              "output_config": {
+                "format": {
+                  "type": "json_schema",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "name": {"type": "string"},
+                      "age": {"type": "integer"}
+                    },
+                    "required": ["name", "age"]
+                  }
+                }
+              },
+              "stream": false
+            }
+                """.trimIndent()
+        }
+
+    @Test
+    fun `test serialization without output_config omits field`() =
+        runWithBothJsonConfigurations("serialization without output_config") { json ->
+            val request = AnthropicMessageRequest(
+                model = "claude-opus-4-6",
+                messages = listOf(
+                    AnthropicMessage.User(
+                        content = listOf(AnthropicContent.Text("Hello"))
+                    )
+                ),
+                maxTokens = 1000
+            )
+
+            val jsonString = json.encodeToString(AnthropicMessageRequestSerializer, request)
+
+            jsonString shouldEqualJson
+                // language=json
+                """
+            {
+              "model": "claude-opus-4-6",
+              "max_tokens": 1000,
+              "messages": [
+                {"role": "user", "content": [{"type": "text", "text": "Hello"}]}
+              ],
+              "stream": false
+            }
+                """.trimIndent()
         }
 }
