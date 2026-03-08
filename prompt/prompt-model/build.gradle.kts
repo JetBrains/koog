@@ -23,7 +23,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
-                api(project(":prompt:prompt-markdown"))
+                implementation(project(":prompt:prompt-markdown"))
             }
         }
 

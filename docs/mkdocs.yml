@@ -79,6 +79,7 @@ nav:
               - Custom subgraphs: custom-subgraphs.md
           - Embeddings: embeddings.md
           - Ranked document storage: ranked-document-storage.md
+          - Serialization: serialization.md
       - Testing: testing.md
   - Why Koog: why-koog.md
   - Examples:
@@ -212,6 +213,7 @@ plugins:
           - embeddings.md: This page provides information on how to generate and compare embeddings of text and code. The page includes a getting started section for local embeddings, details about OpenAI embeddings and examples of comparison of embeddings.
         Ranked document storage:
           - ranked-document-storage.md: This guide provides details about the implementation and use of Resource-Augmented Generation (RAG) systems in Koog. The page includes sections about existing RAG implementations and how to implement your own RAG systems in Koog.
+          - serialization.md: This page explains Koog's library-agnostic serialization abstraction for tool arguments and results, how JSONElement works, and how to configure KotlinxSerializer or JacksonSerializer via AIAgentConfig.
         Features:
           - features-overview.md: This page provides a short overview of features as a way to extend and enhance the functionality of AI agents.
           - agent-event-handlers.md: This page provides details about event handlers that let you monitor and respond to specific events during the agent workflow.
