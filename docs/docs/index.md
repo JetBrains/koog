@@ -1,9 +1,9 @@
 # Overview
 
-Koog is an open-source JetBrains framework for building AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
-It lets you create agents that interact with tools, handle complex workflows, and communicate with users.
+Koog is an open-source JetBrains framework for building AI agents designed specifically for the JVM ecosystem.
+It provides a first-class development experience for both Kotlin and Java developers, featuring an idiomatic, type-safe Kotlin DSL and fluent builder-style Java APIs.
 
-You can customize agent capabilities with a modular feature system and deploy your agents across JVM, JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
+While Java developers can leverage the full power of Koog on the JVM using idiomatic APIs, Kotlin developers can also deploy agents across JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
 
 <div class="grid cards" markdown>
 
@@ -37,7 +37,7 @@ Learn about [agents in general](agents/index.md) and how to create different typ
 
     ---
 
-    Define custom logic as a lambda function in plain Kotlin 
+    Define custom logic as a lambda function in plain Kotlin or Java
 
 -   :material-state-machine:{ .lg .middle } [**Graph-based agents**](agents/graph-based-agents.md)
 
