@@ -90,6 +90,16 @@ class ConvertersTest {
         assertEquals("Sunny, 22C", responses[0].responseData())
     }
 
+    @Test
+    fun `converts Koog Reasoning message to Spring AI AssistantMessage with reasoningContent metadata`() {
+        val koogMsg = Message.Reasoning(content = "step by step", metaInfo = responseMeta)
+        val springMsg = koogMessageToSpringMessage(koogMsg)
+        assertTrue(springMsg is AssistantMessage)
+        assertEquals(MessageType.ASSISTANT, springMsg.messageType)
+        assertEquals("step by step", springMsg.text)
+        assertEquals("step by step", springMsg.metadata["reasoningContent"])
+    }
+
     // ---- springGenerationToKoogResponses ----
 
     @Test
@@ -128,6 +138,24 @@ class ConvertersTest {
         assertEquals(10, metaInfo.inputTokensCount)
         assertEquals(20, metaInfo.outputTokensCount)
         assertEquals(30, metaInfo.totalTokensCount)
+    }
+
+    @Test
+    fun `converts Spring AI Generation with reasoningContent metadata to Koog Reasoning and Assistant messages`() {
+        val generation = Generation(
+            AssistantMessage.builder()
+                .content("Final answer")
+                .properties(mapOf("reasoningContent" to "hidden chain of thought"))
+                .build()
+        )
+
+        val responses = springGenerationToKoogResponses(generation)
+
+        assertEquals(2, responses.size)
+        assertTrue(responses[0] is Message.Reasoning)
+        assertEquals("hidden chain of thought", responses[0].content)
+        assertTrue(responses[1] is Message.Assistant)
+        assertEquals("Final answer", responses[1].content)
     }
 
     // ---- koogToolDescriptorToToolCallback ----

@@ -84,9 +84,11 @@ public fun koogMessageToSpringMessage(message: Message): SpringMessage {
                 .build()
         }
 
-        is Message.Reasoning -> { // See https://github.com/spring-projects/spring-ai/issues/3388 and https://github.com/spring-projects/spring-ai/issues/5038
-            converterLogger.warn("Spring AI does not support reasoning content. Converting to plain AssistantMessage")
-            AssistantMessage(message.content)
+        is Message.Reasoning -> {
+            AssistantMessage.builder()
+                .content(message.content)
+                .properties(mapOf("reasoningContent" to message.content))
+                .build()
         }
     }
 }
@@ -127,11 +129,17 @@ public fun springGenerationToKoogResponses(
         emptyList()
     }
 
+    val reasoningMessage: Message.Reasoning? = assistantMessage.metadata["reasoningContent"]
+        ?.toString()
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { Message.Reasoning(content = it, metaInfo = metaInfo) }
+
     val textMessage: Message.Assistant? = assistantMessage.text
         ?.takeIf { it.isNotEmpty() }
         ?.let { Message.Assistant(content = it, metaInfo = metaInfo) }
 
     return buildList {
+        reasoningMessage?.let { add(it) }
         textMessage?.let { add(it) }
         addAll(toolCallMessages)
         if (isEmpty()) add(Message.Assistant(content = "", metaInfo = metaInfo))
