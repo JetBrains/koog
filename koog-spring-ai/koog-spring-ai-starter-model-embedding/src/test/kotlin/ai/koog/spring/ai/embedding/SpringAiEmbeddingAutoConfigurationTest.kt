@@ -19,12 +19,12 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.core.task.AsyncTaskExecutor
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SpringAIEmbeddingAutoConfigurationTest {
+class SpringAiEmbeddingAutoConfigurationTest {
 
     private fun contextRunner(): ApplicationContextRunner = ApplicationContextRunner()
         .withConfiguration(
             AutoConfigurations.of(
-                SpringAIEmbeddingAutoConfiguration::class.java,
+                SpringAiEmbeddingAutoConfiguration::class.java,
             )
         )
 
@@ -37,12 +37,12 @@ class SpringAIEmbeddingAutoConfigurationTest {
     }
 
     @Test
-    fun `should create SpringAIEmbeddingModelLLMEmbeddingProvider when single EmbeddingModel is present`() {
+    fun `should create SpringAiEmbeddingModelLLMEmbeddingProvider when single EmbeddingModel is present`() {
         contextRunner()
             .withBean(EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
             .run { context ->
                 val provider = context.getBean<LLMEmbeddingProvider>()
-                assertInstanceOf<SpringAILLMEmbeddingProvider>(provider)
+                assertInstanceOf<SpringAiLLMEmbeddingProvider>(provider)
             }
     }
 
@@ -87,7 +87,7 @@ class SpringAIEmbeddingAutoConfigurationTest {
             .withBean("otherEmb", EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
             .run { context ->
                 val provider = context.getBean<LLMEmbeddingProvider>()
-                assertInstanceOf<SpringAILLMEmbeddingProvider>(provider)
+                assertInstanceOf<SpringAiLLMEmbeddingProvider>(provider)
             }
     }
 
@@ -95,21 +95,21 @@ class SpringAIEmbeddingAutoConfigurationTest {
     fun `should create dispatcher bean`() {
         contextRunner()
             .run { context ->
-                assertNotNull(context.getBean("koogSpringAIEmbeddingDispatcher"))
+                assertNotNull(context.getBean("koogSpringAiEmbeddingDispatcher"))
             }
     }
 
     @Test
-    fun `should bind KoogSpringAIEmbeddingProperties`() {
+    fun `should bind KoogSpringAiEmbeddingProperties`() {
         contextRunner()
             .withPropertyValues(
                 "koog.spring-ai.embedding.enabled=true",
                 "koog.spring-ai.embedding.dispatcher.type=IO"
             )
             .run { context ->
-                val props = context.getBean<KoogSpringAIEmbeddingProperties>()
+                val props = context.getBean<KoogSpringAiEmbeddingProperties>()
                 assertTrue(props.enabled)
-                assertTrue(props.dispatcher.type == KoogSpringAIEmbeddingProperties.DispatcherType.IO)
+                assertTrue(props.dispatcher.type == KoogSpringAiEmbeddingProperties.DispatcherType.IO)
             }
     }
 
@@ -121,7 +121,7 @@ class SpringAIEmbeddingAutoConfigurationTest {
                 "koog.spring-ai.embedding.dispatcher.parallelism=2"
             )
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIEmbeddingDispatcher")
+                val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher")
                 assertNotNull(dispatcher)
                 assertInstanceOf<DisposableBean>(dispatcher)
             }
@@ -135,7 +135,7 @@ class SpringAIEmbeddingAutoConfigurationTest {
                 "koog.spring-ai.embedding.dispatcher.parallelism=1"
             )
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIEmbeddingDispatcher") as DisposableBean
+                val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher") as DisposableBean
                 dispatcher.destroy()
             }
     }
@@ -146,7 +146,7 @@ class SpringAIEmbeddingAutoConfigurationTest {
         contextRunner()
             .withBean("applicationTaskExecutor", AsyncTaskExecutor::class.java, { executor })
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIEmbeddingDispatcher")
+                val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher")
                 assertNotNull(dispatcher)
                 assertInstanceOf<kotlinx.coroutines.ExecutorCoroutineDispatcher>(dispatcher)
             }
@@ -156,7 +156,7 @@ class SpringAIEmbeddingAutoConfigurationTest {
     fun `AUTO dispatcher should fall back to Dispatchers_IO when no AsyncTaskExecutor`() {
         contextRunner()
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIEmbeddingDispatcher") as CoroutineDispatcher
+                val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher") as CoroutineDispatcher
                 assertNotNull(dispatcher)
                 assertSame(kotlinx.coroutines.Dispatchers.IO, dispatcher)
             }
@@ -167,7 +167,7 @@ class SpringAIEmbeddingAutoConfigurationTest {
         contextRunner()
             .withPropertyValues("koog.spring-ai.embedding.enabled=false")
             .run { context ->
-                assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAIEmbeddingDispatcher") }
+                assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAiEmbeddingDispatcher") }
             }
     }
 }

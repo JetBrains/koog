@@ -23,12 +23,12 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.core.task.AsyncTaskExecutor
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SpringAIChatAutoConfigurationTest {
+class SpringAiChatAutoConfigurationTest {
 
     private fun contextRunner(): ApplicationContextRunner = ApplicationContextRunner()
         .withConfiguration(
             AutoConfigurations.of(
-                SpringAIChatAutoConfiguration::class.java,
+                SpringAiChatAutoConfiguration::class.java,
             )
         )
 
@@ -41,12 +41,12 @@ class SpringAIChatAutoConfigurationTest {
     }
 
     @Test
-    fun `should create SpringAIChatModelLLMClient when single ChatModel is present`() {
+    fun `should create SpringAiChatModelLLMClient when single ChatModel is present`() {
         contextRunner()
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 val client = context.getBean<LLMClient>()
-                assertInstanceOf<SpringAILLMClient>(client)
+                assertInstanceOf<SpringAiLLMClient>(client)
             }
     }
 
@@ -91,7 +91,7 @@ class SpringAIChatAutoConfigurationTest {
             .withBean("otherChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 val client = context.getBean<LLMClient>()
-                assertInstanceOf<SpringAILLMClient>(client)
+                assertInstanceOf<SpringAiLLMClient>(client)
             }
     }
 
@@ -99,21 +99,21 @@ class SpringAIChatAutoConfigurationTest {
     fun `should create dispatcher bean`() {
         contextRunner()
             .run { context ->
-                assertNotNull(context.getBean("koogSpringAIChatDispatcher"))
+                assertNotNull(context.getBean("koogSpringAiChatDispatcher"))
             }
     }
 
     @Test
-    fun `should bind KoogSpringAIChatProperties`() {
+    fun `should bind KoogSpringAiChatProperties`() {
         contextRunner()
             .withPropertyValues(
                 "koog.spring-ai.chat.enabled=true",
                 "koog.spring-ai.chat.dispatcher.type=IO"
             )
             .run { context ->
-                val props = context.getBean<KoogSpringAIChatProperties>()
+                val props = context.getBean<KoogSpringAiChatProperties>()
                 assertTrue(props.enabled)
-                assertTrue(props.dispatcher.type == KoogSpringAIChatProperties.DispatcherType.IO)
+                assertTrue(props.dispatcher.type == KoogSpringAiChatProperties.DispatcherType.IO)
             }
     }
 
@@ -125,7 +125,7 @@ class SpringAIChatAutoConfigurationTest {
                 "koog.spring-ai.chat.dispatcher.parallelism=2"
             )
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIChatDispatcher")
+                val dispatcher = context.getBean("koogSpringAiChatDispatcher")
                 assertNotNull(dispatcher)
                 assertInstanceOf<DisposableBean>(dispatcher)
             }
@@ -139,7 +139,7 @@ class SpringAIChatAutoConfigurationTest {
                 "koog.spring-ai.chat.dispatcher.parallelism=1"
             )
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIChatDispatcher") as DisposableBean
+                val dispatcher = context.getBean("koogSpringAiChatDispatcher") as DisposableBean
                 dispatcher.destroy()
             }
     }
@@ -152,7 +152,7 @@ class SpringAIChatAutoConfigurationTest {
             .withBean(ChatOptionsCustomizer::class.java, { customizer })
             .run { context ->
                 assertSame(customizer, context.getBean<ChatOptionsCustomizer>())
-                assertInstanceOf<SpringAILLMClient>(context.getBean<LLMClient>())
+                assertInstanceOf<SpringAiLLMClient>(context.getBean<LLMClient>())
             }
     }
 
@@ -164,7 +164,7 @@ class SpringAIChatAutoConfigurationTest {
             .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean(ModerationModel::class.java, { moderationModel })
             .run { context ->
-                assertInstanceOf<SpringAILLMClient>(context.getBean<LLMClient>())
+                assertInstanceOf<SpringAiLLMClient>(context.getBean<LLMClient>())
             }
     }
 
@@ -174,7 +174,7 @@ class SpringAIChatAutoConfigurationTest {
         contextRunner()
             .withBean("applicationTaskExecutor", AsyncTaskExecutor::class.java, { executor })
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIChatDispatcher")
+                val dispatcher = context.getBean("koogSpringAiChatDispatcher")
                 assertNotNull(dispatcher)
                 assertInstanceOf<kotlinx.coroutines.ExecutorCoroutineDispatcher>(dispatcher)
             }
@@ -184,7 +184,7 @@ class SpringAIChatAutoConfigurationTest {
     fun `AUTO dispatcher should fall back to Dispatchers_IO when no AsyncTaskExecutor`() {
         contextRunner()
             .run { context ->
-                val dispatcher = context.getBean("koogSpringAIChatDispatcher") as CoroutineDispatcher
+                val dispatcher = context.getBean("koogSpringAiChatDispatcher") as CoroutineDispatcher
                 assertNotNull(dispatcher)
                 assertSame(kotlinx.coroutines.Dispatchers.IO, dispatcher)
             }
@@ -195,7 +195,7 @@ class SpringAIChatAutoConfigurationTest {
         contextRunner()
             .withPropertyValues("koog.spring-ai.chat.enabled=false")
             .run { context ->
-                assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAIChatDispatcher") }
+                assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAiChatDispatcher") }
             }
     }
 
@@ -255,7 +255,7 @@ class SpringAIChatAutoConfigurationTest {
             .run { context ->
                 assertTrue(context.startupFailure == null, "Context should start without failure")
                 val client = context.getBean<LLMClient>()
-                assertInstanceOf<SpringAILLMClient>(client)
+                assertInstanceOf<SpringAiLLMClient>(client)
             }
     }
 
@@ -281,7 +281,7 @@ class SpringAIChatAutoConfigurationTest {
             .withPropertyValues("koog.spring-ai.chat.provider=google")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
-                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                val client = context.getBean<LLMClient>() as SpringAiLLMClient
                 assertSame(LLMProvider.Google, client.llmProvider())
             }
     }
@@ -292,7 +292,7 @@ class SpringAIChatAutoConfigurationTest {
             .withPropertyValues("koog.spring-ai.chat.provider=openai")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
-                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                val client = context.getBean<LLMClient>() as SpringAiLLMClient
                 assertSame(LLMProvider.OpenAI, client.llmProvider())
             }
     }
@@ -317,18 +317,18 @@ class SpringAIChatAutoConfigurationTest {
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean(LLMProvider::class.java, { LLMProvider.Anthropic })
             .run { context ->
-                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                val client = context.getBean<LLMClient>() as SpringAiLLMClient
                 assertSame(LLMProvider.Anthropic, client.llmProvider())
             }
     }
 
     @Test
-    fun `should fallback to SpringAILLMProvider when no property and unknown ChatModel`() {
+    fun `should fallback to SpringAiLLMProvider when no property and unknown ChatModel`() {
         contextRunner()
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
-                val client = context.getBean<LLMClient>() as SpringAILLMClient
-                assertInstanceOf<SpringAILLMProvider>(client.llmProvider())
+                val client = context.getBean<LLMClient>() as SpringAiLLMClient
+                assertInstanceOf<SpringAiLLMProvider>(client.llmProvider())
             }
     }
 
@@ -341,7 +341,7 @@ class SpringAIChatAutoConfigurationTest {
             )
             .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
-                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                val client = context.getBean<LLMClient>() as SpringAiLLMClient
                 assertSame(LLMProvider.Google, client.llmProvider())
             }
     }
@@ -353,7 +353,7 @@ class SpringAIChatAutoConfigurationTest {
             .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean(LLMProvider::class.java, { LLMProvider.Google })
             .run { context ->
-                val client = context.getBean<LLMClient>() as SpringAILLMClient
+                val client = context.getBean<LLMClient>() as SpringAiLLMClient
                 assertSame(LLMProvider.Google, client.llmProvider())
             }
     }

@@ -45,7 +45,7 @@ import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
  * @param chatOptionsCustomizer optional customizer for provider-specific [ChatOptions] tuning
  * @param moderationModel optional Spring AI [ModerationModel] for content moderation; if null, [moderate] throws [UnsupportedOperationException]
  */
-public class SpringAILLMClient(
+public class SpringAiLLMClient(
     private val chatModel: ChatModel,
     private val provider: LLMProvider,
     private val clock: kotlin.time.Clock,
@@ -59,13 +59,13 @@ public class SpringAILLMClient(
      */
     public companion object {
         /**
-         * Returns a new [Builder] for constructing a [SpringAILLMClient].
+         * Returns a new [Builder] for constructing a [SpringAiLLMClient].
          * Intended for Java callers who want to avoid dealing with Kotlin default parameters
          * and [kotlin.time.Clock].
          *
          * Usage:
          * ```java
-         * SpringAILLMClient.builder()
+         * SpringAiLLMClient.builder()
          *     .chatModel(chatModel)
          *     .moderationModel(moderationModel)
          *     .clock(clock)
@@ -79,13 +79,13 @@ public class SpringAILLMClient(
     }
 
     /**
-     * A Java-friendly builder for [SpringAILLMClient].
+     * A Java-friendly builder for [SpringAiLLMClient].
      *
      * The only required property is [chatModel]; all others have sensible defaults.
      */
     public class Builder {
         private var chatModel: ChatModel? = null
-        private var provider: LLMProvider = SpringAILLMProvider
+        private var provider: LLMProvider = SpringAiLLMProvider
         private var clock: kotlin.time.Clock = kotlin.time.Clock.System
         private var dispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO
         private var chatOptionsCustomizer: ChatOptionsCustomizer = ChatOptionsCustomizer.NOOP
@@ -94,7 +94,7 @@ public class SpringAILLMClient(
         /** Sets the Spring AI [ChatModel] to delegate to. Required. */
         public fun chatModel(chatModel: ChatModel): Builder = apply { this.chatModel = chatModel }
 
-        /** Sets the [LLMProvider] to report for this client. Default is [SpringAILLMProvider]. */
+        /** Sets the [LLMProvider] to report for this client. Default is [SpringAiLLMProvider]. */
         public fun provider(provider: LLMProvider): Builder = apply { this.provider = provider }
 
         /** Sets the clock used for creating response metadata timestamps. Default is [kotlin.time.Clock.System]. */
@@ -112,13 +112,13 @@ public class SpringAILLMClient(
             apply { this.moderationModel = moderationModel }
 
         /**
-         * Builds a new [SpringAILLMClient] instance.
+         * Builds a new [SpringAiLLMClient] instance.
          *
          * @throws IllegalStateException if [chatModel] has not been set
          */
-        public fun build(): SpringAILLMClient {
+        public fun build(): SpringAiLLMClient {
             val chatModel = requireNotNull(this.chatModel) { "chatModel must be set" }
-            return SpringAILLMClient(
+            return SpringAiLLMClient(
                 chatModel = chatModel,
                 provider = provider,
                 clock = clock,
@@ -130,7 +130,7 @@ public class SpringAILLMClient(
     }
 
     override val clientName: String = "spring-ai-chat"
-    private val logger = LoggerFactory.getLogger(SpringAILLMClient::class.java)
+    private val logger = LoggerFactory.getLogger(SpringAiLLMClient::class.java)
 
     override fun llmProvider(): LLMProvider = provider
 
@@ -173,10 +173,10 @@ public class SpringAILLMClient(
      * into Koog [StreamFrame] events.
      *
      * Text content is emitted as [StreamFrame.TextDelta] frames immediately. Tool calls are
-     * handled by a [SpringAIToolCallAssembler] whose mode depends on the detected [LLMProvider]:
-     * - **Anthropic / Google** ([SpringAIToolStreamingMode.EMIT_IMMEDIATELY]): tool calls arrive
+     * handled by a [SpringAiToolCallAssembler] whose mode depends on the detected [LLMProvider]:
+     * - **Anthropic / Google** ([SpringAiToolStreamingMode.EMIT_IMMEDIATELY]): tool calls arrive
      *   fully formed in each chunk and are emitted immediately.
-     * - **OpenAI and unknown providers** ([SpringAIToolStreamingMode.BUFFER_UNTIL_END]): tool call
+     * - **OpenAI and unknown providers** ([SpringAiToolStreamingMode.BUFFER_UNTIL_END]): tool call
      *   fragments are buffered across chunks and emitted as complete tool calls after the stream ends.
      *
      * The resulting flow uses [ai.koog.prompt.streaming.StreamFrameFlowBuilder] which automatically pairs each
@@ -191,7 +191,7 @@ public class SpringAILLMClient(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = buildStreamFrameFlow {
         val springPrompt = toSpringPrompt(prompt, model, tools)
-        val toolCallAssembler = SpringAIToolCallAssembler.forProvider(provider)
+        val toolCallAssembler = SpringAiToolCallAssembler.forProvider(provider)
         val flux = try {
             chatModel.stream(springPrompt)
         } catch (e: CancellationException) {

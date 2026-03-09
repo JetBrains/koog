@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * @property dispatcher Dispatcher / threading settings for blocking Spring AI model calls.
  */
 @ConfigurationProperties(prefix = "koog.spring-ai.embedding")
-public data class KoogSpringAIEmbeddingProperties(
+public data class KoogSpringAiEmbeddingProperties(
     val enabled: Boolean = true,
     val embeddingModelBeanName: String? = null,
     val dispatcher: DispatcherProperties = DispatcherProperties(),

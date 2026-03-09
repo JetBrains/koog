@@ -29,7 +29,7 @@ import reactor.core.publisher.Flux
 import kotlin.time.Clock
 import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
 
-class SpringAILLMClientTest {
+class SpringAiLLMClientTest {
 
     private val testModel = LLModel(
         provider = LLMProvider.Ollama,
@@ -46,17 +46,17 @@ class SpringAILLMClientTest {
     // ---- llmProvider ----
 
     @Test
-    fun `llmProvider returns SpringAILLMProvider by default`() {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+    fun `llmProvider returns SpringAiLLMProvider by default`() {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).build()
-        assertTrue(client.llmProvider() is SpringAILLMProvider)
+        assertTrue(client.llmProvider() is SpringAiLLMProvider)
     }
 
     @Test
     fun `llmProvider returns custom provider when specified`() {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).provider(LLMProvider.Ollama).build()
@@ -67,7 +67,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `models returns LLModel with id from defaultOptions when model name is set`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
             override fun getDefaultOptions() = ToolCallingChatOptions.builder().model("gpt-4o").build()
@@ -76,12 +76,12 @@ class SpringAILLMClientTest {
 
         assertEquals(1, models.size)
         assertEquals("gpt-4o", models[0].id)
-        assertTrue(models[0].provider is SpringAILLMProvider)
+        assertTrue(models[0].provider is SpringAiLLMProvider)
     }
 
     @Test
     fun `models returns empty list when defaultOptions has no model name`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
             override fun getDefaultOptions() = ToolCallingChatOptions.builder().build()
@@ -93,7 +93,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `models uses custom provider when specified`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
             override fun getDefaultOptions() = ToolCallingChatOptions.builder().model("llama3").build()
@@ -109,7 +109,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `execute returns assistant message from chat model response`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) =
                 ChatResponse(listOf(Generation(AssistantMessage("Hello!"))))
 
@@ -129,7 +129,7 @@ class SpringAILLMClientTest {
     @Test
     fun `execute returns tool call messages when model responds with tool calls`() = runBlocking {
         val toolCall = AssistantMessage.ToolCall("id-1", "function", "get_weather", """{"city":"Paris"}""")
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) =
                 ChatResponse(listOf(Generation(AssistantMessage.builder().toolCalls(listOf(toolCall)).build())))
 
@@ -155,7 +155,7 @@ class SpringAILLMClientTest {
             override fun getNativeUsage(): Any = emptyMap<String, Any>()
         }
         val metadata = ChatResponseMetadata.builder().usage(usage).build()
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) =
                 ChatResponse(listOf(Generation(AssistantMessage("Done"))), metadata)
 
@@ -174,7 +174,7 @@ class SpringAILLMClientTest {
     @Test
     fun `execute passes ToolCallingChatOptions when tools are provided`() = runBlocking {
         var capturedPrompt: SpringPrompt? = null
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt): ChatResponse {
                 capturedPrompt = prompt
                 return ChatResponse(listOf(Generation(AssistantMessage("ok"))))
@@ -200,7 +200,7 @@ class SpringAILLMClientTest {
     @Test
     fun `execute passes model id in chat options`() = runBlocking {
         var capturedPrompt: SpringPrompt? = null
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt): ChatResponse {
                 capturedPrompt = prompt
                 return ChatResponse(listOf(Generation(AssistantMessage("ok"))))
@@ -216,7 +216,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `execute flattens multiple generations`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = ChatResponse(
                 listOf(
                     Generation(AssistantMessage("First")),
@@ -238,7 +238,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `executeStreaming emits TextDelta frames for text responses`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt) = Flux.just(
                 ChatResponse(listOf(Generation(AssistantMessage("Hello")))),
@@ -259,7 +259,7 @@ class SpringAILLMClientTest {
     @Test
     fun `executeStreaming emits ToolCallDelta frames for tool call responses`() = runBlocking {
         val toolCall = AssistantMessage.ToolCall("tc-1", "function", "search", """{"q":"test"}""")
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt) = Flux.just(
                 ChatResponse(listOf(Generation(AssistantMessage.builder().toolCalls(listOf(toolCall)).build())))
@@ -281,7 +281,7 @@ class SpringAILLMClientTest {
     fun `executeStreaming buffers tool call chunks for unverified providers`() = runBlocking {
         val firstChunk = AssistantMessage.ToolCall("tc-1", "function", "search", """{"q":""")
         val secondChunk = AssistantMessage.ToolCall("tc-1", "function", "search", """"test"}""")
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt) = Flux.just(
                 ChatResponse(listOf(Generation(AssistantMessage.builder().toolCalls(listOf(firstChunk)).build()))),
@@ -305,7 +305,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `executeStreaming always emits End frame`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt) = Flux.empty<ChatResponse>()
         }).build()
@@ -318,7 +318,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `executeStreaming skips empty text chunks`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt) = Flux.just(
                 ChatResponse(listOf(Generation(AssistantMessage("")))),
@@ -337,7 +337,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `moderate throws UnsupportedOperationException`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).build()
@@ -354,7 +354,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `execute wraps ChatModel exceptions in LLMClientException`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt): ChatResponse = throw RuntimeException("Connection refused")
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).build()
@@ -369,7 +369,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `executeStreaming wraps ChatModel stream exceptions in LLMClientException`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt): ChatResponse = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw RuntimeException("Rate limited")
         }).build()
@@ -384,7 +384,7 @@ class SpringAILLMClientTest {
 
     @Test
     fun `executeStreaming wraps collection errors in LLMClientException`() = runBlocking {
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt): ChatResponse = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> =
                 Flux.error(RuntimeException("Stream interrupted"))
@@ -404,7 +404,7 @@ class SpringAILLMClientTest {
             override fun call(request: org.springframework.ai.moderation.ModerationPrompt): org.springframework.ai.moderation.ModerationResponse =
                 throw RuntimeException("Service unavailable")
         }
-        val client = SpringAILLMClient.builder().chatModel(object : ChatModel {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt): ChatResponse = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).moderationModel(moderationModel).build()

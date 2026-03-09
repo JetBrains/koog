@@ -33,7 +33,7 @@ import java.util.concurrent.Executors
  * Auto-configuration for the Koog Spring AI Chat Model adapter.
  *
  * This configuration:
- * - Binds [KoogSpringAIChatProperties] under `koog.spring-ai.chat.*`.
+ * - Binds [KoogSpringAiChatProperties] under `koog.spring-ai.chat.*`.
  * - Creates an [LLMClient] backed by a Spring AI [ChatModel] when available.
  * - Creates a [PromptExecutor] when an [LLMClient] is available.
  * - Supports multi-model contexts via property-based bean-name selection.
@@ -60,24 +60,24 @@ import java.util.concurrent.Executors
         "org.springframework.ai.model.zhipuai.autoconfigure.ZhiPuAiChatAutoConfiguration"
     ]
 )
-@EnableConfigurationProperties(KoogSpringAIChatProperties::class)
+@EnableConfigurationProperties(KoogSpringAiChatProperties::class)
 @ConditionalOnClass(ChatModel::class)
 @ConditionalOnProperty(prefix = "koog.spring-ai.chat", name = ["enabled"], havingValue = "true", matchIfMissing = true)
-public open class SpringAIChatAutoConfiguration {
+public open class SpringAiChatAutoConfiguration {
 
-    private val logger = LoggerFactory.getLogger(SpringAIChatAutoConfiguration::class.java)
+    private val logger = LoggerFactory.getLogger(SpringAiChatAutoConfiguration::class.java)
 
     /**
      * Creates a [CoroutineDispatcher] for blocking Spring AI chat model calls.
      */
     @Bean
-    @ConditionalOnMissingBean(name = ["koogSpringAIChatDispatcher"])
-    public open fun koogSpringAIChatDispatcher(
-        properties: KoogSpringAIChatProperties,
+    @ConditionalOnMissingBean(name = ["koogSpringAiChatDispatcher"])
+    public open fun koogSpringAiChatDispatcher(
+        properties: KoogSpringAiChatProperties,
         @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
     ): CoroutineDispatcher {
         return when (properties.dispatcher.type) {
-            KoogSpringAIChatProperties.DispatcherType.AUTO -> {
+            KoogSpringAiChatProperties.DispatcherType.AUTO -> {
                 if (asyncTaskExecutor != null) {
                     logger.info("Koog Spring AI Chat: using Spring AsyncTaskExecutor as dispatcher for blocking model calls")
                     asyncTaskExecutor.asCoroutineDispatcher()
@@ -87,12 +87,12 @@ public open class SpringAIChatAutoConfiguration {
                 }
             }
 
-            KoogSpringAIChatProperties.DispatcherType.IO -> {
+            KoogSpringAiChatProperties.DispatcherType.IO -> {
                 logger.info("Koog Spring AI Chat: using Dispatchers.IO for blocking model calls")
                 Dispatchers.IO
             }
 
-            KoogSpringAIChatProperties.DispatcherType.FIXED_THREAD_POOL -> {
+            KoogSpringAiChatProperties.DispatcherType.FIXED_THREAD_POOL -> {
                 val parallelism = properties.dispatcher.parallelism.takeIf { it > 0 }
                     ?: Runtime.getRuntime().availableProcessors()
                 logger.info("Koog Spring AI Chat: using fixed thread pool with parallelism=$parallelism for blocking model calls")
@@ -123,10 +123,10 @@ public open class SpringAIChatAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean(LLMClient::class)
-        public open fun springAIChatModelLLMClient(
+        public open fun springAiChatModelLLMClient(
             beanFactory: BeanFactory,
-            properties: KoogSpringAIChatProperties,
-            @Qualifier("koogSpringAIChatDispatcher") dispatcher: CoroutineDispatcher,
+            properties: KoogSpringAiChatProperties,
+            @Qualifier("koogSpringAiChatDispatcher") dispatcher: CoroutineDispatcher,
             @Autowired(required = false) @Nullable chatOptionsCustomizer: ChatOptionsCustomizer?,
             @Autowired(required = false) @Nullable llmProvider: LLMProvider?,
             moderationModelProvider: ObjectProvider<ModerationModel>,
@@ -148,11 +148,11 @@ public open class SpringAIChatAutoConfiguration {
         private val logger = LoggerFactory.getLogger(SingleChatModelConfiguration::class.java)
 
         @Bean
-        public open fun springAIChatModelLLMClient(
+        public open fun springAiChatModelLLMClient(
             chatModel: ChatModel,
             beanFactory: BeanFactory,
-            properties: KoogSpringAIChatProperties,
-            @Qualifier("koogSpringAIChatDispatcher") dispatcher: CoroutineDispatcher,
+            properties: KoogSpringAiChatProperties,
+            @Qualifier("koogSpringAiChatDispatcher") dispatcher: CoroutineDispatcher,
             @Autowired(required = false) @Nullable chatOptionsCustomizer: ChatOptionsCustomizer?,
             @Autowired(required = false) @Nullable llmProvider: LLMProvider?,
             moderationModelProvider: ObjectProvider<ModerationModel>,
@@ -176,7 +176,7 @@ public open class SpringAIChatAutoConfiguration {
 }
 
 /**
- * Creates a [SpringAILLMClient] from the given [ChatModel] and configuration.
+ * Creates a [SpringAiLLMClient] from the given [ChatModel] and configuration.
  *
  * Resolves the [LLMProvider] (user-provided bean > explicit property > auto-detection > fallback)
  * and the [ModerationModel] (explicit bean name > unique candidate).
@@ -184,7 +184,7 @@ public open class SpringAIChatAutoConfiguration {
 private fun createLLMClient(
     chatModel: ChatModel,
     beanFactory: BeanFactory,
-    properties: KoogSpringAIChatProperties,
+    properties: KoogSpringAiChatProperties,
     dispatcher: CoroutineDispatcher,
     chatOptionsCustomizer: ChatOptionsCustomizer?,
     llmProviderBean: LLMProvider?,
@@ -195,7 +195,7 @@ private fun createLLMClient(
         logger.info("Koog Spring AI Chat: using user-provided LLMProvider bean: id='{}', display='{}'", llmProviderBean.id, llmProviderBean.display)
         llmProviderBean
     } else {
-        val detected = SpringAIChatModelProviderDetector.detect(chatModel, properties.provider)
+        val detected = SpringAiChatModelProviderDetector.detect(chatModel, properties.provider)
         logger.info("Koog Spring AI Chat: resolved LLMProvider: id='{}', display='{}'", detected.id, detected.display)
         detected
     }
@@ -203,7 +203,7 @@ private fun createLLMClient(
         ?.also { logger.info("Koog Spring AI Chat: resolving ModerationModel bean by name='$it'") }
         ?.let { beanFactory.getBean(it, ModerationModel::class.java) }
         ?: moderationModelProvider.ifUnique
-    return SpringAILLMClient(
+    return SpringAiLLMClient(
         chatModel = chatModel,
         provider = resolvedProvider,
         clock = kotlin.time.Clock.System,

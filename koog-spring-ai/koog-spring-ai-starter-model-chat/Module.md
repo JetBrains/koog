@@ -7,7 +7,7 @@ Adapts a Spring AI `ChatModel` (with optional `ModerationModel`) into a Koog `LL
 This starter bridges Spring AI's chat model abstraction with the Koog agent framework.
 It auto-configures:
 
-- A Koog `LLMClient` (`SpringAILLMClient`) that delegates to a Spring AI `ChatModel`
+- A Koog `LLMClient` (`SpringAiLLMClient`) that delegates to a Spring AI `ChatModel`
 - A `PromptExecutor` (`MultiLLMPromptExecutor`) assembled from all available `LLMClient` beans
 
 Tools are always executed by the Koog agent framework — Spring AI receives only tool

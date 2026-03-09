@@ -27,7 +27,7 @@ import java.util.concurrent.Executors
  * Auto-configuration for the Koog Spring AI Embedding Model adapter.
  *
  * This configuration:
- * - Binds [KoogSpringAIEmbeddingProperties] under `koog.spring-ai.embedding.*`.
+ * - Binds [KoogSpringAiEmbeddingProperties] under `koog.spring-ai.embedding.*`.
  * - Creates an [LLMEmbeddingProvider] backed by a Spring AI [EmbeddingModel] when available.
  * - Supports multi-model contexts via property-based bean-name selection.
  * - Provides an injectable [CoroutineDispatcher] for blocking model calls.
@@ -51,24 +51,24 @@ import java.util.concurrent.Executors
         "org.springframework.ai.model.zhipuai.autoconfigure.ZhiPuAiEmbeddingAutoConfiguration"
     ]
 )
-@EnableConfigurationProperties(KoogSpringAIEmbeddingProperties::class)
+@EnableConfigurationProperties(KoogSpringAiEmbeddingProperties::class)
 @ConditionalOnClass(EmbeddingModel::class)
 @ConditionalOnProperty(prefix = "koog.spring-ai.embedding", name = ["enabled"], havingValue = "true", matchIfMissing = true)
-public open class SpringAIEmbeddingAutoConfiguration {
+public open class SpringAiEmbeddingAutoConfiguration {
 
-    private val logger = LoggerFactory.getLogger(SpringAIEmbeddingAutoConfiguration::class.java)
+    private val logger = LoggerFactory.getLogger(SpringAiEmbeddingAutoConfiguration::class.java)
 
     /**
      * Creates a [CoroutineDispatcher] for blocking Spring AI embedding model calls.
      */
     @Bean
-    @ConditionalOnMissingBean(name = ["koogSpringAIEmbeddingDispatcher"])
-    public open fun koogSpringAIEmbeddingDispatcher(
-        properties: KoogSpringAIEmbeddingProperties,
+    @ConditionalOnMissingBean(name = ["koogSpringAiEmbeddingDispatcher"])
+    public open fun koogSpringAiEmbeddingDispatcher(
+        properties: KoogSpringAiEmbeddingProperties,
         @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
     ): CoroutineDispatcher {
         return when (properties.dispatcher.type) {
-            KoogSpringAIEmbeddingProperties.DispatcherType.AUTO -> {
+            KoogSpringAiEmbeddingProperties.DispatcherType.AUTO -> {
                 if (asyncTaskExecutor != null) {
                     logger.info("Koog Spring AI Embedding: using Spring AsyncTaskExecutor as dispatcher for blocking model calls")
                     asyncTaskExecutor.asCoroutineDispatcher()
@@ -78,12 +78,12 @@ public open class SpringAIEmbeddingAutoConfiguration {
                 }
             }
 
-            KoogSpringAIEmbeddingProperties.DispatcherType.IO -> {
+            KoogSpringAiEmbeddingProperties.DispatcherType.IO -> {
                 logger.info("Koog Spring AI Embedding: using Dispatchers.IO for blocking model calls")
                 Dispatchers.IO
             }
 
-            KoogSpringAIEmbeddingProperties.DispatcherType.FIXED_THREAD_POOL -> {
+            KoogSpringAiEmbeddingProperties.DispatcherType.FIXED_THREAD_POOL -> {
                 val parallelism = properties.dispatcher.parallelism.takeIf { it > 0 }
                     ?: Runtime.getRuntime().availableProcessors()
                 logger.info("Koog Spring AI Embedding: using fixed thread pool with parallelism=$parallelism for blocking model calls")
@@ -114,15 +114,15 @@ public open class SpringAIEmbeddingAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean(LLMEmbeddingProvider::class)
-        public open fun springAIEmbeddingModelLLMEmbeddingProvider(
+        public open fun springAiEmbeddingModelLLMEmbeddingProvider(
             beanFactory: BeanFactory,
-            properties: KoogSpringAIEmbeddingProperties,
-            @Qualifier("koogSpringAIEmbeddingDispatcher") dispatcher: CoroutineDispatcher,
+            properties: KoogSpringAiEmbeddingProperties,
+            @Qualifier("koogSpringAiEmbeddingDispatcher") dispatcher: CoroutineDispatcher,
         ): LLMEmbeddingProvider {
             val beanName = properties.embeddingModelBeanName!!
             logger.info("Koog Spring AI Embedding: resolving EmbeddingModel bean by name='$beanName'")
             val embeddingModel = beanFactory.getBean(beanName, EmbeddingModel::class.java)
-            return SpringAILLMEmbeddingProvider(embeddingModel = embeddingModel, dispatcher = dispatcher)
+            return SpringAiLLMEmbeddingProvider(embeddingModel = embeddingModel, dispatcher = dispatcher)
         }
     }
 
@@ -136,12 +136,12 @@ public open class SpringAIEmbeddingAutoConfiguration {
         private val logger = LoggerFactory.getLogger(SingleEmbeddingModelConfiguration::class.java)
 
         @Bean
-        public open fun springAIEmbeddingModelLLMEmbeddingProvider(
+        public open fun springAiEmbeddingModelLLMEmbeddingProvider(
             embeddingModel: EmbeddingModel,
-            @Qualifier("koogSpringAIEmbeddingDispatcher") dispatcher: CoroutineDispatcher,
+            @Qualifier("koogSpringAiEmbeddingDispatcher") dispatcher: CoroutineDispatcher,
         ): LLMEmbeddingProvider {
             logger.info("Koog Spring AI Embedding: using single EmbeddingModel candidate as LLMEmbeddingProvider backend")
-            return SpringAILLMEmbeddingProvider(embeddingModel = embeddingModel, dispatcher = dispatcher)
+            return SpringAiLLMEmbeddingProvider(embeddingModel = embeddingModel, dispatcher = dispatcher)
         }
     }
 }

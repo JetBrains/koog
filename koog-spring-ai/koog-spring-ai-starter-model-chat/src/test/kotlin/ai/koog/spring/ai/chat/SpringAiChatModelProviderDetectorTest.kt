@@ -11,7 +11,7 @@ import org.springframework.ai.chat.model.ChatResponse
 import reactor.core.publisher.Flux
 import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
 
-class SpringAIChatModelProviderDetectorTest {
+class SpringAiChatModelProviderDetectorTest {
 
     @Test
     fun `should resolve all canonical Koog provider ids`() {
@@ -35,7 +35,7 @@ class SpringAIChatModelProviderDetectorTest {
             "vertex" to LLMProvider.Vertex,
         )
         for ((id, provider) in expected) {
-            assertSame(provider, SpringAIChatModelProviderDetector.detect(chatModel, id)) {
+            assertSame(provider, SpringAiChatModelProviderDetector.detect(chatModel, id)) {
                 "Failed for provider id '$id'"
             }
         }
@@ -45,7 +45,7 @@ class SpringAIChatModelProviderDetectorTest {
     fun `should throw on unknown explicit provider id`() {
         val chatModel = mockk<ChatModel>(relaxed = true)
         val ex = assertThrows<IllegalArgumentException> {
-            SpringAIChatModelProviderDetector.detect(chatModel, "nonexistent")
+            SpringAiChatModelProviderDetector.detect(chatModel, "nonexistent")
         }
         assert(ex.message!!.contains("nonexistent"))
     }
@@ -68,16 +68,16 @@ class SpringAIChatModelProviderDetectorTest {
             VertexAiGeminiChatModel() to LLMProvider.Vertex,
         )
         for ((chatModel, expectedProvider) in cases) {
-            assertSame(expectedProvider, SpringAIChatModelProviderDetector.detect(chatModel, null)) {
+            assertSame(expectedProvider, SpringAiChatModelProviderDetector.detect(chatModel, null)) {
                 "Failed auto-detection for ${chatModel.javaClass.simpleName}, expected ${expectedProvider.id}"
             }
         }
     }
 
     @Test
-    fun `should fallback to SpringAILLMProvider for unknown ChatModel`() {
+    fun `should fallback to SpringAiLLMProvider for unknown ChatModel`() {
         val chatModel = mockk<ChatModel>(relaxed = true)
-        assertInstanceOf<SpringAILLMProvider>(SpringAIChatModelProviderDetector.detect(chatModel, null))
+        assertInstanceOf<SpringAiLLMProvider>(SpringAiChatModelProviderDetector.detect(chatModel, null))
     }
 
     // Base stub implementing ChatModel methods so that named subclasses can be instantiated directly

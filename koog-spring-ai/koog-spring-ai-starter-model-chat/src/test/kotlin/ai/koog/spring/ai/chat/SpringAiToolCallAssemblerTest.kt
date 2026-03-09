@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.AssistantMessage
 
-class SpringAIToolCallAssemblerTest {
+class SpringAiToolCallAssemblerTest {
 
     @Test
     fun testAnthropicEmitsCompleteToolCallsImmediately() = runBlocking {
-        val assembler = SpringAIToolCallAssembler.forProvider(LLMProvider.Anthropic)
+        val assembler = SpringAiToolCallAssembler.forProvider(LLMProvider.Anthropic)
         val toolCall = AssistantMessage.ToolCall("call-1", "function", "search", """{"q":"test"}""")
 
         val frames = buildStreamFrameFlow {
@@ -35,7 +35,7 @@ class SpringAIToolCallAssemblerTest {
 
     @Test
     fun testOpenAIBuffersPartialArgumentChunksUntilFlush() = runBlocking {
-        val assembler = SpringAIToolCallAssembler.forProvider(LLMProvider.OpenAI)
+        val assembler = SpringAiToolCallAssembler.forProvider(LLMProvider.OpenAI)
         val firstChunk = AssistantMessage.ToolCall("call-1", "function", "search", """{"q":""")
         val secondChunk = AssistantMessage.ToolCall(null, "function", null, """"test"}""")
 
@@ -58,7 +58,7 @@ class SpringAIToolCallAssemblerTest {
 
     @Test
     fun testUnverifiedProvidersBufferArgumentChunksUntilFlush() = runBlocking {
-        val assembler = SpringAIToolCallAssembler.forProvider(LLMProvider.Ollama)
+        val assembler = SpringAiToolCallAssembler.forProvider(LLMProvider.Ollama)
         val firstChunk = AssistantMessage.ToolCall("call-1", "function", "search", """{"q":""")
         val secondChunk = AssistantMessage.ToolCall("call-1", "function", "search", """"test"}""")
 
@@ -81,7 +81,7 @@ class SpringAIToolCallAssemblerTest {
 
     @Test
     fun testBufferUntilEndHandlesMultipleConcurrentToolCallsCorrectly() = runBlocking {
-        val assembler = SpringAIToolCallAssembler.forProvider(LLMProvider.OpenAI)
+        val assembler = SpringAiToolCallAssembler.forProvider(LLMProvider.OpenAI)
 
         // OpenAI streams two tool calls: each chunk list has both tool calls at their respective positions
         val tool0chunk1 = AssistantMessage.ToolCall("call-1", "function", "search", """{"q":""")

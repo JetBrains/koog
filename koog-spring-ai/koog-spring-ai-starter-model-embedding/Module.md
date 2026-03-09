@@ -5,7 +5,7 @@ Adapts a Spring AI `EmbeddingModel` into a Koog `LLMEmbeddingProvider`.
 ### Overview
 
 This starter bridges Spring AI's embedding model abstraction with the Koog agent framework.
-It auto-configures a Koog `LLMEmbeddingProvider` (`SpringAILLMEmbeddingProvider`) that
+It auto-configures a Koog `LLMEmbeddingProvider` (`SpringAiLLMEmbeddingProvider`) that
 delegates to a Spring AI `EmbeddingModel`.
 
 ### Using in your project

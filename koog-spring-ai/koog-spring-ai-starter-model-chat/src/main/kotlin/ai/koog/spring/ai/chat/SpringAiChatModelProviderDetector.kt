@@ -4,14 +4,14 @@ import ai.koog.prompt.llm.LLMProvider
 import org.springframework.ai.chat.model.ChatModel
 
 /**
- * Resolves the [LLMProvider] to use for a [SpringAILLMClient].
+ * Resolves the [LLMProvider] to use for a [SpringAiLLMClient].
  *
  * Resolution order:
  * 1. Explicit property value (`koog.spring-ai.chat.provider`) looked up by [LLMProvider.id].
  * 2. Auto-detection from the [ChatModel] implementation class name.
- * 3. Fallback to [SpringAILLMProvider].
+ * 3. Fallback to [SpringAiLLMProvider].
  */
-internal object SpringAIChatModelProviderDetector {
+internal object SpringAiChatModelProviderDetector {
 
     /**
      * Well-known Koog providers indexed by their [LLMProvider.id].
@@ -66,6 +66,6 @@ internal object SpringAIChatModelProviderDetector {
         }
 
         // 3. Fallback
-        return SpringAILLMProvider
+        return SpringAiLLMProvider
     }
 }

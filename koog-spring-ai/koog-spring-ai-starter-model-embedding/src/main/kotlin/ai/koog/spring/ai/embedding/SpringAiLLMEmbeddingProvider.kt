@@ -24,7 +24,7 @@ import org.springframework.ai.embedding.EmbeddingRequest
  * @param embeddingModel the Spring AI embedding model to delegate to
  * @param dispatcher the [CoroutineDispatcher] used for blocking embedding calls
  */
-public class SpringAILLMEmbeddingProvider(
+public class SpringAiLLMEmbeddingProvider(
     private val embeddingModel: EmbeddingModel,
     private val dispatcher: CoroutineDispatcher,
 ) : LLMEmbeddingProvider {
@@ -34,12 +34,12 @@ public class SpringAILLMEmbeddingProvider(
      */
     public companion object {
         /**
-         * Returns a new [Builder] for constructing a [SpringAILLMEmbeddingProvider].
+         * Returns a new [Builder] for constructing a [SpringAiLLMEmbeddingProvider].
          * Intended for Java callers who want to avoid dealing with Kotlin default parameters.
          *
          * Usage:
          * ```java
-         * SpringAILLMEmbeddingProvider.builder()
+         * SpringAiLLMEmbeddingProvider.builder()
          *     .embeddingModel(embeddingModel)
          *     .dispatcher(dispatcher)
          *     .build();
@@ -50,7 +50,7 @@ public class SpringAILLMEmbeddingProvider(
     }
 
     /**
-     * A Java-friendly builder for [SpringAILLMEmbeddingProvider].
+     * A Java-friendly builder for [SpringAiLLMEmbeddingProvider].
      *
      * The only required property is [embeddingModel]; all others have sensible defaults.
      */
@@ -66,13 +66,13 @@ public class SpringAILLMEmbeddingProvider(
         public fun dispatcher(dispatcher: CoroutineDispatcher): Builder = apply { this.dispatcher = dispatcher }
 
         /**
-         * Builds a new [SpringAILLMEmbeddingProvider] instance.
+         * Builds a new [SpringAiLLMEmbeddingProvider] instance.
          *
          * @throws IllegalStateException if [embeddingModel] has not been set
          */
-        public fun build(): SpringAILLMEmbeddingProvider {
+        public fun build(): SpringAiLLMEmbeddingProvider {
             val embeddingModel = requireNotNull(this.embeddingModel) { "embeddingModel must be set" }
-            return SpringAILLMEmbeddingProvider(
+            return SpringAiLLMEmbeddingProvider(
                 embeddingModel = embeddingModel,
                 dispatcher = dispatcher,
             )
