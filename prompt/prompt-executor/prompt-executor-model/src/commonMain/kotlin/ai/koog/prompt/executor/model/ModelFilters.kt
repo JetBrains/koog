@@ -38,10 +38,10 @@ public object ModelFilters {
 }
 
 /**
- * Filter that accepts only one specific model instance.
+ * Filter that accepts only one specific model value.
  *
  * @constructor Creates filter bound to [model].
- * @property model Allowed model.
+ * @property model Allowed model compared with structural equality.
  */
 public class SpecificModelFilter(
     private val model: LLModel

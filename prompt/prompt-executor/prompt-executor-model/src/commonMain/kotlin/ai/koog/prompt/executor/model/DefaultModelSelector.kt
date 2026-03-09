@@ -21,29 +21,45 @@ import kotlinx.coroutines.sync.withPermit
  * - If no rankers are provided, accepted models keep their original order.
  *
  * Selector-owned validation:
- * - Input [models] must not contain duplicates.
+ * - Input candidate models must not contain duplicates.
  * - Every ranker output must contain exactly the models it was asked to rank:
  *   no missing models, no extra models, no duplicates.
  *
- * @constructor Creates selector with predefined [steps].
- * @property steps Ordered selection steps.
- * @property maxConcurrentlyFilteredModels Maximum number of models filtered concurrently.
+ * @constructor Creates selector with explicit [filters] and [rankers] lists.
+ * @param filters Hard filters applied to each candidate model before ranking.
+ * @param rankers Rankers applied lexicographically to the accepted model set.
+ * @param maxConcurrentlyFilteredModels Maximum number of models evaluated concurrently during filtering.
  * @throws IllegalArgumentException If [maxConcurrentlyFilteredModels] is not positive.
  */
 public class DefaultModelSelector(
-    private val steps: List<ModelSelectionStep> = emptyList(),
+    private val filters: List<ModelFilter> = emptyList(),
+    private val rankers: List<ModelRanker> = emptyList(),
     private val maxConcurrentlyFilteredModels: Int = 8,
 ) : ModelSelector {
+
     init {
         require(maxConcurrentlyFilteredModels > 0) { "maxConcurrentFilteredModels must be greater than 0." }
     }
 
+    /**
+     * Creates selector from mixed [steps], splitting them into filters and rankers automatically.
+     *
+     * [ModelFilter] instances are applied first; [ModelRanker] instances are applied afterwards
+     * in the order they appear in [steps].
+     *
+     * @param steps Ordered selection steps ([ModelFilter] and/or [ModelRanker] instances).
+     * @param maxConcurrentlyFilteredModels Maximum number of models evaluated concurrently during filtering.
+     * @throws IllegalArgumentException If [maxConcurrentlyFilteredModels] is not positive.
+     */
+    public constructor(vararg steps: ModelSelectionStep, maxConcurrentlyFilteredModels: Int = 8) : this(
+        steps.filterIsInstance<ModelFilter>(),
+        steps.filterIsInstance<ModelRanker>(),
+        maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels,
+    )
+
     override suspend fun select(models: List<LLModel>): ModelSelection {
         if (models.isEmpty()) return ModelSelection.EMPTY
         validateModelsInput(models)
-
-        val filters = steps.filterIsInstance<ModelFilter>()
-        val rankers = steps.filterIsInstance<ModelRanker>()
 
         val accepted = filterAccepted(models, filters)
         val ranked = rankLexicographically(accepted, rankers)

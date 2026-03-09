@@ -211,7 +211,7 @@ class DefaultModelSelectorTest {
 
     private fun selector(steps: List<ModelSelectionStep> = emptyList()): DefaultModelSelector =
         DefaultModelSelector(
-            steps = steps,
+            *steps.toTypedArray(),
             maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels
         )
 }

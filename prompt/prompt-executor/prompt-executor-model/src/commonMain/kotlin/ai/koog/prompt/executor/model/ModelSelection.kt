@@ -30,6 +30,11 @@ public data class ModelSelection(
          * Empty selection result.
          */
         public val EMPTY: ModelSelection = ModelSelection(emptyList())
+
+        /**
+         * Creates [ModelSelection] containing only [model].
+         */
+        public fun single(model: LLModel): ModelSelection = ModelSelection(listOf(model))
     }
 }
 
@@ -42,6 +47,7 @@ public sealed interface ModelSelectionStep
  * Factory helpers for creating common [ModelSelector] instances.
  */
 public object ModelSelectors {
+
     /**
      * Builds selector that accepts only [model].
      *
@@ -52,7 +58,11 @@ public object ModelSelectors {
         withSteps(ModelFilters.specific(model))
 
     /**
-     * Builds selector from ordered [steps], executed by [DefaultModelSelector].
+     * Builds selector from [steps], executed by [DefaultModelSelector].
+     *
+     * Step evaluation is phase-based:
+     * - all [ModelFilter] steps are applied first;
+     * - then all [ModelRanker] steps are applied in their relative order.
      *
      * @param steps Ordered selection steps to execute.
      * @param maxConcurrentlyFilteredModels Maximum number of models filtered concurrently.
@@ -63,7 +73,7 @@ public object ModelSelectors {
         maxConcurrentlyFilteredModels: Int = 8,
     ): ModelSelector =
         DefaultModelSelector(
-            steps = steps.toList(),
+            steps = steps,
             maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels,
         )
 }
