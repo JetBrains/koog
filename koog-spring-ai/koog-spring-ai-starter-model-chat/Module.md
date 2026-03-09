@@ -16,7 +16,7 @@ tool-carrying requests.
 
 ### Using in your project
 
-Add the dependency alongside any Spring AI model starter (e.g., Ollama):
+Add the dependency alongside any Spring AI model starter (e.g., for Ollama):
 
 ```kotlin
 // build.gradle.kts
@@ -27,14 +27,13 @@ dependencies {
 }
 ```
 
-Modify your Spring Boot configuration:
+Modifying your Spring Boot properties is not necessary, below are default settings:
 
 ```properties
-# application.properties
-spring.application.name=testapp
+# application.properties defaults
 spring.ai.model.chat=ollama
-spring.ai.ollama.chat.options.model=llama3.2:1b
 koog.spring-ai.chat.enabled=true
+koog.spring-ai.chat.dispatcher.type=AUTO
 ```
 
 If you have a single `ChatModel` bean, everything works automatically —
@@ -51,7 +50,7 @@ class MyAgentService(private val promptExecutor: PromptExecutor) {
     suspend fun askAgent(userMessage: String): String {
         val agent = AIAgent(
             promptExecutor = promptExecutor,
-            llmModel = promptExecutor.models().first(),
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
             systemPrompt = "You are a helpful assistant."
         )
 
@@ -69,6 +68,7 @@ Or provide your own `PromptExecutor` bean to override the auto-configured one en
 | `enabled` | `Boolean` | `true` | Enable/disable the chat auto-configuration |
 | `chat-model-bean-name` | `String?` | `null` | Bean name of the `ChatModel` to use (for multi-model contexts) |
 | `moderation-model-bean-name` | `String?` | `null` | Bean name of the `ModerationModel` to use (for multi-model contexts) |
+| `provider` | `String?` | `null` | LLM provider id (e.g. `openai`, `anthropic`, `google`). When set, overrides auto-detection from the `ChatModel` class name. Falls back to `spring-ai` if auto-detection fails. |
 | `dispatcher.type` | `AUTO` / `IO` / `FIXED_THREAD_POOL` | `AUTO` | Dispatcher for blocking model calls |
 | `dispatcher.parallelism` | `Int` | `0` (= CPU count) | Thread pool size (for `FIXED_THREAD_POOL`) |
 

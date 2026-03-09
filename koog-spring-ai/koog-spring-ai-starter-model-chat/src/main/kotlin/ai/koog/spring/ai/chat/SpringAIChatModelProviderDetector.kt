@@ -66,6 +66,6 @@ internal object SpringAIChatModelProviderDetector {
         }
 
         // 3. Fallback
-        return SpringAILLMProvider()
+        return SpringAILLMProvider
     }
 }

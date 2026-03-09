@@ -28,12 +28,6 @@ import org.springframework.ai.moderation.ModerationPrompt
 import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
 
 /**
- * An [ai.koog.prompt.llm.LLMProvider] representing a Spring AI-backed provider.
- */
-public class SpringAILLMProvider @JvmOverloads constructor(id: String = "spring-ai", display: String = "Spring AI") :
-    LLMProvider(id, display)
-
-/**
  * An [LLMClient] implementation that delegates to a Spring AI [ChatModel].
  *
  * This adapter allows Koog agents to use any Spring AI chat model provider
@@ -52,7 +46,7 @@ public class SpringAILLMProvider @JvmOverloads constructor(id: String = "spring-
  */
 public class SpringAILLMClient @JvmOverloads constructor(
     private val chatModel: ChatModel,
-    private val provider: LLMProvider = SpringAILLMProvider(),
+    private val provider: LLMProvider = SpringAILLMProvider,
     private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val chatOptionsCustomizer: ChatOptionsCustomizer = ChatOptionsCustomizer.NOOP,
@@ -90,7 +84,7 @@ public class SpringAILLMClient @JvmOverloads constructor(
      */
     public class Builder {
         private var chatModel: ChatModel? = null
-        private var provider: LLMProvider = SpringAILLMProvider()
+        private var provider: LLMProvider = SpringAILLMProvider
         private var clock: kotlin.time.Clock = kotlin.time.Clock.System
         private var dispatcher: CoroutineDispatcher = Dispatchers.IO
         private var chatOptionsCustomizer: ChatOptionsCustomizer = ChatOptionsCustomizer.NOOP
@@ -303,29 +297,5 @@ public class SpringAILLMClient @JvmOverloads constructor(
         }
 
         return chatOptionsCustomizer.customize(options, params, model)
-    }
-}
-
-/**
- * Extension point for provider-specific [ChatOptions] customization.
- *
- * Implement this interface and register it as a Spring bean to apply
- * provider-specific option tuning on top of the default mapping.
- */
-public fun interface ChatOptionsCustomizer {
-    /**
-     * Customize the given [options] based on the original Koog [params] and [model].
-     *
-     * @return the customized (or original) [ChatOptions]
-     */
-    public fun customize(options: ChatOptions, params: LLMParams, model: LLModel): ChatOptions
-
-    /**
-     * A companion object for ChatOptionsCustomizer
-     */
-    public companion object {
-        /** No-op customizer that returns options unchanged. */
-        @JvmField
-        public val NOOP: ChatOptionsCustomizer = ChatOptionsCustomizer { options, _, _ -> options }
     }
 }
