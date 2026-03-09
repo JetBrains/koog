@@ -115,6 +115,12 @@ class ModelIdentifierParsingTest {
         assertEquals(LLMProvider.OpenAI, gpt5_1codex.provider)
         assertEquals(OpenAIModels.Chat.GPT5_1Codex, gpt5_1codex)
 
+        // Test GPT-5.1-Codex-Max
+        val gpt5_1codexmax = getModelFromIdentifier("openai.chat.gpt5_1codexmax")
+        assertNotNull(gpt5_1codexmax)
+        assertEquals(LLMProvider.OpenAI, gpt5_1codexmax.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_1CodexMax, gpt5_1codexmax)
+
         // Test GPT-5.2
         val gpt5_2 = getModelFromIdentifier("openai.chat.gpt5_2")
         assertNotNull(gpt5_2)
@@ -126,6 +132,30 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt5_2pro)
         assertEquals(LLMProvider.OpenAI, gpt5_2pro.provider)
         assertEquals(OpenAIModels.Chat.GPT5_2Pro, gpt5_2pro)
+
+        // Test GPT-5.2-Codex
+        val gpt5_2codex = getModelFromIdentifier("openai.chat.gpt5_2codex")
+        assertNotNull(gpt5_2codex)
+        assertEquals(LLMProvider.OpenAI, gpt5_2codex.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_2Codex, gpt5_2codex)
+
+        // Test GPT-5.3-Codex
+        val gpt5_3codex = getModelFromIdentifier("openai.chat.gpt5_3codex")
+        assertNotNull(gpt5_3codex)
+        assertEquals(LLMProvider.OpenAI, gpt5_3codex.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_3Codex, gpt5_3codex)
+
+        // Test GPT-5.4
+        val gpt5_4 = getModelFromIdentifier("openai.chat.gpt5_4")
+        assertNotNull(gpt5_4)
+        assertEquals(LLMProvider.OpenAI, gpt5_4.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_4, gpt5_4)
+
+        // Test GPT-5.4-Pro
+        val gpt5_4pro = getModelFromIdentifier("openai.chat.gpt5_4pro")
+        assertNotNull(gpt5_4pro)
+        assertEquals(LLMProvider.OpenAI, gpt5_4pro.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_4Pro, gpt5_4pro)
     }
 
     @Test

@@ -19,7 +19,6 @@ object Models {
         return Stream.of(
             OpenAIModels.Chat.GPT5_2, // reasoning
             OpenAIModels.Chat.GPT4_1, // non-reasoning
-            OpenAIModels.Chat.GPT5_1Codex
         )
     }
 
@@ -106,7 +105,7 @@ object Models {
     fun reasoningCapableModels(): Stream<LLModel> {
         return Stream.of(
             // Replaced 5.2 with 5.1-Codex because of the unstable 5.2 behaviour, see KG-625
-            OpenAIModels.Chat.GPT5_1Codex,
+            OpenAIModels.Chat.GPT5_1CodexMax,
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini3_Pro_Preview,
@@ -116,7 +115,7 @@ object Models {
     @JvmStatic
     fun openAIReasoningModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT5_1Codex,
+            OpenAIModels.Chat.GPT5_1CodexMax,
             OpenAIModels.Chat.GPT5_2,
         )
     }

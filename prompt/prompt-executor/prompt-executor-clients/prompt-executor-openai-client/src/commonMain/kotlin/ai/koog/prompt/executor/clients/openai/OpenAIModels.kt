@@ -1,8 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
-import ai.koog.prompt.executor.clients.openai.OpenAIModels.Embeddings.TextEmbedding3Large
-import ai.koog.prompt.executor.clients.openai.OpenAIModels.Embeddings.TextEmbedding3Small
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -14,7 +12,7 @@ import kotlin.jvm.JvmField
  *
  * Note: All models with vision (image) capabilities also support sending PDF files.
  *
- * @see <a href="https://platform.openai.com/docs/models">Models list</a>
+ * @see <a href="https://developers.openai.com/api/docs/models">Models list</a>
  *
  * | Name                             | Speed     | Price              | Input                        | Output                       |
  * |----------------------------------|-----------|--------------------|------------------------------|------------------------------|
@@ -34,8 +32,13 @@ import kotlin.jvm.JvmField
  * | [Chat.GPT5Pro]                   | Slowest   | $15-$120           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_1]                    | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
  * | [Chat.GPT5_1Codex]               | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
+ * | [Chat.GPT5_1CodexMax]            | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_2]                    | Fast      | $1.75-$14          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_2Pro]                 | Slowest   | $21-$168           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_2Codex]               | Medium    | $1.75-$14          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_3Codex]               | Medium    | $1.75-$14          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_4]                    | Medium    | $2.5-$15           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_4Pro]                 | Slowest   | $30-$180           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools           |
@@ -89,7 +92,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Oct 01, 2023 knowledge cutoff
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-4o">Model page</a>
          */
         @JvmField
         public val GPT4o: LLModel = LLModel(
@@ -121,7 +124,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-4o-mini">Model page</a>
          */
         @JvmField
         public val GPT4oMini: LLModel = LLModel(
@@ -153,7 +156,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 32,768 max output tokens
          * Jun 01, 2024 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-4.1">Model page</a>
          */
         @JvmField
         public val GPT4_1: LLModel = LLModel(
@@ -185,7 +188,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 32,768 max output tokens
          * Jun 01, 2024 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-nano">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-4.1-nano">Model page</a>
          */
         @JvmField
         public val GPT4_1Nano: LLModel = LLModel(
@@ -218,7 +221,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Jun 01, 2024 knowledge cutoff
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-mini">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-4.1-mini">Model page</a>
          */
         @JvmField
         public val GPT4_1Mini: LLModel = LLModel(
@@ -252,7 +255,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Oct 01, 2023 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o1">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/o1">Model page</a>
          */
         @JvmField
         public val O1: LLModel = LLModel(
@@ -286,7 +289,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Jun 01, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o3">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/o3">Model page</a>
          */
         @JvmField
         public val O3: LLModel = LLModel(
@@ -320,7 +323,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Oct 01, 2023 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o3-mini">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/o3-mini">Model page</a>
          */
         @JvmField
         public val O3Mini: LLModel = LLModel(
@@ -352,7 +355,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Reasoning token support
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/o4-mini">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/o4-mini">Model page</a>
          */
         @JvmField
         public val O4Mini: LLModel = LLModel(
@@ -383,7 +386,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Sep 30, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5">Model page</a>
          */
         @JvmField
         public val GPT5: LLModel = LLModel(
@@ -414,7 +417,7 @@ public object OpenAIModels : LLModelDefinitions {
          * May 31, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-mini">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5-mini">Model page</a>
          */
         @JvmField
         public val GPT5Mini: LLModel = LLModel(
@@ -446,7 +449,7 @@ public object OpenAIModels : LLModelDefinitions {
          * May 31, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-nano">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5-nano">Model page</a>
          */
         @JvmField
         public val GPT5Nano: LLModel = LLModel(
@@ -477,7 +480,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 128,000 max output tokens
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-codex"\>Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5-codex"\>Model page</a>
          */
         @JvmField
         public val GPT5Codex: LLModel = LLModel(
@@ -508,7 +511,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Sep 30, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-pro">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5-pro">Model page</a>
          */
         @JvmField
         public val GPT5Pro: LLModel = LLModel(
@@ -536,7 +539,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Sep 30, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5.1"\>Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.1"\>Model page</a>
          */
         @JvmField
         public val GPT5_1: LLModel = LLModel(
@@ -568,12 +571,43 @@ public object OpenAIModels : LLModelDefinitions {
          * Sep 30, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5.1-codex"\>Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.1-codex"\>Model page</a>
          */
         @JvmField
         public val GPT5_1Codex: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
             id = "gpt-5.1-codex",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.1-Codex-Max GPT‑5.1-Codex-Max is purpose-built for agentic coding.
+         * It's only available in the Responses API.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.1-codex-max"\>Model page</a>
+         */
+        @JvmField
+        public val GPT5_1CodexMax: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.1-codex-max",
             capabilities = listOf(
                 LLMCapability.Completion,
                 LLMCapability.Schema.JSON.Basic,
@@ -599,7 +633,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Aug 31, 2025 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5.2"\>Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.2"\>Model page</a>
          */
         @JvmField
         public val GPT5_2: LLModel = LLModel(
@@ -632,7 +666,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Aug 31, 2025 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5.2-pro"\>Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.2-pro"\>Model page</a>
          */
         @JvmField
         public val GPT5_2Pro: LLModel = LLModel(
@@ -651,6 +685,128 @@ public object OpenAIModels : LLModelDefinitions {
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
+
+        /**
+         * GPT-5.2-Codex is an upgraded version of GPT-5.2 optimized for agentic coding tasks in Codex or similar environments.
+         * GPT-5.2-Codex supports low, medium, high, and xhigh reasoning effort settings.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.2-codex"\>Model page</a>
+         */
+        @JvmField
+        public val GPT5_2Codex: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.2-codex",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.3-Codex is optimized for agentic coding tasks in Codex or similar environments.
+         * GPT-5.3-Codex supports low, medium, high, and xhigh reasoning effort settings.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.3-codex"\>Model page</a>
+         */
+        @JvmField
+        public val GPT5_3Codex: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.3-codex",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.4 is OpenAI's frontier model for complex professional work.
+         * Reasoning.effort supports: none (default), low, medium, high and xhigh.
+         *
+         * 1,050,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.4"\>Model page</a>
+         */
+        @JvmField
+        public val GPT5_4: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.4",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+                // ToDo add Batch endpoint as well, see KG-719
+            ),
+            contextLength = 1_050_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.4 pro uses more compute to think harder and provide consistently better answers.
+         * GPT-5.4 pro is available in the Responses API only to enable support for multi-turn model interactions
+         * before responding to API requests, and other advanced API features in the future.
+         * Since GPT-5.4 pro is designed to tackle tough problems, some requests may take several minutes to finish.
+         * To avoid timeouts, try using background mode.
+         * GPT-5.4 pro supports reasoning.effort: medium, high, xhigh.
+         *
+         * 1,050,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.4-pro"\>Model page</a>
+         */
+        @JvmField
+        public val GPT5_4Pro: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.4-pro",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 1_050_000,
+            maxOutputTokens = 128_000,
+        )
     }
 
     /**
@@ -667,7 +823,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-audio">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-audio">Model page</a>
          */
         @JvmField
         public val GptAudio: LLModel = LLModel(
@@ -694,7 +850,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini-audio-preview">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-4o-mini-audio-preview">Model page</a>
          */
         @JvmField
         public val GPT4oMiniAudio: LLModel = LLModel(
@@ -719,7 +875,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-audio-preview">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-4o-audio-preview">Model page</a>
          */
         @JvmField
         public val GPT4oAudio: LLModel = LLModel(
@@ -758,7 +914,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Embeddings are useful for search, clustering, recommendations,
          * anomaly detection, and classification tasks.
          *
-         * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-small">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/text-embedding-3-small">Model page</a>
          */
         @JvmField
         public val TextEmbedding3Small: LLModel = LLModel(
@@ -787,7 +943,7 @@ public object OpenAIModels : LLModelDefinitions {
          * clustering, recommendations, anomaly detection, and classification tasks.
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-large">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/text-embedding-3-large">Model page</a>
          */
         @JvmField
         public val TextEmbedding3Large: LLModel = LLModel(
@@ -814,7 +970,7 @@ public object OpenAIModels : LLModelDefinitions {
          * between two pieces of text. Embeddings are useful for search, clustering, recommendations,
          * anomaly detection, and classification tasks.
          *
-         * @see <a href="https://platform.openai.com/docs/models/text-embedding-ada-002">Model page</a>
+         * @see <a href="https://developers.openai.com/api/docs/models/text-embedding-ada-002">Model page</a>
          */
         @JvmField
         public val TextEmbeddingAda002: LLModel = LLModel(
@@ -856,10 +1012,19 @@ public object OpenAIModels : LLModelDefinitions {
         // Chat Models - GPT-5.1 Series
         Chat.GPT5_1,
         Chat.GPT5_1Codex,
+        Chat.GPT5_1CodexMax,
 
         // Chat Models - GPT-5.2 Series
         Chat.GPT5_2,
         Chat.GPT5_2Pro,
+        Chat.GPT5_2Codex,
+
+        // Chat Models - GPT-5.3 Series
+        Chat.GPT5_3Codex,
+
+        // Chat Models - GPT-5.4 Series
+        Chat.GPT5_4,
+        Chat.GPT5_4Pro,
 
         // Audio Models
         Audio.GptAudio,
