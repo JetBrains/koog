@@ -30,26 +30,6 @@ import org.springframework.lang.Nullable
 import java.util.concurrent.Executors
 
 /**
- * Resolves the [LLMProvider] to use for the [SpringAILLMClient].
- *
- * Priority: user-provided [LLMProvider] bean > explicit property > auto-detection > fallback.
- */
-private fun resolveProvider(
-    chatModel: ChatModel,
-    properties: KoogSpringAIChatProperties,
-    llmProviderBean: LLMProvider?,
-    logger: org.slf4j.Logger
-): LLMProvider {
-    if (llmProviderBean != null) {
-        logger.info("Koog Spring AI Chat: using user-provided LLMProvider bean: id='{}', display='{}'", llmProviderBean.id, llmProviderBean.display)
-        return llmProviderBean
-    }
-    val detected = SpringAIChatModelProviderDetector.detect(chatModel, properties.provider)
-    logger.info("Koog Spring AI Chat: resolved LLMProvider: id='{}', display='{}'", detected.id, detected.display)
-    return detected
-}
-
-/**
  * Auto-configuration for the Koog Spring AI Chat Model adapter.
  *
  * This configuration:
@@ -154,18 +134,7 @@ public open class SpringAIChatAutoConfiguration {
             val beanName = properties.chatModelBeanName!!
             logger.info("Koog Spring AI Chat: resolving ChatModel bean by name='$beanName'")
             val chatModel = beanFactory.getBean(beanName, ChatModel::class.java)
-            val resolvedProvider = resolveProvider(chatModel, properties, llmProvider, logger)
-            val resolvedModerationModel: ModerationModel? = properties.moderationModelBeanName
-                ?.also { logger.info("Koog Spring AI Chat: resolving ModerationModel bean by name='$it'") }
-                ?.let { beanFactory.getBean(it, ModerationModel::class.java) }
-                ?: moderationModelProvider.ifUnique
-            return SpringAILLMClient(
-                chatModel,
-                provider = resolvedProvider,
-                dispatcher = dispatcher,
-                chatOptionsCustomizer = chatOptionsCustomizer ?: ChatOptionsCustomizer.NOOP,
-                moderationModel = resolvedModerationModel,
-            )
+            return createLLMClient(chatModel, beanFactory, properties, dispatcher, chatOptionsCustomizer, llmProvider, moderationModelProvider, logger)
         }
     }
 
@@ -189,18 +158,7 @@ public open class SpringAIChatAutoConfiguration {
             moderationModelProvider: ObjectProvider<ModerationModel>,
         ): LLMClient {
             logger.info("Koog Spring AI Chat: using single ChatModel candidate as LLMClient backend")
-            val resolvedProvider = resolveProvider(chatModel, properties, llmProvider, logger)
-            val moderationModel: ModerationModel? = properties.moderationModelBeanName
-                ?.also { logger.info("Koog Spring AI Chat: resolving ModerationModel bean by name='$it'") }
-                ?.let { beanFactory.getBean(it, ModerationModel::class.java) }
-                ?: moderationModelProvider.ifUnique
-            return SpringAILLMClient(
-                chatModel,
-                provider = resolvedProvider,
-                dispatcher = dispatcher,
-                chatOptionsCustomizer = chatOptionsCustomizer ?: ChatOptionsCustomizer.NOOP,
-                moderationModel = moderationModel,
-            )
+            return createLLMClient(chatModel, beanFactory, properties, dispatcher, chatOptionsCustomizer, llmProvider, moderationModelProvider, logger)
         }
     }
 
@@ -211,8 +169,45 @@ public open class SpringAIChatAutoConfiguration {
     @ConditionalOnBean(LLMClient::class)
     @ConditionalOnMissingBean(PromptExecutor::class)
     public open fun koogPromptExecutor(llmClientsProvider: ObjectProvider<LLMClient>): PromptExecutor {
-        val llmClients = llmClientsProvider.orderedStream().toList()
+        val llmClients = llmClientsProvider.toList()
         logger.info("Koog Spring AI Chat: creating MultiLLMPromptExecutor with {} LLMClient(s)", llmClients.size)
         return MultiLLMPromptExecutor(llmClients = llmClients.toTypedArray())
     }
+}
+
+/**
+ * Creates a [SpringAILLMClient] from the given [ChatModel] and configuration.
+ *
+ * Resolves the [LLMProvider] (user-provided bean > explicit property > auto-detection > fallback)
+ * and the [ModerationModel] (explicit bean name > unique candidate).
+ */
+private fun createLLMClient(
+    chatModel: ChatModel,
+    beanFactory: BeanFactory,
+    properties: KoogSpringAIChatProperties,
+    dispatcher: CoroutineDispatcher,
+    chatOptionsCustomizer: ChatOptionsCustomizer?,
+    llmProviderBean: LLMProvider?,
+    moderationModelProvider: ObjectProvider<ModerationModel>,
+    logger: org.slf4j.Logger,
+): LLMClient {
+    val resolvedProvider = if (llmProviderBean != null) {
+        logger.info("Koog Spring AI Chat: using user-provided LLMProvider bean: id='{}', display='{}'", llmProviderBean.id, llmProviderBean.display)
+        llmProviderBean
+    } else {
+        val detected = SpringAIChatModelProviderDetector.detect(chatModel, properties.provider)
+        logger.info("Koog Spring AI Chat: resolved LLMProvider: id='{}', display='{}'", detected.id, detected.display)
+        detected
+    }
+    val moderationModel: ModerationModel? = properties.moderationModelBeanName
+        ?.also { logger.info("Koog Spring AI Chat: resolving ModerationModel bean by name='$it'") }
+        ?.let { beanFactory.getBean(it, ModerationModel::class.java) }
+        ?: moderationModelProvider.ifUnique
+    return SpringAILLMClient(
+        chatModel,
+        provider = resolvedProvider,
+        dispatcher = dispatcher,
+        chatOptionsCustomizer = chatOptionsCustomizer ?: ChatOptionsCustomizer.NOOP,
+        moderationModel = moderationModel,
+    )
 }
