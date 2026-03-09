@@ -19,8 +19,7 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
 kotlinx-io = "0.7.0"
 kotlinx-serialization = "1.10.0" # check with IJ
-# TODO temporary from ./libs/maven-repo, replace with published version
-kotlinx-schema = "0.3.3-SNAPSHOT"
+kotlinx-schema = "0.4.0"
 kover = "0.9.4"
 ktlint = "14.0.1"
 ktor3 = "3.2.2"
