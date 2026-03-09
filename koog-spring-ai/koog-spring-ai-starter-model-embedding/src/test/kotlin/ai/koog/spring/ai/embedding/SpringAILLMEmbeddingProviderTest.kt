@@ -35,7 +35,7 @@ class SpringAILLMEmbeddingProviderTest {
     @Test
     fun testEmbedReturnsListOfDoublesFromEmbeddingModel() = runBlocking {
         val floats = floatArrayOf(0.1f, 0.2f, 0.3f)
-        val provider = SpringAILLMEmbeddingProvider(embeddingModel(floats))
+        val provider = SpringAILLMEmbeddingProvider.builder().embeddingModel(embeddingModel(floats)).build()
 
         val result = provider.embed("hello", testModel)
 
@@ -47,7 +47,7 @@ class SpringAILLMEmbeddingProviderTest {
 
     @Test
     fun testEmbedReturnsEmptyListForEmptyEmbedding() = runBlocking {
-        val provider = SpringAILLMEmbeddingProvider(embeddingModel(floatArrayOf()))
+        val provider = SpringAILLMEmbeddingProvider.builder().embeddingModel(embeddingModel(floatArrayOf())).build()
 
         val result = provider.embed("hello", testModel)
 
@@ -65,7 +65,7 @@ class SpringAILLMEmbeddingProviderTest {
                 return EmbeddingResponse(listOf(Embedding(floatArrayOf(1.0f), 0, EmbeddingResultMetadata())))
             }
         }
-        val provider = SpringAILLMEmbeddingProvider(model)
+        val provider = SpringAILLMEmbeddingProvider.builder().embeddingModel(model).build()
 
         provider.embed("test input", testModel)
 
@@ -80,7 +80,7 @@ class SpringAILLMEmbeddingProviderTest {
             override fun call(request: EmbeddingRequest): EmbeddingResponse =
                 throw RuntimeException("Model error")
         }
-        val provider = SpringAILLMEmbeddingProvider(model)
+        val provider = SpringAILLMEmbeddingProvider.builder().embeddingModel(model).build()
 
         val exception = assertThrows<LLMClientException> {
             provider.embed("hello", testModel)

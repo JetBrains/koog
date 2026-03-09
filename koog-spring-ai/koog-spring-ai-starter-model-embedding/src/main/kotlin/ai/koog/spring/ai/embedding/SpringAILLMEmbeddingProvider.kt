@@ -3,6 +3,7 @@ package ai.koog.spring.ai.embedding
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.io.SuitableForIO
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,7 @@ import org.springframework.ai.embedding.EmbeddingRequest
  */
 public class SpringAILLMEmbeddingProvider(
     private val embeddingModel: EmbeddingModel,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val dispatcher: CoroutineDispatcher,
 ) : LLMEmbeddingProvider {
 
     /**
@@ -55,13 +56,13 @@ public class SpringAILLMEmbeddingProvider(
      */
     public class Builder {
         private var embeddingModel: EmbeddingModel? = null
-        private var dispatcher: CoroutineDispatcher = Dispatchers.IO
+        private var dispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO
 
         /** Sets the Spring AI [EmbeddingModel] to delegate to. Required. */
         public fun embeddingModel(embeddingModel: EmbeddingModel): Builder =
             apply { this.embeddingModel = embeddingModel }
 
-        /** Sets the [CoroutineDispatcher] used for blocking embedding calls. Default is [Dispatchers.IO]. */
+        /** Sets the [CoroutineDispatcher] used for blocking embedding calls. Default is [Dispatchers.SuitableForIO]. */
         public fun dispatcher(dispatcher: CoroutineDispatcher): Builder = apply { this.dispatcher = dispatcher }
 
         /**

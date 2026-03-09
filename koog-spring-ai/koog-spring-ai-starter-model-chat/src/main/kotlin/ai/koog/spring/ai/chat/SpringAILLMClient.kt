@@ -11,6 +11,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.utils.io.SuitableForIO
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -44,13 +45,13 @@ import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
  * @param chatOptionsCustomizer optional customizer for provider-specific [ChatOptions] tuning
  * @param moderationModel optional Spring AI [ModerationModel] for content moderation; if null, [moderate] throws [UnsupportedOperationException]
  */
-public class SpringAILLMClient @JvmOverloads constructor(
+public class SpringAILLMClient(
     private val chatModel: ChatModel,
-    private val provider: LLMProvider = SpringAILLMProvider,
-    private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val chatOptionsCustomizer: ChatOptionsCustomizer = ChatOptionsCustomizer.NOOP,
-    private val moderationModel: ModerationModel? = null,
+    private val provider: LLMProvider,
+    private val clock: kotlin.time.Clock,
+    private val dispatcher: CoroutineDispatcher,
+    private val chatOptionsCustomizer: ChatOptionsCustomizer,
+    private val moderationModel: ModerationModel?,
 ) : LLMClient() {
 
     /**
@@ -86,7 +87,7 @@ public class SpringAILLMClient @JvmOverloads constructor(
         private var chatModel: ChatModel? = null
         private var provider: LLMProvider = SpringAILLMProvider
         private var clock: kotlin.time.Clock = kotlin.time.Clock.System
-        private var dispatcher: CoroutineDispatcher = Dispatchers.IO
+        private var dispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO
         private var chatOptionsCustomizer: ChatOptionsCustomizer = ChatOptionsCustomizer.NOOP
         private var moderationModel: ModerationModel? = null
 
@@ -99,7 +100,7 @@ public class SpringAILLMClient @JvmOverloads constructor(
         /** Sets the clock used for creating response metadata timestamps. Default is [kotlin.time.Clock.System]. */
         public fun clock(clock: kotlin.time.Clock): Builder = apply { this.clock = clock }
 
-        /** Sets the [CoroutineDispatcher] used for blocking model calls. Default is [Dispatchers.IO]. */
+        /** Sets the [CoroutineDispatcher] used for blocking model calls. Default is [Dispatchers.SuitableForIO]. */
         public fun dispatcher(dispatcher: CoroutineDispatcher): Builder = apply { this.dispatcher = dispatcher }
 
         /** Sets the customizer for provider-specific [ChatOptions] tuning. Default is [ChatOptionsCustomizer.NOOP]. */
@@ -182,7 +183,7 @@ public class SpringAILLMClient @JvmOverloads constructor(
      * [StreamFrame.ToolCallDelta] with a corresponding [StreamFrame.ToolCallComplete] and
      * emits [StreamFrame.TextComplete] / [StreamFrame.ReasoningComplete] boundaries.
      *
-     * All blocking I/O runs on the configured [dispatcher] (default [Dispatchers.IO]).
+     * All blocking I/O runs on the configured [dispatcher] (default [Dispatchers.SuitableForIO]).
      */
     override fun executeStreaming(
         prompt: Prompt,
