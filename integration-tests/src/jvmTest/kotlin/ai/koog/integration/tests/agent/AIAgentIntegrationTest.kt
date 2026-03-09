@@ -34,6 +34,7 @@ import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -467,6 +468,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        // TODO: Remove this skip when KG-596 thought_signature fix is merged
+        assumeTrue(
+            model.provider !is GoogleLLMProvider,
+            "Skipping Google models until thought_signature support is in this branch (KG-596)"
+        )
 
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
@@ -612,6 +618,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -638,6 +645,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -737,6 +745,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = checkpointStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
@@ -892,6 +901,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             installFeatures = {
                 install(Persistence) {
                     storage = fileStorageProvider
+                    enableAutomaticPersistence = false
                 }
             }
         )
