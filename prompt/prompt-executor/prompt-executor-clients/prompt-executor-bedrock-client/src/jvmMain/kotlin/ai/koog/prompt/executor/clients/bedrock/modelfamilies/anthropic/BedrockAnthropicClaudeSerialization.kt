@@ -180,10 +180,13 @@ internal object BedrockAnthropicClaudeSerialization {
                 "Bedrock Anthropic only supports JSON schemas for structured output"
             }
             buildJsonObject {
-                put("format", buildJsonObject {
-                    put("type", "json_schema")
-                    put("schema", schema.schema)
-                })
+                put(
+                    "format",
+                    buildJsonObject {
+                        put("type", "json_schema")
+                        put("schema", schema.schema)
+                    }
+                )
             }
         }
 

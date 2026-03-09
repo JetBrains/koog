@@ -15,7 +15,6 @@ import ai.koog.prompt.streaming.buildStreamFrameFlow
 import aws.sdk.kotlin.services.bedrockruntime.model.AnyToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.AutoToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlock
-import aws.sdk.kotlin.services.bedrockruntime.model.JsonSchemaDefinition
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDelta
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockStart
 import aws.sdk.kotlin.services.bedrockruntime.model.ConversationRole
@@ -30,6 +29,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ImageBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageSource
 import aws.sdk.kotlin.services.bedrockruntime.model.InferenceConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.JsonSchemaDefinition
 import aws.sdk.kotlin.services.bedrockruntime.model.OutputConfig
 import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormatStructure
