@@ -122,7 +122,7 @@ public open class SpringAIEmbeddingAutoConfiguration {
             val beanName = properties.embeddingModelBeanName!!
             logger.info("Koog Spring AI Embedding: resolving EmbeddingModel bean by name='$beanName'")
             val embeddingModel = beanFactory.getBean(beanName, EmbeddingModel::class.java)
-            return SpringAILLMEmbeddingProvider(embeddingModel, dispatcher = dispatcher)
+            return SpringAILLMEmbeddingProvider(embeddingModel = embeddingModel, dispatcher = dispatcher)
         }
     }
 
@@ -141,7 +141,7 @@ public open class SpringAIEmbeddingAutoConfiguration {
             @Qualifier("koogSpringAIEmbeddingDispatcher") dispatcher: CoroutineDispatcher,
         ): LLMEmbeddingProvider {
             logger.info("Koog Spring AI Embedding: using single EmbeddingModel candidate as LLMEmbeddingProvider backend")
-            return SpringAILLMEmbeddingProvider(embeddingModel, dispatcher = dispatcher)
+            return SpringAILLMEmbeddingProvider(embeddingModel = embeddingModel, dispatcher = dispatcher)
         }
     }
 }

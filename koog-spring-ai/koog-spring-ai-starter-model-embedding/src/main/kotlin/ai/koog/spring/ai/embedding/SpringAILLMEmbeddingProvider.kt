@@ -28,6 +28,56 @@ public class SpringAILLMEmbeddingProvider(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : LLMEmbeddingProvider {
 
+    /**
+     * Java-friendly builder access.
+     */
+    public companion object {
+        /**
+         * Returns a new [Builder] for constructing a [SpringAILLMEmbeddingProvider].
+         * Intended for Java callers who want to avoid dealing with Kotlin default parameters.
+         *
+         * Usage:
+         * ```java
+         * SpringAILLMEmbeddingProvider.builder()
+         *     .embeddingModel(embeddingModel)
+         *     .dispatcher(dispatcher)
+         *     .build();
+         * ```
+         */
+        @JvmStatic
+        public fun builder(): Builder = Builder()
+    }
+
+    /**
+     * A Java-friendly builder for [SpringAILLMEmbeddingProvider].
+     *
+     * The only required property is [embeddingModel]; all others have sensible defaults.
+     */
+    public class Builder {
+        private var embeddingModel: EmbeddingModel? = null
+        private var dispatcher: CoroutineDispatcher = Dispatchers.IO
+
+        /** Sets the Spring AI [EmbeddingModel] to delegate to. Required. */
+        public fun embeddingModel(embeddingModel: EmbeddingModel): Builder =
+            apply { this.embeddingModel = embeddingModel }
+
+        /** Sets the [CoroutineDispatcher] used for blocking embedding calls. Default is [Dispatchers.IO]. */
+        public fun dispatcher(dispatcher: CoroutineDispatcher): Builder = apply { this.dispatcher = dispatcher }
+
+        /**
+         * Builds a new [SpringAILLMEmbeddingProvider] instance.
+         *
+         * @throws IllegalStateException if [embeddingModel] has not been set
+         */
+        public fun build(): SpringAILLMEmbeddingProvider {
+            val embeddingModel = requireNotNull(this.embeddingModel) { "embeddingModel must be set" }
+            return SpringAILLMEmbeddingProvider(
+                embeddingModel = embeddingModel,
+                dispatcher = dispatcher,
+            )
+        }
+    }
+
     override suspend fun embed(
         text: String,
         model: LLModel

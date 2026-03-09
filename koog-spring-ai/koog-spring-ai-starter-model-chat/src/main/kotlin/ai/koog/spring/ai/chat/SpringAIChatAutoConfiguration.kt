@@ -204,8 +204,9 @@ private fun createLLMClient(
         ?.let { beanFactory.getBean(it, ModerationModel::class.java) }
         ?: moderationModelProvider.ifUnique
     return SpringAILLMClient(
-        chatModel,
+        chatModel = chatModel,
         provider = resolvedProvider,
+        clock = kotlin.time.Clock.System,
         dispatcher = dispatcher,
         chatOptionsCustomizer = chatOptionsCustomizer ?: ChatOptionsCustomizer.NOOP,
         moderationModel = moderationModel,
