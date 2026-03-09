@@ -60,29 +60,78 @@ public class SpringAILLMClient @JvmOverloads constructor(
 ) : LLMClient() {
 
     /**
-     * Java-friendly static factory methods.
+     * Java-friendly builder access.
      */
     public companion object {
         /**
-         * Creates a [SpringAILLMClient] with only a [ChatModel], using all defaults.
-         * Intended for Java callers who want to avoid dealing with [kotlin.time.Clock].
+         * Returns a new [Builder] for constructing a [SpringAILLMClient].
+         * Intended for Java callers who want to avoid dealing with Kotlin default parameters
+         * and [kotlin.time.Clock].
          *
-         * @param chatModel the Spring AI chat model to delegate to
+         * Usage:
+         * ```java
+         * SpringAILLMClient.builder()
+         *     .chatModel(chatModel)
+         *     .moderationModel(moderationModel)
+         *     .clock(clock)
+         *     .dispatcher(dispatcher)
+         *     .chatOptionsCustomizer(customizer)
+         *     .build();
+         * ```
          */
         @JvmStatic
-        public fun create(chatModel: ChatModel): SpringAILLMClient =
-            SpringAILLMClient(chatModel)
+        public fun builder(): Builder = Builder()
+    }
+
+    /**
+     * A Java-friendly builder for [SpringAILLMClient].
+     *
+     * The only required property is [chatModel]; all others have sensible defaults.
+     */
+    public class Builder {
+        private var chatModel: ChatModel? = null
+        private var provider: LLMProvider = SpringAILLMProvider()
+        private var clock: kotlin.time.Clock = kotlin.time.Clock.System
+        private var dispatcher: CoroutineDispatcher = Dispatchers.IO
+        private var chatOptionsCustomizer: ChatOptionsCustomizer = ChatOptionsCustomizer.NOOP
+        private var moderationModel: ModerationModel? = null
+
+        /** Sets the Spring AI [ChatModel] to delegate to. Required. */
+        public fun chatModel(chatModel: ChatModel): Builder = apply { this.chatModel = chatModel }
+
+        /** Sets the [LLMProvider] to report for this client. Default is [SpringAILLMProvider]. */
+        public fun provider(provider: LLMProvider): Builder = apply { this.provider = provider }
+
+        /** Sets the clock used for creating response metadata timestamps. Default is [kotlin.time.Clock.System]. */
+        public fun clock(clock: kotlin.time.Clock): Builder = apply { this.clock = clock }
+
+        /** Sets the [CoroutineDispatcher] used for blocking model calls. Default is [Dispatchers.IO]. */
+        public fun dispatcher(dispatcher: CoroutineDispatcher): Builder = apply { this.dispatcher = dispatcher }
+
+        /** Sets the customizer for provider-specific [ChatOptions] tuning. Default is [ChatOptionsCustomizer.NOOP]. */
+        public fun chatOptionsCustomizer(chatOptionsCustomizer: ChatOptionsCustomizer): Builder =
+            apply { this.chatOptionsCustomizer = chatOptionsCustomizer }
+
+        /** Sets the optional Spring AI [ModerationModel] for content moderation. Default is `null`. */
+        public fun moderationModel(moderationModel: ModerationModel?): Builder =
+            apply { this.moderationModel = moderationModel }
 
         /**
-         * Creates a [SpringAILLMClient] with a [ChatModel] and [ModerationModel], using all other defaults.
-         * Intended for Java callers who want to avoid dealing with [kotlin.time.Clock].
+         * Builds a new [SpringAILLMClient] instance.
          *
-         * @param chatModel the Spring AI chat model to delegate to
-         * @param moderationModel the Spring AI moderation model to use
+         * @throws IllegalStateException if [chatModel] has not been set
          */
-        @JvmStatic
-        public fun create(chatModel: ChatModel, moderationModel: ModerationModel): SpringAILLMClient =
-            SpringAILLMClient(chatModel, moderationModel = moderationModel)
+        public fun build(): SpringAILLMClient {
+            val chatModel = requireNotNull(this.chatModel) { "chatModel must be set" }
+            return SpringAILLMClient(
+                chatModel = chatModel,
+                provider = provider,
+                clock = clock,
+                dispatcher = dispatcher,
+                chatOptionsCustomizer = chatOptionsCustomizer,
+                moderationModel = moderationModel,
+            )
+        }
     }
 
     override val clientName: String = "spring-ai-chat"
