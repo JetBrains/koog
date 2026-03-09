@@ -5,8 +5,13 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ModelSelection
+import ai.koog.prompt.executor.model.ModelSelector
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
@@ -309,13 +314,172 @@ class RoutingLLMPromptExecutorTest {
 
     @Test
     fun testCloseClosesAllClients() {
+        // Given
         val googleClient = MockLLMClient(provider = LLMProvider.Google)
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
 
+        // And
         val executor = RoutingLLMPromptExecutor(googleClient, openAIClient)
+
+        // When
         executor.close()
 
+        // Then
         assertTrue(googleClient.wasClosed())
         assertTrue(openAIClient.wasClosed())
     }
+
+    @Test
+    fun testExecuteWithModelSelectorUsesTopRoutableModel() = runTest {
+        // Given
+        val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
+        val googleClient = MockLLMClient(provider = LLMProvider.Google)
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(openAIClient, googleClient))
+
+        // And
+        val selector = selectorReturning(OpenAIModels.Chat.GPT4o, GoogleModels.Gemini2_0Flash)
+
+        // When
+        val response = executor.execute(prompt, selector)
+
+        // Then
+        assertEquals(openAIClient.executeResponse.single().content, response.single().content)
+    }
+
+    @Test
+    fun testExecuteWithModelSelectorSkipsUnroutableTopModelAndUsesNext() = runTest {
+        // Given
+        val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(openAIClient))
+
+        // And
+        val selector = selectorReturning(AnthropicModels.Sonnet_4, OpenAIModels.Chat.GPT4o)
+
+        // When
+        val response = executor.execute(prompt, selector)
+
+        // Then
+        assertEquals(openAIClient.executeResponse.single().content, response.single().content)
+    }
+
+    @Test
+    fun testExecuteWithModelSelectorUsesFallbackWhenNoRankedModelIsRoutable() = runTest {
+        // Given
+        val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
+        val googleClient = MockLLMClient(provider = LLMProvider.Google)
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(OpenAIModels.Chat.GPT4o)
+        val executor = RoutingLLMPromptExecutor(
+            clientRouter = SimpleTestRouter(openAIClient, googleClient),
+            fallback = fallback
+        )
+
+        // And
+        val selector = selectorReturning(AnthropicModels.Sonnet_4)
+
+        // When
+        val response = executor.execute(prompt, selector)
+
+        // Then
+        assertEquals(openAIClient.executeResponse.single().content, response.single().content)
+    }
+
+    @Test
+    fun testExecuteWithModelSelectorFailsWhenSelectionIsEmptyAndNoFallback() = runTest {
+        // Given
+        val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
+        val executor = RoutingLLMPromptExecutor(
+            clientRouter = SimpleTestRouter(openAIClient),
+            fallback = null
+        )
+
+        // And
+        val selector = ModelSelector { ModelSelection.EMPTY }
+
+        // When, Then
+        assertFailsWith<IllegalArgumentException> {
+            executor.execute(prompt, selector)
+        }
+    }
+
+    @Test
+    fun testExecuteWithModelSelectorReceivesExecutorModels() = runTest {
+        // Given
+        val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
+        val googleClient = MockLLMClient(provider = LLMProvider.Google)
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(openAIClient, googleClient))
+        var modelsSeenBySelector: List<LLModel> = emptyList()
+        val selector = ModelSelector { models ->
+            modelsSeenBySelector = models
+            ModelSelection.single(OpenAIModels.Chat.GPT4o)
+        }
+
+        // When
+        executor.execute(prompt, selector)
+
+        // Then
+        assertEquals(executor.models(), modelsSeenBySelector)
+    }
+
+    @Test
+    fun testExecuteStreamingWithModelSelectorSkipsUnroutableTopModelAndUsesNext() = runTest {
+        // Given
+        val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(openAIClient))
+
+        // And
+        val selector = selectorReturning(AnthropicModels.Sonnet_4, OpenAIModels.Chat.GPT4o)
+
+        // When
+        val response = executor.executeStreaming(prompt, selector)
+            .filterTextOnly()
+            .toList()
+
+        // Then
+        assertEquals(openAIClient.executeStreamingResponse.filterTextOnly().toList(), response)
+    }
+
+    @Test
+    fun testExecuteMultipleChoicesWithModelSelectorSkipsUnroutableTopModelAndUsesNext() = runTest {
+        // Given
+        val openAIChoices: List<LLMChoice> = listOf(
+            listOf(Message.Assistant("openai-choice", ResponseMetaInfo.Empty))
+        )
+        val openAIClient = MockLLMClient(
+            provider = LLMProvider.OpenAI,
+            executeMultipleContent = openAIChoices
+        )
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(openAIClient))
+
+        // And
+        val selector = selectorReturning(AnthropicModels.Sonnet_4, OpenAIModels.Chat.GPT4o)
+
+        // When
+        val choices = executor.executeMultipleChoices(prompt, selector, emptyList())
+
+        // Then
+        assertEquals(openAIChoices, choices)
+    }
+
+    @Test
+    fun testModerateWithModelSelectorSkipsUnroutableTopModelAndUsesNext() = runTest {
+        // Given
+        val openAIModeration = ai.koog.prompt.dsl.ModerationResult(isHarmful = true, categories = emptyMap())
+        val openAIClient = MockLLMClient(
+            provider = LLMProvider.OpenAI,
+            moderateContent = openAIModeration
+        )
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(openAIClient))
+
+        // And
+        val selector = selectorReturning(AnthropicModels.Sonnet_4, OpenAIModels.Chat.GPT4o)
+
+        // When
+        val result = executor.moderate(prompt, selector)
+
+        // Then
+        assertEquals(openAIModeration, result)
+    }
+
+    private fun selectorReturning(vararg ranked: LLModel): ModelSelector =
+        ModelSelector { ModelSelection(ranked.toList()) }
 }

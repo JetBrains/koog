@@ -9,8 +9,11 @@ public fun interface ModelSelector {
     /**
      * Produces model selection result for [models], ordered from best to worst.
      *
+     * The returned [ModelSelection] must be a subset of [models] — implementations must not
+     * introduce models that were not present in the input.
+     *
      * @param models Candidate models to select from.
-     * @return Selection result with ranked models.
+     * @return Selection result with ranked models, all drawn from [models].
      */
     public suspend fun select(models: List<LLModel>): ModelSelection
 }
@@ -50,6 +53,9 @@ public object ModelSelectors {
 
     /**
      * Builds selector that accepts only [model].
+     *
+     * [model] must be present in the candidate list passed to [ModelSelector.select];
+     * if it is absent, the selection result will be empty.
      *
      * @param model The only accepted model.
      * @return Selector configured with [ModelFilters.specific].

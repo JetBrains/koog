@@ -7,6 +7,8 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.ModelSelection
 import ai.koog.prompt.executor.model.ModelSelector
 import ai.koog.prompt.executor.model.SelectingPromptExecutor
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -239,6 +241,20 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     override suspend fun models(): List<LLModel> = modelsDiscovery.await()
+
+    override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        val client = clientRouter.clientFor(model)
+            ?: effectiveFallback?.first
+            ?: throw IllegalArgumentException("No client found for model: ${model.id}")
+        return client.getStandardJsonSchemaGenerator()
+    }
+
+    override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        val client = clientRouter.clientFor(model)
+            ?: effectiveFallback?.first
+            ?: throw IllegalArgumentException("No client found for model: ${model.id}")
+        return client.getBasicJsonSchemaGenerator()
+    }
 
     override fun close() {
         modelsDiscoveryScope.cancel()
