@@ -28,6 +28,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(libs.androidx.datastore.core.okio)
             implementation(libs.jetbrains.compose.animation)
             implementation(libs.jetbrains.compose.animation.graphics)
             implementation(libs.jetbrains.compose.components.resources)
@@ -57,7 +58,6 @@ kotlin {
         }
 
         androidMain.dependencies {
-            implementation(libs.androidx.datastore.preferences)
             implementation(libs.jetbrains.compose.ui.tooling)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
@@ -65,13 +65,11 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation(libs.androidx.datastore.preferences)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.apache5)
         }
 
         iosMain.dependencies {
-            implementation(libs.androidx.datastore.preferences)
             implementation(libs.ktor.client.darwin)
         }
 
