@@ -323,34 +323,18 @@ public inline fun <reified T> nodeLLMRequestStructured(
     name: String? = null,
     examples: List<T> = emptyList(),
     fixingParser: StructureFixingParser? = null
-): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> = nodeLLMRequestStructured(name, examples, fixingParser,
-    typeToken<T>()
-)
-
-/**
- * [InternalAgentsApi] method. Requests structured data from the LLM with optional error correction capabilities.
- * */
-@AIAgentBuilderDslMarker
-@InternalAgentsApi
-public fun <T> nodeLLMRequestStructured(
-    name: String? = null,
-    examples: List<T> = emptyList(),
-    fixingParser: StructureFixingParser? = null,
-    typeToken: TypeToken
-): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> =
-    node(name) { message ->
-        llm.writeSession {
-            appendPrompt {
-                user(message)
-            }
-
-            requestLLMStructured<T>(
-                examples = examples,
-                fixingParser = fixingParser,
-                typeToken = typeToken
-            )
+): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> = node(name) { message ->
+    llm.writeSession {
+        appendPrompt {
+            user(message)
         }
+
+        requestLLMStructured<T>(
+            examples = examples,
+            fixingParser = fixingParser
+        )
     }
+}
 
 /**
  * A node that appends a user message to the LLM prompt, streams LLM response and transforms the stream data.

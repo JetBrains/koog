@@ -3,7 +3,6 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.agent.AgentSubgraphBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor

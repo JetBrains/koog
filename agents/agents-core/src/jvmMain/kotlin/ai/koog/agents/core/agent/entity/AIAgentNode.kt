@@ -28,7 +28,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResultOnlyCallingTools
 import ai.koog.agents.core.dsl.extension.requestStreamingImpl
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.ext.llm.choice.ChoiceSelectionStrategy
@@ -42,7 +41,6 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
-import ai.koog.serialization.TypeCapture
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.Flow
@@ -50,7 +48,6 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.asPublisher
 import org.reactivestreams.Publisher
 import kotlin.random.Random
-import kotlin.reflect.KType
 
 /**
  * Represents a simple implementation of an AI agent node, encapsulating a specific execution
@@ -101,6 +98,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmRequest(
             allowToolCalls: Boolean = true,
             name: String? = null,
@@ -119,10 +117,11 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun <T : Any> doNothing(
             clazz: Class<T>,
             name: String? = null
-        ): AIAgentNodeBase<T, T> = builder(name).withInput(clazz).withOutput(clazz).withAction { input, _ -> input }
+        ): AIAgentNode<T, T> = builder(name).withInput(clazz).withOutput(clazz).withAction { input, _ -> input }.build()
 
         /**
          * Creates an AI agent node that processes language model requests while exclusively enabling tool calls during execution.
@@ -133,6 +132,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmRequestOnlyCallingTools(
             name: String? = null
         ): AIAgentNodeBase<String, Message.Response> {
@@ -150,6 +150,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         @Deprecated("Use llmRequestOnlyCallingTools instead")
         public fun llmSendMessageOnlyCallingTools(
             name: String? = null
@@ -168,6 +169,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmRequestMultipleOnlyCallingTools(
             name: String? = null
         ): AIAgentNodeBase<String, List<Message.Response>> {
@@ -185,6 +187,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmRequestForceOneTool(
             tool: ToolDescriptor,
             name: String? = null
@@ -204,6 +207,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         @Deprecated("Use llmRequestForceOneTool instead")
         public fun llmSendMessageForceOneTool(
             tool: ToolDescriptor,
@@ -224,6 +228,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmRequestForceOneTool(
             tool: Tool<*, *>,
             name: String? = null
@@ -243,6 +248,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         @Deprecated("Use llmRequestForceOneTool instead")
         public fun llmSendMessageForceOneTool(
             tool: Tool<*, *>,
@@ -262,6 +268,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmModerateMessage(
             moderatingModel: LLModel? = null,
             includeCurrentPrompt: Boolean = false,
@@ -285,6 +292,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun <T : Any> llmRequestStreaming(
             transformStreamData: (Publisher<StreamFrame>) -> Publisher<T>,
             outputClass: Class<T>,
@@ -310,6 +318,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmRequestStreaming(
             structureDefinition: StructureDefinition? = null,
             name: String? = null
@@ -326,6 +335,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmRequestMultiple(
             name: String? = null
         ): AIAgentNodeBase<String, List<Message.Response>> {
@@ -342,6 +352,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun executeTool(
             name: String? = null
         ): AIAgentNodeBase<Message.Tool.Call, ReceivedToolResult> {
@@ -358,6 +369,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmSendToolResult(
             name: String? = null
         ): AIAgentNodeBase<ReceivedToolResult, Message.Response> {
@@ -375,6 +387,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmSendToolResultOnlyCallingTools(
             name: String? = null
         ): AIAgentNodeBase<List<ReceivedToolResult>, Message.Response> {
@@ -392,6 +405,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun executeMultipleTools(
             parallelTools: Boolean = false,
             name: String? = null
@@ -410,6 +424,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun executeMultipleToolsAndSendResults(
             parallelTools: Boolean = false,
             name: String? = null
@@ -427,6 +442,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmSendMultipleToolResults(
             name: String? = null
         ): AIAgentNodeBase<List<ReceivedToolResult>, List<Message.Response>> {
@@ -445,6 +461,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmSendMultipleToolResultsOnlyCallingTools(
             name: String? = null
         ): AIAgentNodeBase<List<ReceivedToolResult>, List<Message.Response>> {
@@ -463,6 +480,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun <T : Any> llmRequestStructured(
             config: StructuredRequestConfig<T>,
             fixingParser: StructureFixingParser? = null,
@@ -480,6 +498,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun lLMSendResultsMultipleChoices(
             name: String? = null
         ): AIAgentNodeBase<List<ReceivedToolResult>, List<LLMChoice>> {
@@ -495,6 +514,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @AIAgentBuilderDslMarker
+        @JvmStatic
         public fun selectLLMChoice(
             choiceSelectionStrategy: ChoiceSelectionStrategy,
             name: String? = null
@@ -513,26 +533,8 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          */
         @JavaAPI
         @JvmOverloads
+        @JvmStatic
         public fun llmCompressHistory(name: String? = null): CompressHistoryNodeBuilder =
             CompressHistoryNodeBuilder(name ?: "compress-history-${Random.nextInt()}")
-
-        /**
-         * Creates an AI agent node that performs a structured request using the given tool.
-         *
-         * @param name Optional name of the request. Can be used to identify or label the request.
-         * @param tool The tool used to perform the structured request. It contains argument and result type information.
-         * @param doAppendPrompt Indicates whether to append the prompt during execution. Defaults to true.
-         * @return An AI agent node that is configured to use the specified tool and performs structured requests.
-         */
-        @JavaAPI
-        @JvmOverloads
-        public fun <ToolArg, TResult> llmRequestStructured(
-            tool: Tool<ToolArg, TResult>,
-            doAppendPrompt: Boolean = true,
-            name: String? = null
-        ): AIAgentNodeBase<ToolArg, SafeTool.Result<TResult>> {
-            val node by nodeLLMRequestStructured(name, tool, doAppendPrompt)
-            return
-        }
     }
 }

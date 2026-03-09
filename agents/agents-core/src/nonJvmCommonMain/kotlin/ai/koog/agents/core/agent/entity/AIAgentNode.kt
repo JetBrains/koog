@@ -1,6 +1,7 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.serialization.TypeToken
 import kotlin.reflect.KType
 
 /**
@@ -16,8 +17,8 @@ import kotlin.reflect.KType
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual open class AIAgentNode<TInput, TOutput> internal actual constructor(
     name: String,
-    inputType: KType,
-    outputType: KType,
+    inputType: TypeToken,
+    outputType: TypeToken,
     execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
 ) : SimpleAIAgentNodeImpl<TInput, TOutput>(
     name,

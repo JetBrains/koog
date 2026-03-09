@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
+import ai.koog.serialization.TypeToken
 import kotlin.reflect.KType
 
 /**
@@ -56,7 +57,7 @@ public class StrategyCompletedContext(
     public val strategy: AIAgentStrategy<*, *, *>,
     public val context: AIAgentContext,
     public val result: Any?,
-    public val resultType: KType,
+    public val resultType: TypeToken,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyCompleted
 

@@ -2,6 +2,7 @@ package ai.koog.agents.core.feature.debugger
 
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.serialization.JSONSerializer
 import kotlin.time.Duration
 
 /**
@@ -11,7 +12,9 @@ import kotlin.time.Duration
  * debugger-related parameters. It allows setting and retrieving the port
  * number used by the debugger.
  */
-public class DebuggerConfig : FeatureConfig() {
+public class DebuggerConfig(
+    internal val serializer: JSONSerializer
+) : FeatureConfig() {
 
     private var _port: Int? = null
 

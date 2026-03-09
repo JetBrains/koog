@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.retry
 
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -15,7 +16,7 @@ import kotlin.time.Duration.Companion.seconds
  * @property retryablePatterns Patterns to identify retryable errors
  * @property retryAfterExtractor Optional extractor for retry-after hints
  */
-public data class RetryConfig(
+public data class RetryConfig @JvmOverloads constructor(
     val maxAttempts: Int = 3,
     val initialDelay: Duration = 1.seconds,
     val maxDelay: Duration = 30.seconds,

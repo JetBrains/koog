@@ -44,6 +44,8 @@ import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.prompt.llm.toModelInfo
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
 import kotlin.reflect.KType
@@ -65,7 +67,10 @@ import kotlin.time.toDuration
  * @property awaitInitialConnectionTimeout The timeout duration for the debugger server to wait for a connection.
  */
 @ExperimentalAgentsApi
-public class Debugger(public val port: Int, public val awaitInitialConnectionTimeout: Duration? = null) {
+public class Debugger(
+    public val port: Int,
+    public val awaitInitialConnectionTimeout: Duration? = null
+) {
 
     /**
      * Companion object implementing agent feature, handling [Debugger] creation and installation.
@@ -104,13 +109,13 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,
-        ): DebuggerConfig = DebuggerConfig()
+        ): DebuggerConfig = DebuggerConfig(agentConfig.serializer)
 
         override fun install(config: DebuggerConfig, pipeline: AIAgentGraphPipeline): Debugger {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
 
             val writer = configureRemoteWriter(config)
-            installGraphPipeline(pipeline, writer)
+            installGraphPipeline(pipeline, writer, config.serializer)
 
             return Debugger(
                 port = writer.server.connectionConfig.port,
@@ -412,6 +417,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
         private fun installGraphPipeline(
             pipeline: AIAgentGraphPipeline,
             writer: DebuggerFeatureMessageRemoteWriter,
+            serializer: JSONSerializer,
         ) {
             installCommon(pipeline, writer)
 
@@ -423,7 +429,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -436,8 +442,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
-                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, serializer),
+                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType, serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -449,7 +455,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, serializer),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -466,7 +472,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -478,8 +484,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
-                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, serializer),
+                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType, serializer),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -491,7 +497,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, serializer),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -524,11 +530,11 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
         /**
          * Retrieves the JSON representation of the given data based on its type.
          */
-        private fun nodeDataToJsonElement(data: Any?, dataType: KType): JsonElement? {
+        private fun nodeDataToJsonElement(data: Any?, dataType: TypeToken, serializer: JSONSerializer): JsonElement? {
             data ?: return null
 
             @OptIn(InternalAgentsApi::class)
-            return SerializationUtils.encodeDataToJsonElementOrDefault(data, dataType)
+            return SerializationUtils.encodeDataToJsonElementOrDefault(data, dataType, serializer)
         }
 
         //endregion Private Methods

@@ -337,23 +337,25 @@ public class TypedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
     private val outputClass: Class<Output> = (outputOption as OutputOption.ByClass<Output>).outputClass
 
     /**
-     * Defines and builds a subgraph for an AI agent using the provided graph-building logic.
+     * Defines an AI Agent subgraph by applying the provided graph building action.
      *
-     * @param buildSubgraph The logic to build the subgraph, represented as a `GraphBuilderAction`.
-     * It provides the graph instance to be configured by the caller.
-     * @return An instance of `AIAgentSubgraph` representing the configured subgraph.
+     * @param buildSubgraph The action that builds and configures the subgraph using
+     *                      a `GraphBuilderAction` implementation. It allows customizing
+     *                      the graph strategy for the specified input and output types.
+     * @return An instance of `DefinedAIAgentSubgraphBuilder` configured with the specified
+     *         subgraph logic and type information.
      */
-    public fun define(buildSubgraph: GraphBuilderAction<Input, Output>): AIAgentSubgraph<Input, Output> {
-        val graph = GraphStrategyBuilder(
-            strategyName = name ?: "subgraph-${Random.nextInt()}",
+    public fun define(buildSubgraph: GraphBuilderAction<Input, Output>): DefinedAIAgentSubgraphBuilder<Input, Output> =
+        DefinedAIAgentSubgraphBuilder(
+            name,
+            toolSelectionStrategy,
+            llmModel,
+            llmParams,
+            responseProcessor,
+            inputClass,
+            outputClass,
+            buildSubgraph
         )
-            .withInput(inputClass)
-            .withOutput(outputClass)
-
-        buildSubgraph.build(graph)
-
-        return graph.build()
-    }
 
     /**
      * Configures a task to be executed as part of the subgraph.
@@ -392,6 +394,80 @@ public class TypedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
             outputOption,
             defineTask = { input, _ -> defineTask.execute(input) }
         )
+}
+
+/**
+ * Builder class for creating a defined AI Agent subgraph with specific input and output types.
+ *
+ * This class allows customization of subgraph configurations, such as the selection strategy for tools,
+ * language model parameters, and response processing. The subgraph's internal logic is defined
+ * using the `buildSubgraph` action passed to the constructor.
+ *
+ * @param Input The type of the input data for the subgraph.
+ * @param Output The type of the output data for the subgraph.
+ * @constructor Initializes the builder with a name, tool selection strategy, LLM configuration,
+ * response processor, input/output types, and a subgraph build action.
+ * @param name The name of the subgraph.
+ * @param toolSelectionStrategy Strategy to determine which tools are included in this subgraph.
+ * Defaults to using all tools.
+ * @param llmModel The Large Language Model (LLM) to use for generating responses, or null if no model is provided.
+ * @param llmParams Optional parameters for configuring the behavior of the LLM, such as temperature or context length.
+ * @param responseProcessor A processor for handling and modifying the response after the subgraph's execution.
+ * @param inputClass The class representing the input type for the subgraph.
+ * @param outputClass The class representing the output type for the subgraph.
+ * @param buildSubgraph The action that defines the logic for constructing the subgraph.
+ */
+@JavaAPI
+public class DefinedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
+    name: String?,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    responseProcessor: ResponseProcessor? = null,
+    inputClass: Class<Input>,
+    outputClass: Class<Output>,
+    private val buildSubgraph: GraphBuilderAction<Input, Output>
+) : TypedAIAgentSubgraphBuilderBase<Input, Output, TypedAIAgentSubgraphBuilder<Input, Output>>(
+    name,
+    toolSelectionStrategy,
+    llmModel,
+    llmParams,
+    responseProcessor,
+    inputClass,
+    OutputOption.ByClass(outputClass)
+) {
+    /**
+     * Holds the `Class` object representing the output type expected from the operation.
+     *
+     * This property is initialized by extracting the `outputClass` field from the `OutputOption.ByClass`
+     * instance associated with the builder. It ensures that the defined output type is carried through
+     * the subgraph construction process, enabling type safety and proper resolution of the output type
+     * in the AI agent graph.
+     *
+     * @property outputClass The `Class` instance representing the type of the output.
+     */
+    private val outputClass: Class<Output> = (outputOption as OutputOption.ByClass<Output>).outputClass
+
+    /**
+     * Builds and returns an instance of AIAgentSubgraphBase configured with the specified input and output types.
+     *
+     * The method initializes a graph strategy with a name, input class, and output class.
+     * It leverages the provided `buildSubgraph` to define the logic for the subgraph creation.
+     * The resulting graph is finalized and returned as an AIAgentSubgraphBase instance.
+     *
+     * @return A configured instance of AIAgentSubgraphBase with the specified input and output types.
+     */
+    public fun build(): AIAgentSubgraphBase<Input, Output> {
+        val graph = GraphStrategyBuilder(
+            strategyName = name ?: "subgraph-${Random.nextInt()}",
+        )
+            .withInput(inputClass)
+            .withOutput(outputClass)
+
+        buildSubgraph.build(graph)
+
+        return graph.build()
+    }
 }
 
 /**

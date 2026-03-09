@@ -149,10 +149,7 @@ public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilde
         build: BuilderChainAction<GraphStrategyBuilder, AIAgentGraphStrategy<Input, Output>>
     ): GraphAgentBuilder<Input, Output> = graphStrategy(
         build.configure(
-            GraphStrategyBuilder(
-                strategyName = name,
-                agentConfig = delegate.agentConfig
-            )
+            GraphStrategyBuilder(strategyName = name)
         )
     )
 

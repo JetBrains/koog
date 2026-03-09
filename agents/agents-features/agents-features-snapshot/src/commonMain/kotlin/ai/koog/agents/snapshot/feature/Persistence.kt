@@ -9,6 +9,7 @@ import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.agent.session.feature
@@ -19,6 +20,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
+import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
@@ -153,8 +155,8 @@ public class Persistence(
     }
 
     private fun isTechnicalNode(nodeId: String): Boolean =
-        nodeId.startsWith(AIAgentSubgraph.FINISH_NODE_PREFIX) ||
-            nodeId.startsWith(AIAgentSubgraph.START_NODE_PREFIX)
+        nodeId.startsWith(AIAgentSubgraphBase.FINISH_NODE_PREFIX) ||
+            nodeId.startsWith(AIAgentSubgraphBase.START_NODE_PREFIX)
 
     /**
      * Creates a checkpoint of the agent's current state.
@@ -221,12 +223,12 @@ public class Persistence(
         agentContext: AIAgentContext,
         nodePath: String,
         lastOutput: Any?,
-        lastOutputType: KType,
+        lastOutputType: TypeToken,
         version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
         val outputJson = try {
-            agentContext.config.serializer.encodeToJSONElement(lastOutput, typeToken(lastOutputType))
+            agentContext.config.serializer.encodeToJSONElement(lastOutput, lastOutputType)
         } catch (_: Exception) {
             null
         }

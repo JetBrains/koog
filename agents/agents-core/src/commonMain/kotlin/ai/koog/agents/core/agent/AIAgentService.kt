@@ -433,8 +433,8 @@ public operator fun AIAgentService.Companion.invoke(
     promptExecutor = promptExecutor,
     agentConfig = agentConfig,
     strategy = strategy,
-    inputType = typeOf<String>(),
-    outputType = typeOf<String>(),
+    inputType = typeToken<String>(),
+    outputType = typeToken<String>(),
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
 )

@@ -9,6 +9,8 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -533,7 +535,7 @@ class SerializationUtilsTest {
 
         val actualString =
             @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToStringOrDefault(data, typeOf<TestData>())
+            SerializationUtils.encodeDataToStringOrDefault(data, typeToken<TestData>())
 
         val expectedJsonElement = JsonObject(
             mapOf(

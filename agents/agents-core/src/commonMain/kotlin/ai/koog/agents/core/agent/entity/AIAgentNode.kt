@@ -21,7 +21,7 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param TOutput The type of output data this node produces.
  */
 @OptIn(ExperimentalUuidApi::class)
-public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
+public abstract class AIAgentNodeBase<in TInput, TOutput> internal constructor() {
     /**
      * The name of the AI agent node.
      * This property serves as a unique identifier for the node within the strategy graph
@@ -265,7 +265,7 @@ public class StartNode<TInput> internal constructor(
     subgraphName: String? = null,
     type: TypeToken
 ) : AIAgentNode<TInput, TInput>(
-    name = subgraphName?.let { "${AIAgentSubgraph.START_NODE_PREFIX}$it" } ?: AIAgentSubgraph.START_NODE_PREFIX,
+    name = subgraphName?.let { "${AIAgentSubgraphBase.START_NODE_PREFIX}$it" } ?: AIAgentSubgraphBase.START_NODE_PREFIX,
     inputType = type,
     outputType = type,
     execute = { input -> input }
@@ -312,7 +312,8 @@ public class FinishNode<TOutput> internal constructor(
     subgraphName: String? = null,
     type: TypeToken,
 ) : AIAgentNode<TOutput, TOutput>(
-    name = subgraphName?.let { "${AIAgentSubgraph.FINISH_NODE_PREFIX}$it" } ?: AIAgentSubgraph.FINISH_NODE_PREFIX,
+    name = subgraphName?.let { "${AIAgentSubgraphBase.FINISH_NODE_PREFIX}$it" }
+        ?: AIAgentSubgraphBase.FINISH_NODE_PREFIX,
     inputType = type,
     outputType = type,
     execute = { input -> input }

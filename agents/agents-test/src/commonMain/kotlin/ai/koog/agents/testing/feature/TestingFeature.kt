@@ -9,11 +9,13 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategyBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
@@ -36,6 +38,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
 import kotlin.time.Clock
@@ -58,7 +61,7 @@ public sealed class NodeReference<Input, Output> {
      * @return An instance of [AIAgentNodeBase], representing the resolved node within the subgraph that corresponds
      *         to the current node reference.
      */
-    public abstract fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output>
+    public abstract fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output>
 
     /**
      * The `Start` class is a specialized type of `NodeReference` that serves as a reference to
@@ -75,7 +78,7 @@ public sealed class NodeReference<Input, Output> {
          * @return The starting node of the subgraph cast to AIAgentNodeBase<Input, Input>.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Input> =
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Input> =
             subgraph.start as AIAgentNodeBase<Input, Input>
     }
 
@@ -94,7 +97,7 @@ public sealed class NodeReference<Input, Output> {
          * @return The finishing node of the subgraph, cast to the expected type `AIAgentNodeBase<Output, Output>`.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Output, Output> =
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Output, Output> =
             subgraph.finish as AIAgentNodeBase<Output, Output>
     }
 
@@ -116,7 +119,7 @@ public sealed class NodeReference<Input, Output> {
          * @throws IllegalArgumentException If no node with the specified name is found within the subgraph.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
             fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
                 if (node is FinishNode) return null
@@ -153,7 +156,7 @@ public sealed class NodeReference<Input, Output> {
          * @return The resolved subgraph of type `AIAgentSubgraph<Input, Output>`.
          * @throws IllegalArgumentException If the resolved subgraph does not match the expected type constraints.
          */
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentSubgraph<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentSubgraphBase<Input, Output> {
             val result = super.resolve(subgraph)
 
             if (result !is AIAgentSubgraph<Input, Output>) {
@@ -186,12 +189,12 @@ public sealed class NodeReference<Input, Output> {
          * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentGraphStrategy<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentGraphStrategyBase<Input, Output> {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
             }
 
-            if (subgraph !is AIAgentGraphStrategy) {
+            if (subgraph !is AIAgentGraphStrategy<*, *>) {
                 throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
             }
 
@@ -760,7 +763,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
-                    agentInputType: KType?,
+                    agentInputType: TypeToken?,
                     config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
@@ -869,7 +872,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
-                    agentInputType: KType?,
+                    agentInputType: TypeToken?,
                     config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
@@ -986,7 +989,7 @@ public class Testing {
         private suspend fun <Input, Output> verifyGraph(
             agent: GraphAIAgent<Input, Output>,
             graphAssertions: GraphAssertions,
-            graph: AIAgentSubgraph<*, *>,
+            graph: AIAgentSubgraphBase<*, *>,
             pipeline: AIAgentPipeline,
             config: Config
         ) {

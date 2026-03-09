@@ -500,7 +500,7 @@ public inline fun <reified Input : Any> subgraphWithVerification(
     responseProcessor: ResponseProcessor? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraphWithVerification(
-    inputType = typeOf<Input>(),
+    inputType = typeToken<Input>(),
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
     llmParams = llmParams,

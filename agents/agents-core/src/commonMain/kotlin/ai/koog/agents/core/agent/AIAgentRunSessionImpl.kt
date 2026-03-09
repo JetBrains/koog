@@ -10,6 +10,7 @@ import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.runCatchingCancellable
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KLogger
 import kotlin.reflect.typeOf
 
@@ -81,7 +82,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                             strategy,
                             context,
                             result,
-                            typeOf<Any?>()
+                            typeToken<Any?>()
                         )
 
                         result

@@ -52,7 +52,7 @@ public class AgentEdgeBuilder {
  * @property fromNode The source node from which the partial edge originates.
  */
 @JavaAPI
-public class PartialAgentEdgeBuilder<IncomingInput, IncomingOutput>(
+public open class PartialAgentEdgeBuilder<IncomingInput, IncomingOutput>(
     private val fromNode: AIAgentNodeBase<IncomingInput, IncomingOutput>
 ) {
     /**
@@ -67,7 +67,7 @@ public class PartialAgentEdgeBuilder<IncomingInput, IncomingOutput>(
      *         and its data flow properties. This builder establishes the connection between the
      *         current node's output and the specified node's input.
      */
-    public fun <OutgoingInput, OutgoingOutput> to(
+    public open fun <OutgoingInput, OutgoingOutput> to(
         toNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>
     ): FullAgentEdgeBuilder<IncomingOutput, IncomingOutput, OutgoingInput> = FullAgentEdgeBuilder(
         fromNode = fromNode,
@@ -88,16 +88,14 @@ public class PartialAgentEdgeBuilder<IncomingInput, IncomingOutput>(
      *         of the edge and its data flow properties. This builder establishes the connection
      *         between the current node's output and the specified node's input.
      */
-    public fun <OutgoingOutput> to(
+    public open fun <OutgoingOutput> to(
         toNode: AIAgentNodeBase<in IncomingOutput, OutgoingOutput>
-    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, IncomingOutput, in IncomingOutput> =
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, IncomingOutput, IncomingOutput> =
         CompatibleFullAgentEdgeBuilder(
             fromNode = fromNode,
             toNode = toNode,
             forwardOutputComposition = { _, output -> Some(output) }
         )
-
-
 }
 
 /**
@@ -176,7 +174,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
 
 
     /**
-     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     * Transforms the intermediate output of the [AIAgentNode] by applying a given transformation block.
      *
      * @param transformation A contextual transformation function that takes an intermediate output
      *                       and an AI agent graph context as input, and produces a compatible output.
@@ -196,7 +194,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     )
 
     /**
-     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     * Transforms the intermediate output of the [AIAgentNode] by applying a given transformation block.
      *
      * @param transformation A functional interface that defines how to transform intermediate outputs
      *                        of type [IntermediateOutput] into compatible outputs of type [CompatibleOutput].
@@ -216,7 +214,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     )
 
     /**
-     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     * Transforms the intermediate output of the [AIAgentNode] by applying a given transformation block.
      *
      * @param transformation A contextual transformation function that takes an intermediate output
      *                       and an AI agent graph context as input, and produces a compatible output.
@@ -236,7 +234,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     )
 
     /**
-     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     * Transforms the intermediate output of the [AIAgentNode] by applying a given transformation block.
      *
      * @param transformation A functional interface that defines how to transform intermediate outputs
      *                        of type [IntermediateOutput] into compatible outputs of type [CompatibleOutput].
@@ -254,15 +252,37 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
             }
         }
     )
+
+    /**
+     * Filters the outputs of the current processing edge based on their type, forwarding only those
+     * that are instances of the specified class.
+     *
+     * @param clazz The class instance used to check the type of intermediate outputs. Only outputs
+     *              that are instances of this class will be forwarded.
+     * @return A builder instance allowing further configuration or chaining of processing steps
+     *         within the agent's processing graph.
+     */
+    public open fun <OutputSubtype : IntermediateOutput> onIsInstance(
+        clazz: Class<OutputSubtype>
+    ): FullAgentEdgeBuilder<IncomingOutput, OutputSubtype, OutgoingInput> =
+        onCondition { clazz.isInstance(it) }.transformed<OutputSubtype> { it as OutputSubtype }
+
+    /**
+     * Filters intermediate outputs to only process those that are instances of the specified class type.
+     *
+     * @param clazz The `Class` object representing the type to filter by and cast to.
+     * @return A builder instance configured to handle the filtered and casted outputs,
+     *         enabling further processing or chaining of transformations.
+     */
+    public open fun <CompatibleOutput : OutgoingInput> onIsInstance(
+        clazz: Class<CompatibleOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
+        onCondition { clazz.isInstance(it) }.transformed { it as CompatibleOutput }
 }
 
 /**
  * Constructs a compatible full agent edge between two AI agent nodes, enabling the flow
  * and transformation of data from the output of one node to the input of another.
- *
- * This builder ensures that the output type of the source node is compatible with the input
- * type of the destination node, using a provided transformation function to adapt the data
- * during the flow. The compatibility is enforced at runtime when the edge is constructed.
  *
  * @param IncomingOutput The type of the output data produced by the source node.
  * @param CompatibleOutput An intermediate type ensuring compatibility between the source node
@@ -302,10 +322,14 @@ public open class CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutpu
         return AIAgentEdgeBuilder(intermediate).build()
     }
 
-    override fun onCondition(condition: ContextualCondition<CompatibleOutput>): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
+    override fun onCondition(
+        condition: ContextualCondition<CompatibleOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
         CompatibleFullAgentEdgeBuilder(super.onCondition(condition))
 
-    override fun onCondition(condition: SimpleCondition<CompatibleOutput>): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
+    override fun onCondition(
+        condition: SimpleCondition<CompatibleOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
         CompatibleFullAgentEdgeBuilder(super.onCondition(condition))
 }
 
@@ -381,4 +405,3 @@ public fun interface SimpleTransformation<Output, NewOutput> {
      */
     public operator fun invoke(output: Output): NewOutput
 }
-

@@ -152,7 +152,7 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
      * @return An [AIAgentNodeBase] instance responsible for compressing history based on the
      * specified inputs and configuration within the strategy graph.
      */
-    public fun build(): AIAgentNodeBase<Input, Input> = AIAgentNode.builder(name)
+    public fun build(): AIAgentNode<Input, Input> = AIAgentNode.builder(name)
         .withInput<Input>(inputTypeToken)
         .withOutput<Input>(inputTypeToken)
         .executeOnLLMDispatcher { input ->
@@ -315,19 +315,66 @@ public class TypedAIAgentNodeBuilder<Input : Any, Output : Any>(
     private val outputTypeToken: TypeToken
 ) {
     /**
-     * Creates and returns an instance of [AIAgentNode] that encapsulates the provided execution logic.
+     * Assigns a contextual action to the node being built, specifying the logic that should be executed
+     * when the node processes an input within the AI agent graph context.
      *
-     * This method binds a specified action to an AI agent node, enabling the node to process input of type [Input]
-     * and generate output of type [Output] within the context of an [AIAgentGraphContextBase].
-     *
-     * @param nodeAction A lambda function that represents the processing logic. It takes two parameters:
-     * - [Input]: The input data for the node.
-     * - [AIAgentGraphContextBase]: The execution context in which the action is performed.
-     * The function returns a result of type [Output].
-     *
-     * @return A new instance of [AIAgentNode] configured with the provided processing logic, ready for execution within an AI graph.
+     * @param nodeAction The [ContextualAction] to execute. This defines how the node processes input
+     *                   and produces the corresponding output within the provided [AIAgentGraphContextBase].
+     * @return A new instance of `DefinedAIAgentNodeBuilder` configured with the specified contextual action.
      */
-    public fun withAction(nodeAction: ContextualAction<Input, Output>): AIAgentNode<Input, Output> {
+    public fun withAction(nodeAction: ContextualAction<Input, Output>): DefinedAIAgentNodeBuilder<Input, Output> =
+        DefinedAIAgentNodeBuilder(
+            name,
+            inputTypeToken,
+            outputTypeToken,
+            nodeAction
+        )
+
+    internal fun executeOnLLMDispatcher(
+        asyncAction: suspend AIAgentGraphContextBase.(Input) -> Output
+    ): AIAgentNode<Input, Output> = withAction { input, ctx ->
+        ctx.config.runOnLLMDispatcher {
+            ctx.asyncAction(input)
+        }
+    }.build()
+
+    @OptIn(InternalAgentsApi::class)
+    internal fun executeOnStrategyDispatcher(
+        asyncAction: suspend AIAgentGraphContextBase.(Input) -> Output
+    ): AIAgentNode<Input, Output> = withAction { input, ctx ->
+        ctx.config.runOnStrategyDispatcher {
+            ctx.asyncAction(input)
+        }
+    }.build()
+}
+
+/**
+ * A builder class responsible for constructing instances of [AIAgentNode] with specific input and output types,
+ * a unique node name, and a defined contextual action to be executed within an AI agent graph context.
+ *
+ * @param Input The type of the input data processed by the constructed `AIAgentNode`.
+ * @param Output The type of the output data produced by the constructed `AIAgentNode`.
+ * @constructor Initializes a new instance of the builder with the specified node name, input/output type tokens,
+ *              and the contextual action to execute in the node.
+ * @property name An optional name for the `AIAgentNode`. If not specified, a default name is generated.
+ * @property inputTypeToken A `TypeToken` representing the input type.
+ * @property outputTypeToken A `TypeToken` representing the output type.
+ * @property nodeAction A `ContextualAction` defining the action to execute within the AI agent graph context.
+ */
+@JavaAPI
+public class DefinedAIAgentNodeBuilder<Input : Any, Output : Any>(
+    private val name: String?,
+    private val inputTypeToken: TypeToken,
+    private val outputTypeToken: TypeToken,
+    private val nodeAction: ContextualAction<Input, Output>
+) {
+    /**
+     * Builds and returns an instance of `AIAgentNode` configured with the specified parameters.
+     * The node will execute the provided `ContextualAction` with the input data when invoked.
+     *
+     * @return A fully configured instance of `AIAgentNode` parameterized with `Input` and `Output` types.
+     */
+    public fun build(): AIAgentNode<Input, Output> {
         return AIAgentNode(
             name ?: "node-${Random.nextInt()}",
             inputTypeToken,
@@ -336,23 +383,6 @@ public class TypedAIAgentNodeBuilder<Input : Any, Output : Any>(
             this.config.submitToMainDispatcher {
                 nodeAction.execute(input, this)
             }
-        }
-    }
-
-    internal fun executeOnLLMDispatcher(
-        asyncAction: suspend AIAgentGraphContextBase.(Input) -> Output
-    ): AIAgentNode<Input, Output> = withAction { input, ctx ->
-        ctx.config.runOnLLMDispatcher {
-            ctx.asyncAction(input)
-        }
-    }
-
-    @OptIn(InternalAgentsApi::class)
-    internal fun executeOnStrategyDispatcher(
-        asyncAction: suspend AIAgentGraphContextBase.(Input) -> Output
-    ): AIAgentNode<Input, Output> = withAction { input, ctx ->
-        ctx.config.runOnStrategyDispatcher {
-            ctx.asyncAction(input)
         }
     }
 }

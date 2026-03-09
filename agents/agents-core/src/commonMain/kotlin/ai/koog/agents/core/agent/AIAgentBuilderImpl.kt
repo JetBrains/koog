@@ -15,6 +15,7 @@ import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.serialization.typeToken
 import kotlin.reflect.typeOf
 import kotlin.time.Clock
 
@@ -155,8 +156,8 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         configure: ConfigureAction<TConfig>
     ): GraphAgentBuilder<String, String> = GraphAgentBuilder(
         strategy = singleRunStrategy(),
-        inputType = typeOf<String>(),
-        outputType = typeOf<String>(),
+        inputType = typeToken<String>(),
+        outputType = typeToken<String>(),
         id = this.id,
         prompt = this.prompt,
         llmModel = this.llmModel,
