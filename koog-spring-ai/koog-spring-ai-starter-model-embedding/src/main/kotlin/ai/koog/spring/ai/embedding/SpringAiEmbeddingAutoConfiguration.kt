@@ -27,12 +27,12 @@ import java.util.concurrent.Executors
  * Auto-configuration for the Koog Spring AI Embedding Model adapter.
  *
  * This configuration:
- * - Binds [KoogSpringAiEmbeddingProperties] under `koog.spring-ai.embedding.*`.
+ * - Binds [KoogSpringAiEmbeddingProperties] under `koog.spring.ai.embedding.*`.
  * - Creates an [LLMEmbeddingProvider] backed by a Spring AI [EmbeddingModel] when available.
  * - Supports multi-model contexts via property-based bean-name selection.
  * - Provides an injectable [CoroutineDispatcher] for blocking model calls.
  *
- * Gated by `koog.spring-ai.embedding.enabled=true` (default).
+ * Gated by `koog.spring.ai.embedding.enabled=true` (default).
  */
 @AutoConfiguration(
     afterName = [
@@ -53,7 +53,7 @@ import java.util.concurrent.Executors
 )
 @EnableConfigurationProperties(KoogSpringAiEmbeddingProperties::class)
 @ConditionalOnClass(EmbeddingModel::class)
-@ConditionalOnProperty(prefix = "koog.spring-ai.embedding", name = ["enabled"], havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "koog.spring.ai.embedding", name = ["enabled"], havingValue = "true", matchIfMissing = true)
 public open class SpringAiEmbeddingAutoConfiguration {
 
     private val logger = LoggerFactory.getLogger(SpringAiEmbeddingAutoConfiguration::class.java)
@@ -108,7 +108,7 @@ public open class SpringAiEmbeddingAutoConfiguration {
      * Embedding model configuration — activated when a bean-name selector is provided.
      */
     @Configuration
-    @ConditionalOnProperty(prefix = "koog.spring-ai.embedding", name = ["embedding-model-bean-name"])
+    @ConditionalOnProperty(prefix = "koog.spring.ai.embedding", name = ["embedding-model-bean-name"])
     public open class NamedEmbeddingModelConfiguration {
         private val logger = LoggerFactory.getLogger(NamedEmbeddingModelConfiguration::class.java)
 

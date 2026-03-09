@@ -27,13 +27,13 @@ dependencies {
 }
 ```
 
-Modifying your Spring Boot properties is not necessary, below are default settings:
+Modifying your Spring Boot properties is not necessary, below are the default settings:
 
 ```properties
 # application.properties defaults
 spring.ai.model.chat=ollama
-koog.spring-ai.chat.enabled=true
-koog.spring-ai.chat.dispatcher.type=AUTO
+koog.spring.ai.chat.enabled=true
+koog.spring.ai.chat.dispatcher.type=AUTO
 ```
 
 If you have a single `ChatModel` bean, everything works automatically —
@@ -61,7 +61,7 @@ class MyAgentService(private val promptExecutor: PromptExecutor) {
 
 Or provide your own `PromptExecutor` bean to override the auto-configured one entirely.
 
-### Configuration properties (`koog.spring-ai.chat`)
+### Configuration properties (`koog.spring.ai.chat`)
 
 | Property | Type | Default | Description |
 |---|---|---|---|
@@ -83,8 +83,8 @@ Or provide your own `PromptExecutor` bean to override the auto-configured one en
 When multiple `ChatModel` or `ModerationModel` beans are registered, specify which one to use:
 
 ```properties
-koog.spring-ai.chat.chat-model-bean-name=openAiChatModel
-koog.spring-ai.chat.moderation-model-bean-name=openAiModerationModel
+koog.spring.ai.chat.chat-model-bean-name=openAiChatModel
+koog.spring.ai.chat.moderation-model-bean-name=openAiModerationModel
 ```
 
 Without a selector, the auto-configuration activates only when a single candidate exists.

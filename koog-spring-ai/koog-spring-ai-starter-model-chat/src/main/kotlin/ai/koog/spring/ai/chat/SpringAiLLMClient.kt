@@ -129,7 +129,6 @@ public class SpringAiLLMClient(
         }
     }
 
-    override val clientName: String = "spring-ai-chat"
     private val logger = LoggerFactory.getLogger(SpringAiLLMClient::class.java)
 
     override fun llmProvider(): LLMProvider = provider

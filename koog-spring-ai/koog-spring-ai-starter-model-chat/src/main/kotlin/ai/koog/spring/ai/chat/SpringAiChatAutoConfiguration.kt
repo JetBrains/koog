@@ -33,14 +33,14 @@ import java.util.concurrent.Executors
  * Auto-configuration for the Koog Spring AI Chat Model adapter.
  *
  * This configuration:
- * - Binds [KoogSpringAiChatProperties] under `koog.spring-ai.chat.*`.
+ * - Binds [KoogSpringAiChatProperties] under `koog.spring.ai.chat.*`.
  * - Creates an [LLMClient] backed by a Spring AI [ChatModel] when available.
  * - Creates a [PromptExecutor] when an [LLMClient] is available.
  * - Supports multi-model contexts via property-based bean-name selection.
  * - Provides an injectable [CoroutineDispatcher] for blocking model calls.
  * - Optionally injects [ModerationModel] into the [LLMClient] bean.
  *
- * Gated by `koog.spring-ai.chat.enabled=true` (default).
+ * Gated by `koog.spring.ai.chat.enabled=true` (default).
  */
 @AutoConfiguration(
     afterName = [
@@ -62,7 +62,7 @@ import java.util.concurrent.Executors
 )
 @EnableConfigurationProperties(KoogSpringAiChatProperties::class)
 @ConditionalOnClass(ChatModel::class)
-@ConditionalOnProperty(prefix = "koog.spring-ai.chat", name = ["enabled"], havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "koog.spring.ai.chat", name = ["enabled"], havingValue = "true", matchIfMissing = true)
 public open class SpringAiChatAutoConfiguration {
 
     private val logger = LoggerFactory.getLogger(SpringAiChatAutoConfiguration::class.java)
@@ -117,7 +117,7 @@ public open class SpringAiChatAutoConfiguration {
      * Chat model configuration — activated when a bean-name selector is provided.
      */
     @Configuration
-    @ConditionalOnProperty(prefix = "koog.spring-ai.chat", name = ["chat-model-bean-name"])
+    @ConditionalOnProperty(prefix = "koog.spring.ai.chat", name = ["chat-model-bean-name"])
     public open class NamedChatModelConfiguration {
         private val logger = LoggerFactory.getLogger(NamedChatModelConfiguration::class.java)
 

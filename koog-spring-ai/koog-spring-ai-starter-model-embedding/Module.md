@@ -21,13 +21,12 @@ dependencies {
 }
 ```
 
-Modify your Spring Boot configuration:
+Modifying your Spring Boot properties is not necessary, below are the default settings:
 
 ```properties
 # application.properties
-spring.application.name=testapp
 spring.ai.model.embedding=ollama
-koog.spring-ai.embedding.enabled=true
+koog.spring.ai.embedding.enabled=true
 ```
 
 If you have a single `EmbeddingModel` bean, everything works automatically —
@@ -49,7 +48,7 @@ class MyEmbeddingService(private val embeddingProvider: LLMEmbeddingProvider) {
 
 Or provide your own `LLMEmbeddingProvider` bean to override the auto-configured adapter entirely.
 
-### Configuration properties (`koog.spring-ai.embedding`)
+### Configuration properties (`koog.spring.ai.embedding`)
 
 | Property | Type | Default | Description |
 |---|---|---|---|
@@ -69,7 +68,7 @@ Or provide your own `LLMEmbeddingProvider` bean to override the auto-configured 
 When multiple `EmbeddingModel` beans are registered, specify which one to use:
 
 ```properties
-koog.spring-ai.embedding.embedding-model-bean-name=openAiEmbeddingModel
+koog.spring.ai.embedding.embedding-model-bean-name=openAiEmbeddingModel
 ```
 
 Without a selector, the auto-configuration activates only when a single candidate exists.

@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 /**
  * Configuration properties for the Koog Spring AI Chat Model adapter.
  *
- * Prefix: `koog.spring-ai.chat`
+ * Prefix: `koog.spring.ai.chat`
  *
  * @property enabled Whether the Koog Spring AI Chat auto-configuration is enabled. Default: `true`.
  * @property chatModelBeanName Optional bean name of the [org.springframework.ai.chat.model.ChatModel]
@@ -20,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  *   If auto-detection fails, a generic `spring-ai` provider is used as a fallback.
  * @property dispatcher Dispatcher / threading settings for blocking Spring AI model calls.
  */
-@ConfigurationProperties(prefix = "koog.spring-ai.chat")
+@ConfigurationProperties(prefix = "koog.spring.ai.chat")
 public data class KoogSpringAiChatProperties(
     val enabled: Boolean = true,
     val chatModelBeanName: String? = null,

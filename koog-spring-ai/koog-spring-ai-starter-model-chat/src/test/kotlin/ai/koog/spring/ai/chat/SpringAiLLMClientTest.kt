@@ -362,7 +362,6 @@ class SpringAiLLMClientTest {
         val exception = assertThrows<LLMClientException> {
             client.execute(prompt, testModel, emptyList())
         }
-        assertTrue(exception.message!!.contains("spring-ai-chat"))
         assertTrue(exception.message!!.contains("Connection refused"))
         assertTrue(exception.cause is RuntimeException)
     }
@@ -377,7 +376,6 @@ class SpringAiLLMClientTest {
         val exception = assertThrows<LLMClientException> {
             client.executeStreaming(prompt, testModel, emptyList()).toList()
         }
-        assertTrue(exception.message!!.contains("spring-ai-chat"))
         assertTrue(exception.message!!.contains("Rate limited"))
         assertTrue(exception.cause is RuntimeException)
     }
@@ -393,7 +391,6 @@ class SpringAiLLMClientTest {
         val exception = assertThrows<LLMClientException> {
             client.executeStreaming(prompt, testModel, emptyList()).toList()
         }
-        assertTrue(exception.message!!.contains("spring-ai-chat"))
         assertTrue(exception.message!!.contains("Stream interrupted"))
         assertTrue(exception.cause is RuntimeException)
     }
@@ -412,7 +409,6 @@ class SpringAiLLMClientTest {
         val exception = assertThrows<LLMClientException> {
             client.moderate(prompt, testModel)
         }
-        assertTrue(exception.message!!.contains("spring-ai-chat"))
         assertTrue(exception.message!!.contains("ModerationModel.call() failed"))
         assertTrue(exception.cause is RuntimeException)
     }

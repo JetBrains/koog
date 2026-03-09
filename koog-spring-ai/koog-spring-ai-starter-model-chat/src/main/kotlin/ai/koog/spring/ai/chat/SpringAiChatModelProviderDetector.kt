@@ -7,7 +7,7 @@ import org.springframework.ai.chat.model.ChatModel
  * Resolves the [LLMProvider] to use for a [SpringAiLLMClient].
  *
  * Resolution order:
- * 1. Explicit property value (`koog.spring-ai.chat.provider`) looked up by [LLMProvider.id].
+ * 1. Explicit property value (`koog.spring.ai.chat.provider`) looked up by [LLMProvider.id].
  * 2. Auto-detection from the [ChatModel] implementation class name.
  * 3. Fallback to [SpringAiLLMProvider].
  */
@@ -52,7 +52,7 @@ internal object SpringAiChatModelProviderDetector {
         if (providerId != null) {
             return providersById[providerId]
                 ?: throw IllegalArgumentException(
-                    "Unknown koog.spring-ai.chat.provider='$providerId'. " +
+                    "Unknown koog.spring.ai.chat.provider='$providerId'. " +
                         "Known providers: ${providersById.keys.sorted()}"
                 )
         }

@@ -71,7 +71,7 @@ class SpringAiEmbeddingAutoConfigurationTest {
     @Test
     fun `should not create beans when disabled`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.embedding.enabled=false")
+            .withPropertyValues("koog.spring.ai.embedding.enabled=false")
             .withBean(EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
             .run { context ->
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<LLMEmbeddingProvider>() }
@@ -82,7 +82,7 @@ class SpringAiEmbeddingAutoConfigurationTest {
     fun `should resolve EmbeddingModel by bean name when configured`() {
         val targetModel = mockk<EmbeddingModel>(relaxed = true)
         contextRunner()
-            .withPropertyValues("koog.spring-ai.embedding.embedding-model-bean-name=myEmb")
+            .withPropertyValues("koog.spring.ai.embedding.embedding-model-bean-name=myEmb")
             .withBean("myEmb", EmbeddingModel::class.java, { targetModel })
             .withBean("otherEmb", EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
             .run { context ->
@@ -103,8 +103,8 @@ class SpringAiEmbeddingAutoConfigurationTest {
     fun `should bind KoogSpringAiEmbeddingProperties`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring-ai.embedding.enabled=true",
-                "koog.spring-ai.embedding.dispatcher.type=IO"
+                "koog.spring.ai.embedding.enabled=true",
+                "koog.spring.ai.embedding.dispatcher.type=IO"
             )
             .run { context ->
                 val props = context.getBean<KoogSpringAiEmbeddingProperties>()
@@ -117,8 +117,8 @@ class SpringAiEmbeddingAutoConfigurationTest {
     fun `should create FIXED_THREAD_POOL dispatcher that implements DisposableBean`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring-ai.embedding.dispatcher.type=FIXED_THREAD_POOL",
-                "koog.spring-ai.embedding.dispatcher.parallelism=2"
+                "koog.spring.ai.embedding.dispatcher.type=FIXED_THREAD_POOL",
+                "koog.spring.ai.embedding.dispatcher.parallelism=2"
             )
             .run { context ->
                 val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher")
@@ -131,8 +131,8 @@ class SpringAiEmbeddingAutoConfigurationTest {
     fun `FIXED_THREAD_POOL dispatcher destroy does not throw`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring-ai.embedding.dispatcher.type=FIXED_THREAD_POOL",
-                "koog.spring-ai.embedding.dispatcher.parallelism=1"
+                "koog.spring.ai.embedding.dispatcher.type=FIXED_THREAD_POOL",
+                "koog.spring.ai.embedding.dispatcher.parallelism=1"
             )
             .run { context ->
                 val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher") as DisposableBean
@@ -165,7 +165,7 @@ class SpringAiEmbeddingAutoConfigurationTest {
     @Test
     fun `should not create dispatcher when disabled`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.embedding.enabled=false")
+            .withPropertyValues("koog.spring.ai.embedding.enabled=false")
             .run { context ->
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAiEmbeddingDispatcher") }
             }

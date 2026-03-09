@@ -75,7 +75,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `should not create beans when disabled`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.enabled=false")
+            .withPropertyValues("koog.spring.ai.chat.enabled=false")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<LLMClient>() }
@@ -86,7 +86,7 @@ class SpringAiChatAutoConfigurationTest {
     fun `should resolve ChatModel by bean name when configured`() {
         val targetModel = mockk<ChatModel>(relaxed = true)
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.chat-model-bean-name=myChat")
+            .withPropertyValues("koog.spring.ai.chat.chat-model-bean-name=myChat")
             .withBean("myChat", ChatModel::class.java, { targetModel })
             .withBean("otherChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
@@ -107,8 +107,8 @@ class SpringAiChatAutoConfigurationTest {
     fun `should bind KoogSpringAiChatProperties`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring-ai.chat.enabled=true",
-                "koog.spring-ai.chat.dispatcher.type=IO"
+                "koog.spring.ai.chat.enabled=true",
+                "koog.spring.ai.chat.dispatcher.type=IO"
             )
             .run { context ->
                 val props = context.getBean<KoogSpringAiChatProperties>()
@@ -121,8 +121,8 @@ class SpringAiChatAutoConfigurationTest {
     fun `should create FIXED_THREAD_POOL dispatcher that implements DisposableBean`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring-ai.chat.dispatcher.type=FIXED_THREAD_POOL",
-                "koog.spring-ai.chat.dispatcher.parallelism=2"
+                "koog.spring.ai.chat.dispatcher.type=FIXED_THREAD_POOL",
+                "koog.spring.ai.chat.dispatcher.parallelism=2"
             )
             .run { context ->
                 val dispatcher = context.getBean("koogSpringAiChatDispatcher")
@@ -135,8 +135,8 @@ class SpringAiChatAutoConfigurationTest {
     fun `FIXED_THREAD_POOL dispatcher destroy does not throw`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring-ai.chat.dispatcher.type=FIXED_THREAD_POOL",
-                "koog.spring-ai.chat.dispatcher.parallelism=1"
+                "koog.spring.ai.chat.dispatcher.type=FIXED_THREAD_POOL",
+                "koog.spring.ai.chat.dispatcher.parallelism=1"
             )
             .run { context ->
                 val dispatcher = context.getBean("koogSpringAiChatDispatcher") as DisposableBean
@@ -160,7 +160,7 @@ class SpringAiChatAutoConfigurationTest {
     fun `named config should wire ModerationModel from context when no bean name property set`() {
         val moderationModel = mockk<ModerationModel>(relaxed = true)
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.chat-model-bean-name=myChat")
+            .withPropertyValues("koog.spring.ai.chat.chat-model-bean-name=myChat")
             .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean(ModerationModel::class.java, { moderationModel })
             .run { context ->
@@ -193,7 +193,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `should not create dispatcher when disabled`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.enabled=false")
+            .withPropertyValues("koog.spring.ai.chat.enabled=false")
             .run { context ->
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAiChatDispatcher") }
             }
@@ -234,7 +234,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `should not create PromptExecutor when disabled`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.enabled=false")
+            .withPropertyValues("koog.spring.ai.chat.enabled=false")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<PromptExecutor>() }
@@ -251,7 +251,7 @@ class SpringAiChatAutoConfigurationTest {
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean("myModeration", ModerationModel::class.java, { targetModeration })
             .withBean("otherModeration", ModerationModel::class.java, { otherModeration })
-            .withPropertyValues("koog.spring-ai.chat.moderation-model-bean-name=myModeration")
+            .withPropertyValues("koog.spring.ai.chat.moderation-model-bean-name=myModeration")
             .run { context ->
                 assertTrue(context.startupFailure == null, "Context should start without failure")
                 val client = context.getBean<LLMClient>()
@@ -264,7 +264,7 @@ class SpringAiChatAutoConfigurationTest {
         contextRunner()
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean("realModeration", ModerationModel::class.java, { mockk<ModerationModel>(relaxed = true) })
-            .withPropertyValues("koog.spring-ai.chat.moderation-model-bean-name=nonExistentModeration")
+            .withPropertyValues("koog.spring.ai.chat.moderation-model-bean-name=nonExistentModeration")
             .run { context ->
                 assertTrue(context.startupFailure != null)
                 val rootCause = generateSequence(context.startupFailure) { it.cause }.last()
@@ -278,7 +278,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `should use explicit provider property when set`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.provider=google")
+            .withPropertyValues("koog.spring.ai.chat.provider=google")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 val client = context.getBean<LLMClient>() as SpringAiLLMClient
@@ -289,7 +289,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `should use explicit provider property for openai`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.provider=openai")
+            .withPropertyValues("koog.spring.ai.chat.provider=openai")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 val client = context.getBean<LLMClient>() as SpringAiLLMClient
@@ -300,7 +300,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `should fail on invalid provider property`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.provider=unknown-provider")
+            .withPropertyValues("koog.spring.ai.chat.provider=unknown-provider")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 assertTrue(context.startupFailure != null)
@@ -313,7 +313,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `should use user-provided LLMProvider bean over property`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.provider=openai")
+            .withPropertyValues("koog.spring.ai.chat.provider=openai")
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean(LLMProvider::class.java, { LLMProvider.Anthropic })
             .run { context ->
@@ -336,8 +336,8 @@ class SpringAiChatAutoConfigurationTest {
     fun `named config should use explicit provider property`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring-ai.chat.chat-model-bean-name=myChat",
-                "koog.spring-ai.chat.provider=google"
+                "koog.spring.ai.chat.chat-model-bean-name=myChat",
+                "koog.spring.ai.chat.provider=google"
             )
             .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
@@ -349,7 +349,7 @@ class SpringAiChatAutoConfigurationTest {
     @Test
     fun `named config should use LLMProvider bean`() {
         contextRunner()
-            .withPropertyValues("koog.spring-ai.chat.chat-model-bean-name=myChat")
+            .withPropertyValues("koog.spring.ai.chat.chat-model-bean-name=myChat")
             .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean(LLMProvider::class.java, { LLMProvider.Google })
             .run { context ->
