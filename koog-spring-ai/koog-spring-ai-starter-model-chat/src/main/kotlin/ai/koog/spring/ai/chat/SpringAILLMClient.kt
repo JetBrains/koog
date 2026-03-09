@@ -10,11 +10,11 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.withContext
@@ -28,7 +28,7 @@ import org.springframework.ai.moderation.ModerationPrompt
 import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
 
 /**
- * An [LLMProvider] representing a Spring AI-backed provider.
+ * An [ai.koog.prompt.llm.LLMProvider] representing a Spring AI-backed provider.
  */
 public class SpringAILLMProvider @JvmOverloads constructor(id: String = "spring-ai", display: String = "Spring AI") :
     LLMProvider(id, display)
@@ -173,12 +173,30 @@ public class SpringAILLMClient @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Streams LLM responses by subscribing to [ChatModel.stream] and converting each chunk
+     * into Koog [StreamFrame] events.
+     *
+     * Text content is emitted as [StreamFrame.TextDelta] frames immediately. Tool calls are
+     * handled by a [SpringAIToolCallAssembler] whose mode depends on the detected [LLMProvider]:
+     * - **Anthropic / Google** ([SpringAIToolStreamingMode.EMIT_IMMEDIATELY]): tool calls arrive
+     *   fully formed in each chunk and are emitted immediately.
+     * - **OpenAI and unknown providers** ([SpringAIToolStreamingMode.BUFFER_UNTIL_END]): tool call
+     *   fragments are buffered across chunks and emitted as complete tool calls after the stream ends.
+     *
+     * The resulting flow uses [ai.koog.prompt.streaming.StreamFrameFlowBuilder] which automatically pairs each
+     * [StreamFrame.ToolCallDelta] with a corresponding [StreamFrame.ToolCallComplete] and
+     * emits [StreamFrame.TextComplete] / [StreamFrame.ReasoningComplete] boundaries.
+     *
+     * All blocking I/O runs on the configured [dispatcher] (default [Dispatchers.IO]).
+     */
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = flow {
+    ): Flow<StreamFrame> = buildStreamFrameFlow {
         val springPrompt = toSpringPrompt(prompt, model, tools)
+        val toolCallAssembler = SpringAIToolCallAssembler.forProvider(provider)
         val flux = try {
             chatModel.stream(springPrompt)
         } catch (e: CancellationException) {
@@ -188,25 +206,18 @@ public class SpringAILLMClient @JvmOverloads constructor(
         }
         try {
             flux.asFlow().collect { chatResponse ->
-                for (generation in chatResponse.results) {
+                for ((generationIndex, generation) in chatResponse.results.withIndex()) {
                     val assistantMessage = generation.output
                     val text = assistantMessage.text
                     if (!text.isNullOrEmpty()) {
-                        emit(StreamFrame.TextDelta(text))
+                        emitTextDelta(text, generationIndex)
                     }
                     if (assistantMessage.hasToolCalls()) {
-                        for (toolCall in assistantMessage.toolCalls) { // TODO: No documentation or per-provider verification that Spring AI accumulates partial argument chunks before exposing them.
-                            emit(
-                                StreamFrame.ToolCallDelta(
-                                    id = toolCall.id(),
-                                    name = toolCall.name(),
-                                    content = toolCall.arguments()
-                                )
-                            )
-                        }
+                        toolCallAssembler.accept(assistantMessage.toolCalls, generationIndex, this)
                     }
                 }
             }
+            toolCallAssembler.flush(this)
         } catch (e: CancellationException) {
             throw e
         } catch (e: LLMClientException) {
@@ -214,7 +225,7 @@ public class SpringAILLMClient @JvmOverloads constructor(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.stream() failed during collection: ${e.message}", e)
         }
-        emit(StreamFrame.End())
+        emitEnd()
     }.flowOn(dispatcher)
 
     override suspend fun moderate(

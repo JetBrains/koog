@@ -284,6 +284,35 @@ class SpringAILLMClientTest {
     }
 
     @Test
+    fun `executeStreaming buffers tool call chunks for unverified providers`() = runBlocking {
+        val firstChunk = AssistantMessage.ToolCall("tc-1", "function", "search", """{"q":""")
+        val secondChunk = AssistantMessage.ToolCall("tc-1", "function", "search", """"test"}""")
+        val client = SpringAILLMClient(
+            object : ChatModel {
+                override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
+                override fun stream(prompt: SpringPrompt) = Flux.just(
+                    ChatResponse(listOf(Generation(AssistantMessage.builder().toolCalls(listOf(firstChunk)).build()))),
+                    ChatResponse(listOf(Generation(AssistantMessage.builder().toolCalls(listOf(secondChunk)).build())))
+                )
+            },
+            provider = LLMProvider.Ollama
+        )
+        val prompt = createPrompt(Message.User("Search something", requestMeta()))
+        val frames = client.executeStreaming(prompt, testModel, emptyList()).toList()
+
+        val toolFrames = frames.filterIsInstance<StreamFrame.ToolCallDelta>()
+        assertEquals(1, toolFrames.size)
+        assertEquals("tc-1", toolFrames[0].id)
+        assertEquals("search", toolFrames[0].name)
+        assertEquals("""{"q":"test"}""", toolFrames[0].content)
+
+        val completeFrames = frames.filterIsInstance<StreamFrame.ToolCallComplete>()
+        assertEquals(1, completeFrames.size)
+        assertEquals("""{"q":"test"}""", completeFrames[0].content)
+        assertTrue(frames.last() is StreamFrame.End)
+    }
+
+    @Test
     fun `executeStreaming always emits End frame`() = runBlocking {
         val client = SpringAILLMClient(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
