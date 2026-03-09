@@ -42,6 +42,9 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.serialization.TypeCapture
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.asPublisher
@@ -62,8 +65,8 @@ import kotlin.reflect.KType
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual open class AIAgentNode<TInput, TOutput> internal actual constructor(
     name: String,
-    inputType: KType,
-    outputType: KType,
+    inputType: TypeToken,
+    outputType: TypeToken,
     execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
 ) : SimpleAIAgentNodeImpl<TInput, TOutput>(
     name,
@@ -96,6 +99,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @param allowToolCalls Indicates whether the node is allowed to make tool calls during execution. Defaults to true.
          * @return An instance of [AIAgentNodeBase] configured to process language model requests with input of type [String] and output of type [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmRequest(
             allowToolCalls: Boolean = true,
@@ -113,6 +117,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @param name an optional name for the node. If null, a default name is used.
          * @return an instance of [AIAgentNodeBase] configured to return the input of type [T] as the output without modification.
          */
+        @JavaAPI
         @JvmOverloads
         public fun <T : Any> doNothing(
             clazz: Class<T>,
@@ -126,6 +131,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to handle language model requests with input of type [String]
          *         and output of type [Message.Response], where only tool calls are permitted.
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmRequestOnlyCallingTools(
             name: String? = null
@@ -142,6 +148,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to process language model requests with input of type [String]
          *         and output of type [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         @Deprecated("Use llmRequestOnlyCallingTools instead")
         public fun llmSendMessageOnlyCallingTools(
@@ -159,6 +166,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to process language model requests with
          *         input of type [String] and output of type [List<Message.Response>].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmRequestMultipleOnlyCallingTools(
             name: String? = null
@@ -175,6 +183,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to process the language model request with input of type [String] and output of type [Message.Response], ensuring the specified
          *  tool is used.
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmRequestForceOneTool(
             tool: ToolDescriptor,
@@ -193,6 +202,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * and output of type [Message.Response].
          * @deprecated Use [llmRequestForceOneTool] instead, as it provides the same functionality with updated naming conventions.
          */
+        @JavaAPI
         @JvmOverloads
         @Deprecated("Use llmRequestForceOneTool instead")
         public fun llmSendMessageForceOneTool(
@@ -212,6 +222,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to process language model requests with input
          *         of type [String] and output of type [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmRequestForceOneTool(
             tool: Tool<*, *>,
@@ -230,6 +241,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * and output of type [Message.Response].
          * @throws IllegalStateException if the node could not be created due to invalid configurations.
          */
+        @JavaAPI
         @JvmOverloads
         @Deprecated("Use llmRequestForceOneTool instead")
         public fun llmSendMessageForceOneTool(
@@ -248,6 +260,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @param includeCurrentPrompt Indicates whether the current prompt should be included in the moderation process. Defaults to false.
          * @return An instance of [AIAgentNodeBase] configured to process input messages of type [Message] and produce moderated messages of type [ModeratedMessage].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmModerateMessage(
             moderatingModel: LLModel? = null,
@@ -259,25 +272,28 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         }
 
         /**
-         * Performs a streaming request to an LLM (Language Model) with an optional name and structure definition,
-         * allowing for transformation of the stream data.
+         * Creates a node for streaming responses from LLM and handling the incoming stream data.
+         * The method allows customization of the transformation applied to the streamed frames and is designed for integration
+         * in Java environments.
          *
-         * @param name An optional name for the streaming request. If null, no name will be associated with the request.
-         * @param structureDefinition An optional structure definition to define the shape or format of the streaming data.
-         *                            If null, no specific structure is assumed.
-         * @param transformStreamData A function to transform the stream data. Takes a `Publisher` of `StreamFrame` as input
-         *                            and returns a `Publisher` of the transformed data of type `T`.
-         * @return An instance of `AIAgentNodeBase` with an input type of `String` and an output type of `Publisher` of any type.
+         * @param transformStreamData A function that processes the incoming stream of `StreamFrame` objects and transforms them into a publisher
+         *                            of the desired type.
+         * @param outputClass The class type of the transformed output data.
+         * @param structureDefinition An optional definition of structured data, enabling customization of the request or response structure.
+         * @param name An optional name for the node being created.
+         * @return An instance of `AIAgentNodeBase` with a string input and a publisher output whose data type matches the transformed output.
          */
+        @JavaAPI
         @JvmOverloads
         public fun <T : Any> llmRequestStreaming(
             transformStreamData: (Publisher<StreamFrame>) -> Publisher<T>,
+            outputClass: Class<T>,
             structureDefinition: StructureDefinition? = null,
             name: String? = null
-        ): AIAgentNodeBase<String, Publisher<*>> =
-            builder(name) // TODO: @EugeneTheDev: change to Publisher<T> once type tokens are ready
+        ): AIAgentNodeBase<String, Publisher<T>> =
+            builder(name)
                 .withInput(String::class.java)
-                .withOutput(Publisher::class.java)
+                .withOutput<Publisher<T>>(typeToken(Publisher::class, listOf(TypeToken.of(outputClass))))
                 .executeOnLLMDispatcher { input ->
                     requestStreamingImpl(input, structureDefinition) { streamFrameFlow ->
                         transformStreamData(streamFrameFlow.asPublisher()).asFlow()
@@ -292,6 +308,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase], configured to process language model requests with input of type [String]
          * and output as a stream of [StreamFrame].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmRequestStreaming(
             structureDefinition: StructureDefinition? = null,
@@ -307,6 +324,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @param name Optional name for the node. If null, an auto-generated name will be used.
          * @return An instance of [AIAgentNodeBase] configured to handle language model requests with input of type [String] and output of type [List] of [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmRequestMultiple(
             name: String? = null
@@ -322,6 +340,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] that handles tool execution with input of type [Message.Tool.Call]
          *         and output of type [ReceivedToolResult].
          */
+        @JavaAPI
         @JvmOverloads
         public fun executeTool(
             name: String? = null
@@ -337,6 +356,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to process input of type [ReceivedToolResult]
          *         and produce output of type [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmSendToolResult(
             name: String? = null
@@ -353,6 +373,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to process input of type [List<ReceivedToolResult>]
          *         and output a single [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmSendToolResultOnlyCallingTools(
             name: String? = null
@@ -369,6 +390,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return A node configured to handle execution of a list of tools (`List<Message.Tool.Call>`)
          *         with the results being a list of received tool results (`List<ReceivedToolResult>`).
          */
+        @JavaAPI
         @JvmOverloads
         public fun executeMultipleTools(
             parallelTools: Boolean = false,
@@ -386,6 +408,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] that performs the execution of multiple tools with an input type of [List] of [Message.Tool.Call]
          *         and outputs a [List] of [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         public fun executeMultipleToolsAndSendResults(
             parallelTools: Boolean = false,
@@ -402,6 +425,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to process input of type [List] of [ReceivedToolResult]
          *         and generate output of type [List] of [Message.Response].
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmSendMultipleToolResults(
             name: String? = null
@@ -419,6 +443,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return An instance of [AIAgentNodeBase] configured to handle a list of [ReceivedToolResult] as input and
          *         generate a list of [Message.Response] as output, ensuring only called tools are involved.
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmSendMultipleToolResultsOnlyCallingTools(
             name: String? = null
@@ -436,6 +461,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @return A node that represents the result of the structured language model request, containing a string input
          *         and a structured response of type `Result<StructuredResponse<T>>`.
          */
+        @JavaAPI
         @JvmOverloads
         public fun <T : Any> llmRequestStructured(
             config: StructuredRequestConfig<T>,
@@ -452,6 +478,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          *
          * @param name Optional name for the node.
          */
+        @JavaAPI
         @JvmOverloads
         public fun lLMSendResultsMultipleChoices(
             name: String? = null
@@ -466,6 +493,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @param choiceSelectionStrategy The strategy used to choose an LLM choice.
          * @param name Optional name for the node.
          */
+        @JavaAPI
         @AIAgentBuilderDslMarker
         public fun selectLLMChoice(
             choiceSelectionStrategy: ChoiceSelectionStrategy,
@@ -483,6 +511,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          *             If null, a default name is generated in the format "compress-history-{counter}".
          * @return A new instance of `CompressHistoryNodeBuilder` initialized with the provided or generated name.
          */
+        @JavaAPI
         @JvmOverloads
         public fun llmCompressHistory(name: String? = null): CompressHistoryNodeBuilder =
             CompressHistoryNodeBuilder(name ?: "compress-history-${Random.nextInt()}")
@@ -495,14 +524,15 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
          * @param doAppendPrompt Indicates whether to append the prompt during execution. Defaults to true.
          * @return An AI agent node that is configured to use the specified tool and performs structured requests.
          */
+        @JavaAPI
         @JvmOverloads
         public fun <ToolArg, TResult> llmRequestStructured(
             tool: Tool<ToolArg, TResult>,
             doAppendPrompt: Boolean = true,
             name: String? = null
         ): AIAgentNodeBase<ToolArg, SafeTool.Result<TResult>> {
-            // TODO: @EugeneTheDev: once type tokens are done
-            return TODO("withInput(tool.argsToken).withOutput(tool.resultToken).executeOnStrategyDispatcher { toolArgs -> executeSingleToolImpl(tool, toolArgs, doAppendPrompt) }")
+            val node by nodeLLMRequestStructured(name, tool, doAppendPrompt)
+            return
         }
     }
 }

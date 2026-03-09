@@ -19,6 +19,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.serialization.TypeToken
 import kotlin.reflect.KType
 import kotlin.time.Clock
 
@@ -82,8 +83,8 @@ public expect class AIAgentServiceBuilder internal constructor() : AIAgentServic
  */
 public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: KType,
-    private val outputType: KType,
+    private val inputType: TypeToken,
+    private val outputType: TypeToken,
     internal var promptExecutor: PromptExecutor? = null,
     internal var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private var prompt: Prompt = Prompt.Empty,

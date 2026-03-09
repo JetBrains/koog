@@ -1,247 +1,25 @@
 @file:OptIn(InternalAgentsApi::class)
 
-package ai.koog.agents.core.agent
+package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
+import ai.koog.agents.core.agent.GraphStrategyBuilder
+import ai.koog.agents.core.agent.OutputOption
+import ai.koog.agents.core.agent.ToolCalls
+import ai.koog.agents.core.agent.TypedGraphStrategyBuilder
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.agent.entity.AIAgentNode
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
-import ai.koog.agents.core.agent.entity.FinishNode
-import ai.koog.agents.core.agent.entity.StartNode
-import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
-import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
-import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.core.dsl.extension.ModeratedMessage
-import ai.koog.agents.core.dsl.extension.appendPromptImpl
-import ai.koog.agents.core.dsl.extension.llmCompressHistoryImpl
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleToolsAndSendResults
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestForceOneTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultipleOnlyCallingTools
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestOnlyCallingTools
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageForceOneTool
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageOnlyCallingTools
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResultsOnlyCallingTools
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResultOnlyCallingTools
-import ai.koog.agents.core.dsl.extension.requestStreamingAndSendResultsImpl
-import ai.koog.agents.core.dsl.extension.requestStreamingImpl
-import ai.koog.agents.core.dsl.extension.setStructuredOutputImpl
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.environment.SafeTool
-import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.utils.runOnLLMDispatcher
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.core.utils.submitToMainDispatcher
 import ai.koog.agents.ext.agent.CriticResult
-import ai.koog.agents.ext.agent.setupLLMAsAJudge
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
-import ai.koog.agents.ext.llm.choice.ChoiceSelectionStrategy
-import ai.koog.agents.ext.llm.choice.nodeLLMSendResultsMultipleChoices
-import ai.koog.agents.ext.llm.choice.nodeSelectLLMChoice
-import ai.koog.prompt.dsl.PromptBuilder
-import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.StructureDefinition
-import ai.koog.prompt.structure.StructuredRequestConfig
-import ai.koog.prompt.structure.StructuredResponse
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.asPublisher
-import org.reactivestreams.Publisher
+import ai.koog.serialization.TypeToken
 import kotlin.random.Random
-import kotlin.reflect.KClass
-import kotlin.reflect.full.defaultType
-
-/**
- * A builder class used for constructing strategies related to graph processing.
- * This serves as the entry point for configuring a graph strategy, allowing you
- * to define the input type for the graph.
- *
- * @param strategyName The name of the strategy being built.
- */
-@JavaAPI
-public class GraphStrategyBuilder(private val strategyName: String) {
-    /**
-     * Configures the builder to use the specified input type for the graph strategy.
-     *
-     * @param clazz The Java class representing the input type.
-     * @return A new instance of GraphStrategyBuilderWithInput configured with the specified input type.
-     */
-    public fun <Input : Any> withInput(clazz: Class<Input>): GraphStrategyBuilderWithInput<Input> =
-        GraphStrategyBuilderWithInput(
-            strategyName,
-            clazz.kotlin
-        )
-}
-
-/**
- * A builder class for constructing graph strategies that start with a specific input type.
- *
- * This class is used to define the input type of a graph and allows chaining to specify the output type,
- * enabling the creation of a strongly-typed graph strategy.
- *
- * @param strategyName The name of the strategy being built.
- * @param Input The type of the input that the graph will utilize.
- * @property inputClass The KClass representation of the input type.
- */
-@JavaAPI
-public class GraphStrategyBuilderWithInput<Input : Any>(
-    private val strategyName: String,
-    private val inputClass: KClass<Input>
-) {
-    /**
-     * Specifies the output type for the graph strategy and returns a builder configured with the input and output types.
-     *
-     * @param clazz The Java class object representing the desired output type.
-     * @return A `TypedGraphStrategyBuilder` instance configured with the current input type and the specified output type.
-     */
-    public fun <Output : Any> withOutput(clazz: Class<Output>): TypedGraphStrategyBuilder<Input, Output> =
-        TypedGraphStrategyBuilder(
-            strategyName,
-            inputClass,
-            clazz.kotlin
-        )
-}
-
-/**
- * Builder class used for constructing and configuring an [AIAgentGraphStrategy].
- *
- * @param strategyName The name of the strategy being built.
- * @param Input The type of the input entity.
- * @param Output The type of the output entity.
- * @property inputClass The class type of the input entity.
- * @property outputClass The class type of the output entity.
- */
-@JavaAPI
-public class TypedGraphStrategyBuilder<Input : Any, Output : Any>(
-    private val strategyName: String,
-    private val inputClass: KClass<Input>,
-    private val outputClass: KClass<Output>,
-    private var toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
-    internal var builder: AIAgentGraphStrategyBuilder<Input, Output> = AIAgentGraphStrategyBuilder(
-        strategyName,
-        inputClass.defaultType,
-        outputClass.defaultType,
-        toolSelectionStrategy
-    ),
-    private val edgeBuilders: MutableList<AIAgentGraphStrategyBuilder<Input, Output>.() -> Unit> = mutableListOf()
-) {
-
-    internal var nodeCounter = 0
-
-    /**
-     * Configures the strategy for selecting tools to be used in the current graph strategy builder.
-     *
-     * @param strategy The tool selection strategy to apply. This specifies how tools are selected
-     * or filtered for utilization in the resulting graph strategy. Examples include using all tools,
-     * no tools, or a custom subset of tools.
-     * @return A new instance of [TypedGraphStrategyBuilder] with the updated tool selection strategy applied.
-     */
-    public fun withToolSelectionStrategy(strategy: ToolSelectionStrategy): TypedGraphStrategyBuilder<Input, Output> =
-        this.apply {
-            this.toolSelectionStrategy = strategy
-            this.builder = AIAgentGraphStrategyBuilder(
-                strategyName,
-                inputClass.defaultType,
-                outputClass.defaultType,
-                toolSelectionStrategy
-            )
-        }
-
-    /**
-     * Provides access to the starting node of the graph strategy being constructed.
-     *
-     * This property represents the entry point of the graph, defined by the underlying
-     * [StartNode], which serves as the initial node in the strategy. It is primarily used to
-     * begin data flow or transformations within the constructed AI agent graph.
-     *
-     * The node automatically passes its input data as-is to subsequent nodes, making it
-     * suitable as a handoff point for initializing the graph's execution pipeline.
-     *
-     * This property is derived from the builder and is essential for defining
-     * connections or transitions to other nodes in the graph strategy.
-     */
-    @JvmField
-    public val nodeStart: StartNode<Input> = builder.nodeStart
-
-    /**
-     * Provides access to the "finish" node of the strategy graph being constructed.
-     *
-     * This property represents an instance of [FinishNode], marking the endpoint of a graph or subgraph
-     * within the strategy setup. The finish node directly passes its input to its output without modification
-     * and acts as a terminal node by disallowing any outgoing edges.
-     *
-     * The `nodeFinish` property is lazily retrieved from the builder and reflects the finalized configuration
-     * of the graph strategy. It serves as a key structural component for defining the completion behavior
-     * within the graph execution flow.
-     *
-     * @return The [FinishNode] that terminates the graph or subgraph.
-     */
-    @JvmField
-    public val nodeFinish: FinishNode<Output> = builder.nodeFinish
-
-    /**
-     * Creates and returns a new [AgentSubgraphBuilder] for constructing a subgraph
-     * with the specified name in the context of the current graph strategy builder.
-     *
-     * @param name The name of the subgraph to create, or null if unspecified.
-     * @return A new instance of [AgentSubgraphBuilder] for further configuration of the subgraph.
-     */
-    @JvmOverloads
-    public fun subgraph(name: String? = null): AgentSubgraphBuilder<*> = AgentSubgraphBuilder(name)
-
-    /**
-     * Adds a directed edge to the strategy graph by configuring intermediate transformations
-     * or filters for data flow between nodes using the specified edge builder.
-     *
-     * @param edgeIntermediate An intermediate edge builder that defines the source and destination nodes
-     * along with transformation logic, filtering conditions, and data flow constraints for the edge.
-     * @return The updated instance of [TypedGraphStrategyBuilder] that includes the configured edge.
-     */
-    public fun <IncomingOutput, OutgoingInput, CompatibleOutput : OutgoingInput> edge(
-        edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>
-    ): TypedGraphStrategyBuilder<Input, Output> = this.apply {
-        edgeBuilders += {
-            this.edge(edgeIntermediate)
-        }
-    }
-
-    /**
-     * Builds and returns an instance of [AIAgentGraphStrategy] configured with the
-     * specified parameters, input/output types, and edge builders.
-     *
-     * @return The constructed [AIAgentGraphStrategy] instance.
-     */
-    public fun build(): AIAgentGraphStrategy<Input, Output> {
-        edgeBuilders.forEach { builder.it() }
-
-        return builder.build()
-    }
-}
 
 /**
  * A builder class for configuring and constructing subgraphs in an AI agent graph strategy.
@@ -529,7 +307,9 @@ public abstract class TypedAIAgentSubgraphBuilderBase<Input : Any, Output : Any,
     llmModel,
     llmParams,
     responseProcessor
-)
+) {
+    protected val inputTypeToken: TypeToken = TypeToken.of(inputClass)
+}
 
 /**
  * Builder class for creating and configuring a typed AI agent subgraph.
@@ -668,8 +448,8 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
         is OutputOption.ByClass<Output> -> {
             val subgraph by subgraphWithTask<Input, Output>(
                 name = name,
-                inputType = inputClass.kotlin.defaultType,
-                outputType = outputOption.outputClass.kotlin.defaultType,
+                inputType = inputTypeToken,
+                outputType = outputOption.outputTypeToken,
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,
@@ -689,7 +469,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
         is OutputOption.ByFinishTool<Output> -> {
             val subgraph by subgraphWithTask<Input, Output>(
                 name = name,
-                inputType = inputClass.kotlin.defaultType,
+                inputType = inputTypeToken,
                 toolSelectionStrategy = toolSelectionStrategy,
                 finishTool = outputOption.finishTool,
                 llmModel = llmModel,
@@ -710,7 +490,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
         is OutputOption.Verification<*> -> {
             val subgraph by subgraphWithVerification<Input>(
                 name = name,
-                inputType = inputClass.kotlin.defaultType,
+                inputType = inputTypeToken,
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,

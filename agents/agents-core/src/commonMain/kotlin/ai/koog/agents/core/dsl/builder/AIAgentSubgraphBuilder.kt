@@ -5,6 +5,7 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
@@ -18,6 +19,9 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.KotlinTypeToken
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -73,9 +77,12 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      */
     public fun <IncomingOutput, OutgoingInput, CompatibleOutput : OutgoingInput> edge(
         edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>
+    ): Unit = edge(AIAgentEdgeBuilder(edgeIntermediate).build())
+
+    internal fun <IncomingOutput, OutgoingInput> edge(
+        edge: AIAgentEdge<IncomingOutput, OutgoingInput>
     ) {
-        val edge = AIAgentEdgeBuilder(edgeIntermediate).build()
-        edgeIntermediate.fromNode.addEdge(edge)
+        edge.fromNode.addEdge(edge)
     }
 
     /**
@@ -185,8 +192,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
  */
 public class AIAgentSubgraphBuilder<Input, Output>(
     public val name: String? = null,
-    inputType: KType,
-    outputType: KType,
+    inputType: TypeToken,
+    outputType: TypeToken,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?,
@@ -195,6 +202,39 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
     override val nodeStart: StartNode<Input> = StartNode(subgraphName = name, type = inputType)
     override val nodeFinish: FinishNode<Output> = FinishNode(subgraphName = name, type = outputType)
+
+    /**
+     * Constructs an instance of AIAgentSubgraphBuilder with the provided parameters, using KTypes
+     * for input and output type representation.
+     *
+     * This constructor is deprecated. All [KType] parameters should be replaced by the use of [TypeToken] instead.
+     *
+     * @param name An optional name for the subgraph being built.
+     * @param inputType The type of the input data for the subgraph, represented as a [KType].
+     * @param outputType The type of the output data for the subgraph, represented as a [KType].
+     * @param toolSelectionStrategy The strategy used to select the tools for this subgraph.
+     * @param llmModel An optional Large Language Model ([LLModel]) to be used within the subgraph.
+     * @param llmParams An optional set of parameters ([LLMParams]) for configuring the LLM behavior.
+     * @param responseProcessor An optional [ResponseProcessor] for post-processing responses in the subgraph.
+     */
+    @Deprecated("KTypes usage in graphs and nodes is deprecated. Please, use TypeTokens instead.")
+    public constructor(
+        name: String? = null,
+        inputType: KType,
+        outputType: KType,
+        toolSelectionStrategy: ToolSelectionStrategy,
+        llmModel: LLModel?,
+        llmParams: LLMParams?,
+        responseProcessor: ResponseProcessor? = null,
+    ) : this(
+        name,
+        KotlinTypeToken(inputType),
+        KotlinTypeToken(outputType),
+        toolSelectionStrategy,
+        llmModel,
+        llmParams,
+        responseProcessor
+    )
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
@@ -317,7 +357,7 @@ public inline fun <reified Input, reified Output> node(
     name: String? = null,
     noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
 ): AIAgentNodeDelegate<Input, Output> =
-    node(name, inputType = typeOf<Input>(), outputType = typeOf<Output>(), execute = execute)
+    node(name, inputType = typeToken<Input>(), outputType = typeToken<Output>(), execute = execute)
 
 /**
  * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
@@ -328,8 +368,8 @@ public inline fun <reified Input, reified Output> node(
 @InternalAgentsApi
 public fun <Input, Output> node(
     name: String? = null,
-    inputType: KType, // TODO: @EugeneTheDev, change to type tokens!
-    outputType: KType, // TODO: @EugeneTheDev, change to type tokens!
+    inputType: TypeToken,
+    outputType: TypeToken,
     execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
 ): AIAgentNodeDelegate<Input, Output> {
     return AIAgentNodeDelegate(
@@ -380,8 +420,8 @@ public inline fun <reified Input, reified Output> subgraph(
 @InternalAgentsApi
 public fun <Input : Any, Output : Any> subgraph(
     name: String? = null,
-    inputType: KType, // TODO: @EugeneTheDev, change to type tokens!
-    outputType: KType, // TODO: @EugeneTheDev, change to type tokens!
+    inputType: TypeToken,
+    outputType: TypeToken,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,

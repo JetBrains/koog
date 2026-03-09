@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.utils.Option
 
 public actual class AIAgentEdge<IncomingOutput, OutgoingInput> internal actual constructor(
+    public actual val fromNode: AIAgentNodeBase<*, IncomingOutput>,
     public actual val toNode: AIAgentNodeBase<OutgoingInput, *>,
     internal actual val forwardOutput: suspend (context: AIAgentGraphContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
 ) {

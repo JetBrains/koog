@@ -9,7 +9,6 @@ import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
 import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.utils.Some
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.core.utils.submitToMainDispatcher
 
 /**
@@ -75,6 +74,30 @@ public class PartialAgentEdgeBuilder<IncomingInput, IncomingOutput>(
         toNode = toNode,
         forwardOutputComposition = { _, output -> Some(output) }
     )
+
+
+    /**
+     * Creates a directed edge from the current node to the specified node, enabling the flow of
+     * data between them in the AI agent strategy graph. This method connects the current node's
+     * output directly to the input of the specified node without applying transformations.
+     *
+     * @param toNode The destination node to which the current node's output will be forwarded.
+     *               The type of input this node processes is represented by `IncomingOutput`,
+     *               and the type of output it produces is represented by `OutgoingOutput`.
+     * @return A `CompatibleFullAgentEdgeBuilder` instance that allows further customization
+     *         of the edge and its data flow properties. This builder establishes the connection
+     *         between the current node's output and the specified node's input.
+     */
+    public fun <OutgoingOutput> to(
+        toNode: AIAgentNodeBase<in IncomingOutput, OutgoingOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, IncomingOutput, in IncomingOutput> =
+        CompatibleFullAgentEdgeBuilder(
+            fromNode = fromNode,
+            toNode = toNode,
+            forwardOutputComposition = { _, output -> Some(output) }
+        )
+
+
 }
 
 /**
@@ -95,9 +118,9 @@ public class PartialAgentEdgeBuilder<IncomingInput, IncomingOutput>(
  */
 @JavaAPI
 public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, OutgoingInput> internal constructor(
-    protected val fromNode: AIAgentNodeBase<*, IncomingOutput>,
-    protected val toNode: AIAgentNodeBase<OutgoingInput, *>,
-    protected val forwardOutputComposition: suspend (AIAgentGraphContextBase, IncomingOutput) -> Option<IntermediateOutput>
+    internal val fromNode: AIAgentNodeBase<*, IncomingOutput>,
+    internal val toNode: AIAgentNodeBase<OutgoingInput, *>,
+    internal val forwardOutputComposition: suspend (AIAgentGraphContextBase, IncomingOutput) -> Option<IntermediateOutput>
 ) {
     /**
      * Applies a contextual condition to filter the output being processed and forwarded within the graph.
@@ -111,7 +134,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
      *                  the output (`true`) or filter it out (`false`).
      * @return A builder instance that allows further configuration or chaining of processing steps.
      */
-    public fun onCondition(
+    public open fun onCondition(
         condition: ContextualCondition<IntermediateOutput>
     ): FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, OutgoingInput> = FullAgentEdgeBuilder(
         fromNode, toNode, forwardOutputComposition = { ctx, output ->
@@ -137,7 +160,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
      *                  or `false` if it should be filtered out.
      * @return A builder instance to allow further configuration or chaining of processing steps.
      */
-    public fun onCondition(
+    public open fun onCondition(
         condition: SimpleCondition<IntermediateOutput>
     ): FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, OutgoingInput> = FullAgentEdgeBuilder(
         fromNode, toNode, forwardOutputComposition = { ctx, output ->
@@ -152,35 +175,138 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     )
 
 
+    /**
+     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     *
+     * @param transformation A contextual transformation function that takes an intermediate output
+     *                       and an AI agent graph context as input, and produces a compatible output.
+     * @return A builder instance configured to handle the transformed outputs and enable further chaining
+     *         or customization of the agent's graph configuration.
+     */
     public fun <CompatibleOutput : OutgoingInput> transformed(
         transformation: ContextualTransformation<IntermediateOutput, CompatibleOutput>
-    ) = FullAgentEdgeBuilder(
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> = CompatibleFullAgentEdgeBuilder(
         fromNode, toNode, forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
                 ctx.config.submitToMainDispatcher {
-                    filter { transOutput ->
-                        condition.invoke(transOutput, ctx)
-                    }
+                    map { transformation.invoke(it, ctx) }
+                }
+            }
+        }
+    )
+
+    /**
+     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     *
+     * @param transformation A functional interface that defines how to transform intermediate outputs
+     *                        of type [IntermediateOutput] into compatible outputs of type [CompatibleOutput].
+     * @return A builder for configuring and chaining additional processing steps for the edge,
+     *         maintaining type compatibility with the transformed output.
+     */
+    public fun <CompatibleOutput : OutgoingInput> transformed(
+        transformation: SimpleTransformation<IntermediateOutput, CompatibleOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> = CompatibleFullAgentEdgeBuilder(
+        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+            with(forwardOutputComposition(ctx, output)) {
+                ctx.config.submitToMainDispatcher {
+                    map { transformation.invoke(it) }
+                }
+            }
+        }
+    )
+
+    /**
+     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     *
+     * @param transformation A contextual transformation function that takes an intermediate output
+     *                       and an AI agent graph context as input, and produces a compatible output.
+     * @return A builder instance configured to handle the transformed outputs and enable further chaining
+     *         or customization of the agent's graph configuration.
+     */
+    public fun <TransformedOutput> transformed(
+        transformation: ContextualTransformation<IntermediateOutput, TransformedOutput>
+    ): FullAgentEdgeBuilder<IncomingOutput, TransformedOutput, OutgoingInput> = FullAgentEdgeBuilder(
+        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+            with(forwardOutputComposition(ctx, output)) {
+                ctx.config.submitToMainDispatcher {
+                    map { transformation.invoke(it, ctx) }
+                }
+            }
+        }
+    )
+
+    /**
+     * Transforms the intermediate output of the [ai.koog.agents.core.agent.entity.AIAgentNode] by applying a given transformation block.
+     *
+     * @param transformation A functional interface that defines how to transform intermediate outputs
+     *                        of type [IntermediateOutput] into compatible outputs of type [CompatibleOutput].
+     * @return A builder for configuring and chaining additional processing steps for the edge,
+     *         maintaining type compatibility with the transformed output.
+     */
+    public fun <TransformedOutput> transformed(
+        transformation: SimpleTransformation<IntermediateOutput, TransformedOutput>
+    ): FullAgentEdgeBuilder<IncomingOutput, TransformedOutput, OutgoingInput> = FullAgentEdgeBuilder(
+        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+            with(forwardOutputComposition(ctx, output)) {
+                ctx.config.submitToMainDispatcher {
+                    map { transformation.invoke(it) }
                 }
             }
         }
     )
 }
 
+/**
+ * Constructs a compatible full agent edge between two AI agent nodes, enabling the flow
+ * and transformation of data from the output of one node to the input of another.
+ *
+ * This builder ensures that the output type of the source node is compatible with the input
+ * type of the destination node, using a provided transformation function to adapt the data
+ * during the flow. The compatibility is enforced at runtime when the edge is constructed.
+ *
+ * @param IncomingOutput The type of the output data produced by the source node.
+ * @param CompatibleOutput An intermediate type ensuring compatibility between the source node
+ * and destination node, derived from the source node's output.
+ * @param OutgoingInput The type of the input data expected by the destination node.
+ * @constructor Creates an instance of [CompatibleFullAgentEdgeBuilder].
+ *
+ * @param fromNode The source AI agent node, which emits data that needs to be forwarded.
+ * @param toNode The destination AI agent node, which receives the forwarded data.
+ * @param forwardOutputComposition A transformation function that takes the graph execution context
+ * and the output from the source node, and produces an optional intermediate compatible output.
+ */
 @JavaAPI
 public open class CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput : OutgoingInput, OutgoingInput> internal constructor(
     fromNode: AIAgentNodeBase<*, IncomingOutput>,
     toNode: AIAgentNodeBase<OutgoingInput, *>,
     forwardOutputComposition: suspend (AIAgentGraphContextBase, IncomingOutput) -> Option<CompatibleOutput>
-): FullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput>(
+) : FullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput>(
     fromNode,
     toNode,
     forwardOutputComposition
 ) {
+    private constructor(fullBuilder: FullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput>) : this(
+        fullBuilder.fromNode,
+        fullBuilder.toNode,
+        fullBuilder.forwardOutputComposition
+    )
+
+    /**
+     * Constructs and finalizes an [AIAgentEdge] connecting the specified source and destination nodes.
+     *
+     * @return An instance of [AIAgentEdge] that represents the constructed edge between the source node and the destination node,
+     * enabling the controlled transmission of data from the source to the destination.
+     */
     public fun build(): AIAgentEdge<IncomingOutput, OutgoingInput> {
         val intermediate = AIAgentEdgeBuilderIntermediate(fromNode, toNode, forwardOutputComposition)
         return AIAgentEdgeBuilder(intermediate).build()
     }
+
+    override fun onCondition(condition: ContextualCondition<CompatibleOutput>): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
+        CompatibleFullAgentEdgeBuilder(super.onCondition(condition))
+
+    override fun onCondition(condition: SimpleCondition<CompatibleOutput>): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
+        CompatibleFullAgentEdgeBuilder(super.onCondition(condition))
 }
 
 /**

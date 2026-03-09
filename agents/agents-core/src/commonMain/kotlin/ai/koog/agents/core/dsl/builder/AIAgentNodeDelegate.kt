@@ -4,9 +4,11 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.utils.Some
+import ai.koog.serialization.KotlinTypeToken
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 /**
  * Creates a directed edge from this `AIAgentNodeBase` to another `AIAgentNodeBase`, allowing
@@ -43,11 +45,34 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  */
 public open class AIAgentNodeDelegate<Input, Output>(
     public val name: String?,
-    public val inputType: KType,
-    public val outputType: KType,
+    public val inputType: TypeToken,
+    public val outputType: TypeToken,
     public val execute: suspend AIAgentGraphContextBase.(Input) -> Output
 ) {
     private var node: AIAgentNodeBase<Input, Output>? = null
+
+    /**
+     * Secondary constructor for `AIAgentNodeDelegate` that allows direct specification of input and output types
+     * as [KType] instead of using [KotlinTypeToken].
+     *
+     * This constructor is marked as deprecated because the use of [KotlinTypeToken] for `inputType` and `outputType`
+     * is preferred to streamline type handling and improve interface consistency.
+     *
+     * @param name An optional name associated with the node delegate.
+     * @param inputType The [KType] representing the expected input type for the node.
+     * @param outputType The [KType] representing the expected output type for the node.
+     * @param execute A suspend function defining the execution logic for the node, operating within the scope
+     * of an [AIAgentGraphContextBase] and transforming an `Input` into an `Output`.
+     * @throws IllegalArgumentException If any of the provided parameters are invalid for the context of the node delegate.
+     * @see KotlinTypeToken
+     */
+    @Deprecated("Use TypeToken for inputType and outputType")
+    public constructor(
+        name: String?,
+        inputType: KType,
+        outputType: KType,
+        execute: suspend AIAgentGraphContextBase.(Input) -> Output
+    ) : this(name, KotlinTypeToken(inputType), KotlinTypeToken(outputType), execute)
 
     /**
      * Retrieves an instance of [AIAgentNodeBase] associated with the given property.
@@ -82,7 +107,7 @@ public open class AIAgentNodeDelegate<Input, Output>(
         return AIAgentNodeDelegate(
             name = name,
             inputType = inputType,
-            outputType = typeOf<T>(),
+            outputType = typeToken<T>(),
             execute = { input ->
                 val result = execute.invoke(this, input)
                 transformation(result)

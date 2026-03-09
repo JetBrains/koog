@@ -20,6 +20,7 @@ import ai.koog.agents.core.utils.Option
  * and returns an optional value to determine whether to propagate it further.
  */
 public actual class AIAgentEdge<IncomingOutput, OutgoingInput> internal actual constructor(
+    public actual val fromNode: AIAgentNodeBase<*, IncomingOutput>,
     public actual val toNode: AIAgentNodeBase<OutgoingInput, *>,
     internal actual val forwardOutput: suspend (context: AIAgentGraphContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
 ) {
@@ -46,6 +47,7 @@ public actual class AIAgentEdge<IncomingOutput, OutgoingInput> internal actual c
          * @return A new instance of `AgentEdgeBuilder` to facilitate the creation of `AIAgentEdge` objects.
          */
         @JavaAPI
+        @JvmStatic
         public fun builder(): AgentEdgeBuilder = AgentEdgeBuilder()
     }
 }

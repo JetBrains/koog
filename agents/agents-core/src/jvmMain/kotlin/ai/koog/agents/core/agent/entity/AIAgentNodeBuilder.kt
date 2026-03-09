@@ -3,7 +3,6 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.agent.ContextualAction
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.node
@@ -14,14 +13,19 @@ import ai.koog.agents.core.dsl.extension.requestStreamingAndSendResultsImpl
 import ai.koog.agents.core.dsl.extension.setStructuredOutputImpl
 import ai.koog.agents.core.utils.runOnLLMDispatcher
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.agents.core.utils.submitToMainDispatcher
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.setupLLMAsAJudge
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.serialization.TypeCapture
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
+import io.ktor.utils.io.core.Output
 import kotlin.random.Random
-import kotlin.reflect.full.defaultType
 
 /**
  * A Java builder class for creating [AIAgentNode] with a specified name.
@@ -41,7 +45,17 @@ public class AIAgentNodeBuilder(
      * @return an instance of `AIAgentNodeBuilderWithInput` configured with the specified input type.
      */
     public fun <Input : Any> withInput(clazz: Class<Input>): AIAgentNodeBuilderWithInput<Input> =
-        AIAgentNodeBuilderWithInput(name, clazz)
+        AIAgentNodeBuilderWithInput(name, TypeToken.of(clazz))
+
+
+    /**
+     * Configures the builder to use the specified input type for constructing an [AIAgentNode].
+     *
+     * @param typeToken a [TypeToken] representing the input type.
+     * @return an [AIAgentNodeBuilderWithInput] instance configured with the specified input type.
+     */
+    public fun <Input : Any> withInput(typeToken: TypeToken): AIAgentNodeBuilderWithInput<Input> =
+        AIAgentNodeBuilderWithInput(name, typeToken)
 }
 
 /**
@@ -65,7 +79,22 @@ public class CompressHistoryNodeBuilder(
     public fun <Input : Any> withInput(clazz: Class<Input>): TypedCompressHistoryNodeBuilder<Input> =
         TypedCompressHistoryNodeBuilder(
             name,
-            clazz
+            TypeToken.of(clazz)
+        )
+
+    /**
+     * Configures the current `CompressHistoryNodeBuilder` with a specific input type using a `TypeToken`,
+     * returning a new `TypedCompressHistoryNodeBuilder` specialized for the provided type.
+     *
+     * @param Input The type of input to be associated with the resulting `TypedCompressHistoryNodeBuilder`.
+     *              It must be a non-nullable type.
+     * @param typeToken The `TypeToken` representing the input type to associate with the builder.
+     * @return A new instance of `TypedCompressHistoryNodeBuilder` configured with the specified input type.
+     */
+    public fun <Input : Any> withInput(typeToken: TypeToken): TypedCompressHistoryNodeBuilder<Input> =
+        TypedCompressHistoryNodeBuilder(
+            name,
+            typeToken
         )
 }
 
@@ -74,7 +103,7 @@ public class CompressHistoryNodeBuilder(
  *
  * @param Input The type of the input data for the node.
  * @property name The name of the node to be created.
- * @property inputClass The Kotlin class type of the input data.
+ * @property inputTypeToken Type token of the input data.
  * @property retrievalModel An optional large language model (LLM) used for retrieval purposes.
  * @property strategy The strategy for compressing historical data, which determines how history is managed.
  * @property preserveMemory A flag indicating whether to prioritize preserving memory during history compression.
@@ -82,7 +111,7 @@ public class CompressHistoryNodeBuilder(
 @JavaAPI
 public class TypedCompressHistoryNodeBuilder<Input : Any>(
     private val name: String,
-    private val inputClass: Class<Input>,
+    private val inputTypeToken: TypeToken,
     private val retrievalModel: LLModel? = null,
     private val strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
     private val preserveMemory: Boolean = true,
@@ -95,7 +124,7 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
      * @return A new instance of [TypedCompressHistoryNodeBuilder] with the specified retrieval model configured.
      */
     public fun withRetrievalModel(model: LLModel): TypedCompressHistoryNodeBuilder<Input> =
-        TypedCompressHistoryNodeBuilder(name, inputClass, model, strategy, preserveMemory)
+        TypedCompressHistoryNodeBuilder(name, inputTypeToken, model, strategy, preserveMemory)
 
     /**
      * Sets the history compression strategy to be used for this builder.
@@ -104,7 +133,7 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
      * @return A new instance of `TypedCompressHistoryNodeBuilder` with the specified compression strategy.
      */
     public fun compressionStrategy(strategy: HistoryCompressionStrategy): TypedCompressHistoryNodeBuilder<Input> =
-        TypedCompressHistoryNodeBuilder(name, inputClass, retrievalModel, strategy, preserveMemory)
+        TypedCompressHistoryNodeBuilder(name, inputTypeToken, retrievalModel, strategy, preserveMemory)
 
     /**
      * Sets whether memory preservation is enabled for the node being built.
@@ -113,7 +142,7 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
      * @return This builder instance with the updated memory preservation setting.
      */
     public fun preserveMemory(preserveMemory: Boolean): TypedCompressHistoryNodeBuilder<Input> =
-        TypedCompressHistoryNodeBuilder(name, inputClass, retrievalModel, strategy, preserveMemory)
+        TypedCompressHistoryNodeBuilder(name, inputTypeToken, retrievalModel, strategy, preserveMemory)
 
     /**
      * Builds and returns an instance of [AIAgentNodeBase] configured for compressing history
@@ -124,8 +153,8 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
      * specified inputs and configuration within the strategy graph.
      */
     public fun build(): AIAgentNodeBase<Input, Input> = AIAgentNode.builder(name)
-        .withInput(inputClass)
-        .withOutput(inputClass)
+        .withInput<Input>(inputTypeToken)
+        .withOutput<Input>(inputTypeToken)
         .executeOnLLMDispatcher { input ->
             llmCompressHistoryImpl(input, retrievalModel, strategy, preserveMemory)
         }
@@ -142,8 +171,9 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
 @JavaAPI
 public class AIAgentNodeBuilderWithInput<Input : Any>(
     private val name: String?,
-    private val inputClass: Class<Input>
+    private val inputTypeToken: TypeToken
 ) {
+
     /**
      * Specifies the output type for the [AIAgentNode] and returns a builder for creating a typed [AIAgentNode].
      *
@@ -151,7 +181,20 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
      * @return A builder for creating a typed [AIAgentNode] configured with the specified output type.
      */
     public fun <Output : Any> withOutput(clazz: Class<Output>): TypedAIAgentNodeBuilder<Input, Output> =
-        TypedAIAgentNodeBuilder(name, inputClass, clazz)
+        TypedAIAgentNodeBuilder(name, inputTypeToken, TypeToken.of(clazz))
+
+    /**
+     * Specifies the output type for the AI agent node and returns a builder for creating a typed AI agent node.
+     *
+     * The output type is identified using the provided [TypeToken], which allows handling generic types
+     * and preserves type information during runtime.
+     *
+     * @param typeToken The [TypeToken] that represents the output type of the node.
+     * @return A [TypedAIAgentNodeBuilder] configured with the specified input and output types,
+     *         enabling further customization and creation of the typed AI agent node.
+     */
+    public fun <Output : Any> withOutput(typeToken: TypeToken): TypedAIAgentNodeBuilder<Input, Output> =
+        TypedAIAgentNodeBuilder(name, inputTypeToken, typeToken)
 
     /**
      * Appends a prompt to the AI agent node configuration.
@@ -166,7 +209,7 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
     public fun appendPrompt(
         promptUpdate: PromptBuilderAction
     ): AIAgentNodeBase<Input, Input> = this
-        .withOutput(inputClass)
+        .withOutput<Input>(inputTypeToken)
         .executeOnLLMDispatcher { input ->
             appendPromptImpl(input) {
                 promptUpdate.build(this)
@@ -203,9 +246,9 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
      */
     public fun llmRequestStreamingAndSendResults(
         structureDefinition: StructureDefinition? = null
-    ): AIAgentNodeBase<Input, List<*>> =
-        this // TODO: @EugeneTheDev change to List<Message.Response> once type tokens are merged
-            .withOutput(List::class.java)
+    ): AIAgentNodeBase<Input, List<Message.Response>> =
+        this
+            .withOutput<List<Message.Response>>(typeToken<List<Message.Response>>())
             .executeOnLLMDispatcher { input ->
                 requestStreamingAndSendResultsImpl(structureDefinition)
             }
@@ -224,8 +267,8 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
         llmModel: LLModel? = null
     ): AIAgentNodeBase<Input, CriticResult<Input>> {
         val node by node<Input, CriticResult<Input>>(
-            inputType = inputClass.kotlin.defaultType,
-            outputType = CriticResult::class.defaultType // TODO: @EugeneTheDev change to type token with generic info!
+            inputType = inputTypeToken,
+            outputType = typeToken(CriticResult::class, listOf(inputTypeToken))
         ) { input ->
             setupLLMAsAJudge(task, llmModel, input)
         }
@@ -250,7 +293,7 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
     public fun <T : Any> setStructuredOutput(
         config: StructuredRequestConfig<T>,
     ): AIAgentNodeBase<Input, Input> = this
-        .withOutput(inputClass)
+        .withOutput<Input>(inputTypeToken)
         .executeOnStrategyDispatcher { message ->
             setStructuredOutputImpl(config, message)
         }
@@ -268,8 +311,8 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
 @JavaAPI
 public class TypedAIAgentNodeBuilder<Input : Any, Output : Any>(
     private val name: String?,
-    private val inputClass: Class<Input>,
-    private val outputClass: Class<Output>
+    private val inputTypeToken: TypeToken,
+    private val outputTypeToken: TypeToken
 ) {
     /**
      * Creates and returns an instance of [AIAgentNode] that encapsulates the provided execution logic.
@@ -287,10 +330,10 @@ public class TypedAIAgentNodeBuilder<Input : Any, Output : Any>(
     public fun withAction(nodeAction: ContextualAction<Input, Output>): AIAgentNode<Input, Output> {
         return AIAgentNode(
             name ?: "node-${Random.nextInt()}",
-            inputClass.kotlin.defaultType,
-            outputClass.kotlin.defaultType
+            inputTypeToken,
+            outputTypeToken
         ) { input ->
-            this.config.runOnStrategyDispatcher {
+            this.config.submitToMainDispatcher {
                 nodeAction.execute(input, this)
             }
         }

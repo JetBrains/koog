@@ -26,6 +26,8 @@ import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Serializable
@@ -321,6 +323,20 @@ public inline fun <reified T> nodeLLMRequestStructured(
     name: String? = null,
     examples: List<T> = emptyList(),
     fixingParser: StructureFixingParser? = null
+): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> = nodeLLMRequestStructured(name, examples, fixingParser,
+    typeToken<T>()
+)
+
+/**
+ * [InternalAgentsApi] method. Requests structured data from the LLM with optional error correction capabilities.
+ * */
+@AIAgentBuilderDslMarker
+@InternalAgentsApi
+public fun <T> nodeLLMRequestStructured(
+    name: String? = null,
+    examples: List<T> = emptyList(),
+    fixingParser: StructureFixingParser? = null,
+    typeToken: TypeToken
 ): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> =
     node(name) { message ->
         llm.writeSession {
@@ -330,7 +346,8 @@ public inline fun <reified T> nodeLLMRequestStructured(
 
             requestLLMStructured<T>(
                 examples = examples,
-                fixingParser = fixingParser
+                fixingParser = fixingParser,
+                typeToken = typeToken
             )
         }
     }

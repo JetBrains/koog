@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.ext.agent.CriticResult
+import ai.koog.serialization.TypeToken
 
 /**
  * Represents a configuration option for determining the output type in a subtask builder process.
@@ -19,7 +20,12 @@ public sealed interface OutputOption<Output : Any> {
      * @param Output The type of the output.
      * @property outputClass The `Class` object representing the desired output type.
      */
-    public class ByClass<Output : Any>(public val outputClass: Class<Output>) : OutputOption<Output>
+    public class ByClass<Output : Any>(public val outputClass: Class<Output>) : OutputOption<Output> {
+        /**
+         * [TypeToken] corresponding to the output type defined by [outputClass].
+         */
+        public val outputTypeToken: TypeToken = TypeToken.of(outputClass)
+    }
 
     /**
      * Represents an output option determined by a specific tool that provides the output.

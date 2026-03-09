@@ -342,8 +342,8 @@ public constructor(
     override val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     public val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: KType,
-    private val outputType: KType,
+    private val inputType: TypeToken,
+    private val outputType: TypeToken,
     override val toolRegistry: ToolRegistry,
     public val installFeatures: FeatureContext.() -> Unit
 ) : AIAgentServiceBase<Input, Output, GraphAIAgent<Input, Output>>() {
