@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.features.opentelemetry.span.endInferenceSpan
