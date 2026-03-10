@@ -76,7 +76,7 @@ public object ModelSelectors {
      */
     public fun withSteps(
         vararg steps: ModelSelectionStep,
-        maxConcurrentlyFilteredModels: Int = 8,
+        maxConcurrentlyFilteredModels: Int = DefaultModelSelector.DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS,
     ): ModelSelector =
         DefaultModelSelector(
             steps = steps,

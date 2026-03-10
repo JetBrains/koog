@@ -4,10 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.ExecutionPolicy
 import ai.koog.prompt.executor.model.ModelSelection
 import ai.koog.prompt.executor.model.ModelSelector
-import ai.koog.prompt.executor.model.ModelsToAttempt
 import ai.koog.prompt.executor.model.SelectingPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -154,14 +152,12 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun execute(
         prompt: Prompt,
         modelSelector: ModelSelector,
-        tools: List<ToolDescriptor>,
-        executionPolicy: ExecutionPolicy
+        tools: List<ToolDescriptor>
     ): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and modelSelector: $modelSelector" }
 
-        val response = selectAndExecute(modelSelector, executionPolicy) { (client, model) ->
-            client.execute(prompt, model, tools)
-        }
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(modelSelector)
+        val response = effectiveClient.execute(prompt, effectiveModel, tools)
 
         logger.debug { "Response: $response" }
 
@@ -184,14 +180,12 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     override fun executeStreaming(
         prompt: Prompt,
         modelSelector: ModelSelector,
-        tools: List<ToolDescriptor>,
-        executionPolicy: ExecutionPolicy
+        tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with modelSelector: $modelSelector" }
         return flow {
-            selectAndExecute(modelSelector, executionPolicy) { (client, model) ->
-                emitAll(client.executeStreaming(prompt, model, tools))
-            }
+            val (client, effectiveModel) = chooseClientAndModel(modelSelector)
+            emitAll(client.executeStreaming(prompt, effectiveModel, tools))
         }
     }
 
@@ -211,14 +205,12 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         modelSelector: ModelSelector,
-        tools: List<ToolDescriptor>,
-        executionPolicy: ExecutionPolicy
+        tools: List<ToolDescriptor>
     ): List<LLMChoice> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and modelSelector: $modelSelector" }
 
-        val choices = selectAndExecute(modelSelector, executionPolicy) { (client, model) ->
-            client.executeMultipleChoices(prompt, model, tools)
-        }
+        val (client, effectiveModel) = chooseClientAndModel(modelSelector)
+        val choices = client.executeMultipleChoices(prompt, effectiveModel, tools)
 
         logger.debug { "Choices: $choices" }
 
@@ -239,14 +231,13 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      */
     override suspend fun moderate(
         prompt: Prompt,
-        modelSelector: ModelSelector,
-        executionPolicy: ExecutionPolicy
+        modelSelector: ModelSelector
     ): ModerationResult {
         logger.debug { "Moderating multi-modal content with modelSelector: $modelSelector" }
 
-        return selectAndExecute(modelSelector, executionPolicy) { (client, effectiveModel) ->
-            client.moderate(prompt, effectiveModel)
-        }
+        val (client, effectiveModel) = chooseClientAndModel(modelSelector)
+
+        return client.moderate(prompt, effectiveModel)
     }
 
     override suspend fun models(): List<LLModel> = modelsDiscovery.await()
@@ -270,41 +261,39 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         clientRouter.clients.forEach { it.close() }
     }
 
-    private suspend fun <T> selectAndExecute(
-        modelSelector: ModelSelector,
-        executionPolicy: ExecutionPolicy,
-        block: suspend (ExecutionSubject) -> T
-    ): T {
-        val modelSelection = modelSelector.select(models())
-        val modelsToAttempt = modelSelection.pickFinal(executionPolicy.modelsToAttempt)
-        val executionSubjects = modelsToAttempt.mapNotNull { model ->
-            clientRouter.clientFor(model)?.let { client -> client to model }
+    /**
+     * Resolves the client and model to use for execution based on [modelSelector].
+     *
+     * Passes all executor models to [modelSelector], then walks the ranked result top-to-bottom,
+     * returning the first model that has a registered client in [clientRouter].
+     * Falls back to [effectiveFallback] if no ranked model has a client.
+     *
+     * @throws IllegalArgumentException If no client is found for any ranked model and no fallback is configured.
+     */
+    private suspend fun chooseClientAndModel(modelSelector: ModelSelector): ExecutionSubject {
+        val selection = modelSelector.select(models())
+        val selectedSubject = chooseClientAndModelFromSelection(selection)
+        return when {
+            selectedSubject != null -> selectedSubject
+            effectiveFallback != null -> effectiveFallback
+            else -> throw IllegalArgumentException("No client found for model selection")
         }
-
-        for (executionSubject in executionSubjects) {
-            for (modelAttempt in 1..(executionPolicy.maxRetriesPerModel + 1)) {
-                if (modelAttempt > 1) {
-                    logger.debug { "Retry execution with model ${executionSubject.second.id} (attempt $modelAttempt)" }
-                }
-                try {
-                    return block(executionSubject)
-                } catch (e: Exception) {
-                    logger.warn(e) { "Failed to execute with model ${executionSubject.second.id}" }
-                }
-            }
-        }
-        effectiveFallback?.let { return block(it) }
-
-        throw IllegalArgumentException(
-            "No client found for any model in the selection: ${modelSelection.ranked.map { it.id }}"
-        )
     }
 
-    private fun ModelSelection.pickFinal(modelsToAttempt: ModelsToAttempt): List<LLModel> =
-        when (modelsToAttempt) {
-            is ModelsToAttempt.All -> ranked
-            is ModelsToAttempt.UpTo -> ranked.take(modelsToAttempt.count)
+    /**
+     * Walks [selection] from best to worst, returning the first model with a registered client.
+     *
+     * Returns `null` if no model in the selection has a registered client.
+     */
+    private fun chooseClientAndModelFromSelection(selection: ModelSelection): ExecutionSubject? {
+        for (model in selection.ranked) {
+            val client = clientRouter.clientFor(model)
+            if (client != null) {
+                return client to model
+            }
         }
+        return null
+    }
 }
 
 private typealias ExecutionSubject = Pair<LLMClient, LLModel>

@@ -56,7 +56,6 @@ public abstract class SelectingPromptExecutor : PromptExecutor() {
         prompt: Prompt,
         modelSelector: ModelSelector,
         tools: List<ToolDescriptor> = emptyList(),
-        executionPolicy: ExecutionPolicy = ExecutionPolicy.TryBestOnce,
     ): List<Message.Response>
 
     /**
@@ -71,7 +70,6 @@ public abstract class SelectingPromptExecutor : PromptExecutor() {
         prompt: Prompt,
         modelSelector: ModelSelector,
         tools: List<ToolDescriptor> = emptyList(),
-        executionPolicy: ExecutionPolicy = ExecutionPolicy.TryBestOnce,
     ): Flow<StreamFrame>
 
     /**
@@ -86,7 +84,6 @@ public abstract class SelectingPromptExecutor : PromptExecutor() {
         prompt: Prompt,
         modelSelector: ModelSelector,
         tools: List<ToolDescriptor>,
-        executionPolicy: ExecutionPolicy = ExecutionPolicy.TryBestOnce,
     ): List<LLMChoice>
 
     /**
@@ -96,11 +93,7 @@ public abstract class SelectingPromptExecutor : PromptExecutor() {
      * @param modelSelector Selector that ranks models available to this executor.
      * @return Moderation result.
      */
-    public abstract suspend fun moderate(
-        prompt: Prompt,
-        modelSelector: ModelSelector,
-        executionPolicy: ExecutionPolicy = ExecutionPolicy.TryBestOnce
-    ): ModerationResult
+    public abstract suspend fun moderate(prompt: Prompt, modelSelector: ModelSelector): ModerationResult
 
     /**
      * Returns all models available to this executor.
@@ -111,58 +104,4 @@ public abstract class SelectingPromptExecutor : PromptExecutor() {
      * @return Available models.
      */
     abstract override suspend fun models(): List<LLModel>
-}
-
-/**
- * Defines how execution should traverse and retry models returned by a [ModelSelector].
- *
- * @constructor Creates immutable execution policy.
- * @property modelsToAttempt Maximum number of models returned by [ModelSelector.select] that may be attempted.
- * @property maxRetriesPerModel Maximum retries per attempted model.
- * @throws IllegalArgumentException If [maxRetriesPerModel] is negative.
- */
-public data class ExecutionPolicy(
-    public val modelsToAttempt: ModelsToAttempt = ModelsToAttempt.UpTo(1),
-    public val maxRetriesPerModel: Int = 0,
-) {
-
-    init {
-        require(maxRetriesPerModel >= 0) { "maxRetriesPerModel must be non-negative." }
-    }
-
-    public companion object {
-        public val TryBestOnce: ExecutionPolicy = ExecutionPolicy(
-            modelsToAttempt = ModelsToAttempt.UpTo(1),
-            maxRetriesPerModel = 0,
-        )
-
-        public val TryAllOnce: ExecutionPolicy = ExecutionPolicy(
-            modelsToAttempt = ModelsToAttempt.All,
-            maxRetriesPerModel = 0,
-        )
-    }
-}
-
-/**
- * Limit for how many ranked models can be attempted for a single execution.
- */
-public sealed interface ModelsToAttempt {
-
-    /**
-     * Attempt all models from selector ranking.
-     */
-    public object All : ModelsToAttempt
-
-    /**
-     * Attempt up to [count] models from selector ranking.
-     *
-     * @constructor Creates bounded-attempt limit.
-     * @property count Maximum number of models to attempt.
-     * @throws IllegalArgumentException If [count] is not positive.
-     */
-    public data class UpTo(val count: Int) : ModelsToAttempt {
-        init {
-            require(count > 0) { "count must be positive, was $count" }
-        }
-    }
 }
