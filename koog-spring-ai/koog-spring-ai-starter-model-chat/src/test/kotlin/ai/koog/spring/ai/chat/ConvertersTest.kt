@@ -359,7 +359,7 @@ class ConvertersTest {
     fun `parameterTypeToJsonSchema returns correct type for all primitives`() {
         // Parse as JSON to verify validity rather than exact string match
         fun assertType(expected: String, type: ToolParameterType) {
-            val json = Json.parseToJsonElement(parameterTypeToJsonSchema(type)).jsonObject
+            val json = Json.parseToJsonElement(parameterTypeToJsonElement(type).toString()).jsonObject
             assertEquals(expected, json["type"]?.jsonPrimitive?.content)
         }
         assertType("string", ToolParameterType.String)

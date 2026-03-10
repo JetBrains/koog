@@ -5,7 +5,6 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
@@ -265,25 +264,6 @@ internal fun parameterTypeToJsonElement(
 }
 
 /**
- * Extracts a single plain-text string from all messages in a [Prompt].
- *
- * Only [ContentPart.Text] parts are included; other content parts (images, etc.) are ignored.
- * Messages are joined with a blank line between them.
- *
- * @param prompt the Koog prompt whose messages should be concatenated
- * @return the concatenated text, trimmed
- */
-public fun promptToPlainText(prompt: Prompt): String =
-    prompt.messages.joinToString(separator = "\n\n") { message ->
-        message.parts.joinToString(separator = " ") { part ->
-            when (part) {
-                is ContentPart.Text -> part.text
-                else -> ""
-            }
-        }.trim()
-    }.trim()
-
-/**
  * Converts a Spring AI [SpringModeration] to a Koog [ModerationResult].
  *
  * Maps all 11 Spring AI moderation categories to their Koog counterparts,
@@ -385,15 +365,6 @@ public fun springModerationResultToKoogModerationResult(springResult: SpringMode
     }
 
     return ModerationResult(isHarmful = result.isFlagged, categories = categoryMap)
-}
-
-/**
- * Converts a [ToolParameterType] to its JSON Schema string representation.
- *
- * This is a convenience wrapper around [parameterTypeToJsonElement] for backward compatibility.
- */
-internal fun parameterTypeToJsonSchema(type: ToolParameterType): String {
-    return parameterTypeToJsonElement(type).toString()
 }
 
 /**

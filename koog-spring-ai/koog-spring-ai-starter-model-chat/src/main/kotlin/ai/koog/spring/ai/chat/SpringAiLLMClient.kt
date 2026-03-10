@@ -234,8 +234,16 @@ public class SpringAiLLMClient(
 
         require(prompt.messages.isNotEmpty()) { "Can't moderate an empty prompt" }
 
+        if (prompt.messages.any { it.hasAttachments() }) {
+            throw UnsupportedOperationException(
+                "Moderation of non-text content (images, audio, video, files) is not supported by Spring AI. " +
+                    "Only text-only prompts can be moderated. Remove attachments before calling moderate()."
+            )
+        }
+
         val response = try {
-            springModerationModel.call(ModerationPrompt(promptToPlainText(prompt)))
+            val instructions = prompt.messages.joinToString(separator = "\n\n") { it.content.trim() }.trim()
+            springModerationModel.call(ModerationPrompt(instructions))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

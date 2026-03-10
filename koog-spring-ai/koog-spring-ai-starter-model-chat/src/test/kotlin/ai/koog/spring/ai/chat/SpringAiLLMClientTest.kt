@@ -8,6 +8,8 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -348,6 +350,34 @@ class SpringAiLLMClientTest {
         } catch (e: UnsupportedOperationException) {
             // expected
         }
+    }
+
+    @Test
+    fun `moderate throws UnsupportedOperationException for multimodal prompt`() = runBlocking {
+        val moderationModel = object : org.springframework.ai.moderation.ModerationModel {
+            override fun call(request: org.springframework.ai.moderation.ModerationPrompt): org.springframework.ai.moderation.ModerationResponse =
+                throw AssertionError("Should not be called for multimodal prompts")
+        }
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
+            override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
+            override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
+        }).moderationModel(moderationModel).build()
+
+        val multimodalMessage = Message.User(
+            listOf(
+                ContentPart.Text("Describe this image"),
+                ContentPart.Image(
+                    content = AttachmentContent.Binary.Bytes(byteArrayOf(1, 2, 3)),
+                    format = "png"
+                )
+            ),
+            requestMeta()
+        )
+        val prompt = createPrompt(multimodalMessage)
+        val exception = assertThrows<UnsupportedOperationException> {
+            client.moderate(prompt, testModel)
+        }
+        assertTrue(exception.message!!.contains("non-text content"))
     }
 
     // ---- exception translation ----
