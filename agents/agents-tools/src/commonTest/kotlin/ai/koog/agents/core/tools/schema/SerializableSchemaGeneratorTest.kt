@@ -26,6 +26,7 @@ class SerializableSchemaGeneratorTest {
         val nullableProperty: String? = null,
         val listProperty: List<String> = emptyList(),
         val mapProperty: Map<String, Int> = emptyMap(),
+        @property:LLMDescription("A custom nested property")
         val nestedProperty: NestedProperty = NestedProperty("foo", 1),
         val nestedListProperty: List<NestedProperty> = emptyList(),
         val nestedMapProperty: Map<String, NestedProperty> = emptyMap(),
@@ -167,7 +168,7 @@ class SerializableSchemaGeneratorTest {
                 ),
                 ToolParameterDescriptor(
                     name = "nestedProperty",
-                    description = "Nested property class",
+                    description = "A custom nested property",
                     type = nestedObject,
                 ),
                 ToolParameterDescriptor(

@@ -14,7 +14,6 @@ import kotlinx.schema.json.AllowAdditionalProperties
 import kotlinx.schema.json.AnyOfPropertyDefinition
 import kotlinx.schema.json.ArrayPropertyDefinition
 import kotlinx.schema.json.BooleanPropertyDefinition
-import kotlinx.schema.json.CommonSchemaAttributes
 import kotlinx.schema.json.DenyAdditionalProperties
 import kotlinx.schema.json.JsonSchema
 import kotlinx.schema.json.JsonSchemaConstants
@@ -191,7 +190,7 @@ internal fun PropertyDefinition.toToolParameter(
 
         ToolParameterInfo(
             type = effectiveParameterType,
-            description = this.descriptionOrNull.orEmpty()
+            description = this.description.orEmpty()
         )
     }
 
@@ -207,7 +206,7 @@ internal fun PropertyDefinition.toToolParameter(
                 ToolParameterInfo(
                     type = it.type,
                     // If ref property itself has a description, use it, otherwise use the referenced type description
-                    description = this.descriptionOrNull ?: it.description,
+                    description = this.description ?: it.description,
                 )
             }
             ?: throw IllegalArgumentException("Can't find ref in defs: $ref. Schema defs: ${defs.keys}")
@@ -230,7 +229,7 @@ internal fun PropertyDefinition.toToolParameter(
 
         ToolParameterInfo(
             type = parameterType,
-            description = "",
+            description = this.description.orEmpty(),
         )
     }
 
@@ -252,13 +251,10 @@ internal fun PropertyDefinition.toToolParameter(
 
         ToolParameterInfo(
             type = parameterType,
-            description = "",
+            description = this.description.orEmpty(),
         )
     }
 
     else ->
         throw IllegalArgumentException("Unsupported property definition type: $this")
 }
-
-internal val PropertyDefinition.descriptionOrNull: String?
-    get() = (this as? CommonSchemaAttributes)?.description

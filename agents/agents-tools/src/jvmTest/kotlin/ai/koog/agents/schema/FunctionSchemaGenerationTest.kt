@@ -25,10 +25,11 @@ class FunctionSchemaGenerationTest {
         val nullableProperty: String? = null,
         val listProperty: List<String> = emptyList(),
         val mapProperty: Map<String, Int> = emptyMap(),
+        @property:LLMDescription("A custom nested property")
         val nestedProperty: NestedProperty = NestedProperty("foo", 1),
         val nestedListProperty: List<NestedProperty> = emptyList(),
         val nestedMapProperty: Map<String, NestedProperty> = emptyMap(),
-        @property:LLMDescription("A polymorphic property")
+        @property:LLMDescription("A custom polymorphic property")
         val polymorphicProperty: TestClosedPolymorphism = TestClosedPolymorphism.SubClass1("id1", "property1"),
         val enumProperty: TestEnum = TestEnum.One,
         val objectProperty: TestObject = TestObject,
@@ -161,7 +162,7 @@ class FunctionSchemaGenerationTest {
                 ),
                 ToolParameterDescriptor(
                     name = "nestedProperty",
-                    description = "Nested property class",
+                    description = "A custom nested property",
                     type = nestedObject,
                 ),
                 ToolParameterDescriptor(
@@ -183,7 +184,7 @@ class FunctionSchemaGenerationTest {
                 ),
                 ToolParameterDescriptor(
                     name = "polymorphicProperty",
-                    description = "A polymorphic property",
+                    description = "A custom polymorphic property",
                     type = ToolParameterType.AnyOf(
                         types = arrayOf(
                             ToolParameterDescriptor(
