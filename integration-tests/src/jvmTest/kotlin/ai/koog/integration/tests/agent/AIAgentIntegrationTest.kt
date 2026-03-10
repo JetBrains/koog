@@ -468,7 +468,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-        // TODO: Remove this skip when KG-596 thought_signature fix is merged
+        // TODO: Remove this skip when thought_signature presence is fixed
         assumeTrue(
             model.provider !is GoogleLLMProvider,
             "Skipping Google models until thought_signature support is in this branch (KG-596)"
