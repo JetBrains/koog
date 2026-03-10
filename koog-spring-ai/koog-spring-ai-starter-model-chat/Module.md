@@ -69,14 +69,13 @@ Or provide your own `PromptExecutor` bean to override the auto-configured one en
 | `chat-model-bean-name` | `String?` | `null` | Bean name of the `ChatModel` to use (for multi-model contexts) |
 | `moderation-model-bean-name` | `String?` | `null` | Bean name of the `ModerationModel` to use (for multi-model contexts) |
 | `provider` | `String?` | `null` | LLM provider id (e.g. `openai`, `anthropic`, `google`). When set, overrides auto-detection from the `ChatModel` class name. Falls back to `spring-ai` if auto-detection fails. |
-| `dispatcher.type` | `AUTO` / `IO` / `FIXED_THREAD_POOL` | `AUTO` | Dispatcher for blocking model calls |
-| `dispatcher.parallelism` | `Int` | `0` (= CPU count) | Thread pool size (for `FIXED_THREAD_POOL`) |
+| `dispatcher.type` | `AUTO` / `IO` | `AUTO` | Dispatcher for blocking model calls |
+| `dispatcher.parallelism` | `Int` | `0` (= unbounded) | Max concurrency for `IO` dispatcher (0 = no limit) |
 
 ### Dispatcher types
 
 - **`AUTO`** (default): Uses a Spring-managed `AsyncTaskExecutor` if available (e.g., when `spring.threads.virtual.enabled=true` in Spring Boot 3.2+), otherwise falls back to `Dispatchers.IO`. This lets you opt into virtual threads with a single standard Spring Boot property.
-- **`IO`**: Always uses `Dispatchers.IO`.
-- **`FIXED_THREAD_POOL`**: Uses a fixed-size thread pool with `dispatcher.parallelism` threads. The pool is shut down automatically when the application context closes.
+- **`IO`**: Always uses `Dispatchers.IO`. When `dispatcher.parallelism` is greater than 0, uses `Dispatchers.IO.limitedParallelism(parallelism)` to cap concurrency.
 
 ### Multi-model contexts
 

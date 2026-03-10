@@ -15,7 +15,6 @@ import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.moderation.ModerationModel
-import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.AutoConfigurations
@@ -118,29 +117,16 @@ class SpringAiChatAutoConfigurationTest {
     }
 
     @Test
-    fun `should create FIXED_THREAD_POOL dispatcher that implements DisposableBean`() {
+    fun `IO dispatcher with parallelism should create limited dispatcher`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring.ai.chat.dispatcher.type=FIXED_THREAD_POOL",
+                "koog.spring.ai.chat.dispatcher.type=IO",
                 "koog.spring.ai.chat.dispatcher.parallelism=2"
             )
             .run { context ->
                 val dispatcher = context.getBean("koogSpringAiChatDispatcher")
                 assertNotNull(dispatcher)
-                assertInstanceOf<DisposableBean>(dispatcher)
-            }
-    }
-
-    @Test
-    fun `FIXED_THREAD_POOL dispatcher destroy does not throw`() {
-        contextRunner()
-            .withPropertyValues(
-                "koog.spring.ai.chat.dispatcher.type=FIXED_THREAD_POOL",
-                "koog.spring.ai.chat.dispatcher.parallelism=1"
-            )
-            .run { context ->
-                val dispatcher = context.getBean("koogSpringAiChatDispatcher") as DisposableBean
-                dispatcher.destroy()
+                assertInstanceOf<CoroutineDispatcher>(dispatcher)
             }
     }
 

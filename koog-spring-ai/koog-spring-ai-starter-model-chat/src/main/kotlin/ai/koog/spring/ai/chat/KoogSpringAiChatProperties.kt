@@ -32,7 +32,8 @@ public data class KoogSpringAiChatProperties(
      * Dispatcher settings for blocking Spring AI model calls.
      *
      * @property type The dispatcher type to use. Default: [DispatcherType.AUTO].
-     * @property parallelism Maximum parallelism for the dispatcher (applies to [DispatcherType.FIXED_THREAD_POOL]).
+     * @property parallelism Maximum parallelism for the dispatcher. When greater than 0 and [DispatcherType.IO]
+     *   is selected, `Dispatchers.IO.limitedParallelism(parallelism)` is used instead of the unbounded `Dispatchers.IO`.
      */
     public data class DispatcherProperties(
         val type: DispatcherType = DispatcherType.AUTO,
@@ -56,10 +57,12 @@ public data class KoogSpringAiChatProperties(
          */
         AUTO,
 
-        /** Use [kotlinx.coroutines.Dispatchers.IO]. */
+        /**
+         * Use [kotlinx.coroutines.Dispatchers.IO].
+         *
+         * When [DispatcherProperties.parallelism] is greater than 0, uses
+         * `Dispatchers.IO.limitedParallelism(parallelism)` to cap concurrency.
+         */
         IO,
-
-        /** Use a fixed-size thread pool with [DispatcherProperties.parallelism] threads. */
-        FIXED_THREAD_POOL,
     }
 }

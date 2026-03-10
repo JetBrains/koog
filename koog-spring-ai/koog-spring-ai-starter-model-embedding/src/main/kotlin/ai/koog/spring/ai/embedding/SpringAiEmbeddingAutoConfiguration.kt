@@ -3,12 +3,10 @@ package ai.koog.spring.ai.embedding
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.ai.embedding.EmbeddingModel
 import org.springframework.beans.factory.BeanFactory
-import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -21,7 +19,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.lang.Nullable
-import java.util.concurrent.Executors
 
 /**
  * Auto-configuration for the Koog Spring AI Embedding Model adapter.
@@ -79,26 +76,13 @@ public open class SpringAiEmbeddingAutoConfiguration {
             }
 
             KoogSpringAiEmbeddingProperties.DispatcherType.IO -> {
-                logger.info("Koog Spring AI Embedding: using Dispatchers.IO for blocking model calls")
-                Dispatchers.IO
-            }
-
-            KoogSpringAiEmbeddingProperties.DispatcherType.FIXED_THREAD_POOL -> {
-                val parallelism = properties.dispatcher.parallelism.takeIf { it > 0 }
-                    ?: Runtime.getRuntime().availableProcessors()
-                logger.info("Koog Spring AI Embedding: using fixed thread pool with parallelism=$parallelism for blocking model calls")
-                val executor = Executors.newFixedThreadPool(parallelism)
-                val delegate: ExecutorCoroutineDispatcher = executor.asCoroutineDispatcher()
-                object : ExecutorCoroutineDispatcher(), DisposableBean {
-                    override val executor: java.util.concurrent.Executor get() = executor
-                    override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) =
-                        delegate.dispatch(context, block)
-
-                    override fun close() = delegate.close()
-                    override fun destroy() {
-                        logger.info("Koog Spring AI Embedding: shutting down fixed thread pool dispatcher")
-                        close()
-                    }
+                val parallelism = properties.dispatcher.parallelism
+                if (parallelism > 0) {
+                    logger.info("Koog Spring AI Embedding: using Dispatchers.IO.limitedParallelism($parallelism) for blocking model calls")
+                    Dispatchers.IO.limitedParallelism(parallelism)
+                } else {
+                    logger.info("Koog Spring AI Embedding: using Dispatchers.IO for blocking model calls")
+                    Dispatchers.IO
                 }
             }
         }

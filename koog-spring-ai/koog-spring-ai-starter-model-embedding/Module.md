@@ -54,14 +54,13 @@ Or provide your own `LLMEmbeddingProvider` bean to override the auto-configured 
 |---|---|---|---|
 | `enabled` | `Boolean` | `true` | Enable/disable the embedding auto-configuration |
 | `embedding-model-bean-name` | `String?` | `null` | Bean name of the `EmbeddingModel` to use (for multi-model contexts) |
-| `dispatcher.type` | `AUTO` / `IO` / `FIXED_THREAD_POOL` | `AUTO` | Dispatcher for blocking model calls |
-| `dispatcher.parallelism` | `Int` | `0` (= CPU count) | Thread pool size (for `FIXED_THREAD_POOL`) |
+| `dispatcher.type` | `AUTO` / `IO` | `AUTO` | Dispatcher for blocking model calls |
+| `dispatcher.parallelism` | `Int` | `0` (= unbounded) | Max concurrency for `IO` dispatcher (0 = no limit) |
 
 ### Dispatcher types
 
 - **`AUTO`** (default): Uses a Spring-managed `AsyncTaskExecutor` if available (e.g., when `spring.threads.virtual.enabled=true` in Spring Boot 3.2+), otherwise falls back to `Dispatchers.IO`. This lets you opt into virtual threads with a single standard Spring Boot property.
-- **`IO`**: Always uses `Dispatchers.IO`.
-- **`FIXED_THREAD_POOL`**: Uses a fixed-size thread pool with `dispatcher.parallelism` threads. The pool is shut down automatically when the application context closes.
+- **`IO`**: Always uses `Dispatchers.IO`. When `dispatcher.parallelism` is greater than 0, uses `Dispatchers.IO.limitedParallelism(parallelism)` to cap concurrency.
 
 ### Multi-model contexts
 

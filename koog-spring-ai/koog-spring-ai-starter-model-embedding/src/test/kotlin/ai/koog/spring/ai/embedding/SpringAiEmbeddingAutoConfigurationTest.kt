@@ -11,7 +11,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 import org.springframework.ai.embedding.EmbeddingModel
-import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.AutoConfigurations
@@ -114,29 +113,16 @@ class SpringAiEmbeddingAutoConfigurationTest {
     }
 
     @Test
-    fun `should create FIXED_THREAD_POOL dispatcher that implements DisposableBean`() {
+    fun `IO dispatcher with parallelism should create limited dispatcher`() {
         contextRunner()
             .withPropertyValues(
-                "koog.spring.ai.embedding.dispatcher.type=FIXED_THREAD_POOL",
+                "koog.spring.ai.embedding.dispatcher.type=IO",
                 "koog.spring.ai.embedding.dispatcher.parallelism=2"
             )
             .run { context ->
                 val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher")
                 assertNotNull(dispatcher)
-                assertInstanceOf<DisposableBean>(dispatcher)
-            }
-    }
-
-    @Test
-    fun `FIXED_THREAD_POOL dispatcher destroy does not throw`() {
-        contextRunner()
-            .withPropertyValues(
-                "koog.spring.ai.embedding.dispatcher.type=FIXED_THREAD_POOL",
-                "koog.spring.ai.embedding.dispatcher.parallelism=1"
-            )
-            .run { context ->
-                val dispatcher = context.getBean("koogSpringAiEmbeddingDispatcher") as DisposableBean
-                dispatcher.destroy()
+                assertInstanceOf<CoroutineDispatcher>(dispatcher)
             }
     }
 
