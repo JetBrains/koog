@@ -6,7 +6,7 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.withPersistence
 import ai.koog.serialization.JSONPrimitive
-import kotlin.reflect.typeOf
+import ai.koog.serialization.typeToken
 
 /**
  * Creates a simple node that appends the output to the input.
@@ -133,7 +133,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
 private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? = null, checkpointId: String) =
     node<String, String>(name) { input ->
         withPersistence { ctx ->
-            createCheckpoint(ctx, name!!, input, typeOf<String>(), 0L, checkpointId)
+            createCheckpoint(ctx, name!!, input, typeToken<String>(), 0L, checkpointId)
             llm.writeSession {
                 appendPrompt {
                     user {
@@ -180,7 +180,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
             ctx,
             ctx.executionInfo.path(),
             input,
-            typeOf<String>(),
+            typeToken<String>(),
             0L
         )
 

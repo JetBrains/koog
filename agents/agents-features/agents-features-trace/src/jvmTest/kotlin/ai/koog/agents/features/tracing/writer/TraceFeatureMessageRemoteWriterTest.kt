@@ -32,7 +32,6 @@ import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
@@ -55,6 +54,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -74,7 +74,6 @@ import kotlinx.io.IOException
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -333,8 +332,8 @@ class TraceFeatureMessageRemoteWriterTest {
                 val dummyToolDescription = dummyTool.descriptor.description
 
                 val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
-                SerializationUtils.encodeDataToJsonElementOrNull(
-                    data = receivedToolResult(
+                serializer.encodeToJSONElement(
+                    receivedToolResult(
                         toolCallId = "0",
                         toolName = dummyToolName,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
@@ -342,7 +341,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         content = dummyTool.result,
                         result = dummyToolResultEncoded,
                     ),
-                    dataType = typeOf<ReceivedToolResult>()
+                    typeToken<ReceivedToolResult>()
                 )
 
                 // Correct run id will be set after the 'collect events job' is finished.
@@ -397,9 +396,9 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                userPrompt,
+                                typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -409,14 +408,14 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                userPrompt,
+                                typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                userPrompt,
+                                typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -426,9 +425,9 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = nodeSendLLMCallName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                userPrompt,
+                                typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -456,17 +455,17 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = nodeSendLLMCallName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                userPrompt,
+                                typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = toolCallMessage(
+                            serializer.encodeToJSONElement(
+                                toolCallMessage(
                                     dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                dataType = typeOf<Message>()
+                                typeToken<Message>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -476,9 +475,9 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = nodeExecuteToolName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                                dataType = typeOf<Message.Tool.Call>()
+                            serializer.encodeToJSONElement(
+                                toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
+                                typeToken<Message.Tool.Call>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -508,9 +507,9 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = nodeExecuteToolName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                                dataType = typeOf<Message.Tool.Call>()
+                            serializer.encodeToJSONElement(
+                                toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
+                                typeToken<Message.Tool.Call>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds(),
                             // Tool result is wrapped into an object with id, tool, content, and result fields
@@ -549,9 +548,9 @@ class TraceFeatureMessageRemoteWriterTest {
                             nodeName = nodeSendToolResultName,
                             input = dummyReceivedToolResultEncoded,
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = assistantMessage(mockResponse),
-                                dataType = typeOf<Message>()
+                            serializer.encodeToJSONElement(
+                                assistantMessage(mockResponse),
+                                typeToken<Message>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -561,9 +560,9 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = mockResponse,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                mockResponse,
+                                typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -573,14 +572,14 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = mockResponse,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                mockResponse,
+                                typeToken<String>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = mockResponse,
-                                dataType = typeOf<String>()
+                            serializer.encodeToJSONElement(
+                                mockResponse,
+                                typeToken<String>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),

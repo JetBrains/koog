@@ -24,7 +24,6 @@ import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
 import ai.koog.agents.features.tracing.mock.assistantMessage
@@ -42,6 +41,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.Sink
@@ -53,7 +53,6 @@ import java.nio.file.Path
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.pathString
 import kotlin.io.path.readLines
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -168,18 +167,18 @@ class TraceFeatureMessageFileWriterTest {
             val dummyToolName = dummyTool.name
             val dummyToolDescription = dummyTool.descriptor.description
 
-            val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElementOrNull(
-                data = receivedToolResult(
-                    toolCallId = "0",
-                    toolName = dummyToolName,
-                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
-                    toolDescription = dummyToolDescription,
-                    content = dummyTool.result,
-                    result = dummyToolResultEncoded,
-                ),
-                dataType = typeOf<ReceivedToolResult>()
-            )
+            val dummyReceivedToolResultEncoded =
+                serializer.encodeToJSONElement(
+                    receivedToolResult(
+                        toolCallId = "0",
+                        toolName = dummyToolName,
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
+                        toolDescription = dummyToolDescription,
+                        content = dummyTool.result,
+                        result = dummyToolResultEncoded,
+                    ),
+                    typeToken<ReceivedToolResult>(),
+                )
 
             val expectedMessages = listOf(
                 "${AgentStartingEvent::class.simpleName} (agent id: $agentId, run id: $runId)",
@@ -212,37 +211,40 @@ class TraceFeatureMessageFileWriterTest {
                     "input: \"$userPrompt\", " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(
+                        serializer.encodeToJSONElement(
+                            toolCallMessage(
                                 toolName = dummyToolName,
                                 content = dummyToolArgsEncoded.toString()
                             ),
-                            dataType = typeOf<Message>()
-                        )}" +
+                            typeToken<Message>()
+                        )
+                    }" +
                     ")",
                 "${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
                     "input: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(
+                        serializer.encodeToJSONElement(
+                            toolCallMessage(
                                 toolName = dummyToolName,
                                 content = dummyToolArgsEncoded.toString()
                             ),
-                            dataType = typeOf<Message.Tool.Call>()
-                        )}" +
+                            typeToken<Message.Tool.Call>()
+                        )
+                    }" +
                     ")",
                 "${ToolCallStartingEvent::class.simpleName} (run id: $runId, tool: $dummyToolName, tool args: $dummyToolArgsEncoded)",
                 "${ToolCallCompletedEvent::class.simpleName} (run id: $runId, tool: $dummyToolName, tool args: $dummyToolArgsEncoded, description: $dummyToolDescription, result: $dummyToolResultEncoded)",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
                     "input: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(
+                        serializer.encodeToJSONElement(
+                            toolCallMessage(
                                 toolName = dummyToolName,
                                 content = dummyToolArgsEncoded.toString()
                             ),
-                            dataType = typeOf<Message.Tool.Call>()
-                        )}, " +
+                            typeToken<Message.Tool.Call>()
+                        )
+                    }, " +
                     "output: $dummyReceivedToolResultEncoded)",
                 "${NodeExecutionStartingEvent::class.simpleName} (" +
                     "run id: $runId, " +
@@ -284,10 +286,11 @@ class TraceFeatureMessageFileWriterTest {
                     "input: $dummyReceivedToolResultEncoded, " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = expectedResponse,
-                            dataType = typeOf<Message>()
-                        )}" +
+                        serializer.encodeToJSONElement(
+                            expectedResponse,
+                            typeToken<Message>()
+                        )
+                    }" +
                     ")",
                 "${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: __finish__, input: \"$mockResponse\")",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: __finish__, input: \"$mockResponse\", output: \"$mockResponse\")",

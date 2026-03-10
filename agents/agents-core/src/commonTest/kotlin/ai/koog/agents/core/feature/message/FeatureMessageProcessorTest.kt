@@ -8,9 +8,9 @@ import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+import ai.koog.serialization.JSONPrimitive
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -160,7 +160,7 @@ class FeatureMessageProcessorTest {
                 executionInfo = AgentExecutionInfo(null, testPartName),
                 runId = testRunId,
                 nodeName = testNodeName,
-                input = JsonPrimitive(testInput),
+                input = JSONPrimitive(testInput),
                 timestamp = testClock.now().toEpochMilliseconds()
             )
 
@@ -173,7 +173,7 @@ class FeatureMessageProcessorTest {
                     executionInfo = AgentExecutionInfo(null, testPartName),
                     runId = testRunId,
                     nodeName = testNodeName,
-                    input = JsonPrimitive(testInput),
+                    input = JSONPrimitive(testInput),
                     timestamp = testClock.now().toEpochMilliseconds()
                 )
             )
@@ -200,8 +200,8 @@ class FeatureMessageProcessorTest {
                 executionInfo = AgentExecutionInfo(null, testPartName),
                 runId = testRunId,
                 nodeName = testNodeName,
-                input = JsonPrimitive(testInput),
-                output = JsonPrimitive(testOutput),
+                input = JSONPrimitive(testInput),
+                output = JSONPrimitive(testOutput),
                 timestamp = testClock.now().toEpochMilliseconds()
             )
 
@@ -213,8 +213,8 @@ class FeatureMessageProcessorTest {
                     executionInfo = AgentExecutionInfo(null, testPartName),
                     runId = testRunId,
                     nodeName = testNodeName,
-                    input = JsonPrimitive(testInput),
-                    output = JsonPrimitive(testOutput),
+                    input = JSONPrimitive(testInput),
+                    output = JSONPrimitive(testOutput),
                     timestamp = testClock.now().toEpochMilliseconds()
                 )
             )
@@ -278,7 +278,7 @@ class FeatureMessageProcessorTest {
             val testPartName = "test-part-name"
             val testRunId = "test-run-id"
             val testNodeName = "test-node"
-            val testInput = JsonPrimitive("Test input")
+            val testInput = JSONPrimitive("Test input")
 
             val nodeExecutionStartingEvent = NodeExecutionStartingEvent(
                 eventId = testId,
@@ -316,8 +316,8 @@ class FeatureMessageProcessorTest {
             val testPartName = "test-part-name"
             val testRunId = "test-run-id"
             val testNodeName = "test-node"
-            val testInput = JsonPrimitive("Test input")
-            val testOutput = JsonPrimitive("Test output")
+            val testInput = JSONPrimitive("Test input")
+            val testOutput = JSONPrimitive("Test output")
 
             val nodeExecutionCompletedEvent = NodeExecutionCompletedEvent(
                 eventId = testId,
@@ -357,7 +357,7 @@ class FeatureMessageProcessorTest {
             val testPartName = "test-part-name"
             val testRunId = "test-run-id"
             val testNodeName = "test-node"
-            val testInput = JsonPrimitive("Test input")
+            val testInput = JSONPrimitive("Test input")
             val testError = AIAgentError(
                 message = "Test error message",
                 stackTrace = "Test stack trace",

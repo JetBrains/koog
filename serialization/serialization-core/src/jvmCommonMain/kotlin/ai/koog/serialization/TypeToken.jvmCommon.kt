@@ -74,7 +74,6 @@ public class JavaClassToken(
     public val typeArguments: List<TypeToken> = emptyList(),
 ) : TypeToken
 
-
 /**
  * Creates a [JavaTypeToken] from a Java [Type].
  */

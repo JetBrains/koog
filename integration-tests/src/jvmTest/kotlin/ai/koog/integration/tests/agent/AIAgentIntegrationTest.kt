@@ -40,6 +40,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.serialization.typeToken
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -69,7 +70,6 @@ import java.nio.file.Path
 import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
@@ -589,7 +589,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         agentContext = agentContext,
                         nodePath = save,
                         lastOutput = input,
-                        lastOutputType = typeOf<String>(),
+                        lastOutputType = typeToken<String>(),
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }
@@ -698,7 +698,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         agentContext = agentContext,
                         nodePath = save,
                         lastOutput = input,
-                        lastOutputType = typeOf<String>(),
+                        lastOutputType = typeToken<String>(),
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }
@@ -877,7 +877,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         agentContext = agentContext,
                         nodePath = bye,
                         lastOutput = input,
-                        lastOutputType = typeOf<String>(),
+                        lastOutputType = typeToken<String>(),
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }

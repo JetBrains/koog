@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PR
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -46,7 +45,6 @@ import ai.koog.agents.core.system.mock.toolCallMessage
 import ai.koog.agents.core.system.mock.toolResultMessage
 import ai.koog.agents.core.system.mock.userMessage
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.findEvents
 import ai.koog.agents.testing.feature.message.singleEvent
@@ -290,10 +288,7 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -302,15 +297,9 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionStartingEvent(
@@ -319,10 +308,7 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = nodeSendLLMCallName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         LLMCallStartingEvent(
@@ -354,17 +340,14 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = nodeSendLLMCallName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = toolCallMessage(
+                            serializer.encodeToJSONElement(
+                                toolCallMessage(
                                     dummyTool.name,
-                                    content = """{"dummy":"$requestedDummyToolArgs"}"""
+                                    """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                dataType = typeToken<Message>()
+                                typeToken<Message>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -374,12 +357,12 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = nodeExecuteToolName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = toolCallMessage(
+                            serializer.encodeToJSONElement(
+                                toolCallMessage(
                                     dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                dataType = typeToken<Message.Tool.Call>()
+                                typeToken<Message.Tool.Call>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -409,15 +392,15 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = nodeExecuteToolName,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = toolCallMessage(
+                            serializer.encodeToJSONElement(
+                                toolCallMessage(
                                     toolName = dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                dataType = typeToken<Message.Tool.Call>()
+                                typeToken<Message.Tool.Call>()
                             ),
-                            output = SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = ReceivedToolResult(
+                            output = serializer.encodeToJSONElement(
+                                ReceivedToolResult(
                                     id = "0",
                                     tool = dummyTool.name,
                                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
@@ -426,7 +409,7 @@ class DebuggerTest {
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
-                                dataType = typeToken<ReceivedToolResult>()
+                                typeToken<ReceivedToolResult>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -435,8 +418,8 @@ class DebuggerTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, nodeSendToolResultName),
                             runId = clientEventsCollector.runId,
                             nodeName = nodeSendToolResultName,
-                            input = SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = ReceivedToolResult(
+                            input = serializer.encodeToJSONElement(
+                                ReceivedToolResult(
                                     id = "0",
                                     tool = dummyTool.name,
                                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
@@ -445,7 +428,7 @@ class DebuggerTest {
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
-                                dataType = typeToken<ReceivedToolResult>()
+                                typeToken<ReceivedToolResult>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -472,8 +455,8 @@ class DebuggerTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, nodeSendToolResultName),
                             runId = clientEventsCollector.runId,
                             nodeName = nodeSendToolResultName,
-                            input = SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = ReceivedToolResult(
+                            input = serializer.encodeToJSONElement(
+                                ReceivedToolResult(
                                     id = "0",
                                     tool = dummyTool.name,
                                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
@@ -482,12 +465,12 @@ class DebuggerTest {
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
-                                dataType = typeToken<ReceivedToolResult>()
+                                typeToken<ReceivedToolResult>()
                             ),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = assistantMessage(mockResponse),
-                                dataType = typeToken<Message>()
+                            serializer.encodeToJSONElement(
+                                assistantMessage(mockResponse),
+                                typeToken<Message>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -497,10 +480,7 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = mockResponse,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -509,15 +489,9 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = mockResponse,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = mockResponse,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         StrategyCompletedEvent(

@@ -25,12 +25,12 @@ import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionC
 import ai.koog.agents.core.system.mock.ClientEventsCollector
 import ai.koog.agents.core.system.mock.MockLLMProvider
 import ai.koog.agents.core.system.mock.createAgent
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.singleEvent
 import ai.koog.agents.testing.feature.message.singleNodeEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.prompt.llm.LLModel
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.client.HttpClient
@@ -51,6 +51,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 
 internal object DebuggerTestAPI {
+    private val serializer = KotlinxSerializer()
 
     internal const val HOST = "127.0.0.1"
 
@@ -167,10 +168,7 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -179,15 +177,9 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionStartingEvent(
@@ -196,10 +188,7 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -208,15 +197,9 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeToken<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         StrategyCompletedEvent(
