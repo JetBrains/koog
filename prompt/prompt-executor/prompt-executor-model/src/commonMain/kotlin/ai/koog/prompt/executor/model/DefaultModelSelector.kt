@@ -34,11 +34,11 @@ import kotlinx.coroutines.sync.withPermit
 public class DefaultModelSelector(
     private val filters: List<ModelFilter> = emptyList(),
     private val rankers: List<ModelRanker> = emptyList(),
-    private val maxConcurrentlyFilteredModels: Int = 8,
+    private val maxConcurrentlyFilteredModels: Int = DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS,
 ) : ModelSelector {
 
     init {
-        require(maxConcurrentlyFilteredModels > 0) { "maxConcurrentFilteredModels must be greater than 0." }
+        require(maxConcurrentlyFilteredModels > 0) { "maxConcurrentlyFilteredModels must be greater than 0." }
     }
 
     /**
@@ -51,11 +51,18 @@ public class DefaultModelSelector(
      * @param maxConcurrentlyFilteredModels Maximum number of models evaluated concurrently during filtering.
      * @throws IllegalArgumentException If [maxConcurrentlyFilteredModels] is not positive.
      */
-    public constructor(vararg steps: ModelSelectionStep, maxConcurrentlyFilteredModels: Int = 8) : this(
+    public constructor(
+        vararg steps: ModelSelectionStep,
+        maxConcurrentlyFilteredModels: Int = 8,
+    ) : this(
         steps.filterIsInstance<ModelFilter>(),
         steps.filterIsInstance<ModelRanker>(),
         maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels,
     )
+
+    public companion object {
+        public const val DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS: Int = 8
+    }
 
     override suspend fun select(models: List<LLModel>): ModelSelection {
         if (models.isEmpty()) return ModelSelection.EMPTY

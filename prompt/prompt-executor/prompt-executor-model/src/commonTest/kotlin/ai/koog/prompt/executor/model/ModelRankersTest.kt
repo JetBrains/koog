@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.model
 
 import ai.koog.prompt.executor.model.KeyRanker.OnMissing
-import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,7 +16,7 @@ class ModelRankersTest {
         val missing = model(id = "missing", contextLength = null)
 
         // When
-        val ranking = ModelRankers.biggestContextWindow().rank(listOf(missing, small, large))
+        val ranking = ModelRankers.biggestContextLength().rank(listOf(missing, small, large))
 
         // Then
         assertEquals(

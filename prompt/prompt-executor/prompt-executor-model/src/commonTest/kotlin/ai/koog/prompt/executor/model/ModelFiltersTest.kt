@@ -1,9 +1,9 @@
 package ai.koog.prompt.executor.model
 
 import ai.koog.prompt.executor.model.ModelFilter.Decision
-import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -54,7 +54,7 @@ class ModelFiltersTest {
     @Test
     fun testMinContextWindowFilter() = runTest {
         // Given
-        val filter = ModelFilters.withMinContextWindow(minTokens = 8_192)
+        val filter = ModelFilters.withMinContextLength(minTokens = 8_192)
 
         // And
         val exact = model(id = "exact", contextLength = 8_192)

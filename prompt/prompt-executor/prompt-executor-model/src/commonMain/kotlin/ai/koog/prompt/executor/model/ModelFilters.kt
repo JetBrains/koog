@@ -33,8 +33,8 @@ public object ModelFilters {
      * @param minTokens Minimum required context window size.
      * @return Filter accepting models with sufficient context length.
      */
-    public fun withMinContextWindow(minTokens: Long): ModelFilter =
-        MinContextWindowFilter(minTokens)
+    public fun withMinContextLength(minTokens: Long): ModelFilter =
+        MinContextLengthFilter(minTokens)
 }
 
 /**
@@ -69,7 +69,7 @@ public class CapabilitiesFilter(
  * @constructor Creates minimum-context filter.
  * @property minTokens Minimum required context length in tokens.
  */
-public class MinContextWindowFilter(
+public class MinContextLengthFilter(
     private val minTokens: Long,
 ) : ModelFilter {
     override suspend fun evaluate(model: LLModel): Decision =

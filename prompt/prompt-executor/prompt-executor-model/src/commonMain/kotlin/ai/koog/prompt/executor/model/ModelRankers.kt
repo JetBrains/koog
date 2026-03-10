@@ -13,7 +13,7 @@ public object ModelRankers {
      *
      * @return Ranker ordering by descending context window.
      */
-    public fun biggestContextWindow(): ModelRanker =
+    public fun biggestContextLength(): ModelRanker =
         byDescending(onMissing = OnMissing.RANK_WORST) { it.contextLength }
 
     /**
