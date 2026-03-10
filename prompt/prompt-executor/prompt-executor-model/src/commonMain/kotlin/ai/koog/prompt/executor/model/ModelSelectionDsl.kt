@@ -19,7 +19,7 @@ public annotation class ModelSelectionDsl
  * ```
  * promptExecutor.execute(prompt, tools) {
  *     withCapabilities(LLMCapability.Vision.Image, LLMCapability.ToolChoice)
- *     withMinContextWindow(100_000)
+ *     withMinContextLength(100_000)
  *     withMostOutputTokens()
  * }
  * ```
@@ -31,7 +31,7 @@ public annotation class ModelSelectionDsl
  *
  * promptExecutor.execute(prompt, tools) {
  *     withCapabilities(LLMCapability.Vision.Image, LLMCapability.ToolChoice)
- *     withMinContextWindow(100_000)
+ *     withMinContextLength(100_000)
  *     withFilter(gdprCompliant)
  *     withRanker(cheapest)
  *     withMostOutputTokens()
@@ -78,8 +78,8 @@ public suspend fun SelectingPromptExecutor.moderateWithSelection(
 
 @ModelSelectionDsl
 public class ModelSelectionBuilder {
-    private val filters: MutableList<ModelFilter> by lazy { mutableListOf() }
-    private val rankers: MutableList<ModelRanker> by lazy { mutableListOf() }
+    private val filters: MutableList<ModelFilter> = mutableListOf()
+    private val rankers: MutableList<ModelRanker> = mutableListOf()
     private var maxConcurrentlyFilteredModels: Int = DefaultModelSelector.DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS
 
     public fun withFilter(filter: ModelFilter): ModelSelectionBuilder = apply {
@@ -113,8 +113,8 @@ public class ModelSelectionBuilder {
 
     public fun build(): ModelSelector =
         DefaultModelSelector(
-            filters = filters,
-            rankers = rankers,
+            filters = filters.toList(),
+            rankers = rankers.toList(),
             maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels,
         )
 }

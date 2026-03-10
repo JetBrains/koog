@@ -11,7 +11,7 @@ import kotlinx.coroutines.sync.withPermit
  * Default implementation of [ModelSelector] that executes a step-based model selection pipeline.
  *
  * Pipeline order:
- * 1) Apply all [ModelFilter] steps (with bounded concurrency).
+ * 1) Apply all [ModelFilter] steps (with bounded concurrency - see [maxConcurrentlyFilteredModels]).
  * 2) Apply [ModelRanker] steps lexicographically to accepted models.
  *
  * Lexicographic ranking semantics:
@@ -53,7 +53,7 @@ public class DefaultModelSelector(
      */
     public constructor(
         vararg steps: ModelSelectionStep,
-        maxConcurrentlyFilteredModels: Int = 8,
+        maxConcurrentlyFilteredModels: Int = DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS,
     ) : this(
         steps.filterIsInstance<ModelFilter>(),
         steps.filterIsInstance<ModelRanker>(),
