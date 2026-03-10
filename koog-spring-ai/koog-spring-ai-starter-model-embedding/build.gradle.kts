@@ -16,11 +16,13 @@ kotlin {
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+        javaParameters.set(true)
     }
 }
 tasks.withType<JavaCompile>().configureEach {
     sourceCompatibility = JavaVersion.VERSION_17.toString()
     targetCompatibility = JavaVersion.VERSION_17.toString()
+    options.compilerArgs.add("-parameters")
 }
 dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-clients"))
