@@ -25,7 +25,7 @@ internal object AIAgentHelper {
      * @return An instance of `Builder` for configuring an AI agent.
      */
     @JvmStatic
-    public fun builder(): AIAgentBuilder = AIAgentBuilder()
+    fun builder(): AIAgentBuilder = AIAgentBuilder()
 
     /**
      * Creates an instance of an AI agent based on the provided configuration, input/output types,

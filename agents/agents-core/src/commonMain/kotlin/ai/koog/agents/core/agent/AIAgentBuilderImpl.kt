@@ -50,19 +50,19 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
     @property:PublishedApi
     internal var clock: Clock = Clock.System
 
-    public override fun promptExecutor(promptExecutor: PromptExecutor): AIAgentBuilderAPI = apply {
+    override fun promptExecutor(promptExecutor: PromptExecutor): AIAgentBuilderAPI = apply {
         this.promptExecutor = promptExecutor
     }
 
-    public override fun llmModel(model: LLModel): AIAgentBuilderAPI = apply {
+    override fun llmModel(model: LLModel): AIAgentBuilderAPI = apply {
         this.llmModel = model
     }
 
-    public override fun toolRegistry(toolRegistry: ToolRegistry): AIAgentBuilderAPI = apply {
+    override fun toolRegistry(toolRegistry: ToolRegistry): AIAgentBuilderAPI = apply {
         this.toolRegistry = toolRegistry
     }
 
-    public override fun <Input, Output> graphStrategy(
+    override fun <Input, Output> graphStrategy(
         strategy: AIAgentGraphStrategy<Input, Output>
     ): GraphAgentBuilder<Input, Output> = GraphAgentBuilder(
         strategy = strategy,
@@ -80,7 +80,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         toolRegistry = this.toolRegistry
     )
 
-    public override fun <Input, Output> functionalStrategy(
+    override fun <Input, Output> functionalStrategy(
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentBuilder<Input, Output> = FunctionalAgentBuilder(
         strategy = strategy,
@@ -96,7 +96,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         toolRegistry = this.toolRegistry
     )
 
-    public override fun <Input, Output> plannerStrategy(
+    override fun <Input, Output> plannerStrategy(
         strategy: AIAgentPlannerStrategy<Input, Output, *>
     ): PlannerAgentBuilder<Input, Output> = PlannerAgentBuilder(
         strategy = strategy,
@@ -112,45 +112,45 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         toolRegistry = this.toolRegistry
     )
 
-    public override fun <Input : Any, Output : Any> plannerStrategy(
+    override fun <Input : Any, Output : Any> plannerStrategy(
         name: String,
         buildStrategy: BuilderChainAction<AIAgentPlannerStrategyBuilder, TypedAgentPlannerStrategyBuilder<Input, Output>>
     ): PlannerAgentBuilder<Input, Output> = plannerStrategy(
         buildStrategy.configure(AIAgentPlannerStrategyBuilder(name)).build()
     )
 
-    public override fun id(id: String?): AIAgentBuilderAPI = apply {
+    override fun id(id: String?): AIAgentBuilderAPI = apply {
         this.id = id
     }
 
-    public override fun systemPrompt(systemPrompt: String): AIAgentBuilderAPI = apply {
+    override fun systemPrompt(systemPrompt: String): AIAgentBuilderAPI = apply {
         this.prompt = ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) }
     }
 
-    public override fun prompt(prompt: Prompt): AIAgentBuilderAPI = apply {
+    override fun prompt(prompt: Prompt): AIAgentBuilderAPI = apply {
         this.prompt = prompt
     }
 
-    public override fun temperature(temperature: Double): AIAgentBuilderAPI = apply {
+    override fun temperature(temperature: Double): AIAgentBuilderAPI = apply {
         this.temperature = temperature
     }
 
-    public override fun numberOfChoices(numberOfChoices: Int): AIAgentBuilderAPI = apply {
+    override fun numberOfChoices(numberOfChoices: Int): AIAgentBuilderAPI = apply {
         this.numberOfChoices = numberOfChoices
     }
 
-    public override fun maxIterations(maxIterations: Int): AIAgentBuilderAPI = apply {
+    override fun maxIterations(maxIterations: Int): AIAgentBuilderAPI = apply {
         this.maxIterations = maxIterations
     }
 
-    public override fun agentConfig(config: AIAgentConfig): AIAgentBuilderAPI = apply {
+    override fun agentConfig(config: AIAgentConfig): AIAgentBuilderAPI = apply {
         this.prompt = config.prompt
         this.llmModel = config.model
         this.maxIterations = config.maxAgentIterations
         this.missingToolsConversionStrategy = config.missingToolsConversionStrategy
     }
 
-    public override fun <TConfig : FeatureConfig> install(
+    override fun <TConfig : FeatureConfig> install(
         feature: AIAgentGraphFeature<TConfig, *>,
         configure: ConfigureAction<TConfig>
     ): GraphAgentBuilder<String, String> = GraphAgentBuilder(
@@ -173,7 +173,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         })
     )
 
-    public override fun build(): AIAgent<String, String> {
+    override fun build(): AIAgent<String, String> {
         return AIAgent(
             promptExecutor = requireNotNull(promptExecutor) { "promptExecutor must be set" },
             strategy = singleRunStrategy(),

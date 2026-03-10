@@ -143,7 +143,7 @@ public fun interface ContextualCondition<Output> {
      * @return A boolean value indicating the result of the condition evaluation.
      *         Returns `true` if the condition is met, otherwise `false`.
      */
-    public operator fun invoke(output: Output, context: AIAgentGraphContextBase): Boolean
+    public fun invoke(output: Output, context: AIAgentGraphContextBase): Boolean
 }
 
 /**
@@ -160,7 +160,7 @@ public fun interface SimpleCondition<Output> {
      * @param output The output object to be evaluated against the condition.
      * @return `true` if the given output satisfies the condition, `false` otherwise.
      */
-    public operator fun invoke(output: Output): Boolean
+    public fun invoke(output: Output): Boolean
 }
 
 /**
@@ -179,7 +179,7 @@ public fun interface ContextualTransformation<Output, NewOutput> {
      *                for transformation within the AI agent graph.
      * @return A new output resulting from the transformation.
      */
-    public operator fun invoke(output: Output, context: AIAgentGraphContextBase): NewOutput
+    public fun invoke(output: Output, context: AIAgentGraphContextBase): NewOutput
 }
 
 /**
@@ -196,5 +196,5 @@ public fun interface SimpleTransformation<Output, NewOutput> {
      * @param output The input to be transformed.
      * @return The transformed output of type [NewOutput].
      */
-    public operator fun invoke(output: Output): NewOutput
+    public fun invoke(output: Output): NewOutput
 }
