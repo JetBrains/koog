@@ -8,6 +8,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
@@ -197,13 +198,22 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.stream() failed: ${e.message}", e)
         }
+        var lastChatResponse: ChatResponse? = null
         try {
             flux.asFlow().collect { chatResponse ->
+                lastChatResponse = chatResponse
                 for ((generationIndex, generation) in chatResponse.results.withIndex()) {
                     val assistantMessage = generation.output
                     val text = assistantMessage.text
                     if (!text.isNullOrEmpty()) {
                         emitTextDelta(text, generationIndex)
+                    }
+                    // Emit reasoning content if present
+                    val reasoningContent = assistantMessage.metadata["reasoningContent"]
+                        ?.toString()
+                        ?.takeIf { it.isNotEmpty() }
+                    if (reasoningContent != null) {
+                        emitReasoningDelta(text = reasoningContent, index = generationIndex)
                     }
                     if (assistantMessage.hasToolCalls()) {
                         toolCallAssembler.accept(assistantMessage.toolCalls, generationIndex, this)
@@ -218,7 +228,21 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.stream() failed during collection: ${e.message}", e)
         }
-        emitEnd()
+
+        // Extract metadata from the last chunk
+        val finishReason = lastChatResponse?.results?.firstOrNull()?.metadata?.finishReason
+        val usage = lastChatResponse?.metadata?.usage
+        val metaInfo = if (usage != null) {
+            ResponseMetaInfo.create(
+                clock = clock,
+                totalTokensCount = usage.totalTokens,
+                inputTokensCount = usage.promptTokens,
+                outputTokensCount = usage.completionTokens
+            )
+        } else {
+            null
+        }
+        emitEnd(finishReason = finishReason, metaInfo = metaInfo)
     }.flowOn(dispatcher)
 
     override suspend fun moderate(

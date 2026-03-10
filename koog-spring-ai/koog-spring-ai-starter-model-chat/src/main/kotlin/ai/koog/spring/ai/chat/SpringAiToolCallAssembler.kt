@@ -60,12 +60,12 @@ internal class SpringAiToolCallAssembler private constructor(
 
         when (mode) {
             SpringAiToolStreamingMode.EMIT_IMMEDIATELY -> {
-                for (toolCall in toolCalls) {
+                for ((toolCallIndex, toolCall) in toolCalls.withIndex()) {
                     out.emitToolCallDelta(
                         id = toolCall.id(),
                         name = toolCall.name(),
                         args = toolCall.arguments(),
-                        index = generationIndex
+                        index = toolCallIndex
                     )
                 }
             }
@@ -95,12 +95,13 @@ internal class SpringAiToolCallAssembler private constructor(
      * @param out the stream builder to emit completed tool call frames into
      */
     suspend fun flush(out: StreamFrameFlowBuilder) {
-        for ((_, pending) in pendingByKey) {
+        for ((key, pending) in pendingByKey) {
+            val (_, toolCallIndex) = key
             out.emitToolCallDelta(
                 id = pending.id,
                 name = pending.name,
                 args = pending.arguments.toString(),
-                index = pending.generationIndex
+                index = toolCallIndex
             )
         }
         pendingByKey.clear()
