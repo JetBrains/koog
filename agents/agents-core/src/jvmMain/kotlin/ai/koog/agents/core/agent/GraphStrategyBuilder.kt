@@ -1266,28 +1266,30 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
     private val name: String,
     private val strategyBuilder: TypedGraphStrategyBuilder<*, *>,
     private val inputClass: Class<Input>,
-    private val retrievalModel: LLModel? = null,
-    private val strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
-    private val preserveMemory: Boolean = true,
+    private var retrievalModel: LLModel? = null,
+    private var strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
+    private var preserveMemory: Boolean = true,
 ) {
 
     /**
      * Configures the node builder with a specific retrieval model.
      *
      * @param model The retrieval model to be used in the configured node. An instance of [LLModel] representing the model to apply.
-     * @return A new instance of [TypedCompressHistoryNodeBuilder] with the specified retrieval model configured.
+     * @return This builder instance with the specified retrieval model configured.
      */
-    public fun withRetrievalModel(model: LLModel): TypedCompressHistoryNodeBuilder<Input> =
-        TypedCompressHistoryNodeBuilder(name, strategyBuilder, inputClass, model, strategy, preserveMemory)
+    public fun withRetrievalModel(model: LLModel): TypedCompressHistoryNodeBuilder<Input> = this.apply {
+        this.retrievalModel = model
+    }
 
     /**
      * Sets the history compression strategy to be used for this builder.
      *
      * @param strategy The history compression strategy to apply.
-     * @return A new instance of `TypedCompressHistoryNodeBuilder` with the specified compression strategy.
+     * @return This builder instance with the specified compression strategy.
      */
-    public fun compressionStrategy(strategy: HistoryCompressionStrategy): TypedCompressHistoryNodeBuilder<Input> =
-        TypedCompressHistoryNodeBuilder(name, strategyBuilder, inputClass, retrievalModel, strategy, preserveMemory)
+    public fun compressionStrategy(strategy: HistoryCompressionStrategy): TypedCompressHistoryNodeBuilder<Input> = this.apply {
+        this.strategy = strategy
+    }
 
     /**
      * Sets whether memory preservation is enabled for the node being built.
@@ -1295,8 +1297,9 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
      * @param preserveMemory A boolean indicating whether memory should be preserved.
      * @return This builder instance with the updated memory preservation setting.
      */
-    public fun preserveMemory(preserveMemory: Boolean): TypedCompressHistoryNodeBuilder<Input> =
-        TypedCompressHistoryNodeBuilder(name, strategyBuilder, inputClass, retrievalModel, strategy, preserveMemory)
+    public fun preserveMemory(preserveMemory: Boolean): TypedCompressHistoryNodeBuilder<Input> = this.apply {
+        this.preserveMemory = preserveMemory
+    }
 
     /**
      * Builds and returns an instance of [AIAgentNodeBase] configured for compressing history
