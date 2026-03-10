@@ -17,7 +17,7 @@ import kotlin.time.Clock
 
 @TestInstance(Lifecycle.PER_METHOD)
 @Execution(ExecutionMode.SAME_THREAD)
-class JdbcChatHistoryProviderTest {
+class H2JdbcChatHistoryProviderTest {
 
     private fun createDataSource(): JdbcDataSource {
         return JdbcDataSource().apply {
