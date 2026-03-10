@@ -17,6 +17,7 @@ import kotlinx.coroutines.jdk9.asPublisher
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow.Publisher
 
+@Suppress("MissingKDocForPublicAPI")
 public actual abstract class PromptExecutor actual constructor() : PromptExecutorAPI {
     /**
      * Executes a given prompt using the specified LLM and tools, returning a list of responses from the model.
@@ -115,4 +116,13 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         runOnIOBoundDispatcher(executorService) {
             models()
         }
+
+    /**
+     * Companion object for [PromptExecutor].
+     * */
+    public companion object {
+        @JvmStatic
+        @JavaAPI
+        public fun builder() {}
+    }
 }

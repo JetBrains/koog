@@ -15,6 +15,7 @@ kotlin {
                 api(project(":agents:agents-tools"))
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-structure"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.oshai.kotlin.logging)
             }
