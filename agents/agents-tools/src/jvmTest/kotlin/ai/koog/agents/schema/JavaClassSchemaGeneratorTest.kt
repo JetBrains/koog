@@ -10,8 +10,6 @@ import ai.koog.serialization.JavaTypeToken
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// FIXME in kotlinx-schema: constructor parameters LLMDescription doesn't work
-// fixed in https://github.com/Kotlin/kotlinx-schema/pull/203
 class JavaClassSchemaGeneratorTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
@@ -91,7 +89,7 @@ class JavaClassSchemaGeneratorTest {
                 ),
                 ToolParameterDescriptor(
                     name = "nestedProperty",
-                    description = "Nested property class",
+                    description = "A custom nested property",
                     type = nestedObject,
                 ),
                 ToolParameterDescriptor(

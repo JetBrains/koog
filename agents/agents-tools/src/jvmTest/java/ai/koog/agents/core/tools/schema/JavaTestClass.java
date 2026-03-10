@@ -22,6 +22,7 @@ public class JavaTestClass {
             String nullableProperty,
             List<String> listProperty,
             Map<String, Integer> mapProperty,
+            @LLMDescription(description = "A custom nested property")
             NestedProperty nestedProperty,
             List<NestedProperty> nestedListProperty,
             Map<String, NestedProperty> nestedMapProperty,

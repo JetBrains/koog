@@ -1,6 +1,7 @@
 package ai.koog.agents.core.tools
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.schema.defaultJsonSchemaConfig
 import ai.koog.agents.core.tools.schema.getToolDescriptor
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
@@ -51,7 +52,7 @@ public abstract class Tool<TArgs, TResult>(
         resultType: TypeToken,
         name: String,
         description: String,
-        jsonSchemaConfig: JsonSchemaConfig = JsonSchemaConfig.Default,
+        jsonSchemaConfig: JsonSchemaConfig = defaultJsonSchemaConfig,
     ) : this(
         argsType = argsType,
         resultType = resultType,

@@ -110,7 +110,7 @@ public fun getToolDescriptor(
     callable: KCallable<*>,
     toolName: String? = null,
     toolDescription: String? = null,
-    jsonSchemaConfig: JsonSchemaConfig = JsonSchemaConfig.Default,
+    jsonSchemaConfig: JsonSchemaConfig = defaultJsonSchemaConfig,
 ): ToolDescriptor {
     val schema = createReflectionFunctionGenerator(jsonSchemaConfig)
         .generateSchema(callable)
@@ -119,10 +119,12 @@ public fun getToolDescriptor(
     val requiredParameters = schema.parameters.properties
         .orEmpty()
         .map { (name, property) ->
+            val parameterInfo = property.toToolParameter(defs = null) // no defs in function calling schema
+
             ToolParameterDescriptor(
                 name = name,
-                description = property.descriptionOrEmpty,
-                type = property.toToolParameterType(defs = null) // no defs in function calling schema
+                description = parameterInfo.description,
+                type = parameterInfo.type
             )
         }
 

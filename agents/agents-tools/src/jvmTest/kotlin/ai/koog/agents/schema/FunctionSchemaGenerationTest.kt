@@ -1,4 +1,4 @@
-package ai.koog.agents.core.tools.reflect
+package ai.koog.agents.schema
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -28,6 +28,7 @@ class FunctionSchemaGenerationTest {
         val nestedProperty: NestedProperty = NestedProperty("foo", 1),
         val nestedListProperty: List<NestedProperty> = emptyList(),
         val nestedMapProperty: Map<String, NestedProperty> = emptyMap(),
+        @property:LLMDescription("A polymorphic property")
         val polymorphicProperty: TestClosedPolymorphism = TestClosedPolymorphism.SubClass1("id1", "property1"),
         val enumProperty: TestEnum = TestEnum.One,
         val objectProperty: TestObject = TestObject,
@@ -182,7 +183,7 @@ class FunctionSchemaGenerationTest {
                 ),
                 ToolParameterDescriptor(
                     name = "polymorphicProperty",
-                    description = "",
+                    description = "A polymorphic property",
                     type = ToolParameterType.AnyOf(
                         types = arrayOf(
                             ToolParameterDescriptor(
@@ -249,6 +250,15 @@ class FunctionSchemaGenerationTest {
                 "doubleProperty",
                 "floatProperty",
                 "booleanNullableProperty",
+                "nullableProperty",
+                "listProperty",
+                "mapProperty",
+                "nestedProperty",
+                "nestedListProperty",
+                "nestedMapProperty",
+                "polymorphicProperty",
+                "enumProperty",
+                "objectProperty",
             ),
             additionalProperties = false,
         )
@@ -360,7 +370,7 @@ class FunctionSchemaGenerationTest {
                 ),
                 ToolParameterDescriptor(
                     name = "nestedProperty",
-                    description = "Nested property class",
+                    description = "A custom nested property",
                     type = nestedObject,
                 ),
                 ToolParameterDescriptor(

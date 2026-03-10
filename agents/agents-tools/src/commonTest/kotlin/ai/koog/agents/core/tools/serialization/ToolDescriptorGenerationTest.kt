@@ -71,8 +71,8 @@ object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>(
 
 class ToolDescriptorGenerationTest {
     @Test
-    fun tetComplexToolDescriptorGeneration() {
-        val extectedDescriptor = ToolDescriptor(
+    fun testComplexToolDescriptorGeneration() {
+        val expectedDescriptor = ToolDescriptor(
             name = "complex_nested_tool",
             description = "A tool that processes user profiles with complex nested structures.",
             requiredParameters = listOf(
@@ -140,6 +140,6 @@ class ToolDescriptorGenerationTest {
             )
         )
 
-        assertEquals(extectedDescriptor, ComplexNestedTool.descriptor)
+        assertEquals(expectedDescriptor, ComplexNestedTool.descriptor)
     }
 }
