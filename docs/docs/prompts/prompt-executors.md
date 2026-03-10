@@ -154,8 +154,54 @@ This is useful for avoiding rate limits, improving throughput, and implementing 
 
 When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
 Requests to Anthropic models always go to the single `anthropic` client, as round-robin maintains an independent counter per provider.
+This executor also supports [model selection](#model-selection).
 
 You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-model::ai.koog.prompt.executor.llms.LLMClientRouter) interface.
+
+## Model selection
+
+Model selection lets you choose the most suitable model from the models available in the executor.
+This is useful when you want selection to depend on model characteristics, such as capabilities, context length, or output limits.
+For now, model selection is available only in [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor).
+
+In the default implementation, [`DefaultModelSelector`](api:prompt-executor-model::ai.koog.prompt.executor.model.DefaultModelSelector), selection is step-based:
+
+- **Filters** (hard constraints) remove models.
+- **Rankers** (soft ordering) prioritize remaining models.
+
+See example below for sample usage:
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.execute
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
+import ai.koog.prompt.llm.LLMCapability
+import kotlinx.coroutines.runBlocking
+
+fun runSelection(promptExecutor: ai.koog.prompt.executor.model.SelectingPromptExecutor) = runBlocking {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+// Create routing executor with multiple LLM clients
+val routingExecutor = RoutingLLMPromptExecutor(
+    OpenAILLMClient(apiKey = "openai-key-1"),
+    OpenAILLMClient(apiKey = "openai-key-2"),
+    AnthropicLLMClient(apiKey = "anthropic-key")
+)
+
+// Run prompt with model selection based on required characteristics
+val prompt = prompt("demo"){ system("You are a helpful assistant.") }
+val response = routingExecutor.execute(prompt) {
+    withCapabilities(LLMCapability.Vision.Image, LLMCapability.ToolChoice)
+    withMinContextLength(100_000)
+    withMostOutputTokens()
+}
+```
+<!--- KNIT example-prompt-executors-04.kt -->
 
 ## Pre-defined prompt executors
 
@@ -486,9 +532,3 @@ the prompt executor will use the fallback model:
 
 !!! note
     Fallbacks are available for the `execute()` and `executeMultipleChoices()` methods only.
-
-
-
-
-
-

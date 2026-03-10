@@ -13,13 +13,12 @@ import kotlinx.coroutines.flow.Flow
  * Abstract base for executors that support model selection via [ModelSelector].
  *
  * Extends [PromptExecutor] with a [ModelSelector]-based execution API and makes [models]
- * mandatory so that selectors receive a non-empty candidate list. This class provides the
- * model-based [PromptExecutorAPI] overrides, delegating each call to the corresponding
- * [ModelSelector] variant via [ModelSelectors.specific]. Concrete subclasses only need to
- * implement the [ModelSelector] variants (primary dispatch).
+ * mandatory so that selectors receive a non-empty candidate list.
  *
- * Currently used by
- * [RoutingLLMPromptExecutor][ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor].
+ * This class provides the model-based [PromptExecutorAPI] overrides, delegating each call to the corresponding
+ * [ModelSelector] variant via [ModelSelectors.specific].
+ *
+ * Concrete subclasses must implement the [ModelSelector] variants (primary dispatch) and [models] (candidates source).
  */
 public abstract class SelectingPromptExecutor : PromptExecutor() {
 
@@ -83,7 +82,7 @@ public abstract class SelectingPromptExecutor : PromptExecutor() {
     public abstract suspend fun executeMultipleChoices(
         prompt: Prompt,
         modelSelector: ModelSelector,
-        tools: List<ToolDescriptor>,
+        tools: List<ToolDescriptor> = emptyList(),
     ): List<LLMChoice>
 
     /**
@@ -98,8 +97,7 @@ public abstract class SelectingPromptExecutor : PromptExecutor() {
     /**
      * Returns all models available to this executor.
      *
-     * Called by [ModelSelector.select] to provide the candidate list for selection.
-     * Implementations are encouraged to cache this result to avoid repeated network round-trips.
+     * It is intended to be used along [ModelSelector.select] to provide the candidate list for selection.
      *
      * @return Available models.
      */

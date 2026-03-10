@@ -21,7 +21,7 @@ public fun interface ModelSelector {
 /**
  * Final selector result containing models ordered from best to worst.
  *
- * @constructor Creates selection result from [ranked].
+ * @constructor Creates a selection result from [ranked].
  * @property ranked Selected models ranked from best to worst.
  */
 public data class ModelSelection(

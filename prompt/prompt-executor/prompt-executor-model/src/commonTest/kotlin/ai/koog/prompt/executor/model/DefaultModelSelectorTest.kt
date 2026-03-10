@@ -42,9 +42,10 @@ class DefaultModelSelectorTest {
         val rankers = listOf(ModelRankers.mostOutputTokens(), preferCodex)
 
         // When
-        val selectedModels = selector(filters + rankers).select(
-            models = listOf(gptMini, gpt, gptCodex, gptPro, google),
-        )
+        val selectedModels = DefaultModelSelector(
+            filters = filters,
+            rankers = rankers
+        ).select(listOf(gptMini, gpt, gptCodex, gptPro, google))
 
         // Then
         assertEquals(listOf(gptCodex, gptPro, gpt), selectedModels.ranked)
@@ -61,9 +62,7 @@ class DefaultModelSelectorTest {
         }
 
         // When
-        val result = selector(listOf(rejectB)).select(
-            models = listOf(modelA, modelB, modelC),
-        )
+        val result = DefaultModelSelector(filters = listOf(rejectB)).select(listOf(modelA, modelB, modelC))
 
         // Then
         assertEquals(listOf(modelA, modelC), result.ranked)
@@ -75,9 +74,7 @@ class DefaultModelSelectorTest {
         val rejectAll = ModelFilter { Decision.REJECTED }
 
         // When
-        val result = selector(listOf(rejectAll)).select(
-            models = models(count = 5),
-        )
+        val result = DefaultModelSelector(filters = listOf(rejectAll)).select(models(count = 5))
 
         // Then
         assertEquals(emptyList(), result.ranked)
@@ -109,9 +106,7 @@ class DefaultModelSelectorTest {
         )
 
         // When:
-        val result = selector(rankers).select(
-            models = listOf(modelA, modelB, modelC),
-        )
+        val result = DefaultModelSelector(rankers = rankers).select(listOf(modelA, modelB, modelC))
 
         // Then:
         assertEquals(listOf(modelC, modelA, modelB), result.ranked)
@@ -133,9 +128,7 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector(listOf(excessiveRanker)).select(
-                models = inputModels,
-            )
+            DefaultModelSelector(rankers = listOf(excessiveRanker)).select(inputModels)
         }
     }
 
@@ -153,9 +146,7 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector(listOf(modelDroppingRanker)).select(
-                models = inputModels,
-            )
+            DefaultModelSelector(rankers = listOf(modelDroppingRanker)).select(inputModels)
         }
     }
 
@@ -170,9 +161,7 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector().select(
-                models = inputModels,
-            )
+            DefaultModelSelector().select(models = inputModels)
         }
     }
 
@@ -191,9 +180,7 @@ class DefaultModelSelectorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            selector(listOf(duplicateReturningRanker)).select(
-                models = inputModels,
-            )
+            DefaultModelSelector(rankers = listOf(duplicateReturningRanker)).select(inputModels)
         }
     }
 
@@ -207,11 +194,5 @@ class DefaultModelSelectorTest {
         LLModel(
             provider = LLMProvider.OpenAI,
             id = id,
-        )
-
-    private fun selector(steps: List<ModelSelectionStep> = emptyList()): DefaultModelSelector =
-        DefaultModelSelector(
-            *steps.toTypedArray(),
-            maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels
         )
 }

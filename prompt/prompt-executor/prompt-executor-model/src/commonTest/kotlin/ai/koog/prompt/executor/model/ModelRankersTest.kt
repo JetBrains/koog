@@ -6,6 +6,7 @@ import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class ModelRankersTest {
     @Test
@@ -89,6 +90,22 @@ class ModelRankersTest {
             ),
             actual = ranking
         )
+    }
+
+    @Test
+    fun testRankingRejectsEmptyBucket() {
+        // Given
+        val modelA = model(id = "a")
+        val nonEmptyBucket = RankBucket(modelA)
+        val emptyBucket = RankBucket(emptyList())
+
+        // Then
+        assertFailsWith<IllegalArgumentException> {
+            Ranking(emptyBucket, nonEmptyBucket)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            Ranking(nonEmptyBucket, emptyBucket)
+        }
     }
 
     private fun model(
