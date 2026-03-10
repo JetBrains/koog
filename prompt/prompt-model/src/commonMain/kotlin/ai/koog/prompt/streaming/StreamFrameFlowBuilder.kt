@@ -256,7 +256,6 @@ public class StreamFrameFlowBuilder(
         val index: Int?,
     ) {
         fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall {
-            require(this.index == index)
             val newArgs =
                 if (argumentsDelta == null) this.argumentsDelta else (this.argumentsDelta ?: "") + argumentsDelta
             return copy(argumentsDelta = newArgs)
