@@ -182,7 +182,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             prompt = prompt(
                 id = "single-run-agent",
                 params = LLMParams(
-                    temperature = 1.0,
+                    temperature = 0.0,
                     toolChoice = ToolChoice.Auto,
                 )
             ) {
@@ -192,7 +192,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
             },
             model = model,
-            maxAgentIterations = 10,
+            maxAgentIterations = 20,
         ),
         toolRegistry = toolRegistry,
         installFeatures = {

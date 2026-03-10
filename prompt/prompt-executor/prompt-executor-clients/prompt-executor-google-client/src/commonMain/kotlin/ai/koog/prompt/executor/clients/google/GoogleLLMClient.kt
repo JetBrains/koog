@@ -295,6 +295,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
         val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
         var lastSignature: String? = null
+        val isThinkingModel = model.supports(LLMCapability.Thinking)
 
         fun flushCalls() {
             if (pendingCalls.isNotEmpty()) {
@@ -384,13 +385,22 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     val signature = lastSignature
                     lastSignature = null // Consume: only first call gets the signature
 
+                    // For thinking models (e.g., Gemini 3), thought_signature is required for all function calls.
+                    // If no signature is available from a Reasoning message, use the official workaround dummy signature.
+                    // See: https://ai.google.dev/gemini-api/docs/thought-signatures
+                    val effectiveSignature = signature ?: if (isThinkingModel) {
+                        "context_engineering_is_the_way_to_go"
+                    } else {
+                        null
+                    }
+
                     pendingCalls += GooglePart.FunctionCall(
                         functionCall = GoogleData.FunctionCall(
                             id = message.id,
                             name = message.tool,
                             args = json.decodeFromString(message.content)
                         ),
-                        thoughtSignature = signature
+                        thoughtSignature = effectiveSignature
                     )
                 }
             }
