@@ -701,13 +701,17 @@ public class OpenTelemetry {
         }
 
         /**
-         * Retrieves the [String] representation of the given data based on its type.
+         * Retrieves the string JSON representation of the given data based on its type, skips it if it's not serializable,
+         * returning null.
          */
         private fun nodeDataToString(data: Any?, dataType: TypeToken, serializer: JSONSerializer): String? {
             data ?: return null
 
-            @OptIn(InternalAgentsApi::class)
-            return serializer.encodeToString(data, dataType)
+            return try {
+                serializer.encodeToString(data, dataType)
+            } catch (_: Exception) {
+                null
+            }
         }
 
         /**

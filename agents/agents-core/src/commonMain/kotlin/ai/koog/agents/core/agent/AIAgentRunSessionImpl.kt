@@ -81,6 +81,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                             strategy,
                             context,
                             result,
+                            // FIXME this will break serialization, need to add outputType to the AIAgentStrategy!!
                             typeToken<Any?>()
                         )
 

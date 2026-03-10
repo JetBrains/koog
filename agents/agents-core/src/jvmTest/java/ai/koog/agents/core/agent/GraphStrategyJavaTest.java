@@ -9,9 +9,10 @@ import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.reflect.ToolSet;
 import ai.koog.agents.ext.agent.CriticResult;
-import ai.koog.agents.testing.tools.MockExecutor;
+import ai.koog.agents.testing.tools.MockPromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
+import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -22,11 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GraphStrategyJavaTest {
+    private static final JacksonSerializer serializer = new JacksonSerializer();
 
     @Test
     public void testMinimalGraph() {
         AIAgent<String, String> agent = (AIAgent<String, String>) AIAgent.builder()
-            .promptExecutor(MockExecutor.builder().mockLLMAnswer("ok").asDefaultResponse().build())
+            .promptExecutor(MockPromptExecutor.builder(serializer).mockLLMAnswer("ok").asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)
             .<String, String>graphStrategy("minimal", b -> {
                 var graph = b
@@ -52,7 +54,7 @@ public class GraphStrategyJavaTest {
     @Test
     public void testLLMRequestNode() {
         AIAgent<String, String> agent = (AIAgent<String, String>) AIAgent.builder()
-            .promptExecutor(MockExecutor.builder().mockLLMAnswer("llm-response").asDefaultResponse().build())
+            .promptExecutor(MockPromptExecutor.builder(serializer).mockLLMAnswer("llm-response").asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)
             .<String, String>graphStrategy("llm", b -> {
                 var graph = b
@@ -83,7 +85,7 @@ public class GraphStrategyJavaTest {
     @Test
     public void testCompressionAndJudge() {
         AIAgent<String, Boolean> agent = (AIAgent<String, Boolean>) AIAgent.builder()
-            .promptExecutor(MockExecutor.builder()
+            .promptExecutor(MockPromptExecutor.builder(serializer)
                 .mockLLMAnswer("{\"isCorrect\": true, \"feedback\": \"all good\"}")
                 .asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)
@@ -123,7 +125,7 @@ public class GraphStrategyJavaTest {
     @Test
     public void testFinishToolSubgraph() {
         AIAgent<String, Long> agent = (AIAgent<String, Long>) AIAgent.builder()
-            .promptExecutor(MockExecutor.builder()
+            .promptExecutor(MockPromptExecutor.builder(serializer)
                 .mockLLMAnswer("not used")
                 .asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)

@@ -423,7 +423,11 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -436,8 +440,16 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
-                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType, pipeline.config.serializer),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
+                    output = nodeDataToJsonElement(
+                        eventContext.output,
+                        eventContext.outputType,
+                        pipeline.config.serializer
+                    ),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -449,7 +461,11 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -466,7 +482,11 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -478,8 +498,16 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
-                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType, pipeline.config.serializer),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
+                    output = nodeDataToJsonElement(
+                        eventContext.output,
+                        eventContext.outputType,
+                        pipeline.config.serializer
+                    ),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -491,7 +519,11 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     subgraphName = eventContext.subgraph.name,
-                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType, pipeline.config.serializer),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -522,13 +554,17 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
         }
 
         /**
-         * Retrieves the JSON representation of the given data based on its type.
+         * Retrieves the JSON representation of the given data based on its type, skips it if it's not serializable,
+         * returning `null`.
          */
         private fun nodeDataToJsonElement(data: Any?, dataType: TypeToken, serializer: JSONSerializer): JSONElement? {
             data ?: return null
 
-            @OptIn(InternalAgentsApi::class)
-            return serializer.encodeToJSONElement(data, dataType)
+            return try {
+                serializer.encodeToJSONElement(data, dataType)
+            } catch (_: Exception) {
+                null
+            }
         }
 
         //endregion Private Methods
