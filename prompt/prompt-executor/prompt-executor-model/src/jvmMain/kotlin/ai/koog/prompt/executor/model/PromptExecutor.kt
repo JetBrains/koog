@@ -121,8 +121,16 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
      * Companion object for [PromptExecutor].
      * */
     public companion object {
+        /**
+         * Creates and returns a new instance of [PromptExecutorBuilder].
+         *
+         * This builder can be used to configure and construct a new instance of the
+         * [PromptExecutor] for building [PromptExecutor] with one or multiple LLM clients.
+         *
+         * @return A new instance of [PromptExecutorBuilder] for constructing a [PromptExecutor].
+         */
         @JvmStatic
         @JavaAPI
-        public fun builder() {}
+        public fun builder(): PromptExecutorBuilder = PromptExecutorBuilder()
     }
 }

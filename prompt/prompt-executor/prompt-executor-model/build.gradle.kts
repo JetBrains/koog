@@ -15,6 +15,7 @@ kotlin {
                 api(project(":agents:agents-tools"))
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-structure"))
+                api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
@@ -47,7 +48,20 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-test"))
                 implementation(kotlin("test"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                implementation(
+                    project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
+                )
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
                 implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(project(":test-utils"))
+                implementation(libs.mockito.junit.jupiter)
+                implementation(libs.assertj.core)
             }
         }
     }

@@ -148,7 +148,8 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
 
         AIAgent<String, String> agent = AIAgent.builder()
             .agentConfig(
-                AIAgentConfig.builder(model)
+                AIAgentConfig.builder()
+                    .model(model)
                     .prompt(
                         Prompt.builder("task")
                             .system("You are a helpful assistant that coordinates calculations.")

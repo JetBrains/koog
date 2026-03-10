@@ -6,6 +6,12 @@ Core interfaces and models for executing prompts against language models.
 
 This module defines the fundamental interfaces and models for executing prompts against language models. It provides the `PromptExecutor` interface which serves as the foundation for all prompt execution implementations, supporting both synchronous and streaming execution modes, with or without tool assistance.
 
+Additionally, this module provides implementations of the `PromptExecutor` interface for executing prompts with Large Language Models (LLMs). It includes:
+
+- `SingleLLMPromptExecutor`: Executes prompts using a single LLM client
+- `MultiLLMPromptExecutor`: Executes prompts across multiple LLM providers with fallback capabilities
+
+
 ### Using in your project
 
 Add the dependency to your project:
@@ -48,4 +54,28 @@ suspend fun processPrompt(executor: PromptExecutor, prompt: Prompt, model: LLMod
         print(chunk)
     }
 }
+```
+
+These executors handle both standard and streaming execution of prompts, delegating the actual LLM interaction to the provided LLM clients.
+
+```kotlin
+// Example with SingleLLMPromptExecutor
+val openAIClient = OpenAIClient(apiKey = "your-api-key")
+val singleExecutor = SingleLLMPromptExecutor(openAIClient)
+
+// Example with MultiLLMPromptExecutor
+val anthropicClient = AnthropicClient(apiKey = "your-anthropic-key")
+val multiExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OPENAI to openAIClient,
+    LLMProvider.ANTHROPIC to anthropicClient
+)
+
+// Execute a prompt
+val prompt = Prompt {
+    systemMessage("You are a helpful assistant.")
+    userMessage("Tell me about Kotlin.")
+}
+
+val model = LLModel.GPT_4
+val responses = executor.execute(prompt, model, emptyList())
 ```

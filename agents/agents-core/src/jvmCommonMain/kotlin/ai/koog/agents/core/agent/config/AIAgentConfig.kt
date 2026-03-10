@@ -1,5 +1,7 @@
 @file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 
+@file:Suppress("MissingKDocForPublicAPI")
+
 package ai.koog.agents.core.agent.config
 
 import ai.koog.agents.annotations.JavaAPI
@@ -10,6 +12,7 @@ import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.JSONSerializer
 import java.util.concurrent.ExecutorService
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual class AIAgentConfig actual constructor(
     public actual override val prompt: Prompt,
     public actual override val model: LLModel,
@@ -84,14 +87,14 @@ public actual class AIAgentConfig actual constructor(
          */
         @JavaAPI
         @JvmStatic
-        public fun builder(model: LLModel): AIAgentConfigBuilder = AIAgentConfigBuilder(model = model)
+        public fun builder(): AIAgentConfigBuilder = AIAgentConfigBuilder()
 
         /**
          * A builder class for constructing an instance of [AIAgentConfig] with customizable configuration options.
          */
         @JavaAPI
         public class AIAgentConfigBuilder(
-            public var model: LLModel,
+            public var model: LLModel? = null,
             public var prompt: Prompt? = null,
             public var maxAgentIterations: Int? = null,
             public var missingToolsConversionStrategy: MissingToolsConversionStrategy? = null,
@@ -173,7 +176,10 @@ public actual class AIAgentConfig actual constructor(
              * @throws IllegalStateException if required fields such as prompt or model are null
              */
             public fun build(): AIAgentConfig = AIAgentConfig(
-                model = model,
+                model = model ?: throw IllegalStateException(
+                    "Model must be set, please use " +
+                        "AIAgentConfig.builder().model(...) and provide an instance of `LLModel`"
+                ),
                 prompt = prompt ?: Prompt.Empty,
                 maxAgentIterations = maxAgentIterations ?: 100,
                 missingToolsConversionStrategy = missingToolsConversionStrategy

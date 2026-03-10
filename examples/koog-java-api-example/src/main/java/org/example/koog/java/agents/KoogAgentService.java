@@ -61,8 +61,8 @@ public class KoogAgentService {
     });
 
     public KoogAgentService(
-            MultiLLMPromptExecutor promptExecutor,
-            List<SpanExporter> spanExporters
+        MultiLLMPromptExecutor promptExecutor,
+        List<SpanExporter> spanExporters
     ) {
         this.promptExecutor = Objects.requireNonNull(promptExecutor, "promptExecutor");
         this.spanExporters = Objects.requireNonNull(spanExporters, "spanExporters");
@@ -72,80 +72,81 @@ public class KoogAgentService {
         UserTools userTools = new UserTools(userId);
 
         List<Tool<?, ?>> readingTools = List.of(
-                userTools.getTool("readUserAccount"),
-                userTools.getTool("readUserOrders")
+            userTools.getTool("readUserAccount"),
+            userTools.getTool("readUserOrders")
         );
 
         var agent = AIAgent.builder()
-                .promptExecutor(promptExecutor)
-                .agentConfig(
-                        AIAgentConfig.builder(OpenAIModels.Chat.GPT4_1)
-                                .prompt(Prompt.builder("id")
-                                        .system("system")
-                                        .user("user")
-                                        .assistant("assistant")
-                                        .user("user")
-                                        .assistant("assistant")
-                                        .toolCall("id-1", "tool-1", "args-1")
-                                        .toolResult("id-1", "tool-1", "result-1")
-                                        .toolCall("id-2", "tool-2", "args--2")
-                                        .toolResult("id-2", "tool-2", "result-2")
-                                        .build()
-                                )
-                                .maxAgentIterations(100)
-                                .strategyExecutorService(Executors.newSingleThreadExecutor()) // TODO: use better executor service
-                                .llmRequestExecutorService(Executors.newSingleThreadExecutor()) // TODO: use better executor service
-                                .build()
-                )
-                .functionalStrategy((AIAgentFunctionalContext context, String userInput) -> {
-                    var orderRequest = context
-                            .subtask("Identify the user's problem. Input: " + userInput + ".")
-                            .withInput(userInput)
-                            .withOutput(OrderSupportRequest.class)
-                            .withTools(readingTools)
-                            .useLLM(OpenAIModels.Chat.GPT4o)
-                            .run();
+            .promptExecutor(promptExecutor)
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(OpenAIModels.Chat.GPT4_1)
+                    .prompt(Prompt.builder("id")
+                        .system("system")
+                        .user("user")
+                        .assistant("assistant")
+                        .user("user")
+                        .assistant("assistant")
+                        .toolCall("id-1", "tool-1", "args-1")
+                        .toolResult("id-1", "tool-1", "result-1")
+                        .toolCall("id-2", "tool-2", "args--2")
+                        .toolResult("id-2", "tool-2", "result-2")
+                        .build()
+                    )
+                    .maxAgentIterations(100)
+                    .strategyExecutorService(Executors.newSingleThreadExecutor()) // TODO: use better executor service
+                    .llmRequestExecutorService(Executors.newSingleThreadExecutor()) // TODO: use better executor service
+                    .build()
+            )
+            .functionalStrategy((AIAgentFunctionalContext context, String userInput) -> {
+                var orderRequest = context
+                    .subtask("Identify the user's problem. Input: " + userInput + ".")
+                    .withInput(userInput)
+                    .withOutput(OrderSupportRequest.class)
+                    .withTools(readingTools)
+                    .useLLM(OpenAIModels.Chat.GPT4o)
+                    .run();
 
-                    if (orderRequest.isResolved()) {
-                        return orderRequest.emptyUpdate();
-                    }
+                if (orderRequest.isResolved()) {
+                    return orderRequest.emptyUpdate();
+                }
 
-                    var update = context
-                            .subtask("Solve the identified user's problem")
+                var update = context
+                    .subtask("Solve the identified user's problem")
+                    .withInput(orderRequest)
+                    .withOutput(OrderUpdateSummary.class)
+                    .withTools(userTools.asTools())
+                    .useLLM(AnthropicModels.Sonnet_4)
+                    .run();
+
+                while (true) {
+                    var verification = context
+                        .subtask("Verify if the initial user's problem was solved")
+                        .withInput(update)
+                        .withVerification()
+                        .withTools(readingTools)
+                        .useLLM(OpenAIModels.Chat.O3)
+                        .run();
+
+                    if (verification.getSuccessful()) {
+                        return update;
+                    } else {
+                        update = context
+                            .subtask("You must resolve the following issues: " + verification.getFeedback())
                             .withInput(orderRequest)
                             .withOutput(OrderUpdateSummary.class)
+                            .useLLM(AnthropicModels.Haiku_4_5)
                             .withTools(userTools.asTools())
-                            .useLLM(AnthropicModels.Sonnet_4)
                             .run();
-
-                    while (true) {
-                        var verification = context
-                                .subtask("Verify if the initial user's problem was solved")
-                                .withInput(update)
-                                .withVerification()
-                                .withTools(readingTools)
-                                .useLLM(OpenAIModels.Chat.O3)
-                                .run();
-
-                        if (verification.getSuccessful()) {
-                            return update;
-                        } else {
-                            update = context
-                                    .subtask("You must resolve the following issues: " + verification.getFeedback())
-                                    .withInput(orderRequest)
-                                    .withOutput(OrderUpdateSummary.class)
-                                    .useLLM(AnthropicModels.Haiku_4_5)
-                                    .withTools(userTools.asTools())
-                                    .run();
-                        }
                     }
+                }
 
-                })
-                .toolRegistry(
-                        ToolRegistry.builder()
-                                .tools(userTools)
-                                .build()
-                )
+            })
+            .toolRegistry(
+                ToolRegistry.builder()
+                    .tools(userTools)
+                    .build()
+            )
 //                TODO: migrate to graphs
 //                .install(Persistence.Feature, config -> {
 //                    config.setEnableAutomaticPersistence(true);
@@ -160,19 +161,19 @@ public class KoogAgentService {
 //                    config.setVerbose(true);
 //                    config.addSpanExporter(null);
 //                })
-                .install(EventHandler.Feature, config -> {
-                    config.onToolCallStarting(ctx -> {
-                        System.out.println("tool called: " + ctx.getToolName());
-                    });
-                    config.onAgentClosing(ctx -> {
-                        System.out.println("agent finishing: " + ctx.getAgentId());
-                    });
-                })
-                .build();
+            .install(EventHandler.Feature, config -> {
+                config.onToolCallStarting(ctx -> {
+                    System.out.println("tool called: " + ctx.getToolName());
+                });
+                config.onAgentClosing(ctx -> {
+                    System.out.println("agent finishing: " + ctx.getAgentId());
+                });
+            })
+            .build();
 
         agentIdsByUser
-                .computeIfAbsent(userId, k -> new ConcurrentHashMap<>())
-                .put(agent.getId(), Boolean.TRUE);
+            .computeIfAbsent(userId, k -> new ConcurrentHashMap<>())
+            .put(agent.getId(), Boolean.TRUE);
 
         agentsById.put(agent.getId(), agent);
         return agent;

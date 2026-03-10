@@ -22,7 +22,8 @@ public class JavaAPIAgentBuilderJavaTest {
     private static final JSONSerializer serializer = new JacksonSerializer();
 
     private static AIAgentConfig baseConfig() {
-        return AIAgentConfig.builder(OpenAIModels.Chat.GPT4_1)
+        return AIAgentConfig.builder()
+            .model(OpenAIModels.Chat.GPT4_1)
             .prompt(
                 Prompt.builder("id")
                     .system("system")
@@ -74,7 +75,8 @@ public class JavaAPIAgentBuilderJavaTest {
         var agent = AIAgent.builder()
             .promptExecutor(executor)
             .agentConfig(
-                AIAgentConfig.builder(OpenAIModels.Chat.GPT4o)
+                AIAgentConfig.builder()
+                    .model(OpenAIModels.Chat.GPT4o)
                     .prompt(Prompt.builder("p").user("hi").build())
                     .maxAgentIterations(3)
                     .build()
@@ -123,7 +125,8 @@ public class JavaAPIAgentBuilderJavaTest {
         var agent = AIAgent.builder()
             .promptExecutor(executor)
             .agentConfig(
-                AIAgentConfig.builder(OpenAIModels.Chat.GPT4o)
+                AIAgentConfig.builder()
+                    .model(OpenAIModels.Chat.GPT4o)
                     .prompt(Prompt.builder("p").user("hi").build())
                     .maxAgentIterations(3)
                     .build()

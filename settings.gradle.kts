@@ -57,7 +57,6 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client")
 
-include(":prompt:prompt-executor:prompt-executor-llms")
 include(":prompt:prompt-executor:prompt-executor-llms-all")
 include(":prompt:prompt-executor:prompt-executor-model")
 include(":prompt:prompt-llm")
