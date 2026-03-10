@@ -22,7 +22,7 @@ kotlin {
             }
         }
 
-        jvmMain {
+        jvmCommonMain {
             dependencies {
                 api(kotlin("reflect"))
             }

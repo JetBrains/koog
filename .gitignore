@@ -12,6 +12,7 @@ docs/src/main/kotlin/*.kt
 .venv
 .DS_Store
 /.claude/
+!/.claude/skills/
 /.junie/memory
 
 # Logs
