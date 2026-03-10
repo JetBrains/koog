@@ -86,10 +86,8 @@ public class ChatMemoryJdbcExample {
             if ("/bye".equals(input)) break;
             if (input.isEmpty()) continue;
 
-            String reply = BuildersKt.runBlocking(
-                    kotlin.coroutines.EmptyCoroutineContext.INSTANCE,
-                    (scope, continuation) -> agent.run(input, sessionId, continuation)
-            );
+
+            String reply = agent.run(input, sessionId);
             System.out.println("Assistant: " + reply + "\n");
         }
 

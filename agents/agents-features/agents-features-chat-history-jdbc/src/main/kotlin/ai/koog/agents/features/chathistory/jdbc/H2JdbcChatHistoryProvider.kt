@@ -21,7 +21,7 @@ public class H2JdbcChatHistoryProvider @JvmOverloads constructor(
     ttlSeconds: Long? = null,
     migrator: SQLChatHistorySchemaMigrator = H2JdbcChatHistorySchemaMigrator(dataSource, tableName),
     json: Json = defaultJson
-) : JdbcChatHistoryProvider(dataSource, tableName, ttlSeconds, migrator, json) {
+) : JdbcChatHistoryProvider(dataSource, migrator, ttlSeconds, tableName) {
 
     override val upsertSql: String = """
         MERGE INTO $tableName (conversation_id, messages_json, updated_at, ttl_timestamp)
