@@ -26,7 +26,7 @@ package ai.koog.agents.core.tools
  *
  * @property tools The list of tools contained in this registry
  */
-public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyList()) {
+public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyList(), private val readOnly: Boolean = false) {
 
     private val _tools: MutableList<Tool<*, *>> = tools.toMutableList()
 
@@ -100,8 +100,10 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
      * Adds a tool to the registry if it is not already present.
      *
      * @param tool The tool to be added to the registry.
+     * @throws UnsupportedOperationException if this registry is read-only (e.g. [ToolRegistry.EMPTY]).
      */
     public fun add(tool: Tool<*, *>) {
+        check(!readOnly) { "Cannot add tools to a read-only ToolRegistry. Use ToolRegistry { tool(...) } to create a new registry." }
         if (_tools.contains(tool)) return
         _tools.add(tool)
     }
@@ -112,6 +114,7 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
      * This method accepts a variable number of tools and adds each of them to the registry.
      *
      * @param tools The tools to be added to the registry.
+     * @throws UnsupportedOperationException if this registry is read-only (e.g. [ToolRegistry.EMPTY]).
      */
     public fun addAll(vararg tools: Tool<*, *>) {
         tools.forEach { tool -> add(tool) }
@@ -160,7 +163,10 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
 
         /**
          * A constant representing an empty registry with no tools.
+         *
+         * This instance is read-only; calling [add] or [addAll] on it throws [IllegalStateException].
+         * Use `ToolRegistry { tool(...) }` or the [plus] operator to create a new registry with tools.
          */
-        public val EMPTY: ToolRegistry = ToolRegistry(emptyList())
+        public val EMPTY: ToolRegistry = ToolRegistry(emptyList(), readOnly = true)
     }
 }

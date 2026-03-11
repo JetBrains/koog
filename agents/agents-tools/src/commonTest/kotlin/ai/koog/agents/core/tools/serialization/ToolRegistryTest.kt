@@ -9,6 +9,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class ToolRegistryTest {
     private val tool1 = SampleTool("tool_1")
@@ -116,6 +117,36 @@ class ToolRegistryTest {
         assertFailsWith<IllegalArgumentException>("Should fail on unknown tool") {
             sampleRegistry.getTool("unknown_tool")
         }
+    }
+
+    // Regression test for KG-676: ToolRegistry.EMPTY is mutable but stored as a shared constant
+    @Test
+    fun testEmptyRegistryIsReadOnly() = runTest {
+        assertFailsWith<IllegalStateException>("EMPTY registry must not allow add()") {
+            ToolRegistry.EMPTY.add(tool1)
+        }
+        // EMPTY must remain empty after the failed add
+        assertTrue(ToolRegistry.EMPTY.tools.isEmpty())
+    }
+
+    @Test
+    fun testEmptyRegistryAddAllIsReadOnly() = runTest {
+        assertFailsWith<IllegalStateException>("EMPTY registry must not allow addAll()") {
+            ToolRegistry.EMPTY.addAll(tool1, tool2)
+        }
+        assertTrue(ToolRegistry.EMPTY.tools.isEmpty())
+    }
+
+    @Test
+    fun testEmptyRegistryPlusCreatesNewMutableRegistry() = runTest {
+        val registry = ToolRegistry.EMPTY + ToolRegistry { tool(tool1) }
+        assertEquals(1, registry.tools.size)
+        // Original EMPTY is untouched
+        assertTrue(ToolRegistry.EMPTY.tools.isEmpty())
+        // The new registry is mutable
+        registry.add(tool2)
+        assertEquals(2, registry.tools.size)
+        assertFalse(ToolRegistry.EMPTY.tools.isNotEmpty())
     }
 
     @Test
