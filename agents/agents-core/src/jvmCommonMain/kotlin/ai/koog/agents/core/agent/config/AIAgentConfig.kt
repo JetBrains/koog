@@ -1,7 +1,5 @@
 @file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 
-@file:Suppress("MissingKDocForPublicAPI")
-
 package ai.koog.agents.core.agent.config
 
 import ai.koog.agents.annotations.JavaAPI

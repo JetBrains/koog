@@ -9,6 +9,7 @@ import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.execution.utils.runOnIOBoundDispatcher
+import ai.koog.prompt.executor.llms.ExperimentalRoutingApi
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -119,18 +120,64 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
 
     /**
      * Companion object for [PromptExecutor].
-     * */
+     */
     public companion object {
+
         /**
-         * Creates and returns a new instance of [PromptExecutorBuilder].
+         * Creates a [MultiLLMPromptExecutorBuilder] for constructing a [ai.koog.prompt.executor.llms.MultiLLMPromptExecutor]
+         * that dispatches requests to different LLM providers based on the requested model's provider,
+         * with one client registered per provider.
          *
-         * This builder can be used to configure and construct a new instance of the
-         * [PromptExecutor] for building [PromptExecutor] with one or multiple LLM clients.
+         * Example usage in Java:
+         * ```java
+         * PromptExecutor executor = PromptExecutor.builder()
+         *     .openAI("openai-api-key")
+         *     .anthropic("anthropic-api-key")
+         *     .build();
+         * ```
          *
-         * @return A new instance of [PromptExecutorBuilder] for constructing a [PromptExecutor].
+         * @return A new [MultiLLMPromptExecutorBuilder] instance.
          */
         @JvmStatic
         @JavaAPI
-        public fun builder(): PromptExecutorBuilder = PromptExecutorBuilder()
+        public fun builder(): MultiLLMPromptExecutorBuilder = multiExecutorBuilder()
+
+        /**
+         * Creates a [MultiLLMPromptExecutorBuilder] for constructing a [ai.koog.prompt.executor.llms.MultiLLMPromptExecutor]
+         * that dispatches requests to different LLM providers based on the requested model's provider,
+         * with one client registered per provider.
+         *
+         * Example usage in Java:
+         * ```java
+         * PromptExecutor executor = PromptExecutor.multiExecutorBuilder()
+         *     .openAI("openai-api-key")
+         *     .anthropic("anthropic-api-key")
+         *     .build();
+         * ```
+         *
+         * @return A new [MultiLLMPromptExecutorBuilder] instance.
+         */
+        @JvmStatic
+        @JavaAPI
+        public fun multiExecutorBuilder(): MultiLLMPromptExecutorBuilder = MultiLLMPromptExecutorBuilder()
+
+        /**
+         * Creates a [RoutingPromptExecutorBuilder] for constructing a [ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor]
+         * that load-balances requests across multiple clients per provider using round-robin routing.
+         *
+         * Example usage in Java:
+         * ```java
+         * PromptExecutor executor = PromptExecutor.routingExecutorBuilder()
+         *     .openAI("openai-api-key-1")
+         *     .openAI("openai-api-key-2")
+         *     .build();
+         * ```
+         *
+         * @return A new [RoutingPromptExecutorBuilder] instance.
+         */
+        @JvmStatic
+        @JavaAPI
+        @ExperimentalRoutingApi
+        public fun routingExecutorBuilder(): RoutingPromptExecutorBuilder = RoutingPromptExecutorBuilder()
     }
 }
