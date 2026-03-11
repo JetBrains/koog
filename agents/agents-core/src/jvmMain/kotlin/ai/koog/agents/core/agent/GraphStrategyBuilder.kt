@@ -63,7 +63,6 @@ import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.serialization.typeToken
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.jdk9.asFlow
 import kotlinx.coroutines.jdk9.asPublisher
 import java.util.concurrent.Flow.Publisher
@@ -1041,8 +1040,10 @@ public class AIAgentNodeBuilder(
     public fun llmRequestStreaming(
         name: String? = null,
         structureDefinition: StructureDefinition? = null
-    ): AIAgentNodeBase<String, Flow<StreamFrame>> {
+    ): AIAgentNodeBase<String, Publisher<StreamFrame>> {
         val node by strategyBuilder.builder.nodeLLMRequestStreaming(name, structureDefinition)
+            .transform { it.asPublisher() }
+
         return node
     }
 
