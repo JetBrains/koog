@@ -6,6 +6,9 @@ Koog uses a thin, library-agnostic serialization layer to convert tool arguments
 This layer sits between the agent runtime and the underlying serialization library, so you can swap the library
 without changing any tool or agent code.
 
+Beyond tools, the serialization layer is also used by agent features such as **Persistence** to serialize and
+deserialize node inputs and outputs.
+
 By default, Koog uses `KotlinxSerializer` (backed by kotlinx-serialization).
 On the JVM you can also switch to `JacksonSerializer` (backed by jackson-databind).
 
@@ -252,3 +255,13 @@ You do not need to invoke them yourself in normal usage.
 
 These methods are `open` on `Tool`, so you can override them if you need custom serialization behavior for a
 specific tool.
+
+## How features use the serializer
+
+The serialization layer is not limited to tools — certain agent features rely on it as well.
+
+For example, **Persistence** uses `JSONSerializer` configured in `AIAgentConfig` to serialize and deserialize node inputs and outputs when creating
+checkpoints and restoring agent state. This means any type that flows through a persisted node must be
+serializable by the configured `JSONSerializer`.
+
+See [Agent Persistence](agent-persistence.md) for details on checkpoint creation and restoration.
