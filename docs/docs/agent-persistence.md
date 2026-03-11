@@ -135,10 +135,10 @@ To learn how to create a checkpoint at a specific point in your agent's executio
 <!--- INCLUDE
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.snapshot.feature.persistence
-import kotlin.reflect.typeOf
+import ai.koog.serialization.typeToken
 
 const val outputData = "some-output-data"
-val outputType = typeOf<String>()
+val outputType = typeToken<String>()
 -->
 
 ```kotlin

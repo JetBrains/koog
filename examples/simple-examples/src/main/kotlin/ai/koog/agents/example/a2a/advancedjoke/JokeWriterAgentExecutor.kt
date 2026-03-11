@@ -40,7 +40,7 @@ import ai.koog.prompt.xml.xml
 import kotlin.time.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.reflect.typeOf
+import ai.koog.serialization.typeToken
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -85,8 +85,8 @@ private fun jokeWriterAgent(
     )
 
     return GraphAIAgent(
-        inputType = typeOf<A2AMessage>(),
-        outputType = typeOf<Unit>(),
+        inputType = typeToken<A2AMessage>(),
+        outputType = typeToken<Unit>(),
         promptExecutor = promptExecutor,
         strategy = jokeWriterStrategy(),
         agentConfig = agentConfig,

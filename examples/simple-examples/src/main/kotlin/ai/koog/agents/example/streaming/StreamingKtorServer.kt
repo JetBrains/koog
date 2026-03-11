@@ -29,7 +29,7 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.sse.sse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlin.reflect.typeOf
+import ai.koog.serialization.typeToken
 
 /**
  * Example: Streaming AI Agent with Ktor Server
@@ -112,8 +112,8 @@ private fun createAgent(
     )
 
     return GraphAIAgent(
-        typeOf<String>(),
-        typeOf<String>(),
+        typeToken<String>(),
+        typeToken<String>(),
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         strategy = createStrategy(
