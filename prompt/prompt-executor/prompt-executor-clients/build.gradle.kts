@@ -26,7 +26,7 @@ kotlin {
         jvmMain {
             dependencies {
                 api(kotlin("reflect"))
-                api(libs.kotlinx.coroutines.reactive)
+                api(libs.kotlinx.coroutines.jdk9)
             }
         }
         commonTest {

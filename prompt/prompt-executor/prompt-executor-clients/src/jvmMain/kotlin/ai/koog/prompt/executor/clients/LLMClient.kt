@@ -13,9 +13,9 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.coroutines.reactive.asPublisher
-import org.reactivestreams.Publisher
+import kotlinx.coroutines.jdk9.asPublisher
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Flow
 
 /**
  * Common interface for direct communication with LLM providers.
@@ -75,7 +75,7 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
-    ): Publisher<StreamFrame> = executeStreaming(prompt, model, tools).asPublisher()
+    ): Flow.Publisher<StreamFrame> = executeStreaming(prompt, model, tools).asPublisher()
 
     /**
      * Analyzes the provided prompt for violations of content policies or other moderation criteria.

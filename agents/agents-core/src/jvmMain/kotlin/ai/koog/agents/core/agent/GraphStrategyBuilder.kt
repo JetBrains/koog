@@ -64,9 +64,9 @@ import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.asPublisher
-import org.reactivestreams.Publisher
+import kotlinx.coroutines.jdk9.asFlow
+import kotlinx.coroutines.jdk9.asPublisher
+import java.util.concurrent.Flow.Publisher
 import kotlin.reflect.KClass
 
 /**
