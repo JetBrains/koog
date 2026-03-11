@@ -49,7 +49,7 @@ public class JavaToolbox {
         return c.getMeta() + ":" + c.getPayload().getName();
     }
 
-    @LLMDescription(description = "Adds two numbers")
+    @LLMDescription("Adds two numbers")
     public static int describedAdd(int a, int b) {
         return a + b;
     }

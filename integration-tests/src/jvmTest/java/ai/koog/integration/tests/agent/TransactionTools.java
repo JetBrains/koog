@@ -6,9 +6,9 @@ import ai.koog.agents.core.tools.reflect.ToolSet;
 
 public class TransactionTools implements ToolSet {
     @Tool
-    @LLMDescription(description = "Gets the transaction ID for a given order number. You must call this tool to retrieve transaction IDs.")
+    @LLMDescription("Gets the transaction ID for a given order number. You must call this tool to retrieve transaction IDs.")
     public String getTransactionId(
-        @LLMDescription(description = "The order number") String orderNumber
+        @LLMDescription("The order number") String orderNumber
     ) {
         return "TXN-$orderNumber-${System.currentTimeMillis()}";
     }

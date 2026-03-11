@@ -1,5 +1,6 @@
 package ai.koog.agents.core.tools.annotations
 
+import ai.koog.agents.annotations.JavaAPI
 import kotlinx.serialization.SerialInfo
 
 /**
@@ -16,4 +17,4 @@ import kotlinx.serialization.SerialInfo
     AnnotationTarget.VALUE_PARAMETER,
     AnnotationTarget.FUNCTION
 )
-public annotation class LLMDescription(val description: String)
+public annotation class LLMDescription(val value: String)

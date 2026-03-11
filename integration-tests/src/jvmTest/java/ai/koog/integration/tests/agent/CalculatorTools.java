@@ -7,19 +7,19 @@ import ai.koog.agents.core.tools.annotations.LLMDescription;
 public class CalculatorTools implements ToolSet {
 
     @Tool
-    @LLMDescription(description = "Adds two numbers together")
+    @LLMDescription("Adds two numbers together")
     public int add(
-        @LLMDescription(description = "First number") int a,
-        @LLMDescription(description = "Second number") int b
+        @LLMDescription("First number") int a,
+        @LLMDescription("Second number") int b
     ) {
         return a + b;
     }
 
     @Tool
-    @LLMDescription(description = "Multiplies two numbers")
+    @LLMDescription("Multiplies two numbers")
     public int multiply(
-        @LLMDescription(description = "First number") int a,
-        @LLMDescription(description = "Second number") int b
+        @LLMDescription("First number") int a,
+        @LLMDescription("Second number") int b
     ) {
         return a * b;
     }

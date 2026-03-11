@@ -25,7 +25,7 @@ public class UserTools implements ToolSet {
     }
 
     @Tool
-    @LLMDescription(description = "Read and return a list of orders made by the current user")
+    @LLMDescription("Read and return a list of orders made by the current user")
     public List<OrderInfo> readUserOrders() {
         Map<String, List<OrderInfo>> ordersByUser = InMemoryStore.getOrdersByUser();
         List<OrderInfo> orders = ordersByUser.get(userId);
@@ -34,8 +34,8 @@ public class UserTools implements ToolSet {
     }
 
     @Tool
-    @LLMDescription(description = "Issue a refund for the specified order to the user's account")
-    public void issueRefund(@LLMDescription(description = "Order identifier") int orderId) {
+    @LLMDescription("Issue a refund for the specified order to the user's account")
+    public void issueRefund(@LLMDescription("Order identifier") int orderId) {
         Map<String, UserAccount> accounts = InMemoryStore.getAccounts();
         UserAccount account = accounts.get(userId);
         if (account != null) {
@@ -49,8 +49,8 @@ public class UserTools implements ToolSet {
     }
 
     @Tool
-    @LLMDescription(description = "Create another order with the provided items. Uses a demo user if no context is available")
-    public void makeAnotherOrder(@LLMDescription(description = "Line items for the new order") List<Item> items) {
+    @LLMDescription("Create another order with the provided items. Uses a demo user if no context is available")
+    public void makeAnotherOrder(@LLMDescription("Line items for the new order") List<Item> items) {
         int newId = InMemoryStore.allocateOrderId();
 
         Map<String, List<OrderInfo>> ordersByUser = InMemoryStore.getOrdersByUser();
@@ -78,7 +78,7 @@ public class UserTools implements ToolSet {
     }
 
     @Tool
-    @LLMDescription(description = "Read user account info including active orders and balance")
+    @LLMDescription("Read user account info including active orders and balance")
     public UserAccount readUserAccount() {
         Map<String, UserAccount> accounts = InMemoryStore.getAccounts();
         UserAccount existing = accounts.get(userId);
