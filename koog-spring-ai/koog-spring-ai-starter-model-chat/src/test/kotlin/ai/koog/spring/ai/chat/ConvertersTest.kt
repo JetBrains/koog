@@ -96,7 +96,7 @@ class ConvertersTest {
         val springMsg = koogMessageToSpringMessage(koogMsg)
         assertTrue(springMsg is AssistantMessage)
         assertEquals(MessageType.ASSISTANT, springMsg.messageType)
-        assertEquals("step by step", springMsg.text)
+        assertEquals("", springMsg.text)
         assertEquals("step by step", springMsg.metadata["reasoningContent"])
     }
 

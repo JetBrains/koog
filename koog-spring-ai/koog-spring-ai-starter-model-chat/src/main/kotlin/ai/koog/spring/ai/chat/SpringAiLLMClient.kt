@@ -227,22 +227,22 @@ public class SpringAiLLMClient(
             throw e
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.stream() failed during collection: ${e.message}", e)
+        } finally {
+            // Always emit End frame so downstream consumers are not left hanging
+            val finishReason = lastChatResponse?.results?.firstOrNull()?.metadata?.finishReason
+            val usage = lastChatResponse?.metadata?.usage
+            val metaInfo = if (usage != null) {
+                ResponseMetaInfo.create(
+                    clock = clock,
+                    totalTokensCount = usage.totalTokens,
+                    inputTokensCount = usage.promptTokens,
+                    outputTokensCount = usage.completionTokens
+                )
+            } else {
+                null
+            }
+            emitEnd(finishReason = finishReason, metaInfo = metaInfo)
         }
-
-        // Extract metadata from the last chunk
-        val finishReason = lastChatResponse?.results?.firstOrNull()?.metadata?.finishReason
-        val usage = lastChatResponse?.metadata?.usage
-        val metaInfo = if (usage != null) {
-            ResponseMetaInfo.create(
-                clock = clock,
-                totalTokensCount = usage.totalTokens,
-                inputTokensCount = usage.promptTokens,
-                outputTokensCount = usage.completionTokens
-            )
-        } else {
-            null
-        }
-        emitEnd(finishReason = finishReason, metaInfo = metaInfo)
     }.flowOn(dispatcher)
 
     override suspend fun moderate(

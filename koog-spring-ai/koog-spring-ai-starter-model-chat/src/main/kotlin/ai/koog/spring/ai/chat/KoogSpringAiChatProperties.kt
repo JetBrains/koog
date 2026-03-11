@@ -54,6 +54,14 @@ public data class KoogSpringAiChatProperties(
          * property to opt into virtual threads.
          *
          * Falls back to [kotlinx.coroutines.Dispatchers.IO] when no such executor is present.
+         *
+         * **Warning:** When `spring.threads.virtual.enabled=false` (the default before
+         * Spring Boot 3.2), the application task executor is typically a bounded
+         * `ThreadPoolTaskExecutor` (8 core threads by default). Wrapping it as a
+         * coroutine dispatcher means all blocking model calls share the same thread pool
+         * used by `@Async`, scheduled tasks, and web MVC async handlers. Under load this
+         * can cause thread starvation or deadlocks. In such setups, prefer [IO] or enable
+         * virtual threads.
          */
         AUTO,
 

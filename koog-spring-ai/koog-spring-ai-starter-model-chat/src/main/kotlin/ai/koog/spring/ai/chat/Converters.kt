@@ -84,8 +84,12 @@ public fun koogMessageToSpringMessage(message: Message): SpringMessage {
         }
 
         is Message.Reasoning -> {
+            // Reasoning content is stored only in properties, not in the visible content field.
+            // Placing it in content would re-inject the chain-of-thought as an ordinary assistant
+            // utterance in multi-turn conversations, which can degrade follow-up responses for
+            // models that treat reasoning as hidden (e.g. Anthropic extended thinking, DeepSeek-R1).
             AssistantMessage.builder()
-                .content(message.content)
+                .content("")
                 .properties(mapOf("reasoningContent" to message.content))
                 .build()
         }
