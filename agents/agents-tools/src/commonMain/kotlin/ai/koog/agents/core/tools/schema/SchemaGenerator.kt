@@ -35,7 +35,7 @@ internal fun createSerializationGenerator(
         descriptionExtractor = { annotations ->
             annotations
                 .filterIsInstance<LLMDescription>()
-                .firstOrNull()?.description
+                .firstOrNull()?.value
         }
     ),
     json = Json.Default,
