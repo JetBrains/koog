@@ -69,17 +69,16 @@ val envs = credentialsResolver.resolve(
 )
 
 tasks.withType<Test> {
-    // Forward system properties to the test JVM
+    // Forward test-relevant system properties to the test JVM.
+    // Exclude JVM-internal properties (java.*, sun.*, jdk.*, etc.) to avoid conflicts
+    // when the Gradle daemon runs on a different JDK version than the test toolchain.
+    val jvmInternalPrefixes = setOf("java.", "sun.", "jdk.", "os.", "user.", "file.", "line.", "path.", "native.", "stderr.", "stdout.")
     System.getProperties().forEach { key, value ->
-        systemProperty(key.toString(), value)
-    }
-
-    // Use Java 21 toolchain to avoid class version conflicts
-    javaLauncher.set(
-        javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(21))
+        val k = key.toString()
+        if (jvmInternalPrefixes.none { k.startsWith(it) }) {
+            systemProperty(k, value)
         }
-    )
+    }
 }
 
 // Try loading envs from file for integration tests only.
