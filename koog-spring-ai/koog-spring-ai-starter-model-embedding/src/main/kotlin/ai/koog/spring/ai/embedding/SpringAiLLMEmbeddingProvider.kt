@@ -15,7 +15,7 @@ import org.springframework.ai.embedding.EmbeddingRequest
  * An [LLMEmbeddingProvider] implementation that delegates to a Spring AI [EmbeddingModel].
  *
  * When multiple embedding models are registered in the Spring context, use the
- * `koog.spring-ai.embedding.embedding-model-bean-name` property to select the desired bean.
+ * `koog.spring.ai.embedding.embedding-model-bean-name` property to select the desired bean.
  * The [LLModel.id] is forwarded to the underlying Spring AI model via [EmbeddingOptions] so
  * that backends which support runtime model selection (e.g. OpenAI-compatible endpoints) can
  * honour it; backends that ignore the option will simply use their pre-configured model.
