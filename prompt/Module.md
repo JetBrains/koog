@@ -27,7 +27,6 @@ dependencies {
 
     // For executing prompts
     implementation("ai.koog.prompt:prompt-executor-model:$version")
-    implementation("ai.koog.prompt:prompt-executor-llms:$version")
 
     // Optional modules based on your needs
     implementation("ai.koog.prompt:prompt-cache-model:$version")

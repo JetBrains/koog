@@ -10,16 +10,16 @@ Koog provides three main types of prompt executors that implement the [`PromptEx
 
 | Type            | <div style="width:175px">Class</div>                                                                                                                               | Description                                                                                                                                                                                                                                                          |
 |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Single-provider | [`SingleLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.SingleLLMPromptExecutor) | Wraps a single LLM client for one provider. Use this executor if your agent only requires switching between models within a single LLM provider.                                                                                                                     |
-| Multi-provider  | [`MultiLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor)   | Wraps multiple LLM clients and routes calls based on the LLM provider. It can optionally use a configured fallback provider and LLM when the requested client is unavailable. Use this executor if your agent needs to switch between LLMs from different providers. |
-| Routing         | [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) | Distributes requests to a given LLM model across multiple client instances using routing strategies. Use this executor to avoid rate limits, improve throughput, and implement failover strategies with load balancing.                                               |
+| Single-provider | [`SingleLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.SingleLLMPromptExecutor) | Wraps a single LLM client for one provider. Use this executor if your agent only requires switching between models within a single LLM provider.                                                                                                                     |
+| Multi-provider  | [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor)   | Wraps multiple LLM clients and routes calls based on the LLM provider. It can optionally use a configured fallback provider and LLM when the requested client is unavailable. Use this executor if your agent needs to switch between LLMs from different providers. |
+| Routing         | [`RoutingLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) | Distributes requests to a given LLM model across multiple client instances using routing strategies. Use this executor to avoid rate limits, improve throughput, and implement failover strategies with load balancing.                                               |
 
 ## Creating a single-provider executor
 
 To create a prompt executor for a specific LLM provider, perform the following:
 
 1. Configure an LLM client for a specific provider with the corresponding API key.
-2. Create a prompt executor using [`SingleLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.SingleLLMPromptExecutor).
+2. Create a prompt executor using [`SingleLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.SingleLLMPromptExecutor).
 
 Here is an example:
 
@@ -38,7 +38,7 @@ val promptExecutor = MultiLLMPromptExecutor(openAIClient)
 To create a prompt executor that works with multiple LLM providers, do the following:
 
 1. Configure clients for the required LLM providers with the corresponding API keys.
-2. Pass the configured clients to the [`MultiLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor) class constructor to create a prompt executor
+2. Pass the configured clients to the [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor) class constructor to create a prompt executor
    with multiple LLM providers.
 
 <!--- INCLUDE
@@ -67,8 +67,8 @@ val multiExecutor = MultiLLMPromptExecutor(
 To create a prompt executor that distributes requests across multiple LLM client instances using routing strategies, do the following:
 
 1. Configure multiple client instances (they can be for the same or different LLM providers) with the corresponding API keys.
-2. Create a router using a routing strategy, such as [`RoundRobinRouter`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoundRobinRouter).
-3. Pass the router to the [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) class constructor.
+2. Create a router using a routing strategy, such as [`RoundRobinRouter`](api:prompt-executor-model::ai.koog.prompt.executor.llms.RoundRobinRouter).
+3. Pass the router to the [`RoutingLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) class constructor.
 
 This is useful for avoiding rate limits, improving throughput, and implementing failover strategies.
 
@@ -95,7 +95,7 @@ val routingExecutor = RoutingLLMPromptExecutor(router)
 When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
 Requests to Anthropic models always go to the single `anthropic` client, as round-robin maintains an independent counter per provider.
 
-You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.LLMClientRouter) interface.
+You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-model::ai.koog.prompt.executor.llms.LLMClientRouter) interface.
 
 ## Pre-defined prompt executors
 

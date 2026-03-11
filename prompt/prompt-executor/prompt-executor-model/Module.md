@@ -10,6 +10,7 @@ Additionally, this module provides implementations of the `PromptExecutor` inter
 
 - `SingleLLMPromptExecutor`: Executes prompts using a single LLM client
 - `MultiLLMPromptExecutor`: Executes prompts across multiple LLM providers with fallback capabilities
+- `RoutingLLMPromptExecutor`: Routes requests across multiple clients per provider
 
 
 ### Using in your project
@@ -59,23 +60,31 @@ suspend fun processPrompt(executor: PromptExecutor, prompt: Prompt, model: LLMod
 These executors handle both standard and streaming execution of prompts, delegating the actual LLM interaction to the provided LLM clients.
 
 ```kotlin
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.llm.LLMProvider
+
 // Example with SingleLLMPromptExecutor
-val openAIClient = OpenAIClient(apiKey = "your-api-key")
+val openAIClient = OpenAILLMClient(apiKey = "your-api-key")
 val singleExecutor = SingleLLMPromptExecutor(openAIClient)
 
 // Example with MultiLLMPromptExecutor
-val anthropicClient = AnthropicClient(apiKey = "your-anthropic-key")
+val anthropicClient = AnthropicLLMClient(apiKey = "your-anthropic-key")
 val multiExecutor = MultiLLMPromptExecutor(
-    LLMProvider.OPENAI to openAIClient,
-    LLMProvider.ANTHROPIC to anthropicClient
+    LLMProvider.OpenAI to openAIClient,
+    LLMProvider.Anthropic to anthropicClient
 )
 
 // Execute a prompt
-val prompt = Prompt {
-    systemMessage("You are a helpful assistant.")
-    userMessage("Tell me about Kotlin.")
+val prompt = prompt("example") {
+    system("You are a helpful assistant.")
+    user("Tell me about Kotlin.")
 }
 
-val model = LLModel.GPT_4
-val responses = executor.execute(prompt, model, emptyList())
+val model = OpenAIModels.Chat.GPT4o
+val responses = multiExecutor.execute(prompt, model)
 ```
