@@ -360,7 +360,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
         val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
 
-        executor.executeStreaming(prompt, thinkingModel).collect { frame ->
+        executor.executeStreaming(prompt, thinkingModel, listOf()).collect { frame ->
             when (frame) {
                 is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(frame)
                 is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)

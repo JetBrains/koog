@@ -7,16 +7,18 @@ import ai.koog.agents.core.tools.ToolRegistryBuilder;
 import ai.koog.agents.planner.AIAgentPlannerStrategy;
 import ai.koog.agents.planner.JavaAIAgentPlanner;
 import ai.koog.agents.planner.PlannerAIAgent;
-import ai.koog.agents.planner.goap.*;
+import ai.koog.agents.planner.goap.Action;
+import ai.koog.agents.planner.goap.Goal;
+import ai.koog.agents.planner.goap.GoapAgentState;
 import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
-import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.executor.model.PromptExecutor;
+import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +58,12 @@ public class JavaPlannerAIAgentIntegrationTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static <Plan> void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy, @Nullable ToolRegistry toolRegistry, String request, String expectedResultPart) {
+    private static void testPlanner(
+        AIAgentPlannerStrategy<String, String, ?> strategy,
+        @Nullable ToolRegistry toolRegistry,
+        String request,
+        String expectedResultPart
+    ) {
         var builder = PlannerAIAgent.<String, String>builder(strategy)
             .promptExecutor(promptExecutor)
             .llmModel(OpenAIModels.Chat.GPT4o)

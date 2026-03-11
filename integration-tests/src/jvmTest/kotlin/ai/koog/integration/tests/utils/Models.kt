@@ -108,7 +108,6 @@ object Models {
             // KG-733 [Java API] OpenAILLMClient error: 'reasoning' is provided without its required following item
             // OpenAIModels.Chat.GPT5_2,
             AnthropicModels.Haiku_4_5,
-            GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini3_Pro_Preview,
         )
     }
