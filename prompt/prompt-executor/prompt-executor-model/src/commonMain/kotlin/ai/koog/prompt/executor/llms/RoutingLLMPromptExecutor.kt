@@ -64,9 +64,22 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      */
     @JvmOverloads
     public constructor(
-        vararg llmClients: LLMClient,
+        llmClients: List<LLMClient>,
         fallback: FallbackPromptExecutorSettings? = null
     ) : this(llmClients.groupBy { it.llmProvider() }, fallback)
+
+    /**
+     * Creates executor with a list of clients.
+     * Clients are grouped by provider and routed using [RoundRobinRouter].
+     *
+     * @param llmClients Vararg clients to use
+     * @param fallback Optional fallback configuration
+     */
+    @JvmOverloads
+    public constructor(
+        vararg llmClients: LLMClient,
+        fallback: FallbackPromptExecutorSettings? = null
+    ) : this(llmClients.toList(), fallback)
 
     private companion object {
         /**

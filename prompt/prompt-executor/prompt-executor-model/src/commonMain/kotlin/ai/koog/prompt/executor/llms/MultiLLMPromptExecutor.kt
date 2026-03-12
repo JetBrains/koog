@@ -74,17 +74,30 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     ) : this(llmClients = mapOf(*llmClients), fallback = fallback)
 
     /**
+     * Secondary constructor for `MultiLLMPromptExecutor` that accepts a list of `LLMClient` instances.
+     * The provided clients are processed to create a mapping of `LLMProvider` to their respective `LLMClient`.
+     *
+     * @param llmClients Vararg parameter of `LLMClient` instances used to construct the executor.
+     */
+    @JvmOverloads
+    public constructor (
+        llmClients: List<LLMClient>,
+        fallback: FallbackPromptExecutorSettings? = null
+    ) : this(
+        llmClients = llmClients.map {
+            it.llmProvider() to it
+        }.associateBy({ it.first }, { it.second }),
+        fallback = fallback
+    )
+
+    /**
      * Secondary constructor for `MultiLLMPromptExecutor` that accepts a variable number of `LLMClient` instances.
      * The provided clients are processed to create a mapping of `LLMProvider` to their respective `LLMClient`.
      *
      * @param llmClients Vararg parameter of `LLMClient` instances used to construct the executor.
      */
     @JvmOverloads
-    public constructor (vararg llmClients: LLMClient) : this(
-        llmClients.map {
-            it.llmProvider() to it
-        }.associateBy({ it.first }, { it.second })
-    )
+    public constructor (vararg llmClients: LLMClient) : this(llmClients.toList())
 
     /**
      * Companion object for `MultiLLMPromptExecutor` class.
@@ -142,6 +155,7 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
 
         val response = when {
             provider in llmClients -> llmClients[provider]!!.execute(prompt, model, tools)
+
             fallback != null -> fallbackClient!!.execute(
                 prompt,
                 fallback.fallbackModel,
@@ -197,6 +211,7 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
 
         val choices = when {
             provider in llmClients -> llmClients[provider]!!.executeMultipleChoices(prompt, model, tools)
+
             fallback != null -> fallbackClient!!.executeMultipleChoices(
                 prompt,
                 fallback.fallbackModel,
