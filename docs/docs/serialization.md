@@ -113,6 +113,7 @@ JSONElement
     ├── JSONLiteral  – string, number, or boolean
     └── JSONNull     – JSON null singleton
 ```
+<!--- KNIT example-tool-serialization-01.txt -->
 
 ### Conversion to and from library types
 
@@ -189,6 +190,7 @@ dependencies {
     implementation("ai.koog:serialization-jackson:<version>")
 }
 ```
+<!--- KNIT example-tool-serialization-02.txt -->
 
 Then create the serializer:
 
