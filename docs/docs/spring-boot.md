@@ -149,7 +149,7 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
 
 === "Kotlin"
 
-    <!--- INCLUDE
+    ```kotlin
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
     import ai.koog.prompt.executor.model.PromptExecutor
@@ -159,8 +159,7 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
     import org.springframework.web.bind.annotation.RequestBody
     import org.springframework.web.bind.annotation.RequestMapping
     import org.springframework.web.bind.annotation.RestController
-    -->
-    ```kotlin
+
     @RestController
     @RequestMapping("/api/chat")
     class ChatController(
@@ -196,7 +195,7 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
 
 === "Java"
 
-    <!--- INCLUDE
+    ```java
     import ai.koog.prompt.dsl.Prompt;
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
@@ -210,8 +209,7 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
 
     import jakarta.annotation.Nullable;
     import java.util.List;
-    -->
-    ```java
+
     @RestController
     @RequestMapping("/api/chat")
     public class ChatController {
@@ -259,7 +257,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
 
 === "Kotlin"
 
-    <!--- INCLUDE
+    ```kotlin
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_4_5
     import ai.koog.prompt.executor.clients.openai.OpenAIModels.Chat.GPT4oMini
@@ -268,8 +266,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
     import org.slf4j.Logger
     import org.slf4j.LoggerFactory
     import org.springframework.stereotype.Service
-    -->
-    ```kotlin
+
     @Service
     class RobustAIService(private val multiLLMPromptExecutor: MultiLLMPromptExecutor) {
 
@@ -302,7 +299,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
 
 === "Java"
 
-    <!--- INCLUDE
+    ```java
     import ai.koog.prompt.dsl.Prompt;
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
@@ -315,8 +312,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
     import org.springframework.stereotype.Service;
 
     import java.util.List;
-    -->
-    ```java
+
     @Service
     public class RobustAIService {
         private static final Logger logger = LoggerFactory.getLogger(RobustAIService.class);
