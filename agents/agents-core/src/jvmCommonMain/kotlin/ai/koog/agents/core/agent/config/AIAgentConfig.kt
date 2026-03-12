@@ -75,24 +75,37 @@ public actual class AIAgentConfig actual constructor(
         /**
          * Provides a builder for constructing instances of [AIAgentConfig].
          *
-         * This method returns an instance of [AIAgentConfigBuilder], which allows the configuration of various
+         * This method returns an instance of [InitialAIAgentBuilder], which allows the configuration of various
          * properties and dependencies required to build an [AIAgentConfig] instance.
          *
          * The builder pattern offers a flexible way to set optional parameters and ensures that mandatory
          * properties are properly initialized during the construction of the configuration object.
          *
-         * @return an instance of [AIAgentConfigBuilder] to configure and build an [AIAgentConfig] object.
+         * @return an instance of [InitialAIAgentBuilder] to configure and build an [AIAgentConfig] object.
          */
         @JavaAPI
         @JvmStatic
-        public fun builder(): AIAgentConfigBuilder = AIAgentConfigBuilder()
+        public fun builder(): InitialAIAgentBuilder = InitialAIAgentBuilder()
+
+        @JavaAPI
+        public class InitialAIAgentBuilder {
+
+            /**
+             * Sets the Large Language Model (LLM) to be used for the agent's configuration.
+             *
+             * @param model The instance of [LLModel] that represents the desired language model,
+             * including its provider, identifier, and capabilities.
+             * @return An instance of [AIAgentConfigBuilder] for method chaining.
+             */
+            public fun model(model: LLModel): AIAgentConfigBuilder = AIAgentConfigBuilder(model = model)
+        }
 
         /**
          * A builder class for constructing an instance of [AIAgentConfig] with customizable configuration options.
          */
         @JavaAPI
         public class AIAgentConfigBuilder(
-            public var model: LLModel? = null,
+            public val model: LLModel,
             public var prompt: Prompt? = null,
             public var maxAgentIterations: Int? = null,
             public var missingToolsConversionStrategy: MissingToolsConversionStrategy? = null,
@@ -107,15 +120,6 @@ public actual class AIAgentConfig actual constructor(
              * @return The updated instance of [AIAgentConfigBuilder].
              */
             public fun prompt(prompt: Prompt): AIAgentConfigBuilder = apply { this.prompt = prompt }
-
-            /**
-             * Sets the Large Language Model (LLM) to be used for the agent's configuration.
-             *
-             * @param model The instance of [LLModel] that represents the desired language model,
-             * including its provider, identifier, and capabilities.
-             * @return The current instance of [AIAgentConfigBuilder] for method chaining.
-             */
-            public fun model(model: LLModel): AIAgentConfigBuilder = apply { this.model = model }
 
             /**
              * Sets the maximum number of iterations allowed for the AI agent during its execution.
@@ -171,13 +175,9 @@ public actual class AIAgentConfig actual constructor(
              * default values to optional fields if they are not explicitly set.
              *
              * @return a fully constructed and validated [AIAgentConfig] instance
-             * @throws IllegalStateException if required fields such as prompt or model are null
              */
             public fun build(): AIAgentConfig = AIAgentConfig(
-                model = model ?: throw IllegalStateException(
-                    "Model must be set, please use " +
-                        "AIAgentConfig.builder().model(...) and provide an instance of `LLModel`"
-                ),
+                model = model,
                 prompt = prompt ?: Prompt.Empty,
                 maxAgentIterations = maxAgentIterations ?: 100,
                 missingToolsConversionStrategy = missingToolsConversionStrategy
