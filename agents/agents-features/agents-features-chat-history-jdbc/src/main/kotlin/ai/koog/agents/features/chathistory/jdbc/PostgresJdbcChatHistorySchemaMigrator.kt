@@ -12,7 +12,7 @@ import javax.sql.DataSource
  * @param dataSource The JDBC DataSource to use for obtaining connections
  * @param tableName Name of the table to create
  */
-public class PostgresJdbcChatHistorySchemaMigrator(
+public class PostgresJdbcChatHistorySchemaMigrator @JvmOverloads constructor(
     private val dataSource: DataSource,
     private val tableName: String = "chat_history"
 ) : SQLChatHistorySchemaMigrator {
