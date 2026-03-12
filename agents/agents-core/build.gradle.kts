@@ -51,6 +51,12 @@ kotlin {
             }
         }
 
+        jvmCommonMain {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.jdk9)
+            }
+        }
+
         jvmTest {
             dependencies {
                 implementation(project(":integration-tests"))

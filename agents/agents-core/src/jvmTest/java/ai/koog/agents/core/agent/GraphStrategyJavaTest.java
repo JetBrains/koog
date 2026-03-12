@@ -1,9 +1,5 @@
 package ai.koog.agents.core.agent;
 
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase;
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
-import ai.koog.agents.core.agent.ToolCalls;
-import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate;
 import ai.koog.agents.core.dsl.builder.SimpleTransformation;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
 import ai.koog.agents.core.tools.ToolRegistry;
@@ -16,7 +12,6 @@ import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
