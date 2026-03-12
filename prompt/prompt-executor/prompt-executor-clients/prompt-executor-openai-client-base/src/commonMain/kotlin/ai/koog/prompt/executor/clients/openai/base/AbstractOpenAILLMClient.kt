@@ -399,7 +399,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 content = reasoningContent,
                 metaInfo = metaInfo
             )
-        } else null
+        } else {
+            null
+        }
 
     private fun OpenAIMessage.Assistant.toolCallMessages(metaInfo: ResponseMetaInfo): List<Message.Tool.Call> =
         toolCalls?.map { toolCall ->
@@ -427,7 +429,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 finishReason = finishReason,
                 metaInfo = metaInfo
             )
-        } else null
+        } else {
+            null
+        }
 
     private fun OpenAIMessage.Assistant.audioMessageOrNull(
         metaInfo: ResponseMetaInfo,
@@ -447,7 +451,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 finishReason = finishReason,
                 metaInfo = metaInfo
             )
-        } else null
+        } else {
+            null
+        }
 
     @OptIn(ExperimentalEncodingApi::class)
     protected fun OpenAIMessage.toMessageResponses(
