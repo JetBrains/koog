@@ -1,11 +1,11 @@
 # ToolDescriptorSchemer
 
-`ToolDescriptorSchemer` is an extension point that converts a `ToolDescriptor` into a JSON Schema object compatible with specific LLM providers.
+`ToolDescriptorSchemer` is an extension point that converts a `ToolDescriptor` into a JSON Schema object compatible with specific LLM providers. It can be implemented in both Kotlin and Java.
 
 Key points:
 
 - Location: `ai.koog.agents.core.tools.serialization.ToolDescriptorSchemer`
-- Contract: a single function `scheme(toolDescriptor: ToolDescriptor): JsonObject`
+- Contract: a single function `scheme(toolDescriptor: ToolDescriptor): JsonObject` or `generate(ToolDescriptor toolDescriptor): JsonObject` (Java)
 - Implementations provided:
   - `OpenAICompatibleToolDescriptorSchemer` — generates schemas compatible with OpenAI‑style function/tool definitions.
   - `OllamaToolDescriptorSchemer` — generates schemas compatible with Ollama tool JSON.
@@ -25,13 +25,13 @@ fun generate(toolDescriptor: ToolDescriptor): JsonObject
 <!--- KNIT example-tool-descriptor-schemer-01.kt -->
 
 
-## Why to use it?
+## Why use it
 
-If you want to provide custom scheme for existing or new LLM providers, implement this interface to convert Koog’s `ToolDescriptor` into the expected JSON Schema format.
+If you want to provide a custom scheme for existing or new LLM providers in Kotlin or Java, implement this interface to convert Koog’s `ToolDescriptor` into the expected JSON Schema format.
 
 ## Implementation example
 
-Below is a minimal custom implementation that renders only a subset of parameter types to illustrate how to plug into the SPI. Real implementations should cover all `ToolParameterType`s (String, Integer, Float, Boolean, Null, Enum, List, Object, AnyOf).
+Below is a minimal custom implementation in both Kotlin and Java that renders only a subset of parameter types to illustrate how to plug into the SPI. Real implementations should cover all `ToolParameterType`s (String, Integer, Float, Boolean, Null, Enum, List, Object, AnyOf).
 
 === "Kotlin"
 
@@ -136,7 +136,7 @@ Below is a minimal custom implementation that renders only a subset of parameter
 
 ## Using with a client
 
-Typically you do not need to call a schemer directly. Koog clients accept a list of `ToolDescriptor` objects and apply the correct schemer internally when serializing requests for the provider.
+Typically, you do not need to call a schemer directly. Koog clients accept a list of `ToolDescriptor` objects and apply the correct schemer internally when serializing requests for the provider.
 
 The example below defines a simple tool and passes it to the OpenAI client. The client will use `OpenAICompatibleToolDescriptorSchemer` under the hood to build the JSON schema.
 

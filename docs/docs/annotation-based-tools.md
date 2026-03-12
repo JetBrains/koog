@@ -1,9 +1,9 @@
 # Annotation-based tools
 
-Annotation-based tools provide a declarative way to expose functions as tools for large language models (LLMs).
-By using annotations, you can transform any function into a tool that LLMs can understand and use.
+Annotation-based tools provide a declarative way to expose functions and methods as tools for large language models (LLMs) in both Kotlin and Java.
+By using annotations, you can transform any function or method into a tool that LLMs can understand and use.
 
-This approach is useful when you need to expose existing functionality to LLMs without implementing tool descriptions manually.
+This approach is useful when you need to expose existing functionality to LLMs in Kotlin or Java without implementing tool descriptions manually.
 
 !!! note
     Annotation-based tools are JVM-only and not available for other platforms. For multiplatform support, use the [class-based tool API](class-based-tools.md).
@@ -20,8 +20,8 @@ To start using annotation-based tools in your project, you need to understand th
 
 ## @Tool annotation
 
-The `@Tool` annotation is used to mark functions that should be exposed as tools to LLMs.
-The functions annotated with `@Tool` are collected by reflection from objects that implement the `ToolSet` interface. For details, see [Implement the ToolSet interface](#1-implement-the-toolset-interface).
+The `@Tool` annotation is used to mark functions (Kotlin) or methods (Java) that should be exposed as tools to LLMs.
+The functions and methods annotated with `@Tool` are collected by reflection from objects that implement the `ToolSet` interface. For details, see [Implement the ToolSet interface](#1-implement-the-toolset-interface).
 
 ### Definition
 
@@ -39,7 +39,7 @@ public annotation class Tool(val customName: String = "")
 
 ### Usage
 
-To mark a function as a tool, apply the `@Tool` annotation to this function in a class that implements the `ToolSet` interface:
+To mark a function or method as a tool, apply the `@Tool` annotation to this function or method in a class that implements the `ToolSet` interface:
 
 === "Kotlin"
 
@@ -91,7 +91,7 @@ To mark a function as a tool, apply the `@Tool` annotation to this function in a
 
 ## @LLMDescription annotation
 
-The `@LLMDescription` annotation provides descriptive information about code elements (classes, functions, parameters, and so on) to LLMs.
+The `@LLMDescription` annotation provides descriptive information about code elements (classes, functions, methods, parameters, and so on) to LLMs.
 This helps LLMs understand the purpose and usage of these elements.
 
 ### Definition
@@ -238,7 +238,7 @@ This interface marks your class as a container for tools.
 
 ### 2. Add tool functions
 
-Add functions to your class and annotate them with `@Tool` to expose them as tools:
+Add functions or methods to your class and annotate them with `@Tool` to expose them as tools:
 
 === "Kotlin"
 
@@ -589,7 +589,7 @@ This example shows a more complex tool set for device diagnostics:
 * **Group related tools**: group related tools in the same `ToolSet` implementation and provide a class-level description.
 * **Return informative results**: make sure tool return values provide clear information about the result of the operation.
 * **Handle errors gracefully**: include error handling in your tools and return informative error messages.
-* **Document default values**: when parameters have default values, document this in the description.
+* **Document default values**: when parameters have default values (Kotlin) or overloads (Java), document this in the description.
 * **Keep tools focused**: Each tool should perform a specific, well-defined task rather than trying to do too many things.
 
 ## Troubleshooting common issues
@@ -601,18 +601,19 @@ When working with tool annotations, you might encounter some common issues.
 If the agent does not recognize your tools, check the following:
 
 - Your class implements the `ToolSet` interface.
-- All tool functions are annotated with `@Tool`.
-- Tool functions have appropriate return types (`String` is recommended for simplicity).
+- All tool functions or methods are annotated with `@Tool`.
+- Tool functions or methods have appropriate return types (`String` is recommended for simplicity).
 - Your tools are properly registered with the agent.
 
 ### Unclear tool descriptions
 
 If the LLM does not use your tools correctly or misunderstands their purpose, try the following:
 
-- Improve your `@LLMDescription` annotations to be more specific and clear.
-- Include examples in your descriptions if appropriate.
-- Specify parameter constraints in the descriptions (for example, `"Must be a positive number"`).
-- Use consistent terminology throughout your descriptions.
+- Use simple parameter types when possible (`String`, `Boolean`, `Int` in Kotlin, or `String`, `boolean`, `int` in Java).
+- Clearly describe the expected format in the parameter description.
+- For complex types, consider using `String` parameters with a specific format and parse them in your tool.
+- Include examples of valid inputs in your parameter descriptions.
+- Note that Java doesn't support default parameters. Use method overloading instead.
 
 ### Parameter type issues
 
