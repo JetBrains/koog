@@ -85,6 +85,12 @@ Here is an example of a custom tool implementation using the `Tool` class that r
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Java equivalent: implement the tool as a Java method and register it via ToolRegistry.builder().
     // This is the recommended Java interop path instead of subclassing the Kotlin Tool base class.
@@ -111,6 +117,7 @@ Here is an example of a custom tool implementation using the `Tool` class that r
     // Note: Subclassing the Kotlin Tool<TArgs, TResult> and overriding a suspend execute(...) from Java is not supported.
     // The Java interop uses reflection-based registration of Java methods as tools.
     ```
+    <!-- KNIT example-class-based-tools-java-01.java -->
 
 After implementing your tool, you need to add it to a tool registry and then use it with an agent. For details, see [Tool registry](tools-overview.md#tool-registry).
 
@@ -176,6 +183,12 @@ Here is an example of a custom tool implementation using `SimpleTool`:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Java equivalent of SimpleTool: provide a Java method and register it as a tool.
     public final class CastToDoubleTool {
@@ -204,6 +217,7 @@ Here is an example of a custom tool implementation using `SimpleTool`:
     }
     // Note: Extending Kotlin SimpleTool<TArgs> from Java is not required; registering a Java method is the idiomatic approach.
     ```
+    <!-- KNIT example-class-based-tools-java-02.java -->
 
 ### Sending tool result to LLM in custom format
 
@@ -283,6 +297,12 @@ If you are not happy with JSON results sent to LLM (in some cases, LLMs can work
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     import ai.koog.agents.core.tools.ToolRegistry;
     import ai.koog.agents.core.tools.annotations.LLMDescription;
@@ -318,6 +338,7 @@ If you are not happy with JSON results sent to LLM (in some cases, LLMs can work
     // Note: If you need a structured custom Result object from Java, you must expose a Kotlin @Serializable type
     // or another serializer-aware type. Returning String works out-of-the-box with Koog's Java interop.
     ```
+    <!-- KNIT example-class-based-tools-java-03.java -->
 
 After implementing your tool, you need to add it to a tool registry and then use it with an agent.
 For details, see [Tool registry](tools-overview.md#tool-registry).

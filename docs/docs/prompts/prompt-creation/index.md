@@ -24,11 +24,19 @@ The `prompt()` function in Kotlin or the `Prompt.builder()` in Java creates a Pr
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("unique_prompt_id")
         // List of messages
         .build();
     ```
+    <!--- KNIT example-creating-prompts-java-01.java -->
+
 
 ## Message types
 
@@ -59,6 +67,12 @@ The Kotlin DSL supports the following types of messages, each of which correspon
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("unique_prompt_id")
         .system("You are a helpful assistant with access to tools.")
@@ -66,6 +80,8 @@ The Kotlin DSL supports the following types of messages, each of which correspon
         .assistant("The result is 8.")
         .build();
     ```
+    <!--- KNIT example-creating-prompts-java-02.java -->
+
 
 ### System message
 
@@ -89,11 +105,19 @@ To create the system message, provide a string to the `system()` function as an 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("system_message")
         .system("You are a helpful assistant that explains technical concepts.")
         .build();
     ```
+    <!--- KNIT example-creating-prompts-java-03.java -->
+
 
 ### User messages
 
@@ -116,12 +140,20 @@ To create the user message, provide a string to the `user()` function as an argu
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("user_message")
         .system("You are a helpful assistant.")
         .user("What is Koog?")
         .build();
     ```
+    <!--- KNIT example-creating-prompts-java-04.java -->
+
 
 Most user messages contain plain text, but they can also include multimodal content, such as images, audio, video, and documents.
 For details and examples, see [Multimodal content](multimodal-content.md).
@@ -163,6 +195,12 @@ To create the assistant message, provide a string to the `assistant()` function 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("article_review")
         .system("Evaluate the article.")
@@ -175,6 +213,8 @@ To create the assistant message, provide a string to the `assistant()` function 
         .user("The article is interesting and helpful.")
         .build();
     ```
+    <!--- KNIT example-creating-prompts-java-05.java -->
+
 
 ### Tool messages
 
@@ -221,6 +261,12 @@ To create the tool message, call the `tool()` function:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("calculator_example")
         .system("You are a helpful assistant with access to tools.")
@@ -231,6 +277,8 @@ To create the tool message, call the `tool()` function:
         .user("What is 4 + 5?")
         .build();
     ```
+    <!--- KNIT example-creating-prompts-java-06.java -->
+
 
 ## Text message builders
 
@@ -336,6 +384,12 @@ Prompts can be customized by configuring parameters that control the LLM's behav
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create params first
     LLMParams params = new LLMParams(
@@ -357,6 +411,7 @@ Prompts can be customized by configuring parameters that control the LLM's behav
     // Apply params to the built prompt
     prompt = prompt.withParams(params);
     ```
+    <!--- KNIT example-creating-prompts-java-07.java -->
 
 The following parameters are supported:
 
@@ -394,6 +449,12 @@ You can extend an existing prompt by calling the `prompt()` function with the ex
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt basePrompt = Prompt.builder("base")
         .system("You are a helpful assistant.")
@@ -405,6 +466,7 @@ You can extend an existing prompt by calling the `prompt()` function with the ex
         .user("What's the weather like?")
         .build();
     ```
+    <!--- KNIT example-creating-prompts-java-08.java -->
 
 This creates a new prompt that includes all messages from `basePrompt` and the new user message.
 

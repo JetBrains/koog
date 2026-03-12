@@ -429,8 +429,15 @@ Use the `messageFilter` property to filter events. For example, to trace only no
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-events-java-01.java -->
 
 ### Can I use multiple message processors?
 
@@ -481,8 +488,15 @@ Yes, you can add multiple message processors to trace to different destinations 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-events-java-02.java -->
 
 ### How can I create a custom message processor?
 
@@ -553,7 +567,14 @@ Implement the `FeatureMessageProcessor` interface:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-events-java-03.java -->
 
 For more information about existing event types that can be handled by message processors, see [Predefined event types](#predefined-event-types).

@@ -13,6 +13,20 @@ kotlin {
     compilerOptions.allWarningsAsErrors.set(true)
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("src/main/kotlin")
+        }
+    }
+}
+
 dependencies {
     implementation(project(":a2a:a2a-client"))
     implementation(project(":a2a:a2a-core"))

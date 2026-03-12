@@ -242,6 +242,7 @@ val mermaidDiagram: String = myStrategy.asMermaidDiagram()
 
 println(mermaidDiagram)
 ```
+<!--- KNIT example-custom-strategy-graphs-06.kt -->
 
 and the output will be:
 ```mermaid
@@ -260,8 +261,7 @@ stateDiagram
     sendToolResult --> [*] : transformed
     sendToolResult --> executeToolCall : onCondition
 ```
-
-<!--- KNIT example-custom-strategy-graphs-06.kt -->
+<!--- KNIT example-custom-strategy-graphs-01.txt -->
 
 ## Advanced strategy techniques
 

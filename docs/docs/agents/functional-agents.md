@@ -61,6 +61,12 @@ makes one LLM call, then returns the content of the assistant message from the r
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> mathAgent = AIAgent.builder()
         .promptExecutor(SimpleLLMExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
@@ -77,12 +83,14 @@ makes one LLM call, then returns the content of the assistant message from the r
     String result = mathAgent.run("What is 12 × 9?");
     System.out.println(result);
     ```
+   <!--- KNIT example-functional-agent-java-01.java -->
 
 The agent can produce the following output:
 
 ```text
 The answer to 12 × 9 is 108.
 ```
+<!--- KNIT example-functional-agent-01.txt -->
 
 ## Make sequential LLM calls
 
@@ -107,6 +115,12 @@ You can extend the previous strategy to make multiple sequential LLM calls:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> mathAgent = AIAgent.builder()
         .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
@@ -136,6 +150,7 @@ You can extend the previous strategy to make multiple sequential LLM calls:
         })
         .build();
     ```
+    <!--- KNIT example-functional-agent-java-02.java -->
 
 The agent can produce the following output:
 
@@ -144,6 +159,7 @@ To calculate the product of 12 and 9, we multiply these two numbers together.
 
 12 × 9 = **108**
 ```
+<!--- KNIT example-functional-agent-02.txt -->
 
 ## Add tools
 
@@ -222,6 +238,12 @@ Here is what you need to do:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @LLMDescription(description = "Tools for performing math operations")
     public static class MathTools implements ToolSet {
@@ -271,6 +293,7 @@ Here is what you need to do:
         System.out.println(result);
     }
     ```
+   <!--- KNIT example-functional-agent-java-03.java -->
 
 The agent can produce the following output:
 
@@ -279,6 +302,7 @@ Multiplying 3 and 4...
 Multiplying 12 and 5...
 The result of multiplying 3 by 4 is 12. Multiplying 12 by 5 gives us a final answer of 60.
 ```
+<!--- KNIT example-functional-agent-03.txt -->
 
 ## Next steps
 

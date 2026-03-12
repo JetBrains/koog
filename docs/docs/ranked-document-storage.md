@@ -94,8 +94,15 @@ This sequence of steps represents a *relevance search* flow that returns the mos
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-01.java -->
 
 
 ### Providing relevance search for use by AI agents
@@ -167,8 +174,15 @@ Here is an example of how to implement the defined RAG system for an AI agent to
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-02.java -->
 
 
 ### Providing relevance search as a tool
@@ -255,8 +269,15 @@ Here is an example of how to implement a relevance search tool:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-03.java -->
 
 With this approach, the agent can decide when to use the search tool based on your query. This is particularly useful for complex queries that may require information from multiple documents or when the agent needs to search for specific details.
 
@@ -283,9 +304,16 @@ A simple in-memory implementation that stores documents and their vector embeddi
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     InMemoryVectorStorage<Path> inMemoryStorage = new InMemoryVectorStorage<>();
     ```
+    <!--- KNIT example-ranked-document-storage-java-04.java -->
 
 For more information, see the [InMemoryVectorStorage](api:vector-storage::ai.koog.rag.vector.InMemoryVectorStorage) reference.
 
@@ -312,8 +340,15 @@ A file-based implementation that stores documents and their vector embeddings on
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-05.java -->
 
 For more information, see the [FileVectorStorage](api:vector-storage::ai.koog.rag.vector.FileVectorStorage) reference.
 
@@ -334,8 +369,15 @@ A JVM-specific implementation of `FileVectorStorage` that works with `java.nio.f
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-06.java -->
 
 For more information, see the [JVMFileVectorStorage](api:vector-storage::ai.koog.rag.vector.JVMFileVectorStorage) reference.
 
@@ -363,8 +405,11 @@ A generic implementation that works with any document type that can be converted
 
 === "Java"
 
+    <!--- INCLUDE
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-07.java -->
 
 For more information, see the [TextDocumentEmbedder](api:vector-storage::ai.koog.rag.vector.TextDocumentEmbedder) reference.
 
@@ -388,10 +433,17 @@ A JVM-specific implementation that works with `java.nio.file.Path`.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     LLMEmbedder embedder = new LLMEmbedder(new OllamaClient("http://localhost:11434"), OllamaModels.Embeddings.NOMIC_EMBED_TEXT);
     JVMTextDocumentEmbedder jvmTextEmbedder = new JVMTextDocumentEmbedder(embedder);
     ```
+    <!--- KNIT example-ranked-document-storage-java-08.java -->
 
 For more information, see the [JVMTextDocumentEmbedder](api:vector-storage::ai.koog.rag.vector.JVMTextDocumentEmbedder) reference.
 
@@ -420,16 +472,23 @@ Combines a document embedder and a vector storage to provide a complete solution
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     LLMEmbedder embedder = new LLMEmbedder(new OllamaClient("http://localhost:11434"), OllamaModels.Embeddings.NOMIC_EMBED_TEXT);
     JVMTextDocumentEmbedder documentEmbedder = new JVMTextDocumentEmbedder(embedder);
     InMemoryVectorStorage<Path> vectorStorage = new InMemoryVectorStorage<>();
-
+    
     EmbeddingBasedDocumentStorage<Path> embeddingStorage = new EmbeddingBasedDocumentStorage<>(
         documentEmbedder,
         vectorStorage
     );
     ```
+    <!--- KNIT example-ranked-document-storage-java-09.java -->
 
 For more information, see the [EmbeddingBasedDocumentStorage](api:vector-storage::ai.koog.rag.vector.EmbeddingBasedDocumentStorage) reference.
 
@@ -454,6 +513,12 @@ An in-memory implementation of `EmbeddingBasedDocumentStorage`.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     LLMEmbedder embedder = new LLMEmbedder(new OllamaClient("http://localhost:11434"), OllamaModels.Embeddings.NOMIC_EMBED_TEXT);
     JVMTextDocumentEmbedder documentEmbedder = new JVMTextDocumentEmbedder(embedder);
@@ -461,6 +526,7 @@ An in-memory implementation of `EmbeddingBasedDocumentStorage`.
     InMemoryDocumentEmbeddingStorage<Path> inMemoryEmbeddingStorage =
         new InMemoryDocumentEmbeddingStorage<>(documentEmbedder);
     ```
+    <!--- KNIT example-ranked-document-storage-java-10.java -->
 
 For more information, see the [InMemoryDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.InMemoryDocumentEmbeddingStorage) reference.
 
@@ -488,8 +554,15 @@ A file-based implementation of `EmbeddingBasedDocumentStorage`.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-11.java -->
 
 For more information, see the [FileDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.FileDocumentEmbeddingStorage) reference.
 
@@ -514,6 +587,12 @@ A JVM-specific implementation of `FileDocumentEmbeddingStorage`.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     LLMEmbedder embedder = new LLMEmbedder(new OllamaClient("http://localhost:11434"), OllamaModels.Embeddings.NOMIC_EMBED_TEXT);
     JVMTextDocumentEmbedder documentEmbedder = new JVMTextDocumentEmbedder(embedder);
@@ -523,6 +602,7 @@ A JVM-specific implementation of `FileDocumentEmbeddingStorage`.
        Path.of("/path/to/storage")
     );
     ```
+    <!--- KNIT example-ranked-document-storage-java-12.java -->
 
 For more information, see the [JVMFileDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.JVMFileDocumentEmbeddingStorage) reference.
 
@@ -547,6 +627,12 @@ A JVM-specific implementation that combines `JVMTextDocumentEmbedder` and `JVMFi
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     LLMEmbedder embedder = new LLMEmbedder(new OllamaClient("http://localhost:11434"), OllamaModels.Embeddings.NOMIC_EMBED_TEXT);
 
@@ -555,6 +641,7 @@ A JVM-specific implementation that combines `JVMTextDocumentEmbedder` and `JVMFi
        Path.of("/path/to/storage")
     );
     ```
+    <!--- KNIT example-ranked-document-storage-java-13.java -->
 
 For more information, see the [JVMTextFileDocumentEmbeddingStorage](api:vector-storage::ai.koog.rag.vector.JVMTextFileDocumentEmbeddingStorage) reference.
 
@@ -684,8 +771,15 @@ Here's an example of implementing a custom document embedder for PDF documents:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-14.java -->
 
 ## Implementing custom non-embedding-based RankedDocumentStorage
 
@@ -773,8 +867,15 @@ Here's an example of implementing a custom `RankedDocumentStorage` that uses a s
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-15.java -->
 
 This implementation ranks documents based on the frequency of keywords from the query appearing in the document text. You could extend this approach with more sophisticated algorithms like TF-IDF (Term Frequency-Inverse Document Frequency) or BM25.
 
@@ -832,8 +933,15 @@ Another example is a time-based ranking system that prioritizes recent documents
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-ranked-document-storage-java-16.java -->
 
 By implementing the `RankedDocumentStorage` interface, you can create custom ranking mechanisms tailored to your specific use case while still leveraging the rest of the RAG infrastructure.
 

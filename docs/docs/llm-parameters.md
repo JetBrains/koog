@@ -35,6 +35,12 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("dev-assistant")
         .withParams(new LLMParams(
@@ -51,6 +57,8 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
         .user("Tell me about Kotlin")
         .build();
     ```
+    <!--- KNIT example-llm-parameters-java-01.java -->
+
 
 For more information about prompt creation, see [Prompts](prompts/prompt-creation/index.md).
 
@@ -96,8 +104,16 @@ For more information about prompt creation, see [Prompts](prompts/prompt-creatio
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-llm-parameters-java-02.java -->
+
 
 For more information about existing subgraph types in Koog, see [Predefined subgraphs](nodes-and-components.md#predefined-subgraphs). To learn how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
 
@@ -130,8 +146,15 @@ For more information about existing subgraph types in Koog, see [Predefined subg
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-llm-parameters-java-03.java -->
 
 For more information about sessions, see [LLM sessions and manual history management](sessions.md).
 
@@ -211,6 +234,12 @@ JSON schemas let you request structured JSON data from language models. Koog sup
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create parameters with a basic JSON schema
     LLMParams jsonParams = new LLMParams(
@@ -243,6 +272,7 @@ JSON schemas let you request structured JSON data from language models. Koog sup
         null         // additionalProperties
     );
     ```
+    <!--- KNIT example-llm-parameters-java-04.java -->
 
 2) **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema specification. Note that the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
 
@@ -288,6 +318,12 @@ JSON schemas let you request structured JSON data from language models. Koog sup
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create parameters with a standard JSON schema
     LLMParams standardJsonParams = new LLMParams(
@@ -329,6 +365,7 @@ JSON schemas let you request structured JSON data from language models. Koog sup
         null         // additionalProperties
     );
     ```
+    <!--- KNIT example-llm-parameters-java-05.java -->
 
 ## Tool choice
 
@@ -357,6 +394,12 @@ Here is an example of using the `LLMParams.ToolChoice.Named` class to call a spe
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     LLMParams specificToolParams = new LLMParams(
         null,        // temperature
@@ -369,6 +412,7 @@ Here is an example of using the `LLMParams.ToolChoice.Named` class to call a spe
         null         // additionalProperties
     );
     ```
+    <!--- KNIT example-llm-parameters-java-06.java -->
 
 ## Provider-specific parameters
 
@@ -532,6 +576,12 @@ The following example shows defined OpenRouter LLM parameters using the provider
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     OpenRouterParams openRouterParams = new OpenRouterParams(
         0.7,         // temperature
@@ -558,6 +608,7 @@ The following example shows defined OpenRouter LLM parameters using the provider
         Arrays.asList("middle-out") // transforms
     );
     ```
+    <!--- KNIT example-llm-parameters-java-07.java -->
 
 ## Usage examples
 
@@ -580,6 +631,12 @@ The following example shows defined OpenRouter LLM parameters using the provider
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // A basic set of parameters with limited length
     LLMParams basicParams = new LLMParams(
@@ -593,6 +650,7 @@ The following example shows defined OpenRouter LLM parameters using the provider
         null         // additionalProperties
     );
     ```
+    <!--- KNIT example-llm-parameters-java-08.java -->
 
 ### Reasoning control
 
@@ -615,6 +673,12 @@ to control how many reasoning tokens the model generates before providing a resp
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     OpenAIChatParams openAIReasoningEffortParams = new OpenAIChatParams(
         null,        // temperature
@@ -641,6 +705,7 @@ to control how many reasoning tokens the model generates before providing a resp
         null         // webSearchOptions
     );
     ```
+    <!--- KNIT example-llm-parameters-java-09.java -->
 
 In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`.
 You can then pass the encrypted reasoning tokens back to the model in the next conversation turns.
@@ -660,6 +725,12 @@ You can then pass the encrypted reasoning tokens back to the model in the next c
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     OpenAIResponsesParams openAIStatelessReasoningParams = new OpenAIResponsesParams(
         null,        // temperature
@@ -685,6 +756,7 @@ You can then pass the encrypted reasoning tokens back to the model in the next c
         null         // truncation
     );
     ```
+    <!--- KNIT example-llm-parameters-java-10.java -->
 
 ### Custom parameters
 
@@ -710,6 +782,12 @@ To add custom parameters that may be provider specific and not supported in Koog
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Add custom parameters for specific model providers
     LLMParams customParams = new LLMParams(
@@ -727,6 +805,7 @@ To add custom parameters that may be provider specific and not supported in Koog
         )
     );
     ```
+    <!--- KNIT example-llm-parameters-java-11.java -->
 
 ### Setting and overriding parameters
 
@@ -757,6 +836,12 @@ This lets you define parameters that are common to most requests but also add mo
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Define default parameters
     LLMParams defaultParams = new LLMParams(
@@ -782,6 +867,7 @@ This lets you define parameters that are common to most requests but also add mo
         null         // additionalProperties
     ).applyDefaults(defaultParams);
     ```
+    <!--- KNIT example-llm-parameters-java-12.java -->
 
 The values in the resulting `overrideParams` set are equivalent to the following:
 
@@ -802,6 +888,12 @@ The values in the resulting `overrideParams` set are equivalent to the following
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     LLMParams overrideParams = new LLMParams(
         0.2,         // temperature
@@ -814,3 +906,4 @@ The values in the resulting `overrideParams` set are equivalent to the following
         null         // additionalProperties
     );
     ```
+    <!--- KNIT example-llm-parameters-java-13.java -->

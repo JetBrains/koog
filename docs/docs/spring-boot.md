@@ -21,12 +21,19 @@ ready-to-use beans for dependency injection. It supports all major LLM providers
 
 Add the Koog Spring Boot starter and [Ktor Client Engine](https://ktor.io/docs/client-engines.html#jvm) to your build configuration:
 
+<!--- INCLUDE
+/**
+-->
+<!--- SUFFIX
+**/
+-->
 ```kotlin
 dependencies {
     implementation("ai.koog:koog-spring-boot-starter:$koogVersion")
     implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
 }
 ```
+<!--- KNIT example-spring-boot-01.txt -->
 
 ### 2. Configure Providers
 
@@ -57,9 +64,16 @@ ai.koog.deepseek.base-url=https://api.deepseek.com
 ai.koog.ollama.enabled=true
 ai.koog.ollama.base-url=http://localhost:11434
 ```
+<!--- KNIT example-spring-boot-02.txt -->
 
 Or using YAML format (`application.yml`):
 
+<!--- INCLUDE
+/**
+-->
+<!--- SUFFIX
+**/
+-->
 ```yaml
 ai:
     koog:
@@ -87,6 +101,7 @@ ai:
             enabled: true # Set it to `true` explicitly to activate !!!
             base-url: http://localhost:11434
 ```
+<!--- KNIT example-spring-boot-java-01.txt -->
 
 Both `ai.koog.PROVIDER.api-key` and `ai.koog.PROVIDER.enabled` properties are used to activate the provider.
 
@@ -118,6 +133,12 @@ Inject the auto-configured executors into your services:
 
 === "Kotlin"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```kotlin
     @Service
     class AIService(
@@ -145,9 +166,16 @@ Inject the auto-configured executors into your services:
         }
     }
     ```
+    <!--- KNIT example-spring-boot-01.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @Service
     public class AIService {
@@ -177,6 +205,7 @@ Inject the auto-configured executors into your services:
         }
     }
     ```
+    <!--- KNIT example-spring-boot-java-01.java -->
 
 ## Advanced Usage
 
@@ -186,6 +215,12 @@ Create a chat endpoint using auto-configured executors:
 
 === "Kotlin"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```kotlin
     @RestController
     @RequestMapping("/api/chat")
@@ -218,9 +253,16 @@ Create a chat endpoint using auto-configured executors:
     data class ChatRequest(val message: String)
     data class ChatResponse(val response: String)
     ```
+    <!--- KNIT example-spring-boot-02.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @RestController
     @RequestMapping("/api/chat")
@@ -261,6 +303,7 @@ Create a chat endpoint using auto-configured executors:
         public ChatResponse(String response) { this.response = response; }
     }
     ```
+    <!--- KNIT example-spring-boot-java-02.java -->
 
 ### Multiple Provider Support
 
@@ -268,6 +311,12 @@ Handle multiple providers with fallback logic:
 
 === "Kotlin"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```kotlin
     @Service
     class RobustAIService(
@@ -302,9 +351,16 @@ Handle multiple providers with fallback logic:
         }
     }
     ```
+    <!--- KNIT example-spring-boot-03.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @Service
     public class RobustAIService {
@@ -358,6 +414,7 @@ Handle multiple providers with fallback logic:
         }
     }
     ```
+    <--- KNIT example-spring-boot-java-03.java -->
 
 ### Configuration Properties
 
@@ -365,6 +422,12 @@ You can also inject configuration properties for custom logic:
 
 === "Kotlin"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```kotlin
     @Service
     class ConfigurableAIService(
@@ -384,9 +447,16 @@ You can also inject configuration properties for custom logic:
         }
     }
     ```
+    <!--- KNIT example-spring-boot-04.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @Service
     public class ConfigurableAIService {
@@ -413,6 +483,7 @@ You can also inject configuration properties for custom logic:
         }
     }
     ```
+    <!--- KNIT example-spring-boot-java-03.java -->
 
 ## Configuration Reference
 
@@ -452,6 +523,7 @@ The auto-configuration creates the following beans (when configured):
 ```
 No qualifying bean of type 'MultiLLMPromptExecutor' available
 ```
+<!--- KNIT example-spring-boot-03.txt -->
 
 **Solution:** Ensure you have configured at least one provider in your properties file.
 
@@ -460,11 +532,18 @@ No qualifying bean of type 'MultiLLMPromptExecutor' available
 ```
 Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
 ```
+<!--- KNIT example-spring-boot-04.txt -->
 
 **Solution:** Use `@Qualifier` to specify which bean you want:
 
 === "Kotlin"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```kotlin
     @Service
     class MyService(
@@ -474,9 +553,16 @@ Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
         // ...
     }
     ```
+    <!--- KNIT example-spring-boot-05.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @Service
     public class MyService {
@@ -491,12 +577,14 @@ Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
         // ...
     }
     ```
+    <!--- KNIT example-spring-boot-java-04.java -->
 
 **API key not loaded:**
 
 ```
 API key is required but not provided
 ```
+<!--- KNIT example-spring-boot-05.txt -->
 
 **Solution:** Check that your environment variables are properly set and accessible to your Spring Boot application.
 

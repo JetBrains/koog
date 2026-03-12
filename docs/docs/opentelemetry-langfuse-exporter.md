@@ -19,6 +19,7 @@ This can be done by providing them as parameters to the `addLangfuseExporter()` 
    export LANGFUSE_PUBLIC_KEY="<your-public-key>"
    export LANGFUSE_SECRET_KEY="<your-secret-key>"
 ```
+<!--- KNIT example-langfuse-exporter-01.txt -->
 
 ## Configuration
 

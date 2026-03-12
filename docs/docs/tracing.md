@@ -178,6 +178,7 @@ Tracing
     ├── ToolCallFailedEvent
     └── ToolCallCompletedEvent
 ```
+<!--- KNIT example-tracing-01.txt -->
 
 ## Examples and quickstarts
 
@@ -225,6 +226,7 @@ If no message processors are added to the Tracing feature, a warning will be log
 ```
 Tracing Feature. No feature out stream providers are defined. Trace streaming has no target.
 ```
+<!--- KNIT example-tracing-02.txt -->
 
 The feature will still intercept events, but they will not be processed or output anywhere.
 

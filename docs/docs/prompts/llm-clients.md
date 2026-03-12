@@ -70,6 +70,12 @@ Here is an example that uses `OpenAILLMClient` to run prompts:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create an OpenAI client
     String apiKey = System.getenv("OPENAI_API_KEY");
@@ -90,6 +96,7 @@ Here is an example that uses `OpenAILLMClient` to run prompts:
 
     client.close();
     ```
+    <!--- KNIT example-llm-clients-java-01.java -->
 
 ## Streaming responses
 
@@ -144,6 +151,12 @@ See the [Streaming API documentation](../streaming-api.md) for more details on w
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Set up the OpenAI client with your API key
     String token = System.getenv("OPENAI_API_KEY");
@@ -189,6 +202,7 @@ See the [Streaming API documentation](../streaming-api.md) for more details on w
         public void onComplete() { }
     });
     ```
+    <!--- KNIT example-llm-clients-java-02.java -->
 
 ## Multiple choices
 
@@ -231,6 +245,12 @@ being executed.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     String apiKey = System.getenv("OPENAI_API_KEY");
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
@@ -268,6 +288,7 @@ being executed.
         System.out.println("Line #" + (i + 1) + ": " + text.toString().trim());
     }
     ```
+    <!--- KNIT example-llm-clients-java-03.java -->
 
 ## Listing available models
 
@@ -298,6 +319,12 @@ To get a list of available model IDs supported by the LLM client, use the `model
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     String apiKey = System.getenv("OPENAI_API_KEY");
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
@@ -307,6 +334,7 @@ To get a list of available model IDs supported by the LLM client, use the `model
         System.out.println(model.getId());
     }
     ```
+    <!--- KNIT example-llm-clients-java-04.java -->
 
 ## Embeddings
 
@@ -371,6 +399,12 @@ You can use the `moderate()` method with a moderation model to check whether a p
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     String apiKey = System.getenv("OPENAI_API_KEY");
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
@@ -382,6 +416,7 @@ You can use the `moderate()` method with a moderation model to check whether a p
     ModerationResult result = client.moderate(prompt, OpenAIModels.Moderation.Omni);
     System.out.println(result);
     ```
+    <!--- KNIT example-llm-clients-java-05.java -->
 
 ## Integration with prompt executors
 

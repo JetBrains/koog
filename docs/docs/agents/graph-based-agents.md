@@ -63,6 +63,8 @@ graph TB
     sendToolResult --Message.Response--> onToolCall
     sendToolResult --Message.Response--> onAssistantMessage
 ```
+<!--- KNIT example-graph-agents-01.txt -->
+
 
 ## Build a strategy graph
 
@@ -116,15 +118,29 @@ effectively transforming `Message.Assistant` to `String`, because `nodeFinish` e
 
     Instead of `onAssistantMessage {true}`, you can do the following:
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```kotlin
     onIsInstance(Message.Assistant::class) transformed { it.content }
     ```
+    <!--- KNIT example-graph-agents-02.kt -->
 
     Or:
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```kotlin
     onCondition { it is Message.Assistant } transformed { it.asAssistantMessage().content }
     ```
+    <!--- KNIT example-graph-agents-03.kt -->
 
 ## Create and run the agent
 
@@ -168,7 +184,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-graph-agents-02.kt -->
+<!--- KNIT example-graph-agents-04.kt -->
 
 When you run this agent, it will respond with something like this:
 
@@ -182,6 +198,7 @@ To calculate this, I'll follow the order of operations:
 
 The final answer is 193.
 ```
+<!--- KNIT example-graph-agents-02.txt -->
 
 However, since this agent doesn't have any tools, the LLM never returns a tool call 
 and simply generates the whole answer.
@@ -207,8 +224,8 @@ graph LR
     end
     
     Input --String--> llmRequest --Message.Response--> onAssistantMessage{{onAssistantMessage}} --String--> Output
-
 ```
+<!--- KNIT example-graph-agents-03.txt -->
 
 Even though it is correct in this case, the answer will depend on the arithmetic abilities of the underlying LLM.
 To make sure the calculations are correct, we should provide the agent with math tools.
@@ -248,7 +265,7 @@ val toolRegistry = ToolRegistry {
     tools(MathTools())
 }
 ```
-<!--- KNIT example-graph-agents-03.kt -->
+<!--- KNIT example-graph-agents-05.kt -->
 
 Add the tool registry to the agent configuration:
 
@@ -317,7 +334,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-graph-agents-04.kt -->
+<!--- KNIT example-graph-agents-06.kt -->
 
 When you run the agent now, it will respond with something like this:
 
@@ -332,6 +349,7 @@ Then, 10 was added to the result:
 Finally, 123 was added to the result:
 70 + 123 = 193
 ```
+<!--- KNIT example-graph-agents-04.txt -->
 
 According to this output, the agent correctly performed the calculations, but it only called the `multiply` tool once
 instead of calling the corresponding tool for every operation.
@@ -414,7 +432,7 @@ fun main() = runBlocking {
     println(result)
 }
 ```
-<!--- KNIT example-graph-agents-05.kt -->
+<!--- KNIT example-graph-agents-07.kt -->
 
 When you run the agent now, it will respond with something like this:
 
@@ -425,6 +443,7 @@ Adding 60 and 10...
 Adding 70 and 123...
 The final result is: 193
 ```
+<!--- KNIT example-graph-agents-05.txt -->
 
 As you can see, the agent now correctly calls the appropriate tool for each operation,
 ensuring that it performs the calculations deterministically instead of risking a hallucinated result.

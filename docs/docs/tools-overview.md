@@ -60,6 +60,12 @@ Here is an example of how to create the tool registry and add the tool to it:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create an instance of your ToolSet
     MyToolSet myTool = new MyToolSet();
@@ -69,6 +75,7 @@ Here is an example of how to create the tool registry and add the tool to it:
         .tools(myTool)
         .build();
     ```
+    <!--- KNIT example-tools-overview-java-01.java -->
 
 To merge multiple tool registries, do the following:
 
@@ -110,7 +117,13 @@ To merge multiple tool registries, do the following:
     <!--- KNIT example-tools-overview-02.kt -->
 
 === "Java"
-    
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create instances of your ToolSets
     FirstToolSet firstSampleTool = new FirstToolSet();
@@ -127,6 +140,7 @@ To merge multiple tool registries, do the following:
 
     ToolRegistry newRegistry = firstToolRegistry.plus(secondToolRegistry);
     ```
+    <!--- KNIT example-tools-overview-java-02.java -->
 
 ### Passing tools to an agent
 
@@ -154,6 +168,12 @@ To enable an agent to use a tool, you need to provide a tool registry that conta
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
         .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
@@ -165,6 +185,7 @@ To enable an agent to use a tool, you need to provide a tool registry that conta
         )
         .build();
     ```
+    <!--- KNIT example-tools-overview-java-03.java -->
 
 ### Calling tools
 
@@ -242,8 +263,15 @@ You can also call tools in parallel using the `toParallelToolCallsRaw` extension
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-tools-overview-java-04.java -->
 
 #### Calling tools from nodes
 
@@ -302,6 +330,19 @@ To convert an agent into a tool, use the `AIAgentService` and the `createAgentTo
     ```
     <!--- KNIT example-tools-overview-05.kt -->
 
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-tools-overview-java-05.java -->
+
+
 ### Using agent tools in other agents
 
 Once converted to a tool, you can add the agent tool to another agent's tool registry:
@@ -332,8 +373,16 @@ Once converted to a tool, you can add the agent tool to another agent's tool reg
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-tools-overview-java-06.java -->
+
 
 ### Agent tool execution
 

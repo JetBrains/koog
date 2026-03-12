@@ -65,6 +65,12 @@ The basic form of testing involves mocking LLM responses to ensure deterministic
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     import ai.koog.agents.core.tools.ToolRegistry;
     import ai.koog.agents.testing.tools.MockExecutor;
@@ -80,6 +86,7 @@ The basic form of testing involves mocking LLM responses to ensure deterministic
         .mockLLMAnswer("I don't know how to answer that.").asDefaultResponse()
         .build();
     ```
+    <!--- KNIT example-testing-java-01.java -->
 
 ### Mocking tool calls
 
@@ -191,6 +198,19 @@ You can mock the LLM to call specific tools based on input patterns:
     ```
     <!--- KNIT example-testing-03.kt -->
 
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-02.java -->
+
+
 The examples above demonstrate different ways to mock tools, from simple to more complex ones:
 
 1. `alwaysReturns`: the simplest form, directly returns a value without a lambda.
@@ -206,7 +226,7 @@ To enable the testing mode on an agent, use the `withTesting()` function within 
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.withTesting
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -234,8 +254,16 @@ To enable the testing mode on an agent, use the `withTesting()` function within 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-03.java -->
+
 
 ## Advanced testing
 
@@ -255,7 +283,7 @@ Start by validating the fundamental structure of your agent's graph:
 
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.testGraph
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -308,8 +336,16 @@ Start by validating the fundamental structure of your agent's graph:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-04.java -->
+
 
 ### Testing node behavior
 
@@ -324,7 +360,7 @@ Start with simple input and output validations for individual nodes:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.example.exampleTesting03.CreateTool
     import ai.koog.agents.testing.feature.assistantMessage
@@ -369,8 +405,16 @@ Start with simple input and output validations for individual nodes:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-05.java -->
+
 
 The example above shows how to test the following behavior:
 1. When the LLM node receives `Hello` as the input, it responds with a simple text message.
@@ -386,7 +430,7 @@ You can also test nodes that run tools:
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
     import ai.koog.agents.core.tools.*
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.ext.tool.AskUser
     import ai.koog.agents.testing.feature.testGraph
@@ -448,8 +492,16 @@ You can also test nodes that run tools:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-06.java -->
+
 
 This verifies that when the tool execution node receives a specific tool call signature, it produces the expected tool result.
 
@@ -462,7 +514,7 @@ For more complex scenarios, you can test nodes with structured inputs and output
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.tools.*
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.ext.tool.AskUser
     import ai.koog.agents.testing.feature.assistantMessage
@@ -528,8 +580,15 @@ For more complex scenarios, you can test nodes with structured inputs and output
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-07.java -->
 
 You can also test complex tool call scenarios with detailed result structures:
 
@@ -539,7 +598,7 @@ You can also test complex tool call scenarios with detailed result structures:
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
     import ai.koog.agents.core.tools.*
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.testGraph
     import ai.koog.agents.testing.feature.toolCallMessage
@@ -613,8 +672,15 @@ You can also test complex tool call scenarios with detailed result structures:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-08.java -->
 
 These advanced tests help ensure that your nodes handle complex data structures correctly, which is essential for sophisticated agent behaviors.
 
@@ -632,7 +698,7 @@ Start with simple edge connection tests:
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
     import ai.koog.agents.core.tools.*
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.example.exampleTesting03.CreateTool
     import ai.koog.agents.testing.feature.assistantMessage
@@ -678,8 +744,15 @@ Start with simple edge connection tests:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-09.java -->
 
 This example verifies the following behavior:
 1. When the LLM node outputs a simple text message, the flow is directed to the `giveFeedback` node.
@@ -694,7 +767,7 @@ You can test a more complex routing logic based on the content of outputs:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.assistantMessage
     import ai.koog.agents.testing.feature.testGraph
@@ -734,8 +807,15 @@ You can test a more complex routing logic based on the content of outputs:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-10.java -->
 
 #### Advanced edge testing
 
@@ -746,7 +826,7 @@ For sophisticated agents, you can test conditional routing based on structured d
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.example.exampleTesting09.AnalyzeTool
     import ai.koog.agents.testing.feature.testGraph
@@ -790,8 +870,15 @@ For sophisticated agents, you can test conditional routing based on structured d
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-11.java -->
 
 You can also test complex decision paths based on different result properties:
 
@@ -800,7 +887,7 @@ You can also test complex decision paths based on different result properties:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.example.exampleTesting09.AnalyzeTool
     import ai.koog.agents.testing.feature.testGraph
@@ -851,8 +938,15 @@ You can also test complex decision paths based on different result properties:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-12.java -->
 
 These advanced edge tests help ensure that your agent makes the correct decisions based on the content and structure of node outputs, which is essential for creating intelligent, context-aware workflows.
 
@@ -994,8 +1088,15 @@ Here is how you can test this agent:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-13.java -->
 
 For more complex agents with multiple subgraphs, you can also test the graph structure:
 
@@ -1113,8 +1214,15 @@ For more complex agents with multiple subgraphs, you can also test the graph str
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-14.java -->
 
 ## API reference
 
@@ -1146,8 +1254,11 @@ Use the `mockTool` method in `MockLLMBuilder`:
 
 === "Java"
 
+    <!--- INCLUDE
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-15.java -->
 
 #### How can I test complex graph structures?
 
@@ -1157,7 +1268,7 @@ Use the subgraph assertions, `verifySubgraph`, and node references:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.example.exampleTesting02.mockLLMApi
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.testGraph
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -1200,8 +1311,15 @@ Use the subgraph assertions, `verifySubgraph`, and node references:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-testing-java-16.java -->
 
 #### How do I simulate different LLM responses based on input?
 
@@ -1227,6 +1345,12 @@ Use pattern matching methods:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     import ai.koog.agents.testing.tools.MockExecutor;
     import ai.koog.prompt.executor.model.PromptExecutor;
@@ -1238,6 +1362,7 @@ Use pattern matching methods:
         .mockLLMAnswer("Conditional response").onCondition(s -> s.contains("keyword") && s.length() > 10)
         .build();
     ```
+    <!--- KNIT example-testing-java-17.java -->
 
 ### Troubleshooting
 

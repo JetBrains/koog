@@ -67,6 +67,12 @@ Here is an example:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create a prompt
     Prompt prompt = Prompt.builder("test")
@@ -97,6 +103,7 @@ Here is an example:
     System.out.println("Second response: " + secondResponse.getFirst().getContent());
     System.out.println("Second execution took: " + secondTimeMs + "ms");
     ```
+    <!--- KNIT example-llm-response-caching-java-01.java -->
 
 The example produces the following output:
 
