@@ -20,12 +20,13 @@ import java.util.stream.Collectors;
 @Service
 record AIService(
     @NonNull JavaPromptExecutor executor,
-    kotlinx.datetime.Clock clock
+    kotlin.time.Clock clock
 ) {
 
     private static final Logger log = LoggerFactory.getLogger(AIService.class);
 
     Mono<String> generateResponse(String input) {
+
 
         RequestMetaInfo metaInfo = RequestMetaInfo.Companion.create(clock);
         final var systemPrompt = new Message.System("You are a helpful pirate", metaInfo);
@@ -38,11 +39,11 @@ record AIService(
         );
 
         return Mono.fromFuture(
-            executor.executeAsync(prompt, OpenAIModels.CostOptimized.INSTANCE.getGPT4_1Nano())
-                .handle((responses, thowable) -> {
-                        if (thowable != null) {
-                            log.error("Error executing prompt", thowable);
-                            return "Error: " + thowable.getMessage();
+            executor.executeAsync(prompt, OpenAIModels.Chat.INSTANCE.getGPT4_1Nano())
+                .handle((responses, throwable) -> {
+                        if (throwable != null) {
+                            log.error("Error executing prompt", throwable);
+                            return "Error: " + throwable.getMessage();
                         } else {
                             return responses.stream()
                                 .map(Response::getContent)

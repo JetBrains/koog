@@ -28,27 +28,27 @@
     </scm>
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
-        <spring.boot.version>3.5.6</spring.boot.version>
+        <spring.boot.version>3.5.11</spring.boot.version>
 <!--         <koog.version>0.4.3-SNAPSHOT</koog.version>-->
-        <koog.version>0.4.3-develop-20250927-0204</koog.version>
+        <koog.version>0.6.4</koog.version>
+        <kotlin.version>2.3.10</kotlin.version>
         <!-- Kotlinx-serialization version must be aligned -->
-        <kotlinx-serialization.version>1.8.1</kotlinx-serialization.version>
-        <kotlinx-datetime.version>0.7.1</kotlinx-datetime.version>
-        <ktor.version>3.2.3</ktor.version>
+        <kotlinx-serialization.version>1.10.0</kotlinx-serialization.version>
+        <ktor.version>3.3.3</ktor.version>
     </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.jetbrains.kotlinx</groupId>
-                <artifactId>kotlinx-serialization-bom</artifactId>
-                <version>${kotlinx-serialization.version}</version>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>
-                <artifactId>kotlinx-datetime-jvm</artifactId>
-                <version>${kotlinx-datetime.version}</version>
+                <artifactId>kotlinx-serialization-bom</artifactId>
+                <version>${kotlinx-serialization.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
