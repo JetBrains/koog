@@ -2,7 +2,6 @@ package ai.koog.prompt.executor.model;
 
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.llms.MockLLMClient;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
@@ -13,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class PromptExecutorBuilderTest {
+class RoutingPromptExecutorBuilderTest {
 
     private final LLMProvider providerA = mock(LLMProvider.class);
     private final LLMProvider providerB = mock(LLMProvider.class);
@@ -23,41 +22,38 @@ class PromptExecutorBuilderTest {
     }
 
     @Test
-    void testBuilderAccessibleFromPromptExecutorCompanion() {
-        assertThat(PromptExecutor.builder())
+    void testAddClientReturnsRoutingPromptExecutorBuilder() {
+        RoutingPromptExecutorBuilder builder = PromptExecutor.routingExecutorBuilder()
+            .addClient(clientFor(providerA));
+
+        assertThat(builder)
             .isNotNull()
-            .isInstanceOf(InitialPromptExecutorBuilder.class);
+            .isInstanceOf(RoutingPromptExecutorBuilder.class);
     }
 
     @Test
-    void testAddClientReturnsPromptExecutorBuilder() {
-        assertThat(PromptExecutor.builder().addClient(clientFor(providerA)))
-            .isNotNull()
-            .isInstanceOf(PromptExecutorBuilder.class);
-    }
-
-    @Test
-    void testSingleClientProducesMultiLLMPromptExecutor() {
-        PromptExecutor executor = PromptExecutor.builder()
+    void testSingleClientProducesRoutingLLMPromptExecutor() {
+        PromptExecutor executor = PromptExecutor.routingExecutorBuilder()
             .addClient(clientFor(providerA))
             .build();
 
-        assertThat(executor).isInstanceOf(MultiLLMPromptExecutor.class);
+        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
     }
 
     @Test
-    void testTwoDistinctProvidersProducesMultiLLMPromptExecutor() {
-        PromptExecutor executor = PromptExecutor.builder()
+    void testMultipleDistinctProvidersProducesRoutingLLMPromptExecutor() {
+        PromptExecutor executor = PromptExecutor.routingExecutorBuilder()
             .addClient(clientFor(providerA))
             .addClient(clientFor(providerB))
             .build();
 
-        assertThat(executor).isInstanceOf(MultiLLMPromptExecutor.class);
+        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
     }
 
     @Test
-    void testDuplicateProviderProducesRoutingLLMPromptExecutor() {
-        PromptExecutor executor = PromptExecutor.builder()
+    void testMultipleClientsPerProviderAllowed() {
+        PromptExecutor executor = PromptExecutor.routingExecutorBuilder()
+            .addClient(clientFor(providerA))
             .addClient(clientFor(providerA))
             .addClient(clientFor(providerA))
             .build();
@@ -66,37 +62,26 @@ class PromptExecutorBuilderTest {
     }
 
     @Test
-    void testMixedClientsWithDuplicateProviderProducesRoutingLLMPromptExecutor() {
-        PromptExecutor executor = PromptExecutor.builder()
-            .addClient(clientFor(providerA))
-            .addClient(clientFor(providerB))
-            .addClient(clientFor(providerA))
-            .build();
-
-        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
-    }
-
-    @Test
-    void testFallbackWithRegisteredProviderSucceeds() {
+    void testFallbackRegisteredProviderSucceeds() {
         LLModel fallbackModel = mock(LLModel.class);
         when(fallbackModel.getProvider()).thenReturn(providerA);
 
-        PromptExecutor executor = PromptExecutor.builder()
+        PromptExecutor executor = PromptExecutor.routingExecutorBuilder()
             .addClient(clientFor(providerA))
             .fallback(fallbackModel)
             .build();
 
-        assertThat(executor).isNotNull();
+        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
     }
 
     @Test
-    void testFallbackWithUnregisteredProviderThrows() {
+    void testFallbackUnregisteredProviderThrows() {
         LLModel fallbackModel = mock(LLModel.class);
         when(fallbackModel.getProvider()).thenReturn(providerB);
 
         assertThatIllegalArgumentException()
             .isThrownBy(() ->
-                PromptExecutor.builder()
+                PromptExecutor.routingExecutorBuilder()
                     .addClient(clientFor(providerA))
                     .fallback(fallbackModel)
                     .build()
