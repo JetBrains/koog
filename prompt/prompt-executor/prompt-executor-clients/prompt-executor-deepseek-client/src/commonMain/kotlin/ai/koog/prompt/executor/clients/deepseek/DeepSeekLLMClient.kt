@@ -94,13 +94,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         val deepSeekParams = params.toDeepSeekParams()
         val responseFormat = createResponseFormat(params.schema, model)
 
-        val preparedMessages = if (params.schema != null) {
-            // Add a message having the word `JSON` explicitly
-            // it is required by the deepseek api for structured output
-            messages + OpenAIMessage.Assistant(Content.Text("Respond with JSON"))
-        } else {
-            messages
-        }
+        val preparedMessages = prepareMessagesForDeepSeek(messages, addJsonResponseHint = params.schema != null)
 
         val request = DeepSeekChatCompletionRequest(
             messages = preparedMessages,
@@ -121,6 +115,44 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         )
 
         return json.encodeToString(DeepSeekChatCompletionRequestSerializer, request)
+    }
+
+    private fun prepareMessagesForDeepSeek(
+        messages: List<OpenAIMessage>,
+        addJsonResponseHint: Boolean = false
+    ): List<OpenAIMessage> {
+        val preparedMessages = mutableListOf<OpenAIMessage>()
+
+        for (message in messages) {
+            val previousMessage = preparedMessages.lastOrNull() as? OpenAIMessage.Assistant
+
+            if (
+                previousMessage?.reasoningContent != null &&
+                message is OpenAIMessage.Assistant &&
+                message.reasoningContent == null &&
+                !message.toolCalls.isNullOrEmpty()
+            ) {
+                preparedMessages.removeLast()
+                preparedMessages += OpenAIMessage.Assistant(
+                    content = previousMessage.content ?: message.content,
+                    reasoningContent = previousMessage.reasoningContent,
+                    audio = message.audio ?: previousMessage.audio,
+                    name = message.name ?: previousMessage.name,
+                    refusal = message.refusal ?: previousMessage.refusal,
+                    toolCalls = message.toolCalls,
+                    annotations = message.annotations ?: previousMessage.annotations
+                )
+            } else {
+                preparedMessages += message
+            }
+        }
+
+        if (addJsonResponseHint) {
+            // DeepSeek requires an explicit JSON mention for structured output mode.
+            preparedMessages += OpenAIMessage.Assistant(Content.Text("Respond with JSON"))
+        }
+
+        return preparedMessages
     }
 
     override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
