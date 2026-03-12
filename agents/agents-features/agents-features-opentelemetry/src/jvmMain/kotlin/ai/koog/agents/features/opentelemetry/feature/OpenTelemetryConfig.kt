@@ -2,8 +2,11 @@ package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
+import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporterImpl
+import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporterImpl
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -22,6 +25,8 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Properties
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Configuration class for OpenTelemetry integration.
@@ -314,4 +319,66 @@ public class OpenTelemetryConfig : FeatureConfig() {
     }
 
     //endregion Private Methods
+
+    // integrations:
+
+    /**
+     * Configure an OpenTelemetry span exporter that sends data to [Langfuse](https://langfuse.com/).
+     *
+     * @param langfuseUrl the base URL of the Langfuse instance.
+     *        If not a set is retrieved from `LANGFUSE_HOST` environment variable.
+     *        Defaults to [https://cloud.langfuse.com](https://cloud.langfuse.com).
+     * @param langfusePublicKey if not set is retrieved from `LANGFUSE_PUBLIC_KEY` environment variable.
+     * @param langfuseSecretKey if not set is retrieved from `LANGFUSE_SECRET_KEY` environment variable.
+     * @param timeout OpenTelemetry SpanExporter timeout.
+     *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+     * @param traceAttributes list of trace-level Langfuse attributes.
+     *        See the full list: [Trace-Level Attributes](https://langfuse.com/integrations/native/opentelemetry#trace-level-attributes)
+     *
+     * @see <a href="https://langfuse.com/docs/get-started#create-new-project-in-langfuse">How to create a new project in Langfuse</a>
+     * @see <a href="https://langfuse.com/faq/all/where-are-langfuse-api-keys">How to set up API keys in Langfuse</a>
+     * @see <a href="https://langfuse.com/docs/opentelemetry/get-started#opentelemetry-endpoint">Langfuse OpenTelemetry Docs</a>
+     */
+    @JvmOverloads
+    public fun addLangfuseExporter(
+        langfuseUrl: String? = null,
+        langfusePublicKey: String? = null,
+        langfuseSecretKey: String? = null,
+        timeout: Duration = 10.seconds,
+        traceAttributes: List<CustomAttribute> = emptyList()
+    ): Unit = this.addLangfuseExporterImpl(
+        langfuseUrl,
+        langfusePublicKey,
+        langfuseSecretKey,
+        timeout,
+        traceAttributes
+    )
+
+    /**
+     * Configure an OpenTelemetry span exporter that sends data to [W&B Weave](https://wandb.ai/site/weave/).
+     *
+     * @param weaveOtelBaseUrl the URL of the Weave OpenTelemetry endpoint.
+     *        If not set is retrieved from `WEAVE_URL` environment variable.
+     *        Defaults to [https://trace.wandb.ai](https://trace.wandb.ai).
+     * @param weaveEntity can be found by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home) and
+     *        checking the *Teams* field in the left sidebar.
+     *        If not set is retrieved from `WEAVE_ENTITY` environment variable.
+     * @param weaveProjectName name of your Weave project.
+     *        If not set is retrieved from `WEAVE_PROJECT_NAME` environment variable.
+     * @param weaveApiKey can be created on the [https://wandb.ai/authorize](https://wandb.ai/authorize) page.
+     *        If not set is retrieved from `WEAVE_API_KEY` environment variable.
+     * @param timeout OpenTelemetry SpanExporter timeout.
+     *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+     *
+     * @see <a href="https://weave-docs.wandb.ai/guides/tracking/otel/">Weave OpenTelemetry Docs</a>
+     */
+    @JvmOverloads
+    public fun addWeaveExporter(
+        weaveOtelBaseUrl: String? = null,
+        weaveEntity: String? = null,
+        weaveProjectName: String? = null,
+        weaveApiKey: String? = null,
+        timeout: Duration = 10.seconds,
+    ): Unit = addWeaveExporterImpl(weaveOtelBaseUrl, weaveEntity, weaveProjectName, weaveApiKey, timeout)
+
 }

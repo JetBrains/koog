@@ -7,7 +7,6 @@ import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.server.startSseMcpServer
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
