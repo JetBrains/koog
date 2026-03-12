@@ -19,7 +19,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json as KotlinxJson
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
@@ -33,6 +32,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.serialization.json.Json as KotlinxJson
 
 class DeepSeekLLMClientTest {
 
