@@ -325,7 +325,7 @@ To convert an agent into a tool, use the `AIAgentService` and the `createAgentTo
         agentDescription = "Performs financial transaction analysis",
         inputDescription = "Transaction analysis request",
         inputType = typeToken<String>(),
-)
+    )
     ```
     <!--- KNIT example-tools-overview-05.kt -->
 
