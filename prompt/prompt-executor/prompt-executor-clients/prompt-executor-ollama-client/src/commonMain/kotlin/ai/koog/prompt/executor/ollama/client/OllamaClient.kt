@@ -34,6 +34,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -157,6 +158,20 @@ public class OllamaClient @JvmOverloads constructor(
         }
     }
 
+    internal fun LLMParams.toOllamaChatParams(): OllamaChatParams {
+        if (this is OllamaChatParams) return this
+        return OllamaChatParams(
+            temperature = temperature,
+            maxTokens = maxTokens,
+            numberOfChoices = numberOfChoices,
+            speculation = speculation,
+            schema = schema,
+            toolChoice = toolChoice,
+            user = user,
+            additionalProperties = additionalProperties,
+        )
+    }
+
     /**
      * Provides the type of Language Learning Model (LLM) provider used by the client.
      *
@@ -186,6 +201,8 @@ public class OllamaClient @JvmOverloads constructor(
             null
         }
 
+        val params = prompt.params.toOllamaChatParams()
+
         val request = ollamaJson.encodeToString(
             OllamaChatRequestDTOSerializer,
             OllamaChatRequestDTO(
@@ -195,7 +212,8 @@ public class OllamaClient @JvmOverloads constructor(
                 format = prompt.extractOllamaJsonFormat(),
                 options = extractOllamaOptions(prompt, model),
                 stream = false,
-                additionalProperties = prompt.params.additionalProperties
+                additionalProperties = params.additionalProperties,
+                think = params.think
             )
         )
 
@@ -278,6 +296,8 @@ public class OllamaClient @JvmOverloads constructor(
     ): Flow<StreamFrame> = buildStreamFrameFlow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
+        val params = prompt.params.toOllamaChatParams()
+
         val request = ollamaJson.encodeToString(
             OllamaChatRequestDTOSerializer,
             OllamaChatRequestDTO(
@@ -285,7 +305,8 @@ public class OllamaClient @JvmOverloads constructor(
                 messages = prompt.toOllamaChatMessages(model),
                 options = extractOllamaOptions(prompt, model),
                 stream = true,
-                additionalProperties = prompt.params.additionalProperties,
+                additionalProperties = params.additionalProperties,
+                think = params.think
             )
         )
 

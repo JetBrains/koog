@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
@@ -11,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -350,8 +352,7 @@ class OllamaThinkingFeatureTest {
         assertTrue(allContent.contains(responseContent), "Response content should be in text frames")
     }
 
-    @Test
-    fun `test request includes think parameter`() = runTest {
+    private suspend fun requestFromMockServer(block: suspend OllamaClient.() -> Unit): OllamaChatRequestDTO {
         val mockServer = MockOllamaChatServer { request ->
             OllamaChatResponseDTO(
                 model = request.model,
@@ -367,17 +368,75 @@ class OllamaThinkingFeatureTest {
             baseClient = HttpClient(mockServer.mockEngine)
         )
 
-        ollamaClient.execute(
-            prompt = prompt("test") { },
-            model = OllamaModels.Meta.LLAMA_3_2
-        )
+        ollamaClient.block()
 
-        val requestHistory = mockServer.requestHistory
-        assertEquals(1, requestHistory.size)
+        return mockServer.requestHistory.first()
+    }
 
-        val request = requestHistory.first()
-        // The think parameter should be set to true by default
-        assertTrue(request.think, "Request should have think parameter set to true")
+    @Test
+    fun `execute enables thinking if requested`() = runTest {
+        val request = requestFromMockServer {
+            execute(
+                prompt = prompt("test", OllamaChatParams(think = true)) { },
+                model = OllamaModels.Meta.LLAMA_3_2
+            )
+        }
+        assertEquals(true, request.think, "Request should have think parameter set to true")
+    }
+
+    @Test
+    fun `execute disables thinking if requested`() = runTest {
+        val request = requestFromMockServer {
+            execute(
+                prompt = prompt("test", OllamaChatParams(think = false)) { },
+                model = OllamaModels.Meta.LLAMA_3_2
+            )
+        }
+        assertEquals(false, request.think, "Request should have think parameter set to false")
+    }
+
+    @Test
+    fun `execute does not include think parameter unless requested`() = runTest {
+        val request = requestFromMockServer {
+            execute(
+                prompt = prompt("test") { },
+                model = OllamaModels.Meta.LLAMA_3_2
+            )
+        }
+        assertNull(request.think, "Request should not have think parameter set")
+    }
+
+    @Test
+    fun `executeStreaming enables thinking if requested`() = runTest {
+        val request = requestFromMockServer {
+            executeStreaming(
+                prompt = prompt("test", OllamaChatParams(think = true)) { },
+                model = OllamaModels.Meta.LLAMA_3_2
+            ).toList()
+        }
+        assertEquals(true, request.think, "Request should have think parameter set to true")
+    }
+
+    @Test
+    fun `executeStreaming disables thinking if requested`() = runTest {
+        val request = requestFromMockServer {
+            executeStreaming(
+                prompt = prompt("test", OllamaChatParams(think = false)) { },
+                model = OllamaModels.Meta.LLAMA_3_2
+            ).toList()
+        }
+        assertEquals(false, request.think, "Request should have think parameter set to false")
+    }
+
+    @Test
+    fun `executeStreaming does not include think parameter unless requested`() = runTest {
+        val request = requestFromMockServer {
+            executeStreaming(
+                prompt = prompt("test") { },
+                model = OllamaModels.Meta.LLAMA_3_2
+            ).toList()
+        }
+        assertNull(request.think, "Request should not have think parameter set")
     }
 
     @Test

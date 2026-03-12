@@ -64,7 +64,7 @@ internal data class OllamaChatRequestDTO(
     val format: JsonElement? = null,
     val options: Options? = null,
     val stream: Boolean,
-    val think: Boolean = true,
+    val think: Boolean? = null,
     @SerialName("keep_alive") val keepAlive: String? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) {
