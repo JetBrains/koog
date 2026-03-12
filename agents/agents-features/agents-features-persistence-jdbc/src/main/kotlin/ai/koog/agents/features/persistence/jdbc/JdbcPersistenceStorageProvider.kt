@@ -3,7 +3,6 @@ package ai.koog.agents.features.persistence.jdbc
 import ai.koog.agents.features.sql.providers.SQLPersistenceSchemaMigrator
 import ai.koog.agents.features.sql.providers.SQLPersistenceStorageProvider
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.providers.PersistenceUtils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
