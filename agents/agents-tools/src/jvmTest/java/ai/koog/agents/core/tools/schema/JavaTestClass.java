@@ -9,10 +9,10 @@ import java.util.Map;
  * Used to test schema generation from Java classes.
  */
 public class JavaTestClass {
-    @LLMDescription(description = "A test class")
+    @LLMDescription("A test class")
     public static class TestClass {
         public TestClass(
-            @LLMDescription(description = "A string property")
+            @LLMDescription("A string property")
             String stringProperty,
             int intProperty,
             long longProperty,
@@ -22,7 +22,7 @@ public class JavaTestClass {
             String nullableProperty,
             List<String> listProperty,
             Map<String, Integer> mapProperty,
-            @LLMDescription(description = "A custom nested property")
+            @LLMDescription("A custom nested property")
             NestedProperty nestedProperty,
             List<NestedProperty> nestedListProperty,
             Map<String, NestedProperty> nestedMapProperty,
@@ -32,10 +32,10 @@ public class JavaTestClass {
         }
     }
 
-    @LLMDescription(description = "Nested property class")
+    @LLMDescription("Nested property class")
     public static class NestedProperty {
         public NestedProperty(
-            @LLMDescription(description = "Nested foo property")
+            @LLMDescription("Nested foo property")
             String foo,
             int bar
         ) {
