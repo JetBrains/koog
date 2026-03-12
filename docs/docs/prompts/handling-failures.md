@@ -5,7 +5,7 @@ This page describes how to handle failures for LLM clients and prompt executors 
 ## Retry functionality
 
 When working with LLM providers, transient errors like rate limits or temporary service unavailability may occur.
-The `RetryingLLMClient` decorator adds automatic retry logic to any LLM client.
+The `RetryingLLMClient` decorator adds automatic retry logic to any LLM client in both Kotlin and Java.
 
 ### Basic usage
 
@@ -92,6 +92,7 @@ For example:
     -->
     ```java
     OpenAILLMClient client = new OpenAILLMClient(apiKey);
+    // Use the predefined configuration
     RetryingLLMClient conservativeClient = new RetryingLLMClient(
         client,
         RetryConfig.Companion.getCONSERVATIVE()
@@ -99,14 +100,14 @@ For example:
     ```
     <!--- KNIT example-handling-failures-java-02.java -->
 
-Koog provides several predefined retry configurations:
+Koog provides several predefined retry configurations available via `RetryConfig` in Kotlin and `RetryConfig.Companion` in Java:
 
-| Configuration              | Max attempts | Initial delay | Max delay | Use case                                                                                                 |
-|----------------------------|--------------|---------------|-----------|----------------------------------------------------------------------------------------------------------|
-| `RetryConfig.DISABLED`     | 1 (no retry) | -             | -         | Development, testing, and debugging.                                                                     |
-| `RetryConfig.CONSERVATIVE` | 3            | 2s            | 30s       | Background or scheduled tasks where reliability is more important than speed.                            |
-| `RetryConfig.AGGRESSIVE`   | 5            | 500ms         | 20s       | Critical operations where fast recovery from transient errors is more important than reducing API calls. |
-| `RetryConfig.PRODUCTION`   | 3            | 1s            | 20s       | General production use.                                                                                  |
+| Configuration (Kotlin)     | Configuration (Java)                   | Max attempts | Initial delay | Max delay | Use case                                                                                                 |
+|----------------------------|----------------------------------------|--------------|---------------|-----------|----------------------------------------------------------------------------------------------------------|
+| `RetryConfig.DISABLED`     | `RetryConfig.Companion.getDISABLED()`  | 1 (no retry) | -             | -         | Development, testing, and debugging.                                                                     |
+| `RetryConfig.CONSERVATIVE` | `RetryConfig.Companion.getCONSERVATIVE()` | 3            | 2s            | 30s       | Background or scheduled tasks where reliability is more important than speed.                            |
+| `RetryConfig.AGGRESSIVE`   | `RetryConfig.Companion.getAGGRESSIVE()` | 5            | 500ms         | 20s       | Critical operations where fast recovery from transient errors is more important than reducing API calls. |
+| `RetryConfig.PRODUCTION`   | `RetryConfig.Companion.getPRODUCTION()` | 3            | 1s            | 20s       | General production use.                                                                                  |
 
 You can use them directly or create custom configurations:
 
@@ -258,7 +259,7 @@ val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
 
 ### Retry with prompt executors
 
-When working with prompt executors, you can wrap the underlying LLM client with a retry mechanism before creating the executor.
+When working with prompt executors, you can wrap the underlying LLM client with a retry mechanism before creating the executor in both Kotlin and Java.
 To learn more about prompt executors, see [Prompt executors](prompt-executors.md).
 
 === "Kotlin"
@@ -342,7 +343,7 @@ To learn more about prompt executors, see [Prompt executors](prompt-executors.md
 
 ## Timeout configuration
 
-All LLM clients support timeout configuration to prevent hanging requests.
+All LLM clients support timeout configuration in both Kotlin and Java to prevent hanging requests.
 You can specify timeout values for network connections when creating the client using
 the [`ConnectionTimeoutConfig`](api:prompt-executor-clients::ai.koog.prompt.executor.clients.ConnectionTimeoutConfig) class.
 
@@ -418,7 +419,7 @@ When working with LLMs in production, you need to implement error handling, incl
 - **Fallbacks** for critical operations.
 - **Monitoring retry patterns** to identify recurring issues.
 
-Here is an example of error handling:
+Here is an example of error handling in Kotlin and Java:
 
 === "Kotlin"
 

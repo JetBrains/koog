@@ -83,9 +83,16 @@ Here is an example that uses `OpenAILLMClient` to run prompts:
 
     // Create a prompt
     Prompt prompt = Prompt.builder("prompt_name")
+        // Add a system message to set the context
         .system("You are a helpful assistant.")
+        
+        // Add a user message
         .user("Tell me about Kotlin")
+
+        // You can also add assistant messages for few-shot examples
         .assistant("Kotlin is a modern programming language...")
+
+        // Add another user message
         .user("What are its key features?")
         .build();
 
@@ -103,15 +110,17 @@ Here is an example that uses `OpenAILLMClient` to run prompts:
 !!! note
     Available for all LLM clients.
 
-When you need to process responses as they are generated,
-you can use the `executeStreaming()` method to stream the model output.
+When you need to process responses as they are generated, you can use the `executeStreaming()` method in Kotlin or 
+`executeStreamingWithPublisher()` in Java to stream the model output.
 
 The streaming API provides different frame types:
+
 - **Delta frames** (`TextDelta`, `ReasoningDelta`, `ToolCallDelta`) — incremental content that arrives in chunks
 - **Complete frames** (`TextComplete`, `ReasoningComplete`, `ToolCallComplete`) — full content after all deltas are received
 - **End frame** (`End`) — signals stream completion with finish reason
 
-For models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1), reasoning frames will be emitted during streaming.
+For models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1), reasoning frames will be emitted during 
+streaming.
 See the [Streaming API documentation](../streaming-api.md) for more details on working with frames.
 
 === "Kotlin"

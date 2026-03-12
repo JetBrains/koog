@@ -159,7 +159,7 @@ You can also implement custom routing strategies by creating a class that implem
 
 ## Pre-defined prompt executors
 
-For faster setup, Koog provides the ready-to-use executor implementations for common providers.
+For faster setup, Koog provides ready-to-use executor implementations for common providers in both Kotlin and Java.
 
 The following table includes the **pre-defined single-provider executors**
 that return `SingleLLMPromptExecutor` configured with a specific LLM client.
@@ -374,7 +374,8 @@ For details, refer to [Configuring fallbacks](#configuring-fallbacks).
 ## Configuring fallbacks
 
 Multi-provider and routing prompt executors can be configured to use a fallback LLM provider and model when the requested LLM client is unavailable.
-To configure the fallback mechanism, provide the `fallback` parameter to the `MultiLLMPromptExecutor` or `RoutingLLMPromptExecutor` constructor:
+
+To configure the fallback mechanism, pass fallback settings when creating a `MultiLLMPromptExecutor` or `RoutingLLMPromptExecutor`:
 
 === "Kotlin"
 

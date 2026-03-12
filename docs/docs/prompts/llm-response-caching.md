@@ -1,12 +1,12 @@
 # LLM response caching
 
 For repeated requests that you run with a prompt executor,
-you can cache LLM responses to optimize performance and reduce costs.
+you can cache LLM responses to optimize performance and reduce costs in both Kotlin and Java.
 In Koog, caching is available for all prompt executors through `CachedPromptExecutor`, 
 which is a wrapper around `PromptExecutor` that adds caching functionality.
 It lets you store responses from previously executed prompts and retrieve them when the same prompts are run again.
 
-To create a cached prompt executor, perform the following:
+To create a cached prompt executor in Kotlin or Java, perform the following:
 
 1. Create a prompt executor for which you want to cache responses.
 2. Create a `CachedPromptExecutor` instance by providing the desired cache and the prompt executor you created.
@@ -116,6 +116,6 @@ Second execution took: 1ms
 The second response is retrieved from the cache, which took only 1ms.
 
 !!!note
-    * If you call `executeStreaming()` with the cached prompt executor, it produces a response as a single chunk.
-    * If you call `moderate()` with the cached prompt executor, it forwards the request to the nested prompt executor and does not use the cache.
-    * Caching of multiple choice responses (`executeMultipleChoices()`) is not supported.
+    * If you call `executeStreaming()` in Kotlin or `executeStreamingWithPublisher()` in Java with the cached prompt executor, it produces a response as a single chunk.
+    * If you call `moderate()` with the cached prompt executor in either Kotlin or Java, it forwards the request to the nested prompt executor and does not use the cache.
+    * Caching of multiple choice responses (`executeMultipleChoices()`) is not supported in either Kotlin or Java.

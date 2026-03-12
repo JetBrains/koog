@@ -7,7 +7,8 @@ Koog provides a structured way to create prompts with control over message types
 
 ## Basic structure
 
-The `prompt()` function in Kotlin or the `Prompt.builder()` in Java creates a Prompt object with a unique ID and a list of messages:
+The `prompt()` function in Kotlin or the `Prompt.builder()` in Java create a Prompt object with a unique ID and a list 
+of messages:
 
 === "Kotlin"
 
@@ -40,7 +41,8 @@ The `prompt()` function in Kotlin or the `Prompt.builder()` in Java creates a Pr
 
 ## Message types
 
-The Kotlin DSL supports the following types of messages, each of which corresponds to a specific role in a conversation:
+The Kotlin DSL and the Java builder API support the following types of messages, each of which corresponds to a specific 
+role in a conversation:
 
 - **System message**: Provides the context, instructions, and constraints to the LLM, defining its behavior.
 - **User message**: Represents the user input.
@@ -75,8 +77,11 @@ The Kotlin DSL supports the following types of messages, each of which correspon
     -->
     ```java
     Prompt prompt = Prompt.builder("unique_prompt_id")
+        // Add a system message to set the context
         .system("You are a helpful assistant with access to tools.")
+        // Add a user message
         .user("What is 5 + 3 ?")
+        // Add an assistant message
         .assistant("The result is 8.")
         .build();
     ```
@@ -88,7 +93,7 @@ The Kotlin DSL supports the following types of messages, each of which correspon
 A system message defines the LLM behavior and sets the context for the entire conversation.
 It can specify the model's role, tone, provide guidelines and constraints on responses, and provide response examples.
 
-To create the system message, provide a string to the `system()` function as an argument:
+To create the system message, provide a string as an argument to the `system()` Kotlin function or Java method:
 
 === "Kotlin"
 
@@ -122,7 +127,7 @@ To create the system message, provide a string to the `system()` function as an 
 ### User messages
 
 A user message represents input from the user.
-To create the user message, provide a string to the `user()` function as an argument:
+To create the user message, provide a string as an argument to the `user()` Kotlin function or Java method:
 
 === "Kotlin"
 
@@ -155,7 +160,8 @@ To create the user message, provide a string to the `user()` function as an argu
     <!--- KNIT example-creating-prompts-java-04.java -->
 
 
-Most user messages contain plain text, but they can also include multimodal content, such as images, audio, video, and documents.
+Most user messages contain plain text, but they can also include multimodal content, such as images, audio, video, and 
+documents.
 For details and examples, see [Multimodal content](multimodal-content.md).
 
 ### Assistant messages
@@ -163,7 +169,7 @@ For details and examples, see [Multimodal content](multimodal-content.md).
 An assistant message represents an LLM response, which can be used for few-shot learning in future similar interactions,
 to continue a conversation, or to demonstrate the expected output structure.
 
-To create the assistant message, provide a string to the `assistant()` function as an argument:
+To create the assistant message, provide a string as an argument to the `assistant()` Kotlin function or Java method:
 
 === "Kotlin"
 
@@ -204,12 +210,20 @@ To create the assistant message, provide a string to the `assistant()` function 
     ```java
     Prompt prompt = Prompt.builder("article_review")
         .system("Evaluate the article.")
+
+        // Example 1
         .user("The article is clear and easy to understand.")
         .assistant("positive")
+
+        // Example 2
         .user("The article is hard to read but it's clear and useful.")
         .assistant("neutral")
+
+        // Example 3
         .user("The article is confusing and misleading.")
         .assistant("negative")
+
+        // New input to classify
         .user("The article is interesting and helpful.")
         .build();
     ```
@@ -224,7 +238,7 @@ A tool message represents a tool call and its result, which can be used to pre-f
     An LLM generates tool calls during execution.
     Pre-filling them is helpful for few-shot learning or demonstrating how the tools are expected to be used.
 
-To create the tool message, call the `tool()` function:
+To create the tool message, call the `tool()` function in Kotlin or the `toolCall()` and `toolResult()` methods in Java:
 
 === "Kotlin"
 
@@ -271,8 +285,11 @@ To create the tool message, call the `tool()` function:
     Prompt prompt = Prompt.builder("calculator_example")
         .system("You are a helpful assistant with access to tools.")
         .user("What is 5 + 3?")
+        // Tool call
         .toolCall("calculator_tool_id", "calculator", "{\"operation\": \"add\", \"a\": 5, \"b\": 3}")
+        // Tool result
         .toolResult("calculator_tool_id", "calculator", "8")
+        // LLM response based on tool result    
         .assistant("The result of 5 + 3 is 8.")
         .user("What is 4 + 5?")
         .build();
@@ -426,7 +443,8 @@ For more information, see [LLM parameters](../../llm-parameters.md).
 
 ## Extending existing prompts
 
-You can extend an existing prompt by calling the `prompt()` function with the existing prompt as an argument:
+You can extend an existing prompt by calling the `prompt()` function in Kotlin or the `Prompt.builder()` in Java with 
+the existing prompt as an argument:
 
 === "Kotlin"
 
