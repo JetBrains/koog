@@ -54,10 +54,17 @@ and provide a [prompt executor](../prompts/prompt-executors.md) with a [language
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+
+    class exampleBasicJava01 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
@@ -73,7 +80,7 @@ and provide a [prompt executor](../prompts/prompt-executors.md) with a [language
     String result = agent.run("Hello! How can you help me?");
     System.out.println(result);
     ```
-    <!--- KNIT example-basic-java-01.java -->
+    <!--- KNIT exampleBasicJava01.java -->
 
 The agent will return a generic answer, such as:
 
@@ -116,10 +123,17 @@ as well as the purpose, context, and instructions related to the task.
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+
+    class exampleBasicJava02 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
@@ -128,7 +142,7 @@ as well as the purpose, context, and instructions related to the task.
         .llmModel(OpenAIModels.Chat.GPT4o)
         .build();
     ```
-    <!--- KNIT example-basic-java-02.java -->
+    <!--- KNIT exampleBasicJava02.java -->
 
 The instructions in the system prompt will guide the agent's response:
 
@@ -165,10 +179,17 @@ For example, use the `temperature` parameter to adjust the randomness of the gen
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+
+    class exampleBasicJava03 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
@@ -178,7 +199,7 @@ For example, use the `temperature` parameter to adjust the randomness of the gen
         .temperature(0.7)
         .build();
     ```
-    <!--- KNIT example-basic-java-03.java -->
+    <!--- KNIT exampleBasicJava03.java -->
 
 Here are some response examples with different temperature values:
 
@@ -260,14 +281,27 @@ First, create a tool by annotating a function with the [`@Tool`](https://api.koo
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    
+    import java.util.Scanner;
+    
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+
+    class exampleBasicJava04 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
     // Create a ToolSet class
-    static class UserConversationTools implements ToolSet {
+    class UserConversationTools implements ToolSet {
         @Tool
         @LLMDescription(description = "Ask the user a question by sending it to stdout and return the answer from stdin")
         public String askUser(
@@ -298,7 +332,7 @@ First, create a tool by annotating a function with the [`@Tool`](https://api.koo
         .toolRegistry(toolRegistry)
         .build();
     ```
-    <!-- KNIT example-basic-java-04.java -->
+    <!--- KNIT exampleBasicJava04.java -->
 
     In the example, `askUser` is a tool that helps the agent maintain a conversation with the user via printing and reading from the console.
 
@@ -329,7 +363,7 @@ Examples of Doge memes might include:
 
 The meme is known for its lighthearted and playful tone, and is often used to express excitement, happiness, or silliness. The meme has since become a cultural phenomenon, with countless variations and parodies emerging online.
 ```
-<!-- KNIT example-basic-02.txt -->
+<!--- KNIT example-basic-06.txt -->
 
 ## Adjust agent iterations
 
@@ -382,14 +416,27 @@ For example, a simple agent described here is not likely to require more than 10
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    
+    import java.util.Scanner;
+    
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+
+    class exampleBasicJava05 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
     // Create a ToolSet class
-    static class UserConversationTools implements ToolSet {
+    class UserConversationTools implements ToolSet {
         @Tool
         @LLMDescription(description = "Ask the user a question by sending it to stdout and return the answer from stdin")
         public String askUser(
@@ -418,7 +465,7 @@ For example, a simple agent described here is not likely to require more than 10
         .maxIterations(10)
         .build();
     ```
-    <!--- KNIT example-basic-java-04.java -->
+    <!--- KNIT exampleBasicJava05.java -->
 
 ## Handle events during agent runtime
 
@@ -472,14 +519,29 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.agents.features.eventHandler.feature.EventHandler;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+
+    
+    import java.util.Scanner;
+    
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+
+    class exampleBasicJava06 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
     // Create a ToolSet class
-    static class UserConversationTools implements ToolSet {
+    class UserConversationTools implements ToolSet {
         @Tool
         @LLMDescription(description = "Ask the user a question by sending it to stdout and return the answer from stdin")
         public String askUser(
@@ -514,14 +576,14 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
         })
         .build();
     ```
-    <!--- KNIT example-basic-java-05.java -->
+    <!--- KNIT exampleBasicJava06.java -->
 
 The agent will now output something similar to the following when it calls the `askUser` tool:
 
 ```text
 Tool called: askUser with args {"question":"Which meme would you like me to explain?"}
 ```
-<!--- KNIT example-basic-06.txt -->
+<!--- KNIT example-basic-07.txt -->
 
 For more information about Koog agent features, see [Features overview](../features-overview.md).
 
