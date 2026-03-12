@@ -26,6 +26,8 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-chat-history-jdbc")
     //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-persistence-jdbc")
+    //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-server")
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-client")
@@ -136,6 +138,7 @@ registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemor
 registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
 registerRunExampleTask("runExampleChatMemoryPostgres", "ai.koog.agents.example.chatmemory.ChatMemoryPostgresExampleKt")
 registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.chatmemory.ChatMemoryJdbcExample")
+registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.snapshot.PersistenceJdbcExample")
 /*
  A2A examples
 */

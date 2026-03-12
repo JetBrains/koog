@@ -442,6 +442,7 @@ public data class ResponseMetaInfo(
          * @param metadata Additional metadata as a JSON object.
          * @return A new ResponseMetadata instance with the timestamp from the provided clock.
          */
+        @JvmOverloads
         public fun create(
             clock: Clock,
             totalTokensCount: Int? = null,
