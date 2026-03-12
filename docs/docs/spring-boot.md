@@ -13,27 +13,36 @@ ready-to-use beans for dependency injection. It supports all major LLM providers
 - Google
 - OpenRouter
 - DeepSeek
+- Mistral
 - Ollama
 
 ## Getting Started
 
 ### 1. Add Dependency
 
-Add the Koog Spring Boot starter and [Ktor Client Engine](https://ktor.io/docs/client-engines.html#jvm) to your build configuration:
+Add the Koog Spring Boot starter to your Gradle build configuration:
 
-<!--- INCLUDE
-/**
--->
-<!--- SUFFIX
-**/
--->
 ```kotlin
 dependencies {
     implementation("ai.koog:koog-spring-boot-starter:$koogVersion")
-    implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
 }
 ```
 <!--- KNIT example-spring-boot-01.txt -->
+
+or for Maven
+```xml
+<dependency>
+    <groupId>ai.koog</groupId>
+    <artifactId>koog-spring-boot-starter</artifactId>
+    <version>$koogVersion</version>
+</dependency>
+```
+<!--- KNIT example-spring-boot-02.txt -->
+
+Make sure that your Kotlin or Java project has:
+- Spring Boot 3 (it requires Java 17 or higher)
+- Kotlin version 2.3.10
+- kotlinx-serialization version 1.10.0 (namely, kotlinx-serialization-core-jvm and kotlinx-serialization-json-jvm)
 
 ### 2. Configure Providers
 
@@ -60,20 +69,18 @@ ai.koog.openrouter.base-url=https://openrouter.ai
 ai.koog.deepseek.enabled=true
 ai.koog.deepseek.api-key=${DEEPSEEK_API_KEY}
 ai.koog.deepseek.base-url=https://api.deepseek.com
+# Mistral Configuration
+ai.koog.mistral.enabled=true
+ai.koog.mistral.api-key=${MISTRALAI_API_KEY}
+ai.koog.mistral.base-url=https://api.mistral.ai
 # Ollama Configuration (local - no API key required)
 ai.koog.ollama.enabled=true
-ai.koog.ollama.base-url=http://localhost:11434
+ai.koog.ollama.base-url=http://127.0.0.1:11434
 ```
-<!--- KNIT example-spring-boot-02.txt -->
+<!--- KNIT example-spring-boot-03.txt -->
 
 Or using YAML format (`application.yml`):
 
-<!--- INCLUDE
-/**
--->
-<!--- SUFFIX
-**/
--->
 ```yaml
 ai:
     koog:
@@ -97,9 +104,13 @@ ai:
             enabled: true
             api-key: ${DEEPSEEK_API_KEY}
             base-url: https://api.deepseek.com
+        mistral:
+            enabled: true
+            api-key: ${MISTRALAI_API_KEY}
+            base-url: https://api.mistral.ai
         ollama:
             enabled: true # Set it to `true` explicitly to activate !!!
-            base-url: http://localhost:11434
+            base-url: http://127.0.0.1:11434
 ```
 <!--- KNIT example-spring-boot-java-01.txt -->
 
@@ -115,9 +126,10 @@ Provider's base urls are set to their default values in the Spring Boot starter,
 application.
 
 !!! tip "Environment Variables"
-It's recommended to use environment variables for API keys to keep them secure and out of version control.
-Spring configuration uses LLM provider's well-known environment variables.
-For example, setting the environment variable `OPENAI_API_KEY` is enough for OpenAI spring configuration to activate.
+
+    It's recommended to use environment variables for API keys to keep them secure and out of version control.
+    Spring configuration uses LLM provider's well-known environment variables.
+    For example, setting the environment variable `OPENAI_API_KEY` is enough for OpenAI Spring configuration to activate.
 
 | LLM Provider | Environment Variables |
 |--------------|-----------------------|
@@ -126,119 +138,46 @@ For example, setting the environment variable `OPENAI_API_KEY` is enough for Ope
 | Google       | `GOOGLE_API_KEY`      |
 | OpenRouter   | `OPENROUTER_API_KEY`  |
 | DeepSeek     | `DEEPSEEK_API_KEY`    |
+| Mistral      | `MISTRALAI_API_KEY`   |
 
-### 3. Inject and Use
+### 3. Use in your project
 
-Inject the auto-configured executors into your services:
-
-=== "Kotlin"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```kotlin
-    @Service
-    class AIService(
-        private val openAIExecutor: MultiLLMPromptExecutor?,
-        private val anthropicExecutor: MultiLLMPromptExecutor?
-    ) {
-
-        suspend fun generateResponse(input: String): String {
-            val prompt = prompt {
-                system("You are a helpful AI assistant")
-                user(input)
-            }
-
-            return when {
-                openAIExecutor != null -> {
-                    val result = openAIExecutor.execute(prompt)
-                    result.text
-                }
-                anthropicExecutor != null -> {
-                    val result = anthropicExecutor.execute(prompt)
-                    result.text
-                }
-                else -> throw IllegalStateException("No LLM provider configured")
-            }
-        }
-    }
-    ```
-    <!--- KNIT example-spring-boot-01.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    @Service
-    public class AIService {
-        private final MultiLLMPromptExecutor openAIExecutor;
-        private final MultiLLMPromptExecutor anthropicExecutor;
-
-        public AIService(MultiLLMPromptExecutor openAIExecutor, MultiLLMPromptExecutor anthropicExecutor) {
-            this.openAIExecutor = openAIExecutor;
-            this.anthropicExecutor = anthropicExecutor;
-        }
-
-        public String generateResponse(String input) {
-            Prompt prompt = Prompt.builder("ai-service")
-                .system("You are a helpful AI assistant")
-                .user(input)
-                .build();
-
-            if (openAIExecutor != null) {
-                List<Message.Response> result = openAIExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
-                return result.get(0).getContent();
-            } else if (anthropicExecutor != null) {
-                List<Message.Response> result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5);
-                return result.get(0).getContent();
-            } else {
-                throw new IllegalStateException("No LLM provider configured");
-            }
-        }
-    }
-    ```
-    <!--- KNIT example-spring-boot-java-01.java -->
-
-## Advanced Usage
-
-### REST Controller Example
-
-Create a chat endpoint using auto-configured executors:
+Below is a usage example of an auto-configured executor in Spring MVC RestController. It requires the following:
+- spring-boot-starter-web dependency
+- for Kotlin kotlinx-coroutines-core and kotlinx-coroutines-reactor dependencies should be added (Java version calls blocking `execute` method)
+- Anthropic is enabled via property (ai.koog.anthropic.enabled=true)
 
 === "Kotlin"
 
     <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+    import ai.koog.prompt.executor.model.PromptExecutor
+    import org.springframework.http.HttpStatus
+    import org.springframework.http.ResponseEntity
+    import org.springframework.web.bind.annotation.PostMapping
+    import org.springframework.web.bind.annotation.RequestBody
+    import org.springframework.web.bind.annotation.RequestMapping
+    import org.springframework.web.bind.annotation.RestController
     -->
     ```kotlin
     @RestController
     @RequestMapping("/api/chat")
     class ChatController(
-        private val anthropicExecutor: MultiLLMPromptExecutor?
+        private val anthropicExecutor: PromptExecutor?
     ) {
 
         @PostMapping
         suspend fun chat(@RequestBody request: ChatRequest): ResponseEntity<ChatResponse> {
             return if (anthropicExecutor != null) {
                 try {
-                    val prompt = prompt {
+                    val prompt = prompt("example-prompt") {
                         system("You are a helpful assistant")
                         user(request.message)
                     }
 
-                    val result = anthropicExecutor.execute(prompt)
-                    ResponseEntity.ok(ChatResponse(result.text))
+                    val result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5)
+                    ResponseEntity.ok(ChatResponse(result.first().content))
                 } catch (e: Exception) {
                     ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(ChatResponse("Error processing request"))
@@ -253,23 +192,33 @@ Create a chat endpoint using auto-configured executors:
     data class ChatRequest(val message: String)
     data class ChatResponse(val response: String)
     ```
-    <!--- KNIT example-spring-boot-02.kt -->
+    <!--- KNIT example-spring-boot-01.kt -->
 
 === "Java"
 
     <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
+    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import ai.koog.prompt.message.Message;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.RequestBody;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    import jakarta.annotation.Nullable;
+    import java.util.List;
     -->
     ```java
     @RestController
     @RequestMapping("/api/chat")
     public class ChatController {
-        private final MultiLLMPromptExecutor anthropicExecutor;
+        @Nullable
+        private final PromptExecutor anthropicExecutor;
 
-        public ChatController(MultiLLMPromptExecutor anthropicExecutor) {
+        public ChatController(@Nullable PromptExecutor anthropicExecutor) {
             this.anthropicExecutor = anthropicExecutor;
         }
 
@@ -279,7 +228,7 @@ Create a chat endpoint using auto-configured executors:
                 try {
                     Prompt prompt = Prompt.builder("chat")
                         .system("You are a helpful assistant")
-                        .user(request.message)
+                        .user(request.message())
                         .build();
 
                     List<Message.Response> result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5);
@@ -295,51 +244,49 @@ Create a chat endpoint using auto-configured executors:
         }
     }
 
-    class ChatRequest {
-        public String message;
-    }
-    class ChatResponse {
-        public final String response;
-        public ChatResponse(String response) { this.response = response; }
-    }
+    record ChatRequest(String message) {}
+    record ChatResponse(String response) {}
     ```
-    <!--- KNIT example-spring-boot-java-02.java -->
+    <!--- KNIT example-spring-boot-java-01.java -->
 
-### Multiple Provider Support
+Spring Framework injected the executor for Anthropic by bean name (`anthropicExecutor`),
+but you can also inject multiple `PromptExecutor` beans using `@Qualifier` annotation (see "Multiple beans error" below).
 
-Handle multiple providers with fallback logic:
+## Advanced usage
+### LLM Provider Fallback
+
+After configuring multiple LLM providers you can send request to multiple LLMs via `MultiLLMPromptExecutor`:
 
 === "Kotlin"
 
     <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_4_5
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels.Chat.GPT4oMini
+    import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels.Claude3Haiku
+    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import org.slf4j.Logger
+    import org.slf4j.LoggerFactory
+    import org.springframework.stereotype.Service
     -->
     ```kotlin
     @Service
-    class RobustAIService(
-        private val openAIExecutor: MultiLLMPromptExecutor?,
-        private val anthropicExecutor: MultiLLMPromptExecutor?,
-        private val openRouterExecutor: MultiLLMPromptExecutor?
-    ) {
+    class RobustAIService(private val multiLLMPromptExecutor: MultiLLMPromptExecutor) {
+
+        private val llms = listOf(GPT4oMini, Haiku_4_5, Claude3Haiku)
 
         suspend fun generateWithFallback(input: String): String {
-            val prompt = prompt {
+            val prompt = prompt("robust") {
                 system("You are a helpful AI assistant")
                 user(input)
             }
 
-            val executors = listOfNotNull(openAIExecutor, anthropicExecutor, openRouterExecutor)
-
-            for (executor in executors) {
+            for (llm in llms) {
                 try {
-                    val result = executor.execute(prompt)
-                    return result.text
+                    val result = multiLLMPromptExecutor.execute(prompt, llm)
+                    return result.first().content
                 } catch (e: Exception) {
-                    logger.warn("Executor failed, trying next: ${e.message}")
-                    continue
+                    logger.warn("{} executor failed, trying next: {}", llm.id, e.message)
                 }
             }
 
@@ -356,43 +303,30 @@ Handle multiple providers with fallback logic:
 === "Java"
 
     <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
+    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels;
+    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+    import ai.koog.prompt.llm.LLModel;
+    import ai.koog.prompt.message.Message;
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
+    import org.springframework.stereotype.Service;
+
+    import java.util.List;
     -->
     ```java
     @Service
     public class RobustAIService {
         private static final Logger logger = LoggerFactory.getLogger(RobustAIService.class);
 
-        private static class ProviderConfig {
-            final String name;
-            final MultiLLMPromptExecutor executor;
-            final LLModel model;
+        private final List<LLModel> llms = List.of(OpenAIModels.Chat.GPT4oMini, AnthropicModels.Haiku_4_5, OpenRouterModels.Claude3Haiku);
 
-            ProviderConfig(String name, MultiLLMPromptExecutor executor, LLModel model) {
-                this.name = name;
-                this.executor = executor;
-                this.model = model;
-            }
-        }
+        private final MultiLLMPromptExecutor multiLLMPromptExecutor;
 
-        private final List<ProviderConfig> providers;
-
-        public RobustAIService(MultiLLMPromptExecutor openAIExecutor,
-                               MultiLLMPromptExecutor anthropicExecutor,
-                               MultiLLMPromptExecutor openRouterExecutor) {
-            providers = new ArrayList<>();
-            if (openAIExecutor != null) {
-                providers.add(new ProviderConfig("OpenAI", openAIExecutor, OpenAIModels.Chat.GPT4oMini));
-            }
-            if (anthropicExecutor != null) {
-                providers.add(new ProviderConfig("Anthropic", anthropicExecutor, AnthropicModels.Haiku_4_5));
-            }
-            if (openRouterExecutor != null) {
-                providers.add(new ProviderConfig("OpenRouter", openRouterExecutor, OpenRouterModels.Claude3Haiku));
-            }
+        public RobustAIService(MultiLLMPromptExecutor multiLLMPromptExecutor) {
+            this.multiLLMPromptExecutor = multiLLMPromptExecutor;
         }
 
         public String generateWithFallback(String input) {
@@ -401,12 +335,12 @@ Handle multiple providers with fallback logic:
                 .user(input)
                 .build();
 
-            for (ProviderConfig provider : providers) {
+            for (LLModel llm : llms) {
                 try {
-                    List<Message.Response> result = provider.executor.execute(prompt, provider.model);
+                    List<Message.Response> result = multiLLMPromptExecutor.execute(prompt, llm);
                     return result.get(0).getContent();
                 } catch (Exception e) {
-                    logger.warn("{} executor failed, trying next: {}", provider.name, e.getMessage());
+                    logger.warn("{} executor failed, trying next: {}", llm.getId(), e.getMessage());
                 }
             }
 
@@ -416,92 +350,28 @@ Handle multiple providers with fallback logic:
     ```
     <--- KNIT example-spring-boot-java-03.java -->
 
-### Configuration Properties
-
-You can also inject configuration properties for custom logic:
-
-=== "Kotlin"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```kotlin
-    @Service
-    class ConfigurableAIService(
-        private val openAIExecutor: MultiLLMPromptExecutor?,
-        @Value("\${ai.koog.openai.api-key:}") private val openAIKey: String
-    ) {
-
-        fun isOpenAIConfigured(): Boolean = openAIKey.isNotBlank() && openAIExecutor != null
-
-        suspend fun processIfConfigured(input: String): String? {
-            return if (isOpenAIConfigured()) {
-                val result = openAIExecutor!!.execute(prompt { user(input) })
-                result.text
-            } else {
-                null
-            }
-        }
-    }
-    ```
-    <!--- KNIT example-spring-boot-04.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    @Service
-    public class ConfigurableAIService {
-        private final MultiLLMPromptExecutor openAIExecutor;
-        private final String openAIKey;
-
-        public ConfigurableAIService(MultiLLMPromptExecutor openAIExecutor,
-                                     @Value("${ai.koog.openai.api-key:}") String openAIKey) {
-            this.openAIExecutor = openAIExecutor;
-            this.openAIKey = openAIKey;
-        }
-
-        public boolean isOpenAIConfigured() {
-            return openAIKey != null && !openAIKey.isBlank() && openAIExecutor != null;
-        }
-
-        public String processIfConfigured(String input) {
-            if (!isOpenAIConfigured()) return null;
-
-            Prompt prompt = Prompt.builder("configurable").user(input).build();
-
-            List<Message.Response> result = openAIExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
-            return result.get(0).getContent();
-        }
-    }
-    ```
-    <!--- KNIT example-spring-boot-java-03.java -->
+You can also register your own `MultiLLMPromptExecutor` bean and pass a `FallbackPromptExecutorSettings` to it.
+To override the auto-configuration for your beans you can use `@Primary` annotation.
 
 ## Configuration Reference
 
 ### Available Properties
 
-| Property                      | Description         | Bean Condition                                                  | Default                                     |
-|-------------------------------|---------------------|-----------------------------------------------------------------|---------------------------------------------|
-| `ai.koog.openai.api-key`      | OpenAI API key      | Required for `openAIExecutor` bean                              | -                                           |
-| `ai.koog.openai.base-url`     | OpenAI base URL     | Optional                                                        | `https://api.openai.com`                    |
-| `ai.koog.anthropic.api-key`   | Anthropic API key   | Required for `anthropicExecutor` bean                           | -                                           |
-| `ai.koog.anthropic.base-url`  | Anthropic base URL  | Optional                                                        | `https://api.anthropic.com`                 |
-| `ai.koog.google.api-key`      | Google API key      | Required for `googleExecutor` bean                              | -                                           |
-| `ai.koog.google.base-url`     | Google base URL     | Optional                                                        | `https://generativelanguage.googleapis.com` |
-| `ai.koog.openrouter.api-key`  | OpenRouter API key  | Required for `openRouterExecutor` bean                          | -                                           |
-| `ai.koog.openrouter.base-url` | OpenRouter base URL | Optional                                                        | `https://openrouter.ai`                     |
-| `ai.koog.deepseek.api-key`    | DeepSeek API key    | Required for `deepSeekExecutor` bean                            | -                                           |
-| `ai.koog.deepseek.base-url`   | DeepSeek base URL   | Optional                                                        | `https://api.deepseek.com`                  |
-| `ai.koog.ollama.base-url`     | Ollama base URL     | Any `ai.koog.ollama.*` property activates `ollamaExecutor` bean | `http://localhost:11434`                    |
+| Property                      | Description         | Bean Condition                         | Default                                     |
+|-------------------------------|---------------------|----------------------------------------|---------------------------------------------|
+| `ai.koog.openai.api-key`      | OpenAI API key      | Required for `openAIExecutor` bean     | -                                           |
+| `ai.koog.openai.base-url`     | OpenAI base URL     | Optional                               | `https://api.openai.com`                    |
+| `ai.koog.anthropic.api-key`   | Anthropic API key   | Required for `anthropicExecutor` bean  | -                                           |
+| `ai.koog.anthropic.base-url`  | Anthropic base URL  | Optional                               | `https://api.anthropic.com`                 |
+| `ai.koog.google.api-key`      | Google API key      | Required for `googleExecutor` bean     | -                                           |
+| `ai.koog.google.base-url`     | Google base URL     | Optional                               | `https://generativelanguage.googleapis.com` |
+| `ai.koog.openrouter.api-key`  | OpenRouter API key  | Required for `openRouterExecutor` bean | -                                           |
+| `ai.koog.openrouter.base-url` | OpenRouter base URL | Optional                               | `https://openrouter.ai`                     |
+| `ai.koog.deepseek.api-key`    | DeepSeek API key    | Required for `deepSeekExecutor` bean   | -                                           |
+| `ai.koog.deepseek.base-url`   | DeepSeek base URL   | Optional                               | `https://api.deepseek.com`                  |
+| `ai.koog.mistral.api-key`     | Mistral API key     | Required for `mistralAIExecutor` bean  | -                                           |
+| `ai.koog.mistral.base-url`    | Mistral base URL    | Optional                               | `https://api.mistral.ai`                    |
+| `ai.koog.ollama.base-url`     | Ollama base URL     | Optional                               | `http://127.0.0.1:11434`                    |
 
 ### Bean Names
 
@@ -512,43 +382,29 @@ The auto-configuration creates the following beans (when configured):
 - `googleExecutor` - Google executor (requires `ai.koog.google.api-key`)
 - `openRouterExecutor` - OpenRouter executor (requires `ai.koog.openrouter.api-key`)
 - `deepSeekExecutor` - DeepSeek executor (requires `ai.koog.deepseek.api-key`)
-- `ollamaExecutor` - Ollama executor (requires any `ai.koog.ollama.*` property)
+- `mistralAIExecutor` - Mistral AI executor (requires `ai.koog.mistral.api-key`)
+- `ollamaExecutor` - Ollama executor (requires `ai.koog.ollama.enabled=true`)
+- `multiLLMPromptExecutor` - MultiLLMPromptExecutor
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Bean not found error:**
-
-```
-No qualifying bean of type 'MultiLLMPromptExecutor' available
-```
-<!--- KNIT example-spring-boot-03.txt -->
+**Error: No qualifying bean of type 'PromptExecutor' available**
 
 **Solution:** Ensure you have configured at least one provider in your properties file.
 
-**Multiple beans error:**
-
-```
-Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
-```
-<!--- KNIT example-spring-boot-04.txt -->
+**Error: Multiple qualifying beans of type 'PromptExecutor' available**
 
 **Solution:** Use `@Qualifier` to specify which bean you want:
 
 === "Kotlin"
 
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
     ```kotlin
     @Service
     class MyService(
-        @Qualifier("openAIExecutor") private val openAIExecutor: MultiLLMPromptExecutor,
-        @Qualifier("anthropicExecutor") private val anthropicExecutor: MultiLLMPromptExecutor
+        @Qualifier("openAIExecutor") private val openAIExecutor: PromptExecutor,
+        @Qualifier("anthropicExecutor") private val anthropicExecutor: PromptExecutor
     ) {
         // ...
     }
@@ -557,20 +413,14 @@ Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
 
 === "Java"
 
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
     ```java
     @Service
     public class MyService {
-        private final MultiLLMPromptExecutor openAIExecutor;
-        private final MultiLLMPromptExecutor anthropicExecutor;
+        private final PromptExecutor openAIExecutor;
+        private final PromptExecutor anthropicExecutor;
 
-        public MyService(@Qualifier("openAIExecutor") MultiLLMPromptExecutor openAIExecutor,
-                         @Qualifier("anthropicExecutor") MultiLLMPromptExecutor anthropicExecutor) {
+        public MyService(@Qualifier("openAIExecutor") PromptExecutor openAIExecutor,
+                         @Qualifier("anthropicExecutor") PromptExecutor anthropicExecutor) {
             this.openAIExecutor = openAIExecutor;
             this.anthropicExecutor = anthropicExecutor;
         }
@@ -579,20 +429,14 @@ Multiple qualifying beans of type 'MultiLLMPromptExecutor' available
     ```
     <!--- KNIT example-spring-boot-java-04.java -->
 
-**API key not loaded:**
-
-```
-API key is required but not provided
-```
-<!--- KNIT example-spring-boot-05.txt -->
+**Error: API key is required but not provided**
 
 **Solution:** Check that your environment variables are properly set and accessible to your Spring Boot application.
 
 ## Best Practices
 
 1. **Environment Variables**: Always use environment variables for API keys
-2. **Nullable Injection**: Use nullable types (`MultiLLMPromptExecutor?`) to handle cases where providers aren't
-   configured
+2. **Nullable Injection**: Use nullable types to handle cases where providers aren't configured
 3. **Fallback Logic**: Implement fallback mechanisms when using multiple providers
 4. **Error Handling**: Always wrap executor calls in try-catch blocks for production code
 5. **Testing**: Use mocks in tests to avoid making actual API calls
