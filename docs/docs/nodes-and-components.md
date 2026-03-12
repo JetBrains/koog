@@ -22,6 +22,8 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-01.txt -->
+
 
 Here is how you can define a node that expects a string as input and returns the length of the string (an integer) as output:
 
@@ -61,6 +63,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-02.txt -->
 
 You can use this node for the following purposes:
 
@@ -107,6 +110,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-03.txt -->
 
 You can use this node for the following purposes:
 
@@ -166,6 +170,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-04.txt -->
 
 ### nodeLLMSendMessageForceOneTool
 
@@ -184,6 +189,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-05.txt -->
 
 ### nodeLLMRequest
 
@@ -203,6 +209,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-06.txt -->
 
 You can use this node for the following purposes:
 
@@ -245,6 +252,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-07.txt -->
 
 ### nodeLLMRequestStreaming
 
@@ -263,6 +271,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-08.txt -->
 
 ### nodeLLMRequestMultiple
 
@@ -281,6 +290,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-09.txt -->
 
 You can use this node for the following purposes:
 
@@ -326,6 +336,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-10.txt -->
 
 To learn more about history compression, see [History compression](history-compression.md).
 
@@ -379,6 +390,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-11.txt -->
 
 You can use this node for the following purposes:
 
@@ -424,6 +436,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-12.txt -->
 
 You can use this node for the following purposes:
 
@@ -468,6 +481,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-13.txt -->
 
 You can use this node for the following purposes:
 
@@ -513,6 +527,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-14.txt -->
 
 You can use this node for the following purposes:
 
@@ -562,6 +577,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-15.txt -->
 
 ### transform
 
@@ -842,9 +858,9 @@ streaming data, processes it, and potentially calls tools with the processed dat
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.example.exampleStreamingApi03.Book
-import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
-import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
+import ai.koog.agents.example.exampleStreamingApi05.Book
+import ai.koog.agents.example.exampleStreamingApi06.markdownBookDefinition
+import ai.koog.agents.example.exampleStreamingApi08.parseMarkdownStreamToBooks
 -->
 ```kotlin
 val agentStrategy = strategy<String, List<Book>>("library-assistant") {

@@ -427,6 +427,7 @@ OpenAI provides the specific `/moderations` API that provides responses in the f
   }
 }
 ```
+<!--- KNIT example-content-moderation-01.txt -->
 
 In Koog, the structure of the response above maps to the following response:
 <!--- INCLUDE
@@ -497,6 +498,7 @@ ModerationResult(
   "categoryAppliedInputTypes": {}
 }
 ```
+<!--- KNIT example-content-moderation-02.txt -->
 
 In Koog, the OpenAI response above is presented as follows:
 
@@ -543,6 +545,7 @@ For example:
 unsafe
 S1,S10
 ```
+<!--- KNIT example-content-moderation-03.txt -->
 
 This is translated to the following result in Koog:
 
@@ -582,6 +585,7 @@ Here is an example of an Ollama response that marks the content as safe:
 ```text
 safe
 ```
+<!--- KNIT example-content-moderation-04.txt -->
 
 Koog translates the response in the following way:
 

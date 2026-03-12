@@ -25,6 +25,7 @@ export WEAVE_API_KEY="<your-api-key>"
 export WEAVE_ENTITY="<your-entity>"
 export WEAVE_PROJECT_NAME="koog-tracing"
 ```
+<!--- KNIT example-weave-exporter-01.txt -->
 
 ## Configuration
 

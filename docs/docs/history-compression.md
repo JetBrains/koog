@@ -78,8 +78,15 @@ Depending on which step you decide to perform compression, the following scenari
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-history-compression-java-01.java -->
 
 In this example, the strategy checks if the history is too long after each tool call.
 The history is compressed before sending the tool result back to the LLM. This prevents the context from growing during long conversations.
@@ -109,8 +116,15 @@ The history is compressed before sending the tool result back to the LLM. This p
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-history-compression-java-02.java -->
 
 In this example, the history is compressed after completing the information collection phase, but before proceeding to the decision-making phase.
 
@@ -139,12 +153,19 @@ If you are implementing a custom node, you can compress history using the `repla
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `replaceHistoryWithTLDR()` is a suspend Kotlin extension on AIAgentLLMWriteSession
     // and requires a coroutine context. From Java, calling suspend functions directly
     // would require passing a Continuation and coroutine machinery, which is not part of the
     // public Java API. No non-suspending Java wrapper is available for this action.
     ```
+    <!--- KNIT example-history-compression-java-03.java -->
 
 This approach gives you more flexibility to implement compression at any point in your custom node logic, based on your specific requirements.
 
@@ -187,12 +208,19 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `nodeLLMCompressHistory<ProcessedInput>(strategy = HistoryCompressionStrategy.WholeHistory)`
     // is a Kotlin DSL node with a reified generic. There is no Java builder to add this node
     // into a graph strategy. The HistoryCompressionStrategy type exists, but invoking the DSL
     // from Java is not supported.
     ```
+    <!--- KNIT example-history-compression-java-04.java -->
 
 * In a custom node:
 
@@ -218,11 +246,18 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.WholeHistory)` is a suspend
     // Kotlin extension on AIAgentLLMWriteSession and requires coroutines. No non-suspending Java
     // wrapper exists in the current Koog API to perform this operation.
     ```
+    <!--- KNIT example-history-compression-java-05.java -->
 
 ### FromLastNMessages
 
@@ -256,11 +291,18 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: The Kotlin DSL node `nodeLLMCompressHistory<ProcessedInput>(
     //   strategy = HistoryCompressionStrategy.FromLastNMessages(5)
     // )` relies on reified generics and DSL builders not callable from Java.
     ```
+    <!--- KNIT example-history-compression-java-06.java -->
 
 * In a custom node:
 
@@ -287,10 +329,17 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: Calling `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.FromLastNMessages(5))`
     // requires a suspend Kotlin context. There is no Java-accessible non-suspending API for this.
     ```
+    <!--- KNIT example-history-compression-java-07.java -->
 
 ### Chunked
 
@@ -324,11 +373,18 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: The Kotlin graph DSL and `nodeLLMCompressHistory<ProcessedInput>(
     //   strategy = HistoryCompressionStrategy.Chunked(10)
     // )` are not available from Java due to reified generics and lack of a Java graph builder API.
     ```
+    <!--- KNIT example-history-compression-java-08.java -->
 
 * In a custom node:
 
@@ -355,10 +411,17 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.Chunked(10))` is a suspend
     // Kotlin API; there is no current non-suspending Java entry point to perform this action inside a node.
     ```
+    <!--- KNIT example-history-compression-java-09.java -->
 
 ### RetrieveFactsFromHistory
 
@@ -417,11 +480,18 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `nodeLLMCompressHistory<ProcessedInput>(strategy = new RetrieveFactsFromHistory(...))`
     // is part of the Kotlin graph DSL with reified generics; Java cannot call it and there is no
     // equivalent Java graph builder API to inject this node.
     ```
+    <!--- KNIT example-history-compression-java-10.java -->
 
 * In a custom node:
 
@@ -474,10 +544,17 @@ You can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `replaceHistoryWithTLDR(strategy = new RetrieveFactsFromHistory(...))` is a suspend
     // Kotlin extension requiring coroutines; no Java wrapper is available.
     ```
+    <!--- KNIT example-history-compression-java-11.java -->
 
 ## Custom history compression strategy implementation
 
@@ -527,11 +604,18 @@ Here is an example:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: Custom strategies must extend Kotlin `HistoryCompressionStrategy` and override the
     // suspend method `compress(AIAgentLLMWriteSession, List<Message>)`. Java cannot implement
     // suspend functions directly. A Kotlin shim would be required; no direct Java implementation is possible.
     ```
+    <!--- KNIT example-history-compression-java-12.java -->
 
 In this example, the custom strategy filters messages that contain the word "important" and keeps only those in the compressed history.
 
@@ -560,11 +644,18 @@ Then you can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: Even with a custom strategy, adding it via `nodeLLMCompressHistory<ProcessedInput>(
     //   strategy = new MyCustomCompressionStrategy()
     // )` is Kotlin DSL-only with reified generics; no Java graph builder is provided.
     ```
+    <!--- KNIT example-history-compression-java-13.java -->
 
 * In a custom node:
 
@@ -591,10 +682,17 @@ Then you can use it as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `replaceHistoryWithTLDR(strategy = new MyCustomCompressionStrategy())` is a suspend
     // Kotlin API; not callable from Java without coroutine interop glue, which the public API lacks.
     ```
+    <!--- KNIT example-history-compression-java-14.java -->
 
 ##  Memory preservation during compression
 
@@ -627,10 +725,17 @@ You can use the `preserveMemory` parameter as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: Passing `preserveMemory = true` to `nodeLLMCompressHistory<ProcessedInput>(...)`
     // still relies on the Kotlin graph DSL with reified generics; Java cannot use this API directly.
     ```
+    <!--- KNIT example-history-compression-java-15.java -->
 
 * In a custom node:
 
@@ -660,7 +765,14 @@ You can use the `preserveMemory` parameter as follows:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // FAILED: `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.WholeHistory, preserveMemory = true)`
     // is a suspend Kotlin extension; there is no Java-accessible non-suspending wrapper in Koog.
     ```
+    <!--- KNIT example-history-compression-java-16.java -->

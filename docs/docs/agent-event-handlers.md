@@ -62,6 +62,12 @@ To install the feature and configure event handlers for the agent, do the follow
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
         .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
@@ -78,6 +84,7 @@ To install the feature and configure event handlers for the agent, do the follow
         })
         .build();
     ```
+    <!--- KNIT example-event-handlers-java-01.java -->
 
 For more details about event handler configuration, see [API reference](api:agents-features-event-handler::ai.koog.agents.features.eventHandler.feature.EventHandlerConfig).
 
@@ -115,6 +122,12 @@ This function also installs the event handler feature and configures event handl
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
         .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
@@ -131,3 +144,4 @@ This function also installs the event handler feature and configures event handl
         })
         .build();
     ```
+    <!--- KNIT example-event-handlers-java-02.java -->

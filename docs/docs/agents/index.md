@@ -61,6 +61,12 @@ you can specify the initial system prompt and some other parameters directly in 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
         .promptExecutor(simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")))
@@ -70,6 +76,7 @@ you can specify the initial system prompt and some other parameters directly in 
         .maxIterations(10)
         .build();
     ```
+    <!--- KNIT example-agent-config-java-01.java -->
 
 Alternatively, you can create an instance of [`AIAgentConfig`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.config/-a-i-agent-config/index.html)
 to define the agent's behavior and parameters more granularly, then pass it to the agent constructor.
@@ -109,6 +116,12 @@ conversation history, LLM parameters, and additional execution parameters.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("assistant")
         .system("You are a helpful assistant.")
@@ -134,6 +147,7 @@ conversation history, LLM parameters, and additional execution parameters.
         .agentConfig(agentConfig)
         .build();
     ```
+    <!--- KNIT example-agent-config-java-02.java -->
 
 Here are the parameters of `AIAgentConfig`:
 

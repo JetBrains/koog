@@ -51,6 +51,12 @@ To use the Agent Persistence feature, add it to your agent's configuration:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.<String, String>builder()
         .promptExecutor(SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
@@ -61,6 +67,7 @@ To use the Agent Persistence feature, add it to your agent's configuration:
         })
     .build();
     ```
+    <!--- KNIT example-agent-persistence-java-01.java -->
 
 ## Configuration options
 
@@ -99,6 +106,12 @@ Set the storage provider that will be used to save and retrieve checkpoints:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.<String, String>builder()
         .promptExecutor(SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
@@ -108,6 +121,7 @@ Set the storage provider that will be used to save and retrieve checkpoints:
         })
         .build();
     ```
+    <!--- KNIT example-agent-persistence-java-02.java -->
 
 The framework includes the following built-in providers:
 
@@ -148,6 +162,13 @@ To disable continuous persistence, use the code below:
     <!--- KNIT example-agent-persistence-03.kt -->
 
 === "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.<String, String>builder()
         .promptExecutor(SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
@@ -157,6 +178,7 @@ To disable continuous persistence, use the code below:
         })
         .build();
     ```
+    <!--- KNIT example-agent-persistence-java-03.java -->
 
 If continuous persistence is disabled, you can still create checkpoints manually.
 
@@ -196,8 +218,15 @@ To learn how to create a checkpoint at a specific point in your agent's executio
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-agent-persistence-java-04.java -->
 
 ### Restoring from a checkpoint
 
@@ -222,8 +251,15 @@ To restore the state of an agent from a specific checkpoint, follow the code sam
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-agent-persistence-java-05.java -->
 
 #### Rolling back all side-effects produced by tools
 
@@ -240,6 +276,7 @@ tool call: createUser "Alex"
 tool call: createUser "Daniel"
 tool call: createUser "Maria"
 ```
+ <!--- KNIT example-agent-persistence-01.txt -->
 
 And now you would like to roll back to a checkpoint. Restoring the agent's state (including message history, and strategy graph node) alone would not
 be sufficient to achieve the exact state of the world before the checkpoint. You should also restore the side-effects produced by your tool calls. In our example,
@@ -282,8 +319,15 @@ With Koog Persistence you can achieve that by providing a `RollbackToolRegistry`
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-agent-persistence-java-06.java -->
 
 ### Using extension functions
 
@@ -321,8 +365,15 @@ The Agent Persistence feature provides convenient extension functions for workin
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-agent-persistence-java-07.java -->
 
 ## Advanced usage
 
@@ -360,8 +411,15 @@ You can implement custom storage providers by implementing the `PersistenceStora
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-agent-persistence-java-08.java -->
 
 To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistence
 feature in your agent.
@@ -403,8 +461,15 @@ feature in your agent.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-agent-persistence-java-09.java -->
 
 ### Setting execution points
 
@@ -446,7 +511,14 @@ For advanced control, you can directly set the execution point of an agent:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-agent-persistence-java-10.java -->
 
 This allows for more fine-grained control over the agent's state beyond just restoring from checkpoints.

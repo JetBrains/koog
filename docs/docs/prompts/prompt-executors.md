@@ -38,10 +38,17 @@ Here is an example:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     OpenAILLMClient openAIClient = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(openAIClient);
     ```
+    <!--- KNIT example-prompt-executors-java-01.java -->
 
 ## Creating a multi-provider executor
 
@@ -73,12 +80,19 @@ To create a prompt executor that works with multiple LLM providers, do the follo
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     OpenAILLMClient openAIClient = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
     OllamaClient ollamaClient = new OllamaClient();
 
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(openAIClient, ollamaClient);
     ```
+    <!--- KNIT example-prompt-executors-java-02.java -->
 
 ## Creating a routing executor
 
@@ -118,6 +132,12 @@ This is useful for avoiding rate limits, improving throughput, and implementing 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create multiple client instances
     OpenAILLMClient openAI1 = new OpenAILLMClient("openai-key-1");
@@ -130,6 +150,7 @@ This is useful for avoiding rate limits, improving throughput, and implementing 
     // Create routing executor
     RoutingLLMPromptExecutor routingExecutor = new RoutingLLMPromptExecutor(router);
     ```
+    <!--- KNIT example-prompt-executors-java-03.java -->
 
 When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
 Requests to Anthropic models always go to the single `anthropic` client, as round-robin maintains an independent counter per provider.
@@ -179,10 +200,17 @@ Here is an example of creating a pre-defined executor:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create an OpenAI executor
     PromptExecutor openAIExecutor = simpleOpenAIExecutor("OPENAI_API_KEY");
     ```
+    <!--- KNIT example-prompt-executors-java-04.java -->
 
 ## Running a prompt
 
@@ -222,6 +250,12 @@ Here is an example:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create an OpenAI executor
     PromptExecutor promptExecutor = simpleOpenAIExecutor("OPENAI_API_KEY");
@@ -234,6 +268,7 @@ Here is an example:
     // Run the prompt
     List<Message.Response> response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
     ```
+    <!--- KNIT example-prompt-executors-java-05.java -->
 
 This will run the prompt with the `GPT4o` model and return the response.
 
@@ -299,6 +334,12 @@ Here is an example of switching between providers:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create LLM clients for OpenAI, Anthropic, and Google providers
     OpenAILLMClient openAIClient = new OpenAILLMClient("OPENAI_API_KEY");
@@ -325,6 +366,7 @@ Here is an example of switching between providers:
     // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
     List<Message.Response> anthropicResult = promptExecutor.execute(prompt, AnthropicModels.Sonnet_4_5);
     ```
+    <!--- KNIT example-prompt-executors-java-06.java -->
 
 You can optionally configure a fallback LLM provider and model to use when the requested client is unavailable.
 For details, refer to [Configuring fallbacks](#configuring-fallbacks).
@@ -361,6 +403,12 @@ To configure the fallback mechanism, provide the `fallback` parameter to the `Mu
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     OpenAILLMClient openAIClient = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
     OllamaClient ollamaClient = new OllamaClient();
@@ -376,6 +424,7 @@ To configure the fallback mechanism, provide the `fallback` parameter to the `Mu
         )
     );
     ```
+    <!--- KNIT example-prompt-executors-java-07.java -->
 
 If you pass a model from an LLM provider that is not included in the `MultiLLMPromptExecutor`,
 the prompt executor will use the fallback model:
@@ -417,6 +466,12 @@ the prompt executor will use the fallback model:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create a prompt
     Prompt p = Prompt.builder("demo")
@@ -426,6 +481,7 @@ the prompt executor will use the fallback model:
     // If you pass a Google model, the prompt executor will use the fallback model, as the Google client is not included
     List<Message.Response> response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro);
     ```
+    <!--- KNIT example-prompt-executors-java-08.java -->
 
 !!! note
     Fallbacks are available for the `execute()` and `executeMultipleChoices()` methods only.

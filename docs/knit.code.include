@@ -1,0 +1,4 @@
+// This file was automatically generated from ${file.name} by Knit tool. Do not edit.
+<#if !knit.name?contains("Java")>
+package ${knit.package}.${knit.name}
+</#if>

@@ -30,6 +30,8 @@ The implementation of Chat agent strategy in Koog is done through the `chatAgent
 ```
 ai.koog.agents.ext.agent.chatAgentStrategy
 ```
+<!--- KNIT example-predefined-strategies-01.txt -->
+
 
 To use the strategy, create an AI agent following the pattern below:
 
@@ -136,7 +138,7 @@ available in your agent code, add the following dependency import:
 ```
 ai.koog.agents.ext.agent.reActStrategy
 ```
-<!--- KNIT example-predefined-strategies-03.kt -->
+<!--- KNIT example-predefined-strategies-02.txt -->
 
 To use the strategy, create an AI agent following the pattern below:
 
@@ -165,7 +167,7 @@ val reActAgent = AIAgent(
     )
 )
 ```
-<!--- KNIT example-predefined-strategies-04.kt -->
+<!--- KNIT example-predefined-strategies-03.kt -->
 
 ### Parameters
 
@@ -195,6 +197,7 @@ I need to follow these steps:
 2. Filter out deposits (positive amounts)
 3. Calculate total spending
 ```
+<!--- KNIT example-predefined-strategies-03.txt -->
 
 #### 3. Action and execution, phase 1
 
@@ -207,6 +210,7 @@ match the request to get all transactions during the previous month:
 ```text
 {tool: "get_transactions", args: {startDate: "2025-05-19", endDate: "2025-06-18"}}
 ```
+<!--- KNIT example-predefined-strategies-04.txt -->
 
 The tool returns a result that can look as follows:
 
@@ -218,6 +222,7 @@ The tool returns a result that can look as follows:
   {date: "2025-06-13", amount: -200.00, description: "Utilities"}
 ]
 ```
+<!--- KNIT example-predefined-strategies-05.txt -->
 
 #### 4. Reasoning
 
@@ -228,6 +233,7 @@ I have the transactions. Now I need to:
 1. Remove the salary deposit of +1000.00
 2. Sum up the remaining transactions
 ```
+<!--- KNIT example-predefined-strategies-06.txt -->
 
 #### 5. Action and execution, phase 2
 
@@ -238,12 +244,14 @@ the amounts provided as tool arguments are only the negative ones:
 ```text
 {tool: "calculate_sum", args: {amounts: [-100.00, -500.00, -200.00]}}
 ```
+<!--- KNIT example-predefined-strategies-07.txt -->
 
 The tool returns the final result:
 
 ```text
 -800.00
 ```
+<!--- KNIT example-predefined-strategies-08.txt -->
 
 #### 6. Final response
 
@@ -252,6 +260,7 @@ The agent returns the final response (assistant message) that includes the calcu
 ```text
 You spent $800.00 last month on groceries, rent, and utilities.
 ```
+<!--- KNIT example-predefined-strategies-09.txt -->
 
 ### When to use the ReAct strategy
 
@@ -307,4 +316,4 @@ suspend fun main() {
     val result = bankingAgent.run("How much did I spend last month?")
 }
 ```
-<!--- KNIT example-predefined-strategies-05.kt -->
+<!--- KNIT example-predefined-strategies-04.kt -->

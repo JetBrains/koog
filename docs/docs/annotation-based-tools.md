@@ -29,6 +29,7 @@ The functions annotated with `@Tool` are collected by reflection from objects th
 @Target(AnnotationTarget.FUNCTION)
 public annotation class Tool(val customName: String = "")
 ```
+<!--- KNIT example-annotation-based-tools-01.txt -->
 
 ### Parameters
 
@@ -65,6 +66,12 @@ To mark a function as a tool, apply the `@Tool` annotation to this function in a
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     public class MyToolSet implements ToolSet {
         @Tool
@@ -80,6 +87,7 @@ To mark a function as a tool, apply the `@Tool` annotation to this function in a
         }
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-01.java -->
 
 ## @LLMDescription annotation
 
@@ -98,6 +106,7 @@ This helps LLMs understand the purpose and usage of these elements.
 )
 public annotation class LLMDescription(val description: String)
 ```
+<!--- KNIT example-annotation-based-tools-02.txt -->
 
 ### Parameters
 
@@ -129,6 +138,13 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
 
 === "Java"
 
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @Tool
     @LLMDescription(description = "Performs a specific operation and returns the result")
@@ -137,6 +153,8 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
         return "Result";
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-02.java -->
+
     
 * Parameter level:
 
@@ -164,6 +182,12 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @Tool
     @LLMDescription(description = "Processes input data")
@@ -175,6 +199,8 @@ The `@LLMDescription` annotation can be applied at various levels. For example:
         return "Processed: " + input + " with config: " + config;
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-03.java -->
+
 
 ## Creating a tool
 
@@ -197,11 +223,18 @@ This interface marks your class as a container for tools.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     public class MyFirstToolSet implements ToolSet {
         // Tools will go here
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-04.java -->
 
 ### 2. Add tool functions
 
@@ -226,6 +259,12 @@ Add functions to your class and annotate them with `@Tool` to expose them as too
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     public class MyFirstToolSet implements ToolSet {
         @Tool
@@ -235,6 +274,7 @@ Add functions to your class and annotate them with `@Tool` to expose them as too
         }
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-05.java -->
 
 ### 3. Add descriptions
 
@@ -265,6 +305,12 @@ Add `@LLMDescription` annotations to provide context for the LLM:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @LLMDescription(description = "Tools for getting weather information")
     public class MyFirstToolSet implements ToolSet {
@@ -278,6 +324,7 @@ Add `@LLMDescription` annotations to provide context for the LLM:
         }
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-06.java -->
 
 ### 4. Use your tools with an agent
 
@@ -321,6 +368,12 @@ Now you can use your tools with an agent:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     String apiToken = System.getenv("OPENAI_API_KEY");
 
@@ -343,6 +396,7 @@ Now you can use your tools with an agent:
     String result = agent.run("What's the weather like in New York?");
     System.out.println(result);
     ```
+    <!--- KNIT example-annotation-based-tools-java-07.java -->
 
 ## Usage examples
 
@@ -391,6 +445,12 @@ This example shows a simple tool set for controlling a switch:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     public class Switch {
         private boolean state;
@@ -433,6 +493,7 @@ This example shows a simple tool set for controlling a switch:
         }
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-08.java -->
 
 When an LLM needs to control a switch, it can understand the following information from the provided description:
 
@@ -483,6 +544,12 @@ This example shows a more complex tool set for device diagnostics:
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     @LLMDescription(description = "Tools for performing diagnostics and troubleshooting on devices")
     public class DiagnosticToolSet implements ToolSet {
@@ -511,6 +578,8 @@ This example shows a more complex tool set for device diagnostics:
         }
     }
     ```
+    <!--- KNIT example-annotation-based-tools-java-09.java -->
+
 
 ## Best practices
 

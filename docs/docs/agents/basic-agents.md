@@ -53,6 +53,12 @@ and provide a [prompt executor](../prompts/prompt-executors.md) with a [language
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
         .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
@@ -67,6 +73,7 @@ and provide a [prompt executor](../prompts/prompt-executors.md) with a [language
     String result = agent.run("Hello! How can you help me?");
     System.out.println(result);
     ```
+    <!--- KNIT example-basic-java-01.java -->
 
 The agent will return a generic answer, such as:
 
@@ -83,6 +90,7 @@ I can assist with a wide range of topics and tasks. Here are some examples:
 
 What's on your mind? Do you have a specific question, topic, or task you'd like to tackle?
 ```
+<!--- KNIT example-basic-01.txt -->
 
 ## Add a system prompt
 
@@ -107,6 +115,12 @@ as well as the purpose, context, and instructions related to the task.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
         .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
@@ -114,6 +128,7 @@ as well as the purpose, context, and instructions related to the task.
         .llmModel(OpenAIModels.Chat.GPT4o)
         .build();
     ```
+    <!--- KNIT example-basic-java-02.java -->
 
 The instructions in the system prompt will guide the agent's response:
 
@@ -122,6 +137,7 @@ I'm here to help you navigate the wild world of internet memes!
 
 What's on your mind? Are you trying to understand a specific meme, need help finding a popular joke, or perhaps want some recommendations for trending memes? Let me know, and I'll do my best to provide you with some LOLs!
 ```
+<!--- KNIT example-basic-02.txt -->
 
 ## Configure LLM output
 
@@ -144,10 +160,16 @@ For example, use the `temperature` parameter to adjust the randomness of the gen
         temperature = 0.7
     )
     ```
-    <!--- KNIT example-basic-03.kt -->
+    <!--- KNIT example-basic-java-01.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     AIAgent<String, String> agent = AIAgent.builder()
         .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
@@ -156,6 +178,7 @@ For example, use the `temperature` parameter to adjust the randomness of the gen
         .temperature(0.7)
         .build();
     ```
+    <!--- KNIT example-basic-java-03.java -->
 
 Here are some response examples with different temperature values:
 
@@ -164,6 +187,7 @@ Here are some response examples with different temperature values:
     ```text
     I'm here to help you navigate the wild world of internet memes! Whether you're looking for explanations, examples, or just want to share a meme with someone, I'm your go-to expert. What's on your mind? Got a specific meme in mind that's got you curious? Or maybe you need some meme-related advice? Fire away!
     ```
+    <!--- KNIT example-basic-03.txt -->
 
 === "0.7"
 
@@ -172,6 +196,7 @@ Here are some response examples with different temperature values:
     
     What's on your mind? Need help understanding a specific meme, finding a popular joke or trend, or maybe even creating your own meme? Let's get this meme party started!
     ```
+    <!--- KNIT example-basic-04.txt -->
 
 === "1.0"
 
@@ -182,7 +207,8 @@ Here are some response examples with different temperature values:
     
     Do you have a specific question about memes (e.g., "What does this meme mean?"), or are you looking for some meme-related recommendations (e.g., "Can you recommend a funny meme to share with friends?"). Let me know how I can help!
     ```
-    
+    <!--- KNIT example-basic-05.txt -->
+
 ## Add tools
 
 Agents can use [tools](../tools-overview.md) to perform specific tasks.
@@ -225,7 +251,7 @@ First, create a tool by annotating a function with the [`@Tool`](https://api.koo
         }
     )
     ```
-    <!--- KNIT example-basic-04.kt -->
+    <!--- KNIT example-basic-03.kt -->
 
     In the example, `askUser` is a tool that helps the agent maintain a conversation with the user via printing and reading from the console.
     If the agent decides to ask the user a question,
@@ -233,6 +259,12 @@ First, create a tool by annotating a function with the [`@Tool`](https://api.koo
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create a ToolSet class
     static class UserConversationTools implements ToolSet {
@@ -266,6 +298,7 @@ First, create a tool by annotating a function with the [`@Tool`](https://api.koo
         .toolRegistry(toolRegistry)
         .build();
     ```
+    <!-- KNIT example-basic-java-04.java -->
 
     In the example, `askUser` is a tool that helps the agent maintain a conversation with the user via printing and reading from the console.
 
@@ -296,6 +329,7 @@ Examples of Doge memes might include:
 
 The meme is known for its lighthearted and playful tone, and is often used to express excitement, happiness, or silliness. The meme has since become a cultural phenomenon, with countless variations and parodies emerging online.
 ```
+<!-- KNIT example-basic-02.txt -->
 
 ## Adjust agent iterations
 
@@ -336,7 +370,7 @@ For example, a simple agent described here is not likely to require more than 10
         maxIterations = 10
     )
     ```
-    <!--- KNIT example-basic-05.kt -->
+    <!--- KNIT example-basic-04.kt -->
 
     !!! tip
 
@@ -347,6 +381,12 @@ For example, a simple agent described here is not likely to require more than 10
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create a ToolSet class
     static class UserConversationTools implements ToolSet {
@@ -378,6 +418,7 @@ For example, a simple agent described here is not likely to require more than 10
         .maxIterations(10)
         .build();
     ```
+    <!--- KNIT example-basic-java-04.java -->
 
 ## Handle events during agent runtime
 
@@ -426,10 +467,16 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
         }
     }
     ```
-    <!--- KNIT example-basic-06.kt -->
+    <!--- KNIT example-basic-05.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Create a ToolSet class
     static class UserConversationTools implements ToolSet {
@@ -467,12 +514,14 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
         })
         .build();
     ```
+    <!--- KNIT example-basic-java-05.java -->
 
 The agent will now output something similar to the following when it calls the `askUser` tool:
 
 ```text
 Tool called: askUser with args {"question":"Which meme would you like me to explain?"}
 ```
+<!--- KNIT example-basic-06.txt -->
 
 For more information about Koog agent features, see [Features overview](../features-overview.md).
 

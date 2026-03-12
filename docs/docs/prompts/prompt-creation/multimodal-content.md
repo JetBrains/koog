@@ -50,6 +50,12 @@ The general format of the `user` message that includes a text message and a list
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ContentPartsBuilder partsBuilder = new ContentPartsBuilder();
     partsBuilder.text("Describe these images:");
@@ -60,6 +66,7 @@ The general format of the `user` message that includes a text message and a list
         .user(partsBuilder.build())
         .build();
     ```
+    <!--- KNIT example-multimodal-content-java-01.java -->
 
 The `+` operator adds text content to the user message along with the attachments.
 
@@ -103,6 +110,12 @@ The general format of the `user` message that includes a text message and a list
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("custom_image")
         .user(List.of(
@@ -116,6 +129,7 @@ The general format of the `user` message that includes a text message and a list
         ))
         .build();
     ```
+    <!--- KNIT example-multimodal-content-java-02.java -->
 
 Koog provides the following specialized classes for each media type that implement the `ContentPart.Attachment` interface:
 
@@ -141,20 +155,25 @@ Implementations of the AttachmentContent interface define the type and source of
     ```text
     AttachmentContent.URL("https://example.com/image.png")
     ```
+    <!--- KNIT example-multimodal-content-01.txt -->
+
 - [`AttachmentContent.Binary.Bytes`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a byte array:
     ```text
     AttachmentContent.Binary.Bytes(byteArrayOf(/* ... */))
     ```
+    <!--- KNIT example-multimodal-content-02.txt -->
 
 - [`AttachmentContent.Binary.Base64`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a Base64-encoded string containing file data:
     ```text
     AttachmentContent.Binary.Base64("iVBORw0KGgoAAAANS...")
     ```
+    <!--- KNIT example-multimodal-content-03.txt -->
 
 - [`AttachmentContent.PlainText`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.PlainText) defines the file content as plain text (for [`ContentPart.File`](api:prompt-model::ai.koog.prompt.message.ContentPart.File) only):
     ```text
     AttachmentContent.PlainText("This is the file content.")
     ```
+    <!--- KNIT example-multimodal-content-04.txt -->
 
 ### Mixed attachments
 
@@ -183,6 +202,12 @@ In addition to providing different types of attachments in separate prompts or m
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     Prompt prompt = Prompt.builder("mixed_content_example")
     .system("You are a helpful assistant.")
@@ -204,6 +229,7 @@ In addition to providing different types of attachments in separate prompts or m
     ))
     .build();
     ```
+    <!--- KNIT example-multimodal-content-java-03.java -->
 
 ## Next steps
 

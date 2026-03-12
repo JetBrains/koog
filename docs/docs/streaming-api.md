@@ -90,8 +90,16 @@ This is the most general approach: react to each frame kind.
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-01.java -->
+
 
 It is important to note that you can parse the output by working directly with a raw string stream.
 This approach gives you more flexibility and control over the parsing process.
@@ -130,8 +138,15 @@ Here is a raw string stream with the Markdown definition of the output structure
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-02.java -->
 
 ### Working with reasoning frames
 
@@ -212,12 +227,19 @@ derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
         println("\n---\n$fullText")
     }
     ```
-    <!--- KNIT example-streaming-api-02-01.kt -->
+    <!--- KNIT example-streaming-api-03.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-03.java -->
 
 ### Listening to stream events in event handlers
 
@@ -257,12 +279,19 @@ You can listen to stream events in [agent event handlers](agent-event-handlers.m
         }
     }
     ```
-    <!--- KNIT example-streaming-api-02-02.kt -->
+    <!--- KNIT example-streaming-api-04.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-04.java -->
 
 ### Converting frames to `Message.Response`
 
@@ -305,10 +334,16 @@ First, define a data class to represent your structured data:
         val description: String
     )
     ```
-    <!--- KNIT example-streaming-api-03.kt -->
+    <!--- KNIT example-streaming-api-05.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // A simple Java POJO equivalent to the Kotlin @Serializable data class.
     public class Book {
@@ -323,6 +358,7 @@ First, define a data class to represent your structured data:
         }
     }
     ```
+    <!--- KNIT exampleStreamingApiJava01.java -->
 
 #### 2. Define the Markdown structure
 
@@ -356,12 +392,19 @@ Create a definition that specifies how your data should be structured in Markdow
         })
     }
     ```
-    <!--- KNIT example-streaming-api-04.kt -->
+    <!--- KNIT example-streaming-api-06.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-05.java -->
 
 #### 3. Create a parser for your data structure
 
@@ -370,7 +413,7 @@ The `markdownStreamingParser` provides several handlers for different Markdown e
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.example.exampleStreamingApi03.Book
+    import ai.koog.agents.example.exampleStreamingApi05.Book
     import ai.koog.prompt.structure.markdown.markdownStreamingParser
     import kotlinx.coroutines.flow.Flow
     import kotlinx.coroutines.flow.flow
@@ -395,12 +438,19 @@ The `markdownStreamingParser` provides several handlers for different Markdown e
         onFinishStream { remainingText -> }
     }
     ```
-    <!--- KNIT example-streaming-api-05.kt -->
+    <!--- KNIT example-streaming-api-07.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-06.java -->
 
 Using the defined handlers, you can implement a function that parses the Markdown stream and emits your data objects 
 with the `markdownStreamingParser` function.
@@ -408,7 +458,7 @@ with the `markdownStreamingParser` function.
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.example.exampleStreamingApi03.Book
+    import ai.koog.agents.example.exampleStreamingApi05.Book
     import ai.koog.prompt.structure.markdown.markdownStreamingParser
     import ai.koog.prompt.streaming.StreamFrame
     import ai.koog.prompt.streaming.filterTextOnly
@@ -453,12 +503,19 @@ with the `markdownStreamingParser` function.
        }
     }
     ```
-    <!--- KNIT example-streaming-api-06.kt -->
+    <!--- KNIT example-streaming-api-08.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-07.java -->
 
 #### 4. Use the parser in your agent strategy
 
@@ -467,9 +524,9 @@ with the `markdownStreamingParser` function.
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
-    import ai.koog.agents.example.exampleStreamingApi03.Book
-    import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
-    import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
+    import ai.koog.agents.example.exampleStreamingApi05.Book
+    import ai.koog.agents.example.exampleStreamingApi06.markdownBookDefinition
+    import ai.koog.agents.example.exampleStreamingApi08.parseMarkdownStreamToBooks
     -->
     ```kotlin
     val agentStrategy = strategy<String, List<Book>>("library-assistant") {
@@ -496,12 +553,19 @@ with the `markdownStreamingParser` function.
        edge(getMdOutput forwardTo nodeFinish)
     }
     ```
-    <!--- KNIT example-streaming-api-07.kt -->
+    <!--- KNIT example-streaming-api-09.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-08.java -->
 
 ### Advanced usage: Streaming with tools
 
@@ -515,7 +579,7 @@ The following sections provide a brief step-by-step guide on how to define a too
     <!--- INCLUDE
     import ai.koog.agents.core.tools.SimpleTool
     import ai.koog.agents.core.tools.ToolDescriptor
-    import ai.koog.agents.example.exampleStreamingApi03.Book
+    import ai.koog.agents.example.exampleStreamingApi05.Book
     import ai.koog.serialization.typeToken
     import kotlinx.serialization.Serializable
     -->
@@ -541,12 +605,15 @@ The following sections provide a brief step-by-step guide on how to define a too
         }
     }
     ```
-    <!--- KNIT example-streaming-api-08.kt -->
+    <!--- KNIT example-streaming-api-10.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-09.java -->
 
 ### 2. Use the tool with streaming data
 
@@ -555,9 +622,9 @@ The following sections provide a brief step-by-step guide on how to define a too
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
-    import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
-    import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
-    import ai.koog.agents.example.exampleStreamingApi08.BookTool
+    import ai.koog.agents.example.exampleStreamingApi06.markdownBookDefinition
+    import ai.koog.agents.example.exampleStreamingApi08.parseMarkdownStreamToBooks
+    import ai.koog.agents.example.exampleStreamingApi10.BookTool
     import ai.koog.agents.core.agent.session.callToolRaw
     -->
     ```kotlin
@@ -589,19 +656,26 @@ The following sections provide a brief step-by-step guide on how to define a too
        edge(getMdOutput forwardTo nodeFinish)
      }
     ```
-    <!--- KNIT example-streaming-api-09.kt -->
+    <!--- KNIT example-streaming-api-11.kt -->
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-streaming-api-java-10.java -->
 
 ### 3. Register the tool in your agent configuration
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.example.exampleStreamingApi08.BookTool
+import ai.koog.agents.example.exampleStreamingApi10.BookTool
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 
@@ -617,7 +691,7 @@ val runner = AIAgent(
     toolRegistry = toolRegistry
 )
 ```
-<!--- KNIT example-streaming-api-10.kt -->
+<!--- KNIT example-streaming-api-12.kt -->
 
 ## Best practices
 

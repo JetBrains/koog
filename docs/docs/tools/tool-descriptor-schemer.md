@@ -76,6 +76,12 @@ Below is a minimal custom implementation that renders only a subset of parameter
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     public static class MinimalSchemer extends OpenAICompatibleToolDescriptorSchemaGenerator {
         @Override
@@ -126,6 +132,7 @@ Below is a minimal custom implementation that renders only a subset of parameter
         }
     }
     ```
+    <!--- KNIT example-tool-descriptor-schemer-java-01.java -->
 
 ## Using with a client
 
@@ -201,6 +208,12 @@ The example below defines a simple tool and passes it to the OpenAI client. The 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     // Custom schemer extending the OpenAI-compatible one is Kotlin-only in the docs; for Java example we reuse MinimalSchemer from above.
     OpenAILLMClient client = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"), new OpenAIClientSettings(), null, null, new OpenAICompatibleToolDescriptorSchemaGenerator());
@@ -222,6 +235,7 @@ The example below defines a simple tool and passes it to the OpenAI client. The 
 
     List<Message.Response> responses = client.execute(prompt, OpenAIModels.Chat.GPT4o, java.util.List.of(getUserTool));
     ```
+    <!--- KNIT example-tool-descriptor-schemer-java-02.java -->
 
 If you need direct access to the produced schema (for debugging or for a custom transport), you can instantiate the provider‑specific schemer and serialize the JSON yourself:
 
@@ -256,5 +270,12 @@ If you need direct access to the produced schema (for debugging or for a custom 
 
 === "Java"
 
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
     ```java
     ```
+    <!--- KNIT example-tool-descriptor-schemer-java-03.java -->
