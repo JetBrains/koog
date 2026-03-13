@@ -5,6 +5,7 @@ version = rootProject.version
 
 plugins {
     id("ai.kotlin.jvm")
+    id("ai.kotlin.jvm.publish")
     alias(libs.plugins.kotlin.serialization)
 }
 
