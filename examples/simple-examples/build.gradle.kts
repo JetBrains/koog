@@ -3,12 +3,18 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
     id("ai.koog.gradle.plugins.credentialsresolver")
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 dependencies {
@@ -46,6 +52,8 @@ dependencies {
     implementation("ai.koog:agents-features-acp")
     //noinspection UseTomlInstead
     testImplementation("ai.koog:agents-test")
+
+    implementation(libs.jackson.module.kotlin)
 
     implementation(libs.kotlinx.datetime)
 
@@ -153,6 +161,7 @@ registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.java.
 registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.java.api.snapshot.PersistenceJdbcExample")
 registerRunExampleTask("runExampleBasicSingleRunAgentJava", "ai.koog.agents.example.java.api.simpleapi.BasicSingleRunAgent")
 registerRunExampleTask("runExampleWebSearchAgentJava", "ai.koog.agents.example.java.api.websearch.WebSearchAgent")
+registerRunExampleTask("runExampleGOAPGrouperJava", "ai.koog.agents.example.java.api.goap.GrouperAgent")
 
 /*
  A2A examples
