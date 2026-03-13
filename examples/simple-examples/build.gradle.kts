@@ -152,6 +152,7 @@ Java examples
 registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.java.api.chatmemory.ChatMemoryJdbcExample")
 registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.java.api.snapshot.PersistenceJdbcExample")
 registerRunExampleTask("runExampleBasicSingleRunAgentJava", "ai.koog.agents.example.java.api.simpleapi.BasicSingleRunAgent")
+registerRunExampleTask("runExampleWebSearchAgentJava", "ai.koog.agents.example.java.api.websearch.WebSearchAgent")
 
 /*
  A2A examples
