@@ -12,7 +12,6 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_5
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import kotlin.collections.plus
 import kotlin.jvm.JvmField
 
 /**
@@ -40,7 +39,10 @@ public object AnthropicModels : LLModelDefinitions {
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      * @see <a href="https://platform.claude.com/docs/en/about-claude/model-deprecations#model-status">
      */
-    @Deprecated("Use Opus_4_6 instead", ReplaceWith("Opus_4_6"))
+    @Deprecated(
+        "Use Haiku_4_5 instead",
+        ReplaceWith("ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_4_5")
+    )
     @JvmField
     public val Haiku_3: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
@@ -239,6 +241,7 @@ public object AnthropicModels : LLModelDefinitions {
      * List of the supported models by the Anthropic provider.
      */
     private val supportedModels: List<LLModel> = listOf(
+        @Suppress("DEPRECATION")
         Haiku_3,
         Sonnet_4,
         Opus_4,
@@ -264,6 +267,7 @@ public object AnthropicModels : LLModelDefinitions {
 }
 
 internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
+    @Suppress("DEPRECATION")
     Haiku_3 to "claude-3-haiku-20240307",
     Haiku_4_5 to "claude-haiku-4-5-20251001",
     Sonnet_4 to "claude-sonnet-4-20250514",
