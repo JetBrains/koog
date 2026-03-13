@@ -41,7 +41,7 @@ or for Maven
 
 Make sure that your Kotlin or Java project has:
 - Spring Boot 3 (it requires Java 17 or higher)
-- Kotlin version 2.3.10
+- Kotlin version 2.3.10+
 - kotlinx-serialization version 1.10.0 (namely, kotlinx-serialization-core-jvm and kotlinx-serialization-json-jvm)
 
 ### 2. Configure Providers
@@ -112,7 +112,7 @@ ai:
             enabled: true # Set it to `true` explicitly to activate !!!
             base-url: http://127.0.0.1:11434
 ```
-<!--- KNIT example-spring-boot-java-01.txt -->
+<!--- KNIT example-spring-boot-yaml-01.txt -->
 
 Both `ai.koog.PROVIDER.api-key` and `ai.koog.PROVIDER.enabled` properties are used to activate the provider.
 
@@ -153,7 +153,6 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
     import ai.koog.prompt.executor.model.PromptExecutor
-    import org.springframework.http.HttpStatus
     import org.springframework.http.ResponseEntity
     import org.springframework.web.bind.annotation.PostMapping
     import org.springframework.web.bind.annotation.RequestBody
@@ -162,28 +161,21 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
 
     @RestController
     @RequestMapping("/api/chat")
-    class ChatController(
-        private val anthropicExecutor: PromptExecutor?
-    ) {
+    class ChatController(private val anthropicExecutor: PromptExecutor) {
 
         @PostMapping
         suspend fun chat(@RequestBody request: ChatRequest): ResponseEntity<ChatResponse> {
-            return if (anthropicExecutor != null) {
-                try {
-                    val prompt = prompt("example-prompt") {
-                        system("You are a helpful assistant")
-                        user(request.message)
-                    }
-
-                    val result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5)
-                    ResponseEntity.ok(ChatResponse(result.first().content))
-                } catch (e: Exception) {
-                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(ChatResponse("Error processing request"))
+            return try {
+                val prompt = prompt("chat") {
+                    system("You are a helpful assistant")
+                    user(request.message)
                 }
-            } else {
-                ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(ChatResponse("AI service not configured"))
+
+                val result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5)
+                ResponseEntity.ok(ChatResponse(result.first().content))
+            } catch (e: Exception) {
+                ResponseEntity.internalServerError()
+                    .body(ChatResponse("Error processing request"))
             }
         }
     }
@@ -191,7 +183,7 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
     data class ChatRequest(val message: String)
     data class ChatResponse(val response: String)
     ```
-    <!--- KNIT example-spring-boot-01.kt -->
+    <!--- KNIT example-spring-boot-04.txt -->
 
 === "Java"
 
@@ -200,50 +192,45 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import ai.koog.prompt.message.Message;
-    import org.springframework.http.HttpStatus;
     import org.springframework.http.ResponseEntity;
     import org.springframework.web.bind.annotation.PostMapping;
     import org.springframework.web.bind.annotation.RequestBody;
     import org.springframework.web.bind.annotation.RequestMapping;
     import org.springframework.web.bind.annotation.RestController;
 
-    import jakarta.annotation.Nullable;
     import java.util.List;
 
     @RestController
     @RequestMapping("/api/chat")
     public class ChatController {
-        @Nullable
         private final PromptExecutor anthropicExecutor;
 
-        public ChatController(@Nullable PromptExecutor anthropicExecutor) {
+        public ChatController(PromptExecutor anthropicExecutor) {
             this.anthropicExecutor = anthropicExecutor;
         }
 
         @PostMapping
         public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
-            if (anthropicExecutor != null) {
-                try {
-                    Prompt prompt = Prompt.builder("chat")
+            try {
+                Prompt prompt = Prompt.builder("chat")
                         .system("You are a helpful assistant")
                         .user(request.message())
                         .build();
 
-                    List<Message.Response> result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5);
-                    return ResponseEntity.ok(new ChatResponse(result.get(0).getContent()));
-                } catch (Exception e) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                List<Message.Response> result = anthropicExecutor.execute(prompt, AnthropicModels.Haiku_4_5);
+                return ResponseEntity.ok(new ChatResponse(result.get(0).getContent()));
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError()
                         .body(new ChatResponse("Error processing request"));
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(new ChatResponse("AI service not configured"));
             }
         }
     }
 
-    record ChatRequest(String message) {}
-    record ChatResponse(String response) {}
+    record ChatRequest(String message) {
+    }
+
+    record ChatResponse(String response) {
+    }
     ```
     <!--- KNIT example-spring-boot-java-01.java -->
 
@@ -295,7 +282,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
         }
     }
     ```
-    <!--- KNIT example-spring-boot-03.kt -->
+    <!--- KNIT example-spring-boot-05.txt -->
 
 === "Java"
 
@@ -344,7 +331,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
         }
     }
     ```
-    <--- KNIT example-spring-boot-java-03.java -->
+    <!--- KNIT example-spring-boot-java-02.java -->
 
 You can also register your own `MultiLLMPromptExecutor` bean and pass a `FallbackPromptExecutorSettings` to it.
 To override the auto-configuration for your beans you can use `@Primary` annotation.
@@ -405,7 +392,7 @@ The auto-configuration creates the following beans (when configured):
         // ...
     }
     ```
-    <!--- KNIT example-spring-boot-05.kt -->
+    <!--- KNIT example-spring-boot-06.txt -->
 
 === "Java"
 
@@ -423,7 +410,7 @@ The auto-configuration creates the following beans (when configured):
         // ...
     }
     ```
-    <!--- KNIT example-spring-boot-java-04.java -->
+    <!--- KNIT example-spring-boot-java-03.java -->
 
 **Error: API key is required but not provided**
 
