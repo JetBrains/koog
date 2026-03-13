@@ -8,7 +8,7 @@ Key points:
 - Contract: a single function `scheme(toolDescriptor: ToolDescriptor): JsonObject`
 - Implementations provided:
   - `OpenAICompatibleToolDescriptorSchemer` — generates schemas compatible with OpenAI‑style function/tool definitions.
-- `OllamaToolDescriptorSchemer` — generates schemas compatible with Ollama tool JSON.
+  - `OllamaToolDescriptorSchemer` — generates schemas compatible with Ollama tool JSON.
 
 <!--- INCLUDE
 import ai.koog.agents.core.tools.ToolDescriptor
