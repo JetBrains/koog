@@ -25,7 +25,7 @@ The functions annotated with `@Tool` are collected by reflection from objects th
 
 ### Definition
 
-```text
+```kotlin
 @Target(AnnotationTarget.FUNCTION)
 public annotation class Tool(val customName: String = "")
 ```
@@ -96,7 +96,7 @@ This helps LLMs understand the purpose and usage of these elements.
 
 ### Definition
 
-```text
+```kotlin
 @Target(
     AnnotationTarget.PROPERTY,
     AnnotationTarget.CLASS,

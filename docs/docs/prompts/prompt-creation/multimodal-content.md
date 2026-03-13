@@ -152,25 +152,25 @@ All `ContentPart.Attachment` types accept the following parameters:
 Implementations of the AttachmentContent interface define the type and source of content that is provided as input to the LLM:
 
 - [`AttachmentContent.URL`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.URL) defines the URL of the provided content:
-    ```text
+    ```kotlin
     AttachmentContent.URL("https://example.com/image.png")
     ```
     <!--- KNIT example-multimodal-content-01.txt -->
 
 - [`AttachmentContent.Binary.Bytes`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a byte array:
-    ```text
+    ```kotlin
     AttachmentContent.Binary.Bytes(byteArrayOf(/* ... */))
     ```
     <!--- KNIT example-multimodal-content-02.txt -->
 
 - [`AttachmentContent.Binary.Base64`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.Binary) defines the file content as a Base64-encoded string containing file data:
-    ```text
+    ```kotlin
     AttachmentContent.Binary.Base64("iVBORw0KGgoAAAANS...")
     ```
     <!--- KNIT example-multimodal-content-03.txt -->
 
 - [`AttachmentContent.PlainText`](api:prompt-model::ai.koog.prompt.message.AttachmentContent.PlainText) defines the file content as plain text (for [`ContentPart.File`](api:prompt-model::ai.koog.prompt.message.ContentPart.File) only):
-    ```text
+    ```kotlin
     AttachmentContent.PlainText("This is the file content.")
     ```
     <!--- KNIT example-multimodal-content-04.txt -->
