@@ -3,12 +3,12 @@ package ai.koog.agents.features.opentelemetry.integration.langfuse
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
+import ai.koog.utils.time.toKotlinDuration
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
-import ai.koog.utils.time.toKotlinDuration
 import kotlin.time.Duration.Companion.seconds
 import java.time.Duration as JavaDuration
 

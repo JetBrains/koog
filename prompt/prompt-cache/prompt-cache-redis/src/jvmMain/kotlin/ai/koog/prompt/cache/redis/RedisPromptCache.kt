@@ -3,6 +3,7 @@ package ai.koog.prompt.cache.redis
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.message.Message
+import ai.koog.utils.time.toKotlinDuration
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisClient
@@ -13,7 +14,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
-import ai.koog.utils.time.toKotlinDuration
 import kotlin.time.Duration.Companion.seconds
 import java.time.Duration as JavaDuration
 
@@ -39,7 +39,9 @@ public class RedisPromptCache(
      */
     @JavaAPI
     public constructor(client: RedisClient, prefix: String, ttl: JavaDuration) : this(
-        client, prefix, ttl.toKotlinDuration()
+        client,
+        prefix,
+        ttl.toKotlinDuration()
     )
 
     /**

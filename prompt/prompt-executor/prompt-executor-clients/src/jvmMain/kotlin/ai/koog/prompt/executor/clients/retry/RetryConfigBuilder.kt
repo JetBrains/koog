@@ -2,8 +2,8 @@ package ai.koog.prompt.executor.clients.retry
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.utils.time.toKotlinDuration
-import java.time.Duration as JavaDuration
 import kotlin.time.Duration
+import java.time.Duration as JavaDuration
 
 /**
  * A builder class for constructing [RetryConfig] instances from Java code.

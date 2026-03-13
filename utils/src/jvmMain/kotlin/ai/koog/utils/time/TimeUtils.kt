@@ -4,8 +4,8 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toDuration
-import java.time.Instant as JavaInstant
 import java.time.Duration as JavaDuration
+import java.time.Instant as JavaInstant
 
 /**
  * Utility class providing conversions between Java and Kotlin time types.

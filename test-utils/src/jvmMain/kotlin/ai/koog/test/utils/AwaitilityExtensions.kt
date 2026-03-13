@@ -1,12 +1,12 @@
 package ai.koog.test.utils
 
+import ai.koog.utils.time.toJavaDuration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.awaitility.core.ConditionFactory
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.coroutines.ContinuationInterceptor
-import ai.koog.utils.time.toJavaDuration
 import kotlin.time.Duration
 
 /**

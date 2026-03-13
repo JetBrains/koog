@@ -1,11 +1,11 @@
 package ai.koog.prompt.executor.clients.retry
 
-import java.time.Duration as JavaDuration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import java.time.Duration as JavaDuration
 
 class RetryConfigBuilderTest {
 
