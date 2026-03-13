@@ -50,8 +50,17 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
     compilerOptions {
         languageVersion.set(kotlinLanguageVersion)
         logger.info("'$path' Kotlin language version: $kotlinLanguageVersion")
-        apiVersion.set(kotlinApiVersion)
+        apiVersion = kotlinApiVersion
         logger.info("'$path' Kotlin API version: $kotlinApiVersion")
+        allWarningsAsErrors = false
+        extraWarnings = true
+        progressiveMode = true
+        freeCompilerArgs.addAll(
+            listOf(
+                "-Xexpect-actual-classes",
+                "-Xmulti-dollar-interpolation",
+            )
+        )
     }
 }
 
