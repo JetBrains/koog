@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.websearch;
+package ai.koog.agents.example.websearch;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;

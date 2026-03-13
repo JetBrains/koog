@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.goap;
+package ai.koog.agents.example.goap;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.planner.AIAgentPlannerStrategy;
@@ -169,9 +169,9 @@ public class GrouperAgent {
                                     .run();
 
                             List<String> newLearnings = new ArrayList<>(state.learnings);
-                            newLearnings.add(proposal.getLearnings());
+                            newLearnings.add(proposal.learnings());
                             return state
-                                    .withNewWordings(proposal.getWordings())
+                                    .withNewWordings(proposal.wordings())
                                     .withLearnings(newLearnings)
                                     .withIteration(state.iteration + 1);
                         })
@@ -210,7 +210,7 @@ public class GrouperAgent {
                             List<RatedWording> ratedWordings = IntStream.range(0, state.newWordings.size())
                                     .mapToObj(i -> {
                                         List<LikertRating> ratings = reactions.stream()
-                                                .map(r -> r.getRatings().get(i))
+                                                .map(r -> r.ratings().get(i))
                                                 .collect(Collectors.toList());
                                         return new RatedWording(
                                                 state.newWordings.get(i),

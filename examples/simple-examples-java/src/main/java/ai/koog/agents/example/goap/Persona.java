@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.goap;
+package ai.koog.agents.example.goap;
 
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.params.LLMParams;

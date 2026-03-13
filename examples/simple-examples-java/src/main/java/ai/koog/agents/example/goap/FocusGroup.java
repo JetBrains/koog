@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.goap;
+package ai.koog.agents.example.goap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class FocusGroup {
     public List<String> presentFeedback(List<Reaction> reactions) {
         List<String> feedback = new ArrayList<>();
         for (int i = 0; i < participants.size() && i < reactions.size(); i++) {
-            feedback.add(participants.get(i).name + ": " + reactions.get(i).getFeedback());
+            feedback.add(participants.get(i).name + ": " + reactions.get(i).feedback());
         }
         return feedback;
     }

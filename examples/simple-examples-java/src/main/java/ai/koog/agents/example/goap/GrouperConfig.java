@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.goap;
+package ai.koog.agents.example.goap;
 
 public class GrouperConfig {
     public final FocusGroup focusGroup;

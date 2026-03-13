@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.snapshot;
+package ai.koog.agents.example.snapshot;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.features.persistence.jdbc.PostgresJdbcPersistenceStorageProvider;

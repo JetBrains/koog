@@ -3,18 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
     id("ai.koog.gradle.plugins.credentialsresolver")
-    id("io.spring.dependency-management") version "1.1.7"
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-repositories {
-    mavenCentral()
-    maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 dependencies {
@@ -37,10 +25,6 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-chat-memory-sql")
     //noinspection UseTomlInstead
-    implementation("ai.koog:agents-features-chat-history-jdbc")
-    //noinspection UseTomlInstead
-    implementation("ai.koog:agents-features-persistence-jdbc")
-    //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-server")
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-client")
@@ -52,8 +36,6 @@ dependencies {
     implementation("ai.koog:agents-features-acp")
     //noinspection UseTomlInstead
     testImplementation("ai.koog:agents-test")
-
-    implementation(libs.jackson.module.kotlin)
 
     implementation(libs.kotlinx.datetime)
 
@@ -149,20 +131,6 @@ registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.s
 registerRunExampleTask("runExampleStreamingKtorServer", "ai.koog.agents.example.streaming.StreamingKtorServerKt")
 
 registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.GrouperAgentKt")
-registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemory.ChatMemoryExampleKt")
-registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
-registerRunExampleTask("runExampleChatMemoryPostgres", "ai.koog.agents.example.chatmemory.ChatMemoryPostgresExampleKt")
-
-/*
-Java examples
-*/
-
-registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.java.api.chatmemory.ChatMemoryJdbcExample")
-registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.java.api.snapshot.PersistenceJdbcExample")
-registerRunExampleTask("runExampleBasicSingleRunAgentJava", "ai.koog.agents.example.java.api.simpleapi.BasicSingleRunAgent")
-registerRunExampleTask("runExampleWebSearchAgentJava", "ai.koog.agents.example.java.api.websearch.WebSearchAgent")
-registerRunExampleTask("runExampleGOAPGrouperJava", "ai.koog.agents.example.java.api.goap.GrouperAgent")
-
 /*
  A2A examples
 */

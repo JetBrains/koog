@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.simpleapi;
+package ai.koog.agents.example.simpleapi;
 
 public class Switch {
     private boolean state = false;

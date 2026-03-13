@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.api.chatmemory;
+package ai.koog.agents.example.chatmemory;
 
 import ai.koog.agents.chatMemory.feature.ChatMemory;
 import ai.koog.agents.core.agent.AIAgent;
@@ -7,7 +7,6 @@ import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProviderJvm;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
-import kotlinx.coroutines.BuildersKt;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
