@@ -139,8 +139,13 @@ public class AIAgentPipelineImpl(
 
     @InternalAgentsApi
     override suspend fun prepareFeatures() {
+        prepareFeatures(this)
+    }
+
+    @InternalAgentsApi
+    override suspend fun prepareFeatures(actualPipeline: AIAgentPipelineAPI) {
         // Install system features (if exist)
-        installFeaturesFromSystemConfig()
+        installFeaturesFromSystemConfig(actualPipeline)
 
         // Prepare features
         registeredFeatures.values.forEach { featureConfig ->
@@ -899,12 +904,12 @@ public class AIAgentPipelineImpl(
 
     //region Private Methods
 
-    private fun installFeaturesFromSystemConfig() {
+    private fun installFeaturesFromSystemConfig(actualPipeline: AIAgentPipelineAPI) {
         val featuresFromSystemConfig = readFeatureKeysFromSystemVariables()
         val filteredSystemFeaturesToInstall = filterSystemFeaturesToInstall(featuresFromSystemConfig)
 
         filteredSystemFeaturesToInstall.forEach { systemFeatureKey ->
-            installSystemFeature(systemFeatureKey)
+            installSystemFeature(systemFeatureKey, actualPipeline)
         }
     }
 
@@ -962,19 +967,19 @@ public class AIAgentPipelineImpl(
     }
 
     @OptIn(ExperimentalAgentsApi::class)
-    private fun installSystemFeature(featureKey: AIAgentStorageKey<*>) {
+    private fun installSystemFeature(featureKey: AIAgentStorageKey<*>, actualPipeline: AIAgentPipelineAPI) {
         logger.debug { "Installing system feature: ${featureKey.name}" }
         when (featureKey) {
             Debugger.key -> {
-                when (this) {
+                when (actualPipeline) {
                     is AIAgentGraphPipeline -> {
-                        this.install(Debugger) {
+                        actualPipeline.install(Debugger) {
                             // Use default configuration
                         }
                     }
 
                     is AIAgentFunctionalPipeline -> {
-                        this.install(Debugger) {
+                        actualPipeline.install(Debugger) {
                             // Use default configuration
                         }
                     }

@@ -32,6 +32,11 @@ public actual abstract class AIAgentPipeline actual constructor(
     agentConfig: AIAgentConfig,
     clock: Clock
 ) : AIAgentPipelineAPI by AIAgentPipelineImpl(agentConfig, clock) {
+    @InternalAgentsApi
+    public actual override suspend fun prepareFeatures() {
+        prepareFeatures(this)
+    }
+
     // JVM Unique Interceptors
 
     /**

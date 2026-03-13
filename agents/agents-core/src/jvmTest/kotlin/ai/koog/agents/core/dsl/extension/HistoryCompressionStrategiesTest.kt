@@ -2,8 +2,6 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
@@ -46,22 +44,20 @@ class HistoryCompressionStrategiesTest {
 
     private fun createHistoryCompressionStrategy(strategy: HistoryCompressionStrategy, messages: List<Message>) =
         strategy<String, List<Message>>("strategy") {
-            return strategy<String, List<Message>>("strategy") {
-                val setMessageHistory by node<String, String> { input ->
-                    llm.writeSession {
-                        rewritePrompt {
-                            prompt.withMessages { messages }
-                        }
+            val setMessageHistory by node<String, String> { input ->
+                llm.writeSession {
+                    rewritePrompt {
+                        prompt.withMessages { messages }
                     }
-                    input
                 }
-
-                val compressNode by nodeLLMCompressHistory<String>(
-                    strategy = strategy
-                )
-                nodeStart then setMessageHistory then compressNode
-                edge(compressNode forwardTo nodeFinish transformed { llm.prompt.messages })
+                input
             }
+
+            val compressNode by nodeLLMCompressHistory<String>(
+                strategy = strategy
+            )
+            nodeStart then setMessageHistory then compressNode
+            edge(compressNode forwardTo nodeFinish transformed { llm.prompt.messages })
         }
 
     companion object {
@@ -170,7 +166,12 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
+                    Message.Tool.Call(
+                        "ID",
+                        "DummyTool",
+                        "Args",
+                        metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
+                    )
                 )
             ),
             Arguments.of(
@@ -227,7 +228,12 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
+                    Message.Tool.Call(
+                        "ID",
+                        "DummyTool",
+                        "Args",
+                        metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
+                    )
                 )
             ),
             Arguments.of(
