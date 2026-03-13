@@ -1,6 +1,7 @@
 package ai.koog.prompt.streaming
 
 import ai.koog.prompt.message.ResponseMetaInfo
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -9,7 +10,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
 
 class StreamFrameFlowExtTest {
 
@@ -52,19 +52,16 @@ class StreamFrameFlowExtTest {
 
     @Test
     fun testRequireEndFrameDoesNotMaskExistingErrors() = runTest {
+        val expectedException = RuntimeException("Connection lost")
         val flow = flow<StreamFrame> {
             emit(StreamFrame.TextDelta("Hello"))
-            throw RuntimeException("Connection lost")
+            throw expectedException
         }.requireEndFrame()
 
         val exception = assertFailsWith<RuntimeException> {
             flow.toList()
         }
-
-        assertFalse(
-            exception is IncompleteStreamException,
-            "Should propagate original exception, not IncompleteStreamException"
-        )
+        exception shouldBe expectedException
     }
 
     @Test
