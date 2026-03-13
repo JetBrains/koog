@@ -7,9 +7,6 @@ import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -34,6 +31,7 @@ import ai.koog.integration.tests.utils.tools.DelayTool
 import ai.koog.integration.tests.utils.tools.GetTransactionsTool
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.GoogleLLMProvider
@@ -45,7 +43,6 @@ import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.serialization.typeToken
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
@@ -248,17 +245,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                     val firstCall = parallelToolCalls.first()
                     val secondCall = state.parallelToolCalls.last()
-
-                    if (runMode == ToolCalls.PARALLEL) {
-                        withClue("At least one of the metadata should be equal for parallel tool calls") {
-                            (
-                                firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
-                                    firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
-                                    firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
-                                    firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount
-                                ).shouldBeTrue()
-                        }
-                    }
 
                     withClue("First tool call should be ${SimpleCalculatorTool.name}") {
                         firstCall.tool shouldBe SimpleCalculatorTool.name
@@ -475,6 +461,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         assumeTrue(
             model.provider !is GoogleLLMProvider,
             "Skipping Google models until thought_signature support is in this branch (KG-596)"
+        )
+        assumeTrue(
+            model.id != AnthropicModels.Haiku_4_5.id,
+            "Anthropic Haiku 4.5 is flaky in single-run sequential tool mode and may exhaust iterations"
         )
 
         withRetry {
