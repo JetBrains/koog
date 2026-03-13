@@ -23,6 +23,8 @@ kotlin {
             dependencies {
                 api(libs.kotlinx.coroutines.jdk9)
                 api(libs.lettuce.core)
+                implementation(project(":agents:agents-utils"))
+                implementation(project(":utils"))
             }
         }
 

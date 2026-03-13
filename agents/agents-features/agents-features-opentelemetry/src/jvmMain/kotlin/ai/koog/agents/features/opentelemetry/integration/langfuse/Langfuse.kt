@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.integration.langfuse
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -7,7 +8,9 @@ import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
+import ai.koog.utils.time.toKotlinDuration
 import kotlin.time.Duration.Companion.seconds
+import java.time.Duration as JavaDuration
 
 /**
  * Configure an OpenTelemetry span exporter that sends data to [Langfuse](https://langfuse.com/).
@@ -57,6 +60,34 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
     )
 
     addSpanAdapter(LangfuseSpanAdapter(traceAttributes, this))
+}
+
+/**
+ * Java-compatible overload of [addLangfuseExporter] that accepts [java.time.Duration] for the timeout parameter.
+ *
+ * @param langfuseUrl the base URL of the Langfuse instance.
+ *        If not set, is retrieved from `LANGFUSE_HOST` environment variable.
+ *        Defaults to [https://cloud.langfuse.com](https://cloud.langfuse.com).
+ * @param langfusePublicKey if not set is retrieved from `LANGFUSE_PUBLIC_KEY` environment variable.
+ * @param langfuseSecretKey if not set is retrieved from `LANGFUSE_SECRET_KEY` environment variable.
+ * @param timeout OpenTelemetry SpanExporter timeout as [java.time.Duration].
+ * @param traceAttributes list of trace-level Langfuse attributes.
+ */
+@JavaAPI
+public fun OpenTelemetryConfig.addLangfuseExporter(
+    langfuseUrl: String?,
+    langfusePublicKey: String?,
+    langfuseSecretKey: String?,
+    timeout: JavaDuration,
+    traceAttributes: List<CustomAttribute> = emptyList()
+) {
+    addLangfuseExporter(
+        langfuseUrl = langfuseUrl,
+        langfusePublicKey = langfusePublicKey,
+        langfuseSecretKey = langfuseSecretKey,
+        timeout = timeout.toKotlinDuration(),
+        traceAttributes = traceAttributes
+    )
 }
 
 private val logger = KotlinLogging.logger { }

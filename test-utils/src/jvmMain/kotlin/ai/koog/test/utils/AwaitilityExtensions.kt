@@ -6,8 +6,8 @@ import org.awaitility.core.ConditionFactory
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.coroutines.ContinuationInterceptor
+import ai.koog.utils.time.toJavaDuration
 import kotlin.time.Duration
-import kotlin.time.toJavaDuration
 
 /**
  * Repeatedly evaluates the given [block] until it does not throw any exceptions.

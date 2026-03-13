@@ -1,5 +1,6 @@
 package ai.koog.prompt.cache.redis
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -12,7 +13,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
+import ai.koog.utils.time.toKotlinDuration
 import kotlin.time.Duration.Companion.seconds
+import java.time.Duration as JavaDuration
 
 /**
  * Redis-based implementation of [PromptCache].
@@ -26,6 +29,18 @@ public class RedisPromptCache(
     private val prefix: String,
     private val ttl: Duration,
 ) : PromptCache {
+
+    /**
+     * Java-compatible constructor that accepts [java.time.Duration] for the TTL parameter.
+     *
+     * @param client The Redis client to use for connecting to Redis
+     * @param prefix The prefix for cache keys
+     * @param ttl The time-to-live for cache entries as [java.time.Duration]
+     */
+    @JavaAPI
+    public constructor(client: RedisClient, prefix: String, ttl: JavaDuration) : this(
+        client, prefix, ttl.toKotlinDuration()
+    )
 
     /**
      * Companion object for the RedisPromptCache class, functioning as a factory for creating

@@ -369,7 +369,7 @@ public sealed interface MessageMetaInfo {
  * Defaults to the current system time if not provided.
  */
 @Serializable
-public data class RequestMetaInfo(
+public data class RequestMetaInfo @JvmOverloads constructor(
     override val timestamp: Instant,
     override val metadata: JsonObject? = null
 ) : MessageMetaInfo {
@@ -414,7 +414,7 @@ public data class RequestMetaInfo(
  * Defaults to the current system time if not explicitly set.
  */
 @Serializable
-public data class ResponseMetaInfo(
+public data class ResponseMetaInfo @JvmOverloads constructor(
     public override val timestamp: Instant,
     public val totalTokensCount: Int? = null,
     public val inputTokensCount: Int? = null,
