@@ -70,7 +70,7 @@ public class MarkdownParserBuilder {
             val lines = markdown.split("\n")
 
             var inCodeBlock = false
-            var codeBlockContent = StringBuilder()
+            val codeBlockContent = StringBuilder()
 
             for (line in lines) {
                 val trimmedLine = line.trim()
