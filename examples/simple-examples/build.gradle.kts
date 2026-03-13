@@ -1,7 +1,14 @@
 plugins {
+    java
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
     id("ai.koog.gradle.plugins.credentialsresolver")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 dependencies {
@@ -137,8 +144,15 @@ registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.Gro
 registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemory.ChatMemoryExampleKt")
 registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
 registerRunExampleTask("runExampleChatMemoryPostgres", "ai.koog.agents.example.chatmemory.ChatMemoryPostgresExampleKt")
-registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.chatmemory.ChatMemoryJdbcExample")
-registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.snapshot.PersistenceJdbcExample")
+
+/*
+Java examples
+*/
+
+registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.java.api.chatmemory.ChatMemoryJdbcExample")
+registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.java.api.snapshot.PersistenceJdbcExample")
+registerRunExampleTask("runExampleBasicSingleRunAgentJava", "ai.koog.agents.example.java.api.simpleapi.BasicSingleRunAgent")
+
 /*
  A2A examples
 */

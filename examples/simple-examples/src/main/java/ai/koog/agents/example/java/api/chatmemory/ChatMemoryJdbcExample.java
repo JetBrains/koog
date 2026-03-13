@@ -1,25 +1,24 @@
-package ai.koog.agents.example.snapshot;
+package ai.koog.agents.example.java.api.chatmemory;
 
+import ai.koog.agents.chatMemory.feature.ChatMemory;
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.features.persistence.jdbc.PostgresJdbcPersistenceStorageProvider;
-import ai.koog.agents.snapshot.feature.Persistence;
+import ai.koog.agents.features.chathistory.jdbc.PostgresJdbcChatHistoryProvider;
+import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProviderJvm;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+import kotlinx.coroutines.BuildersKt;
 
 import javax.sql.DataSource;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
 /**
- * Demonstrates AIAgent with the Persistence feature backed by a pure JDBC PostgreSQL provider.
- *
- * <p>The Persistence feature automatically creates checkpoints after each node execution,
- * allowing the agent to resume from where it left off across restarts.
+ * Demonstrates AIAgent with ChatMemory backed by a pure JDBC PostgreSQL provider.
  *
  * <p>Prerequisites:
  * <ul>
@@ -38,38 +37,47 @@ import java.util.logging.Logger;
  *
  * <p>Type {@code /bye} to exit the chat loop.
  */
-public class PersistenceJdbcExample {
+public class ChatMemoryJdbcExample {
 
     private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/koog";
     private static final String JDBC_USER = "postgres";
     private static final String JDBC_PASSWORD = "postgres";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         String apiKey = System.getenv("OPENAI_API_KEY");
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("OPENAI_API_KEY environment variable is not set");
         }
 
-        PostgresJdbcPersistenceStorageProvider storageProvider = new PostgresJdbcPersistenceStorageProvider(
-            simpleDataSource(JDBC_URL, JDBC_USER, JDBC_PASSWORD)
+        // 1. Set up a simple DataSource wrapping DriverManager
+        DataSource dataSource = simpleDataSource(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+
+        // 2. Create a JDBC-backed chat history provider with 24h TTL
+        PostgresJdbcChatHistoryProvider historyProvider = new PostgresJdbcChatHistoryProvider(
+                dataSource,
+                "chat_history",
+                86_400L // conversations expire after 24 hours
         );
 
-        storageProvider.migrateBlocking();
+        // 3. Run schema migration (creates table + indexes if they don't exist)
+        SQLChatHistoryProviderJvm.migrateBlocking(historyProvider);
 
+        // 4. Build the agent with ChatMemory feature
         AIAgent<String, String> agent = AIAgent.builder()
                 .promptExecutor(new MultiLLMPromptExecutor(new OpenAILLMClient(apiKey)))
                 .llmModel(OpenAIModels.Chat.GPT4o)
                 .systemPrompt("You are a friendly assistant. Keep your answers concise.")
-                .install(Persistence.Feature, config -> {
-                    config.setStorage(storageProvider);
-                    config.setEnableAutomaticPersistence(true);
+                .install(ChatMemory.Feature, config -> {
+                    config.chatHistoryProvider(historyProvider);
+                    config.windowSize(50);
                 })
                 .build();
 
-        System.out.println("Agent with JDBC persistence started (Java example).");
-        System.out.println("Checkpoints are saved to PostgreSQL. Type /bye to quit.\n");
+        // Chat loop
+        System.out.println("Chat with JDBC-backed memory started (Java example).");
+        System.out.println("History persists across restarts. Type /bye to quit.\n");
 
-        String sessionId = "jdbc-persistent-agent";
+        String sessionId = "jdbc-java-conversation";
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -77,6 +85,7 @@ public class PersistenceJdbcExample {
             String input = scanner.nextLine().trim();
             if ("/bye".equals(input)) break;
             if (input.isEmpty()) continue;
+
 
             String reply = agent.run(input, sessionId);
             System.out.println("Assistant: " + reply + "\n");
