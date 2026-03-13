@@ -26,7 +26,6 @@ tasks.withType<JavaCompile>().configureEach {
 }
 dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-clients"))
-    api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-model"))
     implementation(project.dependencies.platform(libs.spring.boot.bom))
     implementation(project.dependencies.platform(libs.spring.ai.bom))

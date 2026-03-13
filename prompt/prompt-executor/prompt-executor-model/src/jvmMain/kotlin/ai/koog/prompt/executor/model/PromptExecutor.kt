@@ -9,7 +9,6 @@ import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.execution.utils.runOnIOBoundDispatcher
-import ai.koog.prompt.executor.llms.ExperimentalRoutingApi
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
