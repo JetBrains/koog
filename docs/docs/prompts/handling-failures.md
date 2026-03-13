@@ -102,12 +102,12 @@ For example:
 
 Koog provides several predefined retry configurations available via `RetryConfig` in Kotlin and `RetryConfig.Companion` in Java:
 
-| Configuration (Kotlin)     | Configuration (Java)                   | Max attempts | Initial delay | Max delay | Use case                                                                                                 |
-|----------------------------|----------------------------------------|--------------|---------------|-----------|----------------------------------------------------------------------------------------------------------|
-| `RetryConfig.DISABLED`     | `RetryConfig.Companion.getDISABLED()`  | 1 (no retry) | -             | -         | Development, testing, and debugging.                                                                     |
-| `RetryConfig.CONSERVATIVE` | `RetryConfig.Companion.getCONSERVATIVE()` | 3            | 2s            | 30s       | Background or scheduled tasks where reliability is more important than speed.                            |
-| `RetryConfig.AGGRESSIVE`   | `RetryConfig.Companion.getAGGRESSIVE()` | 5            | 500ms         | 20s       | Critical operations where fast recovery from transient errors is more important than reducing API calls. |
-| `RetryConfig.PRODUCTION`   | `RetryConfig.Companion.getPRODUCTION()` | 3            | 1s            | 20s       | General production use.                                                                                  |
+| Configuration (Kotlin)     | Max attempts | Initial delay | Max delay | Use case                                                                                                 |
+|----------------------------|--------------|---------------|-----------|----------------------------------------------------------------------------------------------------------|
+| `RetryConfig.DISABLED`     | 1 (no retry) | -             | -         | Development, testing, and debugging.                                                                     |
+| `RetryConfig.CONSERVATIVE` | 3            | 2s            | 30s       | Background or scheduled tasks where reliability is more important than speed.                            |
+| `RetryConfig.AGGRESSIVE`   | 5            | 500ms         | 20s       | Critical operations where fast recovery from transient errors is more important than reducing API calls. |
+| `RetryConfig.PRODUCTION`   | 3            | 1s            | 20s       | General production use.                                                                                  |
 
 You can use them directly or create custom configurations:
 

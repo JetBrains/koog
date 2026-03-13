@@ -43,14 +43,15 @@ Each tool consists of the following components:
 | `execute()`                              | The function that implements the logic of the tool. It takes arguments of type `Args` and returns a result of type `Result`. See also [execute()]().                                                                                                                                                                                                                                                                                  |
 
 !!! note "Java Implementation"
-    In Java, instead of subclassing `Tool<Args, Result>`, use annotation-based methods with `@Tool` and `@LLMDescription`. The framework handles serialization and registration automatically through reflection. See the Java example below.
+    In Java, instead of subclassing `Tool<Args, Result>`, use annotation-based methods with `@Tool` and `@LLMDescription`. The framework handles serialization and registration automatically through reflection. For more
+    details, see [Annotation-based methods](#annotation-based-methods-java) below.
 
 !!! tip
     Ensure your tools have clear descriptions and well-defined parameter names to make it easier for the LLM to understand and use them properly. In Kotlin, use the `descriptor` property; in Java, use `@LLMDescription` annotations.
 
 #### Usage example
 
-Here is an example of a custom tool implementation using the `Tool` class that returns a numeric result, and the equivalent annotation-based approach in Java:
+Here is an example of a custom tool implementation using the `Tool` class that returns a numeric result:
 
 === "Kotlin"
 
@@ -90,43 +91,7 @@ Here is an example of a custom tool implementation using the `Tool` class that r
         override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
     }
     ```
-    <!--- KNIT example-class-based-tools-01.kt --> 
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    // Java equivalent: implement the tool as a Java method and register it via ToolRegistry.builder().
-    // This is the recommended Java interop path instead of subclassing the Kotlin Tool base class.
-    public final class CalculatorTool {
-        private CalculatorTool() {}
-
-        @Tool(customName = "calculator")
-        @LLMDescription(description = "A simple calculator that can add two digits (0-9).")
-        public static int calculator(
-                @LLMDescription(description = "The first digit to add (0-9)") int digit1,
-                @LLMDescription(description = "The second digit to add (0-9)") int digit2
-        ) {
-            if (digit1 < 0 || digit1 > 9) throw new IllegalArgumentException("digit1 must be a single digit (0-9)");
-            if (digit2 < 0 || digit2 > 9) throw new IllegalArgumentException("digit2 must be a single digit (0-9)");
-            return digit1 + digit2;
-        }
-
-        public static ToolRegistry registry() throws NoSuchMethodException {
-            return ToolRegistry.builder()
-                .tool(CalculatorTool.class.getMethod("calculator", int.class, int.class))
-                .build();
-        }
-    }
-    // Note: Subclassing the Kotlin Tool<TArgs, TResult> and overriding a suspend execute(...) from Java is not supported.
-    // The Java interop uses reflection-based registration of Java methods as tools.
-    ```
-    <!--- KNIT example-class-based-tools-java-01.java -->
+    <!--- KNIT example-class-based-tools-01.kt -->
 
 After implementing your tool, you need to add it to a tool registry and then use it with an agent. For details, see [Tool registry](tools-overview.md#tool-registry).
 
@@ -146,14 +111,14 @@ Each simple tool consists of the following components:
 | `doExecute()`                            | The overridden function that describes the main action performed by the tool. It takes arguments of type `Args` and returns a `String`. See also [doExecute()](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-simple-tool/do-execute.html).                                          |
 
 !!! note "Java Implementation"
-    In Java, the equivalent approach is to use annotation-based methods that return `String`. The framework automatically handles the text result wrapping. See the Java example below for the idiomatic approach.
+    In Java, the equivalent approach is to use annotation-based methods that return `String`. The framework automatically handles the text result wrapping. For more details, see [Annotation-based methods](#annotation-based-methods-java) below.
 
 !!! tip
     Ensure your tools have clear descriptions and well-defined parameter names to make it easier for the LLM to understand and use them properly. In Kotlin, use the `descriptor` and constructor parameters; in Java, use `@Tool` and `@LLMDescription` annotations.
 
 #### Usage example 
 
-Here is an example of a custom tool implementation using `SimpleTool` in Kotlin and the equivalent annotation-based method in Java:
+Here is an example of a custom tool implementation using `SimpleTool` in Kotlin:
 
 === "Kotlin"
 
@@ -190,7 +155,56 @@ Here is an example of a custom tool implementation using `SimpleTool` in Kotlin 
         }
     }
     ```
-    <!--- KNIT example-class-based-tools-02.kt --> 
+    <!--- KNIT example-class-based-tools-02.kt -->
+
+### Annotation-based methods (Java)
+
+To implement tools in Java, instead of subclassing `Tool` or `SimpleTool`, use annotation-based methods with `@Tool` and
+`@LLMDescription`. Koog handles serialization and registration automatically through reflection. To learn more about the
+implementation, see Java examples below.
+
+#### Usage examples
+
+This is an example of a tool implementation in Java, equivalent to using the `Tool` class in Kotlin.
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // Java equivalent: implement the tool as a Java method and register it via ToolRegistry.builder().
+    // This is the recommended Java interop path instead of subclassing the Kotlin Tool base class.
+    public final class CalculatorTool {
+        private CalculatorTool() {}
+    
+        @Tool(customName = "calculator")
+        @LLMDescription(description = "A simple calculator that can add two digits (0-9).")
+        public static int calculator(
+                @LLMDescription(description = "The first digit to add (0-9)") int digit1,
+                @LLMDescription(description = "The second digit to add (0-9)") int digit2
+        ) {
+            if (digit1 < 0 || digit1 > 9) throw new IllegalArgumentException("digit1 must be a single digit (0-9)");
+            if (digit2 < 0 || digit2 > 9) throw new IllegalArgumentException("digit2 must be a single digit (0-9)");
+            return digit1 + digit2;
+        }
+    
+        public static ToolRegistry registry() throws NoSuchMethodException {
+            return ToolRegistry.builder()
+                .tool(CalculatorTool.class.getMethod("calculator", int.class, int.class))
+                .build();
+        }
+    }
+    // Note: Subclassing the Kotlin Tool<TArgs, TResult> and overriding a suspend execute(...) from Java is not supported.
+    // The Java interop uses reflection-based registration of Java methods as tools.
+    ```
+    <!--- KNIT example-class-based-tools-java-01.java -->
+
+Here is an example of a tool implementation in Java, equivalent to using the `SimpleTool` class in Kotlin. This example
+implements a simple tool that returns a text result.
 
 === "Java"
 
@@ -204,7 +218,7 @@ Here is an example of a custom tool implementation using `SimpleTool` in Kotlin 
     // Java equivalent of SimpleTool: provide a Java method and register it as a tool.
     public final class CastToDoubleTool {
         private CastToDoubleTool() {}
-
+    
         @Tool(customName = "cast_to_double")
         @LLMDescription(description = "casts the passed expression to double or returns 0.0 if the expression is not castable")
         public static String castToDouble(
@@ -219,7 +233,7 @@ Here is an example of a custom tool implementation using `SimpleTool` in Kotlin 
             }
             return "Result: " + value + ", the comment was: " + comment;
         }
-
+    
         public static ToolRegistry registry() throws NoSuchMethodException {
             return ToolRegistry.builder()
                 .tool(CastToDoubleTool.class.getMethod("castToDouble", String.class, String.class))
