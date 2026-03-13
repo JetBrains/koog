@@ -312,6 +312,10 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
     override fun integration_testReasoningMultiStep(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.OpenAI,
+            "KG-733 [Java API] OpenAILLMClient error: 'reasoning' is provided without its required following item"
+        )
         super.integration_testReasoningMultiStep(model)
     }
 

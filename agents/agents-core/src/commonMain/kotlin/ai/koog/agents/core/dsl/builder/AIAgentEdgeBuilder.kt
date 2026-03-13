@@ -5,7 +5,6 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.Option
 
 /**

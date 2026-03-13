@@ -84,6 +84,14 @@ tasks.withType<Test>()
         }
     }
 
+kover {
+    currentProject {
+        instrumentation {
+            disabledForTestTasks.addAll("jvmIntegrationTest", "jvmOllamaTest")
+        }
+    }
+}
+
 dokka {
     dokkaSourceSets.configureEach {
         suppress.set(true)

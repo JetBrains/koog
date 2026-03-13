@@ -50,7 +50,6 @@ import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
 import kotlin.reflect.safeCast
 import kotlin.time.Clock
 

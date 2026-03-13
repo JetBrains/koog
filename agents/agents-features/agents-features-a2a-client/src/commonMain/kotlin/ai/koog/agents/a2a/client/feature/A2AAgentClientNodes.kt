@@ -14,7 +14,6 @@ import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.Response
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.node
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable

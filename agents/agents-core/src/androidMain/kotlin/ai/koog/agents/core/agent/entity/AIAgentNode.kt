@@ -1,7 +1,6 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import kotlin.reflect.KType
 
 /**
  * Represents a simple implementation of an AI agent node, encapsulating a specific execution

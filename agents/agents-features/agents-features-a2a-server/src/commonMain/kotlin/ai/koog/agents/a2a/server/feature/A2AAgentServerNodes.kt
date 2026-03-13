@@ -5,7 +5,6 @@ import ai.koog.a2a.model.TaskEvent
 import ai.koog.agents.a2a.core.A2AMessage
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.node
 import kotlinx.serialization.Serializable
 

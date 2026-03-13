@@ -19,7 +19,8 @@ object Models {
         return Stream.of(
             OpenAIModels.Chat.GPT5_2, // reasoning
             OpenAIModels.Chat.GPT4_1, // non-reasoning
-            OpenAIModels.Chat.GPT5_1Codex
+            // KG-726 Responses from several OpenAI models are completing without receiving an End frame
+            // OpenAIModels.Chat.GPT5_1Codex
         )
     }
 
@@ -105,8 +106,9 @@ object Models {
     @JvmStatic
     fun reasoningCapableModels(): Stream<LLModel> {
         return Stream.of(
-            // Replaced 5.2 with 5.1-Codex because of the unstable 5.2 behaviour, see KG-625
-            OpenAIModels.Chat.GPT5_1Codex,
+            // KG-733 [Java API] OpenAILLMClient error: 'reasoning' is provided without its required following item
+            // GPT-5.1-Codex,
+            OpenAIModels.Chat.GPT5_2,
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini3_Pro_Preview,
@@ -116,7 +118,6 @@ object Models {
     @JvmStatic
     fun openAIReasoningModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT5_1Codex,
             OpenAIModels.Chat.GPT5_2,
         )
     }

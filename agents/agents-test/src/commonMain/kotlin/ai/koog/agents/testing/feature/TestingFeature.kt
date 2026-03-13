@@ -40,7 +40,6 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
 import org.jetbrains.annotations.TestOnly
-import kotlin.reflect.KType
 import kotlin.time.Clock
 
 /**

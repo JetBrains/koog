@@ -21,7 +21,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
-import ai.koog.serialization.TypeCapture
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
 import io.ktor.utils.io.core.Output
@@ -46,7 +45,6 @@ public class AIAgentNodeBuilder(
      */
     public fun <Input : Any> withInput(clazz: Class<Input>): AIAgentNodeBuilderWithInput<Input> =
         AIAgentNodeBuilderWithInput(name, TypeToken.of(clazz))
-
 
     /**
      * Configures the builder to use the specified input type for constructing an [AIAgentNode].
@@ -159,7 +157,6 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
             llmCompressHistoryImpl(input, retrievalModel, strategy, preserveMemory)
         }
 }
-
 
 /**
  * A Java builder class for creating [AIAgentNode] with a specified input type.

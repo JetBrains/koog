@@ -7,7 +7,8 @@ import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -39,6 +40,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.serialization.TypeToken
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -583,7 +585,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         agentContext = agentContext,
                         nodePath = save,
                         lastOutput = input,
-                        lastOutputType = typeOf<String>(),
+                        lastOutputType = typeOf<String>() as TypeToken,
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }
@@ -692,7 +694,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         agentContext = agentContext,
                         nodePath = save,
                         lastOutput = input,
-                        lastOutputType = typeOf<String>(),
+                        lastOutputType = typeOf<String>() as TypeToken,
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }
@@ -871,7 +873,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         agentContext = agentContext,
                         nodePath = bye,
                         lastOutput = input,
-                        lastOutputType = typeOf<String>(),
+                        lastOutputType = typeOf<String>() as TypeToken,
                         version = parent?.version?.plus(1) ?: 0
                     )
                 }

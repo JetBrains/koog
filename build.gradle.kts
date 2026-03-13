@@ -5,6 +5,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
@@ -119,11 +120,18 @@ subprojects {
     }
 
     tasks.withType<Test> {
+        executable = java.io.File(System.getProperty("java.home"), "bin/java").absolutePath
         testLogging {
             showStandardStreams = true
             showExceptions = true
             exceptionFormat = FULL
         }
+        // Work around Kover/CLDR bootstrap crashes when the worker JVM resolves locale classes
+        // from a newer runtime than the configured toolchain.
+        systemProperty(
+            "java.locale.providers",
+            System.getProperty("java.locale.providers") ?: "COMPAT,SPI"
+        )
         environment.putAll(
             mapOf(
                 "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),

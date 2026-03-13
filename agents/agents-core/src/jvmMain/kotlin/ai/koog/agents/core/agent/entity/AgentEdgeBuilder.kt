@@ -75,7 +75,6 @@ public open class PartialAgentEdgeBuilder<IncomingInput, IncomingOutput>(
         forwardOutputComposition = { _, output -> Some(output) }
     )
 
-
     /**
      * Creates a directed edge from the current node to the specified node, enabling the flow of
      * data between them in the AI agent strategy graph. This method connects the current node's
@@ -135,7 +134,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     public open fun onCondition(
         condition: ContextualCondition<IntermediateOutput>
     ): FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, OutgoingInput> = FullAgentEdgeBuilder(
-        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+        fromNode,
+        toNode,
+        forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
                 ctx.config.submitToMainDispatcher {
                     filter { transOutput ->
@@ -161,7 +162,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     public open fun onCondition(
         condition: SimpleCondition<IntermediateOutput>
     ): FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, OutgoingInput> = FullAgentEdgeBuilder(
-        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+        fromNode,
+        toNode,
+        forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
                 ctx.config.submitToMainDispatcher {
                     filter { transOutput ->
@@ -171,7 +174,6 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
             }
         }
     )
-
 
     /**
      * Transforms the intermediate output of the [AIAgentNode] by applying a given transformation block.
@@ -184,7 +186,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     public fun <CompatibleOutput : OutgoingInput> transformed(
         transformation: ContextualTransformation<IntermediateOutput, CompatibleOutput>
     ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> = CompatibleFullAgentEdgeBuilder(
-        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+        fromNode,
+        toNode,
+        forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
                 ctx.config.submitToMainDispatcher {
                     map { transformation.invoke(it, ctx) }
@@ -204,7 +208,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     public fun <CompatibleOutput : OutgoingInput> transformed(
         transformation: SimpleTransformation<IntermediateOutput, CompatibleOutput>
     ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> = CompatibleFullAgentEdgeBuilder(
-        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+        fromNode,
+        toNode,
+        forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
                 ctx.config.submitToMainDispatcher {
                     map { transformation.invoke(it) }
@@ -224,7 +230,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     public fun <TransformedOutput> transformed(
         transformation: ContextualTransformation<IntermediateOutput, TransformedOutput>
     ): FullAgentEdgeBuilder<IncomingOutput, TransformedOutput, OutgoingInput> = FullAgentEdgeBuilder(
-        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+        fromNode,
+        toNode,
+        forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
                 ctx.config.submitToMainDispatcher {
                     map { transformation.invoke(it, ctx) }
@@ -244,7 +252,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     public fun <TransformedOutput> transformed(
         transformation: SimpleTransformation<IntermediateOutput, TransformedOutput>
     ): FullAgentEdgeBuilder<IncomingOutput, TransformedOutput, OutgoingInput> = FullAgentEdgeBuilder(
-        fromNode, toNode, forwardOutputComposition = { ctx, output ->
+        fromNode,
+        toNode,
+        forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
                 ctx.config.submitToMainDispatcher {
                     map { transformation.invoke(it) }

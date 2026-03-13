@@ -288,7 +288,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
 @InternalAgentsApi
-public fun <Input: Any, OutputTransformed: Any> subgraphWithTask(
+public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
     inputType: TypeToken,
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: Tool<*, OutputTransformed>,

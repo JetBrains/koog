@@ -51,7 +51,6 @@ import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.reflect.KType
 
 /**
  * Represents the OpenTelemetry integration feature for tracking and managing spans and contexts

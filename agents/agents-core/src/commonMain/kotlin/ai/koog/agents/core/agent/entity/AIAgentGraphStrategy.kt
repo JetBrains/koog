@@ -30,7 +30,7 @@ public expect class AIAgentGraphStrategy<TInput, TOutput>(
     nodeFinish: FinishNode<TOutput>,
     toolSelectionStrategy: ToolSelectionStrategy,
     serializer: Json = Json { prettyPrint = true }
-): AIAgentGraphStrategyBase<TInput, TOutput>
+) : AIAgentGraphStrategyBase<TInput, TOutput>
 
 /**
  * Base class for [AIAgentStrategy].

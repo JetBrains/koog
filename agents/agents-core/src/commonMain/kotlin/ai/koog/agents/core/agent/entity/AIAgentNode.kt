@@ -153,7 +153,6 @@ public abstract class AIAgentNodeBase<in TInput, TOutput> internal constructor()
     }
 }
 
-
 /**
  * Represents a simple implementation of an AI agent node within a graph-based structure.
  *

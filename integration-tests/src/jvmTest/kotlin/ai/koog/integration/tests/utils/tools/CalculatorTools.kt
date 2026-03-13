@@ -8,12 +8,20 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.JsonNames
 
 @Serializable
 enum class CalculatorOperation {
+    @JsonNames("add")
     ADD,
+
+    @JsonNames("subtract")
     SUBTRACT,
+
+    @JsonNames("multiply")
     MULTIPLY,
+
+    @JsonNames("divide")
     DIVIDE
 }
 

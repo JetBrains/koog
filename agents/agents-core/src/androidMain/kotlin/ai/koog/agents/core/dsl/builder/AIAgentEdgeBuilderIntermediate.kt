@@ -24,7 +24,7 @@ import ai.koog.agents.core.utils.Option
  * or filtering the flow based on specific conditions.
  */
 @EdgeTransformationDslMarker
-public actual open class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> actual internal constructor(
+public actual open class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal actual constructor(
     fromNode: AIAgentNodeBase<*, IncomingOutput>,
     toNode: AIAgentNodeBase<OutgoingInput, *>,
     forwardOutputComposition: suspend (AIAgentGraphContextBase, IncomingOutput) -> Option<IntermediateOutput>

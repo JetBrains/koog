@@ -40,7 +40,6 @@ import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.KType
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.

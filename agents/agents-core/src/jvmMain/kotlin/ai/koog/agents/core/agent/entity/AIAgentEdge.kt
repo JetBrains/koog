@@ -4,7 +4,6 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilder
 import ai.koog.agents.core.utils.Option
 
 /**

@@ -9,7 +9,6 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException

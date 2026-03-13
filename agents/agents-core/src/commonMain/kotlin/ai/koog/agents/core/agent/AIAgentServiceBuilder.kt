@@ -20,7 +20,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.TypeToken
-import kotlin.reflect.KType
 import kotlin.time.Clock
 
 /**

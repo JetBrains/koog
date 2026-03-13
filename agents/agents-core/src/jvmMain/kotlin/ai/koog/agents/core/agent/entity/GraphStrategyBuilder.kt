@@ -10,7 +10,6 @@ import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import kotlin.reflect.KClass
 import kotlin.reflect.full.defaultType
@@ -165,7 +164,7 @@ public class TypedGraphStrategyBuilder<Input : Any, Output : Any>(
      * @param to The destination node of the edge. This node receives input data from the source node.
      * @return An instance of [TypedGraphStrategyBuilder] with the specified edge added to the strategy.
      */
-    public fun <OutgoingInput, CompatibleOutput: OutgoingInput> edge(
+    public fun <OutgoingInput, CompatibleOutput : OutgoingInput> edge(
         from: AIAgentNodeBase<*, CompatibleOutput>,
         to: AIAgentNodeBase<OutgoingInput, *>,
     ): TypedGraphStrategyBuilder<Input, Output> = edge(

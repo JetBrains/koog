@@ -13,7 +13,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.typeToken
-import kotlin.reflect.typeOf
 
 @PublishedApi
 internal object AIAgentServiceHelper {

@@ -13,7 +13,6 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
-import kotlin.reflect.KType
 
 /**
  * Context for merging parallel node execution results.

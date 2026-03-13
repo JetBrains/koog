@@ -490,7 +490,6 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
             return node
         }
 
-
         /**
          * A node that sends multiple tool execution results to the LLM and gets multiple LLM choices.
          *

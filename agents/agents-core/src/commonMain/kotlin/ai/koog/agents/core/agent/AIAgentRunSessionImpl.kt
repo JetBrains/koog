@@ -12,7 +12,6 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.runCatchingCancellable
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KLogger
-import kotlin.reflect.typeOf
 
 /**
  * Internal implementation of [AIAgentRunSession] that manages the execution lifecycle of an AI agent.

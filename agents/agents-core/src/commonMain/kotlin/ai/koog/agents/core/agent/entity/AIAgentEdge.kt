@@ -34,7 +34,6 @@ public expect class AIAgentEdge<IncomingOutput, OutgoingInput> internal construc
 
     internal val forwardOutput: suspend (context: AIAgentGraphContextBase, output: IncomingOutput) -> Option<OutgoingInput>
 
-
     @Suppress("UNCHECKED_CAST")
     internal suspend fun forwardOutputUnsafe(output: Any?, context: AIAgentGraphContextBase): Option<OutgoingInput>
 }

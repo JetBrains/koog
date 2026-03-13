@@ -28,7 +28,6 @@ import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
 /**

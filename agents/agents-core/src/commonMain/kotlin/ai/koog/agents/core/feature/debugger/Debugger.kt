@@ -48,7 +48,6 @@ import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
-import kotlin.reflect.KType
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
