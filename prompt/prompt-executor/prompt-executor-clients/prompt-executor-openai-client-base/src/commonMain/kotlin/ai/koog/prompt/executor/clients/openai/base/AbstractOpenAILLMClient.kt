@@ -423,7 +423,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         finishReason: String?,
         metaInfo: ResponseMetaInfo
     ): Message.Assistant? =
-        if (content != null) {
+        if (content != null && content.text().isNotEmpty()) {
             Message.Assistant(
                 content = this.content.text(),
                 finishReason = finishReason,
