@@ -98,11 +98,9 @@ class OpenRouterSerializationTest {
                 ],
                 "model": "anthropic/claude-3-sonnet",
                 "temperature": 0.7,
-                "additional_properties": {
-                    "customProperty": "customValue",
-                    "customNumber": 42,
-                    "customBoolean": true
-                }
+                "customProperty": "customValue",
+                "customNumber": 42,
+                "customBoolean": true
             }
             """.trimIndent()
     }
@@ -158,15 +156,11 @@ class OpenRouterSerializationTest {
         // Verify basic deserialization works
         request.model shouldBe "anthropic/claude-3-sonnet"
         request.temperature shouldBe 0.7
-
-        // Note: Additional properties functionality is currently broken with JsonNamingStrategy.SnakeCase
-        // due to AdditionalPropertiesFlatteningSerializer bug:
-        // KG-531 OpenRouter's AdditionalPropertiesFlatteningSerializer is incompatible with JsonNamingStrategy.SnakeCase
-        // In lenient mode, unknown properties
-        // are ignored instead of collected.
-        //
-        // The test passes because ignoreUnknownKeys = true, but additional properties are not captured
-        request.additionalProperties shouldBe null
+        request.additionalProperties shouldBe mapOf(
+            "extra" to JsonPrimitive("value"),
+            "number" to JsonPrimitive(42),
+            "flag" to JsonPrimitive(true)
+        )
     }
 
     @Test
@@ -645,9 +639,7 @@ class OpenRouterSerializationTest {
                     }
                 },
                 "user": "user-123",
-                "additional_properties": {
-                    "x-extra": "ok"
-                }
+                "x-extra": "ok"
             }
             """.trimIndent()
     }
