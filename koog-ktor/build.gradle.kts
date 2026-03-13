@@ -28,9 +28,8 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(project(":test-utils"))
                 implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.ktor.server.test.host)
             }
         }
@@ -51,7 +50,6 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.server.config.yaml)
             }

@@ -9,6 +9,10 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
+import io.kotest.assertions.withClue
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +22,7 @@ import kotlin.test.assertNull
 class ModelIdentifierParsingTest {
     // OpenAI model identifier tests
     @Test
-    fun testOpenAIChatModels() = runTest {
+    fun testOpenAIChatModels() {
         // Test GPT-4o
         val gpt4o = getModelFromIdentifier("openai.chat.gpt4o")
         assertNotNull(gpt4o)
@@ -205,84 +209,43 @@ class ModelIdentifierParsingTest {
 
     // Anthropic model identifier tests
     @Test
-    fun testAnthropicModels() = runTest {
-        // Test Opus 4
-        val opus4 = getModelFromIdentifier("anthropic.opus_4")
-        assertNotNull(opus4)
-        assertEquals(LLMProvider.Anthropic, opus4.provider)
-        assertEquals(AnthropicModels.Opus_4, opus4)
-
-        // Test Opus 4.1
-        val opus4_1 = getModelFromIdentifier("anthropic.opus_4_1")
-        assertNotNull(opus4_1)
-        assertEquals(LLMProvider.Anthropic, opus4_1.provider)
-        assertEquals(AnthropicModels.Opus_4_1, opus4_1)
-
-        // Test Opus 4.5
-        val opus4_5 = getModelFromIdentifier("anthropic.opus_4_5")
-        assertNotNull(opus4_5)
-        assertEquals(LLMProvider.Anthropic, opus4_5.provider)
-        assertEquals(AnthropicModels.Opus_4_5, opus4_5)
-
-        // Test Opus 4.6
-        val opus4_6 = getModelFromIdentifier("anthropic.opus_4_6")
-        assertNotNull(opus4_6)
-        assertEquals(LLMProvider.Anthropic, opus4_6.provider)
-        assertEquals(AnthropicModels.Opus_4_6, opus4_6)
-
-        // Test Haiku 3
-        val haiku3 = getModelFromIdentifier("anthropic.haiku_3")
-        assertNotNull(haiku3)
-        assertEquals(LLMProvider.Anthropic, haiku3.provider)
-        assertEquals(AnthropicModels.Haiku_3, haiku3)
-
-        // Test Haiku 4.5
-        val haiku4_5 = getModelFromIdentifier("anthropic.haiku_4_5")
-        assertNotNull(haiku4_5)
-        assertEquals(LLMProvider.Anthropic, haiku4_5.provider)
-        assertEquals(AnthropicModels.Haiku_4_5, haiku4_5)
-
-        // Test Sonnet 4
-        val sonnet4 = getModelFromIdentifier("anthropic.sonnet_4")
-        assertNotNull(sonnet4)
-        assertEquals(LLMProvider.Anthropic, sonnet4.provider)
-        assertEquals(AnthropicModels.Sonnet_4, sonnet4)
-
-        // Test Sonnet 4.5
-        val sonnet4_5 = getModelFromIdentifier("anthropic.sonnet_4_5")
-        assertNotNull(sonnet4_5)
-        assertEquals(LLMProvider.Anthropic, sonnet4_5.provider)
-        assertEquals(AnthropicModels.Sonnet_4_5, sonnet4_5)
-    }
+    fun testAnthropicModels() = verifyModels(
+        LLMProvider.Anthropic,
+        mapOf(
+            "anthropic.opus_4" to AnthropicModels.Opus_4,
+            "anthropic.opus_4_1" to AnthropicModels.Opus_4_1,
+            "anthropic.opus_4_5" to AnthropicModels.Opus_4_5,
+            "anthropic.opus_4_6" to AnthropicModels.Opus_4_6,
+            "anthropic.haiku_3" to AnthropicModels.Haiku_3,
+            "anthropic.haiku_4_5" to AnthropicModels.Haiku_4_5,
+            "anthropic.sonnet_4" to AnthropicModels.Sonnet_4,
+            "anthropic.sonnet_4_5" to AnthropicModels.Sonnet_4_5,
+        )
+    )
 
     // Google model identifier tests
     @Test
-    fun testGoogleModels() = runTest {
-        // Test Gemini 2.0 Flash
-        val gemini20Flash = getModelFromIdentifier("google.gemini2_0flash")
-        assertNotNull(gemini20Flash)
-        assertEquals(LLMProvider.Google, gemini20Flash.provider)
-        assertEquals(GoogleModels.Gemini2_0Flash, gemini20Flash)
+    fun testGoogleModels() = verifyModels(
+        LLMProvider.Google,
+        mapOf(
+            "google.gemini2_0flash" to GoogleModels.Gemini2_0Flash,
+            "google.gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
+            "google.gemini2_5pro" to GoogleModels.Gemini2_5Pro,
+            "google.gemini3flashpreview" to GoogleModels.Gemini3_Flash_Preview,
+            "google.gemini3propreview" to GoogleModels.Gemini3_Pro_Preview,
+            "google.gemini_embedding001" to GoogleModels.Embeddings.GeminiEmbedding001,
+        )
+    )
 
-        val gemini25Pro = getModelFromIdentifier("google.gemini2_5pro")
-        assertNotNull(gemini25Pro)
-        assertEquals(LLMProvider.Google, gemini25Pro.provider)
-        assertEquals(GoogleModels.Gemini2_5Pro, gemini25Pro)
-
-        val gemini25FlashLite = getModelFromIdentifier("google.gemini2_5flashlite")
-        assertNotNull(gemini25FlashLite)
-        assertEquals(LLMProvider.Google, gemini25FlashLite.provider)
-        assertEquals(GoogleModels.Gemini2_5FlashLite, gemini25FlashLite)
-
-        val gemini3ProPreview = getModelFromIdentifier("google.gemini3propreview")
-        assertNotNull(gemini3ProPreview)
-        assertEquals(LLMProvider.Google, gemini3ProPreview.provider)
-        assertEquals(GoogleModels.Gemini3_Pro_Preview, gemini3ProPreview)
-
-        val geminiEmbedding001 = getModelFromIdentifier("google.gemini_embedding001")
-        assertNotNull(geminiEmbedding001)
-        assertEquals(LLMProvider.Google, geminiEmbedding001.provider)
-        assertEquals(GoogleModels.Embeddings.GeminiEmbedding001, geminiEmbedding001)
+    private fun verifyModels(provider: LLMProvider, models: Map<String, LLModel>) {
+        models.forEach { (id, expectedModel) ->
+            withClue("model: $id should be $expectedModel ($provider)") {
+                getModelFromIdentifier(id) shouldNotBeNull {
+                    this.provider shouldBe provider
+                    this shouldBe expectedModel
+                }
+            }
+        }
     }
 
     // MistralAI model identifier tests

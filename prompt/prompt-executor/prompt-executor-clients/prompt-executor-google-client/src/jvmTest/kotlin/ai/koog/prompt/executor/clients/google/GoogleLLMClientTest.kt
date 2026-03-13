@@ -516,7 +516,7 @@ class GoogleLLMClientTest {
         val thoughtContent = request.contents[1]
         thoughtContent.role shouldBe "model"
         thoughtContent.parts!!.single().shouldBeInstanceOf<GooglePart.Text>()
-        val textPart = thoughtContent.parts!!.single() as GooglePart.Text
+        val textPart = thoughtContent.parts.single() as GooglePart.Text
         textPart.text shouldBe "Previous thought"
         textPart.thought shouldBe true
         textPart.thoughtSignature shouldBe "prev-sig"

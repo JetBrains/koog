@@ -13,7 +13,8 @@ object SupportedGoogleModels {
         GoogleModels.Gemini2_5Pro,
         GoogleModels.Gemini2_5Flash,
         GoogleModels.Gemini2_5FlashLite,
-        GoogleModels.Gemini3_Pro_Preview
+        GoogleModels.Gemini3_Pro_Preview,
+        GoogleModels.Gemini3_Flash_Preview,
     )
     private val LLM_MODEL_BY_ID: Map<String, LLModel> = GOOGLE_MODELS.associateBy { it.id }
 
