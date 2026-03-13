@@ -16,7 +16,6 @@ kotlin {
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-structure"))
                 api(project(":prompt:prompt-llm"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.oshai.kotlin.logging)
             }
@@ -25,6 +24,18 @@ kotlin {
         jvmMain {
             dependencies {
                 api(libs.kotlinx.coroutines.jdk9)
+                api(project(":prompt:prompt-executor:prompt-executor-clients"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
+
+                implementation(libs.ktor.client.cio)
             }
         }
 

@@ -124,7 +124,7 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
     public companion object {
 
         /**
-         * Creates an [InitialPromptExecutorBuilder] for constructing a [PromptExecutor].
+         * Creates an [PromptExecutorBuilder] for constructing a [PromptExecutor].
          *
          * The concrete executor implementation is chosen automatically at build time based on
          * the registered clients — see [PromptExecutorBuilder.build] for the selection heuristic.
@@ -137,54 +137,10 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
          *     .build();
          * ```
          *
-         * @return A new [InitialMultiLLMPromptExecutorBuilder] instance.
+         * @return A new [PromptExecutorBuilder] instance.
          */
         @JvmStatic
         @JavaAPI
-        public fun builder(): InitialMultiLLMPromptExecutorBuilder = multiExecutorBuilder()
-
-        /**
-         * Creates an [InitialMultiLLMPromptExecutorBuilder] for constructing a [ai.koog.prompt.executor.llms.MultiLLMPromptExecutor].
-         *
-         * Use this when each LLM provider has exactly one client. If multiple clients are registered
-         * for the same provider, the last one wins.
-         *
-         * Example usage in Java:
-         * ```java
-         * PromptExecutor executor = PromptExecutor.multiExecutorBuilder()
-         *     .addClient(openAIClient)
-         *     .addClient(anthropicClient)
-         *     .build();
-         * ```
-         *
-         * @return A new [InitialMultiLLMPromptExecutorBuilder] instance.
-         */
-        @JvmStatic
-        @JavaAPI
-        public fun multiExecutorBuilder(): InitialMultiLLMPromptExecutorBuilder =
-            InitialMultiLLMPromptExecutorBuilder()
-
-        /**
-         * Creates an [InitialRoutingPromptExecutorBuilder] for constructing a [ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor].
-         *
-         * Use this when you want to register multiple clients per provider for load balancing.
-         * Requests are distributed across all clients registered for the same provider.
-         *
-         * Example usage in Java:
-         * ```java
-         * PromptExecutor executor = PromptExecutor.routingExecutorBuilder()
-         *     .addClient(openAIClientPrimary)
-         *     .addClient(openAIClientSecondary)
-         *     .addClient(anthropicClient)
-         *     .build();
-         * ```
-         *
-         * @return A new [InitialRoutingPromptExecutorBuilder] instance.
-         */
-        @JvmStatic
-        @JavaAPI
-        @ExperimentalRoutingApi
-        public fun routingExecutorBuilder(): InitialRoutingPromptExecutorBuilder =
-            InitialRoutingPromptExecutorBuilder()
+        public fun builder(): PromptExecutorBuilder = PromptExecutorBuilder()
     }
 }
