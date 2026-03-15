@@ -6,9 +6,10 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.jackson.JacksonSerializer
 import java.util.concurrent.ExecutorService
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
 public actual class AIAgentConfig actual constructor(
     public actual override val prompt: Prompt,
     public actual override val model: LLModel,
@@ -45,8 +46,9 @@ public actual class AIAgentConfig actual constructor(
         llmRequestExecutorService: ExecutorService? = null,
         missingToolsConversionStrategy: MissingToolsConversionStrategy =
             MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
-        responseProcessor: ResponseProcessor? = null
-    ) : this(prompt, model, maxAgentIterations, missingToolsConversionStrategy, responseProcessor) {
+        responseProcessor: ResponseProcessor? = null,
+        serializer: JSONSerializer = JacksonSerializer()
+    ) : this(prompt, model, maxAgentIterations, missingToolsConversionStrategy, responseProcessor, serializer) {
         this.strategyExecutorService = agentStrategyExecutorService
         this.llmRequestExecutorService = llmRequestExecutorService
     }
@@ -109,7 +111,8 @@ public actual class AIAgentConfig actual constructor(
             public var missingToolsConversionStrategy: MissingToolsConversionStrategy? = null,
             public var responseProcessor: ResponseProcessor? = null,
             internal var strategyExecutorService: ExecutorService? = null,
-            internal var llmRequestExecutorService: ExecutorService? = null
+            internal var llmRequestExecutorService: ExecutorService? = null,
+            internal var serializer: JSONSerializer = JacksonSerializer()
         ) {
             /**
              * Sets the prompt configuration for the AI agent.
@@ -167,6 +170,9 @@ public actual class AIAgentConfig actual constructor(
             public fun llmRequestExecutorService(executor: ExecutorService?): AIAgentConfigBuilder =
                 apply { this.llmRequestExecutorService = executor }
 
+            public fun serializer(serializer: JSONSerializer): AIAgentConfigBuilder =
+                apply { this.serializer = serializer }
+
             /**
              * Constructs and returns an instance of [AIAgentConfig] using the values configured
              * in the builder. The method validates that all required fields are provided and assigns
@@ -182,7 +188,8 @@ public actual class AIAgentConfig actual constructor(
                     ?: MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
                 responseProcessor = responseProcessor,
                 agentStrategyExecutorService = strategyExecutorService,
-                llmRequestExecutorService = llmRequestExecutorService
+                llmRequestExecutorService = llmRequestExecutorService,
+                serializer = serializer
             )
         }
     }

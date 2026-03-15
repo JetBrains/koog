@@ -24,7 +24,7 @@ import kotlin.reflect.jvm.javaType
 public class JacksonSerializer(
     objectMapper: ObjectMapper = ObjectMapper(),
 ) : JSONSerializer {
-    public val objectMapper: ObjectMapper = objectMapper
+    private val objectMapper: ObjectMapper = objectMapper
         .copy()
         // Register JSONElementModule to handle JSONElement serialization/deserialization
         .registerModule(JSONElementModule())
