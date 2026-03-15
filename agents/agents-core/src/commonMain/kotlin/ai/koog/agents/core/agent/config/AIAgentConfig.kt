@@ -116,3 +116,19 @@ public expect class AIAgentConfig(
         ): AIAgentConfig
     }
 }
+
+internal fun AIAgentConfig.copy(
+    prompt: Prompt = this.prompt,
+    model: LLModel = this.model,
+    maxAgentIterations: Int = this.maxAgentIterations,
+    missingToolsConversionStrategy: MissingToolsConversionStrategy = this.missingToolsConversionStrategy,
+    responseProcessor: ResponseProcessor? = this.responseProcessor,
+    serializer: JSONSerializer = this.serializer
+): AIAgentConfig = AIAgentConfig(
+    prompt = prompt,
+    model = model,
+    maxAgentIterations = this.maxAgentIterations,
+    missingToolsConversionStrategy = missingToolsConversionStrategy,
+    responseProcessor = responseProcessor,
+    serializer = serializer
+)

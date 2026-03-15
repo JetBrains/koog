@@ -115,6 +115,15 @@ public actual class AIAgentConfig actual constructor(
             internal var serializer: JSONSerializer = JacksonSerializer()
         ) {
             /**
+             * Sets serializr for underlying tool calls and LLM requests
+             *
+             * @param serializer The JSON serializer to configure the AI agent with.
+             * @return The updated instance of [Companion.AIAgentConfigBuilder]
+             * */
+            public fun serializer(serializer: JSONSerializer): AIAgentConfigBuilder =
+                apply { this.serializer = serializer }
+
+            /**
              * Sets the prompt configuration for the AI agent.
              *
              * @param prompt The prompt to configure the AI agent with.
@@ -169,9 +178,6 @@ public actual class AIAgentConfig actual constructor(
              */
             public fun llmRequestExecutorService(executor: ExecutorService?): AIAgentConfigBuilder =
                 apply { this.llmRequestExecutorService = executor }
-
-            public fun serializer(serializer: JSONSerializer): AIAgentConfigBuilder =
-                apply { this.serializer = serializer }
 
             /**
              * Constructs and returns an instance of [AIAgentConfig] using the values configured

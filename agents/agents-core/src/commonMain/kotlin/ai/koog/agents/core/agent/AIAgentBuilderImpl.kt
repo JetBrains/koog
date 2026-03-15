@@ -1,8 +1,10 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgentBuilderImpl.Companion.ModelNotSet
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
+import ai.koog.agents.core.agent.config.copy
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -14,11 +16,32 @@ import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
 import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import kotlin.time.Clock
 
-internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
+internal class AIAgentBuilderImpl internal constructor(
+    serializer: JSONSerializer = KotlinxSerializer()
+) : AIAgentBuilderAPI {
+    companion object {
+        internal val NoLLMProvider = object : LLMProvider("None", "Provider is not set") {}
+
+        internal val ModelNotSet = LLModel(
+            provider = NoLLMProvider,
+            id = "model_not_set"
+        )
+    }
+
+    internal var config: AIAgentConfig = AIAgentConfig(
+        prompt = Prompt.Empty,
+        model = ModelNotSet,
+        maxAgentIterations = 50,
+        serializer = serializer
+    )
+
     @property:PublishedApi
     internal var promptExecutor: PromptExecutor? = null
 
@@ -29,25 +52,6 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
     internal var id: String? = null
 
     @property:PublishedApi
-    internal var prompt: Prompt = Prompt.Empty
-
-    @property:PublishedApi
-    internal var llmModel: LLModel? = null
-
-    @property:PublishedApi
-    internal var temperature: Double = 1.0
-
-    @property:PublishedApi
-    internal var numberOfChoices: Int = 1
-
-    @property:PublishedApi
-    internal var missingToolsConversionStrategy: MissingToolsConversionStrategy =
-        MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
-
-    @property:PublishedApi
-    internal var maxIterations: Int = 50
-
-    @property:PublishedApi
     internal var clock: Clock = Clock.System
 
     override fun promptExecutor(promptExecutor: PromptExecutor): AIAgentBuilderAPI = apply {
@@ -55,7 +59,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
     }
 
     override fun llmModel(model: LLModel): AIAgentBuilderAPI = apply {
-        this.llmModel = model
+        this.config = this.config.copy(model = model)
     }
 
     override fun toolRegistry(toolRegistry: ToolRegistry): AIAgentBuilderAPI = apply {
@@ -69,13 +73,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         inputType = strategy.inputType,
         outputType = strategy.outputType,
         id = this.id,
-        prompt = this.prompt,
-        llmModel = this.llmModel,
-        temperature = this.temperature,
-        promptExecutor = this.promptExecutor,
-        numberOfChoices = this.numberOfChoices,
-        maxIterations = this.maxIterations,
-        missingToolsConversionStrategy = this.missingToolsConversionStrategy,
+        config = config,
         clock = this.clock,
         toolRegistry = this.toolRegistry
     )
@@ -86,12 +84,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         strategy = strategy,
         id = this.id,
         promptExecutor = this.promptExecutor,
-        prompt = this.prompt,
-        llmModel = this.llmModel,
-        temperature = this.temperature,
-        numberOfChoices = this.numberOfChoices,
-        maxIterations = this.maxIterations,
-        missingToolsConversionStrategy = this.missingToolsConversionStrategy,
+        config = this.config,
         clock = this.clock,
         toolRegistry = this.toolRegistry
     )
@@ -102,12 +95,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         strategy = strategy,
         id = this.id,
         promptExecutor = this.promptExecutor,
-        prompt = this.prompt,
-        llmModel = this.llmModel,
-        temperature = this.temperature,
-        numberOfChoices = this.numberOfChoices,
-        maxIterations = this.maxIterations,
-        missingToolsConversionStrategy = this.missingToolsConversionStrategy,
+        config = this.config,
         clock = this.clock,
         toolRegistry = this.toolRegistry
     )
@@ -123,31 +111,25 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         this.id = id
     }
 
-    override fun systemPrompt(systemPrompt: String): AIAgentBuilderAPI = apply {
-        this.prompt = ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) }
-    }
+    override fun systemPrompt(systemPrompt: String): AIAgentBuilderAPI =
+        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
 
     override fun prompt(prompt: Prompt): AIAgentBuilderAPI = apply {
-        this.prompt = prompt
+        this.config = config.copy(prompt = prompt)
     }
 
-    override fun temperature(temperature: Double): AIAgentBuilderAPI = apply {
-        this.temperature = temperature
-    }
+    override fun temperature(temperature: Double): AIAgentBuilderAPI =
+        prompt(config.prompt.withParams(config.prompt.params.copy(temperature = temperature)))
 
-    override fun numberOfChoices(numberOfChoices: Int): AIAgentBuilderAPI = apply {
-        this.numberOfChoices = numberOfChoices
-    }
+    override fun numberOfChoices(numberOfChoices: Int): AIAgentBuilderAPI =
+        prompt(config.prompt.withParams(config.prompt.params.copy(numberOfChoices = numberOfChoices)))
 
     override fun maxIterations(maxIterations: Int): AIAgentBuilderAPI = apply {
-        this.maxIterations = maxIterations
+        this.config = config.copy(maxAgentIterations = maxIterations)
     }
 
     override fun agentConfig(config: AIAgentConfig): AIAgentBuilderAPI = apply {
-        this.prompt = config.prompt
-        this.llmModel = config.model
-        this.maxIterations = config.maxAgentIterations
-        this.missingToolsConversionStrategy = config.missingToolsConversionStrategy
+        this.config = config
     }
 
     override fun <TConfig : FeatureConfig> install(
@@ -158,13 +140,7 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
         inputType = typeToken<String>(),
         outputType = typeToken<String>(),
         id = this.id,
-        prompt = this.prompt,
-        llmModel = this.llmModel,
-        temperature = this.temperature,
-        numberOfChoices = this.numberOfChoices,
-        promptExecutor = this.promptExecutor,
-        maxIterations = this.maxIterations,
-        missingToolsConversionStrategy = this.missingToolsConversionStrategy,
+        config = config,
         clock = this.clock,
         featureInstallers = mutableListOf({
             install(feature) {
@@ -179,14 +155,13 @@ internal class AIAgentBuilderImpl internal constructor() : AIAgentBuilderAPI {
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = agentConfig,
+            agentConfig = validateConfig(config),
             clock = clock
         )
     }
+}
 
-    internal val agentConfig: AIAgentConfig get() = AIAgentConfig(
-        prompt = prompt,
-        model = requireNotNull(llmModel) { "llmModel must be set" },
-        maxAgentIterations = maxIterations,
-    )
+internal fun validateConfig(config: AIAgentConfig): AIAgentConfig = when (config.model) {
+    ModelNotSet -> throw IllegalArgumentException("model must be set, plase use .model() on AIAgentBuilder or set AIAgentConfig")
+    else -> config
 }

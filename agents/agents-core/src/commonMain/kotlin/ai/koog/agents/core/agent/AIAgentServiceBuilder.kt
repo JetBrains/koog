@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
+import ai.koog.agents.core.agent.config.copy
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -15,10 +16,8 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.TypeToken
 import kotlin.time.Clock
 
@@ -72,12 +71,7 @@ public expect class AIAgentServiceBuilder internal constructor() : AIAgentServic
  * @property outputType The TypeToken representation of the output type.
  * @property promptExecutor The executor responsible for handling and orchestrating prompts.
  * @property toolRegistry The registry managing the tools available for the service.
- * @property prompt The system or user-defined prompt used in interactions.
- * @property llmModel The language model to be utilized within the service.
- * @property temperature The level of randomness in the language model's responses.
- * @property numberOfChoices The number of response options provided by the language model.
- * @property maxIterations The maximum number of iterations the strategy may execute before completion.
- * @property clock A time source for handling temporal operations such as delays or deadlines.
+ * @property config [AIAgentConfig] containing initial agent configuration for the builder
  * @property featureInstallers A collection of feature configuration functions to be applied to the service.
  */
 public class GraphAgentServiceBuilder<Input, Output> internal constructor(
@@ -86,11 +80,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     private val outputType: TypeToken,
     internal var promptExecutor: PromptExecutor? = null,
     internal var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var prompt: Prompt = Prompt.Empty,
-    private var llmModel: LLModel? = null,
-    private var temperature: Double? = null,
-    private var numberOfChoices: Int = 1,
-    private var maxIterations: Int = 50,
+    private var config: AIAgentConfig,
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
     ),
@@ -117,7 +107,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      * @return An updated `GraphServiceBuilder` instance with the specified LLM model set.
      */
     public fun llmModel(model: LLModel): GraphAgentServiceBuilder<Input, Output> = apply {
-        this.llmModel = model
+        this.config = this.config.copy(model = model)
     }
 
     /**
@@ -140,9 +130,8 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      * @param systemPrompt The system message that provides instructions or context to the language model.
      * @return The updated `GraphServiceBuilder` instance.
      */
-    public fun systemPrompt(systemPrompt: String): GraphAgentServiceBuilder<Input, Output> = apply {
-        this.prompt = prompt(id = "agent") { system(systemPrompt) }
-    }
+    public fun systemPrompt(systemPrompt: String): GraphAgentServiceBuilder<Input, Output> =
+        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
 
     /**
      * Sets the prompt to be used by the GraphServiceBuilder.
@@ -151,7 +140,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      * @return The current instance of GraphServiceBuilder with the prompt set.
      */
     public fun prompt(prompt: Prompt): GraphAgentServiceBuilder<Input, Output> = apply {
-        this.prompt = prompt
+        this.config = config.copy(prompt = prompt)
     }
 
     /**
@@ -163,9 +152,8 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      * to 1.0 or higher (more random results)
      * @return the updated instance of GraphServiceBuilder<Input, Output>
      */
-    public fun temperature(temperature: Double): GraphAgentServiceBuilder<Input, Output> = apply {
-        this.temperature = temperature
-    }
+    public fun temperature(temperature: Double): GraphAgentServiceBuilder<Input, Output> =
+        prompt(config.prompt.withParams(config.prompt.params.copy(temperature = temperature)))
 
     /**
      * Sets the number of choices that the service will consider during processing.
@@ -173,9 +161,8 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      * @param numberOfChoices the number of choices to be used in the service logic
      * @return the current instance of GraphServiceBuilder for method chaining
      */
-    public fun numberOfChoices(numberOfChoices: Int): GraphAgentServiceBuilder<Input, Output> = apply {
-        this.numberOfChoices = numberOfChoices
-    }
+    public fun numberOfChoices(numberOfChoices: Int): GraphAgentServiceBuilder<Input, Output> =
+        prompt(config.prompt.withParams(config.prompt.params.copy(numberOfChoices = numberOfChoices)))
 
     /**
      * Sets the maximum number of iterations to be used in the graph processing service.
@@ -185,7 +172,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      * @return the updated instance of the GraphServiceBuilder
      */
     public fun maxIterations(maxIterations: Int): GraphAgentServiceBuilder<Input, Output> = apply {
-        this.maxIterations = maxIterations
+        this.config = config.copy(maxAgentIterations = maxIterations)
     }
 
     /**
@@ -200,10 +187,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      */
     @JavaAPI
     public fun agentConfig(config: AIAgentConfig): GraphAgentServiceBuilder<Input, Output> = apply {
-        this.prompt = config.prompt
-        this.llmModel = config.model
-        this.maxIterations = config.maxAgentIterations
-        this.missingToolsConversionStrategy = config.missingToolsConversionStrategy
+        this.config = config
     }
 
     /**
@@ -235,23 +219,6 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     @OptIn(InternalAgentsApi::class)
     public fun build(): GraphAIAgentService<Input, Output> {
         val executor = requireNotNull(promptExecutor) { "PromptExecutor must be provided" }
-        val model = requireNotNull(llmModel) { "LLModel must be provided" }
-
-        val config = AIAgentConfig(
-            prompt = if (prompt === Prompt.Empty) {
-                prompt(
-                    id = "chat",
-                    params = LLMParams(
-                        temperature = temperature,
-                        numberOfChoices = numberOfChoices
-                    )
-                ) {}
-            } else {
-                prompt
-            },
-            model = model,
-            maxAgentIterations = maxIterations
-        )
 
         val installCombined: FeatureContext.() -> Unit = {
             featureInstallers.forEach { it(this) }
@@ -259,7 +226,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
 
         return GraphAIAgentService(
             promptExecutor = executor,
-            agentConfig = config,
+            agentConfig = validateConfig(config),
             strategy = strategy,
             inputType = inputType,
             outputType = outputType,
@@ -284,14 +251,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
     private val strategy: AIAgentFunctionalStrategy<Input, Output>,
     internal var promptExecutor: PromptExecutor? = null,
     internal var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var prompt: Prompt = Prompt.Empty,
-    private var llmModel: LLModel? = null,
-    private var temperature: Double? = null,
-    private var numberOfChoices: Int = 1,
-    private var maxIterations: Int = 50,
-    private var missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
-        ToolCallDescriber.JSON
-    ),
+    private var config: AIAgentConfig,
     private var clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) {
@@ -314,7 +274,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      * @return The updated instance of [FunctionalAgentServiceBuilder] with the specified LLM set.
      */
     public fun llmModel(model: LLModel): FunctionalAgentServiceBuilder<Input, Output> = apply {
-        this.llmModel = model
+        this.config = this.config.copy(model = model)
     }
 
     /**
@@ -338,9 +298,8 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      * @param systemPrompt The system message content to provide context or instructions to the language model.
      * @return The updated instance of FunctionalServiceBuilder with the configured system prompt.
      */
-    public fun systemPrompt(systemPrompt: String): FunctionalAgentServiceBuilder<Input, Output> = apply {
-        this.prompt = prompt(id = "agent") { system(systemPrompt) }
-    }
+    public fun systemPrompt(systemPrompt: String): FunctionalAgentServiceBuilder<Input, Output> =
+        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
 
     /**
      * Assigns the given prompt to the builder configuration.
@@ -349,7 +308,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      * @return the current instance of FunctionalServiceBuilder for method chaining.
      */
     public fun prompt(prompt: Prompt): FunctionalAgentServiceBuilder<Input, Output> = apply {
-        this.prompt = prompt
+        this.config = config.copy(prompt = prompt)
     }
 
     /**
@@ -360,9 +319,8 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      * @param temperature the temperature value to configure for the model's output randomness. It should typically be in a range between 0.0 and 1.0.
      * @return the current instance of the FunctionalServiceBuilder with the temperature parameter applied.
      */
-    public fun temperature(temperature: Double): FunctionalAgentServiceBuilder<Input, Output> = apply {
-        this.temperature = temperature
-    }
+    public fun temperature(temperature: Double): FunctionalAgentServiceBuilder<Input, Output> =
+        prompt(config.prompt.withParams(config.prompt.params.copy(temperature = temperature)))
 
     /**
      * Sets the number of choices for the service builder configuration.
@@ -370,9 +328,8 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      * @param numberOfChoices the number of choices to be considered during processing
      * @return the updated instance of FunctionalServiceBuilder for chaining further configurations
      */
-    public fun numberOfChoices(numberOfChoices: Int): FunctionalAgentServiceBuilder<Input, Output> = apply {
-        this.numberOfChoices = numberOfChoices
-    }
+    public fun numberOfChoices(numberOfChoices: Int): FunctionalAgentServiceBuilder<Input, Output> =
+        prompt(config.prompt.withParams(config.prompt.params.copy(numberOfChoices = numberOfChoices)))
 
     /**
      * Sets the maximum number of iterations to use for the service.
@@ -381,7 +338,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      * @return The updated FunctionalServiceBuilder instance with the specified maximum iterations.
      */
     public fun maxIterations(maxIterations: Int): FunctionalAgentServiceBuilder<Input, Output> = apply {
-        this.maxIterations = maxIterations
+        this.config = config.copy(maxAgentIterations = maxIterations)
     }
 
     /**
@@ -396,10 +353,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      */
     @JavaAPI
     public fun agentConfig(config: AIAgentConfig): FunctionalAgentServiceBuilder<Input, Output> = apply {
-        this.prompt = config.prompt
-        this.llmModel = config.model
-        this.maxIterations = config.maxAgentIterations
-        this.missingToolsConversionStrategy = config.missingToolsConversionStrategy
+        this.config = config
     }
 
     /**
@@ -433,23 +387,6 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
     @OptIn(InternalAgentsApi::class)
     public fun build(): FunctionalAIAgentService<Input, Output> {
         val executor = requireNotNull(promptExecutor) { "PromptExecutor must be provided" }
-        val model = requireNotNull(llmModel) { "LLModel must be provided" }
-
-        val config = AIAgentConfig(
-            prompt = if (prompt === Prompt.Empty) {
-                prompt(
-                    id = "chat",
-                    params = LLMParams(
-                        temperature = temperature,
-                        numberOfChoices = numberOfChoices
-                    )
-                ) {}
-            } else {
-                prompt
-            },
-            model = model,
-            maxAgentIterations = maxIterations
-        )
 
         val installCombined: FunctionalAIAgent.FeatureContext.() -> Unit = {
             featureInstallers.forEach { it(this) }
@@ -457,7 +394,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
 
         return FunctionalAIAgentService(
             promptExecutor = executor,
-            agentConfig = config,
+            agentConfig = validateConfig(config),
             toolRegistry = toolRegistry,
             strategy = strategy,
             installFeatures = installCombined
