@@ -8,7 +8,7 @@ dokka {
             includes.from("Module.md")
 
             pluginsConfiguration.html {
-                footerMessage = "Copyright © 2000-2026 JetBrains s.r.o."
+                footerMessage = "Copyright © 2000-${java.time.Year.now().value} JetBrains s.r.o."
             }
 
             sourceLink {
