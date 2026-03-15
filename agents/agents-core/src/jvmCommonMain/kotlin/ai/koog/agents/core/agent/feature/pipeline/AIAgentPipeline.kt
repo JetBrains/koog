@@ -28,13 +28,20 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.utils.submitToMainDispatcher
 import kotlin.time.Clock
 
-public actual abstract class AIAgentPipeline actual constructor(
+public actual abstract class AIAgentPipeline internal constructor(
     agentConfig: AIAgentConfig,
-    clock: Clock
-) : AIAgentPipelineAPI by AIAgentPipelineImpl(agentConfig, clock) {
+    clock: Clock,
+    internal val pipelineDelegate: AIAgentPipelineImpl
+) : AIAgentPipelineAPI by pipelineDelegate {
+    public actual constructor(agentConfig: AIAgentConfig, clock: Clock) : this(
+        agentConfig,
+        clock,
+        AIAgentPipelineImpl(agentConfig, clock)
+    )
+
     @InternalAgentsApi
     public actual override suspend fun prepareFeatures() {
-        prepareFeatures(this)
+        pipelineDelegate.prepareFeatures(this)
     }
 
     // JVM Unique Interceptors

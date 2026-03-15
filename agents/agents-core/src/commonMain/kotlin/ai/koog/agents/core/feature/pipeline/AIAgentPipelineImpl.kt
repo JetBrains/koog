@@ -139,11 +139,21 @@ public class AIAgentPipelineImpl(
 
     @InternalAgentsApi
     override suspend fun prepareFeatures() {
+        // Install system features using this impl as the pipeline reference.
+        // Note: actual pipeline subclasses (e.g. AIAgentGraphPipeline) override this method
+        // to call prepareFeatures(outerPipeline) so that system features see the correct type.
         prepareFeatures(this)
     }
 
-    @InternalAgentsApi
-    override suspend fun prepareFeatures(actualPipeline: AIAgentPipelineAPI) {
+    /**
+     * Prepares all installed features, optionally installing system features from config.
+     *
+     * @param actualPipeline the pipeline instance to pass to [installFeaturesFromSystemConfig].
+     *   Actual pipeline classes that use delegation should override [prepareFeatures] and call
+     *   this method with `this` so that system feature installation sees the correct pipeline type
+     *   (e.g., [AIAgentGraphPipeline] rather than the internal delegate).
+     */
+    internal suspend fun prepareFeatures(actualPipeline: AIAgentPipelineAPI) {
         // Install system features (if exist)
         installFeaturesFromSystemConfig(actualPipeline)
 
@@ -308,7 +318,17 @@ public class AIAgentPipelineImpl(
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMCallCompleted,
-            context = LLMCallCompletedContext(eventId, executionInfo, runId, prompt, model, tools, responses, moderationResponse, context)
+            context = LLMCallCompletedContext(
+                eventId,
+                executionInfo,
+                runId,
+                prompt,
+                model,
+                tools,
+                responses,
+                moderationResponse,
+                context
+            )
         )
     }
 
@@ -462,7 +482,15 @@ public class AIAgentPipelineImpl(
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMStreamingFrameReceived,
-            context = LLMStreamingFrameReceivedContext(eventId, executionInfo, runId, prompt, model, streamFrame, context)
+            context = LLMStreamingFrameReceivedContext(
+                eventId,
+                executionInfo,
+                runId,
+                prompt,
+                model,
+                streamFrame,
+                context
+            )
         )
     }
 

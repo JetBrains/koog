@@ -414,9 +414,6 @@ public interface AIAgentPipelineAPI {
     public suspend fun prepareFeatures()
 
     @InternalAgentsApi
-    public suspend fun prepareFeatures(actualPipeline: AIAgentPipelineAPI): Unit = prepareFeatures()
-
-    @InternalAgentsApi
     public suspend fun closeAllFeaturesMessageProcessors()
 
     // Note: conditional handler builders and internal helper APIs are intentionally not part of the public API

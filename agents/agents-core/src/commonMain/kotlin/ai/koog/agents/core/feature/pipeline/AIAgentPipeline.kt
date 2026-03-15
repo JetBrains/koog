@@ -1032,9 +1032,6 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     public override suspend fun prepareFeatures()
 
     @InternalAgentsApi
-    public override suspend fun prepareFeatures(actualPipeline: AIAgentPipelineAPI)
-
-    @InternalAgentsApi
     public override suspend fun closeAllFeaturesMessageProcessors()
 
     //endregion public and Internal Methods

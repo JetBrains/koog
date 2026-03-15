@@ -1,5 +1,7 @@
-@file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
+@file:Suppress(
+    "MissingKDocForPublicAPI",
+    "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING"
+) @file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.feature.pipeline
 
@@ -13,7 +15,7 @@ public actual open class AIAgentGraphPipeline actual constructor(
     agentConfig: AIAgentConfig,
     clock: Clock,
     private val basePipelineDelegate: AIAgentPipelineImpl
-) : AIAgentPipeline(agentConfig, clock),
+) : AIAgentPipeline(agentConfig, clock, basePipelineDelegate),
     AIAgentGraphPipelineAPI by AIAgentGraphPipelineImpl(agentConfig, clock, basePipelineDelegate) {
 
     public actual fun <TConfig : FeatureConfig, TFeatureImpl : Any> install(

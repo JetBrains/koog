@@ -21,7 +21,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     agentConfig: AIAgentConfig,
     clock: Clock,
     private val basePipelineDelegate: AIAgentPipelineImpl
-) : AIAgentPipeline(agentConfig, clock),
+) : AIAgentPipeline(agentConfig, clock, basePipelineDelegate),
     AIAgentGraphPipelineAPI by AIAgentGraphPipelineImpl(agentConfig, clock, basePipelineDelegate) {
 
     public actual fun <TConfig : FeatureConfig, TFeatureImpl : Any> install(

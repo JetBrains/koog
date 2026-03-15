@@ -11,7 +11,7 @@ public actual open class AIAgentPlannerPipeline actual constructor(
     agentConfig: AIAgentConfig,
     clock: Clock,
     private val basePipelineDelegate: AIAgentPipelineImpl
-) : AIAgentPipeline(agentConfig, clock), AIAgentPlannerPipelineAPI by AIAgentPlannerPipelineImpl(agentConfig, clock, basePipelineDelegate) {
+) : AIAgentPipeline(agentConfig, clock, basePipelineDelegate), AIAgentPlannerPipelineAPI by AIAgentPlannerPipelineImpl(agentConfig, clock, basePipelineDelegate) {
 
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
