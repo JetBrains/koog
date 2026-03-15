@@ -8,6 +8,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONSerializer
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 
 /**
@@ -19,7 +20,7 @@ import kotlin.jvm.JvmStatic
  * @param toolRegistry The tool registry with available tools
  * @param toolCallJsonConfig Configuration for parsing and fixing tool call json
  */
-public class ManualToolCallFixProcessor(
+public class ManualToolCallFixProcessor @JvmOverloads constructor(
     toolRegistry: ToolRegistry,
     toolCallJsonConfig: ToolCallJsonConfig = ToolCallJsonConfig()
 ) : ToolJsonFixProcessor(toolRegistry, toolCallJsonConfig) {
