@@ -5,7 +5,6 @@ package ai.koog.agents.core.tools
  * and register tools, either individually or as a list, and then constructs a registry containing
  * the defined tools.
  */
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public expect class ToolRegistryBuilder() {
     /**
      * Registers a tool to the ToolRegistryBuilder.

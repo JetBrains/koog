@@ -237,7 +237,6 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public expect open class AIAgentNode<TInput, TOutput> internal constructor(
     name: String,
     inputType: TypeToken,

@@ -1,5 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -117,8 +115,11 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
     @OptIn(DetachedPromptExecutorAPI::class)
     private suspend fun selectTools(context: AIAgentContext) = when (toolSelectionStrategy) {
         is ToolSelectionStrategy.ALL -> context.llm.tools
+
         is ToolSelectionStrategy.NONE -> emptyList()
+
         is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
+
         is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
             val initialPrompt = prompt
 

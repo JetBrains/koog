@@ -1,4 +1,4 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT")
+@file:Suppress("ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT")
 
 package ai.koog.agents.core.agent.context
 

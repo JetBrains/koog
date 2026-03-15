@@ -13,7 +13,6 @@ import ai.koog.serialization.TypeToken
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual open class AIAgentNode<TInput, TOutput> internal actual constructor(
     name: String,
     inputType: TypeToken,

@@ -9,7 +9,7 @@ import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTool
 import kotlin.reflect.KFunction
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
+@Suppress("MissingKDocForPublicAPI")
 public actual open class RollbackToolRegistryBuilder actual constructor(
     internal actual val delegate: RollbackToolRegistryBuilderImpl
 ) : RollbackToolRegistryBuilderAPI {

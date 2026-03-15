@@ -63,8 +63,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
  * }
  * ```
  */
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-public expect class EventHandlerConfig constructor() : FeatureConfig, EventHandlerConfigAPI {
+public expect class EventHandlerConfig() : FeatureConfig, EventHandlerConfigAPI {
     //region Agent Handlers
 
     public override fun onAgentStarting(handler: suspend (eventContext: AgentStartingContext) -> Unit)

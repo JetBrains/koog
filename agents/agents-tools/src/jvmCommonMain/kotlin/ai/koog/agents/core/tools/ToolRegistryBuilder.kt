@@ -8,7 +8,6 @@ import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.core.tools.reflect.java.asTool
 import java.lang.reflect.Method
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual class ToolRegistryBuilder {
     private val builder = ToolRegistry.Builder()
 

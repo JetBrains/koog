@@ -2,7 +2,6 @@
 
 package ai.koog.agents.core.tools
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual class ToolRegistryBuilder {
     private val builder = ToolRegistry.Builder()
 

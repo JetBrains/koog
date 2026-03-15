@@ -1,4 +1,4 @@
-@file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@file:Suppress("MissingKDocForPublicAPI")
 @file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.feature.pipeline

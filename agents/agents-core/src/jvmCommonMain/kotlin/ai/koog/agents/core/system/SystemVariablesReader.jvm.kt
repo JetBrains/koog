@@ -2,7 +2,6 @@ package ai.koog.agents.core.system
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 internal actual object SystemVariablesReader {
 
     private val logger = KotlinLogging.logger { }

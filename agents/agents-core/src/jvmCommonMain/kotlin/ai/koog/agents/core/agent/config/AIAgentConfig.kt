@@ -8,7 +8,6 @@ import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.JSONSerializer
 import java.util.concurrent.ExecutorService
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual class AIAgentConfig actual constructor(
     public actual override val prompt: Prompt,
     public actual override val model: LLModel,

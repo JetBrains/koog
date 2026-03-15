@@ -1,6 +1,5 @@
 package ai.koog.agents.core.system
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 internal actual object SystemVariablesReader {
 
     // TODO: Add support for JS platform

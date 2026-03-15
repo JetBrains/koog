@@ -1,4 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 @file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.feature.pipeline

@@ -1,5 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -112,6 +110,7 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
         @Suppress("DEPRECATION")
         when {
             data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput, agentContext)
+
             data.lastOutput != null -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
 
             // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpoints:

@@ -5,7 +5,7 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
+@Suppress("MissingKDocForPublicAPI")
 public actual open class RollbackToolRegistryBuilder actual constructor(
     internal actual val delegate: RollbackToolRegistryBuilderImpl
 ) : RollbackToolRegistryBuilderAPI {

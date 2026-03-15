@@ -1,6 +1,5 @@
 @file:Suppress(
     "MissingKDocForPublicAPI",
-    "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING",
     "ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT"
 )
 

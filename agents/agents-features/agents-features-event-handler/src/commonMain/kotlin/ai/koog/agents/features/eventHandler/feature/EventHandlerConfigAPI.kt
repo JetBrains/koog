@@ -42,7 +42,6 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 /**
  * API for the [EventHandlerConfig]
  */
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public interface EventHandlerConfigAPI {
 
     //region Agent Handlers
