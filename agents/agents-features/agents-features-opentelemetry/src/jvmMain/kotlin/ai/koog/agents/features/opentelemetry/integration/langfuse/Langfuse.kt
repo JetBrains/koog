@@ -74,6 +74,7 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
  * @param traceAttributes list of trace-level Langfuse attributes.
  */
 @JavaAPI
+@JvmOverloads
 public fun OpenTelemetryConfig.addLangfuseExporter(
     langfuseUrl: String?,
     langfusePublicKey: String?,
