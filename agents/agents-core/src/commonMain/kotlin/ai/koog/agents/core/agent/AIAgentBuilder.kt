@@ -10,16 +10,10 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.BuilderChainAction
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
 import ai.koog.agents.planner.PlannerAIAgent
-import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.LLModel
 import ai.koog.serialization.TypeToken
 import kotlin.time.Clock
 
@@ -28,96 +22,8 @@ import kotlin.time.Clock
  * components of an AI agent. This builder enables fine-grained control over tools, strategies,
  * and prompts utilized by an AI agent during its execution.
  */
-public expect class AIAgentBuilder internal constructor() : AIAgentBuilderAPI {
-    /**
-     * Represents the `PromptExecutor` instance to be utilized within the builder.
-     *
-     * This variable optionally holds a reference to the configured `PromptExecutor`, which is responsible for:
-     * - Executing prompts against language models.
-     * - Managing tool interactions for enriched processing.
-     * - Handling and processing responses from the language model.
-     *
-     * If not explicitly set, the builder may rely on a default or alternative mechanism for prompt execution.
-     * Primarily used internally to facilitate the construction of instances within the `Builder`.
-     */
-    @property:PublishedApi
-    internal var promptExecutor: PromptExecutor?
-
-    /**
-     * Holds the `ToolRegistry` instance used in the builder for managing and organizing tool integrations.
-     *
-     * This variable defines the tool set available for an AI agent or workflow, enabling its interactions and
-     * operations with the registered tools. It is initialized with an empty `ToolRegistry` by default and can
-     * be updated during the builder's configuration process.
-     */
-    @property:PublishedApi
-    internal var toolRegistry: ToolRegistry
-
-    /**
-     * Internal identifier for the builder instance.
-     *
-     * This nullable property holds an optional string value that serves as a unique identifier
-     * for the builder. It can be set and modified via the corresponding `id` method in the
-     * `Builder` class.
-     *
-     * The identifier is primarily used to distinguish between different instances of the builder
-     * configuration, aiding in tracking or debugging processes.
-     *
-     * Marked as `internal` and annotated with `@PublishedApi` to allow safe internal access for
-     * inline functions or other components within the same module.
-     */
-    @property:PublishedApi
-    internal var id: String?
-
-    /**
-     * Represents the clock used to determine the current time in the builder.
-     * By default, it is set to the system clock, but can be customized for testing or specific time-related behaviors*/
-    @property:PublishedApi
-    internal var clock: Clock
-
-    public override fun promptExecutor(promptExecutor: PromptExecutor): AIAgentBuilder
-
-    public override fun llmModel(model: LLModel): AIAgentBuilder
-
-    public override fun toolRegistry(toolRegistry: ToolRegistry): AIAgentBuilder
-
-    public override fun <Input, Output> graphStrategy(
-        strategy: AIAgentGraphStrategy<Input, Output>
-    ): GraphAgentBuilder<Input, Output>
-
-    public override fun <Input, Output> functionalStrategy(
-        strategy: AIAgentFunctionalStrategy<Input, Output>
-    ): FunctionalAgentBuilder<Input, Output>
-
-    public override fun <Input, Output> plannerStrategy(
-        strategy: AIAgentPlannerStrategy<Input, Output, *>
-    ): PlannerAgentBuilder<Input, Output>
-
-    public override fun <Input : Any, Output : Any> plannerStrategy(
-        name: String,
-        buildStrategy: BuilderChainAction<AIAgentPlannerStrategyBuilder, TypedAgentPlannerStrategyBuilder<Input, Output>>
-    ): PlannerAgentBuilder<Input, Output>
-
-    public override fun id(id: String?): AIAgentBuilder
-
-    public override fun systemPrompt(systemPrompt: String): AIAgentBuilder
-
-    public override fun prompt(prompt: Prompt): AIAgentBuilder
-
-    public override fun temperature(temperature: Double): AIAgentBuilder
-
-    public override fun numberOfChoices(numberOfChoices: Int): AIAgentBuilder
-
-    public override fun maxIterations(maxIterations: Int): AIAgentBuilder
-
-    public override fun agentConfig(config: AIAgentConfig): AIAgentBuilder
-
-    public override fun <TConfig : FeatureConfig> install(
-        feature: AIAgentGraphFeature<TConfig, *>,
-        configure: ConfigureAction<TConfig>
-    ): GraphAgentBuilder<String, String>
-
-    public override fun build(): AIAgent<String, String>
+public expect class AIAgentBuilder internal constructor() : AIAgentBuilderCommon<AIAgentBuilder> {
+    override fun self(): AIAgentBuilder
 }
 
 /**
@@ -139,121 +45,20 @@ public class GraphAgentBuilder<Input, Output>(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
     private val inputType: TypeToken,
     private val outputType: TypeToken,
-    private var promptExecutor: PromptExecutor? = null,
-    private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var id: String? = null,
-    private var config: AIAgentConfig,
-    private var clock: Clock = Clock.System,
+    promptExecutor: PromptExecutor? = null,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    id: String? = null,
+    config: AIAgentConfig,
+    clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
+) : AIAgentBuilderBase<GraphAgentBuilder<Input, Output>>(
+    promptExecutor = promptExecutor,
+    toolRegistry = toolRegistry,
+    id = id,
+    config = config,
+    clock = clock,
 ) {
-
-    /**
-     * Sets the `PromptExecutor` instance to be used by this `GraphAgentBuilder`.
-     *
-     * @param promptExecutor The `PromptExecutor` instance responsible for executing prompts
-     *                        and interacting with the language model.
-     * @return The current instance of `GraphAgentBuilder` for method chaining.
-     */
-    public fun promptExecutor(promptExecutor: PromptExecutor): GraphAgentBuilder<Input, Output> = apply {
-        this.promptExecutor = promptExecutor
-    }
-
-    /**
-     * Sets the large language model (LLM) for the agent builder.
-     *
-     * @param model The `LLModel` instance representing the large language model to be used by the agent.
-     * @return The current instance of `GraphAgentBuilder<Input, Output>` for method chaining.
-     */
-    public fun llmModel(model: LLModel): GraphAgentBuilder<Input, Output> = apply {
-        this.config = this.config.copy(model = model)
-    }
-
-    /**
-     * Sets the `toolRegistry` for the `GraphAgentBuilder` and returns the updated builder instance.
-     *
-     * @param toolRegistry The `ToolRegistry` instance to be associated with the `GraphAgentBuilder`.
-     * @return The current instance of `GraphAgentBuilder` with the updated `toolRegistry`.
-     */
-    public fun toolRegistry(toolRegistry: ToolRegistry): GraphAgentBuilder<Input, Output> = apply {
-        this.toolRegistry = toolRegistry
-    }
-
-    /**
-     * Sets the unique identifier for the `GraphAgentBuilder` instance.
-     *
-     * @param id The unique identifier to associate with the agent. Can be null if no identifier is required.
-     * @return The current instance of `GraphAgentBuilder` with the updated identifier.
-     */
-    public fun id(id: String?): GraphAgentBuilder<Input, Output> = apply {
-        this.id = id
-    }
-
-    /**
-     * Sets the system-level prompt for the agent.
-     *
-     * The system prompt provides predefined instructions or context
-     * to guide the behavior of the agent.
-     *
-     * @param systemPrompt The system-level instructions or context for the agent.
-     * @return The updated instance of GraphAgentBuilder with the system prompt applied.
-     */
-    public fun systemPrompt(systemPrompt: String): GraphAgentBuilder<Input, Output> =
-        prompt(prompt(config.prompt) { system(systemPrompt) })
-
-    /**
-     * Sets the prompt for the GraphAgentBuilder and returns the builder instance for further configuration.
-     *
-     * @param prompt The prompt configuration to be set.
-     * @return The updated instance of GraphAgentBuilder.
-     */
-    public fun prompt(prompt: Prompt): GraphAgentBuilder<Input, Output> = apply {
-        this.config = config.copy(prompt = prompt)
-    }
-
-    /**
-     * Sets the temperature parameter for the AI agent configuration.
-     *
-     * Temperature controls the randomness of the AI model's output.
-     * A higher temperature results in more randomness, while a lower temperature makes the output more deterministic.
-     *
-     * @param temperature The temperature value to be set, typically ranging between 0.0 and 1.0.
-     * @return The current instance of [GraphAgentBuilder], allowing method chaining.
-     */
-    public fun temperature(temperature: Double): GraphAgentBuilder<Input, Output> =
-        prompt(config.prompt.withParams(config.prompt.params.copy(temperature = temperature)))
-
-    /**
-     * Sets the number of choices the agent can generate and returns the updated builder instance.
-     *
-     * @param numberOfChoices The number of choices to configure for the agent.
-     * @return The updated instance of the GraphAgentBuilder with the specified number of choices.
-     */
-    public fun numberOfChoices(numberOfChoices: Int): GraphAgentBuilder<Input, Output> =
-        prompt(config.prompt.withParams(config.prompt.params.copy(numberOfChoices = numberOfChoices)))
-
-    /**
-     * Sets the maximum number of iterations allowed for the agent's execution.
-     *
-     * @param maxIterations The maximum number of iterations to configure.
-     * @return The current instance of [GraphAgentBuilder] for method chaining.
-     */
-    public fun maxIterations(maxIterations: Int): GraphAgentBuilder<Input, Output> = apply {
-        this.config = config.copy(maxAgentIterations = maxIterations)
-    }
-
-    /**
-     * Configures the `GraphAgentBuilder` using the provided `AIAgentConfig` instance.
-     *
-     * The configuration sets the prompt, language model, maximum iterations,
-     * and the strategy for handling missing tools based on the given `AIAgentConfig`.
-     *
-     * @param config The `AIAgentConfig` instance containing the agent's configuration,
-     *               including prompt settings, model, iteration limits, and tool handling strategies.
-     * @return The current instance of `GraphAgentBuilder<Input, Output>` for method chaining.
-     */
-    public fun agentConfig(config: AIAgentConfig): GraphAgentBuilder<Input, Output> = apply {
-        this.config = config
-    }
+    override fun self(): GraphAgentBuilder<Input, Output> = this
 
     /**
      * Installs a specified feature into the current context and applies its configuration.
@@ -286,10 +91,10 @@ public class GraphAgentBuilder<Input, Output>(
             inputType = inputType,
             outputType = outputType,
             strategy = strategy,
-            promptExecutor = requireNotNull(promptExecutor) { "promptExecutor must be set" },
+            promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = validateConfig(config),
+            agentConfig = validatedConfig,
             clock = clock
         ) {
             featureInstallers.forEach { install ->
@@ -319,116 +124,20 @@ public class GraphAgentBuilder<Input, Output>(
  */
 public class FunctionalAgentBuilder<Input, Output>(
     private val strategy: AIAgentFunctionalStrategy<Input, Output>,
-    private var promptExecutor: PromptExecutor? = null,
-    private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var id: String? = null,
-    private var config: AIAgentConfig,
-    private var clock: Clock = Clock.System,
+    promptExecutor: PromptExecutor? = null,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    id: String? = null,
+    config: AIAgentConfig,
+    clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
+) : AIAgentBuilderBase<FunctionalAgentBuilder<Input, Output>>(
+    promptExecutor = promptExecutor,
+    toolRegistry = toolRegistry,
+    id = id,
+    config = config,
+    clock = clock,
 ) {
-
-    /**
-     * Sets the provided `PromptExecutor` instance for the current `FunctionalAgentBuilder`.
-     *
-     * @param promptExecutor The `PromptExecutor` instance to be used for executing prompts.
-     * @return The updated `FunctionalAgentBuilder` instance with the specified prompt executor configuration.
-     */
-    public fun promptExecutor(promptExecutor: PromptExecutor): FunctionalAgentBuilder<Input, Output> = apply {
-        this.promptExecutor = promptExecutor
-    }
-
-    /**
-     * Configures the functional agent builder to use a specific Large Language Model (LLM) for processing.
-     *
-     * @param model The Large Language Model (LLM) instance to be used, which defines the provider, identifier, and capabilities.
-     * @return The updated instance of [FunctionalAgentBuilder] for further configuration chaining.
-     */
-    public fun llmModel(model: LLModel): FunctionalAgentBuilder<Input, Output> = apply {
-        this.config = this.config.copy(model = model)
-    }
-
-    /**
-     * Sets the tool registry to be used by the FunctionalAgentBuilder.
-     *
-     * @param toolRegistry The ToolRegistry instance to be associated with this builder.
-     * @return The current FunctionalAgentBuilder instance to allow method chaining.
-     */
-    public fun toolRegistry(toolRegistry: ToolRegistry): FunctionalAgentBuilder<Input, Output> = apply {
-        this.toolRegistry = toolRegistry
-    }
-
-    /**
-     * Sets the unique identifier for the FunctionalAgent.
-     *
-     * @param id The unique identifier as a nullable string. It can be used to reference the agent in various contexts or hierarchies.
-     * @return The builder instance, allowing for method chaining during the configuration of the FunctionalAgent.
-     */
-    public fun id(id: String?): FunctionalAgentBuilder<Input, Output> = apply {
-        this.id = id
-    }
-
-    /**
-     * Sets the system-level prompt for the agent being built.
-     * The system-level prompt provides contextual instructions to the agent.
-     *
-     * @param systemPrompt The message that defines the behavior or context for the agent.
-     * @return The instance of FunctionalAgentBuilder with the updated system-level prompt.
-     */
-    public fun systemPrompt(systemPrompt: String): FunctionalAgentBuilder<Input, Output> =
-        prompt(prompt(config.prompt) { system(systemPrompt) })
-
-    /**
-     * Sets the specified prompt for the functional agent being built.
-     *
-     * @param prompt The prompt to be used by the agent.
-     * @return The current instance of FunctionalAgentBuilder with the updated prompt.
-     */
-    public fun prompt(prompt: Prompt): FunctionalAgentBuilder<Input, Output> = apply {
-        this.config = config.copy(prompt = prompt)
-    }
-
-    /**
-     * Sets the temperature parameter for the functional agent. Temperature controls the randomness of the
-     * agent's outputs, where higher values result in more diverse outputs and lower values result in more focused outputs.
-     *
-     * @param temperature The temperature value to be used. It should typically range between 0.0 and 1.0.
-     * @return The updated instance of the FunctionalAgentBuilder with the temperature parameter set.
-     */
-    public fun temperature(temperature: Double): FunctionalAgentBuilder<Input, Output> =
-        prompt(config.prompt.withParams(config.prompt.params.copy(temperature = temperature)))
-
-    /**
-     * Configures the number of choices to be considered during the functional agent's operations.
-     *
-     * @param numberOfChoices The desired number of choices to configure for the functional agent.
-     * @return The updated instance of [FunctionalAgentBuilder] configured with the specified number of choices.
-     */
-    public fun numberOfChoices(numberOfChoices: Int): FunctionalAgentBuilder<Input, Output> =
-        prompt(config.prompt.withParams(config.prompt.params.copy(numberOfChoices = numberOfChoices)))
-
-    /**
-     * Sets the maximum number of iterations for the functional agent builder.
-     *
-     * @param maxIterations The maximum number of iterations to be set.
-     * @return The current instance of FunctionalAgentBuilder with the updated maximum iterations.
-     */
-    public fun maxIterations(maxIterations: Int): FunctionalAgentBuilder<Input, Output> = apply {
-        this.config = config.copy(maxAgentIterations = maxIterations)
-    }
-
-    /**
-     * Configures the FunctionalAgentBuilder with the provided AI agent configuration settings.
-     *
-     * This method applies the specified configuration to the builder, including properties
-     * such as the prompt, language model, maximum iterations, and strategy for handling missing tools.
-     *
-     * @param config The configuration object of type [AIAgentConfig] containing the settings
-     *               to be applied to the builder.
-     * @return The updated instance of [FunctionalAgentBuilder] for further configuration chaining.
-     */
-    public fun agentConfig(config: AIAgentConfig): FunctionalAgentBuilder<Input, Output> = apply {
-        this.config = config
-    }
+    override fun self(): FunctionalAgentBuilder<Input, Output> = this
 
     /**
      * Installs and configures a given feature into the functional agent builder.
@@ -460,10 +169,10 @@ public class FunctionalAgentBuilder<Input, Output>(
     public fun build(): AIAgent<Input, Output> {
         return FunctionalAIAgent(
             strategy = strategy,
-            promptExecutor = requireNotNull(promptExecutor) { "promptExecutor must be set" },
+            promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = validateConfig(config),
+            agentConfig = validatedConfig,
             clock = clock
         ) {
             featureInstallers.forEach { install ->
@@ -488,115 +197,20 @@ public class FunctionalAgentBuilder<Input, Output>(
  */
 public class PlannerAgentBuilder<Input, Output>(
     private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
-    private var promptExecutor: PromptExecutor? = null,
-    private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var id: String? = null,
-    private var config: AIAgentConfig,
-    private var clock: Clock = Clock.System,
+    promptExecutor: PromptExecutor? = null,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    id: String? = null,
+    config: AIAgentConfig,
+    clock: Clock = Clock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
+) : AIAgentBuilderBase<PlannerAgentBuilder<Input, Output>>(
+    promptExecutor = promptExecutor,
+    toolRegistry = toolRegistry,
+    id = id,
+    config = config,
+    clock = clock,
 ) {
-
-    /**
-     * Sets the `PromptExecutor` instance to be used by the `PlannerAgentBuilder`.
-     *
-     * @param promptExecutor An instance of `PromptExecutor` that will handle prompt execution logic.
-     * @return The current instance of `PlannerAgentBuilder<Input, Output>` for method chaining.
-     */
-    public fun promptExecutor(promptExecutor: PromptExecutor): PlannerAgentBuilder<Input, Output> = apply {
-        this.promptExecutor = promptExecutor
-    }
-
-    /**
-     * Sets the Large Language Model (LLM) to be used by the `PlannerAgentBuilder`.
-     *
-     * @param model The instance of [LLModel] representing the Large Language Model to be configured.
-     * @return The current instance of [PlannerAgentBuilder] for method chaining.
-     */
-    public fun llmModel(model: LLModel): PlannerAgentBuilder<Input, Output> = apply {
-        this.config = this.config.copy(model = model)
-    }
-
-    /**
-     * Sets the tool registry for the PlannerAgentBuilder.
-     *
-     * @param toolRegistry The tool registry to be used.
-     * @return The PlannerAgentBuilder instance with the updated tool registry.
-     */
-    public fun toolRegistry(toolRegistry: ToolRegistry): PlannerAgentBuilder<Input, Output> = apply {
-        this.toolRegistry = toolRegistry
-    }
-
-    /**
-     * Sets the identifier for the PlannerAgentBuilder and returns the updated builder instance.
-     *
-     * @param id The identifier to be set. It can be null.
-     * @return The updated PlannerAgentBuilder instance for chaining further configurations.
-     */
-    public fun id(id: String?): PlannerAgentBuilder<Input, Output> = apply {
-        this.id = id
-    }
-
-    /**
-     * Configures the system prompt for the planner agent.
-     *
-     * The system prompt provides foundational instructions or context for the planner agent's behavior.
-     *
-     * @param systemPrompt The content of the system prompt to set.
-     * @return The current instance of the PlannerAgentBuilder with the specified system prompt applied.
-     */
-    public fun systemPrompt(systemPrompt: String): PlannerAgentBuilder<Input, Output> =
-        prompt(prompt(config.prompt) { system(systemPrompt) })
-
-    /**
-     * Sets the prompt to be used by the builder and updates the internal state accordingly.
-     *
-     * @param prompt The prompt to be used by the PlannerAgentBuilder.
-     * @return The current instance of PlannerAgentBuilder with the updated prompt.
-     */
-    public fun prompt(prompt: Prompt): PlannerAgentBuilder<Input, Output> = apply {
-        this.config = config.copy(prompt = prompt)
-    }
-
-    /**
-     * Sets the temperature parameter for the planner agent.
-     * Temperature controls the randomness of the agent's outputs.
-     * A higher value encourages more random and diverse outputs,
-     * while a lower value makes the outputs more focused and deterministic.
-     *
-     * @param temperature The temperature value to be used. Typically ranges from 0.0 to 1.0.
-     * @return The current instance of [PlannerAgentBuilder], allowing for method chaining.
-     */
-    public fun temperature(temperature: Double): PlannerAgentBuilder<Input, Output> =
-        prompt(config.prompt.withParams(config.prompt.params.copy(temperature = temperature)))
-
-    /**
-     * Sets the number of choices the planner agent can consider while making decisions.
-     *
-     * @param numberOfChoices The number of choices to be allowed for the agent.
-     * @return The updated instance of the PlannerAgentBuilder.
-     */
-    public fun numberOfChoices(numberOfChoices: Int): PlannerAgentBuilder<Input, Output> =
-        prompt(config.prompt.withParams(config.prompt.params.copy(numberOfChoices = numberOfChoices)))
-
-    /**
-     * Sets the maximum number of iterations for the planner agent.
-     *
-     * @param maxIterations The maximum number of iterations the agent is allowed to perform.
-     * @return The updated instance of the PlannerAgentBuilder with the specified maximum iterations.
-     */
-    public fun maxIterations(maxIterations: Int): PlannerAgentBuilder<Input, Output> = apply {
-        this.config = config.copy(maxAgentIterations = maxIterations)
-    }
-
-    /**
-     * Configures the agent with the specified AI agent configuration.
-     *
-     * @param config The configuration object that contains settings for the AI agent, such as prompt, model, maximum iterations, and tool conversion strategy.
-     * @return The updated instance of PlannerAgentBuilder<Input, Output> with the applied configuration.
-     */
-    public fun agentConfig(config: AIAgentConfig): PlannerAgentBuilder<Input, Output> = apply {
-        this.config = config
-    }
+    override fun self(): PlannerAgentBuilder<Input, Output> = this
 
     /**
      * Installs a functional feature into the PlannerAgentBuilder with the specified configuration.
@@ -624,10 +238,10 @@ public class PlannerAgentBuilder<Input, Output>(
     public fun build(): AIAgent<Input, Output> {
         return PlannerAIAgent(
             strategy = strategy,
-            promptExecutor = requireNotNull(promptExecutor) { "promptExecutor must be set" },
+            promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = validateConfig(config),
+            agentConfig = validatedConfig,
             clock = clock
         ) {
             featureInstallers.forEach { install ->
