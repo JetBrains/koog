@@ -5,7 +5,10 @@ import ai.koog.agents.example.ApiKeyService;
 import ai.koog.prompt.executor.model.PromptExecutor;
 
 public class FunctionalStrategyExample {
-    record ProblemDescription() {}
+    record ProblemDescription(
+        String domain,
+        int complexity
+    ) {}
 
     public static void main(String[] args) {
         var promptExecutor = PromptExecutor.builder()
