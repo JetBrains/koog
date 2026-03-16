@@ -17,8 +17,8 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldEndWith
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -152,7 +152,7 @@ class ToolSchemaExecutorIntegrationTest {
             getLLMClientForProvider(model.provider).execute(prompt, model, listOf(writeFileTool)) shouldNotBeNull {
                 shouldNotBeEmpty()
                 with(Json.decodeFromString<FileOperation>(joinToString("\n") { it.content })) {
-                    filePath.removePrefix("./") shouldBe "hello.txt"
+                    filePath shouldEndWith "hello.txt"
                     content.trim().shouldContain("Hello, World!")
                 }
             }

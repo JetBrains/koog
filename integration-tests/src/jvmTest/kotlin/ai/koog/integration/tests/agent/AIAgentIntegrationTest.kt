@@ -7,6 +7,8 @@ import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -569,12 +571,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val sayBye = "Bye Bye World!"
         val bye = "Bye"
 
-        val checkpointStrategy = strategy("checkpoint-strategy") {
-            val nodeHello by node<String, String>(hello) {
+        val checkpointStrategy = strategy<String, String>("checkpoint-strategy") {
+            val nodeHello by node<String, String>(name = hello) {
                 sayHello
             }
 
-            val nodeSave by node<String, String>(save) { input ->
+            val nodeSave by node<String, String>(name = save) { input ->
                 // Create a checkpoint
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
@@ -589,7 +591,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 savedMessage
             }
 
-            val nodeBye by node<String, String>(bye) {
+            val nodeBye by node<String, String>(name = bye) {
                 sayBye
             }
 
@@ -678,13 +680,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         // Shared result string to track node executions across rollbacks
         val executionLog = StringBuilder()
 
-        val rollbackStrategy = strategy("rollback-strategy") {
-            val nodeHello by node<String, String>(hello) {
+        val rollbackStrategy = strategy<String, String>("rollback-strategy") {
+            val nodeHello by node<String, String>(name = hello) {
                 executionLog.append(sayHelloLog)
                 sayHello
             }
 
-            val nodeSave by node<String, String>(save) { input ->
+            val nodeSave by node<String, String>(name = save) { input ->
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpointAfterNode(
@@ -699,12 +701,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 saySave
             }
 
-            val nodeBye by node<String, String>(bye) {
+            val nodeBye by node<String, String>(name = bye) {
                 executionLog.append(sayByeLog)
                 sayBye
             }
 
-            val rollbackNode by node<String, String>(rollback) {
+            val rollbackNode by node<String, String>(name = rollback) {
                 // Use a shared variable to prevent infinite rollbacks
                 // Only roll back once, then continue
                 if (!hasRolledBack) {
@@ -787,16 +789,16 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val systemMessage = "You are a helpful assistant."
         val testInput = "Start the test"
 
-        val simpleStrategy = strategy(strategyName) {
-            val nodeHello by node<String, String>(hello) {
+        val simpleStrategy = strategy<String, String>(strategyName) {
+            val nodeHello by node<String, String>(name = hello) {
                 sayHello
             }
 
-            val nodeWorld by node<String, String>(world) {
+            val nodeWorld by node<String, String>(name = world) {
                 sayWorld
             }
 
-            val nodeBye by node<String, String>(bye) {
+            val nodeBye by node<String, String>(name = bye) {
                 sayBye
             }
 
@@ -858,7 +860,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val fileStorageProvider = JVMFilePersistenceStorageProvider(tempDir)
 
-        val simpleStrategy = strategy(strategyName) {
+        val simpleStrategy = strategy<String, String>(strategyName) {
             val nodeHello by node<String, String>(hello) {
                 sayHello
             }
@@ -1055,7 +1057,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 val combinedResult = fold("") { acc, result ->
                     if (acc.isEmpty()) result else "$acc | $result"
                 }
-                ParallelNodeExecutionResult("Combined: ${combinedResult.output}", this)
+                ParallelNodeExecutionResult("Combined: ${combinedResult.output}", combinedResult.context)
             }
 
             edge(nodeStart forwardTo parallelNode transformed { })
@@ -1110,7 +1112,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 name = "maxSelector"
             ) {
                 val maxResult = selectByMax { output -> output.toInt() }
-                ParallelNodeExecutionResult("Maximum value: ${maxResult.output}", this)
+                ParallelNodeExecutionResult("Maximum value: ${maxResult.output}", maxResult.context)
             }
 
             edge(nodeStart forwardTo parallelNode transformed { })
