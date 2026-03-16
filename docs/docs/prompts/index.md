@@ -14,8 +14,8 @@ data class with the following properties:
 - `params`: Optional [LLM configuration parameters](prompt-creation/index.md#prompt-parameters) (such as temperature, tool choice, and others).
 
 Although you can instantiate the `Prompt` class directly,
-the recommended way to create prompts is by using the [Kotlin DSL](prompt-creation/index.md),
-which provides a structured way to define the conversation.
+the recommended way to create prompts is by using the [Kotlin DSL](prompt-creation/index.md) or the Java builder API,
+which provide a structured way to define the conversation.
 
 !!! note
     Kotlin examples on this page use the Kotlin DSL. Java examples use the `Prompt.builder("id")` builder with explicit methods like `system(...)`, `user(...)`, `assistant(...)`, `toolCall(...)`, `toolResult(...)`, and `withOutput(Foo.class)` where applicable.
@@ -63,7 +63,7 @@ The execution flow is the same for both clients and executors:
 
 ```mermaid
 flowchart TB
-    A([Prompt built with Kotlin DSL])
+    A([Prompt built with Kotlin DSL or Java builder])
     B{LLM client or prompt executor}
     C[LLM provider]
     D([Response to your application])

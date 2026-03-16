@@ -1,18 +1,20 @@
 # Class-based tools
 
 This section explains the API designed for scenarios that require enhanced flexibility and customized behavior.
-With this approach, you have full control over a tool, including its parameters, metadata, execution logic, and how it is registered and invoked.
+With this approach in Kotlin, you have full control over a tool, including its parameters, metadata, execution logic, and how it is registered and invoked. In Java, tools are created using annotation-based methods with reflection-based registration.
 
 This level of control is ideal for creating sophisticated tools that extend basic use cases, enabling seamless integration into agent sessions and workflows.
 
-This page describes how to implement a tool, manage tools through registries, call them, and use within node-based agent architectures.
+This page describes how to implement a tool in both Kotlin and Java, manage tools through registries, call them, and use within node-based agent architectures.
 
 !!! note
-    The API is multiplatform. This lets you use the same tools across different platforms.
+    The API is multiplatform for Kotlin. Java tools are implemented using annotation-based methods and registered via reflection. This lets you use the same tools across different platforms in Kotlin, while Java provides full JVM interoperability.
 
 ## Tool implementation
 
 The Koog framework provides the following approaches for implementing tools:
+
+For Kotlin:
 
 * Using the base class `Tool` for all tools. You should use this class when you need to return non-text results or require complete control over the tool behavior.
 * Using the `SimpleTool` class that extends the base `Tool` class and simplifies the creation of tools that return text results. You should use this approach for scenarios where the 
@@ -20,24 +22,32 @@ The Koog framework provides the following approaches for implementing tools:
 
 Both approaches use the same core components but differ in implementation and the results they return.
 
-### Tool class
+For Java:
 
-The [`Tool<Args, Result>`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/index.html) abstract class is the base class for creating tools in Koog.
+* Using annotation-based methods (`@Tool` and `@LLMDescription`) with reflection-based registration. This is the recommended approach for Java interoperability, as subclassing Kotlin's `Tool` or `SimpleTool` from Java is not supported due to suspend function limitations.
+
+### Tool class (Kotlin)
+
+The [`Tool<Args, Result>`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/index.html) abstract class is the base class for creating tools in Kotlin.
 It lets you create tools that accept specific argument types (`Args`) and return results of various types (`Result`).
 
 Each tool consists of the following components:
 
-| <div style="width:110px">Component</div> | Description                                                                                                                                                                                                                                                                                                                                                                                                                          |
-|------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Args`                                   | The serializable data class that defines arguments required for the tool.                                                                                                                                                                                                                                                                                                                                                            |
-| `Result`                                 | The serializable type of result that the tool returns. If you want to present tool results in a custom format, please inherit [ToolResult.TextSerializable](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-result/-text-serializable/index.html) class and implement `textForLLM(): String` method                                                                                                          |
-| `argsSerializer`                         | The overridden variable that defines how the arguments for the tool are deserialized. See also [argsSerializer](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/args-serializer.html).                                                                                                                                                                                                                       |
+| <div style="width:110px">Component</div> | Description                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Args`                                   | The serializable data class that defines arguments required for the tool.                                                                                                                                                                                                                                                                                                                                                             |
+| `Result`                                 | The serializable type of result that the tool returns. If you want to present tool results in a custom format, please inherit [ToolResult.TextSerializable](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-result/-text-serializable/index.html) class and implement `textForLLM(): String` method                                                                                                           |
+| `argsSerializer`                         | The overridden variable that defines how the arguments for the tool are deserialized. See also [argsSerializer](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/args-serializer.html).                                                                                                                                                                                                                        |
 | `resultSerializer`                       | The overridden variable that defines how the result of the tool is deserialized. See also [resultSerializer](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/result-serializer.html). If you chose to inherit [ToolResult.TextSerializable](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-result/-text-serializable/index.html) consider using `ToolResultUtils.toTextSerializer()` |
-| `descriptor`                             | The overridden variable that specifies tool metadata:<br/>- `name`<br/>- `description`<br/>- `requiredParameters` (empty by default)<br/>- `optionalParameters` (empty by default)<br/>See also [descriptor](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/descriptor.html).                                                                                                                               |
-| `execute()`                              | The function that implements the logic of the tool. It takes arguments of type `Args` and returns a result of type `Result`. See also [execute()]().                                                                                                                                                                                                                                                                                 |
+| `descriptor`                             | The overridden variable that specifies tool metadata:<br/>- `name`<br/>- `description`<br/>- `requiredParameters` (empty by default)<br/>- `optionalParameters` (empty by default)<br/>See also [descriptor](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/descriptor.html).                                                                                                                                |
+| `execute()`                              | The function that implements the logic of the tool. It takes arguments of type `Args` and returns a result of type `Result`. See also [execute()]().                                                                                                                                                                                                                                                                                  |
+
+!!! note "Java Implementation"
+    In Java, instead of subclassing `Tool<Args, Result>`, use annotation-based methods with `@Tool` and `@LLMDescription`. The framework handles serialization and registration automatically through reflection. For more
+    details, see [Annotation-based methods](#annotation-based-methods-java) below.
 
 !!! tip
-    Ensure your tools have clear descriptions and well-defined parameter names to make it easier for the LLM to understand and use them properly.
+    Ensure your tools have clear descriptions and well-defined parameter names to make it easier for the LLM to understand and use them properly. In Kotlin, use the `descriptor` property; in Java, use `@LLMDescription` annotations.
 
 #### Usage example
 
@@ -81,49 +91,13 @@ Here is an example of a custom tool implementation using the `Tool` class that r
         override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
     }
     ```
-    <!--- KNIT example-class-based-tools-01.kt --> 
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    // Java equivalent: implement the tool as a Java method and register it via ToolRegistry.builder().
-    // This is the recommended Java interop path instead of subclassing the Kotlin Tool base class.
-    public final class CalculatorTool {
-        private CalculatorTool() {}
-
-        @Tool(customName = "calculator")
-        @LLMDescription(description = "A simple calculator that can add two digits (0-9).")
-        public static int calculator(
-                @LLMDescription(description = "The first digit to add (0-9)") int digit1,
-                @LLMDescription(description = "The second digit to add (0-9)") int digit2
-        ) {
-            if (digit1 < 0 || digit1 > 9) throw new IllegalArgumentException("digit1 must be a single digit (0-9)");
-            if (digit2 < 0 || digit2 > 9) throw new IllegalArgumentException("digit2 must be a single digit (0-9)");
-            return digit1 + digit2;
-        }
-
-        public static ToolRegistry registry() throws NoSuchMethodException {
-            return ToolRegistry.builder()
-                .tool(CalculatorTool.class.getMethod("calculator", int.class, int.class))
-                .build();
-        }
-    }
-    // Note: Subclassing the Kotlin Tool<TArgs, TResult> and overriding a suspend execute(...) from Java is not supported.
-    // The Java interop uses reflection-based registration of Java methods as tools.
-    ```
-    <!--- KNIT example-class-based-tools-java-01.java -->
+    <!--- KNIT example-class-based-tools-01.kt -->
 
 After implementing your tool, you need to add it to a tool registry and then use it with an agent. For details, see [Tool registry](tools-overview.md#tool-registry).
 
 For more details, see [API reference](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/index.html).
 
-### SimpleTool class
+### SimpleTool class (Kotlin)
 
 The [`SimpleTool<Args>`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-simple-tool/index.html) abstract class extends `Tool<Args, ToolResult.Text>` and simplifies the creation of tools that return text results.
 
@@ -136,13 +110,15 @@ Each simple tool consists of the following components:
 | `descriptor`                             | The overridden variable that specifies tool metadata:<br/>- `name`<br/>- `description`<br/>- `requiredParameters` (empty by default)<br/> - `optionalParameters` (empty by default)<br/> See also [descriptor](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/descriptor.html). |
 | `doExecute()`                            | The overridden function that describes the main action performed by the tool. It takes arguments of type `Args` and returns a `String`. See also [doExecute()](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-simple-tool/do-execute.html).                                          |
 
+!!! note "Java Implementation"
+    In Java, the equivalent approach is to use annotation-based methods that return `String`. The framework automatically handles the text result wrapping. For more details, see [Annotation-based methods](#annotation-based-methods-java) below.
 
 !!! tip
-    Ensure your tools have clear descriptions and well-defined parameter names to make it easier for the LLM to understand and use them properly.
+    Ensure your tools have clear descriptions and well-defined parameter names to make it easier for the LLM to understand and use them properly. In Kotlin, use the `descriptor` and constructor parameters; in Java, use `@Tool` and `@LLMDescription` annotations.
 
 #### Usage example 
 
-Here is an example of a custom tool implementation using `SimpleTool`:
+Here is an example of a custom tool implementation using `SimpleTool` in Kotlin:
 
 === "Kotlin"
 
@@ -179,7 +155,56 @@ Here is an example of a custom tool implementation using `SimpleTool`:
         }
     }
     ```
-    <!--- KNIT example-class-based-tools-02.kt --> 
+    <!--- KNIT example-class-based-tools-02.kt -->
+
+### Annotation-based methods (Java)
+
+To implement tools in Java, instead of subclassing `Tool` or `SimpleTool`, use annotation-based methods with `@Tool` and
+`@LLMDescription`. Koog handles serialization and registration automatically through reflection. To learn more about the
+implementation, see Java examples below.
+
+#### Usage examples
+
+This is an example of a tool implementation in Java, equivalent to using the `Tool` class in Kotlin.
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // Java equivalent: implement the tool as a Java method and register it via ToolRegistry.builder().
+    // This is the recommended Java interop path instead of subclassing the Kotlin Tool base class.
+    public final class CalculatorTool {
+        private CalculatorTool() {}
+    
+        @Tool(customName = "calculator")
+        @LLMDescription(description = "A simple calculator that can add two digits (0-9).")
+        public static int calculator(
+                @LLMDescription(description = "The first digit to add (0-9)") int digit1,
+                @LLMDescription(description = "The second digit to add (0-9)") int digit2
+        ) {
+            if (digit1 < 0 || digit1 > 9) throw new IllegalArgumentException("digit1 must be a single digit (0-9)");
+            if (digit2 < 0 || digit2 > 9) throw new IllegalArgumentException("digit2 must be a single digit (0-9)");
+            return digit1 + digit2;
+        }
+    
+        public static ToolRegistry registry() throws NoSuchMethodException {
+            return ToolRegistry.builder()
+                .tool(CalculatorTool.class.getMethod("calculator", int.class, int.class))
+                .build();
+        }
+    }
+    // Note: Subclassing the Kotlin Tool<TArgs, TResult> and overriding a suspend execute(...) from Java is not supported.
+    // The Java interop uses reflection-based registration of Java methods as tools.
+    ```
+    <!--- KNIT example-class-based-tools-java-01.java -->
+
+Here is an example of a tool implementation in Java, equivalent to using the `SimpleTool` class in Kotlin. This example
+implements a simple tool that returns a text result.
 
 === "Java"
 
@@ -193,7 +218,7 @@ Here is an example of a custom tool implementation using `SimpleTool`:
     // Java equivalent of SimpleTool: provide a Java method and register it as a tool.
     public final class CastToDoubleTool {
         private CastToDoubleTool() {}
-
+    
         @Tool(customName = "cast_to_double")
         @LLMDescription(description = "casts the passed expression to double or returns 0.0 if the expression is not castable")
         public static String castToDouble(
@@ -208,7 +233,7 @@ Here is an example of a custom tool implementation using `SimpleTool`:
             }
             return "Result: " + value + ", the comment was: " + comment;
         }
-
+    
         public static ToolRegistry registry() throws NoSuchMethodException {
             return ToolRegistry.builder()
                 .tool(CastToDoubleTool.class.getMethod("castToDouble", String.class, String.class))
@@ -221,11 +246,20 @@ Here is an example of a custom tool implementation using `SimpleTool`:
 
 ### Sending tool result to LLM in custom format
 
+For Kotlin:
+
 If you are not happy with JSON results sent to LLM (in some cases, LLMs can work better if tool output is structured as Markdown, for instance), you have to follow the following steps:
+
 1. Implement `ToolResult.TextSerializable` interface, and override `textForLLM()` method
 2. Override `resultSerializer` using `ToolResultUtils.toTextSerializer<T>()`
 
+For Java:
+
+Return formatted text (such as Markdown) directly as a `String` from your annotated method. The framework handles this automatically.
+
 #### Example
+
+Here is an example showing custom formatted output in both Kotlin and Java:
 
 === "Kotlin"
 
@@ -340,5 +374,5 @@ If you are not happy with JSON results sent to LLM (in some cases, LLMs can work
     ```
     <!--- KNIT example-class-based-tools-java-03.java -->
 
-After implementing your tool, you need to add it to a tool registry and then use it with an agent.
+After implementing your tool in Kotlin or Java, you need to add it to a tool registry and then use it with an agent.
 For details, see [Tool registry](tools-overview.md#tool-registry).

@@ -2,17 +2,17 @@
 
 Multimodal content refers to content of different types, such as text, images, audio, video, and files.
 Koog lets you send images, audio, video, and files to LLMs within the `user` message along with text. 
-You can add them to the `user` message by using the corresponding functions:
+You can add them to the `user` message by using the corresponding functions in Kotlin or methods in Java:
 
 - `image()`: Attaches images (JPG, PNG, WebP, GIF).
 - `audio()`: Attaches audio files (MP3, WAV, FLAC).
 - `video()`: Attaches video files (MP4, AVI, MOV).
 - `file()` / `binaryFile()` / `textFile()`: Attaches documents (PDF, TXT, MD, etc.).
 
-Each function supports two ways of configuring attachment parameters, so you can:
+Each function or method supports two ways of configuring attachment parameters, so you can:
 
-- Pass a URL or a file path to the function, and it automatically handles attachment parameters. For `file()`, `binaryFile()`, and `textFile()`, you must also provide the MIME type.
-- Create and pass a `ContentPart` object to the function for custom control over attachment parameters.
+- Pass a URL or a file path to the function or method, and it automatically handles attachment parameters. For `file()`, `binaryFile()`, and `textFile()`, you must also provide the MIME type.
+- Create and pass a `ContentPart` object to the function or method for custom control over attachment parameters.
 
 !!! note
     Multimodal content support varies by [LLM provider](../../llm-providers.md).
@@ -20,8 +20,8 @@ Each function supports two ways of configuring attachment parameters, so you can
 
 ### Auto-configured attachments
 
-If you pass a URL or a file path to the attachment functions, Koog automatically constructs
-the corresponding attachment parameters based on the file extension.
+If you pass a URL or a file path to the attachment functions or methods, Koog automatically constructs the corresponding 
+attachment parameters based on the file extension.
 
 The general format of the `user` message that includes a text message and a list of auto-configured attachments is as follows:
 
@@ -68,7 +68,7 @@ The general format of the `user` message that includes a text message and a list
     ```
     <!--- KNIT example-multimodal-content-java-01.java -->
 
-The `+` operator adds text content to the user message along with the attachments.
+In Kotlin, the `+` operator adds text content to the user message along with the attachments. In Java, use the `text()` method of `ContentPartsBuilder`.
 
 ### Custom-configured attachments
 
@@ -76,8 +76,8 @@ The [`ContentPart`](api:prompt-model::ai.koog.prompt.message.ContentPart) interf
 lets you configure parameters for each attachment individually.
 
 All attachments implement the `ContentPart.Attachment` interface.
-You can create an instance of a specific implementation for each attachment,
-configure its parameters, and pass it to the corresponding `image()`, `audio()`, `video()`, or `file()` functions.
+You can create an instance of a specific implementation for each attachment, configure its parameters, and pass it to 
+the corresponding `image()`, `audio()`, `video()`, or `file()` functions in Kotlin or methods in Java.
 
 The general format of the `user` message that includes a text message and a list of custom-configured attachments is as follows:
 

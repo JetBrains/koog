@@ -4,7 +4,7 @@
 
 ## Tool workflow
 
-The Koog framework offers the following workflow for working with tools:
+The Koog framework offers the following workflow for working with tools in Kotlin and Java:
 
 1. Create a custom tool or use one of the built-in tools.
 2. Add the tool to a tool registry.
@@ -205,7 +205,7 @@ It provides several methods for calling tools so that you can:
 - Call a tool of the specified type with the given arguments.
 - Call a tool that returns a raw string result.
 
-For more details, see [API reference](api:agents-core::ai.koog.agents.core.agent.session.AIAgentLLMWriteSession).
+For more details, the API reference for [AIAgentLLMWriteSession](api:agents-core::ai.koog.agents.core.agent.session.AIAgentLLMWriteSession).
 
 #### Parallel tool calls
 
