@@ -609,7 +609,7 @@ If the agent does not recognize your tools, check the following:
 
 If the LLM does not use your tools correctly or misunderstands their purpose, try the following:
 
-- Use simple parameter types when possible (`String`, `Boolean`, `Int` in Kotlin, or `String`, `boolean`, `int` in Java).
+- Use primitive parameter types when possible (`String`, `Boolean`, `Int` in Kotlin, or `String`, `boolean`, `int` in Java).
 - Clearly describe the expected format in the parameter description.
 - For complex types, consider using `String` parameters with a specific format and parse them in your tool.
 - Include examples of valid inputs in your parameter descriptions.
