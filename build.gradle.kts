@@ -185,7 +185,14 @@ tasks {
 
             println("Sending request to $uri...")
 
-            val client = OkHttpClient()
+            val client = OkHttpClient.Builder()
+                .connectTimeout(40, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.MINUTES)
+                .readTimeout(10, TimeUnit.MINUTES)
+                .callTimeout(15, TimeUnit.MINUTES)
+                .retryOnConnectionFailure(true)
+                .build()
+
             val request = Request.Builder()
                 .url(uri)
                 .header("Authorization", "Bearer $base64Auth")
