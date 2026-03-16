@@ -6,6 +6,7 @@ import ai.koog.agents.snapshot.feature.Persistence;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+import me.kpavlov.finchly.TestEnvironment;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -45,7 +46,9 @@ public class PersistenceJdbcExample {
     private static final String JDBC_PASSWORD = "postgres";
 
     public static void main(String[] args) {
-        String apiKey = System.getenv("OPENAI_API_KEY");
+//        String apiKey = System.getenv("OPENAI_API_KEY");
+        String apiKey = TestEnvironment.INSTANCE.get("OPENAI_API_KEY");
+
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("OPENAI_API_KEY environment variable is not set");
         }

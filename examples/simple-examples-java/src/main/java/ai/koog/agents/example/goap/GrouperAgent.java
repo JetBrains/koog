@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.params.LLMParams;
+import me.kpavlov.finchly.TestEnvironment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,12 +82,16 @@ public class GrouperAgent {
     }
 
     public static void main(String[] args) {
-        String openAIApiKey = System.getenv("OPENAI_API_KEY");
+//        String openAIApiKey = System.getenv("OPENAI_API_KEY");
+        String openAIApiKey = TestEnvironment.INSTANCE.get("OPENAI_API_KEY");
+
         if (openAIApiKey == null || openAIApiKey.isBlank()) {
             throw new IllegalStateException("OPENAI_API_KEY environment variable is not set");
         }
 
-        String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+//        String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+        String anthropicApiKey = TestEnvironment.INSTANCE.get("OPENAI_API_KEY");
+
         if (anthropicApiKey == null || anthropicApiKey.isBlank()) {
             throw new IllegalStateException("ANTHROPIC_API_KEY environment variable is not set");
         }

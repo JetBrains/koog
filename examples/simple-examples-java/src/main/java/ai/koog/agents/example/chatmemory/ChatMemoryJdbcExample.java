@@ -7,6 +7,7 @@ import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProviderJvm;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+import me.kpavlov.finchly.TestEnvironment;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -43,7 +44,9 @@ public class ChatMemoryJdbcExample {
     private static final String JDBC_PASSWORD = "postgres";
 
     public static void main(String[] args) throws Exception {
-        String apiKey = System.getenv("OPENAI_API_KEY");
+//        String apiKey = System.getenv("OPENAI_API_KEY");
+        String apiKey = TestEnvironment.INSTANCE.get("OPENAI_API_KEY");
+
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("OPENAI_API_KEY environment variable is not set");
         }
