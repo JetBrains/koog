@@ -29,9 +29,9 @@ import ai.koog.agents.core.utils.submitToMainDispatcher
 import kotlin.time.Clock
 
 public actual abstract class AIAgentPipeline actual constructor(
-    agentConfig: AIAgentConfig,
+    config: AIAgentConfig,
     clock: Clock
-) : AIAgentPipelineAPI by AIAgentPipelineImpl(agentConfig, clock) {
+) : AIAgentPipelineCommon(config, clock) {
     // JVM Unique Interceptors
 
     /**
@@ -50,7 +50,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptEnvironmentCreated")
     public fun javaApiInterceptEnvironmentCreated(
         feature: AIAgentFeature<*, *>,
@@ -73,7 +72,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentStarting")
     public fun javaApiInterceptAgentStarting(
         feature: AIAgentFeature<*, *>,
@@ -98,7 +96,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentCompleted")
     public fun javaApiInterceptAgentCompleted(
         feature: AIAgentFeature<*, *>,
@@ -123,7 +120,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentExecutionFailed")
     public fun javaApiInterceptAgentExecutionFailed(
         feature: AIAgentFeature<*, *>,
@@ -148,7 +144,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentClosing")
     public fun javaApiInterceptAgentClosing(
         feature: AIAgentFeature<*, *>,
@@ -173,7 +168,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptStrategyStarting")
     public fun javaApiInterceptStrategyStarting(
         feature: AIAgentFeature<*, *>,
@@ -198,7 +192,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptStrategyCompleted")
     public fun javaApiInterceptStrategyCompleted(
         feature: AIAgentFeature<*, *>,
@@ -223,7 +216,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMCallStarting")
     public fun javaApiInterceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
@@ -248,7 +240,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMCallCompleted")
     public fun javaApiInterceptLLMCallCompleted(
         feature: AIAgentFeature<*, *>,
@@ -273,7 +264,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingStarting")
     public fun javaApiInterceptLLMStreamingStarting(
         feature: AIAgentFeature<*, *>,
@@ -298,7 +288,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingFrameReceived")
     public fun javaApiInterceptLLMStreamingFrameReceived(
         feature: AIAgentFeature<*, *>,
@@ -323,7 +312,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingFailed")
     public fun javaApiInterceptLLMStreamingFailed(
         feature: AIAgentFeature<*, *>,
@@ -348,7 +336,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingCompleted")
     public fun javaApiInterceptLLMStreamingCompleted(
         feature: AIAgentFeature<*, *>,
@@ -373,7 +360,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolCallStarting")
     public fun javaApiInterceptToolCallStarting(
         feature: AIAgentFeature<*, *>,
@@ -398,7 +384,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolValidationFailed")
     public fun javaApiInterceptToolValidationFailed(
         feature: AIAgentFeature<*, *>,
@@ -423,7 +408,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolCallFailed")
     public fun javaApiInterceptToolCallFailed(
         feature: AIAgentFeature<*, *>,
@@ -448,7 +432,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolCallCompleted")
     public fun javaApiInterceptToolCallCompleted(
         feature: AIAgentFeature<*, *>,
