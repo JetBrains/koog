@@ -54,12 +54,22 @@ import kotlin.reflect.safeCast
 import kotlin.time.Clock
 
 /**
- * Default implementation of [AIAgentPipelineAPI]
+ * Base implementation for AI agent pipelines that provides core functionality for managing
+ * features and lifecycle event handling.
+ *
+ * This class serves as the foundation for all pipeline types (graph, functional, planner) and provides:
+ * - Feature installation and management
+ * - Lifecycle event handling and interception
+ * - Handler registration and invocation
+ * - System feature auto-installation from environment variables
+ *
+ * @property config The configuration settings for the AI agent
+ * @property clock Clock instance for time-based operations
  */
-public class AIAgentPipelineImpl(
-    override val config: AIAgentConfig,
-    public override val clock: Clock
-) : AIAgentPipelineAPI {
+public abstract class AIAgentPipelineCommon(
+    public val config: AIAgentConfig,
+    public val clock: Clock
+) {
 
     // Notes on suppressed warnings used in this class:
     // - Some members are annotated with @Suppress to satisfy explicit API requirements
@@ -94,7 +104,16 @@ public class AIAgentPipelineImpl(
 
     private val agentLifecycleHandlersCollector = AgentLifecycleHandlersCollector()
 
-    public override fun <TFeature : Any> feature(
+    /**
+     * Retrieves a feature implementation from the pipeline using the specified feature definition.
+     *
+     * @param TFeature The type of the feature implementation
+     * @param featureClass The KClass of the feature to retrieve
+     * @param feature The feature definition containing the storage key
+     * @return The feature implementation if found, or null if not registered
+     * @throws IllegalArgumentException if the feature is found but not of the expected type
+     */
+    public fun <TFeature : Any> feature(
         featureClass: KClass<TFeature>,
         feature: AIAgentFeature<*, TFeature>
     ): TFeature? {
@@ -108,7 +127,16 @@ public class AIAgentPipelineImpl(
             )
     }
 
-    public override fun <TConfig : FeatureConfig, TFeatureImpl : Any> install(
+    /**
+     * Installs a feature into the pipeline with the provided configuration and implementation.
+     *
+     * @param TConfig The type of the feature configuration
+     * @param TFeatureImpl The type of the feature implementation
+     * @param featureKey The unique storage key identifying the feature
+     * @param featureConfig The configuration for the feature
+     * @param featureImpl The implementation instance of the feature
+     */
+    public fun <TConfig : FeatureConfig, TFeatureImpl : Any> install(
         featureKey: AIAgentStorageKey<TFeatureImpl>,
         featureConfig: TConfig,
         featureImpl: TFeatureImpl,
@@ -116,7 +144,12 @@ public class AIAgentPipelineImpl(
         registeredFeatures[featureKey] = RegisteredFeature(featureImpl, featureConfig)
     }
 
-    public override suspend fun uninstall(
+    /**
+     * Uninstalls a feature from the pipeline and closes its message processors.
+     *
+     * @param featureKey The unique storage key identifying the feature to uninstall
+     */
+    public suspend fun uninstall(
         featureKey: AIAgentStorageKey<*>
     ) {
         registeredFeatures
@@ -138,7 +171,7 @@ public class AIAgentPipelineImpl(
     }
 
     @InternalAgentsApi
-    override suspend fun prepareFeatures() {
+    internal suspend fun prepareFeatures() {
         // Install system features (if exist)
         installFeaturesFromSystemConfig()
 
@@ -157,7 +190,7 @@ public class AIAgentPipelineImpl(
     }
 
     @InternalAgentsApi
-    override suspend fun closeAllFeaturesMessageProcessors() {
+    internal suspend fun closeAllFeaturesMessageProcessors() {
         registeredFeatures.values.forEach { registerFeature ->
             closeFeatureMessageProcessors(registerFeature.featureConfig)
         }
@@ -167,8 +200,8 @@ public class AIAgentPipelineImpl(
 
     //region Invoke Agent Handlers
 
-    @InternalAgentsApi
-    public override suspend fun <TInput, TOutput> onAgentStarting(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun <TInput, TOutput> onAgentStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -181,8 +214,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onAgentCompleted(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onAgentCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String,
@@ -196,8 +229,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onAgentExecutionFailed(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onAgentExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String,
@@ -211,8 +244,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onAgentClosing(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onAgentClosing(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agentId: String
@@ -223,8 +256,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onAgentEnvironmentTransforming(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onAgentEnvironmentTransforming(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agent: GraphAIAgent<*, *>,
@@ -241,8 +274,8 @@ public class AIAgentPipelineImpl(
 
     //region Invoke Strategy Handlers
 
-    @InternalAgentsApi
-    public override suspend fun onStrategyStarting(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onStrategyStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         strategy: AIAgentStrategy<*, *, *>,
@@ -254,8 +287,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onStrategyCompleted(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onStrategyCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         strategy: AIAgentStrategy<*, *, *>,
@@ -273,8 +306,8 @@ public class AIAgentPipelineImpl(
 
     //region Invoke LLM Call Handlers
 
-    @InternalAgentsApi
-    public override suspend fun onLLMCallStarting(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onLLMCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -289,8 +322,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onLLMCallCompleted(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onLLMCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -298,7 +331,7 @@ public class AIAgentPipelineImpl(
         model: LLModel,
         tools: List<ToolDescriptor>,
         responses: List<Message.Response>,
-        moderationResponse: ModerationResult?,
+        moderationResponse: ModerationResult? = null,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
@@ -311,8 +344,8 @@ public class AIAgentPipelineImpl(
 
     //region Invoke Tool Call Handlers
 
-    @InternalAgentsApi
-    public override suspend fun onToolCallStarting(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onToolCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -337,8 +370,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onToolValidationFailed(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onToolValidationFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -367,8 +400,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onToolCallFailed(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onToolCallFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -397,8 +430,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onToolCallCompleted(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onToolCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -429,8 +462,8 @@ public class AIAgentPipelineImpl(
 
     //region Invoke LLM Streaming
 
-    @InternalAgentsApi
-    public override suspend fun onLLMStreamingStarting(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onLLMStreamingStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -445,8 +478,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onLLMStreamingFrameReceived(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onLLMStreamingFrameReceived(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -461,8 +494,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onLLMStreamingFailed(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onLLMStreamingFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -477,8 +510,8 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @InternalAgentsApi
-    public override suspend fun onLLMStreamingCompleted(
+    @OptIn(InternalAgentsApi::class)
+    internal suspend fun onLLMStreamingCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -497,8 +530,14 @@ public class AIAgentPipelineImpl(
 
     //region Interceptors
 
+    /**
+     * Intercepts environment creation and allows transformation of the agent environment.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that receives the context and base environment, returning a potentially modified environment
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptEnvironmentCreated(
+    public fun interceptEnvironmentCreated(
         feature: AIAgentFeature<*, *>,
         handle: suspend (AgentEnvironmentTransformingContext, AIAgentEnvironment) -> AIAgentEnvironment
     ) {
@@ -509,8 +548,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the agent starting event before execution begins.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the agent starting context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptAgentStarting(
+    public fun interceptAgentStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (AgentStartingContext) -> Unit
     ) {
@@ -521,8 +566,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the agent completed event after successful execution.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the agent completed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptAgentCompleted(
+    public fun interceptAgentCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentCompletedContext) -> Unit
     ) {
@@ -533,8 +584,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the agent execution failed event when an error occurs.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the execution failed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptAgentExecutionFailed(
+    public fun interceptAgentExecutionFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentExecutionFailedContext) -> Unit
     ) {
@@ -545,8 +602,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the agent closing event before the agent is closed.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the agent closing context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptAgentClosing(
+    public fun interceptAgentClosing(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentClosingContext) -> Unit
     ) {
@@ -557,8 +620,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the strategy starting event before strategy execution begins.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the strategy starting context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptStrategyStarting(
+    public fun interceptStrategyStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StrategyStartingContext) -> Unit
     ) {
@@ -569,8 +638,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the strategy completed event after strategy execution finishes.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the strategy completed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptStrategyCompleted(
+    public fun interceptStrategyCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StrategyCompletedContext) -> Unit
     ) {
@@ -581,8 +656,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the LLM call starting event before a call to the language model.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the LLM call starting context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptLLMCallStarting(
+    public fun interceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit
     ) {
@@ -593,8 +674,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the LLM call completed event after a language model call finishes.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the LLM call completed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptLLMCallCompleted(
+    public fun interceptLLMCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallCompletedContext) -> Unit
     ) {
@@ -605,8 +692,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the LLM streaming starting event before streaming begins.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the streaming starting context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptLLMStreamingStarting(
+    public fun interceptLLMStreamingStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingStartingContext) -> Unit
     ) {
@@ -617,8 +710,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts each frame received during LLM streaming.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes each streaming frame context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptLLMStreamingFrameReceived(
+    public fun interceptLLMStreamingFrameReceived(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingFrameReceivedContext) -> Unit
     ) {
@@ -629,8 +728,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the LLM streaming failed event when streaming encounters an error.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the streaming failed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptLLMStreamingFailed(
+    public fun interceptLLMStreamingFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingFailedContext) -> Unit
     ) {
@@ -641,8 +746,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the LLM streaming completed event after streaming finishes successfully.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the streaming completed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptLLMStreamingCompleted(
+    public fun interceptLLMStreamingCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingCompletedContext) -> Unit
     ) {
@@ -653,8 +764,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the tool call starting event before a tool is executed.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the tool call starting context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptToolCallStarting(
+    public fun interceptToolCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallStartingContext) -> Unit
     ) {
@@ -665,8 +782,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the tool validation failed event when tool argument validation fails.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the validation failed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptToolValidationFailed(
+    public fun interceptToolValidationFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolValidationFailedContext) -> Unit
     ) {
@@ -677,8 +800,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the tool call failed event when tool execution fails.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the tool call failed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptToolCallFailed(
+    public fun interceptToolCallFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallFailedContext) -> Unit
     ) {
@@ -689,8 +818,14 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    /**
+     * Intercepts the tool call completed event after successful tool execution.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the tool call completed context
+     */
     @OptIn(InternalAgentsApi::class)
-    public override fun interceptToolCallCompleted(
+    public fun interceptToolCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallCompletedContext) -> Unit
     ) {
@@ -705,6 +840,12 @@ public class AIAgentPipelineImpl(
 
     //region Deprecated Interceptors
 
+    /**
+     * Intercepts the agent starting event before execution begins.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the agent starting context
+     */
     @Deprecated(
         message = "Please use interceptAgentStarting instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -712,13 +853,19 @@ public class AIAgentPipelineImpl(
             imports = arrayOf("ai.koog.agents.core.feature.handler.agent.AgentStartingContext")
         )
     )
-    public override fun interceptBeforeAgentStarted(
+    public fun interceptBeforeAgentStarted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (AgentStartingContext) -> Unit
     ) {
         interceptAgentStarting(feature, handle)
     }
 
+    /**
+     * Intercepts the agent completed event after successful execution.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the agent completed context
+     */
     @Deprecated(
         message = "Please use interceptAgentCompleted instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -728,13 +875,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptAgentFinished(
+    public fun interceptAgentFinished(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentCompletedContext) -> Unit
     ) {
         interceptAgentCompleted(feature, handle)
     }
 
+    /**
+     * Intercepts the agent execution failed event when an error occurs.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the execution failed context
+     */
     @Deprecated(
         message = "Please use interceptAgentExecutionFailed instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -744,13 +897,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptAgentRunError(
+    public fun interceptAgentRunError(
         feature: AIAgentFeature<*, *>,
         handle: suspend (AgentExecutionFailedContext) -> Unit
     ) {
         interceptAgentExecutionFailed(feature, handle)
     }
 
+    /**
+     * Intercepts the agent closing event before the agent is closed.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the agent closing context
+     */
     @Deprecated(
         message = "Please use interceptAgentClosing instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -760,13 +919,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptAgentBeforeClose(
+    public fun interceptAgentBeforeClose(
         feature: AIAgentFeature<*, *>,
         handle: suspend (AgentClosingContext) -> Unit
     ) {
         interceptAgentClosing(feature, handle)
     }
 
+    /**
+     * Intercepts the strategy starting event before strategy execution begins.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the strategy starting context
+     */
     @Deprecated(
         message = "Please use interceptStrategyStarting instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -776,13 +941,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptStrategyStart(
+    public fun interceptStrategyStart(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StrategyStartingContext) -> Unit
     ) {
         interceptStrategyStarting(feature, handle)
     }
 
+    /**
+     * Intercepts the strategy completed event after strategy execution finishes.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the strategy completed context
+     */
     @Deprecated(
         message = "Please use interceptStrategyCompleted instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -792,13 +963,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptStrategyFinished(
+    public fun interceptStrategyFinished(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StrategyCompletedContext) -> Unit
     ) {
         interceptStrategyCompleted(feature, handle)
     }
 
+    /**
+     * Intercepts the LLM call starting event before a call to the language model.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the LLM call starting context
+     */
     @Deprecated(
         message = "Please use interceptLLMCallStarting instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -808,13 +985,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptBeforeLLMCall(
+    public fun interceptBeforeLLMCall(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit
     ) {
         interceptLLMCallStarting(feature, handle)
     }
 
+    /**
+     * Intercepts the LLM call completed event after a language model call finishes.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the LLM call completed context
+     */
     @Deprecated(
         message = "Please use interceptLLMCallCompleted instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -824,13 +1007,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptAfterLLMCall(
+    public fun interceptAfterLLMCall(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallCompletedContext) -> Unit
     ) {
         interceptLLMCallCompleted(feature, handle)
     }
 
+    /**
+     * Intercepts the tool call starting event before a tool is executed.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the tool call starting context
+     */
     @Deprecated(
         message = "Please use interceptToolCallStarting instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -840,13 +1029,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptToolCall(
+    public fun interceptToolCall(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallStartingContext) -> Unit
     ) {
         interceptToolCallStarting(feature, handle)
     }
 
+    /**
+     * Intercepts the tool call completed event after successful tool execution.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the tool call completed context
+     */
     @Deprecated(
         message = "Please use interceptToolCallCompleted instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -856,13 +1051,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptToolCallResult(
+    public fun interceptToolCallResult(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallCompletedContext) -> Unit
     ) {
         interceptToolCallCompleted(feature, handle)
     }
 
+    /**
+     * Intercepts the tool call failed event when tool execution fails.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the tool call failed context
+     */
     @Deprecated(
         message = "Please use interceptToolCallFailed instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -872,13 +1073,19 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptToolCallFailure(
+    public fun interceptToolCallFailure(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallFailedContext) -> Unit
     ) {
         interceptToolCallFailed(feature, handle)
     }
 
+    /**
+     * Intercepts the tool validation failed event when tool argument validation fails.
+     *
+     * @param feature The feature registering this interceptor
+     * @param handle Handler that processes the validation failed context
+     */
     @Deprecated(
         message = "Please use interceptToolValidationFailed instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
@@ -888,7 +1095,7 @@ public class AIAgentPipelineImpl(
             )
         )
     )
-    public override fun interceptToolValidationError(
+    public fun interceptToolValidationError(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolValidationFailedContext) -> Unit
     ) {

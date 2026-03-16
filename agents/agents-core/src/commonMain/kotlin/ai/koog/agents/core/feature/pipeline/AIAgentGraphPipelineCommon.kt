@@ -1,0 +1,353 @@
+package ai.koog.agents.core.feature.pipeline
+
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
+import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
+import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
+import ai.koog.serialization.TypeToken
+import kotlin.time.Clock
+
+/**
+ * Base implementation for graph-specific AI agent pipeline operations.
+ *
+ * Extends [AIAgentPipelineCommon] to provide node and subgraph execution lifecycle management,
+ * including event handling for node/subgraph starting, completion, and failure events.
+ *
+ * @property clock Clock instance for time-based operations
+ */
+public abstract class AIAgentGraphPipelineCommon(
+    agentConfig: AIAgentConfig,
+    clock: Clock = Clock.System
+) : AIAgentPipeline(agentConfig, clock) {
+
+    //region Trigger Node Handlers
+
+    /**
+     * Notifies all registered node handlers before a node is executed.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the agent environment transformation event
+     * @param node The node that is about to be executed
+     * @param context The agent context in which the node is being executed
+     * @param input The input data for the node execution
+     * @param inputType The type of the input data provided to the node
+     */
+    internal suspend fun onNodeExecutionStarting(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: TypeToken
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.NodeExecutionStarting,
+            context = NodeExecutionStartingContext(eventId, executionInfo, node, context, input, inputType)
+        )
+    }
+
+    /**
+     * Notifies all registered node handlers after a node has been executed.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the agent environment transformation event
+     * @param node The node that was executed
+     * @param context The agent context in which the node was executed
+     * @param input The input data that was provided to the node
+     * @param inputType The type of the input data provided to the node
+     * @param output The output data produced by the node execution
+     * @param outputType The type of the output data produced by the node execution
+     */
+    internal suspend fun onNodeExecutionCompleted(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: TypeToken,
+        output: Any?,
+        outputType: TypeToken
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.NodeExecutionCompleted,
+            context = NodeExecutionCompletedContext(eventId, executionInfo, node, context, input, inputType, output, outputType)
+        )
+    }
+
+    /**
+     * Handles errors occurring during the execution of a node by invoking all registered node execution error handlers.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the agent environment transformation event
+     * @param node The instance of the node where the error occurred.
+     * @param context The context associated with the AI agent executing the node.
+     * @param input The input data provided to the node.
+     * @param inputType The type of the input data provided to the node.
+     * @param throwable The exception or error that occurred during node execution.
+     */
+    internal suspend fun onNodeExecutionFailed(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: TypeToken,
+        throwable: Throwable
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.NodeExecutionFailed,
+            context = NodeExecutionFailedContext(eventId, executionInfo, node, context, input, inputType, throwable)
+        )
+    }
+
+    //endregion Trigger Node Handlers
+
+    //region Trigger Subgraph Handlers
+
+    /**
+     * Notifies all registered subgraph handlers before a subgraph is executed.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the agent environment transformation event
+     * @param subgraph The subgraph that is about to be executed.
+     * @param context The agent context in which the subgraph is being executed.
+     * @param input The input data for the subgraph execution.
+     * @param inputType The type of the input data provided to the subgraph.
+     */
+    internal suspend fun onSubgraphExecutionStarting(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        subgraph: AIAgentSubgraphBase<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: TypeToken
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.SubgraphExecutionStarting,
+            context = SubgraphExecutionStartingContext(eventId, executionInfo, subgraph, context, input, inputType)
+        )
+    }
+
+    /**
+     * Notifies all registered subgraph handlers after a subgraph has been executed.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the agent environment transformation event
+     * @param subgraph The subgraph that was executed.
+     * @param context The agent context in which the subgraph was executed.
+     * @param input The input data provided to the subgraph.
+     * @param inputType The type of the input data provided to the subgraph.
+     * @param output The output data produced by the subgraph execution.
+     * @param outputType The type of the output data produced by the subgraph execution.
+     */
+    internal suspend fun onSubgraphExecutionCompleted(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        subgraph: AIAgentSubgraphBase<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: TypeToken,
+        output: Any?,
+        outputType: TypeToken
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.SubgraphExecutionCompleted,
+            context = SubgraphExecutionCompletedContext(
+                eventId,
+                executionInfo,
+                subgraph,
+                context,
+                input,
+                output,
+                inputType,
+                outputType
+            )
+        )
+    }
+
+    /**
+     * Notifies all registered subgraph handlers when a subgraph execution fails.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the agent environment transformation event
+     * @param subgraph The subgraph for which the execution failed.
+     * @param context The agent context in which the subgraph execution occurred.
+     * @param input The input data that was provided to the subgraph when it failed.
+     * @param inputType The type of the input data provided to the subgraph.
+     * @param throwable The exception or error that caused the subgraph execution to fail.
+     */
+    internal suspend fun onSubgraphExecutionFailed(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        subgraph: AIAgentSubgraphBase<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: TypeToken,
+        throwable: Throwable
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.SubgraphExecutionFailed,
+            context = SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, throwable)
+        )
+    }
+
+    //endregion Trigger Subgraph Handlers
+
+    //region Interceptors
+
+    /**
+     * Intercepts node execution before it starts.
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle The handler that processes before-node events
+     *
+     * Example:
+     * ```
+     * pipeline.interceptNodeExecutionStarting(feature) { eventContext ->
+     *     logger.info("Node ${eventContext.node.name} is about to execute with input: ${eventContext.input}")
+     * }
+     * ```
+     */
+    public fun interceptNodeExecutionStarting(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: NodeExecutionStartingContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.NodeExecutionStarting,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts node execution after it completes.
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle The handler that processes after-node events
+     *
+     * Example:
+     * ```
+     * pipeline.interceptNodeExecutionCompleted(feature) { eventContext ->
+     *     logger.info("Node ${eventContext.node.name} executed with input: ${eventContext.input} and produced output: ${eventContext.output}")
+     * }
+     * ```
+     */
+    public fun interceptNodeExecutionCompleted(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: NodeExecutionCompletedContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.NodeExecutionCompleted,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts and handles node execution errors for a given feature.
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle A suspend function that processes the node execution error.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptNodeExecutionFailed(feature) { eventContext ->
+     *     logger.error("Node ${eventContext.node.name} execution failed with error: ${eventContext.throwable}")
+     * }
+     * ```
+     */
+    public fun interceptNodeExecutionFailed(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: NodeExecutionFailedContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.NodeExecutionFailed,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts the execution of a subgraph when it starts.
+     *
+     * @param feature The graph feature associated with the AI agent for which the subgraph execution is intercepted.
+     * @param handle A suspendable lambda that handles the subgraph execution starting event context.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptSubgraphExecutionStarting(feature) { eventContext ->
+     *     logger.info("Subgraph ${eventContext.subgraph.name} is about to execute with input: ${eventContext.input}")
+     * }
+     * ```
+     */
+    public fun interceptSubgraphExecutionStarting(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.SubgraphExecutionStarting,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts the completion of a subgraph execution and allows handling of the event.
+     *
+     * @param feature The AI agent graph feature that specifies the feature to intercept.
+     * @param handle A suspendable function that handles the subgraph execution completion event,
+     * taking the event context as a parameter.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptSubgraphExecutionCompleted(feature) { eventContext ->
+     *     logger.info("Subgraph ${eventContext.subgraph.name} executed with input: ${eventContext.input} and produced output: ${eventContext.output}")
+     * }
+     * ```
+     */
+    public fun interceptSubgraphExecutionCompleted(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.SubgraphExecutionCompleted,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts and handles subgraph execution failures for a given feature.
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle A suspend function that processes the subgraph execution failure event.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptSubgraphExecutionFailed(feature) { eventContext ->
+     *     logger.error("Subgraph ${eventContext.subgraph.name} execution failed with error: ${eventContext.throwable}")
+     * }
+     * ```
+     */
+    public fun interceptSubgraphExecutionFailed(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.SubgraphExecutionFailed,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    //endregion Interceptors
+}

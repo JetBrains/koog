@@ -20,9 +20,8 @@ import kotlin.time.Clock
 
 public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor(
     agentConfig: AIAgentConfig,
-    clock: Clock,
-    private val basePipelineDelegate: AIAgentPipelineImpl
-) : AIAgentPipeline(agentConfig, clock), AIAgentPlannerPipelineAPI by AIAgentPlannerPipelineImpl(agentConfig, clock, basePipelineDelegate) {
+    clock: Clock
+) : AIAgentPlannerPipelineCommon(agentConfig, clock) {
 
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
@@ -42,7 +41,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
             pipeline = this,
         )
 
-        basePipelineDelegate.install(feature.key, featureConfig, featureImpl)
+        install(feature.key, featureConfig, featureImpl)
     }
 
     //region JVM Planner Interceptors
