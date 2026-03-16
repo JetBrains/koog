@@ -70,6 +70,7 @@ internal class AIAgentBuilderImpl internal constructor(
         strategy = strategy,
         inputType = strategy.inputType,
         outputType = strategy.outputType,
+        promptExecutor = this.promptExecutor,
         id = this.id,
         config = config,
         clock = this.clock,
@@ -110,7 +111,7 @@ internal class AIAgentBuilderImpl internal constructor(
     }
 
     override fun systemPrompt(systemPrompt: String): AIAgentBuilderAPI =
-        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
+        prompt(Prompt.build(id = "agent") { system(systemPrompt) })
 
     override fun prompt(prompt: Prompt): AIAgentBuilderAPI = apply {
         this.config = config.copy(prompt = prompt)
@@ -137,6 +138,7 @@ internal class AIAgentBuilderImpl internal constructor(
         strategy = singleRunStrategy(),
         inputType = typeToken<String>(),
         outputType = typeToken<String>(),
+        promptExecutor = this.promptExecutor,
         id = this.id,
         config = config,
         clock = this.clock,
