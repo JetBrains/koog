@@ -29,7 +29,7 @@ public class NumberTools implements ToolSet {
     }
 
     @Tool
-    @LLMDescription(description = "Generates a random number between 0 and 999. You must use this tool to get random numbers, you cannot generate them yourself.")
+    @LLMDescription("Generates a random number between 0 and 999. You must use this tool to get random numbers, you cannot generate them yourself.")
     public int generateRandomNumber() {
         return random.nextInt(1000);
     }

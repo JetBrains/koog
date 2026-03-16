@@ -11,11 +11,11 @@ public final class EnumMathTools implements ToolSet {
     }
 
     @Tool
-    @LLMDescription(description = "Executes math operation over two integers and returns the result")
+    @LLMDescription("Executes math operation over two integers and returns the result")
     public int applyOperation(
-        @LLMDescription(description = "Operation type: ADD or SUBTRACT") OperationType operation,
-        @LLMDescription(description = "First operand") int left,
-        @LLMDescription(description = "Second operand") int right
+        @LLMDescription("Operation type: ADD or SUBTRACT") OperationType operation,
+        @LLMDescription("First operand") int left,
+        @LLMDescription("Second operand") int right
     ) {
         return operation == OperationType.ADD ? left + right : left - right;
     }

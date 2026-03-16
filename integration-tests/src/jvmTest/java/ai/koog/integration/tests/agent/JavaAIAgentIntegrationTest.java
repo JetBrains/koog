@@ -299,7 +299,8 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .agentConfig(
-                AIAgentConfig.builder(model)
+                AIAgentConfig.builder()
+                    .model(model)
                     .prompt(prompt)
                     .maxAgentIterations(10)
                     .build()
@@ -443,7 +444,8 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .agentConfig(
-                AIAgentConfig.builder(model)
+                AIAgentConfig.builder()
+                    .model(model)
                     .prompt(prompt)
                     .maxAgentIterations(10)
                     .build()
