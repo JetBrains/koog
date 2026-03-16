@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.example.ApiKeyService;
 import ai.koog.agents.ext.agent.CriticResult;
+import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
 
 public class FunctionalStrategyExample {
@@ -20,6 +21,7 @@ public class FunctionalStrategyExample {
 
         var functionalAgent = AIAgent.builder()
             .promptExecutor(promptExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4_1)
             .functionalStrategy("my-strategy", (ctx, userInput) -> {
                 // Step 1: First, identify the problem
                 // Only give the agent communication and read-only database access here
