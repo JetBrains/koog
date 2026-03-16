@@ -8,7 +8,6 @@ import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
-import ai.koog.agents.core.feature.model.events.FunctionalStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
@@ -21,6 +20,7 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.StrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.StrategyStartingEventBase
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
@@ -101,7 +101,7 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())
             subclass(AgentExecutionFailedEvent::class, AgentExecutionFailedEvent.serializer())
             subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
-            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
+            subclass(StrategyStartingEvent::class, StrategyStartingEvent.serializer())
             subclass(StrategyCompletedEvent::class, StrategyCompletedEvent.serializer())
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
@@ -127,7 +127,7 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())
             subclass(AgentExecutionFailedEvent::class, AgentExecutionFailedEvent.serializer())
             subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
-            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
+            subclass(StrategyStartingEvent::class, StrategyStartingEvent.serializer())
             subclass(StrategyCompletedEvent::class, StrategyCompletedEvent.serializer())
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
@@ -153,7 +153,7 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())
             subclass(AgentExecutionFailedEvent::class, AgentExecutionFailedEvent.serializer())
             subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
-            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
+            subclass(StrategyStartingEvent::class, StrategyStartingEvent.serializer())
             subclass(StrategyCompletedEvent::class, StrategyCompletedEvent.serializer())
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
@@ -173,9 +173,9 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(LLMStreamingCompletedEvent::class, LLMStreamingCompletedEvent.serializer())
         }
 
-        polymorphic(StrategyStartingEvent::class) {
+        polymorphic(StrategyStartingEventBase::class) {
             subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
-            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
+            subclass(StrategyStartingEvent::class, StrategyStartingEvent.serializer())
         }
     }
 

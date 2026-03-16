@@ -10,7 +10,7 @@ import ai.koog.agents.core.system.feature.DebuggerTestAPI.runAgentConnectionWait
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.runAgentPortConfigThroughSystemVariablesTest
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
-import ai.koog.agents.core.system.mock.createAgent
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
 import ai.koog.agents.testing.network.NetUtil
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.utils.io.use
@@ -139,7 +139,7 @@ class DebuggerConfigTest {
                 edge(nodeStart forwardTo nodeFinish)
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 userPrompt = userPrompt,
@@ -232,7 +232,7 @@ class DebuggerConfigTest {
         }
 
         val throwable = assertFailsWith<UnsupportedOperationException> {
-            createAgent(strategy = strategy) {
+            createGraphAgent(strategy = strategy) {
                 @OptIn(ExperimentalAgentsApi::class)
                 install(Debugger) {
                     // Try to filter out all events. OpenTelemetryConfig should ignore this filter
