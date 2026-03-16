@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.jackson.JacksonSerializer
 import java.util.concurrent.ExecutorService
 
 public actual class AIAgentConfig actual constructor(
@@ -44,8 +45,9 @@ public actual class AIAgentConfig actual constructor(
         llmRequestExecutorService: ExecutorService? = null,
         missingToolsConversionStrategy: MissingToolsConversionStrategy =
             MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
-        responseProcessor: ResponseProcessor? = null
-    ) : this(prompt, model, maxAgentIterations, missingToolsConversionStrategy, responseProcessor) {
+        responseProcessor: ResponseProcessor? = null,
+        serializer: JSONSerializer = JacksonSerializer()
+    ) : this(prompt, model, maxAgentIterations, missingToolsConversionStrategy, responseProcessor, serializer) {
         this.strategyExecutorService = agentStrategyExecutorService
         this.llmRequestExecutorService = llmRequestExecutorService
     }
@@ -108,8 +110,18 @@ public actual class AIAgentConfig actual constructor(
             public var missingToolsConversionStrategy: MissingToolsConversionStrategy? = null,
             public var responseProcessor: ResponseProcessor? = null,
             internal var strategyExecutorService: ExecutorService? = null,
-            internal var llmRequestExecutorService: ExecutorService? = null
+            internal var llmRequestExecutorService: ExecutorService? = null,
+            internal var serializer: JSONSerializer = JacksonSerializer()
         ) {
+            /**
+             * Sets serializr for underlying tool calls and LLM requests
+             *
+             * @param serializer The JSON serializer to configure the AI agent with.
+             * @return The updated instance of [Companion.AIAgentConfigBuilder]
+             * */
+            public fun serializer(serializer: JSONSerializer): AIAgentConfigBuilder =
+                apply { this.serializer = serializer }
+
             /**
              * Sets the prompt configuration for the AI agent.
              *
@@ -181,7 +193,8 @@ public actual class AIAgentConfig actual constructor(
                     ?: MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
                 responseProcessor = responseProcessor,
                 agentStrategyExecutorService = strategyExecutorService,
-                llmRequestExecutorService = llmRequestExecutorService
+                llmRequestExecutorService = llmRequestExecutorService,
+                serializer = serializer
             )
         }
     }

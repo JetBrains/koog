@@ -40,10 +40,8 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
-import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
 import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
@@ -141,18 +139,10 @@ abstract class ExecutorIntegrationTestBase {
             )
 
             is GoogleLLMProvider -> {
-                val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
-                    GoogleThinkingConfig(
-                        includeThoughts = true,
-                        thinkingLevel = GoogleThinkingLevel.HIGH
-                    )
-                } else {
-                    GoogleThinkingConfig(
-                        includeThoughts = true,
-                        // Slightly higher limit to avoid truncation in multi-step reasoning tests
-                        thinkingBudget = extendedLimit
-                    )
-                }
+                val thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = true,
+                    thinkingBudget = extendedLimit
+                )
                 GoogleParams(
                     thinkingConfig = thinkingConfig,
                     // Slightly higher limit to avoid truncation in multi-step reasoning tests

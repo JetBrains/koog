@@ -1,4 +1,4 @@
-package ai.koog.integration.tests.agent;
+package ai.koog.integration.tests.utils;
 
 import ai.koog.agents.core.tools.annotations.LLMDescription;
 import ai.koog.agents.core.tools.annotations.Tool;

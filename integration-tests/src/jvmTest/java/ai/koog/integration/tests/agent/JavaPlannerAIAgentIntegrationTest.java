@@ -1,25 +1,24 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.ToolRegistryBuilder;
-import ai.koog.agents.planner.AIAgentPlanner;
 import ai.koog.agents.planner.AIAgentPlannerStrategy;
 import ai.koog.agents.planner.JavaAIAgentPlanner;
 import ai.koog.agents.planner.PlannerAIAgent;
-import ai.koog.agents.planner.goap.*;
-import ai.koog.agents.planner.llm.SimpleLLMPlanner;
-import ai.koog.agents.planner.llm.SimplePlan;
+import ai.koog.agents.planner.goap.Action;
+import ai.koog.agents.planner.goap.Goal;
+import ai.koog.agents.planner.goap.GoapAgentState;
+import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
-import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.executor.model.PromptExecutor;
+import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +47,6 @@ public class JavaPlannerAIAgentIntegrationTest {
         }
     }
 
-    private static final String STRATEGY_NAME = "my-strategy";
-
     private static final LLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
     private static final PromptExecutor promptExecutor = new MultiLLMPromptExecutor(client);
     private static final String SYSTEM_PROMPT = "You are a helpful assistant.";
@@ -61,7 +58,12 @@ public class JavaPlannerAIAgentIntegrationTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static <Plan> void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy, @Nullable ToolRegistry toolRegistry, String request, String expectedResultPart) {
+    private static void testPlanner(
+        AIAgentPlannerStrategy<String, String, ?> strategy,
+        @Nullable ToolRegistry toolRegistry,
+        String request,
+        String expectedResultPart
+    ) {
         var builder = PlannerAIAgent.<String, String>builder(strategy)
             .promptExecutor(promptExecutor)
             .llmModel(OpenAIModels.Chat.GPT4o)
@@ -95,7 +97,7 @@ public class JavaPlannerAIAgentIntegrationTest {
         var planner = new TestPlanner();
         var plannerStrategy = AIAgentPlannerStrategy.builder("test-planner").withPlanner(planner).build();
         var toolRegistry = new ToolRegistryBuilder()
-            .tools(new CalculatorTools())
+            .tools(new NumberTools())
             .build();
 
         testPlanner(plannerStrategy, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");

@@ -5,24 +5,26 @@ import ai.koog.agents.core.agent.ToolCalls;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
+import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
+import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.StructuredResults;
-import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
+public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_RequestLLMStructuredSimple(LLModel model) {
@@ -152,7 +154,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"));
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -185,7 +187,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"), calculator.getTool("multiply"));
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -217,7 +219,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_SubtaskSingleRunSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"));
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -250,12 +252,12 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_ExecuteMultipleToolsParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .systemPrompt("You are a calculator. Use add and multiply tools.")
+            .systemPrompt("You are a calculator. You MUST use add and multiply tools. DO NOT answer without calling tools.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Message.Response response = context.requestLLM(
@@ -290,7 +292,7 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
     public void integration_ExecuteSingleTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
@@ -353,27 +355,152 @@ public class JavaContextApiIntegrationTest extends KoogJavaTestBase {
         assertTrue(result.matches(".*History contains \\d+ messages.*"));
     }
 
-    @Disabled("KG-694")
-    @Test
-    public void integration_ThrowError() {
-        var model = OpenAIModels.Chat.GPT5_1;
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    public void integration_ShouldExecuteMultipleHandlersInOrder(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+
+        AtomicBoolean firstHandlerExecuted = new AtomicBoolean(false);
+        AtomicBoolean secondHandlerExecuted = new AtomicBoolean(false);
+        AtomicBoolean contextProvided = new AtomicBoolean(false);
+
+        AtomicInteger executionOrder = new AtomicInteger(0);
+        AtomicInteger firstHandlerOrder = new AtomicInteger(-1);
+        AtomicInteger secondHandlerOrder = new AtomicInteger(-1);
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                if (input != null) {
-                    throw new RuntimeException("Intentional error from functional strategy");
-                }
-                return "Should not reach here";
+            .systemPrompt("You are a helpful assistant.")
+            .install(EventHandler.Feature, config ->
+                config.onAgentStarting(ctx -> {
+                    firstHandlerExecuted.set(true);
+                    firstHandlerOrder.set(executionOrder.getAndIncrement());
+                })
+            )
+            .install(EventHandler.Feature, config ->
+                config.onAgentStarting(ctx -> {
+                    if (ctx != null) {
+                        contextProvided.set(true);
+                    }
+                    secondHandlerExecuted.set(true);
+                    secondHandlerOrder.set(executionOrder.getAndIncrement());
+                })
+            )
+            .build();
+
+        runBlocking(continuation -> agent.run("Hello", null, continuation));
+
+        assertThat(contextProvided).isTrue();
+        assertThat(firstHandlerExecuted).isTrue();
+        assertThat(secondHandlerExecuted).isTrue();
+        assertThat(firstHandlerOrder.get()).isLessThan(secondHandlerOrder.get());
+        assertThat(firstHandlerOrder.get()).isEqualTo(0);
+        assertThat(secondHandlerOrder.get()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    public void integration_ShouldSupportMultipleHandlers(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        AtomicInteger firstHandlerCalls = new AtomicInteger(0);
+        AtomicInteger secondHandlerCalls = new AtomicInteger(0);
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant.")
+            .install(EventHandler.Feature, config -> {
+                config.onAgentStarting(ctx -> firstHandlerCalls.incrementAndGet());
+                config.onAgentCompleted(ctx -> firstHandlerCalls.incrementAndGet());
+            })
+            .install(EventHandler.Feature, config -> {
+                config.onAgentStarting(ctx -> secondHandlerCalls.incrementAndGet());
+                config.onAgentCompleted(ctx -> secondHandlerCalls.incrementAndGet());
             })
             .build();
 
-        assertThrows(RuntimeException.class, () ->
-                runBlocking(continuation ->
-                    agent.run("Test", null, continuation)),
-            "Intentional error from functional strategy"
-        );
+        runBlocking(continuation -> agent.run("Hello", null, continuation));
+        assertThat(firstHandlerCalls.get()).isEqualTo(2);
+        assertThat(secondHandlerCalls.get()).isEqualTo(2);
+
+        runBlocking(continuation -> agent.run("Hello", null, continuation));
+        assertThat(firstHandlerCalls.get()).isEqualTo(4);
+        assertThat(secondHandlerCalls.get()).isEqualTo(4);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    public void integration_ShouldConfigureMultipleEvents(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        AtomicInteger agentStartCount = new AtomicInteger(0);
+        AtomicInteger llmCallCount = new AtomicInteger(0);
+        AtomicInteger agentCompleteCount = new AtomicInteger(0);
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant.")
+            .install(EventHandler.Feature, config -> {
+                config.onAgentStarting(ctx -> agentStartCount.incrementAndGet());
+                config.onLLMCallStarting(ctx -> llmCallCount.incrementAndGet());
+                config.onAgentCompleted(ctx -> agentCompleteCount.incrementAndGet());
+            })
+            .build();
+
+        runBlocking(continuation -> agent.run("Hello", null, continuation));
+
+        assertThat(agentStartCount.get()).isEqualTo(1);
+        assertThat(llmCallCount.get()).isGreaterThan(0);
+        assertThat(agentCompleteCount.get()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    public void integration_ShouldTriggerToolEventsInOrder(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        List<String> eventOrder = new ArrayList<>();
+        NumberTools calculator = new NumberTools();
+        ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are an assistant with calculator tools. IMPORTANT: " +
+                "You do NOT have access to random number generation - you MUST use the generateRandomNumber tool. " +
+                "You MUST use the add tool for any addition operations. " +
+                "You cannot perform these operations yourself. ALWAYS use the provided tools.")
+            .toolRegistry(toolRegistry)
+            .install(EventHandler.Feature, config -> {
+                config.onAgentStarting(ctx -> eventOrder.add("AgentStarting"));
+                config.onLLMCallStarting(ctx -> eventOrder.add("LLMCallStarting"));
+                config.onToolCallStarting(ctx -> eventOrder.add("ToolCallStarting:" + ctx.getToolName()));
+                config.onToolCallCompleted(ctx -> eventOrder.add("ToolCallCompleted:" + ctx.getToolName()));
+                config.onLLMCallCompleted(ctx -> eventOrder.add("LLMCallCompleted"));
+                config.onAgentCompleted(ctx -> eventOrder.add("AgentCompleted"));
+            })
+            .build();
+
+        String result = runBlocking(continuation -> agent.run(
+            "Generate a random number, then add 5 to it. You must use the tools.",
+            null,
+            continuation
+        ));
+
+        assertThat(result).isNotNull();
+        assertThat(eventOrder).isNotEmpty();
+        assertThat(eventOrder.get(0)).isEqualTo("AgentStarting");
+        assertThat(eventOrder.get(eventOrder.size() - 1)).isEqualTo("AgentCompleted");
+
+        boolean hasToolCallStarting = eventOrder.stream().anyMatch(e -> e.startsWith("ToolCallStarting:"));
+        boolean hasToolCallCompleted = eventOrder.stream().anyMatch(e -> e.startsWith("ToolCallCompleted:"));
+        boolean hasGenerateRandomNumber = eventOrder.stream().anyMatch(e -> e.contains("generateRandomNumber"));
+
+        assertThat(hasToolCallStarting).isTrue();
+        assertThat(hasToolCallCompleted).isTrue();
+        assertThat(hasGenerateRandomNumber).isTrue();
     }
 }

@@ -7,6 +7,7 @@ import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
+import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
@@ -20,10 +21,7 @@ import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for AIAgent with custom functional strategies.
- */
-public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBase {
+public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
 
     private String getAssistantContentOrDefault(Message.Response response, String defaultValue) {
         if (response instanceof Message.Assistant) {
@@ -37,7 +35,6 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_SimpleFunctionalStrategyWithRetry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        // Test simple functional strategy with retry logic
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
@@ -96,13 +93,13 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
     public void integration_FunctionalStrategyWithManualToolHandling(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(createExecutor(model))
             .llmModel(model)
-            .systemPrompt("You are a calculator. Use the add tool to perform calculations.")
+            .systemPrompt("You are a calculator. You MUST use the add tool to perform calculations. DO NOT answer without calling tools.")
             .toolRegistry(toolRegistry)
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Message.Response currentResponse = context.requestLLM(
@@ -139,7 +136,7 @@ public class JavaAIAgentFunctionalStrategyIntegrationTest extends KoogJavaTestBa
 
         MultiLLMPromptExecutor executor = createExecutor(model);
 
-        CalculatorTools calculator = new CalculatorTools();
+        NumberTools calculator = new NumberTools();
 
         List<Tool<?, ?>> calculatorTools = List.of(
             calculator.getTool("add"),

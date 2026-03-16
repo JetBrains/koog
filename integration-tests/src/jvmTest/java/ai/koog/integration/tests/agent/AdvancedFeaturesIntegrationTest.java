@@ -4,8 +4,8 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
+import ai.koog.integration.tests.utils.TransactionTools;
 import ai.koog.prompt.llm.LLModel;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -15,10 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for advanced AIAgent features (state, result, custom pipelines).
- */
-public class JavaAIAgentAdvancedFeaturesIntegrationTest extends KoogJavaTestBase {
+public class AdvancedFeaturesIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")

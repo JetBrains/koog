@@ -3,7 +3,6 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -40,48 +39,6 @@ public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilde
         get() = delegate.id
         set(value) {
             delegate.id = value
-        }
-
-    @property:PublishedApi
-    internal actual var prompt: Prompt
-        get() = delegate.prompt
-        set(value) {
-            delegate.prompt = value
-        }
-
-    @property:PublishedApi
-    internal actual var llmModel: LLModel?
-        get() = delegate.llmModel
-        set(value) {
-            delegate.llmModel = value
-        }
-
-    @property:PublishedApi
-    internal actual var temperature: Double
-        get() = delegate.temperature
-        set(value) {
-            delegate.temperature = value
-        }
-
-    @property:PublishedApi
-    internal actual var numberOfChoices: Int
-        get() = delegate.numberOfChoices
-        set(value) {
-            delegate.numberOfChoices = value
-        }
-
-    @property:PublishedApi
-    internal actual var missingToolsConversionStrategy: MissingToolsConversionStrategy
-        get() = delegate.missingToolsConversionStrategy
-        set(value) {
-            delegate.missingToolsConversionStrategy = value
-        }
-
-    @property:PublishedApi
-    internal actual var maxIterations: Int
-        get() = delegate.maxIterations
-        set(value) {
-            delegate.maxIterations = value
         }
 
     @property:PublishedApi

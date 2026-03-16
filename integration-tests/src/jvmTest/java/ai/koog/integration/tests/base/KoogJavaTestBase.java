@@ -3,6 +3,7 @@ package ai.koog.integration.tests.base;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
@@ -46,6 +47,8 @@ public abstract class KoogJavaTestBase {
             client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
         } else if (model.getProvider() == LLMProvider.Anthropic) {
             client = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+        } else if (model.getProvider() == LLMProvider.Google) {
+            client = new GoogleLLMClient(TestCredentials.INSTANCE.readTestGoogleAIKeyFromEnv());
         } else {
             throw new IllegalArgumentException("Unsupported provider: " + model.getProvider());
         }
