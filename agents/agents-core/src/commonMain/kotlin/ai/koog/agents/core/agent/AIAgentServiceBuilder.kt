@@ -28,35 +28,9 @@ import kotlin.time.Clock
  * - GraphAIAgentService<Input, Output>
  * - FunctionalAIAgentService<Input, Output>
  */
-public expect class AIAgentServiceBuilder internal constructor() : AIAgentServiceBuilderAPI {
-    public override fun promptExecutor(promptExecutor: PromptExecutor): AIAgentServiceBuilder
-
-    public override fun llmModel(model: LLModel): AIAgentServiceBuilder
-
-    public override fun toolRegistry(toolRegistry: ToolRegistry): AIAgentServiceBuilder
-
-    public override fun systemPrompt(systemPrompt: String): AIAgentServiceBuilder
-
-    public override fun prompt(prompt: Prompt): AIAgentServiceBuilder
-
-    public override fun temperature(temperature: Double): AIAgentServiceBuilder
-
-    public override fun numberOfChoices(numberOfChoices: Int): AIAgentServiceBuilder
-
-    public override fun maxIterations(maxIterations: Int): AIAgentServiceBuilder
-
-    @JavaAPI
-    public override fun agentConfig(config: AIAgentConfig): AIAgentServiceBuilder
-
-    public override fun <Input, Output> graphStrategy(
-        strategy: AIAgentGraphStrategy<Input, Output>
-    ): GraphAgentServiceBuilder<Input, Output>
-
-    public override fun <Input, Output> functionalStrategy(
-        strategy: AIAgentFunctionalStrategy<Input, Output>
-    ): FunctionalAgentServiceBuilder<Input, Output>
-
-    public override fun build(): GraphAIAgentService<String, String>
+public expect class AIAgentServiceBuilder internal constructor() :
+    AIAgentServiceBuilderCommon<AIAgentServiceBuilder> {
+    override fun self(): AIAgentServiceBuilder
 }
 
 /**
