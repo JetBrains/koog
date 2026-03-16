@@ -1,18 +1,14 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTool
 import kotlin.reflect.KFunction
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-public actual open class RollbackToolRegistryBuilder actual constructor(
-    internal actual val delegate: RollbackToolRegistryBuilderImpl
-) : RollbackToolRegistryBuilderAPI {
+public actual open class RollbackToolRegistryBuilder actual constructor() :
+    RollbackToolRegistryBuilderCommon<RollbackToolRegistryBuilder>() {
+    protected actual override fun self(): RollbackToolRegistryBuilder = this
 
     /**
      * Registers relationships between tools in the given tool set and their corresponding rollback tools
@@ -44,13 +40,8 @@ public actual open class RollbackToolRegistryBuilder actual constructor(
             }
 
             normalTools.zip(revertTools)
-                .forEach { (tool, revertTool) -> delegate.registerRollbackUnsafe(tool, revertTool) }
+                .forEach { (tool, revertTool) -> registerRollbackUnsafe(tool, revertTool) }
         }
-
-    actual override fun <TArgs> registerRollback(
-        tool: Tool<TArgs, *>,
-        rollbackTool: Tool<TArgs, *>
-    ): RollbackToolRegistryBuilder = apply { delegate.registerRollback(tool, rollbackTool) }
 
     /**
      * Registers a relationship between a tool and its corresponding rollback tool using the specified functions.
@@ -61,9 +52,7 @@ public actual open class RollbackToolRegistryBuilder actual constructor(
     public fun registerRollback(
         toolFunction: KFunction<*>,
         rollbackToolFunction: KFunction<*>
-    ) {
+    ): RollbackToolRegistryBuilder = apply {
         this.registerRollback(toolFunction.asTool(), rollbackToolFunction.asTool())
     }
-
-    actual override fun build(): RollbackToolRegistry = delegate.build()
 }
