@@ -12,19 +12,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 
 @OptIn(InternalAgentsApi::class)
-public actual class ActionBuilder<State> : ActionBuilderApi<State> {
-    private val delegate = ActionBuilderImpl<State>()
-    public actual override fun name(name: String): ActionBuilder<State> = apply { delegate.name(name) }
-    public actual override fun description(description: String?): ActionBuilder<State> =
-        apply { delegate.description(description) }
-
-    public actual override fun precondition(precondition: Condition<State>): ActionBuilder<State> =
-        apply { delegate.precondition(precondition) }
-
-    public actual override fun belief(belief: Belief<State>): ActionBuilder<State> = apply { delegate.belief(belief) }
-    public actual override fun cost(cost: Cost<State>): ActionBuilder<State> = apply { delegate.cost(cost) }
-    public actual override fun execute(execute: Execute<State>): ActionBuilder<State> =
-        apply { delegate.execute(execute) }
+public actual class ActionBuilder<State> : ActionBuilderCommon<State, ActionBuilder<State>>() {
+    public actual override fun self(): ActionBuilder<State> = this
 
     /**
      * Sets the synchronous execute function for the action.
@@ -49,8 +38,6 @@ public actual class ActionBuilder<State> : ActionBuilderApi<State> {
                 execute.execute(context, state)
             }
         }
-
-    public actual override fun build(): Action<State> = delegate.build()
 
     /**
      * Synchronous GOAP action execution.
