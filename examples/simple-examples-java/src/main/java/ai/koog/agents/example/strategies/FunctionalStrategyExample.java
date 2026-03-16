@@ -5,6 +5,8 @@ import ai.koog.agents.example.ApiKeyService;
 import ai.koog.prompt.executor.model.PromptExecutor;
 
 public class FunctionalStrategyExample {
+    record ProblemDescription() {}
+
     public static void main(String[] args) {
         var promptExecutor = PromptExecutor.builder()
             .openAI(ApiKeyService.getOpenAIApiKey())
