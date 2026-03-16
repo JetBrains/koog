@@ -37,11 +37,11 @@ oshai-logging = "7.0.7"
 postgresql = "42.7.4"
 slf4j = "2.0.17"
 spring-ai = "1.1.2"
-spring-boot = "3.5.9"
+spring-boot = "3.5.11"
 spring-management = "1.1.7"
 sqlite = "3.51.1.0"
 testcontainers = "1.21.4"
-jackson = "2.19.4"
+jackson = "2.21.1"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
