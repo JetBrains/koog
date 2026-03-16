@@ -24,6 +24,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
 
+/**
+ * JVM actual implementation of a read-only LLM session.
+ *
+ * In addition to common suspend APIs, this class exposes Java-friendly wrappers
+ * that run session operations on the strategy dispatcher.
+ */
 public actual class AIAgentLLMReadSession actual constructor(
     tools: List<ToolDescriptor>,
     executor: PromptExecutor,
@@ -31,7 +37,7 @@ public actual class AIAgentLLMReadSession actual constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-) : AIAgentLLMSessionAPI by AIAgentLLMReadSessionImpl(executor, tools, prompt, model, responseProcessor, config) {
+) : AIAgentLLMReadSessionCommon(executor, tools, prompt, model, responseProcessor, config) {
 
     /**
      * Executes multiple tasks or requests associated with the given `Prompt` and `ToolDescriptor` list.
