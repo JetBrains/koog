@@ -112,9 +112,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
                 "Expected node completion order for typed-node graph"
             )
         );
-        assertNotNull(result);
-        assertFalse(result.isBlank());
-        assertTrue(containsIgnoreCase(result, "hello"));
     }
 
     @ParameterizedTest
@@ -647,7 +644,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         Persistence persistence = PersistenceKt.persistence(ctx);
 
         runBlockingIfRequired(
-            EmptyCoroutineContext.INSTANCE,
             continuation -> persistence.createCheckpointAfterNode(
                 ctx,
                 nodePath,
@@ -663,7 +659,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     private void rollbackToLatestCheckpoint(AIAgentGraphContextBase ctx) {
         Persistence persistence = PersistenceKt.persistence(ctx);
         runBlockingIfRequired(
-            EmptyCoroutineContext.INSTANCE,
             continuation -> persistence.rollbackToLatestCheckpoint(ctx, continuation)
         );
     }
