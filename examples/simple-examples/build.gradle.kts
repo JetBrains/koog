@@ -85,18 +85,13 @@ fun registerRunExampleTask(
 }
 
 registerRunExampleTask("runExampleCalculator", "ai.koog.agents.example.calculator.CalculatorKt")
-registerRunExampleTask("runExampleCalculatorJava", "ai.koog.agents.example.calculator.java.Calculator")
-registerRunExampleTask(
-    "runExampleCalculatorJavaLocal",
-    "ai.koog.agents.example.calculator.java.Calculator",
-    listOf("local")
-)
 registerRunExampleTask("runExampleCalculatorV2", "ai.koog.agents.example.calculator.v2.CalculatorKt")
 registerRunExampleTask(
     "runExampleCalculatorLocal",
     "ai.koog.agents.example.calculator.CalculatorKt",
     listOf("local")
 )
+registerRunExampleTask("runExampleFunctionalAgentChat", "ai.koog.agents.example.chat.FunctionalAgentChatKt")
 registerRunExampleTask("runExampleErrorFixing", "ai.koog.agents.example.errors.ErrorFixingAgentKt")
 registerRunExampleTask("runExampleErrorFixingLocal", "ai.koog.agents.example.errors.local.ErrorFixingLocalAgentKt")
 registerRunExampleTask("runExampleGuesser", "ai.koog.agents.example.guesser.GuesserKt")

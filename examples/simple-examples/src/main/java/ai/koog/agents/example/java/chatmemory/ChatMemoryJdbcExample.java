@@ -1,4 +1,4 @@
-package ai.koog.agents.example.chatmemory;
+package ai.koog.agents.example.java.chatmemory;
 
 import ai.koog.agents.chatMemory.feature.ChatMemory;
 import ai.koog.agents.core.agent.AIAgent;
@@ -7,15 +7,13 @@ import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProviderJvm;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
-import kotlinx.coroutines.BuildersKt;
-
-import javax.sql.DataSource;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.logging.Logger;
+import javax.sql.DataSource;
 
 /**
  * Demonstrates AIAgent with ChatMemory backed by a pure JDBC PostgreSQL provider.
@@ -54,9 +52,9 @@ public class ChatMemoryJdbcExample {
 
         // 2. Create a JDBC-backed chat history provider with 24h TTL
         PostgresJdbcChatHistoryProvider historyProvider = new PostgresJdbcChatHistoryProvider(
-                dataSource,
-                "chat_history",
-                86_400L // conversations expire after 24 hours
+            dataSource,
+            "chat_history",
+            86_400L // conversations expire after 24 hours
         );
 
         // 3. Run schema migration (creates table + indexes if they don't exist)
@@ -64,14 +62,14 @@ public class ChatMemoryJdbcExample {
 
         // 4. Build the agent with ChatMemory feature
         AIAgent<String, String> agent = AIAgent.builder()
-                .promptExecutor(new MultiLLMPromptExecutor(new OpenAILLMClient(apiKey)))
-                .llmModel(OpenAIModels.Chat.GPT4o)
-                .systemPrompt("You are a friendly assistant. Keep your answers concise.")
-                .install(ChatMemory.Feature, config -> {
-                    config.chatHistoryProvider(historyProvider);
-                    config.windowSize(50);
-                })
-                .build();
+            .promptExecutor(new MultiLLMPromptExecutor(new OpenAILLMClient(apiKey)))
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .systemPrompt("You are a friendly assistant. Keep your answers concise.")
+            .install(ChatMemory.Feature, config -> {
+                config.chatHistoryProvider(historyProvider);
+                config.windowSize(50);
+            })
+            .build();
 
         // Chat loop
         System.out.println("Chat with JDBC-backed memory started (Java example).");
@@ -83,9 +81,12 @@ public class ChatMemoryJdbcExample {
         while (true) {
             System.out.print("You: ");
             String input = scanner.nextLine().trim();
-            if ("/bye".equals(input)) break;
-            if (input.isEmpty()) continue;
-
+            if ("/bye".equals(input)) {
+                break;
+            }
+            if (input.isEmpty()) {
+                continue;
+            }
 
             String reply = agent.run(input, sessionId);
             System.out.println("Assistant: " + reply + "\n");
@@ -95,24 +96,53 @@ public class ChatMemoryJdbcExample {
     }
 
     /**
-     * Creates a minimal {@link DataSource} backed by {@link DriverManager}.
-     * For production use, prefer a connection pool like HikariCP.
+     * Creates a minimal {@link DataSource} backed by {@link DriverManager}. For production use, prefer a connection
+     * pool like HikariCP.
      */
     private static DataSource simpleDataSource(String url, String user, String password) {
         return new DataSource() {
-            @Override public Connection getConnection() throws SQLException {
+            @Override
+            public Connection getConnection() throws SQLException {
                 return DriverManager.getConnection(url, user, password);
             }
-            @Override public Connection getConnection(String u, String p) throws SQLException {
+
+            @Override
+            public Connection getConnection(String u, String p) throws SQLException {
                 return DriverManager.getConnection(url, u, p);
             }
-            @Override public PrintWriter getLogWriter() { return null; }
-            @Override public void setLogWriter(PrintWriter out) { }
-            @Override public void setLoginTimeout(int seconds) { }
-            @Override public int getLoginTimeout() { return 0; }
-            @Override public Logger getParentLogger() { return Logger.getLogger("DataSource"); }
-            @Override public <T> T unwrap(Class<T> iface) { throw new UnsupportedOperationException(); }
-            @Override public boolean isWrapperFor(Class<?> iface) { return false; }
+
+            @Override
+            public PrintWriter getLogWriter() {
+                return null;
+            }
+
+            @Override
+            public void setLogWriter(PrintWriter out) {
+            }
+
+            @Override
+            public void setLoginTimeout(int seconds) {
+            }
+
+            @Override
+            public int getLoginTimeout() {
+                return 0;
+            }
+
+            @Override
+            public Logger getParentLogger() {
+                return Logger.getLogger("DataSource");
+            }
+
+            @Override
+            public <T> T unwrap(Class<T> iface) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean isWrapperFor(Class<?> iface) {
+                return false;
+            }
         };
     }
 }
