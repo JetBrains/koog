@@ -1,11 +1,9 @@
 @file:Suppress("MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
@@ -31,13 +29,13 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.feature.pipeline.Interceptor
 import ai.koog.agents.core.utils.submitToMainDispatcher
 
+/**
+ * JVM implementation of event-handler configuration with Java-friendly handler registration methods.
+ */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-public actual open class EventHandlerConfig actual constructor() :
-    FeatureConfig(),
-    EventHandlerConfigAPI by EventHandlerConfigImpl() {
-
+@OptIn(InternalAgentsApi::class)
+public actual open class EventHandlerConfig actual constructor() : EventHandlerConfigCommon() {
     // Java Specific Handlers:
-
     /**
      * Registers a handler for the subgraph execution starting event. This method allows asynchronous
      * interception of the event, enabling users to execute custom logic during the beginning of a
@@ -46,7 +44,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * @param handler The asynchronous interceptor that processes the SubgraphExecutionStartingContext.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onSubgraphExecutionStarting")
     public fun javaApiOnSubgraphExecutionStarting(handler: Interceptor<SubgraphExecutionStartingContext>) {
         onSubgraphExecutionStarting { eventContext ->
@@ -64,7 +61,6 @@ public actual open class EventHandlerConfig actual constructor() :
      *                the context as needed before completion.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onSubgraphExecutionCompleted")
     public fun javaApiOnSubgraphExecutionCompleted(handler: Interceptor<SubgraphExecutionCompletedContext>) {
         onSubgraphExecutionCompleted { eventContext ->
@@ -80,7 +76,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * @param handler An asynchronous interceptor that processes the subgraph execution failure context.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onSubgraphExecutionFailed")
     public fun javaApiOnSubgraphExecutionFailed(handler: Interceptor<SubgraphExecutionFailedContext>) {
         onSubgraphExecutionFailed { eventContext ->
@@ -94,7 +89,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when an agent is started.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onAgentStarting")
     public fun javaApiOnAgentStarting(handler: Interceptor<AgentStartingContext>) {
         onAgentStarting { eventContext ->
@@ -108,7 +102,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when an agent finishes execution.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onAgentCompleted")
     public fun javaApiOnAgentCompleted(handler: Interceptor<AgentCompletedContext>) {
         onAgentCompleted { eventContext ->
@@ -122,7 +115,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when an error occurs during agent execution.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onAgentExecutionFailed")
     public fun javaApiOnAgentExecutionFailed(handler: Interceptor<AgentExecutionFailedContext>) {
         onAgentExecutionFailed { eventContext ->
@@ -137,7 +129,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * to be executed prior to the agent being closed.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onAgentClosing")
     public fun javaApiOnAgentClosing(handler: Interceptor<AgentClosingContext>) {
         onAgentClosing { eventContext ->
@@ -151,7 +142,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when a strategy starts execution.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onStrategyStarting")
     public fun javaApiOnStrategyStarting(handler: Interceptor<StrategyStartingContext>) {
         onStrategyStarting { eventContext ->
@@ -165,7 +155,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when a strategy finishes execution.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onStrategyCompleted")
     public fun javaApiOnStrategyCompleted(handler: Interceptor<StrategyCompletedContext>) {
         onStrategyCompleted { eventContext ->
@@ -179,7 +168,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called before a node in the agent's execution graph is processed.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onNodeExecutionStarting")
     public fun javaApiOnNodeExecutionStarting(handler: Interceptor<NodeExecutionStartingContext>) {
         onNodeExecutionStarting { eventContext ->
@@ -193,7 +181,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called after a node in the agent's execution graph has been processed.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onNodeExecutionCompleted")
     public fun javaApiOnNodeExecutionCompleted(handler: Interceptor<NodeExecutionCompletedContext>) {
         onNodeExecutionCompleted { eventContext ->
@@ -207,7 +194,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when an error occurs during the execution of a node.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onNodeExecutionFailed")
     public fun javaApiOnNodeExecutionFailed(handler: Interceptor<NodeExecutionFailedContext>) {
         onNodeExecutionFailed { eventContext ->
@@ -221,7 +207,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called before a call is made to the language model.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onLLMCallStarting")
     public fun javaApiOnLLMCallStarting(handler: Interceptor<LLMCallStartingContext>) {
         onLLMCallStarting { eventContext ->
@@ -235,7 +220,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called after a response is received from the language model.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onLLMCallCompleted")
     public fun javaApiOnLLMCallCompleted(handler: Interceptor<LLMCallCompletedContext>) {
         onLLMCallCompleted { eventContext ->
@@ -249,7 +233,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when a tool is about to be called.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onToolCallStarting")
     public fun javaApiOnToolCallStarting(handler: Interceptor<ToolCallStartingContext>) {
         onToolCallStarting { eventContext ->
@@ -263,7 +246,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when a validation error occurs during a tool call.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onToolValidationFailed")
     public fun javaApiOnToolValidationFailed(handler: Interceptor<ToolValidationFailedContext>) {
         onToolValidationFailed { eventContext ->
@@ -277,7 +259,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when a tool call fails with an exception.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onToolCallFailed")
     public fun javaApiOnToolCallFailed(handler: Interceptor<ToolCallFailedContext>) {
         onToolCallFailed { eventContext ->
@@ -291,7 +272,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Append handler called when a tool call completes successfully.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onToolCallCompleted")
     public fun javaApiOnToolCallCompleted(handler: Interceptor<ToolCallCompletedContext>) {
         onToolCallCompleted { eventContext ->
@@ -305,7 +285,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Registers a handler to be invoked before streaming from a language model begins.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onLLMStreamingStarting")
     public fun javaApiOnLLMStreamingStarting(handler: Interceptor<LLMStreamingStartingContext>) {
         onLLMStreamingStarting { eventContext ->
@@ -319,7 +298,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Registers a handler to be invoked when stream frames are received during streaming.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onLLMStreamingFrameReceived")
     public fun javaApiOnLLMStreamingFrameReceived(handler: Interceptor<LLMStreamingFrameReceivedContext>) {
         onLLMStreamingFrameReceived { eventContext ->
@@ -333,7 +311,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Registers a handler to be invoked when an error occurs during streaming.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onLLMStreamingFailed")
     public fun javaApiOnLLMStreamingFailed(handler: Interceptor<LLMStreamingFailedContext>) {
         onLLMStreamingFailed { eventContext ->
@@ -347,7 +324,6 @@ public actual open class EventHandlerConfig actual constructor() :
      * Registers a handler to be invoked after streaming from a language model completes.
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("onLLMStreamingCompleted")
     public fun javaApiOnLLMStreamingCompleted(handler: Interceptor<LLMStreamingCompletedContext>) {
         onLLMStreamingCompleted { eventContext ->
