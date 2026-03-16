@@ -137,8 +137,6 @@ registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.Gro
 registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemory.ChatMemoryExampleKt")
 registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
 registerRunExampleTask("runExampleChatMemoryPostgres", "ai.koog.agents.example.chatmemory.ChatMemoryPostgresExampleKt")
-registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.chatmemory.ChatMemoryJdbcExample")
-registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.snapshot.PersistenceJdbcExample")
 /*
  A2A examples
 */

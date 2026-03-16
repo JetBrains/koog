@@ -11,4 +11,6 @@ java {
 
 dependencies {
     implementation(libs.koog.agents)
+    implementation(libs.koog.agents.features.chat.memory.sql)
+    implementation(libs.koog.agents.features.persistence.jdbc)
 }
