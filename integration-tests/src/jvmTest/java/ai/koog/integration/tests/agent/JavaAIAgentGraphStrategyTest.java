@@ -13,6 +13,7 @@ import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.annotations.LLMDescription;
 import ai.koog.agents.core.tools.reflect.ToolSet;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
+import ai.koog.agents.snapshot.feature.AgentCheckpointData;
 import ai.koog.agents.snapshot.feature.Persistence;
 import ai.koog.agents.snapshot.feature.PersistenceKt;
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider;
@@ -29,11 +30,15 @@ import ai.koog.serialization.TypeToken;
 import kotlin.coroutines.EmptyCoroutineContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -52,6 +57,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_GraphStrategyWithTypedNodeAndLlmNode(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        EventRecorder events = new EventRecorder();
 
         var strategy = AIAgentGraphStrategy.builder("java-typed-node-graph")
             .withInput(String.class)
@@ -83,13 +89,29 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .promptExecutor(createExecutor(model))
             .llmModel(model)
             .systemPrompt("You are a concise assistant.")
+            .install(EventHandler.Feature, config -> {
+                config.onNodeExecutionStarting(context -> events.recordNodeStart(context.getNode().getName()));
+                config.onNodeExecutionCompleted(context -> events.recordNodeCompleted(context.getNode().getName()));
+            })
             .build();
 
         String result = agent.run("Java graph API", null);
 
-        assertNotNull(result);
-        assertFalse(result.isBlank());
-        assertTrue(containsIgnoreCase(result, "hello"));
+        assertAll(
+            () -> assertNotNull(result, "Graph result should not be null"),
+            () -> assertFalse(result.isBlank(), "Graph result should not be blank"),
+            () -> assertTrue(containsIgnoreCase(result, "hello"), "Graph result should contain the expected hello reply, but was: " + result),
+            () -> assertEquals(
+                List.of("preprocess", "llm", "extract-content"),
+                withoutGraphBoundaryNodes(events.nodeNames),
+                "Expected node execution order for typed-node graph"
+            ),
+            () -> assertEquals(
+                List.of("preprocess", "llm", "extract-content"),
+                withoutGraphBoundaryNodes(events.completedNodeNames),
+                "Expected node completion order for typed-node graph"
+            )
+        );
     }
 
     @ParameterizedTest
@@ -130,11 +152,19 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         String result = agent.run("Calculate 7 times 8", null);
 
-        assertNotNull(result);
-        assertFalse(result.isBlank());
-        assertTrue(result.contains("56"), "Result should contain the multiplication result");
-        assertTrue(events.toolNames.contains("multiply"));
-        assertTrue(events.subgraphNames.contains("calc-subgraph"));
+        long multiplyEventCount = events.toolNames.stream().filter("multiply"::equals).count();
+
+        assertAll(
+            () -> assertNotNull(result, "Subgraph result should not be null"),
+            () -> assertFalse(result.isBlank(), "Subgraph result should not be blank"),
+            () -> assertTrue(result.contains("56"), "Result should contain the multiplication result, but was: " + result),
+            () -> assertTrue(events.toolNames.contains("multiply"), "Expected multiply tool event to be emitted"),
+            () -> assertFalse(events.toolNames.contains("add"), "Limited tool subgraph should not expose the add tool"),
+            () -> assertEquals(1L, multiplyEventCount, "Multiply tool should be requested exactly once"),
+            () -> assertEquals(1, calculatorTools.multiplyCalls.get(), "Multiply tool should be invoked exactly once"),
+            () -> assertEquals(0, calculatorTools.addCalls.get(), "Add tool should never be invoked"),
+            () -> assertTrue(events.subgraphNames.contains("calc-subgraph"), "Expected calc-subgraph start event to be emitted")
+        );
     }
 
     @ParameterizedTest
@@ -175,32 +205,43 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .systemPrompt("You are a calculator assistant. Use the multiply tool.")
             .toolRegistry(toolRegistry)
             .install(EventHandler.Feature, config -> {
-                config.onStrategyStarting(context -> events.strategyStarted.incrementAndGet());
-                config.onStrategyCompleted(context -> events.strategyCompleted.incrementAndGet());
-                config.onNodeExecutionStarting(context -> events.nodeNames.add(context.getNode().getName()));
-                config.onSubgraphExecutionStarting(context -> events.subgraphNames.add(context.getSubgraph().getName()));
-                config.onSubgraphExecutionCompleted(context -> events.completedSubgraphNames.add(context.getSubgraph().getName()));
-                config.onToolCallStarting(context -> events.toolNames.add(context.getToolName()));
+                config.onStrategyStarting(context -> events.recordStrategyStarted());
+                config.onStrategyCompleted(context -> events.recordStrategyCompleted());
+                config.onNodeExecutionStarting(context -> events.recordNodeStart(context.getNode().getName()));
+                config.onNodeExecutionCompleted(context -> events.recordNodeCompleted(context.getNode().getName()));
+                config.onSubgraphExecutionStarting(context -> events.recordSubgraphStart(context.getSubgraph().getName()));
+                config.onSubgraphExecutionCompleted(context -> events.recordSubgraphCompleted(context.getSubgraph().getName()));
+                config.onToolCallStarting(context -> events.recordToolCall(context.getToolName()));
             })
             .build();
 
         String result = agent.run("event run", null);
 
-        assertNotNull(result);
-        assertEquals(1, events.strategyStarted.get());
-        assertEquals(1, events.strategyCompleted.get());
-        assertFalse(events.nodeNames.isEmpty(), "At least one node should have executed");
-        assertTrue(result.contains("54"), "Result should contain the multiplication result");
-        assertTrue(events.subgraphNames.contains("tool-subgraph"));
-        assertTrue(events.completedSubgraphNames.contains("tool-subgraph"));
-        assertTrue(events.nodeNames.contains("prepare"));
-        assertTrue(events.toolNames.contains("multiply"));
+        assertAll(
+            () -> assertNotNull(result, "Event graph result should not be null"),
+            () -> assertEquals(1, events.strategyStarted.get(), "Strategy should start exactly once"),
+            () -> assertEquals(1, events.strategyCompleted.get(), "Strategy should complete exactly once"),
+            () -> assertFalse(events.nodeNames.isEmpty(), "At least one node should have executed"),
+            () -> assertTrue(result.contains("54"), "Result should contain the multiplication result, but was: " + result),
+            () -> assertTrue(events.subgraphNames.contains("tool-subgraph"), "Expected tool-subgraph start event"),
+            () -> assertTrue(events.completedSubgraphNames.contains("tool-subgraph"), "Expected tool-subgraph completion event"),
+            () -> assertTrue(events.nodeNames.contains("prepare"), "Expected prepare node start event"),
+            () -> assertTrue(events.completedNodeNames.contains("prepare"), "Expected prepare node completion event"),
+            () -> assertTrue(events.toolNames.contains("multiply"), "Expected multiply tool event"),
+            () -> assertBefore(events.eventLog, "strategy-started", "node-start:prepare", "Strategy should start before prepare node"),
+            () -> assertBefore(events.eventLog, "node-start:prepare", "subgraph-start:tool-subgraph", "Prepare node should start before subgraph"),
+            () -> assertBefore(events.eventLog, "subgraph-start:tool-subgraph", "tool:multiply", "Subgraph should start before the multiply tool is called"),
+            () -> assertBefore(events.eventLog, "tool:multiply", "subgraph-completed:tool-subgraph", "Tool call should happen before subgraph completion"),
+            () -> assertBefore(events.eventLog, "subgraph-completed:tool-subgraph", "strategy-completed", "Strategy should complete after the subgraph completes")
+        );
     }
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_GraphStrategyWithVerificationPath(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        EventRecorder positiveEvents = new EventRecorder();
+        EventRecorder negativeEvents = new EventRecorder();
 
         var strategy = AIAgentGraphStrategy.builder("java-graph-verification")
             .withInput(String.class)
@@ -224,16 +265,22 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .build());
 
         AIAgentGraphStrategy<String, Boolean> graphStrategy = strategy.build();
-        AIAgent<String, Boolean> positiveAgent = buildVerificationAgent(model, graphStrategy);
-        AIAgent<String, Boolean> negativeAgent = buildVerificationAgent(model, graphStrategy);
+        AIAgent<String, Boolean> positiveAgent = buildVerificationAgent(model, graphStrategy, positiveEvents);
+        AIAgent<String, Boolean> negativeAgent = buildVerificationAgent(model, graphStrategy, negativeEvents);
 
         Boolean result = positiveAgent.run("Paris is the capital of France.", null);
         Boolean falseResult = negativeAgent.run("The Sun orbits around the Earth.", null);
 
-        assertNotNull(result);
-        assertTrue(result);
-        assertNotNull(falseResult);
-        assertFalse(falseResult);
+        assertAll(
+            () -> assertNotNull(result, "Verification result for the true statement should not be null"),
+            () -> assertTrue(result, "Expected Paris to be verified as the capital of France"),
+            () -> assertNotNull(falseResult, "Verification result for the false statement should not be null"),
+            () -> assertFalse(falseResult, "Expected the heliocentric false statement to be rejected"),
+            () -> assertTrue(positiveEvents.nodeNames.contains("verification-result"), "Expected verification-result node to execute in the positive run"),
+            () -> assertTrue(negativeEvents.nodeNames.contains("verification-result"), "Expected verification-result node to execute in the negative run"),
+            () -> assertTrue(positiveEvents.subgraphNames.contains("verification-subgraph"), "Expected verification subgraph start event in the positive run"),
+            () -> assertTrue(negativeEvents.subgraphNames.contains("verification-subgraph"), "Expected verification subgraph start event in the negative run")
+        );
     }
 
     @ParameterizedTest
@@ -272,8 +319,12 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         String result = agent.run("Java graph strategy finish tool formatting", null);
 
-        assertNotNull(result);
-        assertTrue(result.startsWith("FINAL:"), "Result should be formatted by the finish tool");
+        assertAll(
+            () -> assertNotNull(result, "Finish-tool graph result should not be null"),
+            () -> assertTrue(result.startsWith("FINAL:"), "Result should be formatted by the finish tool, but was: " + result),
+            () -> assertTrue(result.length() > "FINAL:".length(), "Finish tool result should contain content after the FINAL: prefix"),
+            () -> assertEquals(1, finishTools.finalizeCalls.get(), "Finish tool should be invoked exactly once")
+        );
     }
 
     @ParameterizedTest
@@ -320,7 +371,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .promptExecutor(createExecutor(model))
             .llmModel(model)
             .systemPrompt("You are a concise assistant. Always preserve the user's main topic.")
-            .install(EventHandler.Feature, config -> config.onNodeExecutionStarting(context -> events.nodeNames.add(context.getNode().getName())))
+            .install(EventHandler.Feature, config -> config.onNodeExecutionStarting(context -> events.recordNodeStart(context.getNode().getName())))
             .build();
 
         String result = agent.run(
@@ -328,12 +379,21 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             null
         );
 
-        assertNotNull(result);
-        assertFalse(result.isBlank());
-        assertTrue(events.nodeNames.contains("compress"));
+        assertAll(
+            () -> assertNotNull(result, "History-compression graph result should not be null"),
+            () -> assertFalse(result.isBlank(), "History-compression graph result should not be blank"),
+            () -> assertEquals(
+                List.of("first-llm", "extract-first-response", "compress", "final-llm", "extract-final-response"),
+                withoutGraphBoundaryNodes(events.nodeNames),
+                "Expected history-compression flow to execute all nodes in order"
+            ),
+            () -> assertBefore(events.nodeNames, "first-llm", "compress", "Compression should happen after the first LLM node"),
+            () -> assertBefore(events.nodeNames, "compress", "final-llm", "Compression should happen before the final LLM node")
+        );
     }
 
     @Test
+    @Timeout(15)
     public void integration_GraphStrategyWithManualCheckpointCreationUsingInMemoryStorage() {
         LLModel model = OpenAIModels.Chat.GPT4o;
         Models.assumeAvailable(model.getProvider());
@@ -347,21 +407,27 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         AIAgent<String, String> agent = buildPersistenceAgent(model, storage, strategy, "java-manual-checkpoint-agent");
         String firstResult = agent.run("first run", agent.getId());
 
-        List<?> checkpoints = runBlocking(continuation -> storage.getCheckpoints(agent.getId(), null, continuation));
-        assertFalse(checkpoints.isEmpty());
-        assertEquals(1, checkpointNodeRuns.get());
-        assertEquals(1, finalNodeRuns.get());
-        assertTrue(firstResult.contains("final-node"));
+        List<AgentCheckpointData> checkpoints = getCheckpoints(storage, agent.getId());
+        int checkpointNodeRunsAfterFirstRun = checkpointNodeRuns.get();
+        int finalNodeRunsAfterFirstRun = finalNodeRuns.get();
 
         AIAgent<String, String> restoredAgent = buildPersistenceAgent(model, storage, strategy, agent.getId());
         String secondResult = restoredAgent.run("restored run", agent.getId());
 
-        assertTrue(secondResult.contains("final-node"));
-        assertEquals(1, checkpointNodeRuns.get(), "Checkpoint node should not rerun after restore");
-        assertEquals(2, finalNodeRuns.get(), "Downstream node should rerun after restore");
+        assertAll(
+            () -> assertEquals(1, checkpoints.size(), "Expected exactly one checkpoint to be created"),
+            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getNodePath()),
+            () -> assertEquals(1, checkpointNodeRunsAfterFirstRun, "Checkpoint node should run exactly once on the initial execution"),
+            () -> assertEquals(1, finalNodeRunsAfterFirstRun, "Final node should run exactly once on the initial execution"),
+            () -> assertEquals("final-node:checkpoint-node:first run", firstResult, "Initial run should produce the expected final-node output"),
+            () -> assertEquals("final-node:checkpoint-node:first run", secondResult, "Restored run should resume from checkpointed output, not from the new input"),
+            () -> assertEquals(1, checkpointNodeRuns.get(), "Checkpoint node should not rerun after restore"),
+            () -> assertEquals(2, finalNodeRuns.get(), "Downstream node should rerun after restore")
+        );
     }
 
     @Test
+    @Timeout(15)
     public void integration_GraphStrategyWithFilePersistenceStorage() {
         LLModel model = OpenAIModels.Chat.GPT4o;
         Models.assumeAvailable(model.getProvider());
@@ -375,21 +441,32 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         AIAgent<String, String> agent = buildPersistenceAgent(model, storage, strategy, "java-file-checkpoint-agent");
         String firstResult = agent.run("first run", agent.getId());
 
-        List<?> checkpoints = runBlocking(continuation -> storage.getCheckpoints(agent.getId(), null, continuation));
-        assertFalse(checkpoints.isEmpty());
-        assertTrue(firstResult.contains("final-node"));
+        List<AgentCheckpointData> checkpoints = getCheckpoints(storage, agent.getId());
+        int checkpointNodeRunsAfterFirstRun = checkpointNodeRuns.get();
+        int finalNodeRunsAfterFirstRun = finalNodeRuns.get();
 
         AIAgent<String, String> restoredAgent = buildPersistenceAgent(model, storage, strategy, agent.getId());
         String secondResult = restoredAgent.run("restored run", agent.getId());
 
-        Object latestCheckpoint = runBlocking(continuation -> storage.getLatestCheckpoint(agent.getId(), null, continuation));
-        assertNotNull(latestCheckpoint);
-        assertTrue(secondResult.contains("final-node"));
-        assertEquals(1, checkpointNodeRuns.get());
-        assertEquals(2, finalNodeRuns.get());
+        AgentCheckpointData latestCheckpoint = getLatestCheckpoint(storage, agent.getId());
+
+        assertAll(
+            () -> assertEquals(1, checkpoints.size(), "Expected exactly one file checkpoint to be created"),
+            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getNodePath()),
+            () -> assertEquals(1, checkpointNodeRunsAfterFirstRun, "Checkpoint node should run exactly once on the initial execution"),
+            () -> assertEquals(1, finalNodeRunsAfterFirstRun, "Final node should run exactly once on the initial execution"),
+            () -> assertEquals("final-node:checkpoint-node:first run", firstResult, "Initial run should produce the expected final-node output"),
+            () -> assertNotNull(latestCheckpoint, "Latest checkpoint should be available after file-based persistence"),
+            () -> assertTrue(latestCheckpoint.getNodePath().endsWith("/checkpoint-node"), "Latest file checkpoint should point to checkpoint-node, but was: " + latestCheckpoint.getNodePath()),
+            () -> assertTrue(hasAnyFiles(tempDir), "File persistence should materialize checkpoint files in the temp directory"),
+            () -> assertEquals("final-node:checkpoint-node:first run", secondResult, "Restored run should reuse the stored checkpoint output"),
+            () -> assertEquals(1, checkpointNodeRuns.get(), "Checkpoint node should not rerun after file restore"),
+            () -> assertEquals(2, finalNodeRuns.get(), "Downstream node should rerun after file restore")
+        );
     }
 
     @Test
+    @Timeout(15)
     public void integration_GraphStrategyRollbackToLatestCheckpointFromInsideNode() {
         LLModel model = OpenAIModels.Chat.GPT4o;
         Models.assumeAvailable(model.getProvider());
@@ -453,13 +530,33 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         AIAgent<String, String> agent = buildPersistenceAgent(model, storage, strategy, "java-rollback-agent");
         String result = agent.run("start rollback test", agent.getId());
 
-        assertNotNull(result);
-        assertTrue(result.contains("rollback-skipped"));
-        assertEquals(1, checkpointRuns.get(), "Checkpoint node should not rerun after rollback");
-        assertEquals(2, downstreamRuns.get(), "Downstream node should rerun after rollback");
-        assertEquals(1, executionLog.stream().filter("rollback-performed"::equals).count());
-        assertEquals(1, executionLog.stream().filter("checkpoint-node"::equals).count());
-        assertEquals(2, executionLog.stream().filter("downstream-node"::equals).count());
+        List<AgentCheckpointData> checkpoints = getCheckpoints(storage, agent.getId());
+
+        assertAll(
+            () -> assertNotNull(result, "Rollback graph result should not be null"),
+            () -> assertTrue(result.contains("rollback-skipped"), "Rollback graph should finish on the post-rollback path, but was: " + result),
+            () -> assertEquals(1, checkpointRuns.get(), "Checkpoint node should not rerun after rollback"),
+            () -> assertEquals(2, downstreamRuns.get(), "Downstream node should rerun after rollback"),
+            () -> assertEquals(1, executionLog.stream().filter("rollback-performed"::equals).count(), "Rollback should be performed exactly once"),
+            () -> assertEquals(2, executionLog.stream().filter("rollback-node"::equals).count(), "Rollback node should run before and after rollback"),
+            () -> assertEquals(1, executionLog.stream().filter("checkpoint-node"::equals).count(), "Checkpoint node should run only once"),
+            () -> assertEquals(2, executionLog.stream().filter("downstream-node"::equals).count(), "Downstream node should run twice"),
+            () -> assertEquals(
+                List.of(
+                    "checkpoint-node",
+                    "downstream-node",
+                    "rollback-node",
+                    "rollback-performed",
+                    "downstream-node",
+                    "rollback-node",
+                    "rollback-skipped"
+                ),
+                new ArrayList<>(executionLog),
+                "Execution order should show rollback to the checkpoint and replay from the downstream node"
+            ),
+            () -> assertEquals(1, checkpoints.size(), "Rollback should not delete the existing checkpoint"),
+            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Rollback should preserve the checkpoint at checkpoint-node, but was: " + checkpoints.get(0).getNodePath())
+        );
     }
 
     private AIAgent<String, String> buildPersistenceAgent(
@@ -483,14 +580,27 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
     private AIAgent<String, Boolean> buildVerificationAgent(
         LLModel model,
-        AIAgentGraphStrategy<String, Boolean> strategy
+        AIAgentGraphStrategy<String, Boolean> strategy,
+        EventRecorder events
     ) {
         return AIAgent.builder()
             .graphStrategy(strategy)
             .promptExecutor(createExecutor(model))
             .llmModel(model)
             .systemPrompt("You are a careful verifier.")
+            .install(EventHandler.Feature, config -> {
+                config.onNodeExecutionStarting(context -> events.recordNodeStart(context.getNode().getName()));
+                config.onSubgraphExecutionStarting(context -> events.recordSubgraphStart(context.getSubgraph().getName()));
+            })
             .build();
+    }
+
+    private List<AgentCheckpointData> getCheckpoints(PersistenceStorageProvider<?> storage, String agentId) {
+        return runBlocking(continuation -> storage.getCheckpoints(agentId, null, continuation));
+    }
+
+    private AgentCheckpointData getLatestCheckpoint(PersistenceStorageProvider<?> storage, String agentId) {
+        return runBlocking(continuation -> storage.getLatestCheckpoint(agentId, null, continuation));
     }
 
     private AIAgentGraphStrategy<String, String> buildManualCheckpointGraph(
@@ -532,8 +642,8 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
     private void createCheckpoint(AIAgentGraphContextBase ctx, String nodePath, String lastOutput) {
         Persistence persistence = PersistenceKt.persistence(ctx);
+
         runBlockingIfRequired(
-            EmptyCoroutineContext.INSTANCE,
             continuation -> persistence.createCheckpointAfterNode(
                 ctx,
                 nodePath,
@@ -549,9 +659,29 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     private void rollbackToLatestCheckpoint(AIAgentGraphContextBase ctx) {
         Persistence persistence = PersistenceKt.persistence(ctx);
         runBlockingIfRequired(
-            EmptyCoroutineContext.INSTANCE,
             continuation -> persistence.rollbackToLatestCheckpoint(ctx, continuation)
         );
+    }
+
+    private static boolean hasAnyFiles(Path directory) throws IOException {
+        try (var files = Files.list(directory)) {
+            return files.findAny().isPresent();
+        }
+    }
+
+    private static void assertBefore(List<String> events, String first, String second, String message) {
+        int firstIndex = events.indexOf(first);
+        int secondIndex = events.indexOf(second);
+
+        assertTrue(firstIndex >= 0, message + " Missing event: " + first + ". Actual events: " + events);
+        assertTrue(secondIndex >= 0, message + " Missing event: " + second + ". Actual events: " + events);
+        assertTrue(firstIndex < secondIndex, message + ". Actual events: " + events);
+    }
+
+    private static List<String> withoutGraphBoundaryNodes(List<String> nodeNames) {
+        return nodeNames.stream()
+            .filter(nodeName -> !"__start__".equals(nodeName) && !"__finish__".equals(nodeName))
+            .toList();
     }
 
     private static String assistantContent(Message.Response response, String fallback) {
@@ -569,29 +699,75 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         final AtomicInteger strategyStarted = new AtomicInteger();
         final AtomicInteger strategyCompleted = new AtomicInteger();
         final List<String> nodeNames = new CopyOnWriteArrayList<>();
+        final List<String> completedNodeNames = new CopyOnWriteArrayList<>();
         final List<String> subgraphNames = new CopyOnWriteArrayList<>();
         final List<String> completedSubgraphNames = new CopyOnWriteArrayList<>();
         final List<String> toolNames = new CopyOnWriteArrayList<>();
+
+        final List<String> eventLog = new CopyOnWriteArrayList<>();
+
+        void recordStrategyStarted() {
+            strategyStarted.incrementAndGet();
+            eventLog.add("strategy-started");
+        }
+
+        void recordStrategyCompleted() {
+            strategyCompleted.incrementAndGet();
+            eventLog.add("strategy-completed");
+        }
+
+        void recordNodeStart(String nodeName) {
+            nodeNames.add(nodeName);
+            eventLog.add("node-start:" + nodeName);
+        }
+
+        void recordNodeCompleted(String nodeName) {
+            completedNodeNames.add(nodeName);
+            eventLog.add("node-completed:" + nodeName);
+        }
+
+        void recordSubgraphStart(String subgraphName) {
+            subgraphNames.add(subgraphName);
+            eventLog.add("subgraph-start:" + subgraphName);
+        }
+
+        void recordSubgraphCompleted(String subgraphName) {
+            completedSubgraphNames.add(subgraphName);
+            eventLog.add("subgraph-completed:" + subgraphName);
+        }
+
+        void recordToolCall(String toolName) {
+            toolNames.add(toolName);
+            eventLog.add("tool:" + toolName);
+        }
     }
 
     public static final class CalculatorTools implements ToolSet {
+        final AtomicInteger addCalls = new AtomicInteger();
+        final AtomicInteger multiplyCalls = new AtomicInteger();
+
         @ai.koog.agents.core.tools.annotations.Tool
         @LLMDescription("Adds two numbers together")
         public int add(@LLMDescription("First number") int a, @LLMDescription("Second number") int b) {
+            addCalls.incrementAndGet();
             return a + b;
         }
 
         @ai.koog.agents.core.tools.annotations.Tool
         @LLMDescription("Multiplies two numbers")
         public int multiply(@LLMDescription("First number") int a, @LLMDescription("Second number") int b) {
+            multiplyCalls.incrementAndGet();
             return a * b;
         }
     }
 
     public static final class FinishFormatterTools implements ToolSet {
+        final AtomicInteger finalizeCalls = new AtomicInteger();
+
         @ai.koog.agents.core.tools.annotations.Tool
         @LLMDescription("Formats the final answer into a stable FINAL: prefix")
         public String finalizeResult(@LLMDescription("Raw answer") String raw) {
+            finalizeCalls.incrementAndGet();
             return "FINAL:" + raw.trim();
         }
     }

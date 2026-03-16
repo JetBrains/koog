@@ -103,6 +103,7 @@ internal val AGENT_CONTEXT_ELEMENT: ThreadLocal<CoroutineContext> = ThreadLocal(
  * @return The result of the [block].
  */
 @OptIn(InternalAgentsApi::class)
+@JvmOverloads
 @InternalAgentsApi
 public fun <T> runBlockingIfRequired(context: CoroutineContext = EmptyCoroutineContext, block: suspend () -> T): T {
     val existingContext = AGENT_CONTEXT_ELEMENT.get()
