@@ -380,5 +380,4 @@ public class OpenTelemetryConfig : FeatureConfig() {
         weaveApiKey: String? = null,
         timeout: Duration = 10.seconds,
     ): Unit = addWeaveExporterImpl(weaveOtelBaseUrl, weaveEntity, weaveProjectName, weaveApiKey, timeout)
-
 }

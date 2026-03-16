@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.integration.langfuse
 
-import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -9,7 +8,6 @@ import java.util.Base64
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-
 
 internal fun OpenTelemetryConfig.addLangfuseExporterImpl(
     langfuseUrl: String? = null,
