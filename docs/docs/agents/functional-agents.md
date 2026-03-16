@@ -22,11 +22,10 @@ This page describes how to implement a functional strategy to quickly prototype 
 
 ## Create a minimal functional agent
 
-To create a minimal functional agent,
-use the same [`AIAgent`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent/index.html) interface
-as for a [basic agent](basic-agents.md)
-and pass an instance of [`AIAgentFunctionalStrategy`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent-functional-strategy/index.html) to it.
-You can define a functional strategy that expects a string input and returns a string output, makes one LLM call, then returns the content of the assistant message from the response.
+To create a minimal functional agent, use the same [`AIAgent`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent/index.html) interface as for a [basic agent](basic-agents.md) and pass an 
+instance of [`AIAgentFunctionalStrategy`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent-functional-strategy/index.html) to it.
+You can define a functional strategy that expects an input and returns an output, makes one LLM call, then returns the 
+content of the assistant message from the response.
 
 In Kotlin, the most convenient way is to use the `functionalStrategy {...}` DSL method. In Java, you can use the `functionalStrategy` method on the `AIAgent` builder.
 
