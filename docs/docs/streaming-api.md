@@ -69,7 +69,6 @@ The streaming API distinguishes between two types of frames:
 
 Typically, you'll work with delta frames for UI updates and complete frames for extracting final structured data.
 
----
 ## Usage
 
 ### Working with frames directly
@@ -176,7 +175,7 @@ This is the most general approach: react to each frame kind.
         return null;
     });
     ```
-    <!--- KNIT exampleStreamingApiJava01.java -->
+    <!--- KNIT example-streaming-api-java-01.java -->
 
 
 It is important to note that you can parse the output by working directly with a raw string stream.
@@ -273,7 +272,7 @@ Here is a raw string stream with the Markdown definition of the output structure
         return null;
     });
     ```
-    <!--- KNIT exampleStreamingApiJava02.java -->
+    <!--- KNIT example-streaming-api-java-02.java -->
 
 ### Working with reasoning frames
 
@@ -406,8 +405,8 @@ Models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1) emit reasoni
 
 ### Working with a raw text stream (derived)
 
-If you have existing streaming parsers that expect `Flow<String>`,
-derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
+If you have existing streaming parsers that expect a stream of text chunks (Kotlin `Flow<String>` or Java reactive streams),
+you can derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
 
 === "Kotlin"
 
@@ -490,7 +489,7 @@ derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
         return null;
     });
     ```
-    <!--- KNIT exampleStreamingApiJava03.java -->
+    <!--- KNIT example-streaming-api-java-03.java -->
 
 ### Listening to stream events in event handlers
 
@@ -579,7 +578,7 @@ You can listen to stream events in [agent event handlers](features/agent-event-h
         });
     })
     ```
-    <!--- KNIT exampleStreamingApiJava04.java -->
+    <!--- KNIT example-streaming-api-java-04.java -->
 
 ### Converting frames to `Message.Response`
 
@@ -638,7 +637,7 @@ First, define a data class to represent your structured data:
     ```java
     // TODO not yet supported in Java
     ```
-    <!--- KNIT exampleStreamingApiJava05.java -->
+    <!--- KNIT exampleStreamingApiJava01.java -->
 
 #### 2. Define the Markdown structure
 
@@ -687,7 +686,7 @@ Create a definition that specifies how your data should be structured in Markdow
     ```java
     // TODO not yet supported in Java
     ```
-    <!--- KNIT exampleStreamingApiJava06.java -->
+    <!--- KNIT example-streaming-api-java-05.java -->
 
 #### 3. Create a parser for your data structure
 
@@ -736,7 +735,7 @@ The `markdownStreamingParser` provides several handlers for different Markdown e
     ```java
     // TODO not yet supported in Java
     ```
-    <!--- KNIT exampleStreamingApiJava07.java -->
+    <!--- KNIT example-streaming-api-java-06.java -->
 
 Using the defined handlers, you can implement a function that parses the Markdown stream and emits your data objects 
 with the `markdownStreamingParser` function.
@@ -804,7 +803,7 @@ with the `markdownStreamingParser` function.
     ```java
     // TODO not yet supported in Java
     ```
-    <!--- KNIT exampleStreamingApiJava08.java -->
+    <!--- KNIT example-streaming-api-java-07.java -->
 
 #### 4. Use the parser in your agent strategy
 
@@ -858,7 +857,7 @@ with the `markdownStreamingParser` function.
     ```java
     // TODO not yet supported in Java
     ```
-    <!--- KNIT exampleStreamingApiJava09.java -->
+    <!--- KNIT example-streaming-api-java-08.java -->
 
 ### Advanced usage: Streaming with tools
 
@@ -921,7 +920,7 @@ The following sections provide a brief step-by-step guide on how to define a too
         }
     }
     ```
-    <!--- KNIT exampleStreamingApiJava10.java -->
+    <!--- KNIT example-streaming-api-java-09.java -->
 
 ### 2. Use the tool with streaming data
 
@@ -1034,7 +1033,7 @@ The following sections provide a brief step-by-step guide on how to define a too
     strategy.edge(strategy.nodeStart, getMdOutput);
     strategy.edge(getMdOutput, strategy.nodeFinish);
     ```
-    <!--- KNIT exampleStreamingApiJava11.java -->
+    <!--- KNIT example-streaming-api-java-10.java -->
 
 ### 3. Register the tool in your agent configuration
 
@@ -1094,7 +1093,7 @@ The following sections provide a brief step-by-step guide on how to define a too
         .toolRegistry(toolRegistry)
         .build();
     ```
-    <!--- KNIT exampleStreamingApiJava12.java -->
+    <!--- KNIT example-streaming-api-java-11.java -->
 
 ## Best practices
 

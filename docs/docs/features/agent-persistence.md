@@ -370,9 +370,9 @@ With Koog Persistence you can achieve that by providing a `RollbackToolRegistry`
     ```
     <!--- KNIT example-agent-persistence-java-06.java -->
 
-### Using extension functions
+### Using extension functions (Kotlin)
 
-The Agent Persistence feature provides convenient extension functions for working with checkpoints:
+The Agent Persistence feature provides convenient extension functions in Kotlin for working with checkpoints:
 
 === "Kotlin"
 
