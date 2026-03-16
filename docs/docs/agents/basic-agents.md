@@ -73,8 +73,8 @@ and provide a [prompt executor](../prompts/prompt-executors.md) with a [language
         .build();
     ```
 
-    This agent will expect a string as input and return a string as output.
-    To run the agent, use the `run()` function with some user input:
+    This agent expects a string as input and returns a string as output.
+    To run the agent, use the `run()` method with some user input:
 
     ```java
     String result = agent.run("Hello! How can you help me?");
@@ -155,8 +155,8 @@ What's on your mind? Are you trying to understand a specific meme, need help fin
 
 ## Configure LLM output
 
-You can provide some [LLM parameters](../llm-parameters.md#llm-parameter-reference) directly to the agent constructor
-to customize the behavior of the LLM.
+You can provide some [LLM parameters](../llm-parameters.md#llm-parameter-reference) directly to the agent constructor 
+(Kotlin) or via the builder methods (Java) to customize the behavior of the LLM.
 For example, use the `temperature` parameter to adjust the randomness of the generated responses:
 
 === "Kotlin"
@@ -234,7 +234,7 @@ Here are some response examples with different temperature values:
 
 Agents can use [tools](../tools-overview.md) to perform specific tasks.
 
-First, create a tool by annotating a function with the [`@Tool`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.annotations/-tool/index.html) annotation:
+First, create a tool by annotating a function (Kotlin) or method (Java) with the [`@Tool`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.annotations/-tool/index.html) annotation:
 
 === "Kotlin"
 
@@ -406,13 +406,6 @@ For example, a simple agent described here is not likely to require more than 10
     ```
     <!--- KNIT example-basic-04.kt -->
 
-    !!! tip
-
-        Instead of passing the model, temperature, max iterations,
-        and other parameters directly to the agent constructor,
-        you can also define and pass them as a separate configuration object.
-        For more information, see [Agent configuration](index.md#agent-configuration).
-
 === "Java"
 
     <!--- INCLUDE
@@ -467,6 +460,12 @@ For example, a simple agent described here is not likely to require more than 10
     ```
     <!--- KNIT exampleBasicJava05.java -->
 
+!!! tip
+
+    Instead of passing the model, temperature, max iterations, and other parameters directly to the Kotlin constructor 
+    or Java builder, you can also define and pass them as a separate configuration object.
+    For more information, see [Agent configuration](index.md#agent-configuration).
+
 ## Handle events during agent runtime
 
 To assist with testing and debugging, as well as making hooks for chained agent interactions,
@@ -517,6 +516,7 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
     <!--- KNIT example-basic-05.kt -->
 
 === "Java"
+    Use the `.install()` method on the agent builder to register event handlers with `EventHandler.Feature`:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
