@@ -303,9 +303,9 @@ First, create a tool by annotating a function (Kotlin) or method (Java) with the
     // Create a ToolSet class
     class UserConversationTools implements ToolSet {
         @Tool
-        @LLMDescription(description = "Ask the user a question by sending it to stdout and return the answer from stdin")
+        @LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
         public String askUser(
-            @LLMDescription(description = "Question from the agent")
+            @LLMDescription("Question from the agent")
             String question
         ) {
             System.out.println(question);
@@ -431,9 +431,9 @@ For example, a simple agent described here is not likely to require more than 10
     // Create a ToolSet class
     class UserConversationTools implements ToolSet {
         @Tool
-        @LLMDescription(description = "Ask the user a question by sending it to stdout and return the answer from stdin")
+        @LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
         public String askUser(
-            @LLMDescription(description = "Question from the agent")
+            @LLMDescription("Question from the agent")
             String question
         ) {
             System.out.println(question);
@@ -543,9 +543,9 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
     // Create a ToolSet class
     class UserConversationTools implements ToolSet {
         @Tool
-        @LLMDescription(description = "Ask the user a question by sending it to stdout and return the answer from stdin")
+        @LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
         public String askUser(
-            @LLMDescription(description = "Question from the agent")
+            @LLMDescription("Question from the agent")
             String question
         ) {
             System.out.println(question);
