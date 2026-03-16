@@ -19,7 +19,7 @@ import ai.koog.agents.core.system.feature.DebuggerTestAPI.defaultClientServerTim
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.mockLLModel
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.testBaseClient
 import ai.koog.agents.core.system.mock.ClientEventsCollector
-import ai.koog.agents.core.system.mock.createAgent
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.singleEvent
@@ -82,7 +82,7 @@ class DebuggerSubgraphTest {
                 nodeStart then nodeSubgraph then nodeFinish
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
@@ -220,7 +220,7 @@ class DebuggerSubgraphTest {
                 nodeStart then subgraph then nodeFinish
             }
 
-            val throwable = createAgent(
+            val throwable = createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,

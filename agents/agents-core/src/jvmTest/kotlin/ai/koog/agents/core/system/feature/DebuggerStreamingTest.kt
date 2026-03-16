@@ -1,7 +1,6 @@
 package ai.koog.agents.core.system.feature
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
@@ -21,10 +20,10 @@ import ai.koog.agents.core.system.feature.DebuggerTestAPI.mockLLModel
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.testBaseClient
 import ai.koog.agents.core.system.mock.ClientEventsCollector
 import ai.koog.agents.core.system.mock.MockLLMProvider
-import ai.koog.agents.core.system.mock.assistantMessage
-import ai.koog.agents.core.system.mock.createAgent
-import ai.koog.agents.core.system.mock.systemMessage
-import ai.koog.agents.core.system.mock.userMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.assistantMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
+import ai.koog.agents.core.system.mock.TestAgentFactory.systemMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.userMessage
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.agent.agentExecutionInfo
@@ -121,7 +120,7 @@ class DebuggerStreamingTest {
                 )
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
@@ -317,7 +316,7 @@ class DebuggerStreamingTest {
                 )
             }
 
-            val throwable = createAgent(
+            val throwable = createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,

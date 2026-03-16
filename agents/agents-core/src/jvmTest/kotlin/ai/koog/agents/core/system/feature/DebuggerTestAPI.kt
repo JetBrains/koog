@@ -23,7 +23,7 @@ import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.system.mock.ClientEventsCollector
 import ai.koog.agents.core.system.mock.MockLLMProvider
-import ai.koog.agents.core.system.mock.createAgent
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.singleEvent
 import ai.koog.agents.testing.feature.message.singleNodeEvent
@@ -94,7 +94,7 @@ internal object DebuggerTestAPI {
                 edge(nodeStart forwardTo nodeFinish)
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 userPrompt = userPrompt,
@@ -133,7 +133,6 @@ internal object DebuggerTestAPI {
                 val actualAgentStartingEvent = actualFilteredEvents.singleEvent<AgentStartingEvent>()
                 val actualStrategyStartingEvent = actualFilteredEvents.singleEvent<GraphStrategyStartingEvent>()
                 val actualNodeStartEvent = actualFilteredEvents.singleNodeEvent(START_NODE_PREFIX)
-                val actualNodeFinishEvent = actualFilteredEvents.singleNodeEvent(FINISH_NODE_PREFIX)
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 expectedFilteredEvents.addAll(
@@ -272,7 +271,7 @@ internal object DebuggerTestAPI {
                 edge(nodeStart forwardTo nodeFinish)
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 userPrompt = userPrompt,
