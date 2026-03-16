@@ -75,7 +75,7 @@ version = run {
     "$baseVersion$feat"
 }
 
-fun isCustomReleaseBranch(branchName: String): Boolean = branchName.matches(Regex("""^(release\/)?\d+\.\d+\.\d+$"""))
+fun isCustomReleaseBranch(branchName: String): Boolean = branchName.matches(Regex("""^(release\/)?\d+\.\d+\.\d+(-rc\d*)?$"""))
 
 buildscript {
     dependencies {
