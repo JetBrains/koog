@@ -3,7 +3,9 @@ package ai.koog.integration.tests.utils
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.utils.runBlockingIfRequired
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
@@ -19,9 +21,9 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Flow.Publisher
 import java.util.concurrent.Flow.Subscriber
@@ -30,26 +32,25 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(InternalAgentsApi::class)
 object JavaUtils {
     @JvmStatic
     fun <T : Any> requestLLMStructuredBlocking(
         context: AIAgentFunctionalContext,
         message: String,
         outputType: Class<T>
-    ): T = runBlocking {
+    ): T = runBlockingIfRequired {
         context.requestLLMStructured(message, outputType.kotlin, emptyList(), null).getOrThrow().data
     }
 
     // Storage helpers for Java interop
     @JvmStatic
-    fun <T : Any> storageSet(storage: AIAgentStorage, key: AIAgentStorageKey<T>, value: T): Unit = runBlocking {
-        storage.set(key, value)
-    }
+    fun <T : Any> storageSet(storage: AIAgentStorage, key: AIAgentStorageKey<T>, value: T): Unit =
+        storage.setBlocking(key, value)
 
     @JvmStatic
-    fun <T : Any> storageGet(storage: AIAgentStorage, key: AIAgentStorageKey<T>): T? = runBlocking {
-        storage.get(key)
-    }
+    fun <T : Any> storageGet(storage: AIAgentStorage, key: AIAgentStorageKey<T>): T? =
+        storage.getBlocking(key)
 
     @JvmStatic
     fun historyCompressionStrategiesForJava(): List<HistoryCompressionStrategy> = listOf(
@@ -64,7 +65,7 @@ object JavaUtils {
     fun getCheckpointsBlocking(
         storageProvider: PersistenceStorageProvider<*>,
         sessionId: String
-    ): List<AgentCheckpointData> = runBlocking {
+    ): List<AgentCheckpointData> = runBlockingIfRequired {
         storageProvider.getCheckpoints(sessionId)
     }
 
@@ -91,29 +92,14 @@ object JavaUtils {
         include: List<OpenAIInclude>?,
         reasoning: ReasoningConfig?,
         maxTokens: Int?,
-        schema: LLMParams.Schema?
+        schema: LLMParams.Schema?,
     ): OpenAIResponsesParams = OpenAIResponsesParams(
-        null,
-        maxTokens,
-        numberOfChoices,
-        null,
-        schema,
-        toolChoice,
-        null,
-        null,
-        null,
-        include,
-        null,
-        null,
-        reasoning,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        schema = schema,
+        toolChoice = toolChoice,
+        include = include,
+        reasoning = reasoning,
     )
 
     @JvmStatic
@@ -167,12 +153,7 @@ object JavaUtils {
             toolChoice = toolChoice
         )
 
-        else -> LLMParams(
-            maxTokens = maxTokens,
-            numberOfChoices = numberOfChoices,
-            schema = schema,
-            toolChoice = toolChoice
-        )
+        else -> throw IllegalArgumentException("Unsupported provider for advanced params: $provider")
     }
 
     @JvmStatic
@@ -202,7 +183,7 @@ object JavaUtils {
     @Throws(InterruptedException::class)
     fun collectFrames(publisher: Publisher<StreamFrame>): StreamCollectionResult {
         val done = CountDownLatch(1)
-        val frames = mutableListOf<StreamFrame>()
+        val frames = CopyOnWriteArrayList<StreamFrame>()
         var error: Throwable? = null
 
         publisher.subscribe(object : Subscriber<StreamFrame> {

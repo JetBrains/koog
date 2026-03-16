@@ -337,14 +337,10 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
                 context.requestLLM("First question: What is 2+2?", true);
                 context.requestLLM("Second question: What is 3*3?", true);
 
-                try {
-                    var history = context.getHistory();
-                    int historySize = history.size();
+                var history = context.getHistory();
+                int historySize = history.size();
 
-                    return "History contains " + historySize + " messages";
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to retrieve history", e);
-                }
+                return "History contains " + historySize + " messages";
             })
             .build();
 

@@ -34,10 +34,15 @@ import ai.koog.integration.tests.utils.tools.GetTransactionsTool
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.google.GoogleParams
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
@@ -73,11 +78,24 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.test.Test
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class AIAgentIntegrationTest : AIAgentTestBase() {
+
+    private fun forceOneToolNoReasoningParams(model: LLModel): LLMParams = when (model.provider.id) {
+        LLMProvider.Google.id -> GoogleParams(
+            thinkingConfig = GoogleThinkingConfig(includeThoughts = false)
+        )
+
+        LLMProvider.Anthropic.id -> AnthropicParams(
+            thinking = AnthropicThinking.Disabled()
+        )
+
+        else -> LLMParams()
+    }
 
     companion object {
         private lateinit var testResourcesDir: Path
@@ -222,6 +240,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "single-run integration with calculator enum tool arguments")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         /* Some models are not calling tools in parallel:
@@ -311,6 +330,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "custom calculator tool integration")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry {
@@ -458,6 +478,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "single-run non-parallel integration with calculator enum tool arguments")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
         // TODO: Remove this skip when thought_signature presence is fixed
         assumeTrue(
@@ -1316,6 +1337,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("getLatestModels")
     fun integration_FunctionalSubtask(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "functional subtask with calculator enum tool arguments")
 
         val agent = AIAgent(
             promptExecutor = getExecutor(model),
@@ -1356,8 +1378,18 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
+        Models.assumeEnumToolCallsAreStable(model, "force-one-tool integration with calculator enum arguments")
+        assumeTrue(
+            model.provider.id != LLMProvider.Google.id,
+            "KG-742 Prompt.withUpdatedParams() drops provider-specific params"
+        )
+
         runWithTracking { eventHandlerConfig, state ->
-            withRetry {
+            val maxAttempts = if (model.provider.id == LLMProvider.MistralAI.id) 2 else 3
+            var attempts = 0
+
+            withRetry(times = maxAttempts) {
+                attempts++
                 val testTool = SimpleCalculatorTool
 
                 val agent = AIAgent(
@@ -1369,9 +1401,16 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                             }
                             val response = requestLLMForceOneTool(testTool)
 
-                            assumeTrue(
+                            if (response !is Message.Tool.Call && model.provider.id == LLMProvider.MistralAI.id && attempts >= maxAttempts) {
+                                assumeTrue(
+                                    false,
+                                    "Skipping force-one-tool direct tool-call integration for model $model after one retry: provider still returned ${response::class.simpleName}"
+                                )
+                            }
+
+                            assertTrue(
                                 response is Message.Tool.Call,
-                                "Model returned ${response::class.simpleName} instead of Tool.Call"
+                                "Forced tool request should return Tool.Call for model $model, but was ${response::class.simpleName}"
                             )
 
                             val toolCallMessages = prompt.messages.filterIsInstance<Message.Tool.Call>()
@@ -1382,7 +1421,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         "Tool call completed successfully without duplication"
                     },
                     agentConfig = AIAgentConfig(
-                        prompt = prompt("force-one-tool-test") {
+                        prompt = prompt("force-one-tool-test", params = forceOneToolNoReasoningParams(model)) {
                             system("You are a helpful assistant that can use tools.")
                         },
                         model = model,

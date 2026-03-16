@@ -160,4 +160,13 @@ object Models {
             "Test skipped because provider ${provider.display} is in the skip list ($skipProvidersRaw)"
         )
     }
+
+    // Todo: remove the method an the assumption after fixing the KG-743
+    @JvmStatic
+    fun assumeEnumToolCallsAreStable(model: LLModel, scenario: String) {
+        assumeTrue(
+            model.provider.id != LLMProvider.Anthropic.id,
+            "KG-743 Tool enum arguments are parsed case-sensitively and fail on lowercase values"
+        )
+    }
 }

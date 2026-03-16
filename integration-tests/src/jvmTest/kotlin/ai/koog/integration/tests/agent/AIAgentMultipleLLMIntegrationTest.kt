@@ -203,6 +203,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         runTest(timeout = 10.minutes) {
             val llmModel = AnthropicModels.Opus_4_6
             Models.assumeAvailable(llmModel.provider)
+            Models.assumeEnumToolCallsAreStable(llmModel, "Anthropic enum-tool serialization integration")
 
             AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey),

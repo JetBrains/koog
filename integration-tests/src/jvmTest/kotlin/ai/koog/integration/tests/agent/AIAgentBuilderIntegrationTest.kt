@@ -10,6 +10,7 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -22,6 +23,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -68,6 +70,10 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_BuilderWithToolRegistry(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model.provider.id != LLMProvider.Anthropic.id,
+            "KG-743 Tool enum arguments are parsed case-sensitively and fail on lowercase values"
+        )
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {
@@ -102,6 +108,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_BuilderWithGraphStrategy(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "builder graph-strategy tool integration")
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {

@@ -10,22 +10,19 @@ import ai.koog.agents.planner.PlannerAIAgent;
 import ai.koog.agents.planner.goap.Action;
 import ai.koog.agents.planner.goap.Goal;
 import ai.koog.agents.planner.goap.GoapAgentState;
+import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.NumberTools;
-import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
-import ai.koog.prompt.executor.clients.LLMClient;
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
-import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+import ai.koog.prompt.message.Message;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JavaPlannerAIAgentIntegrationTest {
+public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
     static class TestPlanner extends JavaAIAgentPlanner<String, String> {
 
         @Override
@@ -35,10 +32,19 @@ public class JavaPlannerAIAgentIntegrationTest {
 
         @Override
         protected String executeStep(AIAgentPlannerContext context, String state, String plan) {
-            return context.llm().writeSession(session -> {
-                session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user(state).build());
-                return session.requestLLM().getContent();
-            });
+            Message.Response response = context.requestLLM(state, true);
+
+            int maxIterations = 5;
+            for (int i = 0; i < maxIterations && response instanceof Message.Tool.Call; i++) {
+                response = context.sendToolResult(context.executeTool((Message.Tool.Call) response));
+            }
+
+            if (response instanceof Message.Assistant) {
+                return response.getContent();
+            } else if (response instanceof Message.Tool.Call) {
+                return "Max iterations reached, last tool: " + ((Message.Tool.Call) response).getTool();
+            }
+            return response.getContent();
         }
 
         @Override
@@ -47,26 +53,22 @@ public class JavaPlannerAIAgentIntegrationTest {
         }
     }
 
-    private static final LLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
-    private static final PromptExecutor promptExecutor = new MultiLLMPromptExecutor(client);
     private static final String SYSTEM_PROMPT = "You are a helpful assistant.";
     private static final String REQUEST = "What's 1 + 1?";
 
-    @SuppressWarnings("unchecked")
-    private static <Plan> void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy) {
+    private void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy) {
         testPlanner(strategy, null, REQUEST, "2");
     }
 
-    @SuppressWarnings("unchecked")
-    private static void testPlanner(
+    private void testPlanner(
         AIAgentPlannerStrategy<String, String, ?> strategy,
         @Nullable ToolRegistry toolRegistry,
         String request,
         String expectedResultPart
     ) {
         var builder = PlannerAIAgent.<String, String>builder(strategy)
-            .promptExecutor(promptExecutor)
-            .llmModel(OpenAIModels.Chat.GPT4o)
+            .promptExecutor(createExecutor(OpenAIModels.Chat.GPT5_1))
+            .llmModel(OpenAIModels.Chat.GPT5_1)
             .systemPrompt(SYSTEM_PROMPT);
 
         if (toolRegistry != null) {
@@ -100,7 +102,7 @@ public class JavaPlannerAIAgentIntegrationTest {
             .tools(new NumberTools())
             .build();
 
-        testPlanner(plannerStrategy, toolRegistry, "How much is 123 + 456?", "{\"a\":123,\"b\":456}");
+        testPlanner(plannerStrategy, toolRegistry, "How much is 123 + 456?", "579");
     }
 
     private class TextualState extends GoapAgentState<String, String> {

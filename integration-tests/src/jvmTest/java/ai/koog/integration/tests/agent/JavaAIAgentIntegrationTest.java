@@ -12,10 +12,7 @@ import ai.koog.agents.snapshot.feature.Persistence;
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider;
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
-import ai.koog.integration.tests.utils.JavaUtils;
-import ai.koog.integration.tests.utils.Models;
-import ai.koog.integration.tests.utils.NumberTools;
-import ai.koog.integration.tests.utils.SubgraphStrategies;
+import ai.koog.integration.tests.utils.*;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
@@ -172,18 +169,13 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         assertThat(errors.get()).as("Run should complete without execution errors").isEqualTo(0);
     }
 
-    @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
-    public void integration_MultiLLMRouting(LLModel ignoredModel) {
+    @Test
+    public void integration_MultiLLMRouting() {
         Models.assumeAvailable(LLMProvider.OpenAI);
         Models.assumeAvailable(LLMProvider.Anthropic);
 
-        OpenAILLMClient openAIClient = new OpenAILLMClient(
-            ai.koog.integration.tests.utils.TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv()
-        );
-        AnthropicLLMClient anthropicClient = new AnthropicLLMClient(
-            ai.koog.integration.tests.utils.TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv()
-        );
+        OpenAILLMClient openAIClient = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+        AnthropicLLMClient anthropicClient = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
         resourcesToClose.add(openAIClient);
         resourcesToClose.add(anthropicClient);
 

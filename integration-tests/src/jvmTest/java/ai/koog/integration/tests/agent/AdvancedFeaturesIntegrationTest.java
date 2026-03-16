@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static ai.koog.integration.tests.utils.TransactionTools.TRANSACTION_PREFIX;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AdvancedFeaturesIntegrationTest extends KoogJavaTestBase {
@@ -22,6 +23,7 @@ public class AdvancedFeaturesIntegrationTest extends KoogJavaTestBase {
     public void integration_CustomPipelineFeature(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
+        String transactionNumber = "12345";
         AtomicInteger llmInterceptCount = new AtomicInteger(0);
         AtomicInteger toolInterceptCount = new AtomicInteger(0);
         AtomicBoolean agentStarted = new AtomicBoolean(false);
@@ -45,11 +47,13 @@ public class AdvancedFeaturesIntegrationTest extends KoogJavaTestBase {
             })
             .build();
 
-        String result = runBlocking(continuation -> agent.run("What is the transaction ID for order number 12345? You must use the getTransactionId tool.", null, continuation));
-
+        String result = runBlocking(continuation -> agent.run("What is the transaction ID for order number " + transactionNumber + "? You must use the getTransactionId tool.", null, continuation));
         assertNotNull(result);
         assertTrue(agentStarted.get(), "Agent should have started");
         assertTrue(agentCompleted.get(), "Agent should have completed");
         assertTrue(llmInterceptCount.get() > 0, "LLM interceptor should have been called");
+        assertTrue(toolInterceptCount.get() > 0, "Tool interceptor should have been called");
+        assertTrue(result.contains(TRANSACTION_PREFIX), "Result should contain the transaction prefix");
+        assertTrue(result.contains(transactionNumber), "Result should contain the requested order number");
     }
 }
