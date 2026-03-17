@@ -77,26 +77,80 @@ which means the agent implementing this strategy will expect a string and return
 To create a strategy, use the [`strategy()`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/strategy.html) function with two generics as the input and output types,
 provide a unique identifier for the strategy, and define the nodes and edges.
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
--->
-```kotlin
-val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
-    val nodeSendInput by nodeLLMRequest()
-    val nodeExecuteTool by nodeExecuteTool()
-    val nodeSendToolResult by nodeLLMSendToolResult()
-    
-    edge(nodeStart forwardTo nodeSendInput)
-    edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-}
-```
-<!--- KNIT example-graph-agents-01.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.extension.*
+    -->
+    ```kotlin
+    val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
+        val nodeSendInput by nodeLLMRequest()
+        val nodeExecuteTool by nodeExecuteTool()
+        val nodeSendToolResult by nodeLLMSendToolResult()
+        
+        edge(nodeStart forwardTo nodeSendInput)
+        edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
+        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+    }
+    ```
+    <!--- KNIT example-graph-agents-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    class exampleGraphAgentsJava01 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var calculatorAgentStrategy = AIAgentGraphStrategy.builder("Simple calculator")
+        .withInput(String.class)
+        .withOutput(String.class);
+
+    var nodeSendInput = AIAgentNode.llmRequest(true, "nodeSendInput");
+    var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
+    var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
+
+    calculatorAgentStrategy.edge(calculatorAgentStrategy.nodeStart, nodeSendInput);
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendInput)   
+        .to(calculatorAgentStrategy.nodeFinish)
+        .onCondition(msg -> msg instanceof Message.Assistant)
+        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .build());
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendInput)
+        .to(nodeExecuteTool)
+        .onCondition(msg -> msg instanceof Message.Tool.Call)
+        .transformed(msg -> (Message.Tool.Call) msg)
+        .build());
+    calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendToolResult)
+        .to(calculatorAgentStrategy.nodeFinish)
+        .onCondition(msg -> msg instanceof Message.Assistant)
+        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .build());
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendToolResult)
+        .to(nodeExecuteTool)
+        .onCondition(msg -> msg instanceof Message.Tool.Call)
+        .transformed(msg -> (Message.Tool.Call) msg)
+        .build());
+    ```
+    <!--- KNIT exampleGraphAgentsJava01.java -->
 
 This example uses only [predefined nodes](../nodes-and-components.md),
 but you can also create [custom nodes](../custom-nodes.md).
@@ -146,45 +200,114 @@ effectively transforming `Message.Assistant` to `String`, because `nodeFinish` e
 
 Let's create an agent instance with this strategy and run it:
 
-<!--- CLEAR -->
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
-    val nodeSendInput by nodeLLMRequest()
-    val nodeExecuteTool by nodeExecuteTool()
-    val nodeSendToolResult by nodeLLMSendToolResult()
+=== "Kotlin"
 
-    edge(nodeStart forwardTo nodeSendInput)
-    edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-}
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.extension.*
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
+        val nodeSendInput by nodeLLMRequest()
+        val nodeExecuteTool by nodeExecuteTool()
+        val nodeSendToolResult by nodeLLMSendToolResult()
+    
+        edge(nodeStart forwardTo nodeSendInput)
+        edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
+        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+    }
+    
+    val mathAgent = AIAgent(
+        promptExecutor = simpleOllamaAIExecutor(),
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        strategy = calculatorAgentStrategy
+    )
+    
+    fun main() = runBlocking {
+        val result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.")
+        println(result)
+    }
+    ```
+    <!--- KNIT example-graph-agents-04.kt -->
 
-val mathAgent = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-    strategy = calculatorAgentStrategy
-)
+=== "Java"
 
-fun main() = runBlocking {
-    val result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.")
-    println(result)
-}
-```
-<!--- KNIT example-graph-agents-04.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    import ai.koog.prompt.message.Message;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class exampleGraphAgentsJava02 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var calculatorAgentStrategy = AIAgentGraphStrategy.builder("Simple calculator")
+        .withInput(String.class)
+        .withOutput(String.class);
+
+    var nodeSendInput = AIAgentNode.llmRequest(true, "nodeSendInput");
+    var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
+    var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
+
+    calculatorAgentStrategy.edge(calculatorAgentStrategy.nodeStart, nodeSendInput);
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendInput)   
+        .to(calculatorAgentStrategy.nodeFinish)
+        .onCondition(msg -> msg instanceof Message.Assistant)
+        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .build());
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendInput)
+        .to(nodeExecuteTool)
+        .onCondition(msg -> msg instanceof Message.Tool.Call)
+        .transformed(msg -> (Message.Tool.Call) msg)
+        .build());
+    calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendToolResult)
+        .to(calculatorAgentStrategy.nodeFinish)
+        .onCondition(msg -> msg instanceof Message.Assistant)
+        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .build());
+    calculatorAgentStrategy.edge(AIAgentEdge.builder()
+        .from(nodeSendToolResult)
+        .to(nodeExecuteTool)
+        .onCondition(msg -> msg instanceof Message.Tool.Call)
+        .transformed(msg -> (Message.Tool.Call) msg)
+        .build());
+
+    var promptExecutor = PromptExecutor.builder()
+        .ollama("http://localhost:11434")
+        .build();
+
+    AIAgent<String, String> mathAgent = AIAgent.builder()
+        .promptExecutor(promptExecutor)
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .graphStrategy(calculatorAgentStrategy.build())
+        .build();
+
+        String result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.", null);
+        System.out.println(result);
+    ```
+    <!--- KNIT exampleGraphAgentsJava02.java -->
 
 When you run this agent, it will respond with something like this:
 
@@ -235,106 +358,239 @@ Then the LLM will be able to decide to call tools that perform the calculations 
 
 Define [tools](../tools-overview.md) for performing math operations and add them to a [ToolRegistry](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html):
 
-<!--- INCLUDE
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.tools
--->
-```kotlin
-@LLMDescription("Tools for performing math operations")
-class MathTools : ToolSet {
-    @Tool
-    @LLMDescription("Adds two numbers and returns the result")
-    fun add(a: Int, b: Int): Int {
-        // This is not necessary, but it helps to see the tool call in the console output
-        println("Adding $a and $b...")
-        return a + b
-    }
-    @Tool
-    @LLMDescription("Multiplies two numbers and returns the result")
-    fun multiply(a: Int, b: Int): Int {
-        // This is not necessary, but it helps to see the tool call in the console output
-        println("Multiplying $a and $b...")
-        return a * b
-    }
-}
+=== "Kotlin"
 
-val toolRegistry = ToolRegistry {
-    tools(MathTools())
-}
-```
-<!--- KNIT example-graph-agents-05.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.reflect.tools
+    -->
+    ```kotlin
+    @LLMDescription("Tools for performing math operations")
+    class MathTools : ToolSet {
+        @Tool
+        @LLMDescription("Adds two numbers and returns the result")
+        fun add(a: Int, b: Int): Int {
+            // This is not necessary, but it helps to see the tool call in the console output
+            println("Adding $a and $b...")
+            return a + b
+        }
+        @Tool
+        @LLMDescription("Multiplies two numbers and returns the result")
+        fun multiply(a: Int, b: Int): Int {
+            // This is not necessary, but it helps to see the tool call in the console output
+            println("Multiplying $a and $b...")
+            return a * b
+        }
+    }
+    
+    val toolRegistry = ToolRegistry {
+        tools(MathTools())
+    }
+    ```
+    <!--- KNIT example-graph-agents-05.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
+    class exampleGraphAgentsJava03 {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```java
+    @LLMDescription("Tools for performing math operations")
+    public static class MathTools implements ToolSet {
+        @Tool
+        @LLMDescription("Adds two numbers and returns the result")
+        public int add(int a, int b) {
+            // This is not necessary, but it helps to see the tool call in the console output
+            System.out.println("Adding " + a + " and " + b + "...");
+            return a + b;
+        }
+
+        @Tool
+        @LLMDescription("Multiplies two numbers and returns the result")
+        public int multiply(int a, int b) {
+            // This is not necessary, but it helps to see the tool call in the console output
+            System.out.println("Multiplying " + a + " and " + b + "...");
+            return a * b;
+        }
+    }
+    public static void main(String[] args) {
+        ToolRegistry toolRegistry = ToolRegistry.builder()
+            .tools(new MathTools())
+            .build();
+    }
+    ```
+    <!--- KNIT exampleGraphAgentsJava03.java -->
 
 Add the tool registry to the agent configuration:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.tools
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import kotlinx.coroutines.runBlocking
+=== "Kotlin"
 
-@LLMDescription("Tools for performing math operations")
-class MathTools : ToolSet {
-    @Tool
-    @LLMDescription("Adds two numbers and returns the result")
-    fun add(a: Int, b: Int): Int {
-        // This is not necessary, but it helps to see the tool call in the console output
-        println("Adding $a and $b...")
-        return a + b
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.extension.*
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.reflect.tools
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import kotlinx.coroutines.runBlocking
+    
+    @LLMDescription("Tools for performing math operations")
+    class MathTools : ToolSet {
+        @Tool
+        @LLMDescription("Adds two numbers and returns the result")
+        fun add(a: Int, b: Int): Int {
+            // This is not necessary, but it helps to see the tool call in the console output
+            println("Adding $a and $b...")
+            return a + b
+        }
+        @Tool
+        @LLMDescription("Multiplies two numbers and returns the result")
+        fun multiply(a: Int, b: Int): Int {
+            // This is not necessary, but it helps to see the tool call in the console output
+            println("Multiplying $a and $b...")
+            return a * b
+        }
     }
-    @Tool
-    @LLMDescription("Multiplies two numbers and returns the result")
-    fun multiply(a: Int, b: Int): Int {
-        // This is not necessary, but it helps to see the tool call in the console output
-        println("Multiplying $a and $b...")
-        return a * b
+    
+    val toolRegistry = ToolRegistry {
+        tools(MathTools())
     }
-}
+    
+    val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
+        val nodeSendInput by nodeLLMRequest()
+        val nodeExecuteTool by nodeExecuteTool()
+        val nodeSendToolResult by nodeLLMSendToolResult()
+    
+        edge(nodeStart forwardTo nodeSendInput)
+        edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
+        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+    }
+    -->
+    ```kotlin
+    val mathAgent = AIAgent(
+        promptExecutor = simpleOllamaAIExecutor(),
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        strategy = calculatorAgentStrategy,
+        toolRegistry = toolRegistry
+    )
+    
+    fun main() = runBlocking {
+        val result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.")
+        println(result)
+    }
+    ```
+    <!--- KNIT example-graph-agents-06.kt -->
 
-val toolRegistry = ToolRegistry {
-    tools(MathTools())
-}
+=== "Java"
 
-val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
-    val nodeSendInput by nodeLLMRequest()
-    val nodeExecuteTool by nodeExecuteTool()
-    val nodeSendToolResult by nodeLLMSendToolResult()
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    import ai.koog.prompt.message.Message;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class exampleGraphAgentsJava04 {
+        @LLMDescription("Tools for performing math operations")
+        public static class MathTools implements ToolSet {
+            @Tool
+            @LLMDescription("Adds two numbers and returns the result")
+            public int add(int a, int b) {
+                // This is not necessary, but it helps to see the tool call in the console output
+                System.out.println("Adding " + a + " and " + b + "...");
+                return a + b;
+        }
+            @Tool
+            @LLMDescription("Multiplies two numbers and returns the result")
+            public int multiply(int a, int b) {
+                // This is not necessary, but it helps to see the tool call in the console output
+                System.out.println("Multiplying " + a + " and " + b + "...");
+                return a * b;
+            }
+        }
+        public static void main(String[] args) {
+            ToolRegistry toolRegistry = ToolRegistry.builder()
+                .tools(new MathTools())
+                .build();
+            var calculatorAgentStrategy = AIAgentGraphStrategy.builder("Simple calculator")
+                .withInput(String.class)
+                .withOutput(String.class);
+            var nodeSendInput = AIAgentNode.llmRequest(true, "nodeSendInput");
+            var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
+            var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
+            calculatorAgentStrategy.edge(calculatorAgentStrategy.nodeStart, nodeSendInput);
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendInput)   
+                .to(calculatorAgentStrategy.nodeFinish)
+                .onCondition(msg -> msg instanceof Message.Assistant)
+                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .build());
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendInput)
+                .to(nodeExecuteTool)
+                .onCondition(msg -> msg instanceof Message.Tool.Call)
+                .transformed(msg -> (Message.Tool.Call) msg)
+                .build());
+            calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendToolResult)
+                .to(calculatorAgentStrategy.nodeFinish)
+                .onCondition(msg -> msg instanceof Message.Assistant)
+                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .build());
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendToolResult)
+                .to(nodeExecuteTool)
+                .onCondition(msg -> msg instanceof Message.Tool.Call)
+                .transformed(msg -> (Message.Tool.Call) msg)
+                .build());
+            var promptExecutor = PromptExecutor.builder()
+                .ollama("http://localhost:11434")
+                .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> mathAgent = AIAgent.builder()
+        .promptExecutor(promptExecutor)
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .graphStrategy(calculatorAgentStrategy.build())
+        .toolRegistry(toolRegistry)
+        .build();
 
-    edge(nodeStart forwardTo nodeSendInput)
-    edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-}
--->
-```kotlin
-val mathAgent = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-    strategy = calculatorAgentStrategy,
-    toolRegistry = toolRegistry
-)
-
-fun main() = runBlocking {
-    val result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.")
-    println(result)
-}
-```
-<!--- KNIT example-graph-agents-06.kt -->
+    String result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.", null);
+    System.out.println(result);
+    ```
+    <!--- KNIT exampleGraphAgentsJava04.java -->
 
 When you run the agent now, it will respond with something like this:
 
@@ -360,79 +616,171 @@ We can help the agent by describing its role and providing instructions for usin
 A [system prompt](../prompts/prompt-creation/index.md#system-message) defines the agent's role and instructions for performing tasks.
 In our example, it is important to describe how the agent should process complex multistep calculations:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.tools
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import kotlinx.coroutines.runBlocking
+=== "Kotlin"
 
-@LLMDescription("Tools for performing math operations")
-class MathTools : ToolSet {
-    @Tool
-    @LLMDescription("Adds two numbers and returns the result")
-    fun add(a: Int, b: Int): Int {
-        // This is not necessary, but it helps to see the tool call in the console output
-        println("Adding $a and $b...")
-        return a + b
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.extension.*
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.reflect.tools
+    import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
+    import kotlinx.coroutines.runBlocking
+    
+    @LLMDescription("Tools for performing math operations")
+    class MathTools : ToolSet {
+        @Tool
+        @LLMDescription("Adds two numbers and returns the result")
+        fun add(a: Int, b: Int): Int {
+            // This is not necessary, but it helps to see the tool call in the console output
+            println("Adding $a and $b...")
+            return a + b
+        }
+        @Tool
+        @LLMDescription("Multiplies two numbers and returns the result")
+        fun multiply(a: Int, b: Int): Int {
+            // This is not necessary, but it helps to see the tool call in the console output
+            println("Multiplying $a and $b...")
+            return a * b
+        }
     }
-    @Tool
-    @LLMDescription("Multiplies two numbers and returns the result")
-    fun multiply(a: Int, b: Int): Int {
-        // This is not necessary, but it helps to see the tool call in the console output
-        println("Multiplying $a and $b...")
-        return a * b
+    
+    val toolRegistry = ToolRegistry {
+        tools(MathTools())
     }
-}
+    
+    val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
+        val nodeSendInput by nodeLLMRequest()
+        val nodeExecuteTool by nodeExecuteTool()
+        val nodeSendToolResult by nodeLLMSendToolResult()
+    
+        edge(nodeStart forwardTo nodeSendInput)
+        edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
+        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+    }
+    -->
+    ```kotlin
+    val mathAgent = AIAgent(
+        promptExecutor = simpleOllamaAIExecutor(),
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        systemPrompt = """
+                    You are a simple calculator assistant.
+                    You can add and multiply two numbers using the 'add' and 'multiply' tools.
+                    When the user provides input, extract the numbers and operations they requested.
+                    Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result.
+                    Always respond with a clear, friendly message showing the calculation and result.
+                    """.trimIndent(),
+        toolRegistry = toolRegistry,
+        strategy = calculatorAgentStrategy
+    )
+    
+    fun main() = runBlocking {
+        val result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.")
+        println(result)
+    }
+    ```
+    <!--- KNIT example-graph-agents-07.kt -->
 
-val toolRegistry = ToolRegistry {
-    tools(MathTools())
-}
+=== "Java"
 
-val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
-    val nodeSendInput by nodeLLMRequest()
-    val nodeExecuteTool by nodeExecuteTool()
-    val nodeSendToolResult by nodeLLMSendToolResult()
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    import ai.koog.prompt.message.Message;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class exampleGraphAgentsJava05 {
+        @LLMDescription("Tools for performing math operations")
+        public static class MathTools implements ToolSet {
+            @Tool
+            @LLMDescription("Adds two numbers and returns the result")
+            public int add(int a, int b) {
+                // This is not necessary, but it helps to see the tool call in the console output
+                System.out.println("Adding " + a + " and " + b + "...");
+                return a + b;
+        }
+            @Tool
+            @LLMDescription("Multiplies two numbers and returns the result")
+            public int multiply(int a, int b) {
+                // This is not necessary, but it helps to see the tool call in the console output
+                System.out.println("Multiplying " + a + " and " + b + "...");
+                return a * b;
+            }
+        }
+        public static void main(String[] args) {
+            ToolRegistry toolRegistry = ToolRegistry.builder()
+                .tools(new MathTools())
+                .build();
+            var calculatorAgentStrategy = AIAgentGraphStrategy.builder("Simple calculator")
+                .withInput(String.class)
+                .withOutput(String.class); 
+            var nodeSendInput = AIAgentNode.llmRequest(true, "nodeSendInput");
+            var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
+            var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult"); 
+            calculatorAgentStrategy.edge(calculatorAgentStrategy.nodeStart, nodeSendInput);
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendInput)   
+                .to(calculatorAgentStrategy.nodeFinish)
+                .onCondition(msg -> msg instanceof Message.Assistant)
+                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .build());
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendInput)
+                .to(nodeExecuteTool)
+                .onCondition(msg -> msg instanceof Message.Tool.Call)
+                .transformed(msg -> (Message.Tool.Call) msg)
+                .build());
+            calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendToolResult)
+                .to(calculatorAgentStrategy.nodeFinish)
+                .onCondition(msg -> msg instanceof Message.Assistant)
+                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .build());
+            calculatorAgentStrategy.edge(AIAgentEdge.builder()
+                .from(nodeSendToolResult)
+                .to(nodeExecuteTool)
+                .onCondition(msg -> msg instanceof Message.Tool.Call)
+                .transformed(msg -> (Message.Tool.Call) msg)
+                .build());
+            var promptExecutor = PromptExecutor.builder()
+                .ollama("http://localhost:11434")
+                .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> mathAgent = AIAgent.builder()
+        .promptExecutor(promptExecutor)
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .systemPrompt("You are a simple calculator assistant. You can add and multiply two numbers using the 'add' and 'multiply' tools. When the user provides input, extract the numbers and operations they requested. Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result. Always respond with a clear, friendly message showing the calculation and result.")
+        .graphStrategy(calculatorAgentStrategy.build())
+        .toolRegistry(toolRegistry)
+        .build();
 
-    edge(nodeStart forwardTo nodeSendInput)
-    edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-}
--->
-```kotlin
-val mathAgent = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-    systemPrompt = """
-                You are a simple calculator assistant.
-                You can add and multiply two numbers using the 'add' and 'multiply' tools.
-                When the user provides input, extract the numbers and operations they requested.
-                Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result.
-                Always respond with a clear, friendly message showing the calculation and result.
-                """.trimIndent(),
-    toolRegistry = toolRegistry,
-    strategy = calculatorAgentStrategy
-)
-
-fun main() = runBlocking {
-    val result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.")
-    println(result)
-}
-```
-<!--- KNIT example-graph-agents-07.kt -->
+    String result = mathAgent.run("Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.", null);
+    System.out.println(result);
+    ```
+    <!--- KNIT exampleGraphAgentsJava05.java -->
 
 When you run the agent now, it will respond with something like this:
 
