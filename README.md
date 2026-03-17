@@ -85,7 +85,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 ### Requirements
 
 - JDK 17 or higher is required to use the framework on JVM.
-- kotlinx-coroutines 1.10.2 and kotlinx-serialization 1.8.1 versions should be set explicitly in existing projects. Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about the Koog dependencies.
+- Kotlin 2.3.10 or higher should be set explicitly in existing projects. Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about Kotlin dependencies (currently it uses kotlinx-coroutines 1.10.2, kotlinx-serialization 1.10.0 and kotlinx-datetime 0.7.1)
 
 ### Gradle (Kotlin DSL)
 
