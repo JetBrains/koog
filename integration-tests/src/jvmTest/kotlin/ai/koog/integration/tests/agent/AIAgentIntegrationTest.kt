@@ -1363,7 +1363,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             strategy = functionalStrategy<String, String> { input ->
                 val result: String = subtask(
                     taskDescription = "Judge this: $input",
-                    input = input,
                     runMode = ToolCalls.SEQUENTIAL
                 )
                 "Subtask completed: $result"
