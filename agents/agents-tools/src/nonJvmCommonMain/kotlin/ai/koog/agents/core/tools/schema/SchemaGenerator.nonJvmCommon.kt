@@ -8,11 +8,12 @@ import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import kotlinx.schema.generator.json.JsonSchemaConfig
 import kotlinx.schema.json.JsonSchema
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.serializer
 import kotlinx.serialization.serializerOrNull
 
 @OptIn(InternalKoogSerializationApi::class)
-internal actual fun getJsonSchema(
+public actual fun getJsonSchema(
     typeToken: TypeToken,
     jsonSchemaConfig: JsonSchemaConfig,
 ): JsonSchema {
@@ -34,13 +35,16 @@ private fun findKSerializer(typeToken: TypeToken): KSerializer<*>? {
             return serializerOrNull(typeToken.type)
 
         is KotlinClassToken ->
-            return serializer(
-                kClass = typeToken.klass,
-                typeArgumentsSerializers =
-                typeToken.typeArguments
-                    .map { findKSerializer(it) ?: return null },
-                isNullable = false,
-            )
+            return try {
+                serializer(
+                    kClass = typeToken.klass,
+                    typeArgumentsSerializers = typeToken.typeArguments
+                        .map { findKSerializer(it) ?: return null },
+                    isNullable = false,
+                )
+            } catch (_: SerializationException) {
+                null
+            }
 
         is KSerializerTypeToken<*> ->
             return typeToken.serializer

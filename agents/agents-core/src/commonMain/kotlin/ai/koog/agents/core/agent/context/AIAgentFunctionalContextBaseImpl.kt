@@ -33,6 +33,7 @@ import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
@@ -303,16 +304,21 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
         assistantResponseRepeatMax: Int?,
         responseProcessor: ResponseProcessor?
     ): CriticResult<Input> {
+        val finishTool = FinishTool<CriticResultFromLLM>(
+            outputType = typeToken<CriticResultFromLLM>(),
+            customSerializer = KotlinxSerializer()
+        )
+
         val result = subtask(
-            taskDescription,
-            input,
-            CriticResultFromLLM::class,
-            tools,
-            llmModel,
-            llmParams,
-            runMode,
-            assistantResponseRepeatMax,
-            responseProcessor
+            taskDescription = taskDescription,
+            input = input,
+            finishTool = finishTool,
+            tools = tools,
+            llmModel = llmModel,
+            llmParams = llmParams,
+            runMode = runMode,
+            assistantResponseRepeatMax = assistantResponseRepeatMax,
+            responseProcessor = responseProcessor
         )
 
         return CriticResult(

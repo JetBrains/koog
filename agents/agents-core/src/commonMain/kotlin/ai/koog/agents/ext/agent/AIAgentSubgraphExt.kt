@@ -23,7 +23,10 @@ import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.schema.getJsonSchema
+import ai.koog.agents.core.tools.schema.toToolParameter
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
@@ -34,9 +37,15 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
+import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import ai.koog.serialization.kotlinx.KotlinxDelegateSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -94,16 +103,49 @@ public object SubgraphWithTaskUtils {
 /**
  * A pass-through tool used with [subgraphWithTask] to signal task completion and return a structured result.
  * Wraps outputs in [FinishResult] to support primitive [outputType]s, which base [Tool] cannot handle directly.
+ *
+ * @param outputType Type of the [Output]
+ * @param customSerializer Optional serializer override to use instead of the one that is passed to encode/decode tool methods.
+ * This is useful for certain internal implementations, such as some built-in subgraphs and subtasks, when the output is our own class
+ * and we don't want to rely on user-configured [JSONSerializer].
  */
-@OptIn(InternalAgentToolsApi::class)
-public class FinishTool<Output>(
-    outputType: TypeToken,
+@OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
+public class FinishTool<Output>
+@InternalAgentsApi
+internal constructor(
+    private val outputType: TypeToken,
+    private val customSerializer: JSONSerializer? = null,
 ) : Tool<Output, Output>(
     argsType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
     resultType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
-    name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
-    description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+    descriptor = run {
+        val resultSchema = getJsonSchema(outputType)
+        val resultToolParameter = resultSchema.toToolParameter(resultSchema.defs)
+
+        ToolDescriptor(
+            name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
+            description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION,
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "result",
+                    description = resultToolParameter.description,
+                    type = resultToolParameter.type,
+                )
+            )
+        )
+    }
 ) {
+    private companion object {
+        private val json = Json.Default
+    }
+
+    /**
+     * A pass-through tool used with [subgraphWithTask] to signal task completion and return a structured result.
+     * Wraps outputs in [FinishResult] to support primitive [outputType]s, which base [Tool] cannot handle directly.
+     */
+    @OptIn(InternalAgentsApi::class)
+    public constructor(outputType: TypeToken) : this(outputType, null)
+
     /**
      * Wrapper for the output, since the output itself might be a primitive type, and they are not
      * supported for automatic tool descriptor generation.
@@ -113,21 +155,31 @@ public class FinishTool<Output>(
         val result: Output
     )
 
-    override fun decodeArgs(rawArgs: JSONObject, serializer: JSONSerializer): Output {
-        return serializer.decodeFromJSONElement<FinishResult<Output>>(rawArgs, argsType).result
+    private fun decodeOutput(rawArgs: JSONObject, serializer: JSONSerializer): Output {
+        return json.decodeFromJsonElement<FinishResult<Output>>(
+            deserializer = FinishResult.serializer(KotlinxDelegateSerializer(customSerializer ?: serializer, outputType)),
+            element = rawArgs.toKotlinxJsonObject(),
+        ).result
     }
 
-    override fun encodeArgs(args: Output, serializer: JSONSerializer): JSONObject {
-        return serializer.encodeToJSONElement(FinishResult(args), argsType) as JSONObject
+    private fun encodeOutput(args: Output, serializer: JSONSerializer): JSONObject {
+        return json.encodeToJsonElement(
+            serializer = FinishResult.serializer(KotlinxDelegateSerializer(customSerializer ?: serializer, outputType)),
+            value = FinishResult(args)
+        ).jsonObject.toKoogJSONObject()
     }
 
-    override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): Output {
-        return decodeArgs(rawResult as JSONObject, serializer)
-    }
+    override fun decodeArgs(rawArgs: JSONObject, serializer: JSONSerializer): Output =
+        decodeOutput(rawArgs, serializer)
 
-    override fun encodeResult(result: Output, serializer: JSONSerializer): JSONElement {
-        return encodeArgs(result, serializer)
-    }
+    override fun encodeArgs(args: Output, serializer: JSONSerializer): JSONObject =
+        encodeOutput(args, serializer)
+
+    override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): Output =
+        decodeOutput(rawResult as JSONObject, serializer)
+
+    override fun encodeResult(result: Output, serializer: JSONSerializer): JSONElement =
+        encodeOutput(result, serializer)
 
     override suspend fun execute(args: Output): Output = args
 }
@@ -453,7 +505,10 @@ public fun <Input : Any> subgraphWithVerification(
 
     val verifyTask by subgraphWithTask<Input, CriticResultFromLLM>(
         inputType = inputType,
-        outputType = typeToken<CriticResultFromLLM>(),
+        finishTool = FinishTool<CriticResultFromLLM>(
+            outputType = typeToken<CriticResultFromLLM>(),
+            customSerializer = KotlinxSerializer()
+        ),
         toolSelectionStrategy = toolSelectionStrategy,
         llmModel = llmModel,
         llmParams = llmParams,

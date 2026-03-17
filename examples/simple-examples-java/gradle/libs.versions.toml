@@ -1,12 +1,20 @@
 [versions]
-koog = "0.7.0-develop-20260314-0204"
+# Published to maven local automatically during initialization and before each compilation
+koog = "99-SNAPSHOT"
+jackson = "2.21.1"
+logback = "1.5.13"
 
 [libraries]
+# Koog
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
 koog-agents-features-sql = { module = "ai.koog:agents-features-sql", version.ref = "koog" }
-koog-agents-features-chat-memory-sql = { module = "ai.koog:agents-features-chat-memory-sql", version.ref = "koog" }
+koog-agents-features-chat-memory-jdbc = { module = "ai.koog:agents-features-chat-memory-sql", version.ref = "koog" }
 koog-agents-features-chat-history-jdbc = { module = "ai.koog:agents-features-chat-history-jdbc", version.ref = "koog" }
 koog-agents-features-persistence-jdbc = { module = "ai.koog:agents-features-persistence-jdbc", version.ref = "koog" }
 koog-agents-test = { module = "ai.koog:agents-test", version.ref = "koog" }
+
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 [plugins]

@@ -3,6 +3,9 @@ package ai.koog.agents.example.strategies.functional;
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.example.ApiKeyService;
+import ai.koog.agents.example.strategies.entities.ProblemDescription;
+import ai.koog.agents.example.strategies.entities.ProblemSolution;
+import ai.koog.agents.example.strategies.tools.*;
 import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
@@ -22,11 +25,11 @@ public class FunctionalStrategyExample {
         var functionalAgent = AIAgent.builder()
             .promptExecutor(promptExecutor)
             .llmModel(OpenAIModels.Chat.GPT4_1)
-            .functionalStrategy("my-strategy", (ctx, userInput) -> {
+            .<String, ProblemSolution>functionalStrategy("my-strategy", (ctx, userInput) -> {
                 // Step 1: First, identify the problem
                 // Only give the agent communication and read-only database access here
                 ProblemDescription problem = ctx
-                    .subtask("Identify the problem")
+                    .subtask("Identify the problem: " + userInput)
                     .withInput(userInput)
                     .withOutput(ProblemDescription.class)  // Type-safe output
                     .withTools(communicationTools, databaseReadTools)  // Limited tools
@@ -35,8 +38,8 @@ public class FunctionalStrategyExample {
                 // Step 2: Now solve the problem
                 // Give the agent database write access only after problem identification
                 ProblemSolution solution = ctx
-                    .subtask("Solve the problem")
-                    .withInput(problem)  // Use output from step 1
+                    .subtask("Solve the problem: " + problem) // Use output from step 1
+                    .withInput(problem)
                     .withOutput(ProblemSolution.class)
                     .withTools(databaseReadTools, databaseWriteTools)
                     .run();
@@ -44,7 +47,7 @@ public class FunctionalStrategyExample {
                 // Verify the solution and try to fix it until the solution is satisfying
                 while (true) {
                     CriticResult<ProblemSolution> verificationResult = ctx
-                        .subtask("Now verify that the problem is actually solved!")
+                        .subtask("Now verify that the problem is actually solved: " + solution)
                         .withInput(solution)
                         .withVerification()
                         .withTools(communicationTools, databaseReadTools)
@@ -54,7 +57,7 @@ public class FunctionalStrategyExample {
                         return solution;
                     } else {
                         solution = ctx
-                            .subtask("Fix the solution based on the provided feedback:")
+                            .subtask("Fix the solution based on the provided feedback: " + verificationResult.getFeedback())
                             .withInput(verificationResult.getFeedback())
                             .withOutput(ProblemSolution.class)
                             .withTools(databaseReadTools, databaseWriteTools)
@@ -71,6 +74,8 @@ public class FunctionalStrategyExample {
             )
             .build();
 
-        functionalAgent.run("User input describing the problem to solve");
+        var result = functionalAgent.run("How to make a perfect poached egg?");
+
+        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description));
     }
 }

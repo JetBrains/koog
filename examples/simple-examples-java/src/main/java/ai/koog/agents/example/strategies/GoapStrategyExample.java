@@ -107,6 +107,6 @@ public class GoapStrategyExample {
 
         var result = agent.run("Solve the following problem: Find the square root of 16");
 
-        System.out.println(result);
+        System.out.println("\n\nAgent result:\n%s\n".formatted(result));
     }
 }

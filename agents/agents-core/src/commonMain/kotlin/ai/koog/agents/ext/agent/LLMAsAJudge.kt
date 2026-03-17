@@ -34,7 +34,7 @@ public data class CriticResultFromLLM(
         "Optional feedback about the provided solution. " +
             "Only needed if `isCorrect == false` and if solution needs adjustments."
     )
-    val feedback: String
+    val feedback: String = "",
 )
 
 /**
