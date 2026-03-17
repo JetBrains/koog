@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.chat;
+package ai.koog.agents.example.chat;
 
 import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
 

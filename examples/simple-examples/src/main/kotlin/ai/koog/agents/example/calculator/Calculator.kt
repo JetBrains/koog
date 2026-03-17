@@ -17,7 +17,7 @@ import ai.koog.prompt.llm.LLModel
 
 private enum class RunMode {
     LOCAL_LLAMA_3_2,
-    OPEN_AI_GPT_4
+    OPEN_AI_GPT_4o
 }
 
 /**
@@ -31,9 +31,9 @@ private enum class RunMode {
  * - Run with local Ollama Llama 3.2: `./gradlew runExampleCalculatorLocal`
  */
 suspend fun main(args: Array<String>) {
-    val runMode = when(args.firstOrNull()) {
+    val runMode = when (args.firstOrNull()) {
         "local" -> RunMode.LOCAL_LLAMA_3_2
-        else -> RunMode.OPEN_AI_GPT_4
+        else -> RunMode.OPEN_AI_GPT_4o
     }
 
     runCalculatorExample(runMode)
@@ -92,10 +92,10 @@ private suspend fun runCalculatorExample(runMode: RunMode) {
 
 private fun chooseExecutor(mode: RunMode): PromptExecutor = when (mode) {
     RunMode.LOCAL_LLAMA_3_2 -> simpleOllamaAIExecutor("http://localhost:11434")
-    RunMode.OPEN_AI_GPT_4 -> simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
+    RunMode.OPEN_AI_GPT_4o -> simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 }
 
 private fun chooseModel(mode: RunMode): LLModel = when (mode) {
     RunMode.LOCAL_LLAMA_3_2 -> OllamaModels.Meta.LLAMA_3_2
-    RunMode.OPEN_AI_GPT_4 -> OpenAIModels.Chat.GPT4o
+    RunMode.OPEN_AI_GPT_4o -> OpenAIModels.Chat.GPT4o
 }

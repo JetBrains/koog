@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.calculator;
+package ai.koog.agents.example.calculator;
 
 import ai.koog.agents.core.tools.annotations.LLMDescription;
 import ai.koog.agents.core.tools.annotations.Tool;

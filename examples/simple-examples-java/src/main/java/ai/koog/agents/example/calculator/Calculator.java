@@ -1,4 +1,4 @@
-package ai.koog.agents.example.java.calculator;
+package ai.koog.agents.example.calculator;
 
 import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
 import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
@@ -12,6 +12,7 @@ import ai.koog.agents.core.agent.entity.TypedGraphStrategyBuilder;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
 import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.ToolRegistry;
+import ai.koog.agents.example.ApiKeyService;
 import ai.koog.agents.ext.tool.AskUser;
 import ai.koog.agents.ext.tool.SayToUser;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
@@ -20,7 +21,6 @@ import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.executor.ollama.client.OllamaModels.Meta;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
  *
  * <p>Usage:
  * <ul>
- *   <li>Run with OpenAI GPT-4o (requires {@code OPENAI_API_KEY}): {@code ./gradlew runExampleCalculatorJava}</li>
- *   <li>Run with local Ollama Llama 3.2: {@code ./gradlew runExampleCalculatorJavaLocal}</li>
+ *   <li>Run with OpenAI GPT-4o (requires {@code OPENAI_API_KEY}): {@code ./gradlew runExampleCalculator}</li>
+ *   <li>Run with local Ollama Llama 3.2: {@code ./gradlew runExampleCalculatorLocal}</li>
  * </ul>
  */
 public class Calculator {
@@ -192,7 +192,8 @@ public class Calculator {
         } catch (Exception e) {
             System.err.println("Calculator example failed in mode: " + runMode);
             if (runMode == RunMode.LOCAL_LLAMA_3_2) {
-                System.err.println("Check that Ollama is running at http://localhost:11434 and model llama3.2 is available.");
+                System.err.println(
+                    "Check that Ollama is running at http://localhost:11434 and model llama3.2 is available.");
             } else {
                 System.err.println("Check that OPENAI_API_KEY is set and valid.");
             }
@@ -203,13 +204,7 @@ public class Calculator {
     private static PromptExecutor chooseExecutor(RunMode mode) {
         return switch (mode) {
             case LOCAL_LLAMA_3_2 -> simpleOllamaAIExecutor("http://localhost:11434");
-            case OPEN_AI_GPT_4o -> {
-                String apiKey = System.getenv("OPENAI_API_KEY");
-                if (apiKey == null || apiKey.isBlank()) {
-                    throw new IllegalStateException("OPENAI_API_KEY environment variable is not set");
-                }
-                yield simpleOpenAIExecutor(apiKey);
-            }
+            case OPEN_AI_GPT_4o -> simpleOpenAIExecutor(ApiKeyService.getOpenAIApiKey());
         };
     }
 
