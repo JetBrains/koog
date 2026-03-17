@@ -1,6 +1,6 @@
-package ai.koog.prompt.executor.model
+package ai.koog.prompt.executor.selection
 
-import ai.koog.prompt.executor.model.KeyRanker.OnMissing
+import ai.koog.prompt.executor.selection.KeyRanker.OnMissing
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
@@ -8,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class ModelRankersTest {
+class ModelRankerTest {
     @Test
     fun testBiggestContextWindow() = runTest {
         // Given

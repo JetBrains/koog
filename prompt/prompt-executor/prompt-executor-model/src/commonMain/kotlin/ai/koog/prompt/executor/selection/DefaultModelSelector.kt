@@ -1,11 +1,13 @@
-package ai.koog.prompt.executor.model
+package ai.koog.prompt.executor.selection
 
+import ai.koog.prompt.executor.selection.ModelFilterAPI.Decision
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlin.jvm.JvmOverloads
 
 /**
  * Default implementation of [ModelSelector] that executes a step-based model selection pipeline.
@@ -15,7 +17,7 @@ import kotlinx.coroutines.sync.withPermit
  * 2) Apply [ModelRanker] steps lexicographically to accepted models.
  *
  * Lexicographic ranking semantics:
- * - The first [ModelRanker] ranks the whole accepted model set.
+ * - The first [ModelRankerAPI] ranks the whole accepted model set.
  * - Each next ranker is applied only to tie buckets (buckets with more than one model).
  * - Buckets already resolved to a single model are preserved and never re-ordered.
  * - If no rankers are provided, accepted models keep their original order.
@@ -31,36 +33,23 @@ import kotlinx.coroutines.sync.withPermit
  * @param maxConcurrentlyFilteredModels Maximum number of models evaluated concurrently during filtering.
  * @throws IllegalArgumentException If [maxConcurrentlyFilteredModels] is not positive.
  */
-public class DefaultModelSelector(
+public class DefaultModelSelector @JvmOverloads constructor(
     private val filters: List<ModelFilter> = emptyList(),
     private val rankers: List<ModelRanker> = emptyList(),
     private val maxConcurrentlyFilteredModels: Int = DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS,
-) : ModelSelector {
+) : ModelSelector() {
 
     init {
         require(maxConcurrentlyFilteredModels > 0) { "maxConcurrentlyFilteredModels must be greater than 0." }
     }
 
-    /**
-     * Creates selector from mixed [steps], splitting them into filters and rankers automatically.
-     *
-     * [ModelFilter] instances are applied first; [ModelRanker] instances are applied afterwards
-     * in the order they appear in [steps].
-     *
-     * @param steps Ordered selection steps ([ModelFilter] and/or [ModelRanker] instances).
-     * @param maxConcurrentlyFilteredModels Maximum number of models evaluated concurrently during filtering.
-     * @throws IllegalArgumentException If [maxConcurrentlyFilteredModels] is not positive.
-     */
-    public constructor(
-        vararg steps: ModelSelectionStep,
-        maxConcurrentlyFilteredModels: Int = DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS,
-    ) : this(
-        steps.filterIsInstance<ModelFilter>(),
-        steps.filterIsInstance<ModelRanker>(),
-        maxConcurrentlyFilteredModels = maxConcurrentlyFilteredModels,
-    )
-
     public companion object {
+        /**
+         * Default maximum number of models evaluated concurrently during the filter stage.
+         *
+         * This value caps parallel coroutine launches when applying filters. A value of 8
+         * balances throughput against resource usage for typical multi-provider setups.
+         */
         public const val DEFAULT_MAX_CONCURRENTLY_FILTERED_MODELS: Int = 8
     }
 
@@ -138,14 +127,14 @@ public class DefaultModelSelector(
         }
     }
 
-    private suspend fun filterAccepted(models: List<LLModel>, filters: List<ModelFilter>): List<LLModel> {
+    private suspend fun filterAccepted(models: List<LLModel>, filters: List<ModelFilterAPI>): List<LLModel> {
         if (filters.isEmpty()) return models
         val semaphore = Semaphore(maxConcurrentlyFilteredModels)
         return coroutineScope {
             models.map { model ->
                 async {
                     semaphore.withPermit {
-                        if (filters.all { filter -> filter.evaluate(model) == ModelFilter.Decision.ACCEPTED }) {
+                        if (filters.all { filter -> filter.evaluate(model) == Decision.ACCEPTED }) {
                             model
                         } else {
                             null

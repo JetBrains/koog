@@ -1,6 +1,6 @@
-package ai.koog.prompt.executor.model
+package ai.koog.prompt.executor.selection
 
-import ai.koog.prompt.executor.model.ModelFilter.Decision
+import ai.koog.prompt.executor.selection.ModelFilterAPI.Decision
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
@@ -9,7 +9,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class DefaultModelSelectorTest {
-    private val maxConcurrentlyFilteredModels = 2
 
     @Test
     fun testFiltersAndRanksModels() = runTest {

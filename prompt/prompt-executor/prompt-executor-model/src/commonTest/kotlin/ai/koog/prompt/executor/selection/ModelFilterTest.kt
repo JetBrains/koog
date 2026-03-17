@@ -1,6 +1,6 @@
-package ai.koog.prompt.executor.model
+package ai.koog.prompt.executor.selection
 
-import ai.koog.prompt.executor.model.ModelFilter.Decision
+import ai.koog.prompt.executor.selection.ModelFilterAPI.Decision
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -8,7 +8,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ModelFiltersTest {
+class ModelFilterTest {
     @Test
     fun testSpecificModelFilter() = runTest {
         // Given

@@ -4,9 +4,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.ModelSelection
-import ai.koog.prompt.executor.model.ModelSelector
-import ai.koog.prompt.executor.model.SelectingPromptExecutor
+import ai.koog.prompt.executor.selection.ModelSelection
+import ai.koog.prompt.executor.selection.ModelSelector
+import ai.koog.prompt.executor.selection.SelectingPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -240,8 +240,23 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         return client.moderate(prompt, effectiveModel)
     }
 
+    /**
+     * Returns the union of all models available across registered clients.
+     *
+     * The result is fetched lazily on the first call and cached for the lifetime of this executor.
+     * A failed fetch permanently poisons the cache — all subsequent calls will rethrow the
+     * original exception.
+     */
     override suspend fun models(): List<LLModel> = modelsDiscovery.await()
 
+    /**
+     * Returns the standard JSON schema generator for [model].
+     *
+     * Looks up the client registered for [model]'s provider. Falls back to the fallback client
+     * if no direct match is found. Throws if neither is available.
+     *
+     * @throws IllegalArgumentException If no client is registered for [model] and no fallback is configured.
+     */
     override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
         val client = clientRouter.clientFor(model)
             ?: effectiveFallback?.first
@@ -249,6 +264,14 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         return client.getStandardJsonSchemaGenerator()
     }
 
+    /**
+     * Returns the basic JSON schema generator for [model].
+     *
+     * Looks up the client registered for [model]'s provider. Falls back to the fallback client
+     * if no direct match is found. Throws if neither is available.
+     *
+     * @throws IllegalArgumentException If no client is registered for [model] and no fallback is configured.
+     */
     override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
         val client = clientRouter.clientFor(model)
             ?: effectiveFallback?.first
@@ -256,6 +279,9 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         return client.getBasicJsonSchemaGenerator()
     }
 
+    /**
+     * Cancels the model discovery scope and closes all registered clients.
+     */
     override fun close() {
         modelsDiscoveryScope.cancel()
         clientRouter.clients.forEach { it.close() }
