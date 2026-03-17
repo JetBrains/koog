@@ -166,7 +166,7 @@ object Models {
     fun assumeEnumToolCallsAreStable(model: LLModel, scenario: String) {
         assumeTrue(
             model.provider.id != LLMProvider.Anthropic.id,
-            "KG-743 Tool enum arguments are parsed case-sensitively and fail on lowercase values"
+            "[$scenario] failed, see KG-743: Tool enum arguments are parsed case-sensitively and fail on lowercase values"
         )
     }
 }

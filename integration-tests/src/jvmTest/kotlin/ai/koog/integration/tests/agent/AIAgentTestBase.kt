@@ -33,6 +33,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -68,7 +69,8 @@ open class AIAgentTestBase {
         @JvmStatic
         fun getLatestModels() = listOf(
             AnthropicModels.Opus_4_6,
-            OpenAIModels.Chat.GPT5_1,
+            OpenAIModels.Chat.GPT5_4,
+            GoogleModels.Gemini3_Flash_Preview,
         ).stream()
 
         @JvmStatic

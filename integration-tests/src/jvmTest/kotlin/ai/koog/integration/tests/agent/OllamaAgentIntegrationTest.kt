@@ -177,8 +177,6 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         responseProcessor: ResponseProcessor? = null,
         maxIterations: Int = 20
     ): AIAgent<String, String> {
-        val promptsAndResponses = mutableListOf<String>()
-
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
@@ -193,16 +191,6 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
             install(EventHandler) {
                 onToolCallStarting { eventContext ->
                     toolCalls.add(eventContext.toolName)
-                }
-
-                onLLMCallStarting { eventContext ->
-                    val promptText = eventContext.prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
-                    promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
-                }
-
-                onLLMCallCompleted { eventContext ->
-                    val responseText = "[${eventContext.responses.joinToString { "${it.role.name}: ${it.content}" }}]"
-                    promptsAndResponses.add("RESPONSE: $responseText")
                 }
             }
         }
@@ -223,15 +211,16 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         withRetry(5) {
             val fileName = "compute_scores.py"
             val pathInProject = "scores.txt"
-            val fileTools = FileOperationsTools()
-            fileTools.createNewFileWithText(
-                pathInProject = pathInProject,
-                text = """
+            val sourceFileContents = """
                 name,age,score
                 Alice,25,85
                 Bob,30,92
                 Charlie,22,78
-                """.trimIndent()
+            """.trimIndent()
+            val fileTools = FileOperationsTools()
+            fileTools.createNewFileWithText(
+                pathInProject = pathInProject,
+                text = sourceFileContents
             )
             val toolRegistry = ToolRegistry {
                 tool(fileTools.readFileContentTool)
@@ -269,6 +258,10 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
             """.trimIndent()
 
             withRetry {
+                toolCalls.clear()
+                fileTools.fileContentsByPath.clear()
+                fileTools.createNewFileWithText(pathInProject = pathInProject, text = sourceFileContents)
+
                 agent.run(request)
 
                 toolCalls.shouldContain(fileTools.readFileContentTool.name)

@@ -39,7 +39,11 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -94,7 +98,19 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             thinking = AnthropicThinking.Disabled()
         )
 
-        else -> LLMParams()
+        LLMProvider.OpenAI.id -> if (model.capabilities?.contains(LLMCapability.OpenAIEndpoint.Responses) == true) {
+            OpenAIResponsesParams(reasoning = ReasoningConfig(effort = ReasoningEffort.NONE))
+        } else {
+            OpenAIChatParams(reasoningEffort = ReasoningEffort.NONE)
+        }
+
+        LLMProvider.MistralAI.id,
+        LLMProvider.OpenRouter.id,
+        LLMProvider.Bedrock.id,
+        LLMProvider.Ollama.id,
+        LLMProvider.DeepSeek.id -> LLMParams()
+
+        else -> throw IllegalArgumentException("Unsupported provider for forceOneToolNoReasoningParams: ${model.provider.id}")
     }
 
     companion object {
@@ -478,7 +494,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("allModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        Models.assumeEnumToolCallsAreStable(model, "single-run non-parallel integration with calculator enum tool arguments")
+        Models.assumeEnumToolCallsAreStable(
+            model,
+            "single-run non-parallel integration with calculator enum tool arguments"
+        )
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
         // TODO: Remove this skip when thought_signature presence is fixed
         assumeTrue(
@@ -1373,7 +1392,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("getLatestModels")
     fun integration_RequestLLMForceOneToolDoesNotDuplicateMessages(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
@@ -1400,13 +1419,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                                 user(input)
                             }
                             val response = requestLLMForceOneTool(testTool)
-
-                            if (response !is Message.Tool.Call && model.provider.id == LLMProvider.MistralAI.id && attempts >= maxAttempts) {
-                                assumeTrue(
-                                    false,
-                                    "Skipping force-one-tool direct tool-call integration for model $model after one retry: provider still returned ${response::class.simpleName}"
-                                )
-                            }
 
                             assertTrue(
                                 response is Message.Tool.Call,

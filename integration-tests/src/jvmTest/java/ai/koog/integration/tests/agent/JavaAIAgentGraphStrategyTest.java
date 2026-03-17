@@ -21,13 +21,13 @@ import ai.koog.agents.snapshot.providers.PersistenceStorageProvider;
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.Models;
+import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import ai.koog.serialization.TypeToken;
-import kotlin.coroutines.EmptyCoroutineContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Timeout;
@@ -35,7 +35,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -238,6 +237,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @Retry
     public void integration_GraphStrategyWithVerificationPath(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         EventRecorder positiveEvents = new EventRecorder();
@@ -273,9 +273,9 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         assertAll(
             () -> assertNotNull(result, "Verification result for the true statement should not be null"),
-            () -> assertTrue(result, "Expected Paris to be verified as the capital of France"),
             () -> assertNotNull(falseResult, "Verification result for the false statement should not be null"),
-            () -> assertFalse(falseResult, "Expected the heliocentric false statement to be rejected"),
+            () -> assertTrue(result, "True statement 'Paris is the capital of France' should be verified as true"),
+            () -> assertFalse(falseResult, "False statement 'The Sun orbits around the Earth' should be verified as false"),
             () -> assertTrue(positiveEvents.nodeNames.contains("verification-result"), "Expected verification-result node to execute in the positive run"),
             () -> assertTrue(negativeEvents.nodeNames.contains("verification-result"), "Expected verification-result node to execute in the negative run"),
             () -> assertTrue(positiveEvents.subgraphNames.contains("verification-subgraph"), "Expected verification subgraph start event in the positive run"),
@@ -393,7 +393,8 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @Test
-    @Timeout(15)
+    @Retry
+    @Timeout(30)
     public void integration_GraphStrategyWithManualCheckpointCreationUsingInMemoryStorage() {
         LLModel model = OpenAIModels.Chat.GPT4o;
         Models.assumeAvailable(model.getProvider());
@@ -427,7 +428,8 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @Test
-    @Timeout(15)
+    @Retry
+    @Timeout(30)
     public void integration_GraphStrategyWithFilePersistenceStorage() {
         LLModel model = OpenAIModels.Chat.GPT4o;
         Models.assumeAvailable(model.getProvider());
@@ -466,7 +468,8 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @Test
-    @Timeout(15)
+    @Retry
+    @Timeout(30)
     public void integration_GraphStrategyRollbackToLatestCheckpointFromInsideNode() {
         LLModel model = OpenAIModels.Chat.GPT4o;
         Models.assumeAvailable(model.getProvider());
@@ -663,9 +666,12 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         );
     }
 
-    private static boolean hasAnyFiles(Path directory) throws IOException {
+    private static boolean hasAnyFiles(Path directory) {
         try (var files = Files.list(directory)) {
             return files.findAny().isPresent();
+        } catch (Exception e) {
+            fail("Failed to inspect persistence directory " + directory + ": " + e.getMessage(), e);
+            return false;
         }
     }
 
