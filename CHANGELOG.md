@@ -22,16 +22,6 @@
 
 ## Improvements
 
-## New LLM Models
-
-- **Anthropic Claude Opus 4.6**: Added support via Anthropic and Bedrock executors (#1513)
-- **Google Gemini 3 Flash Preview**: New model with extended capabilities and high-speed processing (#1621)
-- **OpenAI GPT-5.x series**: Added GPT-5.1-Codex-Max, GPT-5.2-Codex, GPT-5.3-Codex, GPT-5.4, and GPT-5.4-Pro (#1595)
-- **Moonshot Kimi K2 Thinking**: Added support via the Bedrock Converse API (#1436)
-- **Ollama thinking support**: Added `think=true` request parameter and streaming reasoning delta support for Ollama models (#1532)
-
-## Improvements
-
 - **OpenTelemetry**:
   - Added OpenTelemetry support for functional agent pipelines ([KG-677](https://youtrack.jetbrains.com/issue/KG-677), #1447)
   - Added OpenTelemetry spans for MCP tool calls (#1421)
@@ -43,6 +33,14 @@
 - **LLM Client Router**: Added support for routing requests across multiple LLM clients with pluggable load balancing strategies, including a built-in round-robin router (#1503)
 - **Swift Package Manager support**: Added XCFramework build and distribution infrastructure for iOS/macOS development via SPM ([KG-682](https://youtrack.jetbrains.com/issue/KG-682), #1485)
 - **JavaScript interop**: Added example for calling a Koog agent from JavaScript code, including browser (TypeScript webapp) and Node.js usage with `AbortSignal` support (#1500)
+
+## New LLM Models
+
+- **Anthropic Claude Opus 4.6**: Added support via Anthropic and Bedrock executors (#1513)
+- **Google Gemini 3 Flash Preview**: New model with extended capabilities and high-speed processing (#1621)
+- **OpenAI GPT-5.x series**: Added GPT-5.1-Codex-Max, GPT-5.2-Codex, GPT-5.3-Codex, GPT-5.4, and GPT-5.4-Pro (#1595)
+- **Moonshot Kimi K2 Thinking**: Added support via the Bedrock Converse API (#1436)
+- **Ollama thinking support**: Added `think=true` request parameter and streaming reasoning delta support for Ollama models (#1532)
 
 ## Bug Fixes
 
@@ -62,6 +60,15 @@
 - **`LLMDescription.description` renamed to `value`**: The `description` field of `LLMDescription` has been renamed to `value` for Java compatibility (#1607)
 - Deprecated `kotlinx.datetime` imports replaced with `kotlin.time` equivalents (`Clock`, `Instant`) (#1533)
 - **Retired Anthropic/Bedrock models**: Removed `Sonnet_3_7`, `Haiku_3_5`, `Sonnet_3_5`, and `Opus_3` from Anthropic models; removed several AI21, Bedrock, and legacy Anthropic models. `Haiku_3` marked as deprecated (#1526)
+
+## Documentation
+
+- Added documentation for Java API and Java examples (#1610)
+- Added documentation for Spring AI integration ([KG-109](https://youtrack.jetbrains.com/issue/KG-109), #1627)
+- Added documentation for custom feature creation (#1295)
+- Reworked Getting Started, agent types, and Chat Memory tutorials (#1349, #1552)
+- Improved Prompts and Planner agent documentation (#1302, #1301)
+- Added nightly builds documentation (#1433)
 
 ## Examples
 
