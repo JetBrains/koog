@@ -1,8 +1,5 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.AIAgentBuilderImpl.Companion.ModelNotSet
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.copy
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -139,13 +136,8 @@ public abstract class AIAgentBuilderCommon<Self : AIAgentBuilderCommon<Self>> in
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = validateConfig(config),
+            agentConfig = validatedConfig,
             clock = clock
         )
     }
-}
-
-internal fun validateConfig(config: AIAgentConfig): AIAgentConfig = when (config.model) {
-    ModelNotSet -> throw IllegalArgumentException("model must be set, plase use .model() on AIAgentBuilder or set AIAgentConfig")
-    else -> config
 }

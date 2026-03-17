@@ -45,11 +45,11 @@ public class GraphAgentBuilder<Input, Output>(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
     private val inputType: TypeToken,
     private val outputType: TypeToken,
-    private var promptExecutor: PromptExecutor? = null,
-    private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var id: String? = null,
-    private var config: AIAgentConfig,
-    private var clock: Clock = Clock.System,
+    promptExecutor: PromptExecutor? = null,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    id: String? = null,
+    config: AIAgentConfig,
+    clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<GraphAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -94,7 +94,7 @@ public class GraphAgentBuilder<Input, Output>(
             promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = validateConfig(config),
+            agentConfig = validatedConfig,
             clock = clock
         ) {
             featureInstallers.forEach { install ->
@@ -124,11 +124,11 @@ public class GraphAgentBuilder<Input, Output>(
  */
 public class FunctionalAgentBuilder<Input, Output>(
     private val strategy: AIAgentFunctionalStrategy<Input, Output>,
-    private var promptExecutor: PromptExecutor? = null,
-    private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var id: String? = null,
-    private var config: AIAgentConfig,
-    private var clock: Clock = Clock.System,
+    promptExecutor: PromptExecutor? = null,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    id: String? = null,
+    config: AIAgentConfig,
+    clock: Clock = Clock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<FunctionalAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -172,7 +172,7 @@ public class FunctionalAgentBuilder<Input, Output>(
             promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = validateConfig(config),
+            agentConfig = validatedConfig,
             clock = clock
         ) {
             featureInstallers.forEach { install ->
@@ -198,17 +198,17 @@ public class FunctionalAgentBuilder<Input, Output>(
  */
 public class PlannerAgentBuilder<Input, Output>(
     private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
-    private var promptExecutor: PromptExecutor? = null,
-    private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private var id: String? = null,
-    private var config: AIAgentConfig,
-    private var clock: Clock = Clock.System,
+    promptExecutor: PromptExecutor? = null,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    id: String? = null,
+    config: AIAgentConfig,
+    clock: Clock = Clock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<PlannerAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
     toolRegistry = toolRegistry,
     id = id,
-    agentConfig = agentConfig,
+    config = config,
     clock = clock,
 ) {
     override fun self(): PlannerAgentBuilder<Input, Output> = this
@@ -242,7 +242,7 @@ public class PlannerAgentBuilder<Input, Output>(
             promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,
             id = id,
-            agentConfig = validateConfig(config),
+            agentConfig = validatedConfig,
             clock = clock
         ) {
             featureInstallers.forEach { install ->

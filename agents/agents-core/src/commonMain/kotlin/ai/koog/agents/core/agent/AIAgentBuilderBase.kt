@@ -20,7 +20,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
     protected var promptExecutor: PromptExecutor?,
     protected var toolRegistry: ToolRegistry,
     protected var id: String?,
-    protected var agentConfig: AIAgentConfig,
+    protected var config: AIAgentConfig,
     protected var clock: Clock,
 ) {
     internal constructor(
@@ -52,10 +52,10 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
     protected val validatedPromptExecutor: PromptExecutor
         get() = requireNotNull(promptExecutor) { "PromptExecutor must be set" }
 
-    protected val validatedAgentConfig: AIAgentConfig
-        get() = when (agentConfig.model) {
+    protected val validatedConfig: AIAgentConfig
+        get() = when (config.model) {
             ModelNotSet -> throw IllegalArgumentException("model must be set, plase use .model() on AIAgentBuilder or set AIAgentConfig")
-            else -> agentConfig
+            else -> config
         }
 
     /**
@@ -83,7 +83,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
      * @return The current builder instance for chaining additional configurations.
      */
     public fun llmModel(model: LLModel): Self = self().apply {
-        this.agentConfig = agentConfig.copy(model = model)
+        this.config = config.copy(model = model)
     }
 
     /**
@@ -126,7 +126,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
      * @return The current builder instance.
      */
     public fun prompt(prompt: Prompt): Self = self().apply {
-        this.agentConfig = agentConfig.copy(prompt = prompt)
+        this.config = config.copy(prompt = prompt)
     }
 
     /**
@@ -140,7 +140,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
      * @return The current builder instance for method chaining.
      */
     public fun temperature(temperature: Double): Self = self().apply {
-        this.agentConfig = agentConfig.copy(prompt = agentConfig.prompt.withParams(agentConfig.prompt.params.copy(temperature = temperature)))
+        this.config = config.copy(prompt = config.prompt.withParams(config.prompt.params.copy(temperature = temperature)))
     }
 
     /**
@@ -154,14 +154,14 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
      * @return The current builder instance for chaining additional configurations.
      */
     public fun numberOfChoices(numberOfChoices: Int): Self = self().apply {
-        this.agentConfig = agentConfig.copy(prompt = agentConfig.prompt.withParams(agentConfig.prompt.params.copy(numberOfChoices = numberOfChoices)))
+        this.config = config.copy(prompt = config.prompt.withParams(config.prompt.params.copy(numberOfChoices = numberOfChoices)))
     }
 
     /**
      * Sets the response processor for the agent.
      */
     public fun responseProcessor(responseProcessor: ResponseProcessor): Self = self().apply {
-        this.agentConfig = agentConfig.copy(responseProcessor = responseProcessor)
+        this.config = config.copy(responseProcessor = responseProcessor)
     }
 
     /**
@@ -171,7 +171,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
      * @return The current builder instance.
      */
     public fun maxIterations(maxIterations: Int): Self = self().apply {
-        this.agentConfig = agentConfig.copy(maxAgentIterations = maxIterations)
+        this.config = config.copy(maxAgentIterations = maxIterations)
     }
 
     /**
@@ -191,6 +191,6 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
      * @return The current builder instance for chaining further methods.
      */
     public fun agentConfig(config: AIAgentConfig): Self = self().apply {
-        this.agentConfig = config
+        this.config = config
     }
 }

@@ -19,16 +19,10 @@ public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCo
         strategy = strategy,
         inputType = strategy.inputType,
         outputType = strategy.outputType,
-        prompt = this.prompt,
-        llmModel = this.llmModel,
-        temperature = this.temperature,
-        numberOfChoices = this.numberOfChoices,
-        maxIterations = this.maxIterations,
-        clock = this.clock,
-    ).also {
-        it.promptExecutor = this.promptExecutor
-        it.toolRegistry = this.toolRegistry
-    }
+        promptExecutor = this.promptExecutor,
+        toolRegistry = this.toolRegistry,
+        config = this.config,
+    )
 
     /**
      * Configure a functional strategy and continue with a functional service builder.
@@ -37,16 +31,10 @@ public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCo
         strategy: AIAgentFunctionalStrategy<Input, Output>
     ): FunctionalAgentServiceBuilder<Input, Output> = FunctionalAgentServiceBuilder(
         strategy = strategy,
-        prompt = this.prompt,
-        llmModel = this.llmModel,
-        temperature = this.temperature,
-        numberOfChoices = this.numberOfChoices,
-        maxIterations = this.maxIterations,
-        clock = this.clock,
-    ).also {
-        it.promptExecutor = this.promptExecutor
-        it.toolRegistry = this.toolRegistry
-    }
+        promptExecutor = this.promptExecutor,
+        toolRegistry = this.toolRegistry,
+        config = this.config,
+    )
 
     /**
      * Convenience build for GraphAIAgentService<String, String> using singleRunStrategy.
@@ -54,7 +42,7 @@ public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCo
     public fun build(): GraphAIAgentService<String, String> {
         return AIAgentServiceHelper(
             promptExecutor = validatedPromptExecutor,
-            agentConfig = agentConfig,
+            agentConfig = config,
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
         ) {}
