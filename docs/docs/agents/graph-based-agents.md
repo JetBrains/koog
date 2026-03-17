@@ -250,7 +250,7 @@ Let's create an agent instance with this strategy and run it:
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.message.Message;
-    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
+    import ai.koog.prompt.executor.model.PromptExecutor;
     class exampleGraphAgentsJava02 {
         public static void main(String[] args) {
     -->
@@ -294,8 +294,12 @@ Let's create an agent instance with this strategy and run it:
         .transformed(msg -> (Message.Tool.Call) msg)
         .build());
 
+    var promptExecutor = PromptExecutor.builder()
+        .ollama("http://localhost:11434")
+        .build();
+
     AIAgent<String, String> mathAgent = AIAgent.builder()
-        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+        .promptExecutor(promptExecutor)
         .llmModel(OllamaModels.Meta.LLAMA_3_2)
         .graphStrategy(calculatorAgentStrategy.build())
         .build();
@@ -512,7 +516,7 @@ Add the tool registry to the agent configuration:
     import ai.koog.agents.core.tools.reflect.ToolSet;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.message.Message;
-    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
+    import ai.koog.prompt.executor.model.PromptExecutor;
     class exampleGraphAgentsJava04 {
         @LLMDescription("Tools for performing math operations")
         public static class MathTools implements ToolSet {
@@ -567,6 +571,9 @@ Add the tool registry to the agent configuration:
                 .onCondition(msg -> msg instanceof Message.Tool.Call)
                 .transformed(msg -> (Message.Tool.Call) msg)
                 .build());
+            var promptExecutor = PromptExecutor.builder()
+                .ollama("http://localhost:11434")
+                .build();
     -->
     <!--- SUFFIX
         }
@@ -574,7 +581,7 @@ Add the tool registry to the agent configuration:
     -->
     ```java
     AIAgent<String, String> mathAgent = AIAgent.builder()
-        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+        .promptExecutor(promptExecutor)
         .llmModel(OllamaModels.Meta.LLAMA_3_2)
         .graphStrategy(calculatorAgentStrategy.build())
         .toolRegistry(toolRegistry)
@@ -698,7 +705,7 @@ In our example, it is important to describe how the agent should process complex
     import ai.koog.agents.core.tools.reflect.ToolSet;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.message.Message;
-    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
+    import ai.koog.prompt.executor.model.PromptExecutor;
     class exampleGraphAgentsJava05 {
         @LLMDescription("Tools for performing math operations")
         public static class MathTools implements ToolSet {
@@ -753,6 +760,9 @@ In our example, it is important to describe how the agent should process complex
                 .onCondition(msg -> msg instanceof Message.Tool.Call)
                 .transformed(msg -> (Message.Tool.Call) msg)
                 .build());
+            var promptExecutor = PromptExecutor.builder()
+                .ollama("http://localhost:11434")
+                .build();
     -->
     <!--- SUFFIX
         }
@@ -760,7 +770,7 @@ In our example, it is important to describe how the agent should process complex
     -->
     ```java
     AIAgent<String, String> mathAgent = AIAgent.builder()
-        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+        .promptExecutor(promptExecutor)
         .llmModel(OllamaModels.Meta.LLAMA_3_2)
         .systemPrompt("You are a simple calculator assistant. You can add and multiply two numbers using the 'add' and 'multiply' tools. When the user provides input, extract the numbers and operations they requested. Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result. Always respond with a clear, friendly message showing the calculation and result.")
         .graphStrategy(calculatorAgentStrategy.build())
