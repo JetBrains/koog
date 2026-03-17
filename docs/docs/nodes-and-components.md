@@ -32,7 +32,6 @@ Here is how you can define a node that expects a string as input and returns the
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -103,7 +102,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeDoNothing
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -181,10 +179,8 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
-
     typealias Input = Unit
     typealias Output = Unit
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -337,7 +333,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.nodeDoNothing
-
     val strategy = strategy<String, String>("strategy_name") {
         val getUserQuestion by nodeDoNothing<String>()
     -->
@@ -451,7 +446,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
     import ai.koog.agents.core.dsl.extension.nodeDoNothing
-
     val strategy = strategy<String, String>("strategy_name") {
         val getComplexUserQuestion by nodeDoNothing<String>()
     -->
@@ -531,7 +525,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
     import ai.koog.agents.core.dsl.extension.nodeDoNothing
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-
     val strategy = strategy<String, String>("strategy_name") {
         val generateHugeHistory by nodeDoNothing<String>()
     -->
@@ -616,7 +609,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.extension.nodeExecuteTool
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.onToolCall
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -694,7 +686,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeExecuteTool
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -766,7 +757,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
     import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
     import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -849,7 +839,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
     import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -949,7 +938,6 @@ Transform the output of a custom node to a different data type:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeDoNothing
-
     val strategy = strategy<String, Int>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -1012,7 +1000,6 @@ Transform the output of built-in nodes like `nodeLLMRequest`:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-
     val strategy = strategy<String, Int>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -1103,11 +1090,9 @@ You can provide a task to the subgraph as text, configure the LLM if needed, and
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.agents.ext.agent.subgraphWithTask
     import ai.koog.agents.core.agent.ToolCalls
-
     val searchTool = SayToUser
     val calculatorTool = SayToUser
     val weatherTool = SayToUser
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -1185,11 +1170,9 @@ Here is an example:
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
     import ai.koog.agents.ext.agent.subgraphWithVerification
     import ai.koog.agents.core.agent.ToolCalls
-
     val runTestsTool = SayToUser
     val analyzeTool = SayToUser
     val readFileTool = SayToUser
-
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -1272,10 +1255,8 @@ You can use this strategy when you need to run straightforward processes that do
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.*
-
     -->
     ```kotlin
-
     public fun singleRunStrategy(): AIAgentGraphStrategy<String, String> = strategy("single_run") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
         val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
