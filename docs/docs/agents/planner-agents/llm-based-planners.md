@@ -84,7 +84,6 @@ The following example shows how to create a simple planner agent using `SimpleLL
         public static void main(String[] args) {
     -->
     <!--- SUFFIX
-            .build();
         }
     }
     -->
@@ -97,7 +96,7 @@ The following example shows how to create a simple planner agent using `SimpleLL
 
     // Create the OpenAI executor
     var promptExecutor = PromptExecutor.builder()
-        .openAI("OPENAI_API_KEY",)
+        .openAI("OPENAI_API_KEY")
         .build();
 
     // Create the planner agent using AIAgent builder

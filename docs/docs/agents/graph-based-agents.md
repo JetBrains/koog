@@ -762,14 +762,7 @@ In our example, it is important to describe how the agent should process complex
     AIAgent<String, String> mathAgent = AIAgent.builder()
         .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
         .llmModel(OllamaModels.Meta.LLAMA_3_2)
-        .systemPrompt("""
-                You are a simple calculator assistant.
-                You can add and multiply two numbers using the 'add' and 'multiply' tools.
-                When the user provides input, extract the numbers and operations they requested.
-                Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result.
-                Always respond with a clear, friendly message showing the calculation and result.
-                """
-        )
+        .systemPrompt("You are a simple calculator assistant. You can add and multiply two numbers using the 'add' and 'multiply' tools. When the user provides input, extract the numbers and operations they requested. Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result. Always respond with a clear, friendly message showing the calculation and result.")
         .graphStrategy(calculatorAgentStrategy.build())
         .toolRegistry(toolRegistry)
         .build();
