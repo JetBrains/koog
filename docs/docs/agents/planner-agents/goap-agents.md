@@ -205,7 +205,7 @@ while the LLM performs the actual content generation within each action.
     
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
-                .ollama("http://localhost:11434")
+                .openAI("OPENAI_API_KEY")
                 .build();
     
             var strategy = AIAgentPlannerStrategy.builder("content-planner")
@@ -280,7 +280,7 @@ while the LLM performs the actual content generation within each action.
             var agent = AIAgent.builder()
                 .plannerStrategy(strategy)
                 .promptExecutor(promptExecutor)
-                .llmModel(OllamaModels.Meta.LLAMA_3_2)
+                .llmModel(OpenAIModels.Chat.GPT4o)
                 .systemPrompt("You are a professional content writer.")
                 .maxIterations(20)
                 .build();
