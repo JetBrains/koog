@@ -30,7 +30,6 @@
   - Added planner-specific pipeline interceptors: `onPlanCreationStarting/Completed`, `onStepExecutionStarting/Completed`, `onPlanCompletionEvaluationStarting/Completed` ([KG-672](https://youtrack.jetbrains.com/issue/KG-672), #1550)
   - GOAP strategies now have typed input/output and a dedicated `GoapAgentState` (#1498)
 - **OpenRouter embedding support**: Implemented `LLMEmbeddingProvider` for OpenRouter, enabling access to 21+ embedding models ([KG-659](https://youtrack.jetbrains.com/issue/KG-659), #1398)
-- **LLM Client Router**: Added support for routing requests across multiple LLM clients with pluggable load balancing strategies, including a built-in round-robin router (#1503)
 - **Swift Package Manager support**: Added XCFramework build and distribution infrastructure for iOS/macOS development via SPM ([KG-682](https://youtrack.jetbrains.com/issue/KG-682), #1485)
 
 ## New LLM Models
