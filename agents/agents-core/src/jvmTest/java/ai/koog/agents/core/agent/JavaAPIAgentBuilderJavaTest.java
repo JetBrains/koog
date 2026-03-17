@@ -137,4 +137,36 @@ public class JavaAPIAgentBuilderJavaTest {
         String out = agent.run("u");
         assertEquals("class-reply:u", out);
     }
+
+    @Test
+    public void testServiceBuilderMaxIterationsIsRespected() {
+        var mockExecutor = new MockExecutorBuilder(new JacksonSerializer())
+            .mockLLMAnswer("ok").asDefaultResponse()
+            .build();
+
+        var service = AIAgentService.builder()
+            .promptExecutor(mockExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .maxIterations(73)
+            .build();
+
+        assertEquals(73, service.getAgentConfig().getMaxAgentIterations(),
+            "maxIterations set via AIAgentService.builder() should be propagated to agentConfig");
+    }
+
+    @Test
+    public void testAgentBuilderMaxIterationsIsRespected() {
+        var mockExecutor = new MockExecutorBuilder(new JacksonSerializer())
+            .mockLLMAnswer("ok").asDefaultResponse()
+            .build();
+
+        var agent = AIAgent.builder()
+            .promptExecutor(mockExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .maxIterations(41)
+            .build();
+
+        assertEquals(41, agent.getAgentConfig().getMaxAgentIterations(),
+            "maxIterations set via AIAgent.builder() should be propagated to agentConfig");
+    }
 }
