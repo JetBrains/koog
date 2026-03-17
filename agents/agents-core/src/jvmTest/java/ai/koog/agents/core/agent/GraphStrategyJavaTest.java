@@ -157,10 +157,4 @@ public class GraphStrategyJavaTest {
         assertNotNull(agent);
     }
 
-    public static class MyTools implements ToolSet {
-        @ai.koog.agents.core.tools.annotations.Tool
-        public long my_tool(int arg) {
-            return (long) arg;
-        }
-    }
 }

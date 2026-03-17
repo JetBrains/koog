@@ -10,9 +10,14 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -132,20 +137,19 @@ class AIAgentToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolResultSerialization() = runTest {
-        val tool = agent.asTool(
-            agentName = "testAgent",
-            agentDescription = "Test agent description",
+        val result = AIAgentTool.AgentToolResult(
+            successful = true,
+            result = SimpleData("This is the agent's response"),
         )
 
-        val args = tool.decodeArgs(argsJson, serializer)
-        val result = tool.execute(args)
+        val resultSerialized = buildJsonObject {
+            put("successful", true)
+            putJsonObject("result") {
+                put("value", "This is the agent's response")
+            }
+        }.toKoogJSONObject()
 
-        assertEquals(
-            AIAgentTool.AgentToolResult(
-                successful = true,
-                result = SimpleData("This is the agent's response"),
-            ),
-            result
-        )
+        tool.encodeResult(result, serializer) shouldBe resultSerialized
+        tool.decodeResult(resultSerialized, serializer) shouldBe result
     }
 }

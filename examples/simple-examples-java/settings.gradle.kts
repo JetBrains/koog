@@ -1,5 +1,3 @@
-import java.net.URI
-
 rootProject.name = "simple-examples-java"
 
 pluginManagement {
@@ -13,6 +11,7 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         google()
-        maven { url = URI("https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public") }
+        // Koog will be published here from sources
+        mavenLocal()
     }
 }

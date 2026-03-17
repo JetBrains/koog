@@ -1,4 +1,4 @@
-package ai.koog.agents.example.strategies.functional;
+package ai.koog.agents.example.strategies.tools;
 
 import ai.koog.agents.core.tools.annotations.LLMDescription;
 import ai.koog.agents.core.tools.annotations.Tool;

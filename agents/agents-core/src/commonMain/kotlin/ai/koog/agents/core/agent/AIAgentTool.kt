@@ -4,11 +4,17 @@ import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.schema.getToolDescriptor
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import ai.koog.serialization.kotlinx.KotlinxDelegateSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.typeToken
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import kotlin.concurrent.atomics.AtomicInt
@@ -90,6 +96,9 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
     resultType = typeToken(AgentToolResult::class, listOf(outputType)),
     descriptor = getToolDescriptor(inputType, agentName, agentDescription)
 ) {
+    private companion object {
+        private val json = Json.Default
+    }
 
     @Deprecated("Use constructor with TypeToken instead of KSerializer")
     @OptIn(InternalKoogSerializationApi::class)
@@ -122,11 +131,32 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
      * @property errorMessage An optional error message describing the failure, if any.
      * @property result An optional agent tool result.
      */
+    @Serializable
     public data class AgentToolResult<Output>(
         val successful: Boolean,
         val errorMessage: String? = null,
         val result: Output? = null
     )
+
+    @OptIn(InternalKoogSerializationApi::class)
+    override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): AgentToolResult<Output> {
+        return json.decodeFromJsonElement(
+            deserializer = AgentToolResult.serializer(
+                KotlinxDelegateSerializer(serializer, outputType)
+            ),
+            element = rawResult.toKotlinxJsonElement(),
+        )
+    }
+
+    @OptIn(InternalKoogSerializationApi::class)
+    override fun encodeResult(result: AgentToolResult<Output>, serializer: JSONSerializer): JSONElement {
+        return json.encodeToJsonElement(
+            serializer = AgentToolResult.serializer(
+                KotlinxDelegateSerializer(serializer, outputType)
+            ),
+            value = result,
+        ).toKoogJSONElement()
+    }
 
     @OptIn(InternalAgentToolsApi::class)
     override suspend fun execute(args: Input): AgentToolResult<Output> {
