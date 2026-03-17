@@ -1,0 +1,32 @@
+
+ai:
+    koog:
+        openai:
+            api-key: ${OPENAI_API_KEY:sk-test}
+        anthropic:
+            api-key: ${ANTHROPIC_API_KEY:sk-test}
+
+logging:
+    level:
+        "org.springframework.web": debug
+        "ai.koog": debug
+
+server:
+    shutdown: immediate
+    http2:
+        enabled: true
+    servlet:
+        jsp:
+            registered: false
+
+
+management:
+    otlp:
+        metrics:
+            export:
+                step: 3s
+spring:
+    application:
+        name: ${build.name:koog-spring-sandwich}
+    config:
+        import: optional:classpath:/META-INF/build-info.properties
