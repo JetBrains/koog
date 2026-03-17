@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.effectiveValue
 import ai.koog.serialization.TypeToken
 import kotlinx.schema.generator.json.JsonSchemaConfig
 import kotlinx.schema.generator.json.serialization.SerializationClassJsonSchemaGenerator
@@ -35,7 +36,7 @@ internal fun createSerializationGenerator(
         descriptionExtractor = { annotations ->
             annotations
                 .filterIsInstance<LLMDescription>()
-                .firstOrNull()?.value
+                .firstOrNull()?.effectiveValue
         }
     ),
     json = Json.Default,
@@ -71,8 +72,8 @@ public fun getToolDescriptor(
 ): ToolDescriptor {
     val schema = getJsonSchema(argsType, jsonSchemaConfig)
 
-    if (JsonSchemaConstants.Types.OBJECT !in schema.type) {
-        throw IllegalArgumentException("Only objects are supported as tool schemas, got ${schema.type}")
+    require(JsonSchemaConstants.Types.OBJECT in schema.type) {
+        "Only objects are supported as tool schemas, got ${schema.type}"
     }
 
     val (requiredParameters, optionalParameters) = schema.properties
@@ -199,10 +200,12 @@ public fun PropertyDefinition.toToolParameter(
     }
 
     is ReferencePropertyDefinition -> {
-        val ref = this.ref
-            ?: throw IllegalArgumentException("Reference property definition is missing the 'ref' attribute")
-        val defs = defs
-            ?: throw IllegalArgumentException("Encountered a ref in the JSON schema but the schema is missing the defs section")
+        val ref = requireNotNull(this.ref) {
+            "Reference property definition is missing the 'ref' attribute"
+        }
+        val defs = requireNotNull(defs) {
+            "Encountered a ref in the JSON schema but the schema is missing the defs section"
+        }
 
         defs[ref.removePrefix(JsonSchemaConstants.Keys.REF_PREFIX)]
             ?.toToolParameter(defs)

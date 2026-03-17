@@ -16,4 +16,18 @@ import kotlinx.serialization.SerialInfo
     AnnotationTarget.VALUE_PARAMETER,
     AnnotationTarget.FUNCTION
 )
-public annotation class LLMDescription(val value: String)
+public annotation class LLMDescription(
+    val value: String = "",
+    @Deprecated(
+        message = "Use 'value' instead.",
+        replaceWith = ReplaceWith("value"),
+    )
+    val description: String = "",
+)
+
+/**
+ * Gets the value from [LLMDescription.value] or [LLMDescription.description].
+ */
+@Suppress("DEPRECATION")
+public val LLMDescription.effectiveValue: String
+    get() = value.ifEmpty { description }

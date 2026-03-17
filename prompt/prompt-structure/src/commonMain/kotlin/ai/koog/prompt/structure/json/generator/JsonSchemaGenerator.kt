@@ -1,7 +1,9 @@
 package ai.koog.prompt.structure.json.generator
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.effectiveValue
 import ai.koog.prompt.params.LLMParams
+import kotlinx.schema.Description
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -22,8 +24,8 @@ public abstract class JsonSchemaGenerator {
     /**
      * Holds intermediate and stateful information about the current schema generation process.
      *
-     * @property json [Json] instance used for serialization, provides required meta info needed for schema generation that
-     * is not available in [SerialDescriptor].
+     * @property json [Json] instance used for serialization, provides required meta info needed
+     *  for schema generation that is not available in [SerialDescriptor].
      * @property descriptor The [SerialDescriptor] currently being processed.
      * @property processedTypeDefs A mutable map of [SerialDescriptor] to [JsonObject], maintaining schema fragments for
      * previously processed types to avoid redundant schema generation.
@@ -50,13 +52,7 @@ public abstract class JsonSchemaGenerator {
          * @return Description or `null` if no description is specified.
          */
         public fun getTypeDescription(): String? {
-            val typeDescriptionOverride = descriptionOverrides[descriptor.serialName]
-            val typeDescriptionAnnotation = descriptor.annotations
-                .filterIsInstance<LLMDescription>()
-                .firstOrNull()
-                ?.value
-
-            return typeDescriptionOverride ?: typeDescriptionAnnotation
+            return descriptionOverrides[descriptor.serialName] ?: getDescriptionFromAnnotations(descriptor.annotations)
         }
 
         /**
@@ -69,17 +65,21 @@ public abstract class JsonSchemaGenerator {
          */
         public fun getElementDescription(index: Int): String? {
             val elementName = descriptor.getElementName(index)
-            val elementAnnotations = descriptor.getElementAnnotations(index)
-
             val lookupKey = "${descriptor.serialName}.$elementName"
-            val elementDescriptionOverride = descriptionOverrides[lookupKey]
-            val elementDescriptionAnnotation = elementAnnotations
-                .filterIsInstance<LLMDescription>()
-                .firstOrNull()
-                ?.value
 
-            return elementDescriptionOverride ?: elementDescriptionAnnotation
+            val elementDescriptionOverride = descriptionOverrides[lookupKey]
+
+            return elementDescriptionOverride ?: getDescriptionFromAnnotations(descriptor.getElementAnnotations(index))
         }
+
+        private fun getDescriptionFromAnnotations(annotations: List<Annotation>): String? = annotations
+            .firstNotNullOfOrNull { annotation ->
+                return when (annotation) {
+                    is Description -> annotation.value
+                    is LLMDescription -> annotation.effectiveValue
+                    else -> null
+                }
+            }
     }
 
     /**
@@ -143,8 +143,8 @@ public fun SerialDescriptor.getPolymorphicDescriptors(json: Json): List<SerialDe
 
     val subclassDescriptor = when (kind) {
         /*
-          Sealed descriptor contains fixed fields: TYPE_KEY on the first position (not interesting for us here) and "value"
-          on the second — collection of subtype descriptors.
+          Sealed descriptor contains fixed fields: TYPE_KEY on the first position
+          (not interesting for us here) and "value" on the second — collection of subtype descriptors.
           The latter is what we need.
           Spent more time on this than I want to admit…
          */

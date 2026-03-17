@@ -2,6 +2,7 @@ package ai.koog.agents.core.tools.reflect
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.effectiveValue
 import kotlinx.schema.Description
 import kotlin.reflect.jvm.jvmName
 
@@ -17,7 +18,7 @@ public interface ToolSet {
      * or entities for integration with large language models (LLMs).
      */
     public val name: String
-        get() = this.javaClass.getAnnotationsByType(LLMDescription::class.java).firstOrNull()?.value
+        get() = this.javaClass.getAnnotationsByType(LLMDescription::class.java).firstOrNull()?.effectiveValue
             ?: this.javaClass.getAnnotationsByType(Description::class.java).firstOrNull()?.value
             ?: this::class.jvmName
 

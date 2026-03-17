@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -27,7 +28,7 @@ class JavaAPIToolRegistryTest {
     // Simple test tool classes
     class CalculatorTools : ToolSet {
         @Tool
-        @LLMDescription("Adds two numbers")
+        @LLMDescription(description = "Adds two numbers")
         fun add(
             @LLMDescription("First number") a: Int,
             @LLMDescription("Second number") b: Int
@@ -36,7 +37,7 @@ class JavaAPIToolRegistryTest {
         @Tool
         @LLMDescription("Multiplies two numbers")
         fun multiply(
-            @LLMDescription("First number") a: Int,
+            @LLMDescription(description = "First number") a: Int,
             @LLMDescription("Second number") b: Int
         ): Int = a * b
     }
@@ -190,7 +191,7 @@ class JavaAPIToolRegistryTest {
             throw AssertionError("Expected exception for duplicate tool name")
         } catch (e: IllegalArgumentException) {
             // Expected: duplicate tool name should throw an exception
-            assertTrue(e.message?.contains("already defined") == true)
+            e.message shouldContain "already defined"
         }
     }
 
