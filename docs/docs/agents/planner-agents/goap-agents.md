@@ -167,130 +167,132 @@ while the LLM performs the actual content generation within each action.
     import ai.koog.agents.planner.goap.GoapAgentState;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
+    class exampleGoapAgents01 {
+    -->
+    <!--- SUFFIX
+    }
     -->
     ```java
-    public class GoapAgentsExample01 {
-        // Define a state for content creation
-        static class ContentState extends GoapAgentState<String, String> {
-            public String topic;
-            public boolean hasOutline = false;
-            public String outline = "";
-            public boolean hasDraft = false;
-            public String draft = "";
-            public boolean hasReview = false;
-            public boolean isPublished = false;
-        
-            public ContentState(String topic) {
-                super(topic);
-                this.topic = topic;
-            }
+    // Define a state for content creation
+    static class ContentState extends GoapAgentState<String, String> {
+        public String topic;
+        public boolean hasOutline = false;
+        public String outline = "";
+        public boolean hasDraft = false;
+        public String draft = "";
+        public boolean hasReview = false;
+        public boolean isPublished = false;
     
-            public ContentState copy(boolean hasOutline, String outline, boolean hasDraft,
-                                     String draft, boolean hasReview, boolean isPublished) {
-                ContentState state = new ContentState(topic);
-                state.hasOutline = hasOutline;
-                state.outline = outline;
-                state.hasDraft = hasDraft;
-                state.draft = draft;
-                state.hasReview = hasReview;
-                state.isPublished = isPublished;
-                return state;
-            }
-    
-            @Override
-            public String provideOutput() {
-                return draft;
-            }
+        public ContentState(String topic) {
+            super(topic);
+            this.topic = topic;
         }
-    
-        public static void main(String[] args) {
-            var promptExecutor = PromptExecutor.builder()
-                .openAI("OPENAI_API_KEY")
-                .build();
-    
-            var strategy = AIAgentPlannerStrategy.builder("content-planner")
-                .goap(ContentState::new)
-                .action("Create outline", builder -> builder
-                    .precondition(state -> !state.hasOutline)
-                    .belief(state -> state.copy(true, "Outline", false, "", false, false))
-                    .cost(state -> 1.0)
-                    .execute((context, state) -> {
-                        String response = context.llm().writeSession(session -> {
-                            session.appendPrompt(prompt -> {
-                                prompt.user("Create a detailed outline for an article about: " + state.topic);
-                                return null;
-                            });
-                            return session.requestLLM().getContent();
-                        });
-                        return state.copy(true, response, state.hasDraft, state.draft,
-                                        state.hasReview, state.isPublished);
-                    })
-                )
-                .action("Write draft", builder -> builder
-                    .precondition(state -> state.hasOutline && !state.hasDraft)
-                    .belief(state -> state.copy(state.hasOutline, state.outline, true, "Draft", false, false))
-                    .cost(state -> 2.0)
-                    .execute((context, state) -> {
-                        String response = context.llm().writeSession(session -> {
-                            session.appendPrompt(prompt -> {
-                                prompt.user("Write an article based on this outline:\n" + state.outline);
-                                return null;
-                            });
-                            return session.requestLLM().getContent();
-                        });
-                        return state.copy(state.hasOutline, state.outline, true, response,
-                                        state.hasReview, state.isPublished);
-                    })
-                )
-                .action("Review content", builder -> builder
-                    .precondition(state -> state.hasDraft && !state.hasReview)
-                    .belief(state -> state.copy(state.hasOutline, state.outline, state.hasDraft,
-                                               state.draft, true, false))
-                    .cost(state -> 1.0)
-                    .execute((context, state) -> {
-                        String response = context.llm().writeSession(session -> {
-                            session.appendPrompt(prompt -> {
-                                prompt.user("Review this article and suggest improvements:\n" + state.draft);
-                                return null;
-                            });
-                            return session.requestLLM().getContent();
-                        });
-                        System.out.println("Review feedback: " + response);
-                        return state.copy(state.hasOutline, state.outline, state.hasDraft,
-                                        state.draft, true, state.isPublished);
-                    })
-                )
-                .action("Publish", builder -> builder
-                    .precondition(state -> state.hasReview && !state.isPublished)
-                    .belief(state -> state.copy(state.hasOutline, state.outline, state.hasDraft,
-                                               state.draft, state.hasReview, true))
-                    .cost(state -> 1.0)
-                    .execute((context, state) -> {
-                        System.out.println("Publishing article...");
-                        return state.copy(state.hasOutline, state.outline, state.hasDraft,
-                                        state.draft, state.hasReview, true);
-                    })
-                )
-                .goal("Published article", builder -> builder
-                    .description("Complete and publish the article")
-                    .condition(state -> state.isPublished)
-                )
-                .build();
-    
-            var agent = AIAgent.builder()
-                .plannerStrategy(strategy)
-                .promptExecutor(promptExecutor)
-                .llmModel(OpenAIModels.Chat.GPT4o)
-                .systemPrompt("You are a professional content writer.")
-                .maxIterations(20)
-                .build();
-    
-            String result = agent.run("The Future of AI in Software Development");
-            System.out.println("Final state: " + result);
+
+        public ContentState copy(boolean hasOutline, String outline, boolean hasDraft,
+                                 String draft, boolean hasReview, boolean isPublished) {
+            ContentState state = new ContentState(topic);
+            state.hasOutline = hasOutline;
+            state.outline = outline;
+            state.hasDraft = hasDraft;
+            state.draft = draft;
+            state.hasReview = hasReview;
+            state.isPublished = isPublished;
+            return state;
+        }
+
+        @Override
+        public String provideOutput() {
+            return draft;
         }
     }
+
+    public static void main(String[] args) {
+        var promptExecutor = PromptExecutor.builder()
+            .openAI("OPENAI_API_KEY")
+            .build();
+
+        var strategy = AIAgentPlannerStrategy.builder("content-planner")
+            .goap(ContentState::new)
+            .action("Create outline", builder -> builder
+                .precondition(state -> !state.hasOutline)
+                .belief(state -> state.copy(true, "Outline", false, "", false, false))
+                .cost(state -> 1.0)
+                .execute((context, state) -> {
+                    String response = context.llm().writeSession(session -> {
+                        session.appendPrompt(prompt -> {
+                            prompt.user("Create a detailed outline for an article about: " + state.topic);
+                            return null;
+                        });
+                        return session.requestLLM().getContent();
+                    });
+                    return state.copy(true, response, state.hasDraft, state.draft,
+                                    state.hasReview, state.isPublished);
+                })
+            )
+            .action("Write draft", builder -> builder
+                .precondition(state -> state.hasOutline && !state.hasDraft)
+                .belief(state -> state.copy(state.hasOutline, state.outline, true, "Draft", false, false))
+                .cost(state -> 2.0)
+                .execute((context, state) -> {
+                    String response = context.llm().writeSession(session -> {
+                        session.appendPrompt(prompt -> {
+                            prompt.user("Write an article based on this outline:\n" + state.outline);
+                            return null;
+                        });
+                        return session.requestLLM().getContent();
+                    });
+                    return state.copy(state.hasOutline, state.outline, true, response,
+                                    state.hasReview, state.isPublished);
+                })
+            )
+            .action("Review content", builder -> builder
+                .precondition(state -> state.hasDraft && !state.hasReview)
+                .belief(state -> state.copy(state.hasOutline, state.outline, state.hasDraft,
+                                           state.draft, true, false))
+                .cost(state -> 1.0)
+                .execute((context, state) -> {
+                    String response = context.llm().writeSession(session -> {
+                        session.appendPrompt(prompt -> {
+                            prompt.user("Review this article and suggest improvements:\n" + state.draft);
+                            return null;
+                        });
+                        return session.requestLLM().getContent();
+                    });
+                    System.out.println("Review feedback: " + response);
+                    return state.copy(state.hasOutline, state.outline, state.hasDraft,
+                                    state.draft, true, state.isPublished);
+                })
+            )
+            .action("Publish", builder -> builder
+                .precondition(state -> state.hasReview && !state.isPublished)
+                .belief(state -> state.copy(state.hasOutline, state.outline, state.hasDraft,
+                                           state.draft, state.hasReview, true))
+                .cost(state -> 1.0)
+                .execute((context, state) -> {
+                    System.out.println("Publishing article...");
+                    return state.copy(state.hasOutline, state.outline, state.hasDraft,
+                                    state.draft, state.hasReview, true);
+                })
+            )
+            .goal("Published article", builder -> builder
+                .description("Complete and publish the article")
+                .condition(state -> state.isPublished)
+            )
+            .build();
+
+        var agent = AIAgent.builder()
+            .plannerStrategy(strategy)
+            .promptExecutor(promptExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .systemPrompt("You are a professional content writer.")
+            .maxIterations(20)
+            .build();
+
+        String result = agent.run("The Future of AI in Software Development");
+        System.out.println("Final state: " + result);
+    }
     ```
-    <!--- KNIT exampleGoapAgents01.java -->
+    <!--- KNIT exampleGoapAgentsJava01.java -->
     
 
 ## Custom cost functions
@@ -339,7 +341,7 @@ you can define custom cost functions for actions and goals to guide the planner:
     import ai.koog.agents.planner.goap.GoapAgentState;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    public class GoapAgentsExample02 {
+    class exampleGoapAgents02 {
         public static class MyState extends GoapAgentState<String, String> {
             public String topic;
             public boolean operationDone = false;
@@ -382,7 +384,7 @@ you can define custom cost functions for actions and goals to guide the planner:
         })
     )
     ```
-    <!--- KNIT exampleGoapAgents02.java -->
+    <!--- KNIT exampleGoapAgentsJava02.java -->
 
 ## State beliefs compared to actual execution
 
@@ -439,7 +441,7 @@ This allows the planner to make plans based on expected outcomes while handling 
     import ai.koog.agents.planner.goap.GoapAgentState;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    public class GoapAgentsExample03 {
+    class exampleGoapAgents03 {
         public static class MyState extends GoapAgentState<String, String> {
             public String topic;
             public boolean taskComplete = false;
@@ -484,7 +486,8 @@ This allows the planner to make plans based on expected outcomes while handling 
             boolean success = performComplexTask();
             return state.copy(success, state.attempts + 1);
         })
+    )
     ```
-    <!--- KNIT exampleGoapAgents03.java -->
+    <!--- KNIT exampleGoapAgentsJava03.java -->
 
 [A* search]: https://en.wikipedia.org/wiki/A*_search_algorithm

@@ -80,7 +80,7 @@ The following example shows how to create a simple planner agent using `SimpleLL
     import ai.koog.agents.planner.AIAgentPlannerStrategy;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    public class exampleLLMBasedPlanner01 {
+    class exampleLLMBasedPlanner01 {
         public static void main(String[] args) {
     -->
     <!--- SUFFIX
@@ -112,7 +112,7 @@ The following example shows how to create a simple planner agent using `SimpleLL
     String result = agent.run("Create a plan to organize a team meeting");
     System.out.println(result);
     ```
-     <!--- KNIT exampleLLMBasedPlanner01.java -->
+     <!--- KNIT exampleLLMBasedPlannerJava01.java -->
 
 ## Next steps
 
