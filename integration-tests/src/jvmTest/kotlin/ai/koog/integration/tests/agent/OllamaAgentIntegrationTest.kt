@@ -31,6 +31,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
@@ -41,14 +42,13 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.BeforeTest
-import kotlin.test.assertContains
-import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
@@ -174,7 +174,8 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         toolRegistry: ToolRegistry,
         llmModel: LLModel = model,
         prompt: Prompt = prompt("test-ollama", LLMParams(temperature = 0.0)) {},
-        responseProcessor: ResponseProcessor? = null
+        responseProcessor: ResponseProcessor? = null,
+        maxIterations: Int = 20
     ): AIAgent<String, String> {
         val promptsAndResponses = mutableListOf<String>()
 
@@ -184,7 +185,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
             agentConfig = AIAgentConfig(
                 prompt,
                 llmModel,
-                20,
+                maxIterations,
                 responseProcessor = responseProcessor,
             ),
             toolRegistry = toolRegistry
@@ -220,9 +221,11 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("modelsWithHallucinations")
     fun ollama_testFixToolCallLLMBased(llmModel: LLModel) = runTest(timeout = 600.seconds) {
         withRetry(5) {
+            val fileName = "compute_scores.py"
+            val pathInProject = "scores.txt"
             val fileTools = FileOperationsTools()
             fileTools.createNewFileWithText(
-                pathInProject = "scores.txt",
+                pathInProject = pathInProject,
                 text = """
                 name,age,score
                 Alice,25,85
@@ -242,6 +245,8 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
                     markdown {
                         +"You are a helpful assistant that can work with files using tools."
                         +"Perform all actions using tools."
+                        +"Create exactly one new file named \"$fileName\" in the project directory."
+                        +"Do not create any other files and do not use absolute paths."
                         +"When you completed the task, answer with a single word: \"Done!\"."
                         +"Do not include any summary in the final message."
                     }
@@ -251,32 +256,25 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
             val agent = createAgent(executor, singleRunStrategy(), toolRegistry, llmModel, prompt, responseProcessor)
 
             val request = """
-            I have created a file named "scores.txt" in the project directory.
+            I have created a file named "$pathInProject" in the project directory.
             The file contains the data about the students.
             
             Your task:
             Read the data to understand the format of the file.
-            Create a "compute_scores.py" file to compute the average score.
+            Create a "$fileName" file to compute the average score.
             Do not summarize results in the end.
 
             Note:
-            Make sure that all paths are relative to the project directory, e.g. "scores.csv", "compute_scores.py".
+            Make sure that all paths are relative to the project directory, e.g. "$pathInProject", "$fileName".
             """.trimIndent()
 
             withRetry {
                 agent.run(request)
 
-                assertContains(
-                    toolCalls,
-                    fileTools.readFileContentTool.name,
-                    "${fileTools.readFileContentTool.name} tool should be called"
-                )
-                assertContains(
-                    toolCalls,
-                    fileTools.createNewFileWithTextTool.name,
-                    "${fileTools.createNewFileWithTextTool.name} tool should be called"
-                )
-                assertEquals(2, fileTools.fileContentsByPath.size, "A script with average score should be created")
+                toolCalls.shouldContain(fileTools.readFileContentTool.name)
+                toolCalls.shouldContain(fileTools.createNewFileWithTextTool.name)
+                fileTools.fileContentsByPath.keys.shouldContain(fileName)
+                fileTools.fileContentsByPath.getValue(fileName).shouldNotBeBlank()
             }
         }
     }
@@ -284,6 +282,8 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
     @Retry
     @Test
     fun ollama_testSubgraphWithTask() = runTest(timeout = 600.seconds) {
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
+
         val fileTools = FileOperationsTools()
         val toolRegistry = ToolRegistry {
             tool(fileTools.createNewFileWithTextTool)
@@ -291,21 +291,42 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
         val strategy = strategy<String, String>("ollama-subgraph-with-task") {
             val task by subgraphWithTask<String, Summary>(
-                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
-            ) { it }
+                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+                llmParams = LLMParams(
+                    temperature = 0.0,
+                    toolChoice = LLMParams.ToolChoice.Required
+                )
+            ) {
+                """
+                Create exactly one file named "hello_world.py" in the project directory.
+                Use only the provided tools.
+                Do not use absolute paths and do not create any other files.
+                After the file is created, immediately call finalize_task_result with a short summary.
+                """.trimIndent()
+            }
 
             nodeStart then task
             edge(task forwardTo nodeFinish transformed { it.summary })
         }
-        val prompt = prompt("ollama-subgraph-with-task", LLMParams(temperature = 0.1)) {
+        val prompt = prompt("ollama-subgraph-with-task", LLMParams(temperature = 0.0)) {
             system(systemPrompt)
         }
         val responseProcessor = LLMBasedToolCallFixProcessor(toolRegistry)
 
-        val agent = createAgent(executor, strategy, toolRegistry, model, prompt, responseProcessor)
+        val agent = createAgent(
+            executor = executor,
+            strategy = strategy,
+            toolRegistry = toolRegistry,
+            llmModel = model,
+            prompt = prompt,
+            responseProcessor = responseProcessor,
+            maxIterations = 50
+        )
 
         agent.run("Create a file \"hello_world.py\"")
 
         toolCalls.shouldContain(fileTools.createNewFileWithTextTool.name)
+        fileTools.fileContentsByPath.keys.shouldContain("hello_world.py")
+        fileTools.fileContentsByPath.getValue("hello_world.py").shouldNotBeBlank()
     }
 }
