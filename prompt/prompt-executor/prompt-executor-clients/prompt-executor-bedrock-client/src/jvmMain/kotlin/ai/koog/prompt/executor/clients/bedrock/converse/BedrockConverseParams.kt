@@ -89,6 +89,31 @@ public class BedrockConverseParams(
         }
     }
 
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): BedrockConverseParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        topP = topP,
+        stopSequences = stopSequences,
+        performanceConfig = performanceConfig,
+        promptVariables = promptVariables,
+        requestMetadata = requestMetadata,
+    )
+
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */
@@ -103,6 +128,9 @@ public class BedrockConverseParams(
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         topP: Double? = this.topP,
         stopSequences: List<String>? = this.stopSequences,
+        performanceConfig: PerformanceConfiguration? = this.performanceConfig,
+        promptVariables: Map<String, PromptVariableValues>? = this.promptVariables,
+        requestMetadata: Map<String, String>? = this.requestMetadata,
     ): BedrockConverseParams = BedrockConverseParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -114,6 +142,9 @@ public class BedrockConverseParams(
         additionalProperties = additionalProperties,
         topP = topP,
         stopSequences = stopSequences,
+        performanceConfig = performanceConfig,
+        promptVariables = promptVariables,
+        requestMetadata = requestMetadata,
     )
 
     override fun equals(other: Any?): Boolean = when {

@@ -89,6 +89,32 @@ public class DeepSeekParams(
         }
     }
 
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): DeepSeekParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        frequencyPenalty = frequencyPenalty,
+        presencePenalty = presencePenalty,
+        logprobs = logprobs,
+        stop = stop,
+        topLogprobs = topLogprobs,
+        topP = topP,
+    )
+
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */
