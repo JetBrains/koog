@@ -2,14 +2,12 @@ package ai.koog.prompt.executor.clients.openai.base
 
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.openai.base.models.CompletionTokensDetails
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
-import ai.koog.prompt.executor.clients.openai.base.models.PromptTokensDetails
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -20,8 +18,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 
 /**
  * Tests for token metadata extraction in [AbstractOpenAILLMClient.createMetaInfo].
@@ -29,9 +25,11 @@ import kotlinx.serialization.json.buildJsonObject
  * Verifies that cached token counts and reasoning token counts are correctly
  * propagated from [OpenAIUsage] into [ResponseMetaInfo.metadata].
  */
-internal class OpenAITokenMetadataTestHelper : AbstractOpenAILLMClient<
-    OpenAITokenMetadataTestHelper.StubResponse,
-    OpenAITokenMetadataTestHelper.StubStreamResponse>(
+internal class OpenAITokenMetadataTestHelper :
+    AbstractOpenAILLMClient<
+        OpenAITokenMetadataTestHelper.StubResponse,
+        OpenAITokenMetadataTestHelper.StubStreamResponse
+    >(
     apiKey = "test-key",
     settings = object : OpenAIBaseSettings(
         baseUrl = "https://test.example.com",
