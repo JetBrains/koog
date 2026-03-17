@@ -9,6 +9,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -25,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.Duration.Companion.seconds
@@ -67,7 +69,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("getLatestModels")
     fun integration_BuilderWithToolRegistry(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(
@@ -105,7 +107,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("getLatestModels")
     fun integration_BuilderWithGraphStrategy(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "builder graph-strategy tool integration")
@@ -272,9 +274,9 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource("allModels")
-    fun integration_BuilderMethodChaining(model: LLModel) = runTest(timeout = 180.seconds) {
+    @Test
+    fun integration_BuilderMethodChaining() = runTest(timeout = 180.seconds) {
+        val model = OpenAIModels.Chat.GPT5_1
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {

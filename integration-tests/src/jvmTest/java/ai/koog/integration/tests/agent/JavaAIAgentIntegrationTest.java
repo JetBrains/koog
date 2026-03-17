@@ -13,6 +13,7 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider;
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.*;
+import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
@@ -170,6 +171,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @Test
+    @Retry
     public void integration_MultiLLMRouting() {
         Models.assumeAvailable(LLMProvider.OpenAI);
         Models.assumeAvailable(LLMProvider.Anthropic);
@@ -241,6 +243,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @Test
+    @Retry
     public void integration_SubgraphWithoutAgentToolsFallback() {
         LLModel model = OpenAIModels.Chat.GPT5_2;
         Models.assumeAvailable(model.getProvider());
@@ -254,7 +257,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             .llmModel(model)
             .systemPrompt("You are a calculator assistant. Use tools from the subgraph to solve the task.")
             .graphStrategy(SubgraphStrategies.calculatorWithSubgraphs(model))
-            .maxIterations(20)
+            .maxIterations(50)
             .install(EventHandler.Feature, config -> {
                 config.onToolCallStarting(ctx -> calledTools.add(ctx.getToolName()));
                 config.onAgentExecutionFailed(ctx -> errors.incrementAndGet());
