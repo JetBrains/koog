@@ -27,6 +27,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
 import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleUsageMetadata
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
@@ -775,21 +776,42 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             throw LLMClientException(clientName, "Empty candidates in Google API response")
         }
 
-        // Extract token count from the response
-        val inputTokensCount = response.usageMetadata?.promptTokenCount
-        val outputTokensCount = response.usageMetadata?.candidatesTokenCount
-        val totalTokensCount = response.usageMetadata?.totalTokenCount
-
-        val metaInfo = ResponseMetaInfo.create(
-            clock,
-            totalTokensCount = totalTokensCount,
-            inputTokensCount = inputTokensCount,
-            outputTokensCount = outputTokensCount
-        )
+        val metaInfo = createMetaInfo(response.usageMetadata)
 
         return response.candidates.map { candidate ->
             processGoogleCandidate(candidate, metaInfo)
         }
+    }
+
+    /**
+     * Builds a [ResponseMetaInfo] from a [GoogleUsageMetadata] object returned by the Gemini API.
+     *
+     * When available, the following provider-specific values are included in [ResponseMetaInfo.metadata]:
+     *
+     * - `cachedTokens` — tokens served from a cached content entry ([GoogleUsageMetadata.cachedContentTokenCount]).
+     * - `reasoningTokens` — tokens used for internal chain-of-thought reasoning ([GoogleUsageMetadata.thoughtsTokenCount]).
+     *
+     * [ResponseMetaInfo.metadata] is `null` when neither value is present.
+     *
+     * @param usage the usage metadata from the API response, or `null` if omitted.
+     * @return a fully populated [ResponseMetaInfo] instance.
+     */
+    internal fun createMetaInfo(usage: GoogleUsageMetadata?): ResponseMetaInfo {
+        val tokenDetails = usage?.let {
+            buildJsonObject {
+                it.cachedContentTokenCount?.let { v -> put("cachedTokens", JsonPrimitive(v)) }
+
+                it.thoughtsTokenCount?.let { v -> put("reasoningTokens", JsonPrimitive(v)) }
+            }.takeIf { obj -> obj.isNotEmpty() }
+        }
+
+        return ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = usage?.totalTokenCount,
+            inputTokensCount = usage?.promptTokenCount,
+            outputTokensCount = usage?.candidatesTokenCount,
+            metadata = tokenDetails
+        )
     }
 
     /**

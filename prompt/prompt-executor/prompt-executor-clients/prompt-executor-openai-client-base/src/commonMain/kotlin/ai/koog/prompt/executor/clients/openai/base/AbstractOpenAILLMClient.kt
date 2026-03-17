@@ -39,6 +39,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.jvm.JvmOverloads
 import kotlin.time.Clock
@@ -501,15 +503,41 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     /**
-     * Creates ResponseMetaInfo from usage data.
-     * Should be used by concrete implementations when processing responses.
+     * Builds a [ResponseMetaInfo] from an [OpenAIUsage] object returned by the OpenAI API.
+     *
+     * In addition to standard token counts, this method populates the [ResponseMetaInfo.metadata]
+     * map with provider-specific token details when available:
+     *
+     * - `cachedTokens` — number of prompt tokens served from the prompt cache
+     *   ([PromptTokensDetails.cachedTokens]). Cached tokens are billed at a reduced rate.
+     * - `reasoningTokens` — number of tokens consumed by internal chain-of-thought reasoning
+     *   ([CompletionTokensDetails.reasoningTokens]). Applicable to o-series models.
+     *
+     * [ResponseMetaInfo.metadata] is `null` when neither value is present in the response.
+     *
+     * @param usage the usage object from the API response, or `null` if the response omits it.
+     * @return a fully populated [ResponseMetaInfo] instance.
      */
-    protected fun createMetaInfo(usage: OpenAIUsage?): ResponseMetaInfo = ResponseMetaInfo.create(
-        clock,
-        totalTokensCount = usage?.totalTokens,
-        inputTokensCount = usage?.promptTokens,
-        outputTokensCount = usage?.completionTokens
-    )
+    protected fun createMetaInfo(usage: OpenAIUsage?): ResponseMetaInfo {
+        val tokenDetails = usage?.let {
+            buildJsonObject {
+                it.promptTokensDetails?.cachedTokens?.let { v ->
+                    put("cachedTokens", JsonPrimitive(v))
+                }
+                it.completionTokensDetails?.reasoningTokens?.let { v ->
+                    put("reasoningTokens", JsonPrimitive(v))
+                }
+            }.takeIf { obj -> obj.isNotEmpty() }
+        }
+
+        return ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = usage?.totalTokens,
+            inputTokensCount = usage?.promptTokens,
+            outputTokensCount = usage?.completionTokens,
+            metadata = tokenDetails
+        )
+    }
 
     protected open fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
         return schema?.let {
