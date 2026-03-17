@@ -32,7 +32,6 @@
 - **OpenRouter embedding support**: Implemented `LLMEmbeddingProvider` for OpenRouter, enabling access to 21+ embedding models ([KG-659](https://youtrack.jetbrains.com/issue/KG-659), #1398)
 - **LLM Client Router**: Added support for routing requests across multiple LLM clients with pluggable load balancing strategies, including a built-in round-robin router (#1503)
 - **Swift Package Manager support**: Added XCFramework build and distribution infrastructure for iOS/macOS development via SPM ([KG-682](https://youtrack.jetbrains.com/issue/KG-682), #1485)
-- **JavaScript interop**: Added example for calling a Koog agent from JavaScript code, including browser (TypeScript webapp) and Node.js usage with `AbortSignal` support (#1500)
 
 ## New LLM Models
 
@@ -74,7 +73,7 @@
 
 - Added Java example for JavaOne 2026 (#1641)
 - Added full Spring Boot Java API example (#1350)
-
+- Added example for calling a Koog agent from JavaScript code, including browser (TypeScript webapp) and Node.js usage with `AbortSignal` support (#1500)
 
 # 0.6.4
 > Published 4 March 2026
