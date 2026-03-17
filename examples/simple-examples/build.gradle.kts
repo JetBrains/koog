@@ -68,7 +68,11 @@ val envs = credentialsResolver.resolve(
     layout.projectDirectory.file(provider { "env.properties" })
 )
 
-fun registerRunExampleTask(name: String, mainClassName: String) = tasks.register<JavaExec>(name) {
+fun registerRunExampleTask(
+    name: String,
+    mainClassName: String,
+    appArgs: List<String> = emptyList()
+) = tasks.register<JavaExec>(name) {
     doFirst {
         standardInput = System.`in`
         standardOutput = System.out
@@ -77,11 +81,17 @@ fun registerRunExampleTask(name: String, mainClassName: String) = tasks.register
 
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
+    args = appArgs
 }
 
 registerRunExampleTask("runExampleCalculator", "ai.koog.agents.example.calculator.CalculatorKt")
 registerRunExampleTask("runExampleCalculatorV2", "ai.koog.agents.example.calculator.v2.CalculatorKt")
-registerRunExampleTask("runExampleCalculatorLocal", "ai.koog.agents.example.calculator.local.CalculatorKt")
+registerRunExampleTask(
+    "runExampleCalculatorLocal",
+    "ai.koog.agents.example.calculator.CalculatorKt",
+    listOf("local")
+)
+registerRunExampleTask("runExampleFunctionalAgentChat", "ai.koog.agents.example.chat.FunctionalAgentChatKt")
 registerRunExampleTask("runExampleErrorFixing", "ai.koog.agents.example.errors.ErrorFixingAgentKt")
 registerRunExampleTask("runExampleErrorFixingLocal", "ai.koog.agents.example.errors.local.ErrorFixingLocalAgentKt")
 registerRunExampleTask("runExampleGuesser", "ai.koog.agents.example.guesser.GuesserKt")
