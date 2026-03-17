@@ -1,3 +1,79 @@
+# 0.7.1
+> Published 17 March 2026
+
+## Major Features
+
+- **Java API**: Introduced comprehensive Java interoperability across the framework:
+    - Java API for creating and running agents from pure Java projects (#1185)
+    - Builder-based Java API for graph strategies (#1581, #1617, #1366)
+    - Java-friendly API for `AIAgentStorage` with JVM-specific methods (#1600)
+    - Blocking API builders for `PromptExecutor` and `LLMClient` for Java (#1555, #1604)
+    - Jackson as the default serializer for Java API (#1630)
+    - Weave and Langfuse integrations now available from Java (#1616)
+    - Centralized Java/Kotlin time conversion utilities (`TimeUtils`, `toKotlinDuration`, etc.) (#1620)
+- **Spring AI Integration**: Added two new Spring Boot starters (`koog-spring-ai-starter-model-chat` and `koog-spring-ai-starter-model-embedding`) to integrate Spring AI `ChatModel` and `EmbeddingModel` implementations as Koog LLM backends, enabling support for the wide range of providers available in Spring AI ([KG-109](https://youtrack.jetbrains.com/issue/KG-109), #1587)
+- **Chat Memory**: Introduced persistent chat memory with multiple storage backend options:
+    - Core `ChatMemory` feature and `ChatHistoryProvider` abstraction (#1511)
+    - Exposed-ORM based providers for PostgreSQL, MySQL, and H2 (#1584)
+    - Pure JDBC `ChatHistoryProvider` for PostgreSQL, MySQL, and H2 with no ORM dependency (#1597)
+    - JDBC-based `PersistenceStorageProvider` (#1612)
+- **Long-term Memory**: Added `LongTermMemory` feature that augments prompts with relevant memory records from storage and extracts/ingests new memories from agent conversations (#1490)
+- **Library-Agnostic Serialization API**: Introduced a `JSONSerializer` abstraction to support pluggable serialization libraries. Two implementations provided: `KotlinxSerializer` (default) and the new `JacksonSerializer` in a separate `serialization-jackson` module. Tools API migrated to this new abstraction (#1588)
+
+## Improvements
+
+- **OpenTelemetry**:
+    - Added OpenTelemetry support for functional agent pipelines ([KG-677](https://youtrack.jetbrains.com/issue/KG-677), #1447)
+    - Added OpenTelemetry spans for MCP tool calls (#1421)
+- **Planner improvements**:
+    - Added `AIAgentPlannerContext` and `AIAgentFunctionalContextBase` for better context hierarchy and planner-specific APIs (#1480)
+    - Added planner-specific pipeline interceptors: `onPlanCreationStarting/Completed`, `onStepExecutionStarting/Completed`, `onPlanCompletionEvaluationStarting/Completed` ([KG-672](https://youtrack.jetbrains.com/issue/KG-672), #1550)
+    - GOAP strategies now have typed input/output and a dedicated `GoapAgentState` (#1498)
+- **OpenRouter embedding support**: Implemented `LLMEmbeddingProvider` for OpenRouter, enabling access to 21+ embedding models ([KG-659](https://youtrack.jetbrains.com/issue/KG-659), #1398)
+- **Swift Package Manager support**: Added XCFramework build and distribution infrastructure for iOS/macOS development via SPM ([KG-682](https://youtrack.jetbrains.com/issue/KG-682), #1485)
+
+## New LLM Models
+
+- **Anthropic Claude Opus 4.6**: Added support via Anthropic and Bedrock executors (#1513)
+- **Google Gemini 3 Flash Preview**: New model with extended capabilities and high-speed processing (#1621)
+- **OpenAI GPT-5.x series**: Added GPT-5.1-Codex-Max, GPT-5.2-Codex, GPT-5.3-Codex, GPT-5.4, and GPT-5.4-Pro (#1595)
+- **Moonshot Kimi K2 Thinking**: Added support via the Bedrock Converse API (#1436)
+- **Ollama thinking support**: Added `think=true` request parameter and streaming reasoning delta support for Ollama models (#1532)
+
+## Bug Fixes
+
+- **Persistence checkpoints**: Fixed last successful node being re-executed when restoring from a checkpoint; changed `lastInput` to `lastOutput` in checkpoint structure (#1308)
+- **Ollama streaming**: Fixed Ollama client to use `preparePost(...).execute` for proper streaming instead of buffering the full response (#1497)
+- **OpenRouter streaming**: Fixed missing `reasoning` and `reasoningDetails` fields in `OpenRouterStreamDelta` causing deserialization errors (#1504)
+- **Dashscope streaming**: Fixed tool call argument merging for streaming responses in `DashscopeLLMClient` ([KG-658](https://youtrack.jetbrains.com/issue/KG-658), #1590)
+- **`agents-ext` dependency leak**: Moved `agents-ext` from `commonMain api` to `jvmTest implementation` in `agents-test` to prevent transitive compile-time dependency leakage (#1506)
+- **Streaming exception handling**: `executeStreaming` now properly propagates exceptions from LLM clients and requires `StreamFrame.End` to signal stream completion ([KG-550](https://youtrack.jetbrains.com/issue/KG-550), #1580)
+- **Debugger feature**: Extended to support functional agents in addition to graph-based agents by dispatching appropriate strategy starting events ([KG-741](https://youtrack.jetbrains.com/issue/KG-741), #1637)
+
+## Breaking Changes
+
+- **Serialization API**: All `encode`/`decode` methods in `Tool` now accept a second `JSONSerializer` parameter. Automatic `ToolDescriptor` generation for primitive argument types (`Tool<String, String>`) is no longer supported without a custom descriptor. `AIAgentFeature.createInitialConfig` now takes an `agentConfig: AIAgentConfig` parameter. JSON types in pipeline events changed from `kotlinx.serialization` to `ai.koog.serialization` (#1588)
+- **`TypeToken` replaces `KType`**: Nodes and agent features now work with `ai.koog.serialization.TypeToken` instead of `kotlin.reflect.KType`. All `typeOf<Foo>()` usages should be replaced with `typeToken<Foo>()` (#1581)
+- **Global JSON schema registries removed**: `RegisteredStandardJsonSchemaGenerators` and `RegisteredBasicJsonSchemaGenerators` removed. `getStructuredRequest` and `StructureFixingParser` moved to `ai.koog.prompt.executor.model` package ([KG-698](https://youtrack.jetbrains.com/issue/KG-698), #1517)
+- **`LLMDescription.description` renamed to `value`**: The `description` field of `LLMDescription` has been renamed to `value` for Java compatibility (#1607)
+- Deprecated `kotlinx.datetime` imports replaced with `kotlin.time` equivalents (`Clock`, `Instant`) (#1533)
+- **Retired Anthropic/Bedrock models**: Removed `Sonnet_3_7`, `Haiku_3_5`, `Sonnet_3_5`, and `Opus_3` from Anthropic models; removed several AI21, Bedrock, and legacy Anthropic models. `Haiku_3` marked as deprecated (#1526)
+
+## Documentation
+
+- Added documentation for Java API and Java examples (#1610)
+- Added documentation for Spring AI integration ([KG-109](https://youtrack.jetbrains.com/issue/KG-109), #1627)
+- Added documentation for custom feature creation (#1295)
+- Reworked Getting Started, agent types, and Chat Memory tutorials (#1349, #1552)
+- Improved Prompts and Planner agent documentation (#1302, #1301)
+- Added nightly builds documentation (#1433)
+
+## Examples
+
+- Added Java example for JavaOne 2026 (#1641)
+- Added full Spring Boot Java API example (#1350)
+- Added example for calling a Koog agent from JavaScript code, including browser (TypeScript webapp) and Node.js usage with `AbortSignal` support (#1500)
+
 # 0.6.4
 > Published 4 March 2026
 
