@@ -127,7 +127,7 @@ internal fun AIAgentConfig.copy(
 ): AIAgentConfig = AIAgentConfig(
     prompt = prompt,
     model = model,
-    maxAgentIterations = this.maxAgentIterations,
+    maxAgentIterations = maxAgentIterations,
     missingToolsConversionStrategy = missingToolsConversionStrategy,
     responseProcessor = responseProcessor,
     serializer = serializer
