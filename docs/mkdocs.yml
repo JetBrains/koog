@@ -135,6 +135,7 @@ plugins:
   - search
   - redirects:
       redirect_maps:
+        'getting-started.md': 'quickstart/index.md'
         'simple-api-getting-started.md': 'quickstart/index.md'
         'advanced-tool-implementation.md': 'class-based-tools.md'
         'key-concepts.md': 'glossary.md'
