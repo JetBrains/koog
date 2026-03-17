@@ -1,4 +1,4 @@
-package ai.koog.agents.example.strategies;
+package ai.koog.agents.example.strategies.functional;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.tools.ToolRegistry;

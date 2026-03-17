@@ -93,7 +93,7 @@ fun registerRunExampleTask(name: String, mainClassName: String, vararg args: Str
 
 registerRunExampleTask("runExampleStrategyGraph", "ai.koog.agents.example.strategies.GraphStrategyExample")
 registerRunExampleTask("runExampleStrategyGoap", "ai.koog.agents.example.strategies.GoapStrategyExample")
-registerRunExampleTask("runExampleStrategyFunctional", "ai.koog.agents.example.strategies.FunctionalStrategyExample")
+registerRunExampleTask("runExampleStrategyFunctional", "ai.koog.agents.example.strategies.functional.FunctionalStrategyExample")
 registerRunExampleTask("runExampleCalculator", "ai.koog.agents.example.calculator.Calculator")
 registerRunExampleTask("runExampleCalculatorLocal", "ai.koog.agents.example.calculator.Calculator", "local")
 registerRunExampleTask("runExampleFunctionalAgentChat", "ai.koog.agents.example.chat.FunctionalAgentChat")
