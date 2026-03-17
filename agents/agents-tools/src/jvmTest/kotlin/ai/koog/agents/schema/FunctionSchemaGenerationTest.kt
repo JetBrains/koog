@@ -7,6 +7,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.schema.JavaTestFunction
 import ai.koog.agents.core.tools.schema.getToolDescriptor
+import kotlinx.schema.Description
 import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.kotlinFunction
 import kotlin.test.Test
@@ -25,7 +26,7 @@ class FunctionSchemaGenerationTest {
         val nullableProperty: String? = null,
         val listProperty: List<String> = emptyList(),
         val mapProperty: Map<String, Int> = emptyMap(),
-        @property:LLMDescription("A custom nested property")
+        @property:Description("A custom nested property")
         val nestedProperty: NestedProperty = NestedProperty("foo", 1),
         val nestedListProperty: List<NestedProperty> = emptyList(),
         val nestedMapProperty: Map<String, NestedProperty> = emptyMap(),
@@ -35,7 +36,7 @@ class FunctionSchemaGenerationTest {
         val objectProperty: TestObject = TestObject,
     )
 
-    @LLMDescription("Nested property class")
+    @Description("Nested property class")
     data class NestedProperty(
         @property:LLMDescription("Nested foo property")
         val foo: String,
@@ -68,7 +69,7 @@ class FunctionSchemaGenerationTest {
 
     @LLMDescription("Sample function")
     fun sampleFunction(
-        @LLMDescription("Sample parameter")
+        @Description("Sample parameter")
         a: String,
         @LLMDescription("Another sample parameter")
         b: TestClass? = null,

@@ -2,6 +2,7 @@ package ai.koog.agents.core.tools.reflect
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import kotlinx.schema.Description
 import kotlin.reflect.jvm.jvmName
 
 /**
@@ -9,7 +10,7 @@ import kotlin.reflect.jvm.jvmName
  */
 public interface ToolSet {
     /**
-     * Retrieves the description of the current class or object from the `LLMDescription` annotation.
+     * Retrieves the description of the current class or object from the [LLMDescription] or [Description] annotation.
      * If the annotation is not present, defaults to the JVM name of the class.
      *
      * This property is typically used to provide human-readable descriptions of toolsets
@@ -17,6 +18,7 @@ public interface ToolSet {
      */
     public val name: String
         get() = this.javaClass.getAnnotationsByType(LLMDescription::class.java).firstOrNull()?.value
+            ?: this.javaClass.getAnnotationsByType(Description::class.java).firstOrNull()?.value
             ?: this::class.jvmName
 
     /**

@@ -8,7 +8,7 @@ dokka {
             includes.from("Module.md")
 
             pluginsConfiguration.html {
-                footerMessage = "Copyright © 2000-2025 JetBrains s.r.o."
+                footerMessage = "Copyright © 2000-${java.time.Year.now().value} JetBrains s.r.o."
             }
 
             sourceLink {
@@ -25,7 +25,7 @@ dokka {
                 remoteLineSuffix = "#L"
             }
 
-            externalDocumentationLinks.register("ktor-client") {
+            externalDocumentationLinks.register("ktor") {
                 url("https://api.ktor.io/ktor-client/")
                 packageListUrl("https://api.ktor.io/package-list")
             }
@@ -43,6 +43,10 @@ dokka {
             externalDocumentationLinks.register("mcp-kotlin-sdk") {
                 url("https://modelcontextprotocol.github.io/kotlin-sdk/")
                 packageListUrl("https://modelcontextprotocol.github.io/kotlin-sdk/package-list")
+            }
+
+            externalDocumentationLinks.register("kotlinx-schema") {
+                url("https://kotlin.github.io/kotlinx-schema/")
             }
         }
     }

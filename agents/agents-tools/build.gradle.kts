@@ -17,6 +17,7 @@ kotlin {
                 implementation(project(":prompt:prompt-markdown"))
                 implementation(project(":prompt:prompt-xml"))
 
+                api(libs.kotlinx.schema.annotations)
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.schema.generator.json)
             }
@@ -30,9 +31,8 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(project(":test-utils"))
                 implementation(libs.kotlinx.datetime)
-                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
