@@ -9,6 +9,7 @@ import ai.koog.integration.tests.agent.AIAgentTestBase.ReportingLLMClient.Event
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.CalculatorTool
@@ -18,6 +19,7 @@ import ai.koog.integration.tests.utils.tools.files.OperationResult
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -26,6 +28,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -53,6 +56,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
 
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+    private val googleApiKey: String get() = readTestGoogleAIKeyFromEnv()
 
     @Test
     @Retry(5)
@@ -70,9 +74,12 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
 
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
+        val googleClient = GoogleLLMClient(googleApiKey).reportingTo(eventsChannel)
+
         val reportingExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient,
-            LLMProvider.Anthropic to anthropicClient
+            LLMProvider.Anthropic to anthropicClient,
+            LLMProvider.Google to googleClient,
         )
 
         val agent = createTestMultiLLMAgent(
@@ -141,6 +148,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         runTest(timeout = 10.minutes) {
             Models.assumeAvailable(LLMProvider.OpenAI)
             Models.assumeAvailable(LLMProvider.Anthropic)
+            Models.assumeAvailable(LLMProvider.Google)
 
             val fs = MockFileSystem()
             val calledTools = mutableListOf<String>()
@@ -169,13 +177,14 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             }
             val expectedToolName = CreateFile(fs).name
 
-            calledTools.shouldForAny { it == expectedToolName }
+            calledTools.shouldForAny { it shouldBeEqual expectedToolName }
         }
 
     @Test
     fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
+        Models.assumeAvailable(LLMProvider.Google)
 
         val fs = MockFileSystem()
         var errorMessage: String? = null

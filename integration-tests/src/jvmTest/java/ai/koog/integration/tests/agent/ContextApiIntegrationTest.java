@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.config.AIAgentConfig;
 import ai.koog.agents.core.agent.ToolCalls;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.tools.Tool;
@@ -11,8 +12,10 @@ import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.StructuredResults;
+import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -22,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextApiIntegrationTest extends KoogJavaTestBase {
@@ -153,13 +157,22 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_SubtaskSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"));
 
         AIAgent<String, String> agent = AIAgent.builder()
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(model)
+                    .serializer(new KotlinxSerializer())
+                    .build()
+            )
             .promptExecutor(createExecutor(model))
-            .llmModel(model)
             .systemPrompt("You are a coordinator that delegates calculations.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
@@ -186,13 +199,22 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_SubtaskParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"), calculator.getTool("multiply"));
 
         AIAgent<String, String> agent = AIAgent.builder()
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(model)
+                    .serializer(new KotlinxSerializer())
+                    .build()
+            )
             .promptExecutor(createExecutor(model))
-            .llmModel(model)
             .systemPrompt("You are a coordinator that delegates calculations.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
@@ -218,13 +240,22 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_SubtaskSingleRunSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         NumberTools calculator = new NumberTools();
         List<Tool<?, ?>> tools = List.of(calculator.getTool("add"));
 
         AIAgent<String, String> agent = AIAgent.builder()
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(model)
+                    .serializer(new KotlinxSerializer())
+                    .build()
+            )
             .promptExecutor(createExecutor(model))
-            .llmModel(model)
             .systemPrompt("You are a coordinator.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
@@ -251,6 +282,10 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_ExecuteMultipleToolsParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         NumberTools calculator = new NumberTools();
 
@@ -291,6 +326,10 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_ExecuteSingleTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         NumberTools calculator = new NumberTools();
 
@@ -457,6 +496,10 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_ShouldTriggerToolEventsInOrder(LLModel model) {
         Models.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         List<String> eventOrder = new ArrayList<>();
         NumberTools calculator = new NumberTools();

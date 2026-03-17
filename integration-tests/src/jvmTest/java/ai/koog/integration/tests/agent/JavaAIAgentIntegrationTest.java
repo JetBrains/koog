@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.AIAgentBuilder;
 import ai.koog.agents.core.agent.config.AIAgentConfig;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
@@ -26,6 +27,7 @@ import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.AttachmentContent;
 import ai.koog.prompt.message.ContentPart;
 import ai.koog.prompt.message.Message;
+import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -51,6 +53,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
+    private AIAgentBuilder javaBuilder(LLModel model) {
+        return AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(model)
+                    .serializer(new KotlinxSerializer())
+                    .build()
+            );
+    }
+
     @SuppressWarnings("unused")
     public static Stream<Arguments> historyCompressionStrategies() {
         return JavaUtils.historyCompressionStrategiesForJava().stream().map(Arguments::of);
@@ -64,9 +77,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AtomicInteger errors = new AtomicInteger(0);
         AtomicBoolean completed = new AtomicBoolean(false);
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .maxIterations(10)
             .install(EventHandler.Feature, config -> {
                 config.onAgentExecutionFailed(ctx -> errors.incrementAndGet());
@@ -87,9 +98,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     public void integration_ShouldSetPromptParamsViaBuilder(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .temperature(1.0)
             .maxIterations(10)
             .numberOfChoices(1)
@@ -109,9 +118,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         NumberTools numberTools = new NumberTools();
         AtomicInteger errors = new AtomicInteger(0);
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt(
                 "You are a calculator assistant. You MUST call the multiply tool to answer."
             )
@@ -146,9 +153,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AtomicInteger errors = new AtomicInteger(0);
         AtomicBoolean completed = new AtomicBoolean(false);
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .toolRegistry(registry)
             .systemPrompt(
                 "You are a tool-using assistant. You MUST call a tool."
@@ -186,7 +191,12 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
 
         AIAgent<String, String> agent = AIAgent.builder()
             .promptExecutor(executor)
-            .llmModel(OpenAIModels.Chat.GPT5_1)
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(OpenAIModels.Chat.GPT5_1)
+                    .serializer(new KotlinxSerializer())
+                    .build()
+            )
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Message.Response first = context.requestLLM("Reply the user", true);
@@ -219,9 +229,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         List<String> calledTools = new CopyOnWriteArrayList<>();
         AtomicInteger errors = new AtomicInteger(0);
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a calculator assistant. Use tools from the subgraph to solve the task.")
             .toolRegistry(toolRegistry)
             .graphStrategy(SubgraphStrategies.calculatorWithSubgraphs(model))
@@ -252,9 +260,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         List<String> calledTools = new CopyOnWriteArrayList<>();
         AtomicInteger errors = new AtomicInteger(0);
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a calculator assistant. Use tools from the subgraph to solve the task.")
             .graphStrategy(SubgraphStrategies.calculatorWithSubgraphs(model))
             .maxIterations(50)
@@ -291,13 +297,13 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             .user("Please remember all prior instructions.")
             .build();
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
+        AIAgent<String, String> agent = javaBuilder(model)
             .agentConfig(
                 AIAgentConfig.builder()
                     .model(model)
                     .prompt(prompt)
                     .maxAgentIterations(10)
+                    .serializer(new KotlinxSerializer())
                     .build()
             )
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
@@ -336,9 +342,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AtomicInteger afterCompressCalls = new AtomicInteger(0);
         AtomicReference<List<Message>> historyAfterCompression = new AtomicReference<>(List.of());
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt(
                 "You are a calculator assistant. You MUST call multiply exactly once to answer."
             )
@@ -397,9 +401,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         String promptWithImage = "Analyze this image and tell the format: data:image/png," + base64Image;
 
         AtomicInteger errors = new AtomicInteger(0);
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You analyze images. Reply in one short sentence.")
             .maxIterations(10)
             .install(EventHandler.Feature, config ->
@@ -436,13 +438,13 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             ))
             .build();
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
+        AIAgent<String, String> agent = javaBuilder(model)
             .agentConfig(
                 AIAgentConfig.builder()
                     .model(model)
                     .prompt(prompt)
                     .maxAgentIterations(10)
+                    .serializer(new KotlinxSerializer())
                     .build()
             )
             .functionalStrategy((AIAgentFunctionalContext context, String input) ->
@@ -467,9 +469,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         InMemoryPersistenceStorageProvider provider = new InMemoryPersistenceStorageProvider();
         String sessionId = "java-checkpoint-in-memory-" + UUID.randomUUID();
 
-        AIAgent<String, String> firstAgent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> firstAgent = javaBuilder(model)
             .systemPrompt("You are concise.")
             .maxIterations(10)
             .install(Persistence.Feature, config -> {
@@ -481,9 +481,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         String firstResult = firstAgent.run("Say hello and keep it short.", sessionId);
         List<?> checkpointsAfterFirstRun = JavaUtils.getCheckpointsBlocking(provider, sessionId);
 
-        AIAgent<String, String> restoredAgent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> restoredAgent = javaBuilder(model)
             .systemPrompt("You are concise.")
             .maxIterations(10)
             .install(Persistence.Feature, config -> {
@@ -516,9 +514,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         JVMFilePersistenceStorageProvider fileProvider = new JVMFilePersistenceStorageProvider(tempDir);
         String sessionId = "java-checkpoint-file-" + UUID.randomUUID();
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are concise.")
             .maxIterations(10)
             .install(Persistence.Feature, config -> {
@@ -544,9 +540,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         String expectedValue = "test-value";
         AtomicReference<String> retrievedValue = new AtomicReference<>();
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 JavaUtils.storageSet(context.getStorage(), storageKey, expectedValue);
@@ -567,9 +561,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AIAgentStorageKey<String> nonExistentKey = new AIAgentStorageKey<>("non-existent");
         AtomicReference<String> retrievedValue = new AtomicReference<>("not-null");
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 retrievedValue.set(JavaUtils.storageGet(context.getStorage(), nonExistentKey));
@@ -590,9 +582,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AtomicReference<String> firstRead = new AtomicReference<>();
         AtomicReference<String> secondRead = new AtomicReference<>();
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 JavaUtils.storageSet(context.getStorage(), storageKey, "initial");
@@ -618,9 +608,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         AtomicReference<String> retrievedString = new AtomicReference<>();
         AtomicReference<Integer> retrievedInt = new AtomicReference<>();
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 JavaUtils.storageSet(context.getStorage(), stringKey, "test-string");
@@ -642,9 +630,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         Models.assumeAvailable(model.getProvider());
 
         AIAgentStorageKey<Integer> runCountKey = new AIAgentStorageKey<>("run-count");
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Integer existing = JavaUtils.storageGet(context.getStorage(), runCountKey);
@@ -667,9 +653,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         var model = OpenAIModels.Chat.GPT5_1;
         Models.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 if (input != null) {
                     throw new RuntimeException("Intentional error from functional strategy");

@@ -35,6 +35,11 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(InternalAgentsApi::class)
 object JavaUtils {
     @JvmStatic
+    fun assumeAvailable(provider: LLMProvider) {
+        Models.assumeAvailable(provider)
+    }
+
+    @JvmStatic
     fun <T : Any> requestLLMStructuredBlocking(
         context: AIAgentFunctionalContext,
         message: String,

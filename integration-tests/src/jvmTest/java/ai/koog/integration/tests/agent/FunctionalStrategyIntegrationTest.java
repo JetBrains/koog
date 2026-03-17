@@ -1,18 +1,21 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.AIAgentBuilder;
 import ai.koog.agents.core.agent.config.AIAgentConfig;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
+import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.NumberTools;
-import ai.koog.integration.tests.utils.Models;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
+import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
+import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -20,8 +23,19 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
+    private AIAgentBuilder javaBuilder(LLModel model) {
+        return AIAgent.builder()
+            .promptExecutor(createExecutor(model))
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(model)
+                    .serializer(new KotlinxSerializer())
+                    .build()
+            );
+    }
 
     private String getAssistantContentOrDefault(Message.Response response, String defaultValue) {
         if (response instanceof Message.Assistant) {
@@ -33,11 +47,9 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_SimpleFunctionalStrategyWithRetry(LLModel model) {
-        Models.assumeAvailable(model.getProvider());
+        JavaUtils.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 for (int i = 0; i < 3; i++) {
@@ -63,11 +75,9 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_MultiStepFunctionalStrategy(LLModel model) {
-        Models.assumeAvailable(model.getProvider());
+        JavaUtils.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Message.Response response1 = context.requestLLM("First step: " + input, true);
@@ -91,14 +101,16 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_FunctionalStrategyWithManualToolHandling(LLModel model) {
-        Models.assumeAvailable(model.getProvider());
+        JavaUtils.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         NumberTools calculator = new NumberTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a calculator. You MUST use the add tool to perform calculations. DO NOT answer without calling tools.")
             .toolRegistry(toolRegistry)
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
@@ -132,7 +144,11 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_Subtask(LLModel model) {
-        Models.assumeAvailable(model.getProvider());
+        JavaUtils.assumeAvailable(model.getProvider());
+        assumeTrue(
+            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
+            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
+        );
 
         MultiLLMPromptExecutor executor = createExecutor(model);
 
@@ -152,6 +168,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
                             .system("You are a helpful assistant that coordinates calculations.")
                             .build()
                     )
+                    .serializer(new KotlinxSerializer())
                     .strategyExecutorService(Executors.newFixedThreadPool(4))
                     .llmRequestExecutorService(Executors.newFixedThreadPool(4))
                     .build()
@@ -179,11 +196,9 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_CustomStrategyWithValidation(LLModel model) {
-        Models.assumeAvailable(model.getProvider());
+        JavaUtils.assumeAvailable(model.getProvider());
 
-        AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(createExecutor(model))
-            .llmModel(model)
+        AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant that generates JSON.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Message.Response response = context.requestLLM(

@@ -3,7 +3,6 @@ package ai.koog.integration.tests.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.agentInput
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
@@ -20,6 +19,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.integration.tests.utils.tools.files.CreateFile
@@ -33,6 +33,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -268,9 +269,11 @@ open class AIAgentTestBase {
         val executor = if (initialExecutor == null) {
             val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+            val googleClient = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
             MultiLLMPromptExecutor(
                 LLMProvider.OpenAI to openAIClient,
-                LLMProvider.Anthropic to anthropicClient
+                LLMProvider.Anthropic to anthropicClient,
+                LLMProvider.Google to googleClient,
             )
         } else {
             initialExecutor
@@ -363,10 +366,12 @@ open class AIAgentTestBase {
     ): AIAgent<String, String> {
         val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
         val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+        val googleClient = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
 
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient,
-            LLMProvider.Anthropic to anthropicClient
+            LLMProvider.Anthropic to anthropicClient,
+            LLMProvider.Google to googleClient,
         )
 
         val subgraphTools = buildSubgraphTools(fs)

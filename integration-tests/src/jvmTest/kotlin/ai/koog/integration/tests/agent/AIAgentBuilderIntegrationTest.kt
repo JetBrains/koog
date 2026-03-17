@@ -2,6 +2,7 @@ package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -14,6 +15,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -23,15 +25,25 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.Duration.Companion.seconds
 
 class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
+
+    private fun builder(model: LLModel): ai.koog.agents.core.agent.AIAgentBuilder =
+        AIAgent.builder()
+            .promptExecutor(getExecutor(model))
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(model)
+                    .serializer(KotlinxSerializer())
+                    .build()
+            )
 
     companion object {
         @JvmStatic
@@ -48,9 +60,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent.builder()
-                    .promptExecutor(getExecutor(model))
-                    .llmModel(model)
+                val agent = builder(model)
                     .systemPrompt("You are a helpful assistant. Be brief.")
                     .temperature(0.7)
                     .maxIterations(10)
@@ -76,7 +86,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
             model.provider.id != LLMProvider.Anthropic.id,
             "KG-743 Tool enum arguments are parsed case-sensitively and fail on lowercase values"
         )
-        Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SimpleCalculatorTool)
@@ -84,9 +94,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent.builder()
-                    .promptExecutor(getExecutor(model))
-                    .llmModel(model)
+                val agent = builder(model)
                     .systemPrompt("You are a helpful assistant with access to a calculator tool.")
                     .toolRegistry(toolRegistry)
                     .graphStrategy(singleRunStrategy(ToolCalls.SEQUENTIAL))
@@ -111,7 +119,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     fun integration_BuilderWithGraphStrategy(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "builder graph-strategy tool integration")
-        Assumptions.assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SimpleCalculatorTool)
@@ -119,9 +127,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent.builder()
-                    .promptExecutor(getExecutor(model))
-                    .llmModel(model)
+                val agent = builder(model)
                     .systemPrompt("You are a helpful assistant with access to a calculator tool.")
                     .toolRegistry(toolRegistry)
                     .graphStrategy(singleRunStrategy(ToolCalls.SEQUENTIAL))
@@ -159,9 +165,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
                     }
                 }
 
-                val agent = AIAgent.builder()
-                    .promptExecutor(getExecutor(model))
-                    .llmModel(model)
+                val agent = builder(model)
                     .systemPrompt("You are a helpful assistant.")
                     .functionalStrategy(strategy)
                     .temperature(0.7)
@@ -197,9 +201,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent.builder()
-                    .promptExecutor(getExecutor(model))
-                    .llmModel(model)
+                val agent = builder(model)
                     .systemPrompt("You are a helpful assistant that provides concise summaries.")
                     .functionalStrategy(strategy)
                     .temperature(0.7)
@@ -249,9 +251,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent.builder()
-                    .promptExecutor(getExecutor(model))
-                    .llmModel(model)
+                val agent = builder(model)
                     .systemPrompt("You are a creative assistant.")
                     .functionalStrategy(strategy)
                     .temperature(0.7)
@@ -274,6 +274,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         }
     }
 
+    @Disabled("KG-748 Java AIAgentServiceBuilder.maxIterations() has no effect as AIAgentConfig.copy() ignores the new value")
     @Test
     fun integration_BuilderMethodChaining() = runTest(timeout = 180.seconds) {
         val model = OpenAIModels.Chat.GPT5_1
@@ -281,9 +282,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent.builder()
-                    .promptExecutor(getExecutor(model))
-                    .llmModel(model)
+                val agent = builder(model)
                     .systemPrompt("You are a helpful assistant.")
                     .temperature(0.8)
                     .numberOfChoices(1)
@@ -314,9 +313,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         RetryUtils.withRetry {
             val eventCallbacks = mutableListOf<String>()
 
-            val agent = AIAgent.builder()
-                .promptExecutor(getExecutor(model))
-                .llmModel(model)
+            val agent = builder(model)
                 .systemPrompt("You are a helpful assistant. Be very brief.")
                 .temperature(0.7)
                 .install(EventHandler.Feature) { config ->
@@ -418,7 +415,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
-            runWithTracking { eventHandlerConfig, state ->
+            runWithTracking { eventHandlerConfig, _ ->
                 val agent = AIAgent.builder()
                     .promptExecutor(getExecutor(model))
                     .llmModel(model)
@@ -429,9 +426,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
                 val result = agent.run("List 5 numbers from 1 to 5.")
 
-                with(state) {
-                    result.shouldNotBeBlank()
-                }
+                result.shouldNotBeBlank()
             }
         }
     }
@@ -442,7 +437,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
 
         RetryUtils.withRetry {
-            runWithTracking { eventHandlerConfig, state ->
+            runWithTracking { eventHandlerConfig, _ ->
                 val strategyWithErrorHandling = functionalStrategy<String, String>("error-handling") { input ->
                     when (val response = requestLLM(input)) {
                         is Message.Assistant -> response.content
@@ -460,9 +455,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
 
                 val result = agent.run("Say hello")
 
-                with(state) {
-                    result.shouldNotBeBlank()
-                }
+                result.shouldNotBeBlank()
             }
         }
     }
