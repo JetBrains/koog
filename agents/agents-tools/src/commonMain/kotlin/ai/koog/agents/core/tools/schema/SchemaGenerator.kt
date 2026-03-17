@@ -42,13 +42,15 @@ internal fun createSerializationGenerator(
     jsonSchemaConfig = jsonSchemaConfig,
 )
 
-internal val defaultJsonSchemaConfig = JsonSchemaConfig(
-    includePolymorphicDiscriminator = false
+@InternalAgentToolsApi
+public val defaultJsonSchemaConfig: JsonSchemaConfig = JsonSchemaConfig(
+    includePolymorphicDiscriminator = false,
 )
 
-internal expect fun getJsonSchema(
+@InternalAgentToolsApi
+public expect fun getJsonSchema(
     typeToken: TypeToken,
-    jsonSchemaConfig: JsonSchemaConfig,
+    jsonSchemaConfig: JsonSchemaConfig = defaultJsonSchemaConfig,
 ): JsonSchema
 
 /**
@@ -96,9 +98,10 @@ public fun getToolDescriptor(
 /**
  * Helper class holding information about the [ToolParameterType] along with its optional description.
  */
-internal class ToolParameterInfo(
-    val type: ToolParameterType,
-    val description: String,
+@InternalAgentToolsApi
+public class ToolParameterInfo(
+    public val type: ToolParameterType,
+    public val description: String,
 )
 
 /**
@@ -107,7 +110,8 @@ internal class ToolParameterInfo(
  *
  * @param defs JSON schema definitions map for resolving references.
  */
-internal fun PropertyDefinition.toToolParameter(
+@InternalAgentToolsApi
+public fun PropertyDefinition.toToolParameter(
     defs: Map<String, PropertyDefinition>?
 ): ToolParameterInfo = when (this) {
     is ValuePropertyDefinition<*> -> {
@@ -255,6 +259,79 @@ internal fun PropertyDefinition.toToolParameter(
         )
     }
 
+    /*
+     Special case - when JSON schema itself needs to be converted to a tool parameter, e.g. FinishTool in subgraphWithTask,
+     with semi-automatic ToolDescriptor construction.
+     */
+    is JsonSchema ->
+        this.toActualPropertyDefinition().toToolParameter(defs)
+
     else ->
         throw IllegalArgumentException("Unsupported property definition type: $this")
+}
+
+/**
+ * Transform JsonSchema to suitable property definition, copying only these fields that are actually used by
+ * [toToolParameter]
+ */
+private fun JsonSchema.toActualPropertyDefinition(): PropertyDefinition = when {
+    JsonSchemaConstants.Types.STRING in type ->
+        StringPropertyDefinition(
+            type = type,
+            description = description,
+            constValue = constValue,
+            enum = enum?.map { it as JsonPrimitive }?.map { it.content }
+        )
+
+    JsonSchemaConstants.Types.BOOLEAN in type ->
+        BooleanPropertyDefinition(
+            type = type,
+            description = description,
+        )
+
+    JsonSchemaConstants.Types.INTEGER in type || JsonSchemaConstants.Types.NUMBER in type ->
+        NumericPropertyDefinition(
+            type = type,
+            description = description,
+        )
+
+    JsonSchemaConstants.Types.ARRAY in type ->
+        ArrayPropertyDefinition(
+            type = type,
+            description = description,
+            items = items,
+        )
+
+    JsonSchemaConstants.Types.OBJECT in type ->
+        ObjectPropertyDefinition(
+            type = type,
+            description = description,
+            properties = properties,
+            required = required,
+            additionalProperties = additionalProperties,
+        )
+
+    type.isEmpty() -> when {
+        ref != null ->
+            ReferencePropertyDefinition(
+                ref = ref,
+                description = description,
+            )
+
+        anyOf != null ->
+            AnyOfPropertyDefinition(
+                anyOf = anyOf!!,
+                description = description,
+            )
+
+        oneOf != null ->
+            OneOfPropertyDefinition(
+                oneOf = oneOf!!,
+                description = description,
+            )
+
+        else -> throw IllegalArgumentException("Empty type in JSON schema for JsonSchema to PropertyDefinition conversion")
+    }
+
+    else -> throw IllegalArgumentException("Unsupported type for JsonSchema to PropertyDefinition conversion: $type")
 }

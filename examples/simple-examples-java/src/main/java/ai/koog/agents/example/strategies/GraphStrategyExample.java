@@ -5,6 +5,8 @@ import ai.koog.agents.core.agent.entity.AIAgentEdge;
 import ai.koog.agents.core.agent.entity.AIAgentNode;
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
 import ai.koog.agents.example.ApiKeyService;
+import ai.koog.agents.example.strategies.entities.ProblemDescription;
+import ai.koog.agents.example.strategies.entities.ProblemSolution;
 import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
@@ -12,20 +14,6 @@ import ai.koog.prompt.executor.model.PromptExecutor;
 import java.util.Collections;
 
 public class GraphStrategyExample {
-    /**
-     * Structured description of an identified problem.
-     * Returned by the first subtask so subsequent steps have typed context.
-     */
-    public record ProblemDescription(String title, String details, String severity) {
-    }
-
-    /**
-     * Structured solution produced by the solving subtask.
-     */
-    public record ProblemSolution(String description) {
-    }
-
-
     public static void main(String[] args) {
         var promptExecutor = PromptExecutor.builder()
             .openAI(ApiKeyService.getOpenAIApiKey())
@@ -53,7 +41,7 @@ public class GraphStrategyExample {
                     .limitedTools(Collections.emptyList())
                     .withInput(ProblemDescription.class)
                     .withOutput(ProblemSolution.class)
-                    .withTask(problem -> "Propose a solution for: " + problem.title() + " - " + problem.details())
+                    .withTask(problem -> "Propose a solution for: " + problem.title + " - " + problem.details)
                     .build();
 
                 // Step 3: Verify the solution using LLM-as-a-judge
@@ -96,6 +84,8 @@ public class GraphStrategyExample {
             .build();
 
 
-        System.out.println(graphAgent.run("Fix the compilation error in the file MyService.java", "sessionId"));
+        var result = graphAgent.run("How to make a perfect poached egg?", "sessionId");
+
+        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description));
     }
 }

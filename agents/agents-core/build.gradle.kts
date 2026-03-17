@@ -50,6 +50,7 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
+                implementation(libs.kotest.assertions.json)
             }
         }
 
