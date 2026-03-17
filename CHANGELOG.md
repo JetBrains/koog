@@ -74,8 +74,6 @@
 
 - Added Java example for JavaOne 2026 (#1641)
 - Added full Spring Boot Java API example (#1350)
-- Added streaming Ktor server example demonstrating LLM response streaming via HTTP (#1489)
-- Updated Java examples with graph and functional strategies (#1639)
 
 
 # 0.6.4
