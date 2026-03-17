@@ -81,14 +81,91 @@ Depending on which step you decide to perform compression, the following scenari
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.environment.ReceivedToolResult;
+    import ai.koog.prompt.message.Message;
+    class exampleHistoryCompressionJava01 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+        .withInput(String.class)
+        .withOutput(String.class);
+
+    var callLLM = AIAgentNode.llmRequest();
+    var executeTool = AIAgentNode.executeTool();
+    var sendToolResult = AIAgentNode.llmSendToolResult();
+
+    // Compress the LLM history and keep the current ReceivedToolResult for the next node
+    var compressHistory = AIAgentNode
+        .llmCompressHistory("compressHistory")
+        .withInput(ReceivedToolResult.class)
+        .build();
+
+    // Edge from start to callLLM
+    graph.edge(graph.nodeStart, callLLM);
+
+    // Edge from callLLM to finish on assistant message
+    graph.edge(AIAgentEdge.builder()
+        .from(callLLM)
+        .to(graph.nodeFinish)
+        .onIsInstance(Message.Assistant.class)
+        .transformed(Message.Assistant::getContent)
+        .build());
+
+    // Edge from callLLM to executeTool on tool call
+    graph.edge(AIAgentEdge.builder()
+        .from(callLLM)
+        .to(executeTool)
+        .onIsInstance(Message.Tool.Call.class)
+        .build());
+
+    // Compress history after executing any tool if the history is too long
+    graph.edge(AIAgentEdge.builder()
+        .from(executeTool)
+        .to(compressHistory)
+        .onCondition((toolResult, ctx) ->
+            ctx.getLlm().readSession(session ->
+                session.getPrompt().getMessages().size() > 100
+            )
+        )
+        .build());
+
+    graph.edge(compressHistory, sendToolResult);
+
+    // Otherwise, proceed to the next LLM request
+    graph.edge(AIAgentEdge.builder()
+        .from(executeTool)
+        .to(sendToolResult)
+        .onCondition((toolResult, ctx) ->
+            ctx.getLlm().readSession(session ->
+                session.getPrompt().getMessages().size() <= 100
+            )
+        )
+        .build());
+
+    // Edge from sendToolResult to executeTool on tool call
+    graph.edge(AIAgentEdge.builder()
+        .from(sendToolResult)
+        .to(executeTool)
+        .onIsInstance(Message.Tool.Call.class)
+        .build());
+
+    // Edge from sendToolResult to finish on assistant message
+    graph.edge(AIAgentEdge.builder()
+        .from(sendToolResult)
+        .to(graph.nodeFinish)
+        .onIsInstance(Message.Assistant.class)
+        .transformed(Message.Assistant::getContent)
+        .build());
     ```
-    <!--- KNIT example-history-compression-java-01.java -->
+    <!--- KNIT exampleHistoryCompressionJava01.java -->
 
 In this example, the strategy checks if the history is too long after each tool call.
 The history is compressed before sending the tool result back to the LLM. This prevents the context from growing during long conversations.
@@ -121,14 +198,51 @@ The history is compressed before sending the tool result back to the LLM. This p
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import java.util.Collections;
+    class exampleHistoryCompressionJava02 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+        .withInput(String.class)
+        .withOutput(String.class);
+
+    // Subgraph to collect information
+    var collectInformation = AIAgentSubgraph.builder("collectInformation")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .limitedTools(Collections.emptyList())
+        .withTask(input -> "Collect information based on: " + input)
+        .build();
+
+    // Compress history after collecting information
+    var compressHistory = AIAgentNode
+        .llmCompressHistory("compressHistory")
+        .withInput(String.class)
+        .build();
+
+    // Subgraph to make decision based on compressed history
+    var makeTheDecision = AIAgentSubgraph.builder("makeTheDecision")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .limitedTools(Collections.emptyList())
+        .withTask(input -> "Make a decision based on the information")
+        .build();
+
+    // Build the flow: start -> collectInformation -> compressHistory -> makeTheDecision -> finish
+    graph.edge(graph.nodeStart, collectInformation);
+    graph.edge(collectInformation, compressHistory);
+    graph.edge(compressHistory, makeTheDecision);
+    graph.edge(makeTheDecision, graph.nodeFinish);
     ```
-    <!--- KNIT example-history-compression-java-02.java -->
+    <!--- KNIT exampleHistoryCompressionJava02.java -->
 
 In this example, the history is compressed after completing the information collection phase, but before proceeding to the decision-making phase.
 
@@ -166,12 +280,8 @@ If you are implementing a custom node, you can compress history using the `repla
     **/
     -->
     ```java
-    // FAILED: `replaceHistoryWithTLDR()` is a suspend Kotlin extension on AIAgentLLMWriteSession
-    // and requires a coroutine context. From Java, calling suspend functions directly
-    // would require passing a Continuation and coroutine machinery, which is not part of the
-    // public Java API. No non-suspending Java wrapper is available for this action.
     ```
-    <!--- KNIT example-history-compression-java-03.java -->
+    <!--- KNIT example-history-compression-java-01.java -->
 
 This approach gives you more flexibility to implement compression at any point in your custom node logic, based on your specific requirements.
 
@@ -217,18 +327,32 @@ You can use it as follows:
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava03 {
+        public static void main(String[] args) {
+            var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+                .withInput(String.class)
+                .withOutput(String.class);
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
-    // FAILED: `nodeLLMCompressHistory<ProcessedInput>(strategy = HistoryCompressionStrategy.WholeHistory)`
-    // is a Kotlin DSL node with a reified generic. There is no Java builder to add this node
-    // into a graph strategy. The HistoryCompressionStrategy type exists, but invoking the DSL
-    // from Java is not supported.
+    // Using WholeHistory strategy in a compression node
+    var compressHistory = AIAgentNode
+        .llmCompressHistory("compressHistory")
+        .withInput(String.class)
+        .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
+        .build();
+
+    // Note: This example only shows the node creation.
+    // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT example-history-compression-java-04.java -->
+    <!--- KNIT exampleHistoryCompressionJava03.java -->
 
 * In a custom node:
 
@@ -263,11 +387,8 @@ You can use it as follows:
     **/
     -->
     ```java
-    // FAILED: `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.WholeHistory)` is a suspend
-    // Kotlin extension on AIAgentLLMWriteSession and requires coroutines. No non-suspending Java
-    // wrapper exists in the current Koog API to perform this operation.
     ```
-    <!--- KNIT example-history-compression-java-05.java -->
+    <!--- KNIT example-history-compression-java-02.java -->
 
 ### FromLastNMessages
 
@@ -304,17 +425,32 @@ You can use it as follows:
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava04 {
+        public static void main(String[] args) {
+            var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+                .withInput(String.class)
+                .withOutput(String.class);
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
-    // FAILED: The Kotlin DSL node `nodeLLMCompressHistory<ProcessedInput>(
-    //   strategy = HistoryCompressionStrategy.FromLastNMessages(5)
-    // )` relies on reified generics and DSL builders not callable from Java.
+    // Using FromLastNMessages strategy to compress only the last 5 messages
+    var compressHistory = AIAgentNode
+        .llmCompressHistory("compressHistory")
+        .withInput(String.class)
+        .compressionStrategy(HistoryCompressionStrategy.FromLastNMessages(5))
+        .build();
+
+    // Note: This example only shows the node creation.
+    // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT example-history-compression-java-06.java -->
+    <!--- KNIT exampleHistoryCompressionJava04.java -->
 
 * In a custom node:
 
@@ -350,10 +486,8 @@ You can use it as follows:
     **/
     -->
     ```java
-    // FAILED: Calling `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.FromLastNMessages(5))`
-    // requires a suspend Kotlin context. There is no Java-accessible non-suspending API for this.
     ```
-    <!--- KNIT example-history-compression-java-07.java -->
+    <!--- KNIT example-history-compression-java-03.java -->
 
 ### Chunked
 
@@ -390,17 +524,32 @@ You can use it as follows:
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava05 {
+    public static void main(String[] args) {
+        var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+            .withInput(String.class)
+            .withOutput(String.class);
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
-    // FAILED: The Kotlin graph DSL and `nodeLLMCompressHistory<ProcessedInput>(
-    //   strategy = HistoryCompressionStrategy.Chunked(10)
-    // )` are not available from Java due to reified generics and lack of a Java graph builder API.
+    // Using Chunked strategy to compress history in chunks of 10 messages
+    var compressHistory = AIAgentNode
+        .llmCompressHistory("compressHistory")
+        .withInput(String.class)
+        .compressionStrategy(HistoryCompressionStrategy.Chunked(10))
+        .build();
+
+    // Note: This example only shows the node creation.
+    // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT example-history-compression-java-08.java -->
+    <!--- KNIT exampleHistoryCompressionJava05.java -->
 
 * In a custom node:
 
@@ -436,10 +585,8 @@ You can use it as follows:
     **/
     -->
     ```java
-    // FAILED: `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.Chunked(10))` is a suspend
-    // Kotlin API; there is no current non-suspending Java entry point to perform this action inside a node.
     ```
-    <!--- KNIT example-history-compression-java-09.java -->
+    <!--- KNIT example-history-compression-java-04.java -->
 
 ### RetrieveFactsFromHistory
 
@@ -499,19 +646,52 @@ You can use it as follows:
     <!--- KNIT example-history-compression-10.kt -->
 
 === "Java"
-
+    
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.environment.ReceivedToolResult;
+    import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory;
+    import ai.koog.agents.memory.model.Concept;
+    import ai.koog.agents.memory.model.FactType;
+    class exampleHistoryCompressionJava06 {
+    public static void main(String[] args) {
+        var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+            .withInput(String.class)
+            .withOutput(String.class);
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
-    // FAILED: `nodeLLMCompressHistory<ProcessedInput>(strategy = new RetrieveFactsFromHistory(...))`
-    // is part of the Kotlin graph DSL with reified generics; Java cannot call it and there is no
-    // equivalent Java graph builder API to inject this node.
+    // Using RetrieveFactsFromHistory strategy to extract specific facts
+    var compressHistory = AIAgentNode
+        .llmCompressHistory("compressHistory")
+        .withInput(ReceivedToolResult.class)
+        .compressionStrategy(new RetrieveFactsFromHistory(
+            new Concept(
+                "user_preferences",
+                "User's preferences for the recommendation system, including the preferred conversation style, theme in the application, etc.",
+                FactType.MULTIPLE
+            ),
+            new Concept(
+                "product_details",
+                "Brief details about products in the catalog the user has been checking",
+                FactType.MULTIPLE
+            ),
+            new Concept(
+                "issue_solved",
+                "Was the initial user's issue resolved?",
+                FactType.SINGLE
+            )
+        ))
+        .build();
+
+        // Note: This example only shows the node creation.
+        // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT example-history-compression-java-10.java -->
+    <!--- KNIT exampleHistoryCompressionJava06.java -->
 
 * In a custom node:
 
@@ -573,10 +753,8 @@ You can use it as follows:
     **/
     -->
     ```java
-    // FAILED: `replaceHistoryWithTLDR(strategy = new RetrieveFactsFromHistory(...))` is a suspend
-    // Kotlin extension requiring coroutines; no Java wrapper is available.
     ```
-    <!--- KNIT example-history-compression-java-11.java -->
+    <!--- KNIT example-history-compression-java-05.java -->
 
 ## Custom history compression strategy implementation
 
@@ -633,11 +811,8 @@ Here is an example:
     **/
     -->
     ```java
-    // FAILED: Custom strategies must extend Kotlin `HistoryCompressionStrategy` and override the
-    // suspend method `compress(AIAgentLLMWriteSession, List<Message>)`. Java cannot implement
-    // suspend functions directly. A Kotlin shim would be required; no direct Java implementation is possible.
     ```
-    <!--- KNIT example-history-compression-java-12.java -->
+    <!--- KNIT example-history-compression-java-06.java -->
 
 In this example, the custom strategy filters messages that contain the word "important" and keeps only those in the compressed history.
 
@@ -675,11 +850,8 @@ Then you can use it as follows:
     **/
     -->
     ```java
-    // FAILED: Even with a custom strategy, adding it via `nodeLLMCompressHistory<ProcessedInput>(
-    //   strategy = new MyCustomCompressionStrategy()
-    // )` is Kotlin DSL-only with reified generics; no Java graph builder is provided.
     ```
-    <!--- KNIT example-history-compression-java-13.java -->
+    <!--- KNIT example-history-compression-java-07.java -->
 
 * In a custom node:
 
@@ -715,10 +887,8 @@ Then you can use it as follows:
     **/
     -->
     ```java
-    // FAILED: `replaceHistoryWithTLDR(strategy = new MyCustomCompressionStrategy())` is a suspend
-    // Kotlin API; not callable from Java without coroutine interop glue, which the public API lacks.
     ```
-    <!--- KNIT example-history-compression-java-14.java -->
+    <!--- KNIT example-history-compression-java-08.java -->
 
 ##  Memory preservation during compression
 
@@ -754,16 +924,33 @@ You can use the `preserveMemory` parameter as follows:
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava07 {
+    public static void main(String[] args) {
+        var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+            .withInput(String.class)
+            .withOutput(String.class);
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
-    // FAILED: Passing `preserveMemory = true` to `nodeLLMCompressHistory<ProcessedInput>(...)`
-    // still relies on the Kotlin graph DSL with reified generics; Java cannot use this API directly.
+    // Using WholeHistory strategy with preserveMemory=true
+    var compressHistory = AIAgentNode
+        .llmCompressHistory("compressHistory")
+        .withInput(String.class)
+        .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
+        .preserveMemory(true)
+        .build();
+
+    // Note: This example only shows the node creation.
+    // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT example-history-compression-java-15.java -->
+    <!--- KNIT exampleHistoryCompressionJava07.java -->
 
 * In a custom node:
 
@@ -802,7 +989,5 @@ You can use the `preserveMemory` parameter as follows:
     **/
     -->
     ```java
-    // FAILED: `replaceHistoryWithTLDR(strategy = HistoryCompressionStrategy.WholeHistory, preserveMemory = true)`
-    // is a suspend Kotlin extension; there is no Java-accessible non-suspending wrapper in Koog.
     ```
-    <!--- KNIT example-history-compression-java-16.java -->
+    <!--- KNIT example-history-compression-java-09.java -->
