@@ -73,6 +73,7 @@ import kotlin.uuid.Uuid
  *
  * @property baseUrl The base URL for the Google AI API.
  * @property timeoutConfig Timeout configuration for API requests.
+ * @property fallbackThoughtSignature Default `thought_signature` used for thinking models
  */
 public class GoogleClientSettings(
     public val baseUrl: String = "https://generativelanguage.googleapis.com",
@@ -80,7 +81,8 @@ public class GoogleClientSettings(
     public val defaultPath: String = "v1beta/models",
     public val generateContentMethod: String = "generateContent",
     public val streamGenerateContentMethod: String = "streamGenerateContent",
-    public val embedContentMethod: String = "embedContent"
+    public val embedContentMethod: String = "embedContent",
+    public val fallbackThoughtSignature: String = "context_engineering_is_the_way_to_go",
 )
 
 /**
@@ -389,7 +391,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     // If no signature is available from a Reasoning message, use the official workaround dummy signature.
                     // See: https://ai.google.dev/gemini-api/docs/thought-signatures
                     val effectiveSignature = signature ?: if (isThinkingModel) {
-                        "context_engineering_is_the_way_to_go"
+                        settings.fallbackThoughtSignature
                     } else {
                         null
                     }

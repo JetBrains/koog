@@ -178,7 +178,7 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini3_Flash_Preview: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-3-flash-preview",
-        capabilities = fullCapabilities,
+        capabilities = fullCapabilities + LLMCapability.Thinking,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )
