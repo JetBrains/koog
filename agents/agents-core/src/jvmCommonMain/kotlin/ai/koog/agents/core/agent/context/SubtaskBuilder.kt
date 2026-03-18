@@ -28,22 +28,22 @@ public class SubtaskBuilder(
      *
      * @param outputClass The class representing the type of the output for the subtask.
      */
-    public fun <Output : Any> withOutput(outputClass: Class<Output>): SubtaskBuilderWithInputAndOutput<Output> =
-        SubtaskBuilderWithInputAndOutput(context = context, taskDescription = taskDescription, output = OutputOption.ByClass(outputClass))
+    public fun <Output : Any> withOutput(outputClass: Class<Output>): SubtaskBuilderWithOutput<Output> =
+        SubtaskBuilderWithOutput(context = context, taskDescription = taskDescription, output = OutputOption.ByClass(outputClass))
 
     /**
      * Associates a finishing tool with the subtask builder, allowing the subtask to produce an output of the specified type.
      *
      * @param finishTool The tool that defines how the subtask's output will be produced and processed.
      */
-    public fun <Output : Any> withFinishTool(finishTool: Tool<*, Output>): SubtaskBuilderWithInputAndOutput<Output> =
-        SubtaskBuilderWithInputAndOutput(context = context, taskDescription = taskDescription, output = OutputOption.ByFinishTool(finishTool))
+    public fun <Output : Any> withFinishTool(finishTool: Tool<*, Output>): SubtaskBuilderWithOutput<Output> =
+        SubtaskBuilderWithOutput(context = context, taskDescription = taskDescription, output = OutputOption.ByFinishTool(finishTool))
 
     /**
      * Configures the subtask builder to include a verification step in the task pipeline.
      */
-    public fun withVerification(): SubtaskBuilderWithInputAndOutput<CriticResult<String>> =
-        SubtaskBuilderWithInputAndOutput(context, taskDescription, OutputOption.Verification())
+    public fun withVerification(): SubtaskBuilderWithOutput<CriticResult<String>> =
+        SubtaskBuilderWithOutput(context, taskDescription, OutputOption.Verification())
 }
 
 /**
@@ -61,7 +61,7 @@ public class SubtaskBuilder(
  * @param assistantResponseRepeatMax Optional maximum number of response repetitions allowed for the assistant.
  * @param executorService Optional executor service for managing asynchronous operations.
  */
-public class SubtaskBuilderWithInputAndOutput<Output : Any>(
+public class SubtaskBuilderWithOutput<Output : Any>(
     public val context: AIAgentFunctionalContextBase<*>,
     public val taskDescription: String,
     public val output: OutputOption<Output>,
@@ -109,7 +109,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      * @param tools A list of tools, each represented as an instance of `Tool<*, *>`,
      *              to be utilized for the execution of the subtask.
      */
-    public fun withTools(tools: List<Tool<*, *>>): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun withTools(tools: List<Tool<*, *>>): SubtaskBuilderWithOutput<Output> =
         apply { this.tools = tools }
 
     /**
@@ -119,7 +119,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      *                 that can be used for the execution of the subtask. Each [ToolSet] will be
      *                 converted into a list of tools using its `asTools` method.
      */
-    public fun withTools(vararg toolSets: ToolSet): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun withTools(vararg toolSets: ToolSet): SubtaskBuilderWithOutput<Output> =
         apply { this.tools = toolSets.flatMap { it.asTools() } }
 
     /**
@@ -127,7 +127,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      *
      * @param llmModel The Large Language Model (LLM) to be used, represented as an instance of [LLModel].
      */
-    public fun useLLM(llmModel: LLModel): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun useLLM(llmModel: LLModel): SubtaskBuilderWithOutput<Output> =
         apply { this.llmModel = llmModel }
 
     /**
@@ -135,7 +135,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      *
      * @param llmParams The parameters to configure the behavior of the language model.
      */
-    public fun withParams(llmParams: LLMParams): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun withParams(llmParams: LLMParams): SubtaskBuilderWithOutput<Output> =
         apply { this.llmParams = llmParams }
 
     /**
@@ -143,7 +143,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      *
      * @param responseProcessor The instance of [ResponseProcessor] to handle and modify LLM responses during task execution.
      */
-    public fun withResponseProcessor(responseProcessor: ResponseProcessor): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun withResponseProcessor(responseProcessor: ResponseProcessor): SubtaskBuilderWithOutput<Output> =
         apply { this.responseProcessor = responseProcessor }
 
     /**
@@ -154,7 +154,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      * - `PARALLEL`: Executes tool calls in parallel.
      * - `SINGLE_RUN_SEQUENTIAL`: Allows only a single tool call to be executed.
      */
-    public fun runMode(runMode: ToolCalls): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun runMode(runMode: ToolCalls): SubtaskBuilderWithOutput<Output> =
         apply { this.runMode = runMode }
 
     /**
@@ -163,7 +163,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      * @param max The maximum number of repetitions allowed for the assistant's response.
      *            Must be a non-negative integer.
      */
-    public fun assistantResponseRepeatMax(max: Int): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun assistantResponseRepeatMax(max: Int): SubtaskBuilderWithOutput<Output> =
         apply { this.assistantResponseRepeatMax = max }
 
     /**
@@ -171,7 +171,7 @@ public class SubtaskBuilderWithInputAndOutput<Output : Any>(
      *
      * @param service the ExecutorService to be used for managing task execution.
      */
-    public fun withExecutorService(service: ExecutorService): SubtaskBuilderWithInputAndOutput<Output> =
+    public fun withExecutorService(service: ExecutorService): SubtaskBuilderWithOutput<Output> =
         apply { this.executorService = service }
 
     /**
