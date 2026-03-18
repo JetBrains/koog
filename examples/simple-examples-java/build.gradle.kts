@@ -47,7 +47,11 @@ fun ExecSpec.doPublishKoogToMavenLocal() {
     workingDir = koogRootDir
     commandLine(
         "${koogRootDir.resolve("gradlew").absolutePath}",
+        // KMP modules: root metadata module and only JVM artifacts
+        "publishKotlinMultiplatformPublicationToMavenLocal",
         "publishJvmPublicationToMavenLocal",
+        // JVM-only modules
+        "publishMavenPublicationToMavenLocal",
         "-Pversion=${koogVersion.removeSuffix("-SNAPSHOT")}",
     )
 }

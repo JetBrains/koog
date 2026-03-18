@@ -156,9 +156,8 @@ public expect abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         preserveMemory: Boolean
     )
 
-    public suspend inline fun <Input, reified Output> subtask(
+    public suspend inline fun <reified Output> subtask(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>? = null,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
@@ -166,20 +165,18 @@ public expect abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         assistantResponseRepeatMax: Int? = null
     ): Output
 
-    override suspend fun <Input> subtaskWithVerification(
+    override suspend fun subtaskWithVerification(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>?,
         llmModel: LLModel?,
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
         responseProcessor: ResponseProcessor?
-    ): CriticResult<Input>
+    ): CriticResult<String>
 
-    override suspend fun <Input, Output : Any> subtask(
+    override suspend fun <Output : Any> subtask(
         taskDescription: String,
-        input: Input,
         outputClass: KClass<Output>,
         tools: List<Tool<*, *>>?,
         llmModel: LLModel?,
@@ -189,9 +186,8 @@ public expect abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         responseProcessor: ResponseProcessor?
     ): Output
 
-    override suspend fun <Input, OutputTransformed> subtask(
+    override suspend fun <OutputTransformed> subtask(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>?,
         finishTool: Tool<*, OutputTransformed>,
         llmModel: LLModel?,

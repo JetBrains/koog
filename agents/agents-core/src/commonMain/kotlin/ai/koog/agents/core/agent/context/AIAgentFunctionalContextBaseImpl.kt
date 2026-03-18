@@ -294,16 +294,15 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
         }
     }
 
-    override suspend fun <Input> subtaskWithVerification(
+    override suspend fun subtaskWithVerification(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>?,
         llmModel: LLModel?,
         llmParams: LLMParams?,
         runMode: ToolCalls,
         assistantResponseRepeatMax: Int?,
         responseProcessor: ResponseProcessor?
-    ): CriticResult<Input> {
+    ): CriticResult<String> {
         val finishTool = FinishTool<CriticResultFromLLM>(
             outputType = typeToken<CriticResultFromLLM>(),
             customSerializer = KotlinxSerializer()
@@ -311,7 +310,6 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
 
         val result = subtask(
             taskDescription = taskDescription,
-            input = input,
             finishTool = finishTool,
             tools = tools,
             llmModel = llmModel,
@@ -324,13 +322,12 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
         return CriticResult(
             successful = result.isCorrect,
             feedback = result.feedback,
-            input = input
+            input = taskDescription
         )
     }
 
-    override suspend fun <Input, Output : Any> subtask(
+    override suspend fun <Output : Any> subtask(
         taskDescription: String,
-        input: Input,
         outputClass: KClass<Output>,
         tools: List<Tool<*, *>>?,
         llmModel: LLModel?,
@@ -343,7 +340,6 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
 
         return subtask(
             taskDescription,
-            input,
             tools,
             finishTool,
             llmModel,
@@ -355,9 +351,8 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
         )
     }
 
-    override suspend fun <Input, OutputTransformed> subtask(
+    override suspend fun <OutputTransformed> subtask(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>?,
         finishTool: Tool<*, OutputTransformed>,
         llmModel: LLModel?,
@@ -424,9 +419,8 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
 
     @OptIn(InternalAgentToolsApi::class)
     @PublishedApi
-    internal suspend inline fun <Input, reified Output : Any> subtaskImpl(
+    internal suspend inline fun <reified Output : Any> subtaskImpl(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>? = null,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
@@ -435,7 +429,6 @@ internal class AIAgentFunctionalContextBaseImpl<Pipeline : AIAgentPipeline>(
     ): Output {
         return subtask(
             taskDescription = taskDescription,
-            input = input,
             outputClass = Output::class,
             tools = tools,
             llmModel = llmModel,

@@ -263,7 +263,6 @@ public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : A
     /**
      * Compresses the current LLM prompt (message history) into a summary, replacing messages with a TLDR.
      *
-     * @param input The input value that will be returned unchanged after compression.
      * @param strategy Determines which messages to include in compression.
      * @param preserveMemory Specifies whether to retain message memory after compression.
      * @return The input value, unchanged.
@@ -280,8 +279,6 @@ public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : A
      * based on its correctness and feedback.
      *
      * @param taskDescription The subtask to be executed by AIAgent.
-     * @param Input The type of the input provided to the subtask.
-     * @param input The input data for the subtask, which will be used to
      * create and execute the task.
      * @param tools An optional list of tools that can be used during
      * the execution of the subtask.
@@ -295,25 +292,22 @@ public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : A
      * and the original input for the subtask.
      */
     @OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
-    public suspend fun <Input> subtaskWithVerification(
+    public suspend fun subtaskWithVerification(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>? = null,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
         runMode: ToolCalls = ToolCalls.SEQUENTIAL,
         assistantResponseRepeatMax: Int? = null,
         responseProcessor: ResponseProcessor? = null,
-    ): CriticResult<Input>
+    ): CriticResult<String>
 
     /**
      * Executes a subtask within the larger context of an AI agent's functional operation. This method allows you to define a specific
      * task to be performed, using the given input, tools, and optional configuration parameters.
      *
      * @param taskDescription The subtask to be executed by AIAgent.
-     * @param Input The type of input provided to the subtask.
      * @param Output The type of the output expected from the subtask.
-     * @param input The input data required for the subtask execution.
      * @param tools A list of tools available for use within the subtask.
      * @param llmModel The optional large language model to be used during the subtask, if different from the default one.
      * @param llmParams The configuration parameters for the large language model, such as temperature, etc.
@@ -322,9 +316,8 @@ public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : A
      * @return The result of the subtask execution, as an instance of type Output.
      */
     @OptIn(InternalAgentToolsApi::class)
-    public suspend fun <Input, Output : Any> subtask(
+    public suspend fun <Output : Any> subtask(
         taskDescription: String,
-        input: Input,
         outputClass: KClass<Output>,
         tools: List<Tool<*, *>>? = null,
         llmModel: LLModel? = null,
@@ -340,7 +333,6 @@ public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : A
      * employs tools iteratively, and attempts to complete the subtask with a designated finishing tool.
      *
      * @param taskDescription The subtask to be executed by AIAgent.
-     * @param input The input data required to define and execute the subtask.
      * @param tools An optional list of tools that can be used to achieve the task, excluding the finishing tool.
      * @param finishTool A mandatory tool that determines the final result of the subtask by producing and transforming output.
      * @param llmModel An optional specific language learning model (LLM) to use for executing the subtask.
@@ -350,9 +342,8 @@ public interface AIAgentFunctionalContextBaseAPI<Pipeline : AIAgentPipeline> : A
      * @return The transformed final result of executing the finishing tool to complete the subtask.
      */
     @OptIn(InternalAgentToolsApi::class, DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
-    public suspend fun <Input, OutputTransformed> subtask(
+    public suspend fun <OutputTransformed> subtask(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>? = null,
         finishTool: Tool<*, OutputTransformed>,
         llmModel: LLModel? = null,

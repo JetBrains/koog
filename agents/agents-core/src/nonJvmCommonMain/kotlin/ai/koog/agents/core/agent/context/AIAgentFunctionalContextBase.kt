@@ -22,9 +22,8 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         fixingParser: StructureFixingParser?
     ): Result<StructuredResponse<T>> = delegate.requestLLMStructured(message, examples, fixingParser)
 
-    public actual suspend inline fun <Input, reified Output> subtask(
+    public actual suspend inline fun <reified Output> subtask(
         taskDescription: String,
-        input: Input,
         tools: List<Tool<*, *>>?,
         llmModel: LLModel?,
         llmParams: LLMParams?,
@@ -32,7 +31,6 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         assistantResponseRepeatMax: Int?,
     ): Output = delegate.subtaskImpl(
         taskDescription,
-        input,
         tools,
         llmModel,
         llmParams,
