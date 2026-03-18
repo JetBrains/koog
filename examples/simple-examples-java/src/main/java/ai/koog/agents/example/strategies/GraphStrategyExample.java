@@ -38,7 +38,7 @@ public class GraphStrategyExample {
             .limitedTools(Collections.emptyList())
             .withInput(ProblemDescription.class)
             .withOutput(ProblemSolution.class)
-            .withTask(problem -> "Propose a solution for: " + problem.title + " - " + problem.details)
+            .withTask(problem -> "Propose a solution for: " + problem.title() + " - " + problem.details())
             .build();
 
         // Step 3: Verify the solution using LLM-as-a-judge
@@ -86,6 +86,6 @@ public class GraphStrategyExample {
 
         var result = graphAgent.run("How to make a perfect poached egg?", "sessionId");
 
-        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description));
+        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description()));
     }
 }

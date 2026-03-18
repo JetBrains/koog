@@ -72,6 +72,6 @@ public class FunctionalStrategyExample {
 
         var result = functionalAgent.run("How to make a perfect poached egg?");
 
-        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description));
+        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description()));
     }
 }
