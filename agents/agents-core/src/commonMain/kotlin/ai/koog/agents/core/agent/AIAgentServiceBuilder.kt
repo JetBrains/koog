@@ -87,7 +87,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      */
     @OptIn(InternalAgentsApi::class)
     public fun build(): GraphAIAgentService<Input, Output> {
-        val executor = requireNotNull(promptExecutor) { "PromptExecutor must be provided" }
+        val executor = validatedPromptExecutor
 
         val installCombined: FeatureContext.() -> Unit = {
             featureInstallers.forEach { it(this) }

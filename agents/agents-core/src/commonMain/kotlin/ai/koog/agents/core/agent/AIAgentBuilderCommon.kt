@@ -132,7 +132,7 @@ public abstract class AIAgentBuilderCommon<Self : AIAgentBuilderCommon<Self>> in
      */
     public fun build(): AIAgent<String, String> {
         return AIAgent(
-            promptExecutor = requireNotNull(promptExecutor) { "promptExecutor must be set" },
+            promptExecutor = validatedPromptExecutor,
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
             id = id,

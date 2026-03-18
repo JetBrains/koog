@@ -8,7 +8,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 /**
  * Common chained implementation for [AIAgentServiceBuilder] actual classes.
  */
-public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCommon<Self>> internal constructor() : AIAgentBuilderBase<Self>() {
+public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCommon<Self>> internal constructor() : AIAgentServiceBuilderBase<Self>() {
 
     /**
      * Configure a graph strategy and continue with a graph service builder.
