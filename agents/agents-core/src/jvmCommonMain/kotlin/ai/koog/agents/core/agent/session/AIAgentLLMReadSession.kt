@@ -21,8 +21,10 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.jdk9.asPublisher
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Flow.Publisher
 
 public actual class AIAgentLLMReadSession actual constructor(
     tools: List<ToolDescriptor>,
@@ -208,8 +210,8 @@ public actual class AIAgentLLMReadSession actual constructor(
     @JvmOverloads
     public fun requestLLMStreaming(
         executorService: ExecutorService? = null
-    ): Flow<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMStreaming()
+    ): Publisher<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
+        requestLLMStreaming().asPublisher()
     }
 
     /**

@@ -9,6 +9,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestOnlyCall
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.extension.ModeratedMessage
+import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleToolsAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -30,9 +31,11 @@ import ai.koog.agents.core.dsl.extension.requestStreamingImpl
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.agents.ext.llm.choice.ChoiceSelectionStrategy
 import ai.koog.agents.ext.llm.choice.nodeLLMSendResultsMultipleChoices
 import ai.koog.agents.ext.llm.choice.nodeSelectLLMChoice
+import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
