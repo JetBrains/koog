@@ -53,7 +53,7 @@ public data class Prompt @JvmOverloads constructor(
          * where no meaningful data or prompt has been provided.
          */
         @JvmField
-        public val Empty: Prompt = Prompt(emptyList(), "")
+        public val Empty: Prompt = Prompt(emptyList(), "default")
 
         /**
          * Builds a `Prompt` object using the specified identifier, parameters, and initialization logic.

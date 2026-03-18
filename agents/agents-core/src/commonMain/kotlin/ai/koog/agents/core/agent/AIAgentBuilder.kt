@@ -18,6 +18,7 @@ import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
 import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.serialization.TypeToken
@@ -198,7 +199,7 @@ public class GraphAgentBuilder<Input, Output>(
      * @return The updated instance of GraphAgentBuilder with the system prompt applied.
      */
     public fun systemPrompt(systemPrompt: String): GraphAgentBuilder<Input, Output> =
-        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
+        prompt(prompt(config.prompt) { system(systemPrompt) })
 
     /**
      * Sets the prompt for the GraphAgentBuilder and returns the builder instance for further configuration.
@@ -375,7 +376,7 @@ public class FunctionalAgentBuilder<Input, Output>(
      * @return The instance of FunctionalAgentBuilder with the updated system-level prompt.
      */
     public fun systemPrompt(systemPrompt: String): FunctionalAgentBuilder<Input, Output> =
-        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
+        prompt(prompt(config.prompt) { system(systemPrompt) })
 
     /**
      * Sets the specified prompt for the functional agent being built.
@@ -546,7 +547,7 @@ public class PlannerAgentBuilder<Input, Output>(
      * @return The current instance of the PlannerAgentBuilder with the specified system prompt applied.
      */
     public fun systemPrompt(systemPrompt: String): PlannerAgentBuilder<Input, Output> =
-        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
+        prompt(prompt(config.prompt) { system(systemPrompt) })
 
     /**
      * Sets the prompt to be used by the builder and updates the internal state accordingly.

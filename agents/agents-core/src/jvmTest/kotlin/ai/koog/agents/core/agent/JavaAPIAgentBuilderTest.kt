@@ -5,7 +5,9 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import junit.framework.TestCase.assertTrue
 import org.junit.jupiter.api.Test
@@ -248,5 +250,30 @@ class JavaAPIAgentBuilderTest {
             .build()
 
         assertNotNull(agent)
+    }
+
+    @Test
+    fun testBuilderSystemMessagePreservesParamsAndId() {
+        val id = "original-prompt-id"
+        val temperature = 0.42
+        val maxTokens = 42
+        val originalSystemPrompt = "Original system prompt"
+        val systemPrompt = "System prompt"
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getMockExecutor(serializer) { })
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .prompt(prompt(id, LLMParams(maxTokens = maxTokens)) { system(originalSystemPrompt) })
+            .temperature(temperature)
+            .systemPrompt(systemPrompt)
+            .build()
+
+        val prompt = agent.agentConfig.prompt
+
+        assertEquals(id, prompt.id, "Prompt ID should be preserved")
+        assertEquals(temperature, prompt.params.temperature, "Temperature should be preserved")
+        assertEquals(maxTokens, prompt.params.maxTokens, "Prompt params should be preserved")
+        assertEquals(originalSystemPrompt, prompt.messages.first().content, "original messages should be preserved")
+        assertEquals(systemPrompt, prompt.messages.last().content, "system prompt should be added")
     }
 }
