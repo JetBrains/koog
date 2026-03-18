@@ -121,6 +121,43 @@ public open class OpenRouterParams(
     }
 
     /**
+     * Subclasses that declare additional fields must override this method to preserve those fields.
+     */
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): OpenRouterParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        frequencyPenalty = frequencyPenalty,
+        presencePenalty = presencePenalty,
+        logprobs = logprobs,
+        stop = stop,
+        topLogprobs = topLogprobs,
+        topP = topP,
+        topK = topK,
+        repetitionPenalty = repetitionPenalty,
+        minP = minP,
+        topA = topA,
+        transforms = transforms,
+        models = models,
+        route = route,
+        provider = provider,
+    )
+
+    /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */
     public fun copy(

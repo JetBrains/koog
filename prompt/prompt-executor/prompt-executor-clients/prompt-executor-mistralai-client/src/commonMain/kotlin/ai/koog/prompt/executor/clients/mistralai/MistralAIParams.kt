@@ -89,6 +89,34 @@ public class MistralAIParams(
         }
     }
 
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): MistralAIParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        topP = topP,
+        stop = stop,
+        randomSeed = randomSeed,
+        presencePenalty = presencePenalty,
+        frequencyPenalty = frequencyPenalty,
+        parallelToolCalls = parallelToolCalls,
+        promptMode = promptMode,
+        safePrompt = safePrompt,
+    )
+
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */

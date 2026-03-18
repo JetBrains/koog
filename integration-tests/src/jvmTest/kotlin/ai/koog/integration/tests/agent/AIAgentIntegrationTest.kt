@@ -1398,11 +1398,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         Models.assumeEnumToolCallsAreStable(model, "force-one-tool integration with calculator enum arguments")
-        assumeTrue(
-            model.provider.id != LLMProvider.Google.id,
-            "KG-742 Prompt.withUpdatedParams() drops provider-specific params"
-        )
-
         runWithTracking { eventHandlerConfig, state ->
             val maxAttempts = if (model.provider.id == LLMProvider.MistralAI.id) 2 else 3
             var attempts = 0
