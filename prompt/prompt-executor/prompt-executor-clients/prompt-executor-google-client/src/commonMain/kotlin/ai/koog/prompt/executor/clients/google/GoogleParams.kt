@@ -71,6 +71,29 @@ public class GoogleParams(
         }
     }
 
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): GoogleParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        topP = topP,
+        topK = topK,
+        thinkingConfig = thinkingConfig,
+    )
+
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */
