@@ -35,13 +35,28 @@ val str = strategy<Input, Output>("my-strategy") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-val myNode by node<Input, Output>("node_name") { input ->
-    // Processing
-    returnValue
-}
-```
-<!--- KNIT example-custom-nodes-01.kt -->
+=== "Kotlin"
+
+    ```kotlin
+    val myNode by node<Input, Output>("node_name") { input ->
+        // Processing
+        returnValue
+    }
+    ```
+    <!--- KNIT example-custom-nodes-01.kt -->
+
+=== "Java"
+
+    ```java
+    var myNode = AIAgentNode.builder("node_name")
+        .withInput(Input.class)
+        .withOutput(Output.class)
+        .withAction((input, ctx) -> {
+            // Processing
+            return returnValue;
+        })
+        .build();
+    ```
 
 The code above represents a custom node `myNode` with predefined `Input` and `Output` types, with the optional name
 string parameter (`node_name`). In an actual example, here is a simple node that takes a string input and returns
@@ -56,16 +71,31 @@ val str = strategy<String, Int>("my-strategy") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-val myNode by node<String, Int>("node_name") { input ->
-    // Processing
-    input.length
-}
-```
-<!--- KNIT example-custom-nodes-02.kt -->
+=== "Kotlin"
 
-Another way to create a custom node is to define an extension function on `AIAgentSubgraphBuilderBase` that
-calls the `node` function:
+    ```kotlin
+    val myNode by node<String, Int>("node_name") { input ->
+        // Processing
+        input.length
+    }
+    ```
+    <!--- KNIT example-custom-nodes-02.kt -->
+
+=== "Java"
+
+    ```java
+    var myNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(Integer.class)
+        .withAction((input, ctx) -> {
+            // Processing
+            return input.length();
+        })
+        .build();
+    ```
+
+Another way to create a custom node in Kotlin is to define an extension function on `AIAgentSubgraphBuilderBase` that
+calls the `node` function. In Java, you achieve the same reusability by extracting the node builder call into a helper method:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
@@ -81,17 +111,32 @@ val strategy = strategy<String, String>("strategy_name") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-fun AIAgentSubgraphBuilderBase<*, *>.myCustomNode(
-    name: String? = null
-): AIAgentNodeDelegate<Input, Output> = node(name) { input ->
-    // Custom logic
-    input // Return the input as output (pass-through)
-}
+=== "Kotlin"
 
-val myCustomNode by myCustomNode("node_name")
-```
-<!--- KNIT example-custom-nodes-03.kt -->
+    ```kotlin
+    fun AIAgentSubgraphBuilderBase<*, *>.myCustomNode(
+        name: String? = null
+    ): AIAgentNodeDelegate<Input, Output> = node(name) { input ->
+        // Custom logic
+        input // Return the input as output (pass-through)
+    }
+
+    val myCustomNode by myCustomNode("node_name")
+    ```
+    <!--- KNIT example-custom-nodes-03.kt -->
+
+=== "Java"
+
+    ```java
+    var myCustomNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> {
+            // Custom logic
+            return input; // Return the input as output (pass-through)
+        })
+        .build();
+    ```
 
 This creates a pass-through node that performs some custom logic but returns the input as the output without modification.
 
@@ -113,19 +158,37 @@ val strategy = strategy<String, String>("strategy_name") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-    fun AIAgentSubgraphBuilderBase<*, *>.myNodeWithArguments(
-    name: String? = null,
-    arg1: String,
-    arg2: Int
-): AIAgentNodeDelegate<Input, Output> = node(name) { input ->
-    // Use arg1 and arg2 in your custom logic
-    input // Return the input as the output
-}
+=== "Kotlin"
 
-val myCustomNode by myNodeWithArguments("node_name", arg1 = "value1", arg2 = 42)
-```
-<!--- KNIT example-custom-nodes-04.kt -->
+    ```kotlin
+        fun AIAgentSubgraphBuilderBase<*, *>.myNodeWithArguments(
+        name: String? = null,
+        arg1: String,
+        arg2: Int
+    ): AIAgentNodeDelegate<Input, Output> = node(name) { input ->
+        // Use arg1 and arg2 in your custom logic
+        input // Return the input as the output
+    }
+
+    val myCustomNode by myNodeWithArguments("node_name", arg1 = "value1", arg2 = 42)
+    ```
+    <!--- KNIT example-custom-nodes-04.kt -->
+
+=== "Java"
+
+    ```java
+    String arg1 = "value1";
+    int arg2 = 42;
+
+    var myCustomNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> {
+            // Use arg1 and arg2 in your custom logic
+            return input; // Return the input as the output
+        })
+        .build();
+    ```
 
 
 ### Parameterized nodes
@@ -139,20 +202,37 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 -->
 
-```kotlin
-inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.myParameterizedNode(
-    name: String? = null,
-): AIAgentNodeDelegate<T, T> = node(name) { input ->
-    // Do some additional actions
-    // Return the input as the output
-    input
-}
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val myCustomNode by myParameterizedNode<String>("node_name")
-}
-```
-<!--- KNIT example-custom-nodes-05.kt -->
+    ```kotlin
+    inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.myParameterizedNode(
+        name: String? = null,
+    ): AIAgentNodeDelegate<T, T> = node(name) { input ->
+        // Do some additional actions
+        // Return the input as the output
+        input
+    }
+
+    val strategy = strategy<String, String>("strategy_name") {
+        val myCustomNode by myParameterizedNode<String>("node_name")
+    }
+    ```
+    <!--- KNIT example-custom-nodes-05.kt -->
+
+=== "Java"
+
+    ```java
+    // In Java, specify the types explicitly when building the node
+    var myCustomNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> {
+            // Do some additional actions
+            // Return the input as the output
+            return input;
+        })
+        .build();
+    ```
 
 ### Stateful nodes
 
@@ -167,20 +247,39 @@ typealias Input = Unit
 typealias Output = Unit
 
 -->
-```kotlin
-fun AIAgentSubgraphBuilderBase<*, *>.myStatefulNode(
-    name: String? = null
-): AIAgentNodeDelegate<Input, Output> {
-    var counter = 0
+=== "Kotlin"
 
-    return node(name) { input ->
-        counter++
-        println("Node executed $counter times")
-        input
+    ```kotlin
+    fun AIAgentSubgraphBuilderBase<*, *>.myStatefulNode(
+        name: String? = null
+    ): AIAgentNodeDelegate<Input, Output> {
+        var counter = 0
+
+        return node(name) { input ->
+            counter++
+            println("Node executed $counter times")
+            input
+        }
     }
-}
-```
-<!--- KNIT example-custom-nodes-06.kt -->
+    ```
+    <!--- KNIT example-custom-nodes-06.kt -->
+
+=== "Java"
+
+    ```java
+    // In Java, use AtomicInteger (or similar) since the lambda captures must be effectively final
+    AtomicInteger counter = new AtomicInteger(0);
+
+    var myStatefulNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> {
+            int count = counter.incrementAndGet();
+            System.out.println("Node executed " + count + " times");
+            return input;
+        })
+        .build();
+    ```
 
 ## Node input and output types
 
@@ -195,13 +294,28 @@ val strategy = strategy<String, String>("strategy_name") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-val stringToIntNode by node<String, Int>("node_name") { input: String ->
-    // Processing
-    input.toInt() // Convert string to integer
-}
-```
-<!--- KNIT example-custom-nodes-07.kt -->
+=== "Kotlin"
+
+    ```kotlin
+    val stringToIntNode by node<String, Int>("node_name") { input: String ->
+        // Processing
+        input.toInt() // Convert string to integer
+    }
+    ```
+    <!--- KNIT example-custom-nodes-07.kt -->
+
+=== "Java"
+
+    ```java
+    var stringToIntNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(Integer.class)
+        .withAction((input, ctx) -> {
+            // Processing
+            return Integer.parseInt(input); // Convert string to integer
+        })
+        .build();
+    ```
 
 !!! note
     The input and output types determine how the node can be connected to other nodes in the workflow. Nodes can only be connected if the output type of the source node is compatible with the input type of the target node.
@@ -235,14 +349,28 @@ val strategy = strategy<String, String>("strategy_name") {
 <!--- SUFFIX
 }
 -->
-```kotlin
+=== "Kotlin"
 
-val loggingNode by node<String, String>("node_name") { input ->
-    println("Processing input: $input")
-    input // Return the input as the output
-}
-```
-<!--- KNIT example-custom-nodes-08.kt -->
+    ```kotlin
+    val loggingNode by node<String, String>("node_name") { input ->
+        println("Processing input: $input")
+        input // Return the input as the output
+    }
+    ```
+    <!--- KNIT example-custom-nodes-08.kt -->
+
+=== "Java"
+
+    ```java
+    var loggingNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> {
+            System.out.println("Processing input: " + input);
+            return input; // Return the input as the output
+        })
+        .build();
+    ```
 
 ### Transformation nodes
 
@@ -257,13 +385,28 @@ val strategy = strategy<String, String>("strategy_name") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-val upperCaseNode by node<String, String>("node_name") { input ->
-    println("Processing input: $input")
-    input.uppercase() // Transform the input to uppercase
-}
-```
-<!--- KNIT example-custom-nodes-09.kt -->
+=== "Kotlin"
+
+    ```kotlin
+    val upperCaseNode by node<String, String>("node_name") { input ->
+        println("Processing input: $input")
+        input.uppercase() // Transform the input to uppercase
+    }
+    ```
+    <!--- KNIT example-custom-nodes-09.kt -->
+
+=== "Java"
+
+    ```java
+    var upperCaseNode = AIAgentNode.builder("node_name")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> {
+            System.out.println("Processing input: " + input);
+            return input.toUpperCase(); // Transform the input to uppercase
+        })
+        .build();
+    ```
 
 ### LLM interaction nodes
 
@@ -278,19 +421,41 @@ val strategy = strategy<String, String>("strategy_name") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-val summarizeTextNode by node<String, String>("node_name") { input ->
-    llm.writeSession {
-        appendPrompt {
-            user("Please summarize the following text: $input")
-        }
+=== "Kotlin"
 
-        val response = requestLLMWithoutTools()
-        response.content
+    ```kotlin
+    val summarizeTextNode by node<String, String>("node_name") { input ->
+        llm.writeSession {
+            appendPrompt {
+                user("Please summarize the following text: $input")
+            }
+
+            val response = requestLLMWithoutTools()
+            response.content
+        }
     }
-}
-```
-<!--- KNIT example-custom-nodes-10.kt -->
+    ```
+    <!--- KNIT example-custom-nodes-10.kt -->
+
+=== "Java"
+
+    ```java
+    // In Java, LLM interaction is handled using pre-built factory nodes.
+    // AIAgentNode.llmRequest() creates a node that sends the input string as a user
+    // message to the LLM and returns the response. The prompt text is provided as
+    // the node's input when it is executed in the graph.
+    var summarizeTextNode = AIAgentNode.llmRequest(true, "node_name");
+
+    // To extract the text content from the LLM response, chain a separate node:
+    var extractContent = AIAgentNode.builder("extract-content")
+        .withInput(Message.Response.class)
+        .withOutput(String.class)
+        .withAction((response, ctx) -> response.getContent())
+        .build();
+    ```
+
+!!! note
+    The Kotlin example above shows fine-grained control over the LLM session (custom prompt construction, explicit `requestLLMWithoutTools` call). The Java API provides higher-level factory methods like `AIAgentNode.llmRequest()` that handle prompt construction automatically — the input string becomes the user message. For most use cases this is sufficient; for advanced prompt customization, compose multiple nodes or use a custom subgraph.
 
 ### Tool run node
 
@@ -315,17 +480,35 @@ val strategy = strategy<String, String>("strategy_name") {
 <!--- SUFFIX
 }
 -->
-```kotlin
-val nodeExecuteCustomTool by node<String, String>("node_name") { input ->
-    val toolCall = Message.Tool.Call(
-        id = UUID.randomUUID().toString(),
-        tool = toolName,
-        metaInfo = ResponseMetaInfo.create(Clock.System),
-        content = Json.encodeToString(ToolArgs(arg1 = input, arg2 = 42)) // Use the input as tool arguments
-    )
+=== "Kotlin"
 
-    val result = environment.executeTool(toolCall)
-    result.content
-}
-```
-<!--- KNIT example-custom-nodes-11.kt -->
+    ```kotlin
+    val nodeExecuteCustomTool by node<String, String>("node_name") { input ->
+        val toolCall = Message.Tool.Call(
+            id = UUID.randomUUID().toString(),
+            tool = toolName,
+            metaInfo = ResponseMetaInfo.create(Clock.System),
+            content = Json.encodeToString(ToolArgs(arg1 = input, arg2 = 42)) // Use the input as tool arguments
+        )
+
+        val result = environment.executeTool(toolCall)
+        result.content
+    }
+    ```
+    <!--- KNIT example-custom-nodes-11.kt -->
+
+=== "Java"
+
+    ```java
+    // In Java, direct tool execution (as shown in the Kotlin example) is not available
+    // through the Java builder API. Instead, use a subgraph that delegates tool calls
+    // to the LLM, which decides when and how to invoke the tools:
+    var toolSubgraph = AIAgentSubgraph.builder("tool-subgraph")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withTask(input -> "Use my_tool with input: " + input)
+        .build();
+    ```
+
+!!! note
+    The Kotlin example demonstrates low-level tool execution by manually constructing a `Message.Tool.Call` and calling `environment.executeTool()`. The Java API encourages a higher-level approach using subgraphs with `withTask()`, where the LLM orchestrates tool calls automatically. To restrict which tools are available, chain `.limitedTools(List.of(myTool))` before `.withInput()`.
