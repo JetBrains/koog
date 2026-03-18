@@ -27,7 +27,6 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -274,7 +273,6 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         }
     }
 
-    @Disabled("KG-748 Java AIAgentServiceBuilder.maxIterations() has no effect as AIAgentConfig.copy() ignores the new value")
     @Test
     fun integration_BuilderMethodChaining() = runTest(timeout = 180.seconds) {
         val model = OpenAIModels.Chat.GPT5_1
