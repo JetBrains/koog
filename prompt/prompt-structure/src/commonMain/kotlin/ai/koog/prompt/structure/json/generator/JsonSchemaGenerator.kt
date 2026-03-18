@@ -72,14 +72,9 @@ public abstract class JsonSchemaGenerator {
             return elementDescriptionOverride ?: getDescriptionFromAnnotations(descriptor.getElementAnnotations(index))
         }
 
-        private fun getDescriptionFromAnnotations(annotations: List<Annotation>): String? = annotations
-            .firstNotNullOfOrNull { annotation ->
-                when (annotation) {
-                    is Description -> annotation.value
-                    is LLMDescription -> annotation.effectiveValue
-                    else -> null
-                }
-            }
+        private fun getDescriptionFromAnnotations(annotations: List<Annotation>): String? =
+            annotations.filterIsInstance<LLMDescription>().firstOrNull()?.effectiveValue
+                ?: annotations.filterIsInstance<Description>().firstOrNull()?.value
     }
 
     /**

@@ -103,4 +103,36 @@ class LLMDescriptionUsageTest {
         assertEquals("Nested class property desc", props.getValue("street").description)
         assertEquals("", props.getValue("number").description)
     }
+
+    // -------------------------------------------------------------------------
+    // Tests verifying finding #1: effectiveValue backward-compat and priority
+    // -------------------------------------------------------------------------
+
+    // Finding #1a: the deprecated `description` field is still honoured via effectiveValue.
+    @Serializable
+    @LLMDescription(description = "Legacy class description")
+    data class LegacyAnnotated(
+        @property:LLMDescription(description = "Legacy property description") val x: Int
+    )
+
+    @Test
+    fun deprecated_description_field_is_read_via_effective_value() {
+        val desc = getToolDescriptor(typeToken<LegacyAnnotated>(), "legacy")
+        assertEquals("Legacy class description", desc.description)
+        assertEquals(
+            "Legacy property description",
+            desc.requiredParameters.single { it.name == "x" }.description
+        )
+    }
+
+    // Finding #1b: when both `value` and the deprecated `description` are set, `value` wins.
+    @Serializable
+    @LLMDescription(value = "New class description", description = "Old class description")
+    data class ValueFieldTakesPriority(val x: Int)
+
+    @Test
+    fun value_field_takes_priority_over_deprecated_description_field() {
+        val desc = getToolDescriptor(typeToken<ValueFieldTakesPriority>(), "value_priority")
+        assertEquals("New class description", desc.description)
+    }
 }

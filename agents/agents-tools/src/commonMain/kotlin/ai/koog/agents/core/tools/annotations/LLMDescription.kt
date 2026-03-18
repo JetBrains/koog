@@ -29,5 +29,5 @@ public annotation class LLMDescription(
  * Gets the value from [LLMDescription.value] or [LLMDescription.description].
  */
 @Suppress("DEPRECATION")
-public val LLMDescription.effectiveValue: String
-    get() = value.ifEmpty { description }
+public val LLMDescription.effectiveValue: String?
+    get() = value.ifBlank { description }.ifBlank { null }

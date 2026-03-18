@@ -1,6 +1,8 @@
 package ai.koog.prompt.structure.json.generator
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import io.kotest.assertions.json.shouldEqualJson
+import kotlinx.schema.Description
 import kotlinx.serialization.SerialInfo
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -194,12 +196,35 @@ class JsonSchemaGeneratorTest {
         val value: JsonElement? = null
     )
 
+    // Finding #1: empty @LLMDescription (effectiveValue == null) must not block @Description fallback.
+    @Serializable
+    @SerialName("DescriptionFallbackClass")
+    @LLMDescription
+    @Description("Fallback description from @Description")
+    data class DescriptionFallbackClass(
+        @property:LLMDescription
+        @property:Description("Fallback property description")
+        val prop: String
+    )
+
+    // Finding #2: @LLMDescription must beat @Description regardless of declaration order.
+    // Here @Description is declared first to provoke the ordering-dependent bug.
+    @Serializable
+    @SerialName("PriorityClass")
+    @Description("Should NOT appear: Description annotation")
+    @LLMDescription("Should appear: LLMDescription annotation")
+    data class PriorityClass(
+        @property:Description("Should NOT appear: Description on property")
+        @property:LLMDescription("Should appear: LLMDescription on property")
+        val prop: String
+    )
+
     @Test
     fun testGenerateStandardSchema() {
         val result = standardGenerator.generate(json, "TestClass", serializer<TestClass>(), emptyMap())
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "${"$"}id": "TestClass",
               "${"$"}defs": {
@@ -247,8 +272,6 @@ class JsonSchemaGeneratorTest {
               "${"$"}ref": "#/${"$"}defs/TestClass"
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -256,7 +279,7 @@ class JsonSchemaGeneratorTest {
         val result = basicGenerator.generate(json, "TestClass", serializer<TestClass>(), emptyMap())
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "type": "object",
               "properties": {
@@ -295,8 +318,6 @@ class JsonSchemaGeneratorTest {
               "additionalProperties": false
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -304,7 +325,7 @@ class JsonSchemaGeneratorTest {
         val result = basicGenerator.generate(json, "TestClass", serializer<TestClass>(), emptyMap(), setOf("TestClass.nullableProperty"))
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "type": "object",
               "properties": {
@@ -339,8 +360,6 @@ class JsonSchemaGeneratorTest {
               "additionalProperties": false
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -367,7 +386,7 @@ class JsonSchemaGeneratorTest {
         val result = standardGenerator.generate(json, "TestClass", serializer<TestClass>(), descriptions)
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "${"$"}id": "TestClass",
               "${"$"}defs": {
@@ -416,8 +435,6 @@ class JsonSchemaGeneratorTest {
               "${"$"}ref": "#/${"$"}defs/TestClass"
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -430,7 +447,7 @@ class JsonSchemaGeneratorTest {
         val result = basicGenerator.generate(json, "TestClass", serializer<TestClass>(), descriptions)
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "type": "object",
               "properties": {
@@ -470,8 +487,6 @@ class JsonSchemaGeneratorTest {
               "additionalProperties": false
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -487,7 +502,7 @@ class JsonSchemaGeneratorTest {
         val result = standardGenerator.generate(json, "NestedTestClass", serializer<NestedTestClass>(), descriptions)
         val schema = json.encodeToString(result.schema)
 
-        val expectedDotSchema = """
+        schema shouldEqualJson """
             {
               "${"$"}id": "NestedTestClass",
               "${"$"}defs": {
@@ -547,8 +562,6 @@ class JsonSchemaGeneratorTest {
               "${"$"}ref": "#/${"$"}defs/NestedTestClass"
             }
         """.trimIndent()
-
-        assertEquals(expectedDotSchema, schema)
     }
 
     @Test
@@ -564,7 +577,7 @@ class JsonSchemaGeneratorTest {
         val result = basicGenerator.generate(json, "NestedTestClass", serializer<NestedTestClass>(), descriptions)
         val schema = json.encodeToString(result.schema)
 
-        val expectedDotSchema = """
+        schema shouldEqualJson """
             {
               "type": "object",
               "properties": {
@@ -643,8 +656,6 @@ class JsonSchemaGeneratorTest {
               "additionalProperties": false
             }
         """.trimIndent()
-
-        assertEquals(expectedDotSchema, schema)
     }
 
     @Test
@@ -665,7 +676,7 @@ class JsonSchemaGeneratorTest {
         )
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "${"$"}id": "TestClosedPolymorphism",
               "${"$"}defs": {
@@ -735,8 +746,6 @@ class JsonSchemaGeneratorTest {
               ]
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -757,7 +766,7 @@ class JsonSchemaGeneratorTest {
         )
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "${"$"}id": "TestOpenPolymorphism",
               "${"$"}defs": {
@@ -827,8 +836,6 @@ class JsonSchemaGeneratorTest {
               ]
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -843,7 +850,7 @@ class JsonSchemaGeneratorTest {
         val result = standardGenerator.generate(json, "EventData", serializer<EventData>(), emptyMap())
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "${"$"}id": "EventData",
               "${"$"}defs": {
@@ -863,8 +870,6 @@ class JsonSchemaGeneratorTest {
               "${"$"}ref": "#/${"$"}defs/EventData"
             }
         """.trimIndent()
-
-        assertEquals(expectedSchema, schema)
     }
 
     @Test
@@ -872,7 +877,7 @@ class JsonSchemaGeneratorTest {
         val result = standardGenerator.generate(json, "NullableEventData", serializer<NullableEventData>(), emptyMap())
         val schema = json.encodeToString(result.schema)
 
-        val expectedSchema = """
+        schema shouldEqualJson """
             {
               "${"$"}id": "NullableEventData",
               "${"$"}defs": {
@@ -896,7 +901,77 @@ class JsonSchemaGeneratorTest {
               "${"$"}ref": "#/${"$"}defs/NullableEventData"
             }
         """.trimIndent()
+    }
 
-        assertEquals(expectedSchema, schema)
+    // -------------------------------------------------------------------------
+    // Tests verifying findings #1 and #2 from PR review
+    // -------------------------------------------------------------------------
+
+    /**
+     * Finding #1: when @LLMDescription has empty value and description, effectiveValue must be
+     * treated as absent (null) so the @Description annotation is used as fallback.
+     * An effectiveValue of "" (non-null empty string) would short-circuit the fallback and
+     * produce a schema with no description at all.
+     */
+    @Test
+    fun testEmptyLLMDescriptionFallsBackToDescriptionAnnotation() {
+        val result = basicGenerator.generate(
+            json,
+            "DescriptionFallbackClass",
+            serializer<DescriptionFallbackClass>(),
+            emptyMap()
+        )
+        val schema = json.encodeToString(result.schema)
+
+        schema shouldEqualJson """
+            {
+              "type": "object",
+              "properties": {
+                "prop": {
+                  "type": "string",
+                  "description": "Fallback property description"
+                }
+              },
+              "required": [
+                "prop"
+              ],
+              "additionalProperties": false,
+              "description": "Fallback description from @Description"
+            }
+        """.trimIndent()
+    }
+
+    /**
+     * Finding #2: @LLMDescription must take explicit priority over @Description regardless of
+     * annotation declaration order. Here @Description is intentionally declared before
+     * @LLMDescription on both the class and the property to verify that iteration order cannot
+     * cause @Description to win.
+     */
+    @Test
+    fun testLLMDescriptionTakesPriorityOverDescriptionAnnotation() {
+        val result = basicGenerator.generate(
+            json,
+            "PriorityClass",
+            serializer<PriorityClass>(),
+            emptyMap()
+        )
+        val schema = json.encodeToString(result.schema)
+
+        schema shouldEqualJson """
+            {
+              "type": "object",
+              "properties": {
+                "prop": {
+                  "type": "string",
+                  "description": "Should appear: LLMDescription on property"
+                }
+              },
+              "required": [
+                "prop"
+              ],
+              "additionalProperties": false,
+              "description": "Should appear: LLMDescription annotation"
+            }
+        """.trimIndent()
     }
 }

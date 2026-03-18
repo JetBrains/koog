@@ -22,8 +22,7 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
                 implementation(project(":agents:agents-test"))
             }
         }
