@@ -325,7 +325,7 @@ Here is an example of a basic strategy graph:
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.message.Message;
-    class ExampleCustomStrategyGraphs05 {
+    class exampleCustomStrategyGraphs05 {
         public static void main(String[] args) {
     -->
     <!--- SUFFIX
@@ -373,7 +373,7 @@ Here is an example of a basic strategy graph:
 
     return strategy.build();
     ```
-    <!--- KNIT ExampleCustomStrategyGraphs05.java -->
+    <!--- KNIT exampleCustomStrategyGraphs05.java -->
 
 ## Visualizing strategy graph 
 
@@ -425,7 +425,7 @@ For the graph created in the previous example, you can run:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.MermaidDiagramGenerator;
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
-    class ExampleCustomStrategyGraphs06 {
+    class exampleCustomStrategyGraphs06 {
         public static void main(String[] args) {
             var myStrategy = AIAgentGraphStrategy.builder("single_run")
                 .withInput(String.class)
@@ -440,7 +440,7 @@ For the graph created in the previous example, you can run:
     var mermaidDiagram = MermaidDiagramGenerator.INSTANCE.generate(myStrategy);
     System.out.println(mermaidDiagram);
     ```
-    <!--- KNIT ExampleCustomStrategyGraphs06.java -->
+    <!--- KNIT exampleCustomStrategyGraphs06.java -->
 
 and the output will be:
 ```mermaid
