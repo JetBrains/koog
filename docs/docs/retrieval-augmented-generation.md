@@ -1,55 +1,46 @@
 # Retrieval-augmented generation (RAG)
 
-To let you provide up-to-date and searchable information sources for use with Large Language Models (LLMs), Koog
-supports Retrieval-augmented generation (RAG) to store and retrieve information from documents.
+Koog provides building blocks for retrieval-augmented generation (RAG): embedding text, storing embedded documents, and retrieving the most relevant results for a query.
 
-## Key RAG features
+This page focuses on what is available in the current `rag` module and how to use it safely.
 
-The core components of a common RAG system include:
+## What Koog provides today
 
-- **Document storage**: a repository of documents, files, or text chunks that contain information.
-- **Vector embeddings**: numerical representations of a text that capture semantic meaning. For more information on embeddings in Koog, see [Embeddings](embeddings.md).
-- **Retrieval mechanism**: a system that finds the most relevant documents based on a query.
-- **Generation component**: an LLM that uses the retrieved information to generate responses.
+The current RAG support is split into two modules:
 
-RAG addresses several limitations of traditional LLMs:
+- `rag-base`: common abstractions for retrieval, storage, search requests, filtering, and file/document providers
+- `vector-storage`: local implementations that combine document embedding with vector storage
 
-- **Knowledge cutoff**: RAG can access the most recent information, not limited to training data.
-- **Hallucinations**: by grounding responses in retrieved documents, RAG reduces fabricated information.
-- **Domain specificity**: RAG can be tailored to specific domains by curating the knowledge base.
-- **Transparency**: the sources of information can be cited, making the system more explainable.
+Today, the most complete out-of-the-box flow is:
 
-## Finding information in a RAG system
+1. Create an `Embedder`
+2. Create a `DocumentEmbedder`
+3. Create a `VectorStore`
+4. Add documents
+5. Search with `SimilaritySearchRequest`
 
-Finding relevant information in a RAG system involves storing documents as vector embeddings and ranking them based on their similarity to a user's query. This approach works with various document types, including PDFs, images, text files, or even individual text chunks.
+## Usage with local embeddings
 
-The process involves:
+Use this approach when you want to build a local or prototype RAG pipeline inside Koog using the current built-in implementations.
 
-1. **Document embedding**: converting documents into vector representations that capture their semantic meaning.
-2. **Vector storage**: storing these embeddings efficiently for quick retrieval.
-3. **Similarity search**: finding documents whose embeddings are most similar to the query embedding.
-4. **Ranking**: ordering documents by their relevance score.
+### Main types
 
-## Implementing a RAG system in Koog
+- `LLMEmbedder`: embeds text using an embedding-capable model
+- `JVMTextDocumentEmbedder`: reads JVM file-based documents and embeds their text content
+- `EmbeddingStore`: combines a document embedder with a vector storage backend
+- `InMemoryVectorStorage`: stores vectors in memory
+- `SimilaritySearchRequest`: performs similarity search by query text
 
-To implement a RAG system in Koog, follow the steps below:
-
-1. Create an embedder using Ollama or OpenAI. The embedder is an instance of the `LLMEmbedder` class that takes an LLM client instance and model as parameters. For more information, see [Embeddings](embeddings.md).
-2. Create a document embedder based on the created general embedder.
-3. Create a document storage.
-4. Add documents to the storage.
-5. Find the most relevant documents using a defined query.
-
-This sequence of steps represents a *relevance search* flow that returns the most relevant documents for a given user query. Here is a code sample showing how to implement the entire sequence of steps described above:
+### Minimal example
 
 <!--- INCLUDE
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.rag.base.storage.SimilaritySearchRequest
-import ai.koog.rag.vector.store.EmbeddingStore
-import ai.koog.rag.vector.storage.InMemoryVectorStorage
 import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
+import ai.koog.rag.vector.storage.InMemoryVectorStorage
+import ai.koog.rag.vector.store.EmbeddingStore
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Path
 
@@ -61,647 +52,86 @@ fun main() {
 }
 -->
 ```kotlin
-// Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
-// You may also use OpenAI embeddings with:
-// val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
+val embedder = LLMEmbedder(
+    client = OllamaClient(),
+    model = OllamaModels.Embeddings.NOMIC_EMBED_TEXT
+)
 
-// Create a JVM-specific document embedder
 val documentEmbedder = JVMTextDocumentEmbedder(embedder)
 
-// Create a vector store using in-memory vector storage
-val vectorStore = EmbeddingStore(documentEmbedder, InMemoryVectorStorage())
+val vectorStore = EmbeddingStore(
+    embedder = documentEmbedder,
+    storage = InMemoryVectorStorage()
+)
 
-// Store documents in the storage
-vectorStore.add(listOf(
-    Path.of("./my/documents/doc1.txt"),
-    Path.of("./my/documents/doc2.txt"),
-    Path.of("./my/documents/doc3.txt"),
-    // ... add more documents as needed
-    Path.of("./my/documents/doc100.txt")
-))
+vectorStore.add(
+    listOf(
+        Path.of("./docs/doc1.txt"),
+        Path.of("./docs/doc2.txt"),
+        Path.of("./docs/doc3.txt")
+    )
+)
 
-// Find the most relevant documents for a user query
-val query = "I want to open a bank account but I'm getting a 404 when I open your website. I used to be your client with a different account 5 years ago before you changed your firm name"
-val results = vectorStore.search(SimilaritySearchRequest(queryText = query, limit = 3))
+val results = vectorStore.search(
+    SimilaritySearchRequest(
+        queryText = "How do I reset my password?",
+        limit = 3
+    )
+)
 
-// Process the relevant files
 results.forEach { result ->
-    println("Relevant file: ${result.document.toAbsolutePath()} (score: ${result.score.value})")
-    // Process the file content as needed
+    println("${result.document}: ${result.score.value}")
 }
 ```
 <!--- KNIT example-retrieval-augmented-generation-01.kt -->
 
+### Available local implementations
 
-### Providing relevance search for use by AI agents
+- `InMemoryVectorStorage`: in-memory vector storage
+- `FileVectorStorage`: file-based vector storage
+- `JVMFileVectorStorage`: JVM file-based vector storage
+- `TextDocumentEmbedder`: generic document-to-text embedder
+- `JVMTextDocumentEmbedder`: JVM text document embedder
+- `EmbeddingStore`: generic embedding + storage composition
+- `InMemoryDocumentEmbeddingStore`: in-memory embedding store
+- `FileDocumentEmbeddingStore`: file-based embedding store
+- `JVMFileDocumentEmbeddingStore`: JVM file-based embedding store
+- `TextFileDocumentEmbeddingStore`: file-based store for text documents
+- `JVMFileEmbeddingStore`: JVM file-based store for text documents
 
-Once you have a vector store system, you can use it to provide relevant context to an AI agent for answering user queries. This enhances the agent's ability to provide accurate and contextually appropriate responses.
+## Current limitations
 
-Here is an example of how to implement the defined RAG system for an AI agent to be able to answer queries by getting information from the document storage: 
+The current built-in flow is useful for local and reference implementations, but it is not yet a full production RAG platform.
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaClient
-import ai.koog.rag.base.storage.SimilaritySearchRequest
-import ai.koog.rag.vector.store.EmbeddingStore
-import ai.koog.rag.vector.storage.InMemoryVectorStorage
-import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
-import kotlin.io.path.pathString
+Important limitations:
 
-// Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
-// You may also use OpenAI embeddings with:
-// val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
+- the built-in examples center on similarity search only
+- there is no built-in chunking pipeline in the `rag` module
+- metadata-rich production record modeling is still limited
+- production vector database integrations are not provided in the current `rag` module
 
-// Create a JVM-specific document embedder
-val documentEmbedder = JVMTextDocumentEmbedder(embedder)
+If you are building a custom backend, start from `rag-base` abstractions and implement your own storage adapter.
 
-// Create a vector store using in-memory vector storage
-val vectorStore = EmbeddingStore(documentEmbedder, InMemoryVectorStorage())
+## Usage with production vector databases
 
-const val apiKey = "apikey"
+This section will document recommended integrations for production vector databases such as Pinecone, Weaviate, pgvector, and Milvus.
 
--->
-```kotlin
-suspend fun solveUserRequest(query: String) {
-    // Retrieve top-5 documents from the document provider
-    val results = vectorStore.search(SimilaritySearchRequest(queryText = query, limit = 5))
+To be added later.
 
-    // Create an AI Agent with the relevant context
-    val agentConfig = AIAgentConfig(
-        prompt = prompt("context") {
-            system("You are a helpful assistant. Use the provided context to answer the user's question accurately.")
-            user {
-                +"Relevant context:"
-                results.forEach {
-                    file(it.document.pathString, "text/plain")
-                }
-            }
-        },
-        model = OpenAIModels.Chat.GPT4o, // Or a different model of your choice
-        maxAgentIterations = 100,
-    )
+## Choosing where to start
 
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(apiKey),
-        llmModel = OpenAIModels.Chat.GPT4o
-    )
+Use `vector-storage` if:
 
+- you want a local RAG prototype
+- you want a simple reference implementation
+- you want to experiment with embedding and retrieval flow inside Koog
 
-    // Run the agent to get a response
-    val response = agent.run(query)
+Use `rag-base` if:
 
-    // Return or process the response
-    println("Agent response: $response")
-}
-```
-<!--- KNIT example-retrieval-augmented-generation-02.kt -->
+- you are building your own storage backend
+- you want to integrate an external vector database
+- you want to reuse the abstractions in another Koog module
 
+## See also
 
-### Providing relevance search as a tool
-
-Instead of directly providing document content as context, you can also implement a tool that allows the agent to perform relevance searches on demand. This gives the agent more flexibility in deciding when and how to use the document storage.
-
-Here is an example of how to implement a relevance search tool:
-
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.asTool
-import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaClient
-import ai.koog.rag.base.storage.SimilaritySearchRequest
-import ai.koog.rag.vector.store.EmbeddingStore
-import ai.koog.rag.vector.storage.InMemoryVectorStorage
-import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
-import kotlinx.coroutines.runBlocking
-import java.nio.file.Files
-
-// Create an embedder using Ollama
-val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
-// You may also use OpenAI embeddings with:
-// val embedder = LLMEmbedder(OpenAILLMClient("API_KEY"), OpenAIModels.Embeddings.TextEmbeddingAda3Large)
-
-// Create a JVM-specific document embedder
-val documentEmbedder = JVMTextDocumentEmbedder(embedder)
-
-// Create a vector store using in-memory vector storage
-val vectorStore = EmbeddingStore(documentEmbedder, InMemoryVectorStorage())
-
-const val apiKey = "apikey"
-
--->
-```kotlin
-@Tool
-@LLMDescription("Search for relevant documents about any topic (if exists). Returns the content of the most relevant documents.")
-suspend fun searchDocuments(
-    @LLMDescription("Query to search relevant documents about")
-    query: String,
-    @LLMDescription("Maximum number of documents")
-    count: Int
-): String {
-    val results =
-        vectorStore.search(SimilaritySearchRequest(queryText = query, limit = count, minScore = 0.9))
-
-    if (results.isEmpty()) {
-        return "No relevant documents found for the query: $query"
-    }
-
-    val result = StringBuilder("Found ${results.size} relevant documents:\n\n")
-
-    results.forEachIndexed { index, searchResult ->
-        val content = Files.readString(searchResult.document)
-        result.append("Document ${index + 1}: ${searchResult.document.fileName}\n")
-        result.append("Content: $content\n\n")
-    }
-
-    return result.toString()
-}
-
-fun main() {
-    runBlocking {
-        val tools = ToolRegistry {
-            tool(::searchDocuments.asTool())
-        }
-
-        val agent = AIAgent(
-            toolRegistry = tools,
-            promptExecutor = simpleOpenAIExecutor(apiKey),
-            llmModel = OpenAIModels.Chat.GPT4o
-        )
-
-        val response = agent.run("How to make a cake?")
-        println("Agent response: $response")
-
-    }
-}
-```
-<!--- KNIT example-retrieval-augmented-generation-03.kt -->
-
-With this approach, the agent can decide when to use the search tool based on your query. This is particularly useful for complex queries that may require information from multiple documents or when the agent needs to search for specific details.
-
-## Existing implementations of vector storage and document embedding providers
-
-For convenience and easier implementation of a RAG system, Koog provides several out-of-the-box implementations for vector storage, document embedding, and combined embedding and storage components.
-
-### Vector storage
-
-#### InMemoryVectorStorage
-
-A simple in-memory implementation that stores documents and their vector embeddings in memory. Suitable for testing or small-scale applications.
-
-<!--- INCLUDE
-import ai.koog.rag.vector.storage.InMemoryVectorStorage
-import java.nio.file.Path
--->
-```kotlin
-val inMemoryStorage = InMemoryVectorStorage<Path>()
-```
-<!--- KNIT example-retrieval-augmented-generation-04.kt -->
-
-For more information, see the [InMemoryVectorStorage](api:vector-storage::ai.koog.rag.vector.storage.InMemoryVectorStorage) reference.
-
-#### FileVectorStorage
-
-A file-based implementation that stores documents and their vector embeddings on disk. Suitable for persistent storage across application restarts.
-
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-val fileStorage = FileVectorStorage<Document, Path>(
-   documentReader = documentProvider,
-   fs = fileSystemProvider,
-   root = rootPath
-)
-```
-<!--- KNIT example-retrieval-augmented-generation-05.kt -->
-
-For more information, see the [FileVectorStorage](api:vector-storage::ai.koog.rag.vector.storage.FileVectorStorage) reference.
-
-#### JVMFileVectorStorage
-
-A JVM-specific implementation of `FileVectorStorage` that works with `java.nio.file.Path`.
-
-<!--- INCLUDE
-import ai.koog.rag.vector.storage.JVMFileVectorStorage
-import java.nio.file.Path
--->
-```kotlin
-val jvmFileStorage = JVMFileVectorStorage(root = Path.of("/path/to/storage"))
-```
-<!--- KNIT example-retrieval-augmented-generation-06.kt -->
-
-For more information, see the [JVMFileVectorStorage](api:vector-storage::ai.koog.rag.vector.storage.JVMFileVectorStorage) reference.
-
-### Document embedder
-
-#### TextDocumentEmbedder
-
-A generic implementation that works with any document type that can be converted to text.
-
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-val textEmbedder = TextDocumentEmbedder<Document, Path>(
-   documentReader = documentProvider,
-   embedder = embedder
-)
-```
-<!--- KNIT example-retrieval-augmented-generation-07.kt -->
-
-For more information, see the [TextDocumentEmbedder](api:vector-storage::ai.koog.rag.vector.embedder.TextDocumentEmbedder) reference.
-
-#### JVMTextDocumentEmbedder
-
-A JVM-specific implementation that works with `java.nio.file.Path`.
-
-<!--- INCLUDE
-import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import ai.koog.prompt.executor.ollama.client.OllamaClient
-import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
-
--->
-```kotlin
-val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
-val jvmTextEmbedder = JVMTextDocumentEmbedder(embedder = embedder)
-```
-<!--- KNIT example-retrieval-augmented-generation-08.kt -->
-
-For more information, see the [JVMTextDocumentEmbedder](api:vector-storage::ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder) reference.
-
-### Combined storage implementations
-
-#### EmbeddingStore
-
-Combines a document embedder and a vector storage to provide a complete solution for storing and searching documents.
-
-<!--- INCLUDE
-import ai.koog.agents.example.exampleRetrievalAugmentedGeneration02.documentEmbedder
-import ai.koog.rag.vector.store.EmbeddingStore
-import ai.koog.rag.vector.storage.InMemoryVectorStorage
-import java.nio.file.Path
-
-val vectorStorage = InMemoryVectorStorage<Path>()
-
--->
-```kotlin
-val embeddingStore = EmbeddingStore(
-    embedder = documentEmbedder,
-    storage = vectorStorage
-)
-```
-<!--- KNIT example-retrieval-augmented-generation-09.kt -->
-
-For more information, see the [EmbeddingStore](api:vector-storage::ai.koog.rag.vector.store.EmbeddingStore) reference.
-
-#### InMemoryDocumentEmbeddingStore
-
-An in-memory implementation of `EmbeddingStore`.
-
-<!--- INCLUDE
-import ai.koog.agents.example.exampleRetrievalAugmentedGeneration03.documentEmbedder
-import ai.koog.rag.vector.store.InMemoryDocumentEmbeddingStore
-import java.nio.file.Path
-
-typealias Document = Path
--->
-```kotlin
-val inMemoryEmbeddingStore = InMemoryDocumentEmbeddingStore<Document>(
-    embedder = documentEmbedder
-)
-
-```
-<!--- KNIT example-retrieval-augmented-generation-10.kt -->
-
-For more information, see the [InMemoryDocumentEmbeddingStore](api:vector-storage::ai.koog.rag.vector.store.InMemoryDocumentEmbeddingStore) reference.
-
-#### FileDocumentEmbeddingStore
-
-A file-based implementation of `EmbeddingStore`.
-
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-val fileEmbeddingStore = FileDocumentEmbeddingStore<Document, Path>(
-   embedder = documentEmbedder,
-   documentProvider = documentProvider,
-   fs = fileSystemProvider,
-   root = rootPath
-)
-```
-<!--- KNIT example-retrieval-augmented-generation-11.kt -->
-
-For more information, see the [FileDocumentEmbeddingStore](api:vector-storage::ai.koog.rag.vector.store.FileDocumentEmbeddingStore) reference.
-
-#### JVMFileDocumentEmbeddingStore
-
-A JVM-specific implementation of `FileDocumentEmbeddingStore`.
-
-<!--- INCLUDE
-import ai.koog.agents.example.exampleRetrievalAugmentedGeneration03.documentEmbedder
-import ai.koog.rag.vector.store.JVMFileDocumentEmbeddingStore
-import java.nio.file.Path
--->
-```kotlin
-val jvmFileEmbeddingStore = JVMFileDocumentEmbeddingStore(
-   embedder = documentEmbedder,
-   root = Path.of("/path/to/storage")
-)
-```
-<!--- KNIT example-retrieval-augmented-generation-12.kt -->
-
-For more information, see the [JVMFileDocumentEmbeddingStore](api:vector-storage::ai.koog.rag.vector.store.JVMFileDocumentEmbeddingStore) reference.
-
-#### TextFileDocumentEmbeddingStore
-
-A file-based implementation that combines `TextDocumentEmbedder` and `FileVectorStorage`.
-
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-val textFileEmbeddingStore = TextFileDocumentEmbeddingStore<Document, Path>(
-   embedder = embedder,
-   documentProvider = documentProvider,
-   fs = fileSystemProvider,
-   root = rootPath
-)
-```
-<!--- KNIT example-retrieval-augmented-generation-13.kt -->
-
-For more information, see the [TextFileDocumentEmbeddingStore](api:vector-storage::ai.koog.rag.vector.store.TextFileDocumentEmbeddingStore) reference.
-
-These implementations provide a flexible and extensible framework for working with document embeddings and vector storage in various environments.
-
-## Implementing your own vector storage and document embedder
-
-You can extend Koog's vector storage framework by implementing your own custom document embedders and vector storage solutions. This is particularly useful when working with specialized document types or storage requirements.
-
-Here's an example of implementing a custom document embedder for PDF documents:
-
-<!--- INCLUDE
-import ai.koog.embeddings.base.Embedder
-import ai.koog.embeddings.base.Vector
-import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import ai.koog.prompt.executor.ollama.client.OllamaClient
-import ai.koog.rag.base.storage.SearchResult
-import ai.koog.rag.base.storage.Score
-import ai.koog.rag.base.storage.ScoreMetric
-import ai.koog.rag.base.storage.HasTextQuery
-import ai.koog.rag.base.storage.HasScoreThreshold
-import ai.koog.rag.base.storage.RetrievalStorage
-import ai.koog.rag.base.storage.SearchRequest
-import ai.koog.rag.base.files.DocumentProvider
-import ai.koog.rag.base.storage.SimilaritySearchRequest
-import ai.koog.rag.vector.embedder.DocumentEmbedder
-import ai.koog.rag.vector.storage.InMemoryVectorStorage
-import ai.koog.rag.vector.storage.VectorStorage
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import java.nio.file.Path
--->
-```kotlin
-// Define a PDFDocument class
-class PDFDocument(private val path: Path) {
-    fun readText(): String {
-        // Use a PDF library to extract text from the PDF
-        return "Text extracted from PDF at $path"
-    }
-}
-
-// Implement a DocumentProvider for PDFDocument
-class PDFDocumentProvider : DocumentProvider<Path, PDFDocument> {
-    override suspend fun document(path: Path): PDFDocument? {
-        return if (path.toString().endsWith(".pdf")) {
-            PDFDocument(path)
-        } else {
-            null
-        }
-    }
-
-    override suspend fun text(document: PDFDocument): CharSequence {
-        return document.readText()
-    }
-}
-
-// Implement a DocumentEmbedder for PDFDocument
-class PDFDocumentEmbedder(private val embedder: Embedder) : DocumentEmbedder<PDFDocument> {
-    override suspend fun embed(document: PDFDocument): Vector {
-        val text = document.readText()
-        return embed(text)
-    }
-
-    override suspend fun embed(text: String): Vector {
-        return embedder.embed(text)
-    }
-
-    override fun diff(embedding1: Vector, embedding2: Vector): Double {
-        return embedder.diff(embedding1, embedding2)
-    }
-}
-
-// Create a custom vector storage for PDF documents
-class PDFVectorStorage(
-    private val pdfProvider: PDFDocumentProvider,
-    private val embedder: PDFDocumentEmbedder,
-    private val storage: VectorStorage<PDFDocument>
-) : RetrievalStorage<PDFDocument> {
-    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<PDFDocument>> {
-        val queryText = (request as? HasTextQuery)?.queryText
-            ?: error("PDFVectorStorage requires a request implementing HasTextQuery")
-        val minScore = (request as? HasScoreThreshold)?.minScore ?: 0.0
-        val results = mutableListOf<SearchResult<PDFDocument>>()
-        val queryVector = embedder.embed(queryText)
-        var index = 0
-        storage.allDocumentsWithPayload().collect { (document, documentVector) ->
-            val similarity = 1.0 - embedder.diff(queryVector, documentVector)
-            if (similarity >= minScore) {
-                results.add(SearchResult(id = "result-${index++}", document = document, score = Score(value = similarity, metric = ScoreMetric.COSINE_SIMILARITY)))
-            }
-        }
-        return results.sortedByDescending { it.score.value }.take(request.limit)
-    }
-
-    suspend fun store(document: PDFDocument): String {
-        val vector = embedder.embed(document)
-        return storage.store(document, vector)
-    }
-
-    suspend fun storeFromPath(path: Path): String? {
-        val document = pdfProvider.document(path) ?: return null
-        return store(document)
-    }
-
-    suspend fun delete(documentId: String): Boolean {
-        return storage.delete(documentId)
-    }
-
-    suspend fun read(documentId: String): PDFDocument? {
-        return storage.read(documentId)
-    }
-
-    fun allDocuments(): Flow<PDFDocument> = flow {
-        storage.allDocumentsWithPayload().collect {
-            emit(it.document)
-        }
-    }
-}
-
-// Usage example
-suspend fun main() {
-    val pdfProvider = PDFDocumentProvider()
-    val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
-    val pdfEmbedder = PDFDocumentEmbedder(embedder)
-    val storage = InMemoryVectorStorage<PDFDocument>()
-    val pdfStorage = PDFVectorStorage(pdfProvider, pdfEmbedder, storage)
-
-    // Store PDF documents from file paths using the provider
-    pdfStorage.storeFromPath(Path.of("./documents/sample.pdf"))
-
-    // Query for relevant PDF documents
-    val relevantPDFs = pdfStorage.search(SimilaritySearchRequest(queryText = "information about climate change", limit = 3))
-
-}
-```
-<!--- KNIT example-retrieval-augmented-generation-14.kt -->
-
-## Implementing custom non-embedding-based RetrievalStorage
-
-While embedding-based document ranking is powerful, there are scenarios where you might want to implement a custom ranking mechanism that does not rely on embeddings. For example, you might want to rank documents based on:
-
-- PageRank-like algorithms
-- Keyword frequency
-- Recency of documents
-- User interaction history
-- Domain-specific heuristics
-
-Here's an example of implementing a custom `RetrievalStorage` that uses a simple keyword-based ranking approach:
-
-<!--- INCLUDE
-import ai.koog.rag.base.storage.RetrievalStorage
-import ai.koog.rag.base.storage.SearchResult
-import ai.koog.rag.base.storage.Score
-import ai.koog.rag.base.storage.ScoreMetric
-import ai.koog.rag.base.storage.SearchRequest
-import ai.koog.rag.base.storage.HasTextQuery
-import ai.koog.rag.base.storage.HasScoreThreshold
-import ai.koog.rag.base.files.DocumentProvider
-import java.nio.file.Path
--->
-```kotlin
-class KeywordBasedDocumentStorage<Document>(
-    private val documentProvider: DocumentProvider<Path, Document>,
-    private val documents: MutableList<Document> = mutableListOf()
-) : RetrievalStorage<Document> {
-
-    private fun countOccurrences(text: String, keyword: String): Int {
-        var count = 0
-        var index = 0
-        while (index != -1) {
-            index = text.indexOf(keyword, index)
-            if (index != -1) {
-                count++
-                index += keyword.length
-            }
-        }
-        return count
-    }
-
-    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<Document>> {
-        val queryText = (request as? HasTextQuery)?.queryText ?: return emptyList()
-        val minScore = (request as? HasScoreThreshold)?.minScore ?: 0.0
-        val keywords = queryText.lowercase().split(Regex("\\W+")).filter { it.length > 2 }
-        val results = mutableListOf<SearchResult<Document>>()
-        var index = 0
-        documents.forEach { document ->
-            val documentText = documentProvider.text(document).toString().lowercase()
-            var similarity = 0.0
-            for (keyword in keywords) {
-                val count = countOccurrences(documentText, keyword)
-                if (count > 0) {
-                    similarity += count.toDouble() / documentText.length * 1000
-                }
-            }
-            if (similarity >= minScore) {
-                results.add(SearchResult(id = "result-${index++}", document = document, score = Score(value = similarity, metric = ScoreMetric.BM25)))
-            }
-        }
-        return results.sortedByDescending { it.score.value }.take(request.limit)
-    }
-}
-```
-<!--- KNIT example-retrieval-augmented-generation-15.kt -->
-
-This implementation ranks documents based on the frequency of keywords from the query appearing in the document text. You could extend this approach with more sophisticated algorithms like TF-IDF (Term Frequency-Inverse Document Frequency) or BM25.
-
-Another example is a time-based ranking system that prioritizes recent documents:
-
-<!--- INCLUDE
-import ai.koog.rag.base.storage.RetrievalStorage
-import ai.koog.rag.base.storage.SearchResult
-import ai.koog.rag.base.storage.Score
-import ai.koog.rag.base.storage.ScoreMetric
-import ai.koog.rag.base.storage.SearchRequest
-import ai.koog.rag.base.storage.HasScoreThreshold
-import java.lang.System.currentTimeMillis
--->
-```kotlin
-class TimeBasedDocumentStorage<Document>(
-    private val documents: MutableList<Document> = mutableListOf(),
-    private val getDocumentTimestamp: (Document) -> Long
-) : RetrievalStorage<Document> {
-
-    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<Document>> {
-        val minScore = (request as? HasScoreThreshold)?.minScore ?: 0.0
-        val currentTime = System.currentTimeMillis()
-        val results = mutableListOf<SearchResult<Document>>()
-        var index = 0
-
-        documents.forEach { document ->
-            val timestamp = getDocumentTimestamp(document)
-            val ageInHours = (currentTime - timestamp) / (1000.0 * 60 * 60)
-            val decayFactor = Math.exp(-0.01 * ageInHours)
-
-            if (decayFactor >= minScore) {
-                results.add(SearchResult(id = "result-${index++}", document = document, score = Score(value = decayFactor, metric = ScoreMetric.CUSTOM)))
-            }
-        }
-
-        return results.sortedByDescending { it.score.value }.take(request.limit)
-    }
-}
-```
-<!--- KNIT example-retrieval-augmented-generation-16.kt -->
-
-By implementing the `RetrievalStorage` interface, you can create custom ranking mechanisms tailored to your specific use case while still leveraging the rest of the RAG infrastructure.
-
-The flexibility of Koog's design allows you to mix and match different storage and ranking strategies to build a system that meets your specific requirements.
+- [Embeddings](embeddings.md)
