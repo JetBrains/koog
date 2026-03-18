@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.feature
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
@@ -25,8 +26,8 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Properties
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toKotlinDuration
+import java.time.Duration as JavaDuration
 
 /**
  * Configuration class for OpenTelemetry integration.
@@ -339,18 +340,19 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * @see <a href="https://langfuse.com/faq/all/where-are-langfuse-api-keys">How to set up API keys in Langfuse</a>
      * @see <a href="https://langfuse.com/docs/opentelemetry/get-started#opentelemetry-endpoint">Langfuse OpenTelemetry Docs</a>
      */
+    @JavaAPI
     @JvmOverloads
     public fun addLangfuseExporter(
         langfuseUrl: String? = null,
         langfusePublicKey: String? = null,
         langfuseSecretKey: String? = null,
-        timeout: Duration = 10.seconds,
-        traceAttributes: List<CustomAttribute> = emptyList()
+        timeout: JavaDuration? = null,
+        traceAttributes: List<CustomAttribute>? = null
     ): Unit = this.addLangfuseExporterImpl(
         langfuseUrl,
         langfusePublicKey,
         langfuseSecretKey,
-        timeout,
+        timeout?.toKotlinDuration(),
         traceAttributes
     )
 
@@ -372,12 +374,19 @@ public class OpenTelemetryConfig : FeatureConfig() {
      *
      * @see <a href="https://weave-docs.wandb.ai/guides/tracking/otel/">Weave OpenTelemetry Docs</a>
      */
+    @JavaAPI
     @JvmOverloads
     public fun addWeaveExporter(
         weaveOtelBaseUrl: String? = null,
         weaveEntity: String? = null,
         weaveProjectName: String? = null,
         weaveApiKey: String? = null,
-        timeout: Duration = 10.seconds,
-    ): Unit = addWeaveExporterImpl(weaveOtelBaseUrl, weaveEntity, weaveProjectName, weaveApiKey, timeout)
+        timeout: JavaDuration? = null,
+    ): Unit = addWeaveExporterImpl(
+        weaveOtelBaseUrl,
+        weaveEntity,
+        weaveProjectName,
+        weaveApiKey,
+        timeout?.toKotlinDuration()
+    )
 }
