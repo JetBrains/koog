@@ -127,27 +127,25 @@ provide a unique identifier for the strategy, and define the nodes and edges.
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendInput)   
         .to(calculatorAgentStrategy.nodeFinish)
-        .onCondition(msg -> msg instanceof Message.Assistant)
-        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .onIsInstance(Message.Assistant.class)
+        .transformed(Message.Assistant::getContent)
         .build());
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendInput)
         .to(nodeExecuteTool)
-        .onCondition(msg -> msg instanceof Message.Tool.Call)
-        .transformed(msg -> (Message.Tool.Call) msg)
+        .onIsInstance(Message.Tool.Call.class)
         .build());
     calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(calculatorAgentStrategy.nodeFinish)
-        .onCondition(msg -> msg instanceof Message.Assistant)
-        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .onIsInstance(Message.Assistant.class)
+        .transformed(Message.Assistant::getContent)
         .build());
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(nodeExecuteTool)
-        .onCondition(msg -> msg instanceof Message.Tool.Call)
-        .transformed(msg -> (Message.Tool.Call) msg)
+        .onIsInstance(Message.Tool.Call.class)
         .build());
     ```
     <!--- KNIT exampleGraphAgentsJava01.java -->
@@ -271,27 +269,25 @@ Let's create an agent instance with this strategy and run it:
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendInput)   
         .to(calculatorAgentStrategy.nodeFinish)
-        .onCondition(msg -> msg instanceof Message.Assistant)
-        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .onIsInstance(Message.Assistant.class)
+        .transformed(Message.Assistant::getContent)
         .build());
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendInput)
         .to(nodeExecuteTool)
-        .onCondition(msg -> msg instanceof Message.Tool.Call)
-        .transformed(msg -> (Message.Tool.Call) msg)
+        .onIsInstance(Message.Tool.Call.class)
         .build());
     calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(calculatorAgentStrategy.nodeFinish)
-        .onCondition(msg -> msg instanceof Message.Assistant)
-        .transformed(msg -> ((Message.Assistant) msg).getContent())
+        .onIsInstance(Message.Assistant.class)
+        .transformed(Message.Assistant::getContent)
         .build());
     calculatorAgentStrategy.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(nodeExecuteTool)
-        .onCondition(msg -> msg instanceof Message.Tool.Call)
-        .transformed(msg -> (Message.Tool.Call) msg)
+        .onIsInstance(Message.Tool.Call.class)
         .build());
 
     var promptExecutor = PromptExecutor.builder()
@@ -549,27 +545,25 @@ Add the tool registry to the agent configuration:
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendInput)   
                 .to(calculatorAgentStrategy.nodeFinish)
-                .onCondition(msg -> msg instanceof Message.Assistant)
-                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .onIsInstance(Message.Assistant.class)
+                .transformed(Message.Assistant::getContent)
                 .build());
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendInput)
                 .to(nodeExecuteTool)
-                .onCondition(msg -> msg instanceof Message.Tool.Call)
-                .transformed(msg -> (Message.Tool.Call) msg)
+                .onIsInstance(Message.Tool.Call.class)
                 .build());
             calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendToolResult)
                 .to(calculatorAgentStrategy.nodeFinish)
-                .onCondition(msg -> msg instanceof Message.Assistant)
-                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .onIsInstance(Message.Assistant.class)
+                .transformed(Message.Assistant::getContent)
                 .build());
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendToolResult)
                 .to(nodeExecuteTool)
-                .onCondition(msg -> msg instanceof Message.Tool.Call)
-                .transformed(msg -> (Message.Tool.Call) msg)
+                .onIsInstance(Message.Tool.Call.class)
                 .build());
             var promptExecutor = PromptExecutor.builder()
                 .ollama("http://localhost:11434")
@@ -738,27 +732,25 @@ In our example, it is important to describe how the agent should process complex
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendInput)   
                 .to(calculatorAgentStrategy.nodeFinish)
-                .onCondition(msg -> msg instanceof Message.Assistant)
-                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .onIsInstance(Message.Assistant.class)
+                .transformed(Message.Assistant::getContent)
                 .build());
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendInput)
                 .to(nodeExecuteTool)
-                .onCondition(msg -> msg instanceof Message.Tool.Call)
-                .transformed(msg -> (Message.Tool.Call) msg)
+                .onIsInstance(Message.Tool.Call.class)
                 .build());
             calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendToolResult)
                 .to(calculatorAgentStrategy.nodeFinish)
-                .onCondition(msg -> msg instanceof Message.Assistant)
-                .transformed(msg -> ((Message.Assistant) msg).getContent())
+                .onIsInstance(Message.Assistant.class)
+                .transformed(Message.Assistant::getContent)
                 .build());
             calculatorAgentStrategy.edge(AIAgentEdge.builder()
                 .from(nodeSendToolResult)
                 .to(nodeExecuteTool)
-                .onCondition(msg -> msg instanceof Message.Tool.Call)
-                .transformed(msg -> (Message.Tool.Call) msg)
+                .onIsInstance(Message.Tool.Call.class)
                 .build());
             var promptExecutor = PromptExecutor.builder()
                 .ollama("http://localhost:11434")

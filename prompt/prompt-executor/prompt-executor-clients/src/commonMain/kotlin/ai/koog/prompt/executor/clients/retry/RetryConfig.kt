@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.retry
 
+import kotlin.jvm.JvmField
 import kotlin.jvm.JvmOverloads
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -43,6 +44,7 @@ public data class RetryConfig @JvmOverloads constructor(
         /**
          * Default retry patterns that work across all providers.
          */
+        @JvmField
         public val DEFAULT_PATTERNS: List<RetryablePattern> = listOf(
             // HTTP status codes
             RetryablePattern.Status(429), // Rate limit
@@ -69,6 +71,7 @@ public data class RetryConfig @JvmOverloads constructor(
         /**
          * Conservative configuration - fewer retries, longer delays.
          */
+        @JvmField
         public val CONSERVATIVE: RetryConfig = RetryConfig(
             maxAttempts = 3,
             initialDelay = 2.seconds,
@@ -78,6 +81,7 @@ public data class RetryConfig @JvmOverloads constructor(
         /**
          * Aggressive configuration - more retries, shorter delays.
          */
+        @JvmField
         public val AGGRESSIVE: RetryConfig = RetryConfig(
             maxAttempts = 5,
             initialDelay = 500.milliseconds,
@@ -88,6 +92,7 @@ public data class RetryConfig @JvmOverloads constructor(
         /**
          * Production configuration - balanced for production use.
          */
+        @JvmField
         public val PRODUCTION: RetryConfig = RetryConfig(
             maxAttempts = 3,
             initialDelay = 1.seconds,
@@ -99,6 +104,7 @@ public data class RetryConfig @JvmOverloads constructor(
         /**
          * No retry - effectively disables retry logic.
          */
+        @JvmField
         public val DISABLED: RetryConfig = RetryConfig(maxAttempts = 1)
 
         /**
@@ -106,6 +112,7 @@ public data class RetryConfig @JvmOverloads constructor(
          *
          * Suitable for general-purpose use cases where standard retry behavior is required.
          */
+        @JvmField
         public val DEFAULT: RetryConfig = RetryConfig()
     }
 }

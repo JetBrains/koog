@@ -28,7 +28,6 @@ graph LR
 Here is how you can define a node that expects a string as input and returns the length of the string (an integer) as output:
 
 === "Kotlin"
-
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
@@ -131,11 +130,7 @@ Here is an example:
     }
     -->
     ```java
-    var passthrough = AIAgentNode.builder("passthrough")
-        .withInput(String.class)
-        .withOutput(String.class)
-        .withAction((input, ctx) -> input)
-        .build();
+    var passthrough = AIAgentNode.doNothing(String.class);
 
     strategy.edge(strategy.nodeStart, passthrough);
     strategy.edge(passthrough, strategy.nodeFinish);
@@ -212,6 +207,8 @@ Here is an example:
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     class exampleNodesAndComponentsJava03 {
+        class Output {}
+        class Input extends Output { }
         public static void main(String[] args) {
             var strategy = AIAgentGraphStrategy.builder("strategy_name")
                 .withInput(String.class)
@@ -222,39 +219,30 @@ Here is an example:
     }
     -->
     ```java
-    var firstNode = AIAgentNode.builder("firstNode")
-        .withInput(Object.class)
-        .withOutput(Object.class)
+    var firstNode = AIAgentNode.builder()
+        .withInput(Input.class)
+        .withOutput(Output.class)
         .withAction((input, ctx) -> {
             // Transform input to output
             return input;
         })
         .build();
 
-    var secondNode = AIAgentNode.builder("secondNode")
-        .withInput(Object.class)
-        .withOutput(Object.class)
+    var secondNode = AIAgentNode.builder()
+        .withInput(Output.class)
+        .withOutput(Output.class)
         .withAction((output, ctx) -> {
             // Transform output to output
             return output;
         })
         .build();
 
-    var setupContext = AIAgentNode.builder("setupContext")
-        .withInput(Object.class)
-        .withOutput(Object.class)
-        .withAction((output, ctx) -> {
-            ctx.getLlm().writeSession(session -> {
-                session.appendPrompt(prompt -> {
-                    prompt.system("You are a helpful assistant specialized in Kotlin programming.");
-                    prompt.user("I need help with Kotlin coroutines.");
-                    return null;
-                });
-                return null;
-            });
-            return output;
-        })
-        .build();
+    var setupContext = AIAgentNode.builder()
+        .withInput(Output.class)
+        .appendPrompt(prompt -> {
+            prompt.system("You are a helpful assistant specialized in Kotlin programming.");
+            prompt.user("I need help with Kotlin coroutines.");
+        });
 
     strategy.edge(firstNode, setupContext);
     strategy.edge(setupContext, secondNode);
@@ -355,18 +343,17 @@ Here is an example:
             var strategy = AIAgentGraphStrategy.builder("strategy_name")
                 .withInput(String.class)
                 .withOutput(String.class);
+            var getUserQuestion = AIAgentNode.builder("getUserQuestion")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
     -->
     <!--- SUFFIX
         }
     }
     -->
     ```java
-    var getUserQuestion = AIAgentNode.builder("getUserQuestion")
-        .withInput(String.class)
-        .withOutput(String.class)
-        .withAction((input, ctx) -> input)
-        .build();
-
     var requestLLM = AIAgentNode.llmRequest(true, "requestLLM");
 
     strategy.edge(getUserQuestion, requestLLM);
@@ -468,18 +455,17 @@ Here is an example:
             var strategy = AIAgentGraphStrategy.builder("strategy_name")
                 .withInput(String.class)
                 .withOutput(String.class);
+            var getComplexUserQuestion = AIAgentNode.builder("getComplexUserQuestion")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
     -->
     <!--- SUFFIX
         }
     }
     -->
     ```java
-    var getComplexUserQuestion = AIAgentNode.builder("getComplexUserQuestion")
-        .withInput(String.class)
-        .withOutput(String.class)
-        .withAction((input, ctx) -> input)
-        .build();
-
     var requestLLMMultipleTools = AIAgentNode.llmRequestMultiple("requestLLMMultipleTools");
 
     strategy.edge(getComplexUserQuestion, requestLLMMultipleTools);
@@ -551,18 +537,17 @@ Here is an example:
             var strategy = AIAgentGraphStrategy.builder("strategy_name")
                 .withInput(String.class)
                 .withOutput(String.class);
+            var generateHugeHistory = AIAgentNode.builder("generateHugeHistory")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
     -->
     <!--- SUFFIX
         }
     }
     -->
     ```java
-    var generateHugeHistory = AIAgentNode.builder("generateHugeHistory")
-        .withInput(String.class)
-        .withOutput(String.class)
-        .withAction((input, ctx) -> input)
-        .build();
-
     var compressHistory = AIAgentNode.llmCompressHistory("compressHistory")
         .withInput(String.class)
         .build();
@@ -645,8 +630,7 @@ Here is an example:
     strategy.edge(AIAgentEdge.builder()
         .from(requestLLM)
         .to(executeTool)
-        .onCondition(msg -> msg instanceof Message.Tool.Call)
-        .transformed(msg -> (Message.Tool.Call) msg)
+        .onIsInstance(Message.Tool.Call.class)
         .build());
     ```
     <!--- KNIT exampleNodesAndComponentsJava07.java -->
@@ -1297,30 +1281,33 @@ You can use this strategy when you need to run straightforward processes that do
         var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
 
         strategy.edge(strategy.nodeStart, nodeCallLLM);
+
         strategy.edge(AIAgentEdge.builder()
             .from(nodeCallLLM)
             .to(nodeExecuteTool)
-            .onCondition(msg -> msg instanceof Message.Tool.Call)
-            .transformed(msg -> (Message.Tool.Call) msg)
+            .onIsInstance(Message.Tool.Call.class)
             .build());
+
         strategy.edge(AIAgentEdge.builder()
             .from(nodeCallLLM)
             .to(strategy.nodeFinish)
-            .onCondition(msg -> msg instanceof Message.Assistant)
-            .transformed(msg -> ((Message.Assistant) msg).getContent())
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
             .build());
+
         strategy.edge(nodeExecuteTool, nodeSendToolResult);
+
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(strategy.nodeFinish)
-            .onCondition(msg -> msg instanceof Message.Assistant)
-            .transformed(msg -> ((Message.Assistant) msg).getContent())
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
             .build());
+
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(nodeExecuteTool)
-            .onCondition(msg -> msg instanceof Message.Tool.Call)
-            .transformed(msg -> (Message.Tool.Call) msg)
+            .onIsInstance(Message.Tool.Call.class)
             .build());
 
         return strategy.build();
@@ -1416,16 +1403,15 @@ It typically executes tools based on the LLM decisions and processes the results
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendInput)
             .to(strategy.nodeFinish)
-            .onCondition(msg -> msg instanceof Message.Assistant)
-            .transformed(msg -> ((Message.Assistant) msg).getContent())
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
             .build());
 
         // If the LLM calls a tool, execute it
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendInput)
             .to(nodeExecuteTool)
-            .onCondition(msg -> msg instanceof Message.Tool.Call)
-            .transformed(msg -> (Message.Tool.Call) msg)
+            .onIsInstance(Message.Tool.Call.class)
             .build());
 
         // Send the tool result back to the LLM
@@ -1435,16 +1421,15 @@ It typically executes tools based on the LLM decisions and processes the results
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(nodeExecuteTool)
-            .onCondition(msg -> msg instanceof Message.Tool.Call)
-            .transformed(msg -> (Message.Tool.Call) msg)
+            .onIsInstance(Message.Tool.Call.class)
             .build());
 
         // If the LLM responds with a message, finish
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(strategy.nodeFinish)
-            .onCondition(msg -> msg instanceof Message.Assistant)
-            .transformed(msg -> ((Message.Assistant) msg).getContent())
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
             .build());
 
         return strategy.build();
@@ -1497,7 +1482,86 @@ streaming data, processes it, and potentially calls tools with the processed dat
 
 === "Java"
 
-    ```java.
-    // The framework currently provides streaming APIs primarily through Kotlin's Flow interface.
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import ai.koog.prompt.structure.StructureDefinition;
+    import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition;
+    import ai.koog.serialization.TypeCapture;
+    import ai.koog.serialization.TypeToken;
+    import java.util.ArrayList;
+    import java.util.List;
+    import java.util.concurrent.Flow;
+    class exampleNodesAndComponentsJava17 {
+        class Book {
+            String getTitle() {
+                return "";
+            }
+            String getAuthor() {
+                return "";
+            }
+        }
+        public static MarkdownStructureDefinition markdownBookDefinition() {
+            return null;
+        }
+        public static Flow.Publisher<Book> parseMarkdownStreamToBooks(Flow.Publisher<StreamFrame> markdownStream) {
+            return null;
+        }
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var strategy = AIAgentGraphStrategy.builder()
+        .withInput(String.class)
+        .withOutput(List.class);
+
+    var getMdOutput = AIAgentNode.builder()
+        .withInput(String.class)
+        .<List<Book>>withOutput(TypeToken.of(new TypeCapture<List<Book>>() {}))
+        .withAction((booksDescription, ctx) -> {
+            var books = new ArrayList<Book>();
+            StructureDefinition mdDefinition = markdownBookDefinition();
+
+            ctx.getLlm().writeSession(session -> {
+                session.appendPrompt(prompt -> {
+                    prompt.user(booksDescription);
+                });
+
+                // Initiate the response stream in the form of the definition `mdDefinition`
+                var markdownStream = session.requestLLMStreaming(mdDefinition);
+                // Call the parser with the result of the response stream and perform actions with the result
+                parseMarkdownStreamToBooks(markdownStream).subscribe(new Flow.Subscriber<>() {
+                    @Override
+                    public void onSubscribe(Flow.Subscription subscription) {
+                    }
+
+                    @Override
+                    public void onNext(Book book) {
+                        books.add(book);
+                        System.out.println("Parsed Book: " + book.getTitle() + " by " + book.getAuthor());
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
+
+                return null;
+            });
+
+            return books;
+        })
+        .build();
+
+    strategy.edge(strategy.nodeStart, getMdOutput);
+    strategy.edge(getMdOutput, strategy.nodeFinish);
     ```
-    <!--- KNIT example-nodes-and-component-java-01.kt -->
+    <!--- KNIT exampleNodesAndComponentsJava17.java -->
