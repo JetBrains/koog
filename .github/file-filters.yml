@@ -24,6 +24,10 @@ simple-examples:
   - *ci-configs
   - 'examples/simple-examples/**'
 
+simple-examples-java:
+  - *ci-configs
+  - 'examples/simple-examples-java/**'
+
 code-agent:
   - *ci-configs
   - 'examples/code-agent/**'
