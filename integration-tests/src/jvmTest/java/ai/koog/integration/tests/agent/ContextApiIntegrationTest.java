@@ -177,7 +177,6 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 String subtaskResult = context.subtask("Calculate the sum of 10 and 20 using the add tool")
-                    .withInput(input)
                     .withOutput(String.class)
                     .withTools(tools)
                     .useLLM(model)
@@ -219,7 +218,6 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 String subtaskResult = context.subtask("Calculate 5 + 3 and 4 * 6 using available tools")
-                    .withInput(input)
                     .withOutput(String.class)
                     .withTools(tools)
                     .useLLM(model)
@@ -260,7 +258,6 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 String subtaskResult = context.subtask("Add 7 and 8")
-                    .withInput(input)
                     .withOutput(String.class)
                     .withTools(tools)
                     .useLLM(model)

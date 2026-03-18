@@ -177,7 +177,6 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 String subtaskResult = context.subtask("Calculate: " + input)
-                    .withInput(input)
                     .withOutput(String.class)
                     .withTools(calculatorTools)
                     .useLLM(model)
