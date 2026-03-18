@@ -30,7 +30,6 @@ public class FunctionalStrategyExample {
                 // Only give the agent communication and read-only database access here
                 ProblemDescription problem = ctx
                     .subtask("Identify the problem: " + userInput)
-                    .withInput(userInput)
                     .withOutput(ProblemDescription.class)  // Type-safe output
                     .withTools(communicationTools, databaseReadTools)  // Limited tools
                     .run();
@@ -39,16 +38,14 @@ public class FunctionalStrategyExample {
                 // Give the agent database write access only after problem identification
                 ProblemSolution solution = ctx
                     .subtask("Solve the problem: " + problem) // Use output from step 1
-                    .withInput(problem)
                     .withOutput(ProblemSolution.class)
                     .withTools(databaseReadTools, databaseWriteTools)
                     .run();
 
                 // Verify the solution and try to fix it until the solution is satisfying
                 while (true) {
-                    CriticResult<ProblemSolution> verificationResult = ctx
+                    CriticResult<String> verificationResult = ctx
                         .subtask("Now verify that the problem is actually solved: " + solution)
-                        .withInput(solution)
                         .withVerification()
                         .withTools(communicationTools, databaseReadTools)
                         .run();
@@ -58,7 +55,6 @@ public class FunctionalStrategyExample {
                     } else {
                         solution = ctx
                             .subtask("Fix the solution based on the provided feedback: " + verificationResult.getFeedback())
-                            .withInput(verificationResult.getFeedback())
                             .withOutput(ProblemSolution.class)
                             .withTools(databaseReadTools, databaseWriteTools)
                             .run();
@@ -76,6 +72,6 @@ public class FunctionalStrategyExample {
 
         var result = functionalAgent.run("How to make a perfect poached egg?");
 
-        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description));
+        System.out.println("\n\nAgent result:\n%s\n".formatted(result.description()));
     }
 }

@@ -201,7 +201,6 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 Message.Response first = context.requestLLM("Reply the user", true);
                 String second = context.subtask("Verify the answer")
-                    .withInput(input)
                     .withOutput(String.class)
                     .useLLM(AnthropicModels.Opus_4_6)
                     .run();

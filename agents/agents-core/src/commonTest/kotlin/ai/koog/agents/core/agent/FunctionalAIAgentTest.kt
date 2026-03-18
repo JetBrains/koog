@@ -8,6 +8,8 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.ext.agent.CriticResult
+import ai.koog.agents.ext.agent.CriticResultFromLLM
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -18,7 +20,6 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -498,17 +499,16 @@ class FunctionalAIAgentTest {
                     )
 
                     val assembly = Assembly(engine, body)
-                    product = subtask<Assembly, Spacecraft>(
+
+                    product = subtask<Spacecraft>(
                         taskDescription = "Assemble the product: $assembly",
-                        input = assembly,
                         tools = AssemblyTools.tools,
                         llmModel = OllamaModels.Meta.LLAMA_4,
                         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
                     )
 
-                    qaReport = subtask<Spacecraft, FullQAReport>(
-                        taskDescription = "Verify the product is built correctly",
-                        input = product,
+                    qaReport = subtask<FullQAReport>(
+                        taskDescription = "Verify the product is built correctly: $product",
                         tools = QATools.tools,
                         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
                     )
@@ -539,10 +539,9 @@ class FunctionalAIAgentTest {
     private suspend fun AIAgentFunctionalContext.buildBody(
         architecture: Architecture,
         additionalInfo: String? = null
-    ): Body = subtask<Architecture, Body>(
+    ): Body = subtask<Body>(
         taskDescription = "Create the body for the given architecture: $architecture" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
-        input = architecture,
         tools = BuildBodyTools.tools,
         llmModel = GoogleModels.Gemini2_0Flash,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
@@ -551,10 +550,9 @@ class FunctionalAIAgentTest {
     private suspend fun AIAgentFunctionalContext.buildEngine(
         architecture: Architecture,
         additionalInfo: String? = null
-    ): Engine = subtask<Architecture, Engine>(
+    ): Engine = subtask<Engine>(
         taskDescription = "Create the engine for the given architecture: $architecture" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
-        input = architecture,
         tools = BuildEngineTools.tools,
         llmModel = AnthropicModels.Opus_4_6,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
@@ -563,10 +561,9 @@ class FunctionalAIAgentTest {
     private suspend fun AIAgentFunctionalContext.designArchitecture(
         input: String,
         additionalInfo: String? = null
-    ): Architecture = subtask<String, Architecture>(
+    ): Architecture = subtask<Architecture>(
         taskDescription = "Create the architecture for the following machinery: $input" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
-        input = input,
         tools = ArchitectureTools.tools,
         llmModel = OpenAIModels.Chat.GPT5,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
@@ -591,9 +588,8 @@ class FunctionalAIAgentTest {
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = ToolRegistry.EMPTY,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Do simple subtask: $input",
-                    input = input,
                     tools = null, // no extra tools
                     runMode = ToolCalls.SEQUENTIAL
                 )
@@ -639,9 +635,8 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Compose task with tool: $input",
-                    input = input,
                     tools = listOf(DummyTool),
                     runMode = ToolCalls.SEQUENTIAL
                 )
@@ -679,9 +674,8 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Parallel subtask: $input",
-                    input = input,
                     tools = null,
                     runMode = ToolCalls.PARALLEL
                 )
@@ -715,9 +709,8 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Single-run subtask: $input",
-                    input = input,
                     tools = null,
                     runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
                 )
@@ -740,8 +733,8 @@ class FunctionalAIAgentTest {
 
         val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             mockLLMToolCall(
-                SubgraphWithTaskUtils.finishTool<ai.koog.agents.ext.agent.CriticResultFromLLM>(),
-                ai.koog.agents.ext.agent.CriticResultFromLLM(isCorrect = true, feedback = "OK")
+                SubgraphWithTaskUtils.finishTool<CriticResultFromLLM>(),
+                CriticResultFromLLM(isCorrect = true, feedback = "OK")
             ) onRequestContains "Judge this:"
 
             mockLLMAnswer("default").asDefaultResponse
@@ -751,10 +744,9 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = ToolRegistry.EMPTY,
-            strategy = functionalStrategy<String, ai.koog.agents.ext.agent.CriticResult<String>> { input ->
+            strategy = functionalStrategy<String, CriticResult<String>> { input ->
                 subtaskWithVerification(
                     taskDescription = "Judge this: $input",
-                    input = input,
                     runMode = ToolCalls.SEQUENTIAL
                 )
             },
@@ -768,7 +760,7 @@ class FunctionalAIAgentTest {
         val result = agent.run("case-A", null)
         assertEquals(true, result.successful)
         assertEquals("OK", result.feedback)
-        assertEquals("case-A", result.input)
+        assertEquals("Judge this: case-A", result.input)
         assertEquals(0, actualToolCalls.size)
     }
 

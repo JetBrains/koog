@@ -1,0 +1,110 @@
+name: Simple Examples Java
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Cancel only when the run is not on main or develop
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+env:
+  JAVA_VERSION: 17
+  JAVA_DISTRIBUTION: 'corretto'
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
+      simple-examples-java: ${{ steps.filter.outputs.simple-examples-java_any_changed  }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: tj-actions/changed-files@7dee1b0c1557f278e5c7dc244927139d78c0e22a # v47.0.4
+        name: Check changed files
+        id: filter
+        with:
+          write_output_files: 'true'
+          files_yaml_from_source_file: .github/file-filters.yml
+
+      - run: .github/scripts/print_changed_files.sh
+        name: 'Print changed files'
+
+  compilation:
+    needs: changes
+    if: ${{ needs.changes.outputs.koog-src == 'true' || needs.changes.outputs.simple-examples-java == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          # Cache downloaded JDKs/konan in addition to the default directories.
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+            ~/.konan/**
+
+      - name: Compile
+        working-directory: ./examples/simple-examples-java
+        run: ./gradlew assemble testClasses --stacktrace
+        env:
+          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
+
+  tests:
+    needs: compilation
+    if: ${{ needs.changes.outputs.koog-src == 'true' || needs.changes.outputs.simple-examples-java == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          # Cache downloaded JDKs/konan in addition to the default directories.
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+            ~/.konan/**
+
+      - name: Run tests
+        working-directory: ./examples/simple-examples-java
+        run: ./gradlew test --stacktrace
+        env:
+          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
