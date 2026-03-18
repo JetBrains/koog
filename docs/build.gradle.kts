@@ -19,6 +19,10 @@ java {
     }
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(java.toolchain.languageVersion.get().asInt())
+}
+
 sourceSets {
     main {
         java {

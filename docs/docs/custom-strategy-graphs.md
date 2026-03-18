@@ -43,7 +43,6 @@ An edge is created using the `edge` function and the `forwardTo` infix function:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
-    
     val strategy = strategy<String, String>("strategy_name") {
             val sourceNode by node<String, String> { input -> input }
             val targetNode by node<String, String> { input -> input }
@@ -61,7 +60,7 @@ An edge is created using the `edge` function and the `forwardTo` infix function:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
-    class exampleCustomStrategyGraphs01 {
+    class exampleCustomStrategyGraphsJava01 {
         public static void main(String[] args) {
             var strategy = AIAgentGraphStrategy.builder("strategyName")
                 .withInput(String.class)
@@ -76,7 +75,7 @@ An edge is created using the `edge` function and the `forwardTo` infix function:
     ```java
     strategy.edge(sourceNode, targetNode);
     ```
-    <!--- KNIT exampleCustomStrategyGraphs01.java -->
+    <!--- KNIT exampleCustomStrategyGraphsJava01.java -->
 
 #### Conditions
 
@@ -100,7 +99,6 @@ You can transform the output before passing it to the target node by using the `
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
-    
     val strategy = strategy<String, String>("strategy_name") {
             val sourceNode by node<String, String> { input -> input }
             val targetNode by node<String, String> { input -> input }
@@ -122,7 +120,7 @@ You can transform the output before passing it to the target node by using the `
     import ai.koog.agents.core.agent.entity.AIAgentEdge;
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
-    class exampleCustomStrategyGraphs02 {
+    class exampleCustomStrategyGraphsJava02 {
         public static void main(String[] args) {
             var strategy = AIAgentGraphStrategy.builder("strategyName")
                 .withInput(String.class)
@@ -142,7 +140,7 @@ You can transform the output before passing it to the target node by using the `
         .transformed(input -> input.toUpperCase())
         .build());
     ```
-    <!--- KNIT exampleCustomStrategyGraphs02.java -->
+    <!--- KNIT exampleCustomStrategyGraphsJava02.java -->
 
 ### Subgraphs
 
@@ -150,18 +148,16 @@ Subgraphs are sections of the strategy graph that operate with their own set of 
 The strategy graph can contain multiple subgraphs. Each subgraph is defined by using the `subgraph` function:
 
 === "Kotlin"
+
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
-    
     typealias Input = String
     typealias Output = Int
-    
     typealias FirstInput = String
     typealias FirstOutput = Int
-    
     typealias SecondInput = String
     typealias SecondOutput = Int
     -->
@@ -181,7 +177,7 @@ The strategy graph can contain multiple subgraphs. Each subgraph is defined by u
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
-    class exampleCustomStrategyGraphs03 {
+    class exampleCustomStrategyGraphsJava03 {
         class FirstInput {}
         class FirstOutput {}
         class SecondInput {}
@@ -209,27 +205,24 @@ The strategy graph can contain multiple subgraphs. Each subgraph is defined by u
         })
         .build();
     ```
-    <!--- KNIT exampleCustomStrategyGraphs03.java -->
+    <!--- KNIT exampleCustomStrategyGraphsJava03.java -->
 
 A subgraph can use any tool from a tool registry. 
 However, you can specify a subset of tools from this registry that can be used in the subgraph and pass it as an argument to the `subgraph` function:
 
-    === "Kotlin"
+=== "Kotlin"
+
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
     import ai.koog.agents.ext.tool.SayToUser
-    
     typealias Input = String
     typealias Output = Int
-    
     typealias FirstInput = String
     typealias FirstOutput = Int
-    
     val someTool = SayToUser
-    
     -->
     ```kotlin
     val strategy = strategy<Input, Output>("strategy-name") {
@@ -249,10 +242,10 @@ However, you can specify a subset of tools from this registry that can be used i
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
     import ai.koog.agents.core.tools.reflect.ToolSet;
-    class exampleCustomStrategyGraphs03 {
+    class exampleCustomStrategyGraphsJava04 {
         class FirstInput {}
         class FirstOutput {}
-        ToolSet someTools = null;
+        static ToolSet someTools = null;
         public static void main(String[] args) {
     -->
     <!--- SUFFIX
@@ -269,7 +262,7 @@ However, you can specify a subset of tools from this registry that can be used i
         })
         .build();
     ```
-    <!--- KNIT exampleCustomStrategyGraphs04.java -->
+    <!--- KNIT exampleCustomStrategyGraphsJava04.java -->
 
 ## Basic strategy graph creation
 
@@ -300,7 +293,6 @@ Here is an example of a basic strategy graph:
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
     import ai.koog.agents.core.dsl.extension.onAssistantMessage
     import ai.koog.agents.core.dsl.extension.onToolCall
-    
     -->
     ```kotlin
     val myStrategy = strategy<String, String>("my-strategy") {
@@ -325,7 +317,7 @@ Here is an example of a basic strategy graph:
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.message.Message;
-    class exampleCustomStrategyGraphs05 {
+    class exampleCustomStrategyGraphsJava05 {
         public static void main(String[] args) {
     -->
     <!--- SUFFIX
@@ -333,7 +325,7 @@ Here is an example of a basic strategy graph:
     }
     -->
     ```java
-    var strategy = AIAgentGraphStrategy.builder("single_run")
+    var graph = AIAgentGraphStrategy.builder("single_run")
         .withInput(String.class)
         .withOutput(String.class);
 
@@ -341,39 +333,39 @@ Here is an example of a basic strategy graph:
     var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
     var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
 
-    strategy.edge(strategy.nodeStart, nodeCallLLM);
+    graph.edge(graph.nodeStart, nodeCallLLM);
 
-    strategy.edge(AIAgentEdge.builder()
+    graph.edge(AIAgentEdge.builder()
         .from(nodeCallLLM)
         .to(nodeExecuteTool)
         .onIsInstance(Message.Tool.Call.class)
         .build());
 
-    strategy.edge(AIAgentEdge.builder()
+    graph.edge(AIAgentEdge.builder()
         .from(nodeCallLLM)
-        .to(strategy.nodeFinish)
+        .to(graph.nodeFinish)
         .onIsInstance(Message.Assistant.class)
         .transformed(Message.Assistant::getContent)
         .build());
 
-    strategy.edge(nodeExecuteTool, nodeSendToolResult);
+    graph.edge(nodeExecuteTool, nodeSendToolResult);
 
-    strategy.edge(AIAgentEdge.builder()
+    graph.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
-        .to(strategy.nodeFinish)
+        .to(graph.nodeFinish)
         .onIsInstance(Message.Assistant.class)
         .transformed(Message.Assistant::getContent)
         .build());
 
-    strategy.edge(AIAgentEdge.builder()
+    graph.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(nodeExecuteTool)
         .onIsInstance(Message.Tool.Call.class)
         .build());
 
-    return strategy.build();
+    var strategy = graph.build();
     ```
-    <!--- KNIT exampleCustomStrategyGraphs05.java -->
+    <!--- KNIT exampleCustomStrategyGraphsJava05.java -->
 
 ## Visualizing strategy graph 
 
@@ -382,6 +374,7 @@ On JVM you may generate a [Mermaid state diagram](https://mermaid.js.org/syntax/
 For the graph created in the previous example, you can run:
 
 === "Kotlin"
+
     <!--- INCLUDE
     import ai.koog.agents.core.agent.asMermaidDiagram
     import ai.koog.agents.core.dsl.builder.forwardTo
@@ -394,13 +387,11 @@ For the graph created in the previous example, you can run:
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
     import ai.koog.agents.core.dsl.extension.onAssistantMessage
     import ai.koog.agents.core.dsl.extension.onToolCall
-    
     fun main() {
         val myStrategy = strategy("my-strategy") {
             val nodeCallLLM by nodeLLMRequest()
             val executeToolCall by nodeExecuteTool()
             val sendToolResult by nodeLLMSendToolResult()
-        
             edge(nodeStart forwardTo nodeCallLLM)
             edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
             edge(nodeCallLLM forwardTo executeToolCall onToolCall { true })
@@ -425,7 +416,7 @@ For the graph created in the previous example, you can run:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.MermaidDiagramGenerator;
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
-    class exampleCustomStrategyGraphs06 {
+    class exampleCustomStrategyGraphsJava06 {
         public static void main(String[] args) {
             var myStrategy = AIAgentGraphStrategy.builder("single_run")
                 .withInput(String.class)
@@ -440,7 +431,7 @@ For the graph created in the previous example, you can run:
     var mermaidDiagram = MermaidDiagramGenerator.INSTANCE.generate(myStrategy);
     System.out.println(mermaidDiagram);
     ```
-    <!--- KNIT exampleCustomStrategyGraphs06.java -->
+    <!--- KNIT exampleCustomStrategyGraphsJava06.java -->
 
 and the output will be:
 ```mermaid

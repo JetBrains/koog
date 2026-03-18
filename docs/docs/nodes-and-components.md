@@ -28,7 +28,6 @@ graph LR
 Here is how you can define a node that expects a string as input and returns the length of the string (an integer) as output:
 
 === "Kotlin"
-
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
@@ -239,7 +238,7 @@ Here is an example:
         .build();
 
     var setupContext = AIAgentNode.builder()
-        .withInput(String.class)
+        .withInput(Output.class)
         .appendPrompt(prompt -> {
             prompt.system("You are a helpful assistant specialized in Kotlin programming.");
             prompt.user("I need help with Kotlin coroutines.");
@@ -344,7 +343,6 @@ Here is an example:
             var strategy = AIAgentGraphStrategy.builder("strategy_name")
                 .withInput(String.class)
                 .withOutput(String.class);
-
             var getUserQuestion = AIAgentNode.builder("getUserQuestion")
                 .withInput(String.class)
                 .withOutput(String.class)
@@ -457,7 +455,6 @@ Here is an example:
             var strategy = AIAgentGraphStrategy.builder("strategy_name")
                 .withInput(String.class)
                 .withOutput(String.class);
-
             var getComplexUserQuestion = AIAgentNode.builder("getComplexUserQuestion")
                 .withInput(String.class)
                 .withOutput(String.class)
@@ -540,7 +537,6 @@ Here is an example:
             var strategy = AIAgentGraphStrategy.builder("strategy_name")
                 .withInput(String.class)
                 .withOutput(String.class);
-
             var generateHugeHistory = AIAgentNode.builder("generateHugeHistory")
                 .withInput(String.class)
                 .withOutput(String.class)
@@ -1494,7 +1490,6 @@ streaming data, processes it, and potentially calls tools with the processed dat
     import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition;
     import ai.koog.serialization.TypeCapture;
     import ai.koog.serialization.TypeToken;
-    
     import java.util.ArrayList;
     import java.util.List;
     import java.util.concurrent.Flow;
@@ -1507,10 +1502,10 @@ streaming data, processes it, and potentially calls tools with the processed dat
                 return "";
             }
         }
-        private MarkdownStructureDefinition markdownBookDefinition() {
+        public static MarkdownStructureDefinition markdownBookDefinition() {
             return null;
         }
-        private Flow.Publisher<Book> parseMarkdownStreamToBooks(Flow.Publisher<StreamFrame> markdownStream) {
+        public static Flow.Publisher<Book> parseMarkdownStreamToBooks(Flow.Publisher<StreamFrame> markdownStream) {
             return null;
         }
         public static void main(String[] args) {
@@ -1547,7 +1542,7 @@ streaming data, processes it, and potentially calls tools with the processed dat
                     @Override
                     public void onNext(Book book) {
                         books.add(book);
-                        System.out.println("Parsed Book: " + book.getTitle() + " by " + book.getAuthor())
+                        System.out.println("Parsed Book: " + book.getTitle() + " by " + book.getAuthor());
                     }
 
                     @Override

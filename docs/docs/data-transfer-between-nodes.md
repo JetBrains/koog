@@ -53,7 +53,7 @@ of a simple class with basic user data:
         int age
     ) {}
     ```
-    <!--- KNIT exampleDataTransferBetweenNodes01.java -->
+    <!--- KNIT exampleDataTransferBetweenNodesJava01.java -->
 
 
 Once defined, use the class to create a storage key as described below.
@@ -81,11 +81,11 @@ Create a typed storage key for the defined data structure:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentStorage;
     import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
-    record UserData(
-        String name,
-        int age
-    ) {}
-    class exampleDataTransferBetweenNodes02 {
+    class exampleDataTransferBetweenNodesJava02 {
+        record UserData(
+            String name,
+            int age
+        ) {}
         public static void main(String[] args) {
     -->
     <!--- SUFFIX
@@ -95,7 +95,7 @@ Create a typed storage key for the defined data structure:
     ```java
     AIAgentStorageKey<UserData> userDataKey = AIAgentStorage.createStorageKey("user-data");
     ```
-    <!--- KNIT exampleDataTransferBetweenNodes02.java -->
+    <!--- KNIT exampleDataTransferBetweenNodesJava02.java -->
 
 The `createStorageKey` function takes a single string parameter that uniquely identifies the key.
 
@@ -128,7 +128,7 @@ To save data using a created storage key, use the `storage.set(key: AIAgentStora
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.agents.core.agent.entity.AIAgentStorage;
     import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
-    public class exampleDataTransferBetweenNodes03 {
+    public class exampleDataTransferBetweenNodesJava03 {
         record UserData(
             String name,
             int age
@@ -150,7 +150,7 @@ To save data using a created storage key, use the `storage.set(key: AIAgentStora
         })
         .build();
     ```
-    <!--- KNIT exampleDataTransferBetweenNodes03.java -->
+    <!--- KNIT exampleDataTransferBetweenNodesJava03.java -->
 
 ### Retrieving data
 
@@ -189,7 +189,7 @@ To retrieve the data, use the `storage.get` method in a node:
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.agents.core.agent.entity.AIAgentStorage;
     import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
-    public class exampleDataTransferBetweenNodes04 {
+    public class exampleDataTransferBetweenNodesJava04 {
         record UserData(
             String name,
             int age
@@ -212,7 +212,7 @@ To retrieve the data, use the `storage.get` method in a node:
         })
         .build();
     ```
-    <!--- KNIT exampleDataTransferBetweenNodes04.java -->
+    <!--- KNIT exampleDataTransferBetweenNodesJava04.java -->
 
 ## API documentation
 

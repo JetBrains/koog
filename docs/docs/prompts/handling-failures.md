@@ -488,12 +488,14 @@ Here is an example of error handling in Kotlin and Java:
     import ai.koog.prompt.message.Message;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
-    
     import java.util.List;
     import java.util.function.Consumer;
+    class exampleHandlingFailuresJava05 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
     Logger logger = LoggerFactory.getLogger("Example");
