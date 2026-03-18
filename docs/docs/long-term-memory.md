@@ -8,46 +8,83 @@ The `LongTermMemory` feature adds persistent memory to Koog AI agents via two in
 
 > **Note:** `LongTermMemory` is an experimental API. Annotate your code with `@OptIn(ExperimentalAgentsApi::class)` or add `@file:OptIn(ExperimentalAgentsApi::class)` at the top of your file.
 
-```kotlin
-@OptIn(ExperimentalAgentsApi::class)
-val storage = InMemoryRecordStorage() // or your vector DB adapter
+=== "Kotlin"
 
-@OptIn(ExperimentalAgentsApi::class)
-val agent = AIAgent(
-    promptExecutor = executor,
-    strategy = singleRunStrategy(),
-    agentConfig = agentConfig,
-    toolRegistry = ToolRegistry.EMPTY
-) {
-    install(LongTermMemory) {
-        retrieval {
-            storage = storage
-            searchStrategy = KeywordSearchStrategy(topK = 5)
-        }
-        ingestion {
-            storage = storage
+    ```kotlin
+    @OptIn(ExperimentalAgentsApi::class)
+    val myStorage = InMemoryRecordStorage() // or your vector DB adapter
+
+    @OptIn(ExperimentalAgentsApi::class)
+    val agent = AIAgent(
+        promptExecutor = executor,
+        strategy = singleRunStrategy(),
+        agentConfig = agentConfig,
+        toolRegistry = ToolRegistry.EMPTY
+    ) {
+        install(LongTermMemory) {
+            retrieval {
+                storage = myStorage
+                searchStrategy = KeywordSearchStrategy(topK = 5)
+            }
         }
     }
-}
 
-agent.run("What did we discuss yesterday?")
-```
+    agent.run("What did we discuss yesterday?")
+    ```
+
+=== "Java"
+
+    ```java
+    InMemoryRecordStorage myStorage = new InMemoryRecordStorage();
+
+    AIAgent agent = AIAgent.builder()
+        .promptExecutor(executor)
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .systemPrompt("You are a helpful assistant.")
+        .install(LongTermMemory.Feature, config -> {
+            config.retrieval(
+                new LongTermMemory.RetrievalSettingsBuilder()
+                    .withStorage(myStorage)
+                    .withSearchStrategy(query ->
+                        new KeywordSearchRequest(query, 15, 0.5, null)
+                    )
+                    .build()
+            );
+        })
+        .build();
+
+    Object result = agent.run("What did we discuss yesterday?");
+    ```
 
 ## Retrieval Only (RAG)
 
 Use retrieval without ingestion when you have a pre-populated knowledge base:
 
-```kotlin
-@OptIn(ExperimentalAgentsApi::class)
-install(LongTermMemory) {
-    retrieval {
-        storage = myVectorDbStorage
-        namespace = "my-collection"  // optional: scope to a specific namespace/collection
-        searchStrategy = SimilaritySearchStrategy(topK = 3, similarityThreshold = 0.7)
-        promptAugmenter = SystemPromptAugmenter()
+=== "Kotlin"
+
+    ```kotlin
+    @OptIn(ExperimentalAgentsApi::class)
+    install(LongTermMemory) {
+        retrieval {
+            storage = myVectorDbStorage
+            namespace = "my-collection"  // optional: scope to a specific namespace/collection
+            searchStrategy = SimilaritySearchStrategy(topK = 3, similarityThreshold = 0.7)
+            promptAugmenter = SystemPromptAugmenter()
+        }
     }
-}
-```
+    ```
+
+=== "Java"
+
+    ```java
+    var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
+        .withStorage(myVectorDbStorage)
+        .withSearchStrategy(
+            SearchStrategy.builder().similarity().withTopK(3).withSimilarityThreshold(0.7).build()
+        )
+        .withPromptAugmenter(PromptAugmenter.builder().system().build())
+        .build();
+    ```
 
 ### Prompt Augmenters
 
@@ -57,23 +94,49 @@ install(LongTermMemory) {
 | `UserPromptAugmenter()` | Inserts context as a separate user message before the last user message |
 | `PromptAugmenter { prompt, context -> ... }` | Custom augmentation via lambda |
 
+### Search Strategies
+
+| Strategy                                                  | Behavior                 |
+|-----------------------------------------------------------|--------------------------|
+| `KeywordSearchStrategy()`                                 | Full-text/lexical keyword matching |
+| `SimilaritySearchStrategy()`                              | Vector similarity semantic search |
+| `query -> new KeywordSearchRequest(query, 20, 0.0, null)` | Custom search via lambda |
+
 ## Ingestion Only
 
 Use ingestion without retrieval to build up a memory storage over time:
 
-```kotlin
-@OptIn(ExperimentalAgentsApi::class)
-install(LongTermMemory) {
-    ingestion {
-        storage = myVectorDbStorage
-        namespace = "my-collection"  // optional: scope to a specific namespace/collection
-        extractor = FilteringMemoryRecordExtractor(
-            messageRolesToExtract = setOf(Message.Role.User, Message.Role.Assistant)
-        )
-        timing = IngestionTiming.ON_LLM_CALL
+=== "Kotlin"
+
+    ```kotlin
+    @OptIn(ExperimentalAgentsApi::class)
+    install(LongTermMemory) {
+        ingestion {
+            storage = myVectorDbStorage
+            namespace = "my-collection"  // optional: scope to a specific namespace/collection
+            extractor = FilteringMemoryRecordExtractor(
+                messageRolesToExtract = setOf(Message.Role.User, Message.Role.Assistant)
+            )
+            timing = IngestionTiming.ON_LLM_CALL
+        }
     }
-}
-```
+    ```
+
+=== "Java"
+
+    ```java
+    var ingestionSettings = new LongTermMemory.IngestionSettingsBuilder()
+        .withStorage(myVectorDbStorage)
+        .withExtractor(
+            MemoryRecordExtractor.builder()
+                .filtering()
+                .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
+                .withLastMessageOnly(false)
+                .build()
+        )
+        .withTiming(IngestionTiming.ON_LLM_CALL)
+        .build();
+    ```
 
 ### Ingestion Timing
 
@@ -127,22 +190,6 @@ install(LongTermMemory) {
     ingestion {
         storage = myStorage
         extractor = summarizingExtractor
-    }
-}
-```
-
-## Custom Search Request
-
-Use `searchStrategy` with a lambda to control how user queries are turned into search requests:
-
-```kotlin
-@OptIn(ExperimentalAgentsApi::class)
-install(LongTermMemory) {
-    retrieval {
-        storage = myStorage
-        searchStrategy = SearchStrategy { query ->
-            SimilaritySearchRequest(query = rephrase(query), limit = 10)
-        }
     }
 }
 ```

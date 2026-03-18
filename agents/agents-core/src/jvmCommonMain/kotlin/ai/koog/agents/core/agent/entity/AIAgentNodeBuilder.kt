@@ -214,26 +214,6 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
         }
 
     /**
-     * Represents an action that defines how a [PromptBuilder] is configured.
-     *
-     * This functional interface is primarily used in the context of building prompt-related configurations
-     * for AI agent nodes. Implementations of this interface customize a [PromptBuilder] instance, which
-     * facilitates the creation of structured or dynamic prompts.
-     *
-     * The interface is annotated with [JavaAPI], indicating it is designed to support interoperability
-     * with Java code and follows conventions favorable for Java environments.
-     */
-    @JavaAPI
-    public fun interface PromptBuilderAction {
-        /**
-         * Executes the provided action on the given PromptBuilder instance.
-         *
-         * @param promptBuilder The PromptBuilder instance to be configured or modified.
-         */
-        public fun build(promptBuilder: PromptBuilder)
-    }
-
-    /**
      * Sends a streaming request to the Large Language Model (LLM) and processes the results, optionally using
      * a specified structure definition for content customization.
      *
@@ -382,4 +362,24 @@ public class DefinedAIAgentNodeBuilder<Input : Any, Output : Any>(
             }
         }
     }
+}
+
+/**
+ * Represents an action that defines how a [PromptBuilder] is configured.
+ *
+ * This functional interface is primarily used in the context of building prompt-related configurations
+ * for AI agent nodes. Implementations of this interface customize a [PromptBuilder] instance, which
+ * facilitates the creation of structured or dynamic prompts.
+ *
+ * The interface is annotated with [JavaAPI], indicating it is designed to support interoperability
+ * with Java code and follows conventions favorable for Java environments.
+ */
+@JavaAPI
+public fun interface PromptBuilderAction {
+    /**
+     * Executes the provided action on the given PromptBuilder instance.
+     *
+     * @param promptBuilder The PromptBuilder instance to be configured or modified.
+     */
+    public fun build(promptBuilder: PromptBuilder)
 }

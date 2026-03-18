@@ -5,6 +5,7 @@ package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.PromptBuilderAction
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.SafeTool
@@ -21,11 +22,14 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.jdk9.asPublisher
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Flow.Publisher
 import kotlin.reflect.KClass
 import kotlin.time.Clock
 
@@ -49,6 +53,21 @@ public actual class AIAgentLLMWriteSession internal constructor(
             environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock
         )
     )
+
+    /**
+     * Appends a prompt using the provided prompt update action.
+     *
+     * @param promptUpdate A lambda expression defining the modifications to apply to the prompt.
+     */
+    @JavaAPI
+    @JvmName("appendPrompt")
+    public fun javaNonExtensionAppendPrompt(
+        promptUpdate: PromptBuilderAction
+    ) {
+        appendPrompt {
+            promptUpdate.build(this)
+        }
+    }
 
     /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.
@@ -176,8 +195,18 @@ public actual class AIAgentLLMWriteSession internal constructor(
     @JvmOverloads
     public fun requestLLMStreaming(
         executorService: ExecutorService? = null
-    ): Flow<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMStreaming()
+    ): Publisher<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
+        requestLLMStreaming().asPublisher()
+    }
+
+    @JavaAPI
+    @JvmOverloads
+    @JvmName("requestLLMStreaming")
+    public fun javaRequestLLMStreaming(
+        structureDefinition: StructureDefinition,
+        executorService: ExecutorService? = null
+    ): Publisher<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
+        requestLLMStreaming(structureDefinition).asPublisher()
     }
 
     /**

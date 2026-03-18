@@ -478,36 +478,54 @@ Here is an example of error handling in Kotlin and Java:
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.clients.retry.RetryConfig;
+    import ai.koog.prompt.executor.clients.retry.RetryingLLMClient;
+    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+    import ai.koog.prompt.message.Message;
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
+    import java.util.List;
+    import java.util.function.Consumer;
+    class exampleHandlingFailuresJava05 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
-    // TODO: FIX
-    //Logger logger = LoggerFactory.getLogger("Example");
-    //RetryingLLMClient resilientClient = new RetryingLLMClient(
-    //    new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
-    //    RetryConfig.Companion.getPRODUCTION()
-    //);
-    //Prompt prompt = Prompt.builder("test")
-    //    .user("Hello")
-    //    .build();
-    //MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(resilientClient);
-    //
-    //java.util.function.Consumer<List<Message.Response>> processResponse = (resp) -> { /* implementation */ };
-    //Runnable scheduleRetryLater = () -> { /* implementation */ };
-    //Runnable notifyAdministrator = () -> { /* implementation */ };
-    //Runnable useDefaultResponse = () -> { /* implementation */ };
-    //
-    //try {
-    //    List<Message.Response> response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
-    //    processResponse.accept(response);
-    //} catch (Exception e) {
-    //    logger.error("LLM operation failed", e);
-    //    String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
-    //    if (msg.contains("rate limit")) {
-    //        scheduleRetryLater.run();
-    //    } else if (msg.contains("invalid api key")) {
-    //        notifyAdministrator.run();
-    //    } else {
-    //        useDefaultResponse.run();
-    //    }
-    //}
+    Logger logger = LoggerFactory.getLogger("Example");
+    RetryingLLMClient resilientClient = new RetryingLLMClient(
+            new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
+            RetryConfig.PRODUCTION
+    );
+    Prompt prompt = Prompt.builder("test")
+            .user("Hello")
+            .build();
+    MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(resilientClient);
+
+    Consumer<List<Message.Response>> processResponse = (resp) -> { /* implementation */ };
+    Runnable scheduleRetryLater = () -> { /* implementation */ };
+    Runnable notifyAdministrator = () -> { /* implementation */ };
+    Runnable useDefaultResponse = () -> { /* implementation */ };
+
+    try {
+        List<Message.Response> response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
+        processResponse.accept(response);
+    } catch (Exception e) {
+        logger.error("LLM operation failed", e);
+        String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
+        if (msg.contains("rate limit")) {
+            scheduleRetryLater.run();
+        } else if (msg.contains("invalid api key")) {
+            notifyAdministrator.run();
+        } else {
+            useDefaultResponse.run();
+        }
+    }
     ```
     <!--- KNIT example-handling-failures-java-05.java -->
