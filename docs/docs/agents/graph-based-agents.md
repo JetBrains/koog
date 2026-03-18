@@ -1,8 +1,11 @@
 # Graph-based agents
 
 With graph-based agents, you model the behavior as an explicit state machine:
-nodes of a graph strategy represent actions (LLM calls, tool execution)
-and edges represent data flow between nodes.
+nodes of a graph strategy represent actions (LLM calls, tool execution), and edges represent 
+data flow between nodes.
+
+To implement a graph-based strategy in Kotlin, use the DSL with the `strategy()` function. In 
+Java, use the builder pattern with `AIAgentGraphStrategy.builder()`.
 
 The main advantages of graph-based agents are:
 
@@ -74,8 +77,9 @@ the strategy as a whole also defines some input and output type.
 This example assumes that the input and output types are strings,
 which means the agent implementing this strategy will expect a string and return a string.
 
-To create a strategy, use the [`strategy()`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/strategy.html) function with two generics as the input and output types,
-provide a unique identifier for the strategy, and define the nodes and edges.
+To create a strategy, use the [`strategy()`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/strategy.html) function (Kotlin) or the 
+`AIAgentGraphStrategy.builder()` method (Java) with the input and output types, provide a unique
+identifier for the strategy, and define the nodes and edges.
 
 === "Kotlin"
 
@@ -158,17 +162,17 @@ Edges can have conditions to determine when to follow a particular edge.
 Edges can also transform the output of the previous node before passing it to the next one.
 This is necessary to connect nodes that have non-matching output and input types.
 
-In the previous example, `onToolCall { true }` means that the edge will follow
-only if the previous node returned a tool call `Message.Tool.Call`.
+In the previous example, `onToolCall { true }` (Kotlin) or `.onCondition(msg -> msg instanceof Message.Tool.Call)`
+(Java) means that the edge will follow only if the previous node returned a tool call.
 
-When using `onAssistantMessage { true }`, the edge will follow
-only if the previous node returned an assistant message `Message.Assistant`.
-This function also extracts the content of the assistant message,
-effectively transforming `Message.Assistant` to `String`, because `nodeFinish` expects a string.
+When using `onAssistantMessage { true }` (Kotlin), or `.onCondition(msg -> msg instanceof Message.Assistant)`
+(Java), the edge will follow only if the previous node returned an assistant message. In Kotlin,
+this function also extracts the content of the assistant message, effectively transforming 
+`Message.Assistant` to `String`, because `nodeFinish` expects a string.
 
 !!! tip
 
-    Instead of `onAssistantMessage {true}`, you can do the following:
+    In Kotlin, instead of `onAssistantMessage {true}`, you can do the following:
 
     <!--- INCLUDE
     /**
@@ -446,7 +450,6 @@ Add the tool registry to the agent configuration:
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import kotlinx.coroutines.runBlocking
-    
     @LLMDescription("Tools for performing math operations")
     class MathTools : ToolSet {
         @Tool
@@ -464,16 +467,13 @@ Add the tool registry to the agent configuration:
             return a * b
         }
     }
-    
     val toolRegistry = ToolRegistry {
         tools(MathTools())
     }
-    
     val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteTool()
         val nodeSendToolResult by nodeLLMSendToolResult()
-    
         edge(nodeStart forwardTo nodeSendInput)
         edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
         edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
@@ -625,7 +625,6 @@ In our example, it is important to describe how the agent should process complex
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import kotlinx.coroutines.runBlocking
-    
     @LLMDescription("Tools for performing math operations")
     class MathTools : ToolSet {
         @Tool
@@ -643,16 +642,13 @@ In our example, it is important to describe how the agent should process complex
             return a * b
         }
     }
-    
     val toolRegistry = ToolRegistry {
         tools(MathTools())
     }
-    
     val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteTool()
         val nodeSendToolResult by nodeLLMSendToolResult()
-    
         edge(nodeStart forwardTo nodeSendInput)
         edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
         edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })

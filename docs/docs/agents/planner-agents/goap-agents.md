@@ -21,15 +21,15 @@ GOAP planners work with three main concepts:
 
     Examples on this page assume that you have set the `OPENAI_API_KEY` environment variable.
 
-In Koog, you define a GOAP agent using a DSL by declaratively specifying the goals and actions.
+In Koog, you define a GOAP agent by declaratively specifying the goals and actions using a DSL (Kotlin) or builder pattern (Java).
 
 To create a GOAP agent, you need to:
 
-1. Define the state as a data class with properties representing various aspects specific to your goal.
-2. Create a [GOAPPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner/index.html) instance using the [goap()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/goap.html) function.
-    1. Define actions with preconditions and beliefs using the [action()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/action.html) function.
-    2. Define goals with completion conditions using the [goal()](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.goap/-g-o-a-p-planner-builder/goal.html) function.
-3. Wrap the planner with [AIAgentPlannerStrategy](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-a-i-agent-planner-strategy/index.html) and pass it to the [PlannerAIAgent](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-planner-a-i-agent/index.html) constructor.
+1. Define the state class that extends [GoapAgentState](api:agents-core::ai.koog.agents.planner.goap.GoapAgentState) and overrides the [provideOutput()](api:agents-core::ai.koog.agents.planner.goap.GoapAgentState.provideOutput) method. In Kotlin, use a data class for automatic `copy()` method generation. In Java, use a regular class and manually implement a `copy()` method for state updates.
+2. Create an [AIAgentPlannerStrategy](api:agents-core::ai.koog.agents.planner.AIAgentPlannerStrategy) with a GOAP planner. In Kotlin, use the [goap()](api:agents-core::ai.koog.agents.planner.AIAgentPlannerStrategy.Companion.goap) function with a DSL block. In Java, use [AIAgentPlannerStrategy.builder().goap()](api:agents-core::ai.koog.agents.planner.AIAgentPlannerStrategyBuilder.goap) followed by builder methods.
+    1. Define actions with preconditions and beliefs using the [action()](api:agents-core::ai.koog.agents.planner.goap.GOAPPlannerBuilder.action) function in Kotlin or the corresponding `.action()` builder method in Java. In Java, actions also require the `.execute()` method to be implemented.
+    2. Define goals with completion conditions using the [goal()](api:agents-core::ai.koog.agents.planner.goap:GOAPPlannerBuilder:goal) function in Kotlin or the corresponding `.goal()` builder method in Java.
+3. Create the agent and provide the planner strategy. In Kotlin, use the `AIAgent()` constructor with the `strategy` parameter. In Java, use `AIAgent.builder()` with the [.plannerStrategy()](api:agents-core::ai.koog.agents.core.agent=.AIAgentBuilderAPI.plannerStrategy) builder method and a `.build()` call at the end.
 
 !!! note
 

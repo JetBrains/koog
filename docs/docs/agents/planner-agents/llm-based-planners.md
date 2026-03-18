@@ -19,13 +19,14 @@ Koog provides two simple planners:
 
 - [SimpleLLMPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.llm/-simple-l-l-m-planner/index.html)
   generates a plan only once at the very beginning and then follows the plan until it is completed.
-  To include replanning, extend `SimpleLLMPlanner` and override the `assessPlan` method,
-  indicating when the agent should replan.
+  To include replanning, extend `SimpleLLMPlanner` (in either Kotlin or Java) and override the `assessPlan` method,
+  indicating when the agent should replan. In Java, use `.llmBasedPlanner()` in the builder to access the default 
+  implementation.
 - [SimpleLLMWithCriticPlanner](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner.llm/-simple-l-l-m-with-critic-planner/index.html)
-  implements the `assessPlan` method that uses an LLM to check the validity of the plan via an LLM request
+  extends `SimpleLLMPlanner` and overrides the `assessPlan` method to use an LLM to check the validity of the plan via an LLM request
   and assess whether the agent should replan.
 
-The following example shows how to create a simple planner agent using `SimpleLLMPlanner`:
+The following example shows how to create a simple planner agent using `SimpleLLMPlanner`. In Kotlin, you explicitly instantiate `SimpleLLMPlanner` and wrap it in a strategy. In Java, you use the builder pattern with `.llmBasedPlanner()`, which internally creates the planner:
 
 === "Kotlin"
 
