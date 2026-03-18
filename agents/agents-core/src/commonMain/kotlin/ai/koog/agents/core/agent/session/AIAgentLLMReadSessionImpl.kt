@@ -120,7 +120,10 @@ internal class AIAgentLLMReadSessionImpl(
         val promptWithForcingOneTool = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Named(tool.name)
         }
-        return executeSingle(promptWithForcingOneTool, tools)
+        val responses = executeMultiple(promptWithForcingOneTool, tools)
+
+        return responses.firstOrNull { it is Message.Tool.Call }
+            ?: responses.first { it is Message.Assistant }
     }
 
     override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
