@@ -261,7 +261,7 @@ class JavaAPIAgentBuilderTest {
         val systemPrompt = "System prompt"
 
         val agent = AIAgent.builder()
-            .promptExecutor(getMockExecutor(serializer) {  })
+            .promptExecutor(getMockExecutor(serializer) { })
             .llmModel(OpenAIModels.Chat.GPT4o)
             .prompt(prompt(id, LLMParams(maxTokens = maxTokens)) { system(originalSystemPrompt) })
             .temperature(temperature)
