@@ -36,6 +36,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
         ),
         Clock.System,
     )
+
     /**
      * Sets the identifier for the builder configuration.
      *
