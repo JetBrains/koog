@@ -13,6 +13,7 @@ import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
 import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -111,7 +112,7 @@ internal class AIAgentBuilderImpl internal constructor(
     }
 
     override fun systemPrompt(systemPrompt: String): AIAgentBuilderAPI =
-        prompt(Prompt.build(id = "agent") { system(systemPrompt) })
+        prompt(prompt(config.prompt) { system(systemPrompt) })
 
     override fun prompt(prompt: Prompt): AIAgentBuilderAPI = apply {
         this.config = config.copy(prompt = prompt)

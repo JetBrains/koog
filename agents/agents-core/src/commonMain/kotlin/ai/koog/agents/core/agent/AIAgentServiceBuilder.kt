@@ -16,6 +16,7 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.serialization.TypeToken
@@ -131,7 +132,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
      * @return The updated `GraphServiceBuilder` instance.
      */
     public fun systemPrompt(systemPrompt: String): GraphAgentServiceBuilder<Input, Output> =
-        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
+        prompt(prompt(config.prompt) { system(systemPrompt) })
 
     /**
      * Sets the prompt to be used by the GraphServiceBuilder.
@@ -299,7 +300,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
      * @return The updated instance of FunctionalServiceBuilder with the configured system prompt.
      */
     public fun systemPrompt(systemPrompt: String): FunctionalAgentServiceBuilder<Input, Output> =
-        prompt(ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) })
+        prompt(prompt(config.prompt) { system(systemPrompt) })
 
     /**
      * Assigns the given prompt to the builder configuration.
