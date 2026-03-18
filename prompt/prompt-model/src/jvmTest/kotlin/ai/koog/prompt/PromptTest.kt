@@ -309,7 +309,7 @@ class PromptTest {
         val emptyPrompt = Prompt.Empty
 
         assertTrue(emptyPrompt.messages.isEmpty())
-        assertEquals("", emptyPrompt.id)
+        assertEquals("default", emptyPrompt.id)
         assertEquals(LLMParams(), emptyPrompt.params)
 
         val json = Json.encodeToString(emptyPrompt)
@@ -317,7 +317,7 @@ class PromptTest {
 
         assertEquals(emptyPrompt, decoded)
         assertTrue(decoded.messages.isEmpty())
-        assertEquals("", decoded.id)
+        assertEquals("default", decoded.id)
     }
 
     @Test

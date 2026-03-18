@@ -46,7 +46,7 @@ internal class AIAgentServiceBuilderImpl(
     }
 
     public override fun systemPrompt(systemPrompt: String): AIAgentServiceBuilderAPI =
-        this.prompt(prompt(id = "agent") { system(systemPrompt) })
+        this.prompt(prompt(config.prompt) { system(systemPrompt) })
 
     public override fun prompt(prompt: Prompt): AIAgentServiceBuilderAPI = apply {
         this.config = config.copy(prompt = prompt)
