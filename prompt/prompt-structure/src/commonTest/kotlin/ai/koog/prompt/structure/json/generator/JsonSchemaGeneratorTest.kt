@@ -1,6 +1,7 @@
 package ai.koog.prompt.structure.json.generator
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import kotlinx.serialization.SerialInfo
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode
@@ -34,10 +35,26 @@ class JsonSchemaGeneratorTest {
     private val basicGenerator = BasicJsonSchemaGenerator
     private val standardGenerator = StandardJsonSchemaGenerator
 
+    /**
+     * A minimal serial-info annotation used to reproduce the non-local return bug in
+     * [JsonSchemaGenerator.GenerationContext.getDescriptionFromAnnotations].
+     *
+     * Because [firstNotNullOfOrNull] is an inline function, the `return` inside its lambda
+     * is a *non-local* return that exits `getDescriptionFromAnnotations` immediately — not
+     * just the lambda. When [MarkerAnnotation] appears first in the element annotations list
+     * the `else -> null` branch executes `return null`, which exits the enclosing function
+     * before [LLMDescription] is ever examined, so descriptions are silently dropped.
+     */
+    @SerialInfo
+    @Target(AnnotationTarget.PROPERTY, AnnotationTarget.CLASS)
+    annotation class MarkerAnnotation(val tag: String = "")
+
+    @MarkerAnnotation("ignored on class")
     @Serializable
     @SerialName("TestClass")
     @LLMDescription("A test class")
     data class TestClass(
+        @property:MarkerAnnotation("ignored on property")
         @property:LLMDescription("A string property")
         val stringProperty: String,
         val intProperty: Int,

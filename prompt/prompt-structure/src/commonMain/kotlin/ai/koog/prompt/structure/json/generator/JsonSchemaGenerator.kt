@@ -74,7 +74,7 @@ public abstract class JsonSchemaGenerator {
 
         private fun getDescriptionFromAnnotations(annotations: List<Annotation>): String? = annotations
             .firstNotNullOfOrNull { annotation ->
-                return when (annotation) {
+                when (annotation) {
                     is Description -> annotation.value
                     is LLMDescription -> annotation.effectiveValue
                     else -> null
@@ -127,8 +127,8 @@ public abstract class JsonSchemaGenerator {
 }
 
 /**
- * Utility function to get all subtype serial descriptors from a given polymorphic serial descriptor, that can handle both
- * [PolymorphicKind.OPEN] and [PolymorphicKind.SEALED] kinds.
+ * Utility function to get all subtype serial descriptors from a given polymorphic serial descriptor,
+ * that can handle both [PolymorphicKind.OPEN] and [PolymorphicKind.SEALED] kinds.
  *
  * @param this Serial descriptor of a polymorphic type.
  * @param json [Json] instance
