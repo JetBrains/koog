@@ -21,22 +21,19 @@ an output, to more complex node implementations that accept parameters and maint
 
 The simplest way to implement a custom node in a graph and define your own custom logic would be to use the following pattern:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-typealias Input = String
-typealias Output = Int
-
-val returnValue = 42
-
-val str = strategy<Input, Output>("my-strategy") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    typealias Input = String
+    typealias Output = Int
+    val returnValue = 42
+    val str = strategy<Input, Output>("my-strategy") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     val myNode by node<Input, Output>("node_name") { input ->
         // Processing
@@ -47,6 +44,18 @@ val str = strategy<Input, Output>("my-strategy") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava01 {
+        static class Input {}
+        static class Output {}
+        static Output returnValue = new Output();
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     var myNode = AIAgentNode.builder("node_name")
         .withInput(Input.class)
@@ -57,22 +66,22 @@ val str = strategy<Input, Output>("my-strategy") {
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava01.java -->
 
 The code above represents a custom node `myNode` with predefined `Input` and `Output` types, with the optional name
 string parameter (`node_name`). In an actual example, here is a simple node that takes a string input and returns
 the input's length:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-val str = strategy<String, Int>("my-strategy") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    val str = strategy<String, Int>("my-strategy") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     val myNode by node<String, Int>("node_name") { input ->
         // Processing
@@ -83,6 +92,15 @@ val str = strategy<String, Int>("my-strategy") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava02 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     var myNode = AIAgentNode.builder("node_name")
         .withInput(String.class)
@@ -93,26 +111,25 @@ val str = strategy<String, Int>("my-strategy") {
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava02.java -->
 
 Another way to create a custom node in Kotlin is to define an extension function on `AIAgentSubgraphBuilderBase` that
 calls the `node` function. In Java, you achieve the same reusability by extracting the node builder call into a helper method:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-typealias Input = String
-typealias Output = String
-
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
+    import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    typealias Input = String
+    typealias Output = String
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     fun AIAgentSubgraphBuilderBase<*, *>.myCustomNode(
         name: String? = null
@@ -127,6 +144,15 @@ val strategy = strategy<String, String>("strategy_name") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava03 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     var myCustomNode = AIAgentNode.builder("node_name")
         .withInput(String.class)
@@ -137,6 +163,7 @@ val strategy = strategy<String, String>("strategy_name") {
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava03.java -->
 
 This creates a pass-through node that performs some custom logic but returns the input as the output without modification.
 
@@ -144,22 +171,20 @@ This creates a pass-through node that performs some custom logic but returns the
 
 You can create nodes that accept arguments to customize their behavior:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-typealias Input = String
-typealias Output = String
-
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
+    import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    typealias Input = String
+    typealias Output = String
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
         fun AIAgentSubgraphBuilderBase<*, *>.myNodeWithArguments(
         name: String? = null,
@@ -176,6 +201,15 @@ val strategy = strategy<String, String>("strategy_name") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava04 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     String arg1 = "value1";
     int arg2 = 42;
@@ -189,21 +223,21 @@ val strategy = strategy<String, String>("strategy_name") {
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava04.java -->
 
 
 ### Parameterized nodes
 
 You can define nodes with input and output parameters:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
--->
-
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
+    import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    -->
     ```kotlin
     inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.myParameterizedNode(
         name: String? = null,
@@ -221,6 +255,15 @@ import ai.koog.agents.core.dsl.builder.node
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava05 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     // In Java, specify the types explicitly when building the node
     var myCustomNode = AIAgentNode.builder("node_name")
@@ -233,22 +276,21 @@ import ai.koog.agents.core.dsl.builder.node
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava05.java -->
 
 ### Stateful nodes
 
 If your node needs to maintain state between runs, you can use closure variables:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.dsl.builder.node
-
-typealias Input = Unit
-typealias Output = Unit
-
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
+    import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+    import ai.koog.agents.core.dsl.builder.node
+    typealias Input = Unit
+    typealias Output = Unit
+    -->
     ```kotlin
     fun AIAgentSubgraphBuilderBase<*, *>.myStatefulNode(
         name: String? = null
@@ -266,6 +308,16 @@ typealias Output = Unit
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import java.util.concurrent.atomic.AtomicInteger;
+    class exampleCustomNodesJava06 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     // In Java, use AtomicInteger (or similar) since the lambda captures must be effectively final
     AtomicInteger counter = new AtomicInteger(0);
@@ -280,22 +332,22 @@ typealias Output = Unit
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava06.java -->
 
 ## Node input and output types
 
 Nodes can have different input and output types, which are specified as generic parameters:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     val stringToIntNode by node<String, Int>("node_name") { input: String ->
         // Processing
@@ -306,6 +358,15 @@ val strategy = strategy<String, String>("strategy_name") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava07 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     var stringToIntNode = AIAgentNode.builder("node_name")
         .withInput(String.class)
@@ -316,6 +377,7 @@ val strategy = strategy<String, String>("strategy_name") {
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava07.java -->
 
 !!! note
     The input and output types determine how the node can be connected to other nodes in the workflow. Nodes can only be connected if the output type of the source node is compatible with the input type of the target node.
@@ -340,17 +402,16 @@ The following sections provide some common patterns for implementing custom node
 
 Nodes that perform an operation but return the input as the output.
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     val loggingNode by node<String, String>("node_name") { input ->
         println("Processing input: $input")
@@ -361,6 +422,15 @@ val strategy = strategy<String, String>("strategy_name") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava08 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     var loggingNode = AIAgentNode.builder("node_name")
         .withInput(String.class)
@@ -371,22 +441,22 @@ val strategy = strategy<String, String>("strategy_name") {
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava08.java -->
 
 ### Transformation nodes
 
 Nodes that transform the input into a different output.
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     val upperCaseNode by node<String, String>("node_name") { input ->
         println("Processing input: $input")
@@ -397,6 +467,15 @@ val strategy = strategy<String, String>("strategy_name") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomNodesJava09 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     var upperCaseNode = AIAgentNode.builder("node_name")
         .withInput(String.class)
@@ -407,22 +486,22 @@ val strategy = strategy<String, String>("strategy_name") {
         })
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava09.java -->
 
 ### LLM interaction nodes
 
 Nodes that interact with the LLM.
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     val summarizeTextNode by node<String, String>("node_name") { input ->
         llm.writeSession {
@@ -439,6 +518,16 @@ val strategy = strategy<String, String>("strategy_name") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    class exampleCustomNodesJava10 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     // In Java, LLM interaction is handled using pre-built factory nodes.
     // AIAgentNode.llmRequest() creates a node that sends the input string as a user
@@ -453,35 +542,32 @@ val strategy = strategy<String, String>("strategy_name") {
         .withAction((response, ctx) -> response.getContent())
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava10.java -->
 
 !!! note
     The Kotlin example above shows fine-grained control over the LLM session (custom prompt construction, explicit `requestLLMWithoutTools` call). The Java API provides higher-level factory methods like `AIAgentNode.llmRequest()` that handle prompt construction automatically — the input string becomes the user message. For most use cases this is sufficient; for advanced prompt customization, compose multiple nodes or use a custom subgraph.
 
 ### Tool run node
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
-import kotlin.time.Clock
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import java.util.*
-
-val toolName = "my-custom-tool"
-
-@Serializable
-data class ToolArgs(val arg1: String, val arg2: Int)
-
-val strategy = strategy<String, String>("strategy_name") {
-
--->
-<!--- SUFFIX
-}
--->
 === "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.prompt.message.Message
+    import ai.koog.prompt.message.ResponseMetaInfo
+    import kotlin.time.Clock
+    import kotlinx.serialization.Serializable
+    import kotlinx.serialization.json.Json
+    import java.util.*
+    val toolName = "my-custom-tool"
+    @Serializable
+    data class ToolArgs(val arg1: String, val arg2: Int)
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
     ```kotlin
     val nodeExecuteCustomTool by node<String, String>("node_name") { input ->
         val toolCall = Message.Tool.Call(
@@ -499,6 +585,15 @@ val strategy = strategy<String, String>("strategy_name") {
 
 === "Java"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    class exampleCustomNodesJava11 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
     ```java
     // In Java, direct tool execution (as shown in the Kotlin example) is not available
     // through the Java builder API. Instead, use a subgraph that delegates tool calls
@@ -509,6 +604,7 @@ val strategy = strategy<String, String>("strategy_name") {
         .withTask(input -> "Use my_tool with input: " + input)
         .build();
     ```
+    <!--- KNIT exampleCustomNodesJava11.java -->
 
 !!! note
     The Kotlin example demonstrates low-level tool execution by manually constructing a `Message.Tool.Call` and calling `environment.executeTool()`. The Java API encourages a higher-level approach using subgraphs with `withTask()`, where the LLM orchestrates tool calls automatically. To restrict which tools are available, chain `.limitedTools(List.of(myTool))` before `.withInput()`.
