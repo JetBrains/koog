@@ -1,7 +1,5 @@
 package ai.koog.rag.base.storage
 
-import ai.koog.rag.base.filter.Expression
-
 /**
  * Base interface for all search requests against a storage backend.
  *
@@ -33,18 +31,6 @@ public interface HasTextQuery {
 }
 
 /**
- * Mixin interface indicating that a search request supports metadata filtering.
- *
- * @property filter optional filter expression to narrow down search results based on metadata
- */
-public interface HasFilter {
-    /**
-     * optional filter expression to narrow down search results based on metadata
-     */
-    public val filter: Expression?
-}
-
-/**
  * Mixin interface indicating that a search request supports a minimum score threshold.
  *
  * @property minScore optional minimum relevance score; results below this threshold are excluded
@@ -66,15 +52,13 @@ public interface HasScoreThreshold {
  * @property limit maximum number of results to return (default: 10)
  * @property offset number of results to skip for pagination (default: 0)
  * @property minScore optional minimum similarity score threshold
- * @property filter optional filter expression to narrow down results
  */
 public data class SimilaritySearchRequest(
     override val queryText: String,
     override val limit: Int = 10,
     override val offset: Int = 0,
     override val minScore: Double? = null,
-    override val filter: Expression? = null,
-) : SearchRequest, HasTextQuery, HasScoreThreshold, HasFilter
+) : SearchRequest, HasTextQuery, HasScoreThreshold
 
 /**
  * A search request that performs keyword-based (lexical) search using the provided query text.
@@ -83,15 +67,13 @@ public data class SimilaritySearchRequest(
  * @property limit maximum number of results to return (default: 10)
  * @property offset number of results to skip for pagination (default: 0)
  * @property minScore optional minimum relevance score threshold
- * @property filter optional filter expression to narrow down results
  */
 public data class KeywordSearchRequest(
     override val queryText: String,
     override val limit: Int = 10,
     override val offset: Int = 0,
     override val minScore: Double? = null,
-    override val filter: Expression? = null,
-) : SearchRequest, HasTextQuery, HasScoreThreshold, HasFilter
+) : SearchRequest, HasTextQuery, HasScoreThreshold
 
 /**
  * A search request that combines similarity (vector) and keyword (lexical) search strategies.
@@ -106,7 +88,6 @@ public data class KeywordSearchRequest(
  * @property limit maximum number of results to return (default: 10)
  * @property offset number of results to skip for pagination (default: 0)
  * @property minScore optional minimum relevance score threshold
- * @property filter optional filter expression to narrow down results
  * @throws IllegalArgumentException if [alpha] is not in `[0.0, 1.0]`
  */
 public data class HybridSearchRequest(
@@ -115,8 +96,7 @@ public data class HybridSearchRequest(
     override val limit: Int = 10,
     override val offset: Int = 0,
     override val minScore: Double? = null,
-    override val filter: Expression? = null,
-) : SearchRequest, HasTextQuery, HasScoreThreshold, HasFilter {
+) : SearchRequest, HasTextQuery, HasScoreThreshold {
     init {
         require(alpha in 0.0..1.0) { "alpha must be in [0.0, 1.0]" }
     }
