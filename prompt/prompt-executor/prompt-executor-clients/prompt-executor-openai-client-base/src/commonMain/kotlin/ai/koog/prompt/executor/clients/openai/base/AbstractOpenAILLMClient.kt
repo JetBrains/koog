@@ -468,6 +468,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             yield(audioMessageOrNull(metaInfo, finishReason))
         }.filterNotNull().toList()
         if (messageResponses.isEmpty()) {
+            if (finishReason != null) {
+                return listOf(Message.Assistant("", metaInfo, finishReason))
+            }
             val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
             logger.error(exception) { exception.message }
             throw exception
