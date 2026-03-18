@@ -26,37 +26,68 @@ This approach creates a conversational interface where the agent can use tools t
 ### Setup and dependencies
 
 The implementation of Chat agent strategy in Koog is done through the `chatAgentStrategy` function. To make the function available in your agent code, add the following dependency import:
-
+   
 ```
 ai.koog.agents.ext.agent.chatAgentStrategy
 ```
 <!--- KNIT example-predefined-strategies-01.txt -->
 
-
 To use the strategy, create an AI agent following the pattern below:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.agents.ext.agent.chatAgentStrategy
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
+=== "Kotlin"
 
-val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
-val promptExecutor =simpleOpenAIExecutor(apiKey)
-val toolRegistry = ToolRegistry.EMPTY
-val model =  OpenAIModels.Chat.O4Mini
--->
-```kotlin
-val chatAgent = AIAgent(
-    promptExecutor = promptExecutor,
-    toolRegistry = toolRegistry,
-    llmModel = model,
-    // Set chatAgentStrategy as the agent strategy
-    strategy = chatAgentStrategy()
-)
-```
-<!--- KNIT example-predefined-strategies-01.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.agents.ext.agent.chatAgentStrategy
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
+    val promptExecutor = simpleOpenAIExecutor(apiKey)
+    val toolRegistry = ToolRegistry.EMPTY
+    val model =  OpenAIModels.Chat.O4Mini
+    -->
+    ```kotlin
+    val chatAgent = AIAgent(
+        promptExecutor = promptExecutor,
+        toolRegistry = toolRegistry,
+        llmModel = model,
+        // Set chatAgentStrategy as the agent strategy
+        strategy = chatAgentStrategy()
+    )
+    ```
+    <!--- KNIT example-predefined-strategies-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.ext.agent.AIAgentStrategiesKt;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class examplePredefinedStrategiesJava01 {
+        public static void main(String[] args) {
+            String apiKey = System.getenv("OPENAI_API_KEY");
+            PromptExecutor promptExecutor = PromptExecutor.builder()
+                .openAI(apiKey)
+                .build();
+            ToolRegistry toolRegistry = ToolRegistry.builder().build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> chatAgent = AIAgent.builder()
+        .promptExecutor(promptExecutor)
+        .toolRegistry(toolRegistry)
+        .llmModel(OpenAIModels.Chat.O4Mini)
+        .graphStrategy(AIAgentStrategiesKt.chatAgentStrategy())
+        .build();
+    ```
+    <!--- KNIT examplePredefinedStrategiesJava01.java -->
+
 
 ### When to use the Chat agent strategy
 
@@ -71,42 +102,79 @@ The Chat agent strategy is particularly useful for:
 
 Here is a code sample of an AI agent that implements the predefined Chat agent strategy (`chatAgentStrategy`) and tools that the agent may use:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.agents.ext.agent.chatAgentStrategy
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.ext.tool.SayToUser
+=== "Kotlin"
 
-typealias searchTool = AskUser
-typealias weatherTool = SayToUser
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.agents.ext.agent.chatAgentStrategy
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.agents.ext.tool.AskUser
+    import ai.koog.agents.ext.tool.SayToUser
+    typealias searchTool = AskUser
+    typealias weatherTool = SayToUser
+    val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
+    val promptExecutor =simpleOpenAIExecutor(apiKey)
+    val toolRegistry = ToolRegistry.EMPTY
+    val model =  OpenAIModels.Chat.O4Mini
+    -->
+    ```kotlin
+    val chatAgent = AIAgent(
+        promptExecutor = promptExecutor,
+        llmModel = model,
+        // Use chatAgentStrategy as the agent strategy
+        strategy = chatAgentStrategy(),
+        // Add tools the agent can use
+        toolRegistry = ToolRegistry {
+            tool(searchTool)
+            tool(weatherTool)
+        }
+    )
 
-val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
-val promptExecutor =simpleOpenAIExecutor(apiKey)
-val toolRegistry = ToolRegistry.EMPTY
-val model =  OpenAIModels.Chat.O4Mini
--->
-```kotlin
-val chatAgent = AIAgent(
-    promptExecutor = promptExecutor,
-    llmModel = model,
-    // Use chatAgentStrategy as the agent strategy
-    strategy = chatAgentStrategy(),
-    // Add tools the agent can use
-    toolRegistry = ToolRegistry {
-        tool(searchTool)
-        tool(weatherTool)
+    suspend fun main() { 
+        // Run the agent with a user query
+        val result = chatAgent.run("What's the weather like today and should I bring an umbrella?")
     }
-)
+    ```
+    <!--- KNIT example-predefined-strategies-02.kt -->
 
-suspend fun main() { 
-    // Run the agent with a user query
-    val result = chatAgent.run("What's the weather like today and should I bring an umbrella?")
-}
-```
-<!--- KNIT example-predefined-strategies-02.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.ext.agent.AIAgentStrategiesKt;
+    import ai.koog.agents.ext.tool.AskUser;
+    import ai.koog.agents.ext.tool.SayToUser;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class examplePredefinedStrategiesJava02 {
+        public static void main(String[] args) {
+            String apiKey = System.getenv("OPENAI_API_KEY");
+            PromptExecutor promptExecutor = PromptExecutor.builder()
+                .openAI(apiKey)
+                .build();
+            ToolRegistry toolRegistry = ToolRegistry.builder()
+                .tool(AskUser.INSTANCE)
+                .tool(SayToUser.INSTANCE)
+                .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> chatAgent = AIAgent.builder()
+        .promptExecutor(promptExecutor)
+        .llmModel(OpenAIModels.Chat.O4Mini)
+        .graphStrategy(AIAgentStrategiesKt.chatAgentStrategy())
+        .toolRegistry(toolRegistry)
+        .build();
+
+    String result = chatAgent.run("What's the weather like today and should I bring an umbrella?");
+    ```
+    <!--- KNIT examplePredefinedStrategiesJava02.java -->
 
 ## ReAct strategy
 
@@ -142,32 +210,63 @@ ai.koog.agents.ext.agent.reActStrategy
 
 To use the strategy, create an AI agent following the pattern below:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.agents.ext.agent.reActStrategy
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-
-val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
-val promptExecutor = simpleOpenAIExecutor(apiKey)
-val toolRegistry = ToolRegistry.EMPTY
-val model =  OpenAIModels.Chat.O4Mini
--->
-```kotlin hl_lines="5-10"
-val reActAgent = AIAgent(
-    promptExecutor = promptExecutor,
-    toolRegistry = toolRegistry,
-    llmModel = model,
-    // Set reActStrategy as the agent strategy
-    strategy = reActStrategy(
-        // Set optional parameter values
-        reasoningInterval = 1,
-        name = "react_agent"
+=== "Kotlin"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.agents.ext.agent.reActStrategy
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
+    val promptExecutor = simpleOpenAIExecutor(apiKey)
+    val toolRegistry = ToolRegistry.EMPTY
+    val model =  OpenAIModels.Chat.O4Mini
+    -->
+    ```kotlin hl_lines="5-10"
+    val reActAgent = AIAgent(
+        promptExecutor = promptExecutor,
+        toolRegistry = toolRegistry,
+        llmModel = model,
+        // Set reActStrategy as the agent strategy
+        strategy = reActStrategy(
+            // Set optional parameter values
+            reasoningInterval = 1,
+            name = "react_agent"
+        )
     )
-)
-```
-<!--- KNIT example-predefined-strategies-03.kt -->
+    ```
+    <!--- KNIT example-predefined-strategies-03.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.ext.agent.AIAgentStrategiesKt;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class examplePredefinedStrategiesJava03 {
+        public static void main(String[] args) {
+            String apiKey = System.getenv("OPENAI_API_KEY");
+            PromptExecutor promptExecutor = PromptExecutor.builder()
+                .openAI(apiKey)
+                .build();
+            ToolRegistry toolRegistry = ToolRegistry.builder().build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> reActAgent = AIAgent.builder()
+        .promptExecutor(promptExecutor)
+        .toolRegistry(toolRegistry)
+        .llmModel(OpenAIModels.Chat.O4Mini)
+        .graphStrategy(AIAgentStrategiesKt.reActStrategy(1, "react_agent"))
+        .build();
+    ```
+    <!--- KNIT examplePredefinedStrategiesJava03.java -->
 
 ### Parameters
 
@@ -276,44 +375,80 @@ The ReAct strategy is particularly useful for:
 Here is a code sample of an AI agent that implements the predefined ReAct strategy (`reActStrategy`) and tools that
 the agent may use:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.agents.ext.agent.reActStrategy
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.ext.tool.SayToUser
+=== "Kotlin"
 
-typealias Input = String
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.agents.ext.agent.reActStrategy
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.agents.ext.tool.AskUser
+    import ai.koog.agents.ext.tool.SayToUser
+    typealias Input = String
+    typealias getTransactions = AskUser
+    typealias calculateSum = SayToUser
+    val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
+    val promptExecutor = simpleOpenAIExecutor(apiKey)
+    val toolRegistry = ToolRegistry.EMPTY
+    val model =  OpenAIModels.Chat.O4Mini
+    -->
+    ```kotlin
+    val bankingAgent = AIAgent(
+        promptExecutor = promptExecutor,
+        llmModel = model,
+        // Use reActStrategy as the agent strategy
+        strategy = reActStrategy(
+            reasoningInterval = 1,
+            name = "banking_agent"
+        ),
+        // Add tools the agent can use
+        toolRegistry = ToolRegistry {
+            tool(getTransactions)
+            tool(calculateSum)
+        }
+    )
 
-typealias getTransactions = AskUser
-typealias calculateSum = SayToUser
-
-val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
-val promptExecutor = simpleOpenAIExecutor(apiKey)
-val toolRegistry = ToolRegistry.EMPTY
-val model =  OpenAIModels.Chat.O4Mini
--->
-```kotlin
-val bankingAgent = AIAgent(
-    promptExecutor = promptExecutor,
-    llmModel = model,
-    // Use reActStrategy as the agent strategy
-    strategy = reActStrategy(
-        reasoningInterval = 1,
-        name = "banking_agent"
-    ),
-    // Add tools the agent can use
-    toolRegistry = ToolRegistry {
-        tool(getTransactions)
-        tool(calculateSum)
+    suspend fun main() { 
+        // Run the agent with a user query
+        val result = bankingAgent.run("How much did I spend last month?")
     }
-)
+    ```
+    <!--- KNIT example-predefined-strategies-04.kt -->
 
-suspend fun main() { 
-    // Run the agent with a user query
-    val result = bankingAgent.run("How much did I spend last month?")
-}
-```
-<!--- KNIT example-predefined-strategies-04.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.ext.agent.AIAgentStrategiesKt;
+    import ai.koog.agents.ext.tool.AskUser;
+    import ai.koog.agents.ext.tool.SayToUser;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class examplePredefinedStrategiesJava04 {
+        public static void main(String[] args) {
+            String apiKey = System.getenv("OPENAI_API_KEY");
+            PromptExecutor promptExecutor = PromptExecutor.builder()
+                .openAI(apiKey)
+                .build();
+            ToolRegistry toolRegistry = ToolRegistry.builder()
+                .tool(AskUser.INSTANCE)
+                .tool(SayToUser.INSTANCE)
+                .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> bankingAgent = AIAgent.builder()
+        .promptExecutor(promptExecutor)
+        .llmModel(OpenAIModels.Chat.O4Mini)
+        .graphStrategy(AIAgentStrategiesKt.reActStrategy(1, "banking_agent"))
+        .toolRegistry(toolRegistry)
+        .build();
+
+    String result = bankingAgent.run("How much did I spend last month?");
+    ```
+    <!--- KNIT examplePredefinedStrategiesJava04.java -->

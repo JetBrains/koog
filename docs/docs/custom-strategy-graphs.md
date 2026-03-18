@@ -277,7 +277,6 @@ The basic strategy graph operates as follows:
 
 ![basic-strategy-graph](img/basic-strategy-graph.png)
 
-
 Here is an example of a basic strategy graph:
 
 === "Kotlin"
@@ -462,43 +461,96 @@ For long-running conversations, the history can grow large and consume a lot of 
 
 For workflows that require executing multiple tools in parallel, you can use the `nodeExecuteMultipleTools` node:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.builder.parallel
-import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.prompt.message.Message
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val someNode by node<String, List<Message.Tool.Call>> { emptyList() }
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val executeMultipleTools by nodeExecuteMultipleTools()
-val processMultipleResults by nodeLLMSendMultipleToolResults()
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.builder.parallel
+    import ai.koog.agents.core.dsl.builder.subgraph
+    import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
+    import ai.koog.prompt.message.Message
+    val strategy = strategy<String, String>("strategy_name") {
+        val someNode by node<String, List<Message.Tool.Call>> { emptyList() }
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val executeMultipleTools by nodeExecuteMultipleTools()
+    val processMultipleResults by nodeLLMSendMultipleToolResults()
 
-edge(someNode forwardTo executeMultipleTools)
-edge(executeMultipleTools forwardTo processMultipleResults)
-```
-<!--- KNIT example-custom-strategy-graphs-07.kt -->
+    edge(someNode forwardTo executeMultipleTools)
+    edge(executeMultipleTools forwardTo processMultipleResults)
+    ```
+    <!--- KNIT example-custom-strategy-graphs-07.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentNodeBase;
+    import ai.koog.prompt.message.Message;
+    import java.util.List;
+    class exampleCustomStrategyGraphsJava07 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+             AIAgentNodeBase<String, List<Message.Tool.Call>> someNode =
+                (AIAgentNodeBase<String, List<Message.Tool.Call>>) (AIAgentNodeBase<?, ?>) AIAgentNode.builder("someNode")
+                    .withInput(String.class)
+                    .withOutput(List.class)
+                    .withAction((input, ctx) -> List.of())
+                    .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var executeMultipleTools = AIAgentNode.executeMultipleTools(false, "executeMultipleTools");
+    var processMultipleResults = AIAgentNode.llmSendMultipleToolResults("processMultipleResults");
+
+    strategy.edge(AIAgentEdge.builder()
+        .from(someNode)
+        .to(executeMultipleTools)
+        .build());
+
+    strategy.edge(executeMultipleTools, processMultipleResults);
+    ```
+    <!--- KNIT exampleCustomStrategyGraphsJava07.java -->
 
 You can also use the `toParallelToolCallsRaw` extension function for streaming data:
 
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-parseMarkdownStreamToBooks(markdownStream).toParallelToolCallsRaw(BookTool::class).collect()
-```
-<!--- KNIT example-custom-strategy-graphs-08.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    /*
+    -->
+    <!--- SUFFIX
+    */
+    -->
+    ```kotlin
+    parseMarkdownStreamToBooks(markdownStream).toParallelToolCallsRaw(BookTool::class).collect()
+    ```
+    <!--- KNIT example-custom-strategy-graphs-08.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-custom-strategy-graphs-java-01.java -->
 
 To learn more, see [Tools](tools-overview.md#parallel-tool-calls). 
 
@@ -508,29 +560,41 @@ Parallel node execution lets you run multiple nodes concurrently, improving perf
 
 To initiate parallel node runs, use the `parallel` method:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.builder.parallel
-import ai.koog.agents.core.dsl.builder.subgraph
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val nodeCalcTokens by node<String, Int> { 42 }
-    val nodeCalcSymbols by node<String, Int> { 42 }
-    val nodeCalcWords by node<String, Int> { 42 }
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.builder.parallel
+    import ai.koog.agents.core.dsl.builder.subgraph
+    val strategy = strategy<String, String>("strategy_name") {
+        val nodeCalcTokens by node<String, Int> { 42 }
+        val nodeCalcSymbols by node<String, Int> { 42 }
+        val nodeCalcWords by node<String, Int> { 42 }
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val calc by parallel<String, Int>(
+        nodeCalcTokens, nodeCalcSymbols, nodeCalcWords,
+    ) {
+        selectByMax { it }
+    }
+    ```
+    <!--- KNIT example-custom-strategy-graphs-09.kt -->
 
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val calc by parallel<String, Int>(
-    nodeCalcTokens, nodeCalcSymbols, nodeCalcWords,
-) {
-    selectByMax { it }
-}
-```
-<!--- KNIT example-custom-strategy-graphs-09.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-custom-strategy-graphs-java-02.java -->
 
 The code above creates a node named `calc` that runs the `nodeCalcTokens`, `nodeCalcSymbols`, and `nodeCalcWords` nodes 
 in parallel and returns the results as an instance of `AsyncParallelResult`.
@@ -541,40 +605,85 @@ For more information related to parallel node execution and a detailed reference
 
 For complex workflows that require different paths based on certain conditions, you can use conditional branching:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.builder.parallel
-import ai.koog.agents.core.dsl.builder.subgraph
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val someNode by node<String, String> { it }
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val branchA by node<String, String> { input ->
-    // Logic for branch A
-    "Branch A: $input"
-}
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.builder.parallel
+    import ai.koog.agents.core.dsl.builder.subgraph
+    val strategy = strategy<String, String>("strategy_name") {
+        val someNode by node<String, String> { it }
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val branchA by node<String, String> { input ->
+        // Logic for branch A
+        "Branch A: $input"
+    }
 
-val branchB by node<String, String> { input ->
-    // Logic for branch B
-    "Branch B: $input"
-}
+    val branchB by node<String, String> { input ->
+        // Logic for branch B
+        "Branch B: $input"
+    }
 
-edge(
-    (someNode forwardTo branchA)
-            onCondition { input -> input.contains("A") }
-)
-edge(
-    (someNode forwardTo branchB)
-            onCondition { input -> input.contains("B") }
-)
-```
-<!--- KNIT example-custom-strategy-graphs-10.kt -->
+    edge(
+        (someNode forwardTo branchA)
+                onCondition { input -> input.contains("A") }
+    )
+    edge(
+        (someNode forwardTo branchB)
+                onCondition { input -> input.contains("B") }
+    )
+    ```
+    <!--- KNIT example-custom-strategy-graphs-10.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleCustomStrategyGraphsJava08 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var someNode = AIAgentNode.doNothing(String.class, "someNode");
+
+    var branchA = AIAgentNode.builder("branchA")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> "Branch A: " + input)
+        .build();
+
+    var branchB = AIAgentNode.builder("branchB")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> "Branch B: " + input)
+        .build();
+
+    strategy.edge(AIAgentEdge.builder()
+        .from(someNode)
+        .to(branchA)
+        .onCondition(input -> input.contains("A"))
+        .build());
+    strategy.edge(AIAgentEdge.builder()
+        .from(someNode)
+        .to(branchB)
+        .onCondition(input -> input.contains("B"))
+        .build());
+    ```
+    <!--- KNIT exampleCustomStrategyGraphsJava08.java -->
 
 ## Best practices
 
@@ -595,74 +704,146 @@ When you create custom strategy graphs, follow these best practices:
 
 The tone analysis strategy is a good example of a tool-based strategy that includes history compression:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.builder.parallel
-import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.ToolRegistry
--->
-```kotlin
-fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy<String, String> {
-    return strategy(name) {
-        val nodeSendInput by nodeLLMRequest()
-        val nodeExecuteTool by nodeExecuteTool()
-        val nodeSendToolResult by nodeLLMSendToolResult()
-        val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResult>()
+=== "Kotlin"
 
-        // Define the flow of the agent
-        edge(nodeStart forwardTo nodeSendInput)
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.builder.parallel
+    import ai.koog.agents.core.dsl.builder.subgraph
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+    import ai.koog.agents.core.dsl.extension.onAssistantMessage
+    import ai.koog.agents.core.dsl.extension.onToolCall
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.tools.ToolRegistry
+    -->
+    ```kotlin
+    fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy<String, String> {
+        return strategy(name) {
+            val nodeSendInput by nodeLLMRequest()
+            val nodeExecuteTool by nodeExecuteTool()
+            val nodeSendToolResult by nodeLLMSendToolResult()
+            val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResult>()
 
-        // If the LLM responds with a message, finish
-        edge(
-            (nodeSendInput forwardTo nodeFinish)
-                    onAssistantMessage { true }
-        )
+            // Define the flow of the agent
+            edge(nodeStart forwardTo nodeSendInput)
 
-        // If the LLM calls a tool, execute it
-        edge(
-            (nodeSendInput forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+            // If the LLM responds with a message, finish
+            edge(
+                (nodeSendInput forwardTo nodeFinish)
+                        onAssistantMessage { true }
+            )
 
-        // If the history gets too large, compress it
-        edge(
-            (nodeExecuteTool forwardTo nodeCompressHistory)
-                    onCondition { _ -> llm.readSession { prompt.messages.size > 100 } }
-        )
+            // If the LLM calls a tool, execute it
+            edge(
+                (nodeSendInput forwardTo nodeExecuteTool)
+                        onToolCall { true }
+            )
 
-        edge(nodeCompressHistory forwardTo nodeSendToolResult)
+            // If the history gets too large, compress it
+            edge(
+                (nodeExecuteTool forwardTo nodeCompressHistory)
+                        onCondition { _ -> llm.readSession { prompt.messages.size > 100 } }
+            )
 
-        // Otherwise, send the tool result directly
-        edge(
-            (nodeExecuteTool forwardTo nodeSendToolResult)
-                    onCondition { _ -> llm.readSession { prompt.messages.size <= 100 } }
-        )
+            edge(nodeCompressHistory forwardTo nodeSendToolResult)
 
-        // If the LLM calls another tool, execute it
-        edge(
-            (nodeSendToolResult forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+            // Otherwise, send the tool result directly
+            edge(
+                (nodeExecuteTool forwardTo nodeSendToolResult)
+                        onCondition { _ -> llm.readSession { prompt.messages.size <= 100 } }
+            )
 
-        // If the LLM responds with a message, finish
-        edge(
-            (nodeSendToolResult forwardTo nodeFinish)
-                    onAssistantMessage { true }
-        )
+            // If the LLM calls another tool, execute it
+            edge(
+                (nodeSendToolResult forwardTo nodeExecuteTool)
+                        onToolCall { true }
+            )
+
+            // If the LLM responds with a message, finish
+            edge(
+                (nodeSendToolResult forwardTo nodeFinish)
+                        onAssistantMessage { true }
+            )
+        }
     }
-}
-```
-<!--- KNIT example-custom-strategy-graphs-11.kt -->
+    ```
+    <!--- KNIT example-custom-strategy-graphs-11.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.environment.ReceivedToolResult;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.prompt.message.Message;
+    class exampleCustomStrategyGraphsJava09 {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```java
+    public static AIAgentGraphStrategy<String, String> toneStrategy(String name, ToolRegistry toolRegistry) {
+        var graph = AIAgentGraphStrategy.builder(name)
+            .withInput(String.class)
+            .withOutput(String.class);
+
+        var nodeSendInput = AIAgentNode.llmRequest();
+        var nodeExecuteTool = AIAgentNode.executeTool();
+        var nodeSendToolResult = AIAgentNode.llmSendToolResult();
+        var nodeCompressHistory = AIAgentNode
+            .llmCompressHistory("nodeCompressHistory")
+            .withInput(ReceivedToolResult.class)
+            .build();
+
+        graph.edge(graph.nodeStart, nodeSendInput);
+        graph.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(graph.nodeFinish)
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
+            .build());
+        graph.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(nodeExecuteTool)
+            .onIsInstance(Message.Tool.Call.class)
+            .build());
+        graph.edge(AIAgentEdge.builder()
+            .from(nodeExecuteTool)
+            .to(nodeCompressHistory)
+            .onCondition((toolResult, ctx) ->
+                ctx.getLlm().readSession(session -> session.getPrompt().getMessages().size() > 100))
+            .build());
+        graph.edge(nodeCompressHistory, nodeSendToolResult);
+        graph.edge(AIAgentEdge.builder()
+            .from(nodeExecuteTool)
+            .to(nodeSendToolResult)
+            .onCondition((toolResult, ctx) ->
+                ctx.getLlm().readSession(session -> session.getPrompt().getMessages().size() <= 100))
+            .build());
+        graph.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(nodeExecuteTool)
+            .onIsInstance(Message.Tool.Call.class)
+            .build());
+        graph.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(graph.nodeFinish)
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
+            .build());
+
+        return graph.build();
+    }
+    ```
+    <!--- KNIT exampleCustomStrategyGraphsJava09.java -->
 
 This strategy does the following:
 
