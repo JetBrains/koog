@@ -102,10 +102,6 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_FunctionalStrategyWithManualToolHandling(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
-        assumeTrue(
-            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
-            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
-        );
 
         NumberTools calculator = new NumberTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculator).build();
@@ -145,10 +141,6 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     public void integration_Subtask(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
-        assumeTrue(
-            !LLMProvider.Google.getId().equals(model.getProvider().getId()),
-            "KG-722 Google LLM client: Function call is missing a thought_signature in functionCall parts"
-        );
 
         MultiLLMPromptExecutor executor = createExecutor(model);
 

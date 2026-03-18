@@ -119,7 +119,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     public void integration_GraphStrategyWithTaskSubgraphAndLimitedTools(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model does not support tools");
-        assumeNoGoogleToolCalling(model);
 
         CalculatorTools calculatorTools = new CalculatorTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculatorTools).build();
@@ -174,7 +173,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     public void integration_GraphStrategyShouldEmitStrategyNodeSubgraphAndToolEvents(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model does not support tools");
-        assumeNoGoogleToolCalling(model);
 
         CalculatorTools calculatorTools = new CalculatorTools();
         ToolRegistry toolRegistry = ToolRegistry.builder().tools(calculatorTools).build();
@@ -240,19 +238,11 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         );
     }
 
-    private static void assumeNoGoogleToolCalling(LLModel model) {
-        assumeTrue(
-            !"google".equalsIgnoreCase(model.getProvider().getId()),
-            "Skipping Google models until thought_signature support is fixed (KG-722/KG-596)"
-        );
-    }
-
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
     @Retry
     public void integration_GraphStrategyWithVerificationPath(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        assumeNoGoogleToolCalling(model);
         EventRecorder positiveEvents = new EventRecorder();
         EventRecorder negativeEvents = new EventRecorder();
 
