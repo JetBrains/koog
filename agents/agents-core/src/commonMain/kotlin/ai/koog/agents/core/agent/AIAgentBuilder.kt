@@ -79,6 +79,12 @@ public class GraphAgentBuilder<Input, Output>(
         }
     }
 
+    public fun install(
+        featureInstaller: FeatureContext.() -> Unit,
+    ): GraphAgentBuilder<Input, Output> = apply {
+        this.featureInstallers += featureInstaller
+    }
+
     /**
      * Builds and returns an instance of `AIAgent` configured using the parameters
      * provided to the `GraphAgentBuilder`.

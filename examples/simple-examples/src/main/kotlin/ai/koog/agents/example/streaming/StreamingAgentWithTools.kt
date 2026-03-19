@@ -2,6 +2,7 @@ package ai.koog.agents.example.streaming
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
@@ -13,8 +14,10 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.simpleapi.Switch
 import ai.koog.agents.example.simpleapi.SwitchTools
 import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
@@ -68,15 +71,16 @@ private fun openAiAgent(
     toolRegistry: ToolRegistry,
     executor: PromptExecutor,
     installFeatures: FeatureContext.() -> Unit = {}
-) = AIAgent(
-    promptExecutor = executor,
-    strategy = streamingWithToolsStrategy(),
-    llmModel = OpenAIModels.Chat.GPT4oMini,
-    systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
-    temperature = 0.0,
-    toolRegistry = toolRegistry,
-    installFeatures = installFeatures
-)
+) = AIAgent.builder()
+    .graphStrategy { streamingWithToolsStrategy() }
+    .promptExecutor(executor)
+    .prompt(prompt("agent", OpenAIResponsesParams(temperature = 0.0)) {
+        system("You're responsible for running a Switch and perform operations on it by request")
+    })
+    .llmModel(OpenAIModels.Chat.GPT4oMini)
+    .toolRegistry(toolRegistry)
+    .install(installFeatures)
+    .build()
 
 @Suppress("unused")
 private fun anthropicAgent(
