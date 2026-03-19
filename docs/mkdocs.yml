@@ -7,9 +7,7 @@ nav:
           - Key features: key-features.md
           - LLM providers: llm-providers.md
           - Glossary: glossary.md
-      - Quickstart:
-          - quickstart/index.md
-          - Chat agent with memory: quickstart/chat-agent.md
+      - Quickstart: quickstart.md
       - Agents:
           - agents/index.md
           - Basic agents: agents/basic-agents.md
@@ -42,18 +40,21 @@ nav:
           - Class-based tools: class-based-tools.md
           - Custom tools schema: tools/tool-descriptor-schemer.md
       - Features:
-          - Overview: features-overview.md
-          - Event handlers: agent-event-handlers.md
-          - Tracing: tracing.md
-          - Memory: agent-memory.md
-          - Chat Memory: chat-memory.md
-          - Long Term Memory: long-term-memory.md
-          - Agent Persistence: agent-persistence.md
+          - features/index.md
+          - Event handlers: features/agent-event-handlers.md
+          - Tracing: features/tracing.md
+          - Chat memory:
+            - features/chat-memory/index.md
+            - Chat agent with memory: features/chat-memory/chat-agent-with-memory.md
+            - Chat backend with memory: features/chat-memory/chat-backend-with-memory.md
+          - Agent memory: features/agent-memory.md
+          - Long-term memory: features/long-term-memory.md
+          - Agent persistence: features/agent-persistence.md
           - OpenTelemetry:
-              - Overview: opentelemetry-support.md
-              - Langfuse Exporter: opentelemetry-langfuse-exporter.md
-              - Weave Exporter: opentelemetry-weave-exporter.md
-          - Custom features: custom-features.md
+              - features/open-telemetry/index.md
+              - Langfuse Exporter: features/open-telemetry/opentelemetry-langfuse-exporter.md
+              - Weave Exporter: features/open-telemetry/opentelemetry-weave-exporter.md
+          - Custom features: features/custom-features.md
       - History compression: history-compression.md
       - Model Context Protocol: model-context-protocol.md
       - A2A Protocol:
@@ -135,8 +136,8 @@ plugins:
   - search
   - redirects:
       redirect_maps:
-        'getting-started.md': 'quickstart/index.md'
-        'simple-api-getting-started.md': 'quickstart/index.md'
+        'getting-started.md': 'quickstart.md'
+        'simple-api-getting-started.md': 'quickstart.md'
         'getting-started/index.md': 'quickstart/index.md'
         'advanced-tool-implementation.md': 'class-based-tools.md'
         'key-concepts.md': 'glossary.md'
@@ -156,8 +157,7 @@ plugins:
           - llm-providers.md: This page provides a list of LLM providers supported by Koog.
           - glossary.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
         Quickstart:
-          - quickstart/index.md: This page provides a guide on installing Koog and creating a minimal AI agent.
-          - quickstart/chat-agent.md: This page provides a quickstart guide for building a conversational chat agent with persistent memory using the ChatMemory feature.
+          - quickstart.md: This page provides a guide on installing Koog and creating a minimal AI agent.
         Agents:
           - agents/basic-agents.md: This guide lets you build a basic agent with minimum required configuration.
           - agents/graph-based-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
@@ -184,6 +184,17 @@ plugins:
           - custom-strategy-graphs.md: This page explains how you can create a custom strategy graph that lets you tailor the behavior of an agent to your specific needs.
           - parallel-node-execution.md: This guide provides a basic reference and examples of using parallel node execution to run multiple AI agent nodes concurrently, improving performance and enabling complex workflows.
           - data-transfer-between-nodes.md: This page explains how you can store and pass data using AIAgentStorage, which is a key-value storage system designed as a type-safe way to pass data between different nodes or even subgraphs.
+        Features:
+          - features/index.md: This page provides a short overview of features as a way to extend and enhance the functionality of AI agents.
+          - features/agent-event-handlers.md: This page provides details about event handlers that let you monitor and respond to specific events during the agent workflow.
+          - features/tracing.md: This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
+          - features/chat-memory/index.md: This page provides details about the ChatMemory feature which lets AI agents store and retrieve chat message history to combine multiple agent runs into one conversation. The page includes information about installing the feature, configuration details, best practices, and links to examples and tutorials.
+          - features/agent-memory.md: This page provides details about the AgentMemory feature which lets AI agents store, retrieve, and use information across conversations. The page includes configuration and initialization details, examples and quickstart, best practices, error handling and FAQ and troubleshooting.
+          - features/agent-persistence.md: This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
+          - features/custom-features.md: This page provides details on how to implement custom features in Koog. The page includes information about the basic feature structure and implementation, as well as a practical example of a custom feature.
+          - features/open-telemetry/index.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
+          - features/open-telemetry/opentelemetry-langfuse-exporter.md: This page provides information about Koog's built-in support for exporting agent traces to Langfuse, a platform for observability and analytics of AI applications. The page provides details about LangFuse integration configuration and an example of its use.
+          - features/open-telemetry/opentelemetry-weave-exporter.md: This page provides details about W&B Weave integration in Koog to capture prompts, completions, system context, and execution traces and visualize them directly in a W&B workspace. The page provides details about W&B Weave integration setup, configuration and an example of its use.
         History compression:
           - history-compression.md: This page provides details about different implementations and different types of history compression strategies to reduce history size and token usage.
         Model Context Protocol:
@@ -217,17 +228,6 @@ plugins:
         Ranked document storage:
           - ranked-document-storage.md: This guide provides details about the implementation and use of Resource-Augmented Generation (RAG) systems in Koog. The page includes sections about existing RAG implementations and how to implement your own RAG systems in Koog.
           - serialization.md: This page explains Koog's library-agnostic serialization abstraction for tool arguments and results, how JSONElement works, and how to configure KotlinxSerializer or JacksonSerializer via AIAgentConfig.
-        Features:
-          - features-overview.md: This page provides a short overview of features as a way to extend and enhance the functionality of AI agents.
-          - agent-event-handlers.md: This page provides details about event handlers that let you monitor and respond to specific events during the agent workflow.
-          - tracing.md: This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
-          - agent-memory.md: This page provides details about the AgentMemory feature which lets AI agents store, retrieve, and use information across conversations. The page includes configuration and initialization details, examples and quickstart, best practices, error handling and FAQ and troubleshooting.
-          - agent-persistence.md: This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
-          - custom-features.md: This page provides details on how to implement custom features in Koog. The page includes information about the basic feature structure and implementation, as well as a practical example of a custom feature.
-        OpenTelemetry:
-          - opentelemetry-support.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
-          - opentelemetry-langfuse-exporter.md: This page provides information about Koog's built-in support for exporting agent traces to Langfuse, a platform for observability and analytics of AI applications. The page provides details about LangFuse integration configuration and an example of its use.
-          - opentelemetry-weave-exporter.md: This page provides details about W&B Weave integration in Koog to capture prompts, completions, system context, and execution traces and visualize them directly in a W&B workspace. The page provides details about W&B Weave integration setup, configuration and an example of its use.
         Testing:
           - testing.md: This guide provides a detailed overview of the Testing feature that provides a comprehensive framework for testing AI agent pipelines, subgraphs, and tool interactions in Koog. The page includes configuration and initialization details, basic and advanced examples and an FAQ and troubleshooting section.
         Why Koog:

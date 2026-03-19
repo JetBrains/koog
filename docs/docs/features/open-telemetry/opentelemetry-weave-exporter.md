@@ -76,7 +76,7 @@ When enabled, the Weave exporter captures the same spans as Koog’s general Ope
 - **System context**: metadata such as model name, environment, Koog version
 
 For security reasons, some content of OpenTelemetry spans is masked by default.
-To make the content available in Weave, use the [setVerbose](opentelemetry-support.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+To make the content available in Weave, use the [setVerbose](index.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -104,8 +104,8 @@ install(OpenTelemetry) {
 <!--- KNIT example-weave-exporter-02.kt -->
 
 When visualized in W&B Weave, the trace appears as follows:
-![W&B Weave traces](img/opentelemetry-weave-exporter-light.png#only-light)
-![W&B Weave traces](img/opentelemetry-weave-exporter-dark.png#only-dark)
+![W&B Weave traces](../../img/opentelemetry-weave-exporter-light.png#only-light)
+![W&B Weave traces](../../img/opentelemetry-weave-exporter-dark.png#only-dark)
 
 For more details, see the official [Weave OpenTelemetry Docs](https://weave-docs.wandb.ai/guides/tracking/otel/).
 

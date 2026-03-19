@@ -585,7 +585,7 @@ Tool called: askUser with args {"question":"Which meme would you like me to expl
 ```
 <!--- KNIT example-basic-07.txt -->
 
-For more information about Koog agent features, see [Features overview](../features-overview.md).
+For more information about Koog agent features, see [Features](../features/index.md).
 
 ## Next steps
 

@@ -449,7 +449,6 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-05.txt -->
 
-
 === "OpenRouter"
 
     The following example creates and runs a simple Koog agent using the [`GPT-4o`](https://openrouter.ai/openai/gpt-4o) model via the OpenRouter API.
@@ -535,8 +534,8 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             
             // Create an agent
             val agent = AIAgent(
-                .promptExecutor(simpleBedrockExecutorWithBearerToken(apiKey, new BedrockClientSettings()))
-                .llmModel(BedrockModels.INSTANCE.getAnthropicClaude4_5Sonnet())
+                promptExecutor = simpleBedrockExecutorWithBearerToken(apiKey),
+                llmModel = BedrockModels.AnthropicClaude4_5Sonnet
             )
         
             // Run the agent
@@ -563,8 +562,8 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleBedrockExecutorWithBearerToken(apiKey))
-            .llmModel(BedrockModels.AnthropicClaude4_5Sonnet)
+            .promptExecutor(simpleBedrockExecutorWithBearerToken(apiKey, new BedrockClientSettings()))
+            .llmModel(BedrockModels.INSTANCE.getAnthropicClaude4_5Sonnet())
             .build();
 
         // Run the agent
@@ -629,7 +628,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         -->
         <!--- SUFFIX
         **/
-        -->
+        -->   
         ```java
         // Get the Mistral AI API key from the MISTRAL_API_KEY environment variable
         String apiKey = System.getenv("MISTRAL_API_KEY");
@@ -701,7 +700,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         -->
         <!--- SUFFIX
         **/
-        -->
+        -->  
         ```java
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
@@ -721,7 +720,8 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     I can assist with various tasks such as answering questions, providing information, and even helping with language-related tasks like proofreading or writing suggestions. What's on your mind today?
     ```
     <!--- KNIT example-getting-started-09.txt -->
+
 ## Next steps
 
-- Learn more about [building agents](agents/index.md)
+- Learn more about [agent types](agents/index.md)
 
