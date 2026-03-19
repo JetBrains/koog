@@ -125,7 +125,6 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
     }
 
     @Test
-    @Disabled("KG-748 Java AIAgentServiceBuilder.maxIterations() has no effect as AIAgentConfig.copy() ignores the new value")
     public void integration_AIAgentServiceBuilderConfiguration() {
         LLModel model = OpenAIModels.Chat.GPT5_1;
         JavaUtils.assumeAvailable(model.getProvider());
