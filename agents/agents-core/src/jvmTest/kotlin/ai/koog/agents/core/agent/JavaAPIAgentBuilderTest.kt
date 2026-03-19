@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.Prompt.Companion.builder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.params.LLMParams
@@ -113,16 +114,19 @@ class JavaAPIAgentBuilderTest {
             model = OpenAIModels.Chat.GPT4o,
             maxAgentIterations = 100
         )
+        assertEquals(9, config.prompt.messages.size)
 
         val agent = AIAgent.builder()
             .promptExecutor(getMockExecutor(serializer) { })
             .agentConfig(config)
+            .systemPrompt("sys")
             .build()
 
         assertNotNull(agent)
         assertEquals(OpenAIModels.Chat.GPT4o, agent.agentConfig.model)
         // 2 system/user pairs + 2 tool calls + 2 tool results = 6 messages plus initial system => account for actual structure
         assertTrue(agent.agentConfig.prompt.messages.isNotEmpty())
+        assertEquals(10, agent.agentConfig.prompt.messages.size)
     }
 
     @Test
@@ -275,5 +279,57 @@ class JavaAPIAgentBuilderTest {
         assertEquals(maxTokens, prompt.params.maxTokens, "Prompt params should be preserved")
         assertEquals(originalSystemPrompt, prompt.messages.first().content, "original messages should be preserved")
         assertEquals(systemPrompt, prompt.messages.last().content, "system prompt should be added")
+    }
+
+    @Test
+    fun testBuilderOverridesAgentConfig() {
+        val config = AIAgentConfig(
+            builder("copy-test").system("system").build(),
+            OpenAIModels.Chat.GPT4o,
+            3
+        )
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getMockExecutor(serializer) { })
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .agentConfig(config)
+            .maxIterations(15)
+            .build()
+
+        assertEquals(agent.agentConfig.maxAgentIterations, 15)
+    }
+
+    @Test
+    fun testBuilderOverridesPromptParams() {
+        val params = LLMParams(
+            temperature = 0.5,
+        )
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getMockExecutor(serializer) { })
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .prompt(prompt("test-prompt", params) { system("system") })
+            .temperature(0.7)
+            .build()
+
+        assertEquals(agent.agentConfig.prompt.params.temperature, 0.7)
+    }
+
+    @Test
+    fun testBuilderOverridesPromptParamsInCustomConfig() {
+        val config = AIAgentConfig(
+            builder("copy-test").system("system").build(),
+            OpenAIModels.Chat.GPT4o,
+            3
+        )
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getMockExecutor(serializer) { })
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .agentConfig(config)
+            .temperature(0.7)
+            .build()
+
+        assertEquals(agent.agentConfig.prompt.params.temperature, 0.7)
     }
 }
