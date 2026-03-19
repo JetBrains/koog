@@ -13,7 +13,7 @@ Koog agents are built around the following core concepts:
   It can be in the form of a directed graph, a function, or a planner.
   See [Agent types](#agent-types).
 - An agent can use [tools](../tools-overview.md) to interact with external data sources and services.
-- You can extend and enhance the functionality of AI agents using [features](../features-overview.md).
+- You can extend and enhance the functionality of AI agents using [features](../features/index.md).
 
 !!! tip
 
