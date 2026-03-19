@@ -64,7 +64,7 @@ internal fun createToolCallCounterMetricEvent(
     return CounterMetricEvent(
         id = id,
         timestamp = Clock.System.now(),
-        metricName = KoogMetrics.Tool.Count.name,
+        metricName = KoogMetrics.Client.Tool.Call.Count.name,
         attributes = attributes,
         1
     )

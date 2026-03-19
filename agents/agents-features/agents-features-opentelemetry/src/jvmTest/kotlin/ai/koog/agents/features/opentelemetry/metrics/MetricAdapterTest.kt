@@ -36,7 +36,7 @@ class MetricAdapterTest {
             )
         )
 
-        val toolCallCountRecords = meter.getRecordsByCounterName("koog.tool.count")
+        val toolCallCountRecords = meter.getRecordsByCounterName("koog.gen_ai.client.tool.call.count")
         assertEquals(2, toolCallCountRecords.size) // Initial 0 + 1 call
 
         val attributes = toolCallCountRecords.last().attributes
@@ -63,7 +63,7 @@ class MetricAdapterTest {
             )
         )
 
-        val toolCallCountRecords = meter.getRecordsByCounterName("koog.tool.count")
+        val toolCallCountRecords = meter.getRecordsByCounterName("koog.gen_ai.client.tool.call.count")
         assertEquals(2, toolCallCountRecords.size) // Initial 0 + 1 call
 
         // Metric adapter should have processed the tool name
@@ -136,7 +136,7 @@ class MetricAdapterTest {
             )
         )
 
-        val toolCallCountRecords = meter.getRecordsByCounterName("koog.tool.count")
+        val toolCallCountRecords = meter.getRecordsByCounterName("koog.gen_ai.client.tool.call.count")
         assertEquals(4, toolCallCountRecords.size) // Initial 0 + 3 calls
     }
 
@@ -160,7 +160,7 @@ class MetricAdapterTest {
             )
         )
 
-        val toolCallCountRecords = meter.getRecordsByCounterName("koog.tool.count")
+        val toolCallCountRecords = meter.getRecordsByCounterName("koog.gen_ai.client.tool.call.count")
         assertEquals(2, toolCallCountRecords.size)
 
         // Verify the metric was recorded (even if the tool name might be filtered)

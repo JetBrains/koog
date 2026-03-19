@@ -98,7 +98,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
         // Do not allow events filtering for the OpenTelemetry feature
-        // Open Telemetry relay on the hierarchy. Filtering events can break the feature logic.
+        // OpenTelemetry relay on the hierarchy. Filtering events can break the feature logic.
         throw UnsupportedOperationException("Events filtering is not allowed for the OpenTelemetry feature.")
     }
 

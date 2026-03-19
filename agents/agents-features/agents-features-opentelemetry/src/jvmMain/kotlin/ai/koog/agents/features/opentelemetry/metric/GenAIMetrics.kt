@@ -17,8 +17,8 @@ internal object GenAIMetrics {
                 override val name: String
                     get() = super.name.concatKey("usage")
 
-                override val description: String = "Total token count"
-                override val unit: String = "token"
+                override val description: String = "Number of input and output tokens used"
+                override val unit: String = "{token}"
             }
         }
 
@@ -32,7 +32,7 @@ internal object GenAIMetrics {
                 override val name: String
                     get() = super.name.concatKey("duration")
 
-                override val description: String = "Operation duration"
+                override val description: String = "GenAI operation duration"
                 override val unit: String = "s"
             }
         }

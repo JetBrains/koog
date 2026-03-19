@@ -13,17 +13,17 @@ class MetricFactoryTest {
         val metric = MetricFactory.createTokenCounterMetric()
 
         assertEquals("gen_ai.client.token.usage", metric.name)
-        assertEquals("Total token count", metric.description)
-        assertEquals("token", metric.unit)
+        assertEquals("Number of input and output tokens used", metric.description)
+        assertEquals("{token}", metric.unit)
     }
 
     @Test
     fun testCreateToolCallCounterMetric() {
         val metric = MetricFactory.createToolCallCounterMetric()
 
-        assertEquals("koog.tool.count", metric.name)
-        assertEquals("Tool calls count", metric.description)
-        assertEquals("tool call", metric.unit)
+        assertEquals("koog.gen_ai.client.tool.call.count", metric.name)
+        assertEquals("Number of tool calls performed by the agent", metric.description)
+        assertEquals("{call}", metric.unit)
     }
 
     @Test
@@ -31,7 +31,7 @@ class MetricFactoryTest {
         val metric = MetricFactory.createOperationDurationHistogramMetric()
 
         assertEquals("gen_ai.client.operation.duration", metric.name)
-        assertEquals("Operation duration", metric.description)
+        assertEquals("GenAI operation duration", metric.description)
         assertEquals("s", metric.unit)
 
         // Verify boundaries advice is set according to OpenTelemetry semantic conventions

@@ -96,7 +96,7 @@ class MetricEventCreatorsTest {
             toolCallStatus = status
         )
 
-        assertEquals("koog.tool.count", event.metricName)
+        assertEquals("koog.gen_ai.client.tool.call.count", event.metricName)
         assertEquals(1L, event.value)
 
         // Verify attributes using toSdkAttributes
@@ -145,7 +145,7 @@ class MetricEventCreatorsTest {
                 toolCallStatus = status
             )
 
-            assertEquals("koog.tool.count", event.metricName)
+            assertEquals("koog.gen_ai.client.tool.call.count", event.metricName)
             assertEquals(1L, event.value)
 
             val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)

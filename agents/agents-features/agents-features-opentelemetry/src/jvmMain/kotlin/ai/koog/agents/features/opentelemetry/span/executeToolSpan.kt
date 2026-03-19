@@ -13,7 +13,7 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Build and start a new Execute Tool Span with necessary attributes.
  *
- * Add the necessary attributes for the Execute Tool Span, according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Execute Tool Span, according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/#execute-tool-span
  *
  * Span attributes:
@@ -72,7 +72,7 @@ internal fun startExecuteToolSpan(
 /**
  * End Execute Tool Span and set final attributes.
  *
- * Add the necessary attributes for the Execute Tool Span, according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Execute Tool Span, according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/#execute-tool-span
  *
  * Span attribute:

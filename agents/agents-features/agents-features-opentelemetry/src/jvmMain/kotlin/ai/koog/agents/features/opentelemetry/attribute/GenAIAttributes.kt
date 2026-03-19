@@ -16,9 +16,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.putJsonArray
 
 /**
- * The class describe Attributes in GenAI system.
+ * This class describes attributes in the GenAI system.
  *
- * The list of supported attributes according to Open Telemetry Semantic Convention
+ * The list of supported attributes according to OpenTelemetry Semantic Convention
  * (https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/)
  *
  * Note: Some shared attributes are located in [CommonAttributes] class.
@@ -28,9 +28,12 @@ import kotlinx.serialization.json.putJsonArray
  * - gen_ai.agent.description (conditional)
  * - gen_ai.agent.id (conditional)
  * - gen_ai.agent.name (conditional)
+ * - gen_ai.provider.name (conditional)
  * - gen_ai.conversation.id (conditional)
  * - gen_ai.data_source.id (conditional)
+ * - gen_ai.input.messages (recommended)
  * - gen_ai.output.type (conditional/required)
+ * - gen_ai.output.messages (recommended)
  * - gen_ai.request.choice.count (conditional/required)
  * - gen_ai.request.model (conditional/required)
  * - gen_ai.request.seed (conditional/required)
@@ -43,12 +46,17 @@ import kotlinx.serialization.json.putJsonArray
  * - gen_ai.response.finish_reasons (recommended)
  * - gen_ai.response.id (recommended)
  * - gen_ai.response.model (recommended)
+ * - gen_ai.token.type (required)
  * - gen_ai.usage.input_tokens (recommended)
  * - gen_ai.usage.output_tokens (recommended)
+ * - gen_ai.usage.total_tokens (non-semantic)
  * - gen_ai.tool.call.id (recommended)
+ * - gen_ai.tool.call.arguments (recommended)
+ * - gen_ai.tool.call.result (recommended)
  * - gen_ai.tool.description (recommended)
  * - gen_ai.tool.name (recommended)
- * - gen_ai.token.type (required)
+ * - gen_ai.tool.definitions (recommended)
+ * - gen_ai.system_instructions (recommended)
  */
 internal object GenAIAttributes {
 

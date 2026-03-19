@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 class MetricCollectorTest {
     companion object {
         private const val tokenCountMetricName = "gen_ai.client.token.usage"
-        private const val toolCallCountMetricName = "koog.tool.count"
+        private const val toolCallCountMetricName = "koog.gen_ai.client.tool.call.count"
         private const val operationDurationMetricName = "gen_ai.client.operation.duration"
 
         val model: LLModel = LLModel(
@@ -77,7 +77,7 @@ class MetricCollectorTest {
 
         assertContains(
             meter.buildCounter,
-            Metric(tokenCountMetricName, "Total token count", "token")
+            Metric(tokenCountMetricName, "Number of input and output tokens used", "{token}")
         )
     }
 
@@ -89,7 +89,7 @@ class MetricCollectorTest {
 
         assertContains(
             meter.buildCounter,
-            Metric(toolCallCountMetricName, "Tool calls count", "tool call")
+            Metric(toolCallCountMetricName, "Number of tool calls performed by the agent", "{call}")
         )
     }
 
@@ -101,7 +101,7 @@ class MetricCollectorTest {
 
         assertContains(
             meter.buildHistogram,
-            Metric(operationDurationMetricName, "Operation duration", "s")
+            Metric(operationDurationMetricName, "GenAI operation duration", "s")
         )
     }
 

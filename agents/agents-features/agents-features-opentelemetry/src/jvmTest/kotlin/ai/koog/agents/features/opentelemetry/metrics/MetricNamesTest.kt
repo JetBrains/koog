@@ -8,9 +8,9 @@ import kotlin.test.assertEquals
 class MetricNamesTest {
     @Test
     fun `test tool call count metric`() {
-        val metric = KoogMetrics.Tool.Count
-        assertEquals("koog.tool.count", metric.name)
-        assertEquals("tool call", metric.unit)
+        val metric = KoogMetrics.Client.Tool.Call.Count
+        assertEquals("koog.gen_ai.client.tool.call.count", metric.name)
+        assertEquals("{call}", metric.unit)
     }
 
     @Test
@@ -24,6 +24,6 @@ class MetricNamesTest {
     fun `test token usage metric`() {
         val metric = GenAIMetrics.Client.Token.Usage
         assertEquals("gen_ai.client.token.usage", metric.name)
-        assertEquals("token", metric.unit)
+        assertEquals("{token}", metric.unit)
     }
 }

@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.Tracer
 /**
  * Build and start a new Strategy Span with necessary attributes.
  *
- * Note: This span is not a standard span type defined in the Open Telemetry
+ * Note: This span is not a standard span type defined in the OpenTelemetry
  * Semantic Conventions but is designed to provide support for tracing
  * operations related to strategy execution in Koog events.
  *
@@ -45,7 +45,7 @@ internal fun startStrategySpan(
 /**
  * End Strategy Span and set final attributes.
  *
- * Note: This span is not a standard span type defined in the Open Telemetry
+ * Note: This span is not a standard span type defined in the OpenTelemetry
  * Semantic Conventions but is designed to provide support for tracing
  * operations related to strategy execution in Koog events.
  *
