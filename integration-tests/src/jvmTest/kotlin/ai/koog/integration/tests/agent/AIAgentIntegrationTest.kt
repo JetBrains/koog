@@ -68,7 +68,6 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.kotest.matchers.string.shouldNotContain
-import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -82,6 +81,7 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.test.Test
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -1408,13 +1408,14 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                             }
                             val response = requestLLMForceOneTool(testTool)
 
-                            if (model.provider.id !== LLMProvider.Google.id) {
-                                response.shouldBeInstanceOf<Message.Tool.Call>()
+                            assertTrue(
+                                response is Message.Tool.Call,
+                                "Forced tool request should return Tool.Call for model $model, but was ${response::class.simpleName}"
+                            )
 
-                                val toolCallMessages = prompt.messages.filterIsInstance<Message.Tool.Call>()
-                                    .filter { it.tool == testTool.name }
-                                toolCallMessages.shouldHaveSize(1)
-                            }
+                            val toolCallMessages = prompt.messages.filterIsInstance<Message.Tool.Call>()
+                                .filter { it.tool == testTool.name }
+                            toolCallMessages.shouldHaveSize(1)
                         }
 
                         "Tool call completed successfully without duplication"
