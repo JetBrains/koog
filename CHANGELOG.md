@@ -1,3 +1,21 @@
+# 0.7.2
+> Published 19 March 2026
+
+## Bug Fixes
+
+- **Java API for OpenTelemetry extensions**: Fixed Java API inside `OpenTelemetryConfig` class annotated with `@JavaOverride`
+  that relied on Kotlin `Duration` class, causing all further attributes to be skipped by the compiler in Langfuse and Weave extensions ([KG-754](https://youtrack.jetbrains.com/issue/KG-754), #1682)
+- **System prompt preservation in agent builder**: Fixed `systemPrompt` method in agent builders to preserve previously configured messages, id, and params in the prompt ([KG-747](https://youtrack.jetbrains.com/issue/KG-747), #1671)
+- **LLMParams copy overloads**: Added correct `override fun copy()` to all `LLMParams` subclasses (`GoogleParams`, `AnthropicParams`, `OpenAIChatParams`, etc.) so that `Prompt.withUpdatedParams` preserves provider-specific fields instead of silently dropping them. Also fixed `BedrockConverseParams.copy()` missing parameters and `DashscopeParams` incorrect `super.copy()` call (KG-742, #1668)
+
+## Breaking Changes
+
+- **Removed `input` parameter from `AIAgentFunctionalContext.subtask`**: The `input` parameter was not actually used; `taskDescription` is the right way to specify the task. Related methods and builders updated accordingly (#1667)
+
+## Documentation
+
+- Started porting rest of the documentation to Java (#1669)
+
 # 0.7.1
 > Published 17 March 2026
 

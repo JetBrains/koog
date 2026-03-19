@@ -85,14 +85,15 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 ### Requirements
 
 - JDK 17 or higher is required to use the framework on JVM.
-- Kotlin 2.3.10 or higher should be set explicitly in existing projects. Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about Kotlin dependencies (currently it uses kotlinx-coroutines 1.10.2, kotlinx-serialization 1.10.0 and kotlinx-datetime 0.7.1)
+- Kotlin 2.3.10 or higher should be set explicitly in existing projects. Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about Kotlin dependencies (currently it uses kotlinx-coroutines 1.10.2, kotlinx-serialization 1.10.0 and kotlinx-datetime 0.7.2)
+
 ### Gradle (Kotlin DSL)
 
 1. Add dependencies to the `build.gradle.kts` file:
 
     ```
     dependencies {
-        implementation("ai.koog:koog-agents:0.7.1")
+        implementation("ai.koog:koog-agents:0.7.2")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -102,7 +103,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 
     ```
     dependencies {
-        implementation 'ai.koog:koog-agents:0.7.1'
+        implementation 'ai.koog:koog-agents:0.7.2'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -114,7 +115,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
-        <version>0.7.1</version>
+        <version>0.7.2</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.
