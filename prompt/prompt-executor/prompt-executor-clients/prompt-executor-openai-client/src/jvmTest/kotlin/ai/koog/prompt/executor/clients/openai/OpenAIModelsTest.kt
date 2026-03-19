@@ -1,10 +1,12 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.prompt.executor.clients.list
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
+import kotlin.test.assertNotNull
 
 class OpenAIModelsTest {
 
@@ -28,5 +30,15 @@ class OpenAIModelsTest {
         reflectionModels.forEach { model ->
             models shouldContain model
         }
+    }
+
+    @Test
+    fun `reasoning OpenAI models should advertise thinking capability`() {
+        assertNotNull(OpenAIModels.Chat.O1.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.O3.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.O3Mini.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.O4Mini.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.GPT5.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.GPT5_4.capabilities) shouldContain LLMCapability.Thinking
     }
 }

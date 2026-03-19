@@ -44,7 +44,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
-import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -179,7 +178,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             prompt = prompt(
                 id = "single-run-agent",
                 params = LLMParams(
-                    temperature = 1.0,
+                    temperature = 0.0,
                     toolChoice = ToolChoice.Auto,
                 )
             ) {
@@ -189,7 +188,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
             },
             model = model,
-            maxAgentIterations = 10,
+            maxAgentIterations = 20,
         ),
         toolRegistry = toolRegistry,
         installFeatures = {
@@ -496,11 +495,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             "single-run non-parallel integration with calculator enum tool arguments"
         )
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-        // TODO: Remove this skip when thought_signature presence is fixed
-        assumeTrue(
-            model.provider !is GoogleLLMProvider,
-            "Skipping Google models until thought_signature support is in this branch (KG-596)"
-        )
+
         assumeTrue(
             model.id != AnthropicModels.Haiku_4_5.id,
             "Anthropic Haiku 4.5 is flaky in single-run sequential tool mode and may exhaust iterations"
