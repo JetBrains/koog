@@ -11,9 +11,14 @@ import kotlinx.datetime.Clock
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
-internal fun AgentLifecycleEventContext.toMetricEvent(): BaseMetricEvent {
+/**
+ * Creates a timestamped placeholder metric event used to capture the start time of an operation.
+ * The actual metric attributes and value are populated later when the operation completes
+ * via [createLLMCallDurationHistogramMetricEvent] or [createExecuteToolDurationHistogramMetricEvent].
+ */
+internal fun AgentLifecycleEventContext.toTimestampedMetricEvent(): BaseMetricEvent {
     return BaseMetricEvent(
-        id = this@toMetricEvent.eventId,
+        id = this@toTimestampedMetricEvent.eventId,
         timestamp = Clock.System.now(),
         metricName = GenAIMetrics.Client.Operation.Duration.name,
         attributes = emptyList()

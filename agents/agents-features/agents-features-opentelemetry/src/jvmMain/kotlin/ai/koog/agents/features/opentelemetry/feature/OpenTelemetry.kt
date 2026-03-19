@@ -30,7 +30,7 @@ import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDuration
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMOutputTokensMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createToolCallCounterMetricEvent
-import ai.koog.agents.features.opentelemetry.metric.events.toMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.toTimestampedMetricEvent
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
 import ai.koog.agents.features.opentelemetry.span.SpanType
@@ -550,7 +550,7 @@ public class OpenTelemetry {
                 )
 
                 // Metrics
-                metricCollector.storeMetricEvent(eventContext.toMetricEvent())
+                metricCollector.storeMetricEvent(eventContext.toTimestampedMetricEvent())
             }
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
@@ -706,7 +706,7 @@ public class OpenTelemetry {
                 spanCollector.collectSpan(executeToolSpan, path)
 
                 // Metrics
-                metricCollector.storeMetricEvent(eventContext.toMetricEvent())
+                metricCollector.storeMetricEvent(eventContext.toTimestampedMetricEvent())
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
@@ -735,7 +735,7 @@ public class OpenTelemetry {
                             id = eventContext.eventId,
                             duration = Clock.System.now() - storedMetricEvent.timestamp,
                             toolName = eventContext.toolName,
-                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
                         )
                     )
                 }
@@ -767,7 +767,7 @@ public class OpenTelemetry {
                             id = eventContext.eventId,
                             duration = Clock.System.now() - storedMetricEvent.timestamp,
                             toolName = eventContext.toolName,
-                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR
                         )
                     )
                 }

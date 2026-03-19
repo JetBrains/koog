@@ -34,34 +34,26 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
     }
 
     private fun addCounterMetric(metric: CounterMetric): LongCounter {
-        val counter = meter.counterBuilder(metric.name)
+        return meter.counterBuilder(metric.name)
             .setDescription(metric.description)
             .setUnit(metric.unit)
             .build()
             .also { it.add(0) }
-
-        counters[metric.name] = counter
-
-        return counter
     }
 
     private fun addHistogramMetric(metric: HistogramMetric): DoubleHistogram {
-        val counter = meter
+        return meter
             .histogramBuilder(metric.name)
             .setDescription(metric.description)
             .setUnit(metric.unit)
             .setExplicitBucketBoundariesAdvice(metric.boundariesAdvice)
             .build()
-
-        histograms[metric.name] = counter
-
-        return counter
     }
 
     internal fun storeMetricEvent(metricEvent: MetricEvent<*>) {
         val result = metricEvents.putIfAbsent(metricEvent.id, metricEvent)
 
-        if (result == null) {
+        if (result != null) {
             logger.warn { "Metric event (id: ${metricEvent.id}) is already stored. Unable to store event with the same id." }
         }
     }
@@ -71,7 +63,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
     }
 
     internal fun addCounterMetricEvent(metricEvent: CounterMetricEvent) {
-        val updatedMetricEvent = config.metricAdapter?.process(metricEvent) ?: metricEvent
+        val updatedMetricEvent = applyMetricAdapter(metricEvent)
 
         val metric = counters[updatedMetricEvent.metricName]
         if (metric == null) {
@@ -86,7 +78,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
     }
 
     internal fun recordHistogramMetricEvent(metricEvent: HistogramMetricEvent) {
-        val updatedMetricEvent = config.metricAdapter?.process(metricEvent) ?: metricEvent
+        val updatedMetricEvent = applyMetricAdapter(metricEvent)
 
         val metric = histograms[updatedMetricEvent.metricName]
         if (metric == null) {
@@ -98,5 +90,15 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
             updatedMetricEvent.value,
             updatedMetricEvent.attributes.toSdkAttributes(verbose = config.isVerbose)
         )
+    }
+
+    private fun <T : MetricEvent<T>> applyMetricAdapter(metricEvent: T): T {
+        val adapter = config.metricAdapter ?: return metricEvent
+        return try {
+            adapter.process(metricEvent)
+        } catch (e: Exception) {
+            logger.warn(e) { "Metric adapter failed to process event (id: ${metricEvent.id}). Recording original event." }
+            metricEvent
+        }
     }
 }
