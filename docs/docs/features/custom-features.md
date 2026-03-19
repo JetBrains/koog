@@ -3,7 +3,7 @@
 Features provide a way to extend and enhance the functionality of AI agents at runtime. They are designed to be modular
 and composable, allowing you to mix and match them according to your needs.
 
-In addition to [features](features-overview.md) that are available in Koog out of the box, you can also implement your 
+In addition to [features](index.md) that are available in Koog out of the box, you can also implement your 
 own features by extending a proper feature interface. 
 This page presents the basic building blocks for your own feature using the current Koog APIs.
 
@@ -11,9 +11,9 @@ This page presents the basic building blocks for your own feature using the curr
 
 Koog provides the following interfaces that you can extend to implement custom features:
 
-- [AIAgentGraphFeature](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature/-a-i-agent-graph-feature/index.html): Represents a feature specific to [agents that have defined workflows](agents/graph-based-agents.md) (graph-based agents).
-- [AIAgentFunctionalFeature](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature/-a-i-agent-functional-feature/index.html): Represents a feature that can be used with [functional agents](agents/functional-agents.md).
-- [AIAgentPlannerFeature](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-a-i-agent-planner-feature/index.html): Represents a feature type that is specific to [planner agents](agents/planner-agents/index.md).
+- [AIAgentGraphFeature](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature/-a-i-agent-graph-feature/index.html): Represents a feature specific to [agents that have defined workflows](../agents/graph-based-agents.md) (graph-based agents).
+- [AIAgentFunctionalFeature](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature/-a-i-agent-functional-feature/index.html): Represents a feature that can be used with [functional agents](../agents/functional-agents.md).
+- [AIAgentPlannerFeature](https://api.koog.ai/agents/agents-planner/ai.koog.agents.planner/-a-i-agent-planner-feature/index.html): Represents a feature type that is specific to [planner agents](../agents/planner-agents/index.md).
 
 !!! note
     To create a custom feature that can be installed in graph-based, functional, and planner agents, you need to 
@@ -218,7 +218,7 @@ If your feature logic relies on the complete agent event structure, event filter
 prevent this, you need to disable event filtering when implementing the feature by overriding `setEventFilter` in your 
 feature configuration to ignore any custom filters set when installing the feature.
 
-An example of a feature that relies on processing the entire agent event stream is [OpenTelemetry](opentelemetry-support.md), as it uses the 
+An example of a feature that relies on processing the entire agent event stream is [OpenTelemetry](open-telemetry/index.md), as it uses the 
 complete agent event structure to compose an inherited structure of spans.
 
 Here is an example of how to disable event filtering for a feature:

@@ -247,7 +247,7 @@ derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
 
 ### Listening to stream events in event handlers
 
-You can listen to stream events in [agent event handlers](agent-event-handlers.md).
+You can listen to stream events in [agent event handlers](features/agent-event-handlers.md).
 
 === "Kotlin"
 

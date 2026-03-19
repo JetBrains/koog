@@ -266,4 +266,4 @@ For example, **Persistence** uses `JSONSerializer` configured in `AIAgentConfig`
 checkpoints and restoring agent state. This means any type that flows through a persisted node must be
 serializable by the configured `JSONSerializer`.
 
-See [Agent Persistence](agent-persistence.md) for details on checkpoint creation and restoration.
+See [Agent Persistence](features/agent-persistence.md) for details on checkpoint creation and restoration.

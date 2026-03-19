@@ -791,5 +791,5 @@ ensuring that it performs the calculations deterministically instead of risking 
 ## Next steps
 
 - Compare to [functional agents](functional-agents.md) and [planner agents](planner-agents/index.md)
-- Enhance your agent by [installing additional features](../features-overview.md)
+- Enhance your agent by [installing features](../features/index.md)
 - Improve the predictability and reliability with [structured output](../structured-output.md)

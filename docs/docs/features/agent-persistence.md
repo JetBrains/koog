@@ -1,4 +1,4 @@
-# Agent Persistence
+# Agent persistence
 
 Agent Persistence is a feature that provides checkpoint functionality for AI agents in the Koog framework.
 It lets you save and restore the state of an agent at specific points during execution, enabling capabilities such as:
