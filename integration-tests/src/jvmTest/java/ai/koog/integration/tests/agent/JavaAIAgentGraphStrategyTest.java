@@ -44,7 +44,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static ai.koog.agents.core.utils.CoroutineUtilsKt.runBlockingIfRequired;
+import static ai.koog.utils.coroutines.CoroutineUtilsKt.runBlockingIfRequired;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 

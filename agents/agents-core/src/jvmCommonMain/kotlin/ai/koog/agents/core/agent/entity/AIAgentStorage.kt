@@ -4,7 +4,8 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.utils.runBlockingIfRequired
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.coroutines.runBlockingIfRequired
 
 /**
  * Represents a storage key used for identifying and accessing data associated with an AI agent.
@@ -12,6 +13,7 @@ import ai.koog.agents.core.utils.runBlockingIfRequired
  * The generic type parameter [T] specifies the type of data associated with this key, ensuring
  * type safety when storing and retrieving data in the context of an AI agent.
  */
+@OptIn(InternalKoogUtils::class)
 public actual class AIAgentStorage internal actual constructor(
     internal actual val delegate: AIAgentStorageImpl,
 ) : AIAgentStorageAPI by delegate {

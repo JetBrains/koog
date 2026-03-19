@@ -1,6 +1,8 @@
 package ai.koog.agents.core.tools;
 
+import ai.koog.agents.annotations.JavaAPI;
 import ai.koog.serialization.TypeToken;
+import ai.koog.utils.coroutines.CoroutineUtilsKt;
 import kotlin.coroutines.Continuation;
 import kotlinx.schema.generator.json.JsonSchemaConfig;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +22,7 @@ import java.util.Map;
  * @param <TResult> The type of result the tool returns.
  */
 @SuppressWarnings("unused")
+@JavaAPI
 public abstract class JavaTool<TArgs, TResult> extends Tool<TArgs, TResult> {
 
     /**
@@ -97,7 +100,10 @@ public abstract class JavaTool<TArgs, TResult> extends Tool<TArgs, TResult> {
         TArgs args,
         @NotNull Continuation<? super TResult> $completion
     ) {
-        return execute(args);
+        return CoroutineUtilsKt.runBlockingIfRequired(
+            $completion.getContext(),
+            ($completionLambda) ->  execute(args)
+        );
     }
 
     /**
