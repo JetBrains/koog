@@ -431,45 +431,58 @@ Koog also emits runtime metrics alongside traces to help you monitor agent behav
 
 ### Available metrics
 
-- gen_ai.client.token.usage
+#### Standard GenAI metrics
+
+These metrics follow the [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/):
+
+- **gen_ai.client.token.usage**
     - Instrument: Counter (LongCounter)
-    - Unit: `token`
-    - Description: Total token count per operation and token type
+    - Unit: `{token}`
+    - Description: Number of input and output tokens used
     - When emitted: after an LLM call finishes; recorded separately for input and output tokens
     - Key attributes:
-        - `gen_ai.operation.name` (required) - `TEXT_COMPLETION`
+        - `gen_ai.operation.name` (required) — `text_completion`
         - `gen_ai.provider.name` (required)
+        - `gen_ai.token.type` (required) — `input` or `output`
+        - `gen_ai.request.model` (conditionally required)
         - `gen_ai.response.model` (recommended)
-        - `gen_ai.token.type` (recommended) — `INPUT` or `OUTPUT`
-    - Spec: see OpenTelemetry semantic
-      conventions, [gen_ai.client.token.usage](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/#metric-gen_aiclienttokenusage)
+        - `server.address` (recommended)
+        - `server.port` (conditionally required, if `server.address` is set)
+    - Spec: [gen_ai.client.token.usage](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/#metric-gen_aiclienttokenusage)
 
-- gen_ai.client.operation.duration
+- **gen_ai.client.operation.duration**
     - Instrument: Histogram (DoubleHistogram)
     - Unit: seconds (`s`)
-    - Description: Operation duration distribution; in Koog it is recorded for tool calls
+    - Description: GenAI operation duration
     - Recommended explicit bucket boundaries (seconds): 0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12,
       10.24, 20.48, 40.96, 81.92
+    - When emitted: after an LLM call or tool execution finishes
     - Key attributes:
-        - `gen_ai.operation.name` (required) - `TEXT_COMPLETION` or `EXECUTE_TOOL`
-        - `gen_ai.tool.name` (recommended, if `gen_ai.operation.name` is `EXECUTE_TOOL`)
-        - `gen_ai.tool.call.status` (custom, if `gen_ai.operation.name` is `EXECUTE_TOOL`) — `SUCCESS`, `ERROR`, or
-          `VALIDATION_FAILED`
-        - `gen_ai.provider.name` (recommended, if `gen_ai.operation.name` is `TEXT_COMPLETION`)
-        - `gen_ai.response.model` (recommended, if `gen_ai.operation.name` is `TEXT_COMPLETION`)
-        - `gen_ai.token.type` (recommended, if `gen_ai.operation.name` is `TEXT_COMPLETION`)
-    - Spec: see OpenTelemetry semantic
-      conventions, [gen_ai.client.operation.duration](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/#metric-gen_aiclientoperationduration)
+        - `gen_ai.operation.name` (required) — `text_completion` or `execute_tool`
+        - `gen_ai.provider.name` (required, for LLM calls)
+        - `error.type` (conditionally required, if operation ended in error)
+        - `gen_ai.request.model` (conditionally required)
+        - `gen_ai.response.model` (recommended)
+        - `gen_ai.tool.name` (recommended, for tool executions)
+        - `koog.tool.call.status` (Koog-specific, for tool executions) — `success`, `error`, or `validation_failed`
+        - `server.address` (recommended)
+        - `server.port` (conditionally required, if `server.address` is set)
+    - Spec: [gen_ai.client.operation.duration](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/#metric-gen_aiclientoperationduration)
 
-- gen_ai.client.tool.count
+#### Koog-specific metrics
+
+These metrics are specific to the Koog framework and use the `koog.gen_ai.*` namespace to avoid conflicts
+with current or future OpenTelemetry semantic conventions:
+
+- **koog.gen_ai.client.tool.call.count**
     - Instrument: Counter (LongCounter)
-    - Unit: `tool call`
-    - Description: Custom metric that counts tool calls and their statuses
+    - Unit: `{call}`
+    - Description: Number of tool calls performed by the agent
     - When emitted: on tool completion, failure, or validation failure
     - Key attributes:
-        - `gen_ai.operation.name` (required) — `EXECUTE_TOOL`
+        - `gen_ai.operation.name` (required) — `execute_tool`
         - `gen_ai.tool.name` (recommended)
-        - `gen_ai.tool.call.status` (custom) — `SUCCESS`, `ERROR`, or `VALIDATION_FAILED`
+        - `koog.tool.call.status` (Koog-specific) — `success`, `error`, or `validation_failed`
 
 !!! note
 
