@@ -8,15 +8,17 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.execution.utils.runOnIOBoundDispatcher
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.coroutines.runOnIOBoundDispatcher
 import kotlinx.coroutines.jdk9.asPublisher
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow.Publisher
 
+@OptIn(InternalKoogUtils::class)
 @Suppress("MissingKDocForPublicAPI")
 public actual abstract class PromptExecutor actual constructor() : PromptExecutorAPI {
     /**

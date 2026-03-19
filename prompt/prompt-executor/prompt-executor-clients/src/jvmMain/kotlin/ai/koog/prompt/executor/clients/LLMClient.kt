@@ -8,11 +8,12 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.execution.utils.runOnIOBoundDispatcher
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.coroutines.runOnIOBoundDispatcher
 import kotlinx.coroutines.jdk9.asPublisher
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow
@@ -23,6 +24,7 @@ import java.util.concurrent.Flow
  *
  * Implements [AutoCloseable] as LLM clients typically work with IO resources. Always close it when finished.
  */
+@OptIn(InternalKoogUtils::class)
 public actual abstract class LLMClient actual constructor() : LLMClientAPI {
     /**
      * Executes a prompt and returns a list of response messages.

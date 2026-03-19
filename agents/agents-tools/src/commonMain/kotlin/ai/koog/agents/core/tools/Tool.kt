@@ -12,6 +12,7 @@ import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import kotlinx.schema.generator.json.JsonSchemaConfig
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmOverloads
 
 /**
  * Base class representing a tool that can be invoked by the LLM.
@@ -19,12 +20,12 @@ import kotlinx.serialization.Serializable
  *
  * @param TArgs The type of arguments the tool accepts.
  * @param TResult The type of result the tool returns.
- * @property argsType Type token representing arguments type [TArgs].
- * @property resultType Type token representing result type [TResult].
- * @property descriptor A [ToolDescriptor] representing the tool's schema, including its name, description, and parameters.
- * @property metadata A map of arbitrary metadata associated with the tool.
+ * @param argsType Type token representing arguments type [TArgs].
+ * @param resultType Type token representing result type [TResult].
+ * @param descriptor A [ToolDescriptor] representing the tool's schema, including its name, description, and parameters.
+ * @param metadata A map of arbitrary metadata associated with the tool.
  */
-public abstract class Tool<TArgs, TResult>(
+public abstract class Tool<TArgs, TResult> @JvmOverloads constructor(
     public val argsType: TypeToken,
     public val resultType: TypeToken,
     public val descriptor: ToolDescriptor,
@@ -47,6 +48,7 @@ public abstract class Tool<TArgs, TResult>(
      * @param jsonSchemaConfig Optional custom [JsonSchemaConfig] for the tool schema generation.
      */
     @OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
+    @JvmOverloads
     public constructor(
         argsType: TypeToken,
         resultType: TypeToken,
