@@ -5,19 +5,34 @@ import ai.koog.agents.core.agent.entity.AIAgentEdge;
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
 import ai.koog.agents.core.agent.entity.AIAgentNode;
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.example.ApiKeyService;
 import ai.koog.agents.example.strategies.entities.ProblemDescription;
 import ai.koog.agents.example.strategies.entities.ProblemSolution;
+import ai.koog.agents.example.strategies.tools.CommunicationTools;
+import ai.koog.agents.example.strategies.tools.ThinkTool;
 import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
 
 import java.util.Collections;
+import java.util.List;
 
 public class GraphStrategyExample {
     public static void main(String[] args) {
         var promptExecutor = PromptExecutor.builder()
             .openAI(ApiKeyService.getOpenAIApiKey())
+            .build();
+
+        // Function-based tools from a class that implements ToolSet
+        var communicationTools = new CommunicationTools();
+        // Class-based tool
+        var thinkTool = new ThinkTool();
+
+        // Define tools available for the agent
+        var toolRegistry = ToolRegistry.builder()
+            .tools(communicationTools)
+            .tool(thinkTool)
             .build();
 
         // Define the overall graph structure with typed input/output
@@ -27,7 +42,7 @@ public class GraphStrategyExample {
 
          // Step 1: Identify the problem using an LLM subgraph with limited tools
         var identifyProblem = AIAgentSubgraph.builder("identify-problem")
-            .limitedTools(Collections.emptyList())
+            .limitedTools(List.of(thinkTool))
             .withInput(String.class)
             .withOutput(ProblemDescription.class)
             .withTask(input -> "Analyze the following and identify the core problem: " + input)
@@ -35,7 +50,7 @@ public class GraphStrategyExample {
 
         // Step 2: Solve the problem using another LLM subgraph
         var solveProblem = AIAgentSubgraph.builder("solve-problem")
-            .limitedTools(Collections.emptyList())
+            .limitedTools(List.of(thinkTool))
             .withInput(ProblemDescription.class)
             .withOutput(ProblemSolution.class)
             .withTask(problem -> "Propose a solution for: " + problem.title() + " - " + problem.details())
@@ -82,6 +97,7 @@ public class GraphStrategyExample {
             .promptExecutor(promptExecutor)
             .llmModel(OpenAIModels.Chat.GPT4_1)
             .graphStrategy(strategy)
+            .toolRegistry(toolRegistry)
             .build();
 
         var result = graphAgent.run("How to make a perfect poached egg?", "sessionId");
