@@ -1,4 +1,4 @@
-package ai.koog.agents.example.features.weave
+package ai.koog.agents.example.features.opentelemetry.weave
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.example.ApiKeyService
@@ -31,7 +31,7 @@ fun main() = runBlocking {
 
         val agent = AIAgent(
             promptExecutor = executor,
-            llmModel = OpenAIModels.Chat.O4Mini,
+            llmModel = OpenAIModels.Chat.GPT4o,
             systemPrompt = "You are a code assistant. Provide concise code examples."
         ) {
             install(OpenTelemetry) {

@@ -1,4 +1,4 @@
-package ai.koog.agents.example.features.langfuse
+package ai.koog.agents.example.features.opentelemetry.langfuse
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
@@ -11,7 +11,7 @@ import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.server.startSseMcpServer
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import io.ktor.server.cio.*
+import io.ktor.server.cio.CIO
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
@@ -39,7 +39,7 @@ suspend fun main() {
         val tools = McpToolRegistryProvider.fromSseUrl("http://localhost:30001")
         val agent = AIAgent(
             promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-            llmModel = OpenAIModels.Chat.GPT4_1Mini,
+            llmModel = OpenAIModels.Chat.GPT4o,
             systemPrompt = "You are a code assistant. Provide concise code examples.",
             toolRegistry = ToolRegistry { tool(::sin); tool(::cos) } + tools
         ) {
