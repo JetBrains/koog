@@ -73,6 +73,7 @@ import kotlin.uuid.Uuid
  *
  * @property baseUrl The base URL for the Google AI API.
  * @property timeoutConfig Timeout configuration for API requests.
+ * @property fallbackThoughtSignature Default `thought_signature` used for thinking models
  */
 public class GoogleClientSettings(
     public val baseUrl: String = "https://generativelanguage.googleapis.com",
@@ -80,7 +81,8 @@ public class GoogleClientSettings(
     public val defaultPath: String = "v1beta/models",
     public val generateContentMethod: String = "generateContent",
     public val streamGenerateContentMethod: String = "streamGenerateContent",
-    public val embedContentMethod: String = "embedContent"
+    public val embedContentMethod: String = "embedContent",
+    public val fallbackThoughtSignature: String = "context_engineering_is_the_way_to_go",
 )
 
 /**
@@ -295,6 +297,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
         val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
         var lastSignature: String? = null
+        val isThinkingModel = model.supports(LLMCapability.Thinking)
 
         fun flushCalls() {
             if (pendingCalls.isNotEmpty()) {
@@ -384,13 +387,22 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     val signature = lastSignature
                     lastSignature = null // Consume: only first call gets the signature
 
+                    // For thinking models (e.g., Gemini 3), thought_signature is required for all function calls.
+                    // If no signature is available from a Reasoning message, use the official workaround dummy signature.
+                    // See: https://ai.google.dev/gemini-api/docs/thought-signatures
+                    val effectiveSignature = signature ?: if (isThinkingModel) {
+                        settings.fallbackThoughtSignature
+                    } else {
+                        null
+                    }
+
                     pendingCalls += GooglePart.FunctionCall(
                         functionCall = GoogleData.FunctionCall(
                             id = message.id,
                             name = message.tool,
                             args = json.decodeFromString(message.content)
                         ),
-                        thoughtSignature = signature
+                        thoughtSignature = effectiveSignature
                     )
                 }
             }
@@ -458,8 +470,11 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
         val functionCallingConfig = when (val toolChoice = googleParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
+
             LLMParams.ToolChoice.None -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.NONE)
+
             LLMParams.ToolChoice.Required -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.ANY)
+
             is LLMParams.ToolChoice.Named -> {
                 GoogleFunctionCallingConfig(
                     GoogleFunctionCallingMode.ANY,
@@ -494,6 +509,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -509,6 +525,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported audio attachment content: ${content::class}"
                             )
@@ -524,6 +541,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported file attachment content: ${content::class}"
                             )
@@ -539,6 +557,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
                         val blob: GoogleData.Blob = when (val content = part.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+
                             else -> throw IllegalArgumentException(
                                 "Unsupported video attachment content: ${content::class}"
                             )
@@ -565,9 +584,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         fun JsonObjectBuilder.putType(type: ToolParameterType) {
             when (type) {
                 ToolParameterType.Boolean -> put("type", "boolean")
+
                 ToolParameterType.Float -> put("type", "number")
+
                 ToolParameterType.Integer -> put("type", "integer")
+
                 ToolParameterType.String -> put("type", "string")
+
                 ToolParameterType.Null -> put("type", "null")
 
                 is ToolParameterType.Enum -> {
@@ -704,6 +727,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         return when {
             // When the model calls tools, keep Reasoning (for signature) and Tool.Call, filter out Assistant text
             responses.any { it is Message.Tool.Call } -> responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
+
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
@@ -712,6 +736,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                     metaInfo = metaInfo
                 )
             )
+
             // Just return responses
             else -> responses
         }

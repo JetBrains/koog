@@ -2,11 +2,13 @@ package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.list
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import io.kotest.matchers.collections.shouldContain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 
 class AnthropicModelsTest {
@@ -69,5 +71,12 @@ class AnthropicModelsTest {
         reflectionModels.forEach { model ->
             models shouldContain model
         }
+    }
+
+    @Test
+    fun `Anthropic extended thinking models should advertise thinking capability`() {
+        assertNotNull(AnthropicModels.Haiku_4_5.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(AnthropicModels.Sonnet_4.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(AnthropicModels.Opus_4_6.capabilities) shouldContain LLMCapability.Thinking
     }
 }

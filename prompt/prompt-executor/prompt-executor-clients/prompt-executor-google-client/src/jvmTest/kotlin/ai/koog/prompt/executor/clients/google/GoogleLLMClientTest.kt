@@ -420,7 +420,7 @@ class GoogleLLMClientTest {
     }
 
     @Test
-    fun `createGoogleRequest attaches signature from Reasoning to first call only`() {
+    fun `createGoogleRequest attaches signature from Reasoning and fallback to subsequent calls`() {
         val client = GoogleLLMClient(apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
@@ -442,8 +442,30 @@ class GoogleLLMClientTest {
         val fc1 = callsParts[0] as GooglePart.FunctionCall
         val fc2 = callsParts[1] as GooglePart.FunctionCall
 
-        fc1.thoughtSignature shouldBe "my-sig" // First gets signature
-        fc2.thoughtSignature shouldBe null // Second doesn't
+        fc1.thoughtSignature shouldBe "my-sig"
+        fc2.thoughtSignature shouldBe "context_engineering_is_the_way_to_go"
+    }
+
+    @Test
+    fun `createGoogleRequest uses configurable fallback thought signature`() {
+        val client = GoogleLLMClient(
+            apiKey = "test",
+            settings = GoogleClientSettings(fallbackThoughtSignature = "custom-fallback")
+        )
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        val call = request.contents[1].parts!!.single() as GooglePart.FunctionCall
+        call.thoughtSignature shouldBe "custom-fallback"
     }
 
     @Test
