@@ -8,6 +8,7 @@ version = rootProject.version
 plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.ksp)
 }
 
 java {
@@ -56,6 +57,7 @@ kotlin {
 
         jvmCommonMain {
             dependencies {
+                kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
                 implementation(libs.kotlinx.coroutines.jdk9)
                 implementation(project(":serialization:serialization-jackson"))
             }
@@ -72,6 +74,10 @@ kotlin {
     }
 
     explicitApi()
+}
+
+dependencies {
+    add("kspJvm", project(":poet"))
 }
 
 publishToMaven()

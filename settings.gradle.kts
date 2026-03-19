@@ -102,3 +102,5 @@ include(":docs")
 
 include(":test-utils")
 include(":utils")
+
+include("poet")

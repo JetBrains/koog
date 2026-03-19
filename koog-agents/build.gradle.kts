@@ -48,6 +48,8 @@ val excluded = setOf(
     ":koog-spring-ai:koog-spring-ai-starter-model-chat",
     ":koog-spring-ai:koog-spring-ai-starter-model-embedding",
 
+    ":poet",
+
     project.path, // the current project should not depend on itself
 )
 
