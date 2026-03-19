@@ -6,7 +6,7 @@ import ai.koog.agents.features.opentelemetry.metric.CounterMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
 import ai.koog.agents.features.opentelemetry.metric.KoogMetrics
 import ai.koog.prompt.llm.LLModel
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 internal fun createLLMInputTokensMetricEvent(
     id: String,
@@ -66,6 +66,6 @@ internal fun createToolCallCounterMetricEvent(
         timestamp = Clock.System.now(),
         metricName = KoogMetrics.Client.Tool.Call.Count.name,
         attributes = attributes,
-        1
+        value = 1L
     )
 }

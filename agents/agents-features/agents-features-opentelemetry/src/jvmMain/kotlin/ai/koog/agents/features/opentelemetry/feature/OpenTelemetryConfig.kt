@@ -10,6 +10,7 @@ import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExp
 import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporterImpl
 import ai.koog.agents.features.opentelemetry.metric.MetricFilter
 import ai.koog.agents.features.opentelemetry.metric.adapter.MetricAdapter
+import ai.koog.utils.time.toJavaDuration
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -36,6 +37,8 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Properties
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toKotlinDuration
 import java.time.Duration as JavaDuration
 

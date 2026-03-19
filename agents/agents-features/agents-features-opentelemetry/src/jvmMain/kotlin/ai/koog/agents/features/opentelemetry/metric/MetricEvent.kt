@@ -1,7 +1,7 @@
 package ai.koog.agents.features.opentelemetry.metric
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 internal sealed interface MetricEvent<T : MetricEvent<T>> {
     val id: String

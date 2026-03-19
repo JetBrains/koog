@@ -7,7 +7,7 @@ import ai.koog.agents.features.opentelemetry.metric.BaseMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
 import ai.koog.agents.features.opentelemetry.metric.HistogramMetricEvent
 import ai.koog.prompt.llm.LLModel
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
