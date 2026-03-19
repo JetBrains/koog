@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap
 internal class MetricCollector(private val meter: Meter, private val config: OpenTelemetryConfig) {
 
     private val counters = ConcurrentHashMap<String, LongCounter>()
-
     private val histograms = ConcurrentHashMap<String, DoubleHistogram>()
 
     private val metricEvents = ConcurrentHashMap<String, MetricEvent<*>>()
@@ -34,7 +33,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         }
     }
 
-    fun addCounterMetric(metric: CounterMetric): LongCounter {
+    private fun addCounterMetric(metric: CounterMetric): LongCounter {
         val counter = meter.counterBuilder(metric.name)
             .setDescription(metric.description)
             .setUnit(metric.unit)
@@ -46,7 +45,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
         return counter
     }
 
-    fun addHistogramMetric(metric: HistogramMetric): DoubleHistogram {
+    private fun addHistogramMetric(metric: HistogramMetric): DoubleHistogram {
         val counter = meter
             .histogramBuilder(metric.name)
             .setDescription(metric.description)

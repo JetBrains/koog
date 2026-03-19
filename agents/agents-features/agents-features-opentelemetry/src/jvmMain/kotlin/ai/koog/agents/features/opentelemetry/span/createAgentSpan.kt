@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.Tracer
 /**
  * Build and start a new Create Agent Span with necessary attributes.
  *
- * Add the necessary attributes for the Create Agent Span according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Create Agent Span according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/#create-agent-span
  *
  * Span attributes:
@@ -71,7 +71,7 @@ internal fun startCreateAgentSpan(
 /**
  * End Create Agent Span and set final attributes.
  *
- * Add the necessary attributes for the Create Agent Span according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Create Agent Span according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/#create-agent-span
  *
  * Span attribute:

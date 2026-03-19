@@ -15,7 +15,7 @@ import io.opentelemetry.api.trace.Tracer
 /**
  * Build and start a new Inference Span with necessary attributes.
  *
- * Add the necessary attributes for the Inference Span according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Inference Span according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/#inference
  *
  * Span attributes:
@@ -125,7 +125,7 @@ internal fun startInferenceSpan(
 /**
  * End Inference Span and set final attributes.
  *
- * Add the necessary attributes for the Inference Span according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Inference Span according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/#inference
  *
  * Span attribute:

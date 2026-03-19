@@ -2,18 +2,30 @@ package ai.koog.agents.features.opentelemetry.metric
 
 internal object KoogMetrics {
 
-    sealed interface Tool : KoogMetric {
+    sealed interface Client : KoogMetric {
 
         override val name: String
-            get() = super.name.concatKey("tool")
+            get() = super.name.concatKey("client")
 
-        object Count : Tool {
+        sealed interface Tool : Client {
 
             override val name: String
-                get() = super.name.concatKey("count")
+                get() = super.name.concatKey("tool")
 
-            override val description: String = "Tool calls count"
-            override val unit: String = "tool call"
+            sealed interface Call : Tool {
+
+                override val name: String
+                    get() = super.name.concatKey("call")
+
+                object Count : Call {
+
+                    override val name: String
+                        get() = super.name.concatKey("count")
+
+                    override val description: String = "Number of tool calls performed by the agent"
+                    override val unit: String = "{call}"
+                }
+            }
         }
     }
 }

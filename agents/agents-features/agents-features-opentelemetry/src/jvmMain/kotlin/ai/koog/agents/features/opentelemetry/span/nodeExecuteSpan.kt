@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.Tracer
 /**
  * Build and start a new Node Execute Span with necessary attributes.
  *
- * Note: This span is out of scope of the Open Telemetry Semantic Convention for GenAI.
+ * Note: This span is out of scope of the OpenTelemetry Semantic Convention for GenAI.
  *       It is a custom span used to support Koog events hierarchy.
  *
  * Span attributes:
@@ -51,7 +51,7 @@ internal fun startNodeExecuteSpan(
 /**
  * End Node Execute Span and set final attributes.
  *
- * Note: This span is out of scope of the Open Telemetry Semantic Convention for GenAI.
+ * Note: This span is out of scope of the OpenTelemetry Semantic Convention for GenAI.
  *       It is a custom span used to support Koog events hierarchy.
  *
  * Span attributes:

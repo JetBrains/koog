@@ -14,7 +14,7 @@ import io.opentelemetry.api.trace.Tracer
 /**
  * Build and start a new Invoke Agent Span with necessary attributes.
  *
- * Add the necessary attributes for the Invoke Agent Span, according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Invoke Agent Span, according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/#invoke-agent-span
  *
  * Span attributes:
@@ -134,7 +134,7 @@ internal fun startInvokeAgentSpan(
 /**
  * End Invoke Agent Span and set final attributes.
  *
- * Add the necessary attributes for the Invoke Agent Span, according to the Open Telemetry Semantic Convention:
+ * Add the necessary attributes for the Invoke Agent Span, according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/#invoke-agent-span
  *
  * Span attribute:
