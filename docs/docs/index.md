@@ -77,7 +77,7 @@ Learn about the core components of Koog agents in detail:
 
     Enable the agent to interact with external data sources and services
 
--   :material-toy-brick-outline:{ .lg .middle } [**Features**](features-overview.md)
+-   :material-toy-brick-outline:{ .lg .middle } [**Features**](features/index.md)
 
     ---
 
@@ -96,7 +96,7 @@ Learn about the core components of Koog agents in detail:
 
     Optimize token usage while maintaining context in long-running conversations using advanced techniques
 
--   :material-floppy:{ .lg .middle } [**Agent persistence**](agent-persistence.md)
+-   :material-floppy:{ .lg .middle } [**Agent persistence**](features/agent-persistence.md)
 
     ---
 
@@ -119,15 +119,15 @@ Learn about the core components of Koog agents in detail:
 
     ---
 
-    Retain and retrieve knowledge across conversations using [vector embeddings](embeddings.md), [ranked document storage](ranked-document-storage.md), and [shared agent memory](agent-memory.md)
+    Retain and retrieve knowledge across conversations using [vector embeddings](embeddings.md), [ranked document storage](ranked-document-storage.md), and [shared agent memory](features/agent-memory.md)
 
--   :material-timeline-text:{ .lg .middle } [**Tracing**](tracing.md)
+-   :material-timeline-text:{ .lg .middle } [**Tracing**](features/tracing.md)
 
     ---
 
     Debug and monitor agent execution with detailed, configurable tracing
 
--   :material-timeline-text:{ .lg .middle } [**Long Term Memory**](long-term-memory.md)
+-   :material-timeline-text:{ .lg .middle } [**Long Term Memory**](features/long-term-memory.md)
 
     ---
 
@@ -157,7 +157,7 @@ Learn about the core components of Koog agents in detail:
 
     Integrate Koog with Ktor servers
 
--   :material-chart-timeline-variant:{ .lg .middle } [**OpenTelemetry**](opentelemetry-support.md)
+-   :material-chart-timeline-variant:{ .lg .middle } [**OpenTelemetry**](features/open-telemetry/index.md)
 
     ---
 
