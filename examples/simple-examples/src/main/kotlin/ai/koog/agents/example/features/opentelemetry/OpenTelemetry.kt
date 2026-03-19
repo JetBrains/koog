@@ -9,6 +9,7 @@ import ai.koog.utils.io.use
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
+import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.seconds
@@ -35,8 +36,8 @@ import kotlin.time.Duration.Companion.seconds
  */
 fun main() = runBlocking {
     val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Chat.O4Mini,
+        promptExecutor = simpleOpenAIExecutor(), // openai token
+        llmModel = OpenAIModels.Chat.GPT4o,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(OpenTelemetry) {
@@ -51,8 +52,10 @@ fun main() = runBlocking {
             // Add a console logger to view metrics
             // If needed, you can configure the exporter to send metrics to a monitoring backend
             addMetricExporter(
-                LoggingMetricExporter.create(),
-                1.seconds
+                OtlpGrpcMetricExporter.builder()
+                    .setEndpoint("http://localhost:17011")
+                    .build(),
+                0.5.seconds
             )
 
             // Add a console logger for local debugging
@@ -61,7 +64,7 @@ fun main() = runBlocking {
             // Send traces to OpenTelemetry collector
             addSpanExporter(
                 OtlpGrpcSpanExporter.builder()
-                    .setEndpoint("http://localhost:4317")
+                    .setEndpoint("http://localhost:17011")
                     .build()
             )
         }

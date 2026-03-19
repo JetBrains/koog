@@ -8,6 +8,7 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
@@ -15,6 +16,12 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.exporter.logging.LoggingSpanExporter
+import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
+import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 private enum class RunMode {
     LOCAL_LLAMA_3_2,
@@ -41,8 +48,8 @@ suspend fun main(args: Array<String>) {
 }
 
 private suspend fun runCalculatorExample(runMode: RunMode) {
-    val executor = chooseExecutor(runMode)
-    val model = chooseModel(runMode)
+    val executor = simpleOpenAIExecutor() // openai token
+    val model = OpenAIModels.Chat.GPT4o
 
     // Create a tool registry with calculator tools
     val toolRegistry = ToolRegistry {
@@ -83,6 +90,30 @@ private suspend fun runCalculatorExample(runMode: RunMode) {
                 onAgentCompleted { eventContext ->
                     println("Result: ${eventContext.result}")
                 }
+            }
+            install(OpenTelemetry) {
+                setServiceInfo(
+                    "koog-otel-example-calculator",
+                    "0.0.1"
+                )
+                addResourceAttributes(
+                    mapOf(AttributeKey.stringKey("service.instance.id") to "run-" + UUID.randomUUID().toString())
+                )
+
+                // If needed, you can configure the exporter to send metrics to a monitoring backend
+                addMetricExporter(
+                    OtlpGrpcMetricExporter.builder()
+                        .setEndpoint("http://localhost:17011")
+                        .build(),
+                    0.5.seconds
+                )
+
+                // Send traces to OpenTelemetry collector
+                addSpanExporter(
+                    OtlpGrpcSpanExporter.builder()
+                        .setEndpoint("http://localhost:17011")
+                        .build()
+                )
             }
         }
 
