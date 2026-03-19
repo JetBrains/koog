@@ -220,6 +220,7 @@ class ModelIdentifierParsingTest {
             "anthropic.haiku_4_5" to AnthropicModels.Haiku_4_5,
             "anthropic.sonnet_4" to AnthropicModels.Sonnet_4,
             "anthropic.sonnet_4_5" to AnthropicModels.Sonnet_4_5,
+            "anthropic.sonnet_4_6" to AnthropicModels.Sonnet_4_6,
         )
     )
 

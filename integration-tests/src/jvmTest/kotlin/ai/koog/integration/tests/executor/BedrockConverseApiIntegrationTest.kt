@@ -70,7 +70,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
 
         @JvmStatic
         fun reasoningCapableModels(): Stream<LLModel> {
-            return listOf(BedrockModels.AnthropicClaude4_5Sonnet).stream()
+            return listOf(BedrockModels.AnthropicClaude4_6Sonnet).stream()
         }
 
         @JvmStatic

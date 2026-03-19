@@ -223,6 +223,15 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Claude 4.6 Sonnet laude Sonnet 4.6 suggests the best combination of speed and intelligence.
+     * It’s a full upgrade of the model’s skills across coding, computer use, long-context reasoning, agent planning, knowledge work, and design.
+     */
+    public val AnthropicClaude4_6Sonnet: LLModel = BedrockModel(
+        AnthropicModels.Sonnet_4_6,
+        "anthropic.claude-sonnet-4-6",
+    ).effectiveModel
+
+    /**
      * Claude 3 Haiku - Fast and efficient model for high-volume, simple tasks
      *
      * This model is optimized for:
@@ -651,6 +660,7 @@ public object BedrockModels : LLModelDefinitions {
         AnthropicClaude46Opus,
         AnthropicClaude4Sonnet,
         AnthropicClaude4_5Sonnet,
+        AnthropicClaude4_6Sonnet,
         AnthropicClaude4_5Haiku,
 
         // Amazon Nova Series
