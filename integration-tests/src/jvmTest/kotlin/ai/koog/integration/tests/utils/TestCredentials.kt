@@ -26,6 +26,11 @@ object TestCredentials {
             ?: error("ERROR: environment variable `MISTRAL_AI_API_TEST_KEY` is not set")
     }
 
+    fun readTestDashscopeKeyFromEnv(): String {
+        return System.getenv("DASHSCOPE_API_TEST_KEY")
+            ?: error("ERROR: environment variable `DASHSCOPE_API_TEST_KEY` is not set")
+    }
+
     fun readAwsAccessKeyIdFromEnv(): String {
         return System.getenv("AWS_ACCESS_KEY_ID")
             ?: error("ERROR: environment variable `AWS_ACCESS_KEY_ID` is not set")
