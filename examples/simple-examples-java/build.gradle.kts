@@ -103,3 +103,10 @@ registerRunExampleTask("runExampleCalculatorLocal", "ai.koog.agents.example.calc
 registerRunExampleTask("runExampleFunctionalAgentChat", "ai.koog.agents.example.chat.FunctionalAgentChat")
 registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.chatmemory.ChatMemoryJdbcExample")
 registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.snapshot.PersistenceJdbcExample")
+
+/*
+Open Telemetry examples
+*/
+registerRunExampleTask("runExampleOpenTelemetryApp", "ai.koog.agents.example.features.opentelemetry.OpenTelemetryExample")
+registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.opentelemetry.langfuse.LangfuseExample")
+registerRunExampleTask("runExampleWeaveApp", "ai.koog.agents.example.features.opentelemetry.weave.WeaveExample")

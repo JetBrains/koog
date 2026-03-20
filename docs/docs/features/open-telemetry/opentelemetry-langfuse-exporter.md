@@ -11,8 +11,8 @@ For background on Koog's OpenTelemetry support, see the [OpenTelemetry support](
 
 1. Create a Langfuse project. Follow the setup guide at [Create new project in Langfuse](https://langfuse.com/docs/get-started#create-new-project-in-langfuse)
 2. Get API credentials. Retrieve your Langfuse `public key` and `secret key` as described in [Where are Langfuse API keys?](https://langfuse.com/faq/all/where-are-langfuse-api-keys)
-3. Pass the Langfuse host, private key, and secret key to the Langfuse exporter. 
-This can be done by providing them as parameters to the `addLangfuseExporter()` function, or by setting environment variables as shown below:
+3. Pass the Langfuse host, private key, and secret key to the Langfuse exporter.
+   This can be done by providing them as parameters to the `addLangfuseExporter()` function, or by setting environment variables as shown below:
 
 ```bash
    export LANGFUSE_HOST="https://cloud.langfuse.com"
@@ -28,35 +28,69 @@ The exporter uses `OtlpHttpSpanExporter` under the hood to send traces to Langfu
 
 ### Example: agent with Langfuse tracing
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() = runBlocking {
-    val apiKey = "api-key"
-    
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(apiKey),
-        llmModel = OpenAIModels.Chat.GPT4oMini,
-        systemPrompt = "You are a code assistant. Provide concise code examples."
-    ) {
-        install(OpenTelemetry) {
-            addLangfuseExporter()
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import kotlinx.coroutines.runBlocking
+    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
+    -->
+    ```kotlin
+    fun main() = runBlocking {
+        val agent = AIAgent(
+            promptExecutor = promptExecutor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a code assistant. Provide concise code examples."
+        ) {
+            install(OpenTelemetry) {
+                addLangfuseExporter()
+            }
         }
+    
+        println("Running agent with Langfuse tracing")
+    
+        val result = agent.run("Tell me a joke about programming")
+        println("Result: $result\nSee traces on the Langfuse instance")
     }
+    ```
+    <!--- KNIT example-langfuse-exporter-01.kt -->
 
-    println("Running agent with Langfuse tracing")
+=== "Java"
 
-    val result = agent.run("Tell me a joke about programming")
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    public class exampleLangfuseExporterJava01 {
+        static PromptExecutor promptExecutor = PromptExecutor.builder()
+            .openAI("openai-api-key")
+            .build();
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```java
+    public static void main(String[] args) {
+        var agent = AIAgent.builder()
+            .promptExecutor(promptExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4oMini)
+            .systemPrompt("You are a code assistant. Provide concise code examples.")
+            .install(OpenTelemetry.Feature, config ->
+                config.addLangfuseExporter()
+            )
+            .build();
 
-    println("Result: $result\nSee traces on the Langfuse instance")
-}
-```
-<!--- KNIT example-langfuse-exporter-01.kt -->
+        System.out.println("Running agent with Langfuse tracing");
+
+        var result = agent.run("Tell me a joke about programming");
+        System.out.println("Result: " + result + "\nSee traces on the Langfuse instance");
+    }
+    ```
+    <!--- KNIT exampleLangfuseExporterJava01.java -->
 
 ## Trace attributes
 
@@ -73,41 +107,90 @@ Common attributes:
 
 ### Example with session and tags
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
-import java.util.UUID
--->
-```kotlin
-fun main() = runBlocking {
-    val apiKey = "api-key"
-    val sessionId = UUID.randomUUID().toString()
+=== "Kotlin"
 
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(apiKey),
-        llmModel = OpenAIModels.Chat.GPT4oMini,
-        systemPrompt = "You are a helpful assistant."
-    ) {
-        install(OpenTelemetry) {
-            addLangfuseExporter(
-                traceAttributes = listOf(
-                    CustomAttribute("langfuse.session.id", sessionId),
-                    CustomAttribute("langfuse.trace.tags", listOf("chat", "kotlin", "production"))
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import kotlinx.coroutines.runBlocking
+    import java.util.UUID
+    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
+    -->
+    ```kotlin
+    fun main() = runBlocking {
+        val sessionId = UUID.randomUUID().toString()
+    
+        val agent = AIAgent(
+            promptExecutor = promptExecutor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a helpful assistant."
+        ) {
+            install(OpenTelemetry) {
+                addLangfuseExporter(
+                    traceAttributes = listOf(
+                        CustomAttribute("langfuse.session.id", sessionId),
+                        CustomAttribute("langfuse.trace.tags", listOf("chat", "kotlin", "production"))
+                    )
                 )
-            )
+            }
         }
-    }
+    
+        println("Running agent with Langfuse tracing")
 
-    // Multiple runs with the same session ID will be grouped in Langfuse
-    agent.run("What is Kotlin?")
-    agent.run("Show me a coroutine example")
-}
-```
-<!--- KNIT example-langfuse-exporter-02.kt -->
+        // Multiple runs with the same session ID will be grouped in Langfuse
+        agent.run("What is Kotlin?")
+        agent.run("Show me a coroutine example")
+    }
+    ```
+    <!--- KNIT example-langfuse-exporter-02.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute;
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import java.util.List;
+    import java.util.UUID;
+    public class exampleLangfuseExporterJava02 {
+        static PromptExecutor promptExecutor = PromptExecutor.builder()
+            .openAI("openai-api-key")
+            .build();
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```java
+    public static void main(String[] args) {
+        var sessionId = UUID.randomUUID().toString();
+
+        var agent = AIAgent.builder()
+            .promptExecutor(promptExecutor)
+            .systemPrompt("You are a helpful assistant.")
+            .llmModel(OpenAIModels.Chat.GPT4oMini)
+            .install(OpenTelemetry.Feature, config ->
+                config.addLangfuseExporter(
+                    null, null, null, null,
+                    List.of(
+                        new CustomAttribute("langfuse.session.id", sessionId),
+                        new CustomAttribute("langfuse.trace.tags", List.of("chat", "kotlin", "production"))
+                    )
+                ))
+            .build();
+
+        System.out.println("Running agent with Langfuse tracing");
+
+        // Multiple runs with the same session ID will be grouped in Langfuse
+        agent.run("How to setup Langfuse integration in Koog agent?");
+        agent.run("Show me a Java API  example");
+    }
+    ```
+    <!--- KNIT exampleLangfuseExporterJava02.java -->
 
 ## What gets traced
 
@@ -120,37 +203,71 @@ When enabled, the Langfuse exporter captures the same spans as Koog’s general 
 
 Koog also captures span attributes required by Langfuse to show [Agent Graphs](https://langfuse.com/docs/observability/features/agent-graphs).
 
-For security reasons, some content of OpenTelemetry spans is masked by default. 
-To make the content available in Langfuse, use the [setVerbose](index.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+For security reasons, some content of OpenTelemetry spans is masked by default.
+To make the content available in Langfuse, use the [setVerbose](opentelemetry-support.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+=== "Kotlin"
 
-const val apiKey = ""
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
+    val agent = AIAgent(
+        promptExecutor = promptExecutor,
+        llmModel = OpenAIModels.Chat.GPT4o,
+        systemPrompt = "You are a helpful assistant."
+    ) {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    install(OpenTelemetry) {
+        addLangfuseExporter()
+        setVerbose(true)
+    }
+    ```
+    <!--- KNIT example-langfuse-exporter-03.kt -->
 
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(apiKey),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    systemPrompt = "You are a helpful assistant."
-) {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-install(OpenTelemetry) {
-    addLangfuseExporter()
-    setVerbose(true)
-}
-```
-<!--- KNIT example-langfuse-exporter-03.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute;
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import java.util.List;
+    import java.util.UUID;
+    public class exampleLangfuseExporterJava03 {
+        public static void main(String[] args) {
+            var promptExecutor = PromptExecutor.builder()
+                .openAI("openai-api-key")
+                .build();
+            var agent = AIAgent.builder()
+                .promptExecutor(promptExecutor)
+                .systemPrompt("You are a helpful assistant.")
+                .llmModel(OpenAIModels.Chat.GPT4oMini)
+                .
+    -->
+    <!--- SUFFIX
+            .build();
+        }
+    }
+    -->
+    ```java
+    install(OpenTelemetry.Feature, config -> {
+        config.addLangfuseExporter();
+        config.setVerbose(true);
+    })
+    ```
+    <!--- KNIT exampleLangfuseExporterJava03.java -->
 
 When visualized in Langfuse, the trace appears as follows:
-![Langfuse traces](../../img/opentelemetry-langfuse-exporter-light.png#only-light)
-![Langfuse traces](../../img/opentelemetry-langfuse-exporter-dark.png#only-dark)
+![Langfuse traces](img/opentelemetry-langfuse-exporter-light.png#only-light)
+![Langfuse traces](img/opentelemetry-langfuse-exporter-dark.png#only-dark)
 
 For more details on Langfuse OpenTelemetry tracing, see:  
 [Langfuse OpenTelemetry Docs](https://langfuse.com/integrations/native/opentelemetry#opentelemetry-endpoint).
