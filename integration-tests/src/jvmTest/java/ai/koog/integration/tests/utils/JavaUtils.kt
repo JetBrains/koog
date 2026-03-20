@@ -21,7 +21,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.annotations.InternalKoogUtils
-import ai.koog.utils.coroutines.runBlockingIfRequired
+import ai.koog.utils.coroutines.withSuspend
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CopyOnWriteArrayList
@@ -45,7 +45,7 @@ object JavaUtils {
         context: AIAgentFunctionalContext,
         message: String,
         outputType: Class<T>
-    ): T = runBlockingIfRequired {
+    ): T = withSuspend {
         context.requestLLMStructured(message, outputType.kotlin, emptyList(), null).getOrThrow().data
     }
 
@@ -71,7 +71,7 @@ object JavaUtils {
     fun getCheckpointsBlocking(
         storageProvider: PersistenceStorageProvider<*>,
         sessionId: String
-    ): List<AgentCheckpointData> = runBlockingIfRequired {
+    ): List<AgentCheckpointData> = withSuspend {
         storageProvider.getCheckpoints(sessionId)
     }
 

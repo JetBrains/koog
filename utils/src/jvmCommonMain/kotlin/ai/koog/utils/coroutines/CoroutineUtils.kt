@@ -1,10 +1,13 @@
 package ai.koog.utils.coroutines
 
 import ai.koog.utils.annotations.InternalKoogUtils
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
@@ -25,7 +28,7 @@ public fun <T> runOnIOBoundDispatcher(
     executorService: ExecutorService? = null,
     block: suspend () -> T
 ): T =
-    runBlocking(
+    withSuspend(
         executorService.asCoroutineContext(
             fallbackDispatcher = Dispatchers.IO
         )
@@ -37,7 +40,7 @@ public fun <T> runOnIOBoundDispatcher(
  * A [ThreadLocal] storage for the current [CoroutineContext].
  *
  * This element is used to bridge the gap between suspending Kotlin code and blocking Java/non-suspendable code.
- * It allows [runBlockingIfRequired] to detect if the current thread is already executing within a coroutine
+ * It allows [withSuspend] to detect if the current thread is already executing within a coroutine
  * context and which dispatcher is being used.
  *
  * This is critical for:
@@ -45,11 +48,14 @@ public fun <T> runOnIOBoundDispatcher(
  * 2. **Deadlock Prevention**: Ensuring that we don't attempt to synchronously dispatch to a dispatcher
  *    that is already blocking the current thread.
  *
- * @see runBlockingIfRequired
+ * @see withSuspend
  */
 internal val CURRENT_CONTEXT_ELEMENT: ThreadLocal<CoroutineContext> = ThreadLocal()
 
 /**
+ * Blocking -> suspend bridge, to call suspendable functions from blocking Java API while avoiding coroutine deadlocks
+ * regular runBlocking might cause.
+ *
  * Executes a suspending [block] by either using [runBlocking] or immediately executing it if already
  * on the target dispatcher.
  *
@@ -73,7 +79,10 @@ internal val CURRENT_CONTEXT_ELEMENT: ThreadLocal<CoroutineContext> = ThreadLoca
  */
 @JvmOverloads
 @InternalKoogUtils
-public fun <T> runBlockingIfRequired(context: CoroutineContext = EmptyCoroutineContext, block: suspend () -> T): T {
+public fun <T> withSuspend(
+    context: CoroutineContext = EmptyCoroutineContext,
+    block: suspend () -> T
+): T {
     val existingContext = CURRENT_CONTEXT_ELEMENT.get()
 
     if (existingContext != null) {
@@ -99,4 +108,30 @@ public fun <T> runBlockingIfRequired(context: CoroutineContext = EmptyCoroutineC
             CURRENT_CONTEXT_ELEMENT.set(old)
         }
     }
+}
+
+/**
+ * Suspend -> blocking bridge, to call blocking Java API functions from suspendable code while avoiding blocking the
+ * coroutine by delegating the [block] to the provided [executor] and waiting for its completion.
+ *
+ * @param executor The executor to use for executing the [block]. Defaults to [Dispatchers.Default].
+ * @param block The blocking lambda to execute.
+ */
+@InternalKoogUtils
+@JvmOverloads
+public suspend fun <T> withBlocking(
+    executor: Executor = Dispatchers.Default.asExecutor(),
+    block: () -> T,
+): T {
+    val result = CompletableDeferred<T>()
+
+    executor.execute {
+        try {
+            result.complete(block())
+        } catch (e: Throwable) {
+            result.completeExceptionally(e)
+        }
+    }
+
+    return result.await()
 }

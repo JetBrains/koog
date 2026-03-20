@@ -6,7 +6,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.coroutines.asCoroutineContext
-import ai.koog.utils.coroutines.runBlockingIfRequired
+import ai.koog.utils.coroutines.withSuspend
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
@@ -28,7 +28,7 @@ public fun <T> AIAgentConfig.runOnLLMDispatcher(executorService: ExecutorService
         defaultExecutorService = llmRequestExecutorService,
         fallbackDispatcher = Dispatchers.IO
     )
-    return runBlockingIfRequired(context, block)
+    return withSuspend(context, block)
 }
 
 /**
@@ -54,7 +54,7 @@ public fun <T> AIAgentConfig.runOnStrategyDispatcher(
         defaultExecutorService = strategyExecutorService,
         fallbackDispatcher = Dispatchers.Default
     )
-    return runBlockingIfRequired(context, block)
+    return withSuspend(context, block)
 }
 
 /**

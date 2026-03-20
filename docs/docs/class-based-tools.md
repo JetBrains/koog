@@ -24,7 +24,11 @@ The Koog framework provides the following approaches for implementing tools:
 
 === "Java"
 
-    * Using the base class `JavaTool` for all tools.
+    Using the base class `JavaTool` for all tools.
+
+    To avoid blocking the agent thread, tools are executed on a separate `Executor`.
+    By default, each `JavaTool` instance uses its own single-threaded executor.
+    You can set your own executor by using the constructor that takes an `Executor` parameter.
 
 
 !!! tip
@@ -80,6 +84,7 @@ Here is an example of a custom tool implementation that returns a numeric result
     import ai.koog.serialization.JSONSerializer;
     import ai.koog.serialization.TypeToken;
     import com.fasterxml.jackson.annotation.JsonProperty;
+    import java.util.concurrent.Executors;
     -->
     ```java
     // Implements a simple calculator tool that adds two numbers
@@ -89,7 +94,9 @@ Here is an example of a custom tool implementation that returns a numeric result
                 TypeToken.of(Args.class),
                 TypeToken.of(Integer.class),
                 "calculator",
-                "A simple calculator that can add two integers"
+                "A simple calculator that can add two integers",
+                // Optional: set your own executor that runs the tool
+                Executors.newSingleThreadExecutor() 
             );
         }
 
