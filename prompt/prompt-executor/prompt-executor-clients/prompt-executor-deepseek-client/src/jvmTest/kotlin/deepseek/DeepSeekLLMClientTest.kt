@@ -6,6 +6,8 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -18,6 +20,10 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -26,6 +32,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.serialization.json.Json as KotlinxJson
 
 class DeepSeekLLMClientTest {
 
@@ -123,6 +130,39 @@ class DeepSeekLLMClientTest {
               "prompt_cache_hit_tokens" : 0,
               "prompt_cache_miss_tokens" : 35
           }
+        }
+    """.trimIndent()
+
+    //language=json
+    val toolCallWithReasoningBody = """
+        {
+          "id": "chatcmpl-tool",
+          "object": "chat.completion",
+          "created": 1716920005,
+          "system_fingerprint": "dummy",
+          "model": "deepseek-reasoner",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "",
+                "reasoning_content": "I should call the weather tool first.",
+                "tool_calls": [
+                  {
+                    "id": "call_weather",
+                    "type": "function",
+                    "function": {
+                      "name": "weather",
+                      "arguments": "{\"city\":\"Boston\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ],
+          "usage": {"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5}
         }
     """.trimIndent()
 
@@ -229,6 +269,94 @@ class DeepSeekLLMClientTest {
         // For now, we'd only verify that streaming flow can be created
         // as MockEngine does not support Ktor SSE end-to-end streaming reliably in tests
         assertNotNull(flow, "Flow should not be null")
+    }
+
+    @Test
+    fun testExecuteToolCallResponsePreservesReasoningMessage() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = toolCallWithReasoningBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, Json.toString())
+            )
+        }
+        val http = HttpClient(engine) {}
+        val client = DeepSeekLLMClient(apiKey = key, baseClient = http, clock = FixedClock)
+
+        val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock) {
+            user("What is the weather in Boston?")
+        }
+
+        val responses = client.execute(prompt, DeepSeekModels.DeepSeekReasoner)
+
+        assertEquals(2, responses.size, "Response should contain reasoning and tool call")
+        assertIs<Message.Reasoning>(responses[0])
+        assertEquals("I should call the weather tool first.", responses[0].content)
+        val toolCall = assertIs<Message.Tool.Call>(responses[1])
+        assertEquals("call_weather", toolCall.id)
+        assertEquals("weather", toolCall.tool)
+        assertEquals("{\"city\":\"Boston\"}", toolCall.content)
+    }
+
+    @Test
+    fun testExecuteDeepSeekReasonerReplaysReasoningWithToolCalls() = runTest {
+        var capturedBody: String? = null
+        val engine = MockEngine { req ->
+            capturedBody = (req.body as TextContent).text
+            respond(
+                content = body,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, Json.toString())
+            )
+        }
+        val http = HttpClient(engine) {}
+        val client = DeepSeekLLMClient(apiKey = key, baseClient = http, clock = FixedClock)
+
+        val prompt = Prompt(
+            messages = listOf(
+                Message.User("What's the weather in Boston?", RequestMetaInfo.Empty),
+                Message.Reasoning(
+                    content = "I should call the weather tool first.",
+                    metaInfo = ResponseMetaInfo.Empty
+                ),
+                Message.Tool.Call(
+                    id = "call_weather",
+                    tool = "weather",
+                    content = "{\"city\":\"Boston\"}",
+                    metaInfo = ResponseMetaInfo.Empty
+                ),
+                Message.Tool.Result(
+                    id = "call_weather",
+                    tool = "weather",
+                    content = "{\"temperature\":72}",
+                    metaInfo = RequestMetaInfo.Empty
+                )
+            ),
+            id = "p-tool-history"
+        )
+
+        client.execute(prompt, DeepSeekModels.DeepSeekReasoner)
+
+        assertNotNull(capturedBody, "Captured request body should not be null")
+        val messages = KotlinxJson.parseToJsonElement(capturedBody).jsonObject["messages"]!!.jsonArray
+
+        assertEquals(3, messages.size, "Reasoning and tool calls should be merged into a single assistant message")
+        val assistantMessage = messages[1].jsonObject
+        assertEquals("assistant", assistantMessage["role"]?.jsonPrimitive?.contentOrNull)
+        assertEquals(
+            "I should call the weather tool first.",
+            assistantMessage["reasoning_content"]?.jsonPrimitive?.contentOrNull
+        )
+        assertEquals(
+            "I should call the weather tool first.",
+            assistantMessage["content"]?.jsonPrimitive?.contentOrNull
+        )
+        val toolCalls = assistantMessage["tool_calls"]!!.jsonArray
+        assertEquals(1, toolCalls.size)
+        assertEquals(
+            "weather",
+            toolCalls[0].jsonObject["function"]!!.jsonObject["name"]!!.jsonPrimitive.contentOrNull
+        )
     }
 
     @Test
