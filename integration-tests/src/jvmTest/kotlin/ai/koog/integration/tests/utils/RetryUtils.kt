@@ -25,6 +25,9 @@ object RetryUtils {
     private const val OPENAI_503_ERROR = "Error from OpenAI API: 503 Service Unavailable"
     private const val OPENAI_LLM_CLIENT_500_ERROR = "Error from OpenAILLMClient API: 500 Internal Server Error"
     private const val OPEN_ROUTER_502_ERROR = "{\"error\":{\"message\":\"Provider returned error\",\"code\":502"
+    private const val MISTRAL_502_ERROR = "Error from client: MistralAILLMClient\nStatus code: 502"
+    private const val BEDROCK_MARKETPLACE_ACCESS_DENIED =
+        "Model access is denied due to IAM user or service role is not authorized to perform the required AWS Marketplace actions"
 
     // As we can't do anything about how OpenRouter returns responses from time to time,
     // it's not worth failing tests on a 3-rd party conditions.
@@ -51,7 +54,9 @@ object RetryUtils {
             OPENAI_503_ERROR,
             OPENAI_LLM_CLIENT_500_ERROR,
             OPENAI_IMAGE_DOWNLOAD_ERROR,
-            OPEN_ROUTER_502_ERROR
+            OPEN_ROUTER_502_ERROR,
+            MISTRAL_502_ERROR,
+            BEDROCK_MARKETPLACE_ACCESS_DENIED
         )
 
         val message = e.message
