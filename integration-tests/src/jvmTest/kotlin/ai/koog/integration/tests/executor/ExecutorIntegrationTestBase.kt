@@ -40,6 +40,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
@@ -207,6 +208,10 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model != GoogleModels.Gemini3_Pro_Preview,
+            "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
+        )
 
         val executor = getExecutor(model)
 
@@ -1208,6 +1213,10 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model != GoogleModels.Gemini3_Pro_Preview,
+            "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
+        )
         assumeTrue(
             model.provider !== LLMProvider.OpenRouter,
             "KG-626 Error from OpenRouter on a streaming with a tool call"
