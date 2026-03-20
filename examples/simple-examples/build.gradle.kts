@@ -134,7 +134,6 @@ registerRunExampleTask(
     "runExampleRoutingViaAgentsAsTools",
     "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt"
 )
-registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example.feature.OpenTelemetryKt")
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
@@ -166,6 +165,8 @@ registerRunExampleTask("runExampleAdvancedJokeAgentClient", "ai.koog.agents.exam
 registerRunExampleTask("runExampleAcpApp", "ai.koog.agents.example.acp.KoogAcpAppKt")
 
 /*
- Langfuse examples
+ Open Telemetry examples
 */
-registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.langfuse.LangfuseKt")
+registerRunExampleTask("runExampleOpenTelemetryApp", "ai.koog.agents.example.features.opentelemetry.OpenTelemetryExampleKt")
+registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.opentelemetry.langfuse.LangfuseExampleKt")
+registerRunExampleTask("runExampleWeaveApp", "ai.koog.agents.example.features.opentelemetry.weave.WeaveExampleKt")
