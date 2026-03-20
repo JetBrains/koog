@@ -2,7 +2,7 @@
 
 Koog provides built-in support for exporting agent traces to [W&B Weave](https://wandb.ai/site/weave/),
 a developer tool from Weights & Biases for observability and analytics of AI applications.  
-With the Weave integration, you can capture prompts, completions, system context, and execution traces 
+With the Weave integration, you can capture prompts, completions, system context, and execution traces
 and visualize them directly in your W&B workspace.
 
 For background on Koog’s OpenTelemetry support, see the [OpenTelemetry support](https://docs.koog.ai/opentelemetry-support/).
@@ -13,8 +13,8 @@ For background on Koog’s OpenTelemetry support, see the [OpenTelemetry support
 
 1. Get up a W&B account at [https://wandb.ai](https://wandb.ai)
 2. Get your API key from [https://wandb.ai/authorize](https://wandb.ai/authorize).
-3. Find your entity name by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home). 
-Your entity is usually your username if it's a personal account or your team/org name.
+3. Find your entity name by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home).
+   Your entity is usually your username if it's a personal account or your team/org name.
 4. Define a name for your project. You don't have to create a project beforehand, it will be created automatically when the first trace is sent.
 5. Pass the Weave entity, project name, and API key to the Weave exporter.
    This can be done by providing them as parameters to the `addWeaveExporter()` function,
@@ -34,37 +34,84 @@ The exporter uses Weave’s OpenTelemetry endpoint via `OtlpHttpSpanExporter`.
 
 ### Example: agent with Weave tracing
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() = runBlocking {
-    val apiKey = "api-key"
-    val entity = System.getenv()["WEAVE_ENTITY"] ?: throw IllegalArgumentException("WEAVE_ENTITY is not set")
-    val projectName = System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
-    
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(apiKey),
-        llmModel = OpenAIModels.Chat.GPT4oMini,
-        systemPrompt = "You are a code assistant. Provide concise code examples."
-    ) {
-        install(OpenTelemetry) {
-            addWeaveExporter()
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import kotlinx.coroutines.runBlocking
+    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
+    -->
+    ```kotlin
+    fun main() = runBlocking {
+        val entity = System.getenv()["WEAVE_ENTITY"] 
+            ?: throw IllegalArgumentException("WEAVE_ENTITY is not set")
+        
+        val projectName = System.getenv()["WEAVE_PROJECT_NAME"] 
+            ?: "koog-tracing"
+        
+        val agent = AIAgent(
+            promptExecutor = promptExecutor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a code assistant. Provide concise code examples."
+        ) {
+            install(OpenTelemetry) {
+                addWeaveExporter()
+            }
         }
+    
+        println("Running agent with Weave tracing")
+    
+        val result = agent.run("Tell me a joke about programming")
+        println("Result: $result\nSee traces on https://wandb.ai/$entity/$projectName/weave/traces")
     }
+    ```
+    <!--- KNIT example-weave-exporter-01.kt -->
 
-    println("Running agent with Weave tracing")
+=== "Java"
 
-    val result = agent.run("Tell me a joke about programming")
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import java.util.Optional;
+    public class exampleWeaveExporterJava01 {
+        static PromptExecutor promptExecutor = PromptExecutor.builder()
+            .openAI("openai-api-key")
+            .build();
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```java
+    public static void main(String[] args) {
+        var entity = Optional.ofNullable(System.getenv("WEAVE_ENTITY"))
+            .filter(env -> !env.isBlank())
+            .orElseThrow(() -> new IllegalArgumentException("WEAVE_ENTITY is not set"));
 
-    println("Result: $result\nSee traces on https://wandb.ai/$entity/$projectName/weave/traces")
-}
-```
-<!--- KNIT example-weave-exporter-01.kt -->
+        var projectName = Optional.ofNullable(System.getenv("WEAVE_PROJECT_NAME"))
+            .filter(env -> !env.isBlank())
+            .orElse("koog-tracing");
+
+        var agent = AIAgent.builder()
+            .promptExecutor(promptExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4oMini)
+            .systemPrompt("You are a helpful assistant.")
+            .install(OpenTelemetry.Feature, config ->
+                config.addWeaveExporter(null, entity, projectName)
+            )
+            .build();
+
+        System.out.println("Running agent with Weave tracing");
+
+        var result = agent.run("Tell me a joke about programming");
+        System.out.println("Result: " + result + "\nSee traces on https://wandb.ai/" + entity + "/" + projectName + "/weave/traces");
+    }
+    ```
+    <!--- KNIT exampleWeaveExporterJava01.java -->
 
 ## What gets traced
 
@@ -76,36 +123,70 @@ When enabled, the Weave exporter captures the same spans as Koog’s general Ope
 - **System context**: metadata such as model name, environment, Koog version
 
 For security reasons, some content of OpenTelemetry spans is masked by default.
-To make the content available in Weave, use the [setVerbose](index.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+To make the content available in Weave, use the [setVerbose](opentelemetry-support.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+=== "Kotlin"
 
-const val apiKey = ""
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
+    val agent = AIAgent(
+        promptExecutor = promptExecutor,
+        llmModel = OpenAIModels.Chat.GPT4o,
+        systemPrompt = "You are a helpful assistant."
+    ) {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    install(OpenTelemetry) {
+        addWeaveExporter()
+        setVerbose(true)
+    }
+    ```
+    <!--- KNIT example-weave-exporter-02.kt -->
 
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(apiKey),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    systemPrompt = "You are a helpful assistant."
-) {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-install(OpenTelemetry) {
-    addWeaveExporter()
-    setVerbose(true)
-}
-```
-<!--- KNIT example-weave-exporter-02.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute;
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import java.util.List;
+    import java.util.UUID;
+    public class exampleWeaveExporterJava02 {
+        public static void main(String[] args) {
+            var promptExecutor = PromptExecutor.builder()
+                .openAI("openai-api-key")
+                .build();
+            var agent = AIAgent.builder()
+                .promptExecutor(promptExecutor)
+                .systemPrompt("You are a helpful assistant.")
+                .llmModel(OpenAIModels.Chat.GPT4oMini)
+                .
+    -->
+    <!--- SUFFIX
+            .build();
+        }
+    }
+    -->
+    ```java
+    install(OpenTelemetry.Feature, config -> {
+        config.addWeaveExporter();
+        config.setVerbose(true);
+    })
+    ```
+    <!--- KNIT exampleWeaveExporterJava02.java -->
 
 When visualized in W&B Weave, the trace appears as follows:
-![W&B Weave traces](../../img/opentelemetry-weave-exporter-light.png#only-light)
-![W&B Weave traces](../../img/opentelemetry-weave-exporter-dark.png#only-dark)
+![W&B Weave traces](img/opentelemetry-weave-exporter-light.png#only-light)
+![W&B Weave traces](img/opentelemetry-weave-exporter-dark.png#only-dark)
 
 For more details, see the official [Weave OpenTelemetry Docs](https://weave-docs.wandb.ai/guides/tracking/otel/).
 
