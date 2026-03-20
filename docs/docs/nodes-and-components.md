@@ -7,14 +7,14 @@ In general, nodes let you encapsulate complex logic into reusable components tha
 different agent workflows. This guide will walk you through the existing nodes that can be used in your agent
 strategies.
 
-Each node is essentially a function that takes an input of a specific type and returns an output of a specific type.
+Each node is essentially a function (Kotlin) or action (Java) that takes an input of a specific type and returns an output of a specific type.
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["node"]
+    subgraph node ["Node"]
         execute(Do stuff)
     end
     
@@ -64,20 +64,20 @@ Here is how you can define a node that expects a string as input and returns the
     ```
     <!--- KNIT exampleNodesAndComponentsJava01.java -->
 
-For more information, see [`node()`](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase.node).
+For more information, see [node()](api:agents-core::ai.koog.agents.core.dsl.builder.node) (Kotlin) or [AIAgentNode.builder()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.builder) for Java.
 
 ## Utility nodes
 
-### nodeDoNothing
+### Pass-through node
 
-A simple pass-through node that does nothing and returns the input as output. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeDoNothing).
+A simple pass-through node that does nothing and returns the input as output. For details, see [nodeDoNothing](api:agents-core::ai.koog.agents.core.dsl.extension.nodeDoNothing) (Kotlin) or [AIAgentNode.doNothing()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.doNothing) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeDoNothing"]
+    subgraph node ["Pass-through node"]
         execute(Do nothing)
     end
     
@@ -139,17 +139,18 @@ Here is an example:
 
 ## LLM nodes
 
-### nodeAppendPrompt
+### Prompt preparation node
 
-A node that adds messages to the LLM prompt using the provided prompt builder.
-This is useful for modifying the conversation context before making an actual LLM request. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeUpdatePrompt).
+**A node that adds messages to the LLM prompt using the provided prompt builder.
+This is useful for modifying the conversation context before making an actual LLM request.** For details, see [nodeAppendPrompt](api:agents-core::ai.koog.agents.core.dsl.extension.nodeAppendPrompt) (Kotlin) or [AIAgentNode.appendPrompt()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNodeBuilderWithInput.appendPrompt
+) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeAppendPrompt"]
+    subgraph node ["Prompt preparation node"]
         execute(Append prompt)
     end
     
@@ -249,16 +250,16 @@ Here is an example:
     ```
     <!--- KNIT exampleNodesAndComponentsJava03.java -->
 
-### nodeLLMSendMessageOnlyCallingTools
+### Tool-only node
 
-A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageOnlyCallingTools).
+A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools. For details, see [nodeLLMSendMessageOnlyCallingTools](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageOnlyCallingTools) (Kotlin) or [AIAgentNode.llmSendMessageOnlyCallingTools()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendMessageOnlyCallingTools) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendMessageOnlyCallingTools"]
+    subgraph node ["Tool-only node"]
         execute(Request LLM expecting only tool calls)
     end
     
@@ -268,16 +269,16 @@ graph LR
 ```
 <!--- KNIT example-nodes-and-component-04.txt -->
 
-### nodeLLMSendMessageForceOneTool
+### Forced single tool use node
 
-A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageForceOneTool).
+A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool. For details, see [nodeLLMSendMessageForceOneTool](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageForceOneTool) (Kotlin) or [AIAgentNode.llmSendMessageForceOneTool()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendMessageForceOneTool) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendMessageForceOneTool"]
+    subgraph node ["Forced single tool use node"]
         execute(Request LLM expecting a specific tool call)
     end
     
@@ -287,17 +288,17 @@ graph LR
 ```
 <!--- KNIT example-nodes-and-component-05.txt -->
 
-### nodeLLMRequest
+### LLM request node
 
 A node that appends a user message to the LLM prompt and gets a response with optional tool usage. The node configuration determines whether
-tool calls are allowed during the processing of the message. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequest).
+tool calls are allowed during the processing of the message. For details, see [nodeLLMRequest](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequest) (Kotlin) or [AIAgentNode.llmRequest()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequest) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequest"]
+    subgraph node ["LLM request node"]
         execute(Request LLM)
     end
     
@@ -360,16 +361,16 @@ Here is an example:
     ```
     <!--- KNIT exampleNodesAndComponentsJava04.java -->
 
-### nodeLLMRequestStructured
+### LLM request node with structured response
 
-A node that appends a user message to the LLM prompt and requests structured data from the LLM with error correction capabilities. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured).
+A node that appends a user message to the LLM prompt and requests structured data from the LLM with error correction capabilities. For details, see [nodeLLMRequestStructured](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured) (Kotlin) or [AIAgentNode.llmRequestStructured()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestStructured) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequestStructured"]
+    subgraph node ["LLM request node, structured response"]
         execute(Request LLM structured)
     end
     
@@ -379,16 +380,16 @@ graph LR
 ```
 <!--- KNIT example-nodes-and-component-07.txt -->
 
-### nodeLLMRequestStreaming
+### LLM request node with streaming response
 
-A node that appends a user message to the LLM prompt and streams LLM response with or without stream data transformation. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming).
+A node that appends a user message to the LLM prompt and streams LLM response with or without stream data transformation. For details, see [nodeLLMRequestStreaming](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming) (Kotlin) or [AIAgentNode.llmRequestStreaming()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestStreaming) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequestStreaming"]
+    subgraph node ["LLM request node, streaming response"]
         execute(Request LLM streaming)
     end
     
@@ -398,16 +399,16 @@ graph LR
 ```
 <!--- KNIT example-nodes-and-component-08.txt -->
 
-### nodeLLMRequestMultiple
+### LLM request node with multiple responses
 
-A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple).
+A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [nodeLLMRequestMultiple](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple) (Kotlin) or [AIAgentNode.llmRequestMultiple()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestMultiple) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequestMultiple"]
+    subgraph node ["LLM request node, multiple responses"]
         execute(Request LLM expecting multiple responses)
     end
     
@@ -472,17 +473,16 @@ Here is an example:
     ```
     <!--- KNIT exampleNodesAndComponentsJava05.java -->
 
-### nodeLLMCompressHistory
+### History compression node
 
-A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a concise summary (TL;DR). For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory).
-This is useful for managing long conversations by compressing the history to reduce token usage.
+A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a concise summary (TL;DR). This is useful for managing long conversations by compressing the history to reduce token usage. For details, see [nodeLLMCompressHistory](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory) (Kotlin) or [AIAgentNode.llmCompressHistory()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmCompressHistory) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMCompressHistory"]
+    subgraph node ["History compression node"]
         execute(Compress current prompt)
     end
     
@@ -558,16 +558,16 @@ Here is an example:
 
 ## Tool nodes
 
-### nodeExecuteTool
+### Tool execution node
 
-A node that executes a single tool call and returns its result. This node is used to handle tool calls made by the LLM. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteTool).
+A node that executes a single tool call and returns its result. This node is used to handle tool calls made by the LLM. For details, see [nodeExecuteTool](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteTool) (Kotlin) or [AIAgentNode.executeTool()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.executeTool) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeExecuteTool"]
+    subgraph node ["Tool execution node"]
         execute(Execute tool call)
     end
     
@@ -635,16 +635,16 @@ Here is an example:
     ```
     <!--- KNIT exampleNodesAndComponentsJava07.java -->
 
-### nodeLLMSendToolResult
+### Tool result follow-up node
 
-A node that adds a tool result to the prompt and requests an LLM response. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult).
+A node that adds a tool result to the prompt and requests an LLM response. For details, see [nodeLLMSendToolResult](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult) (Kotlin) or [AIAgentNode.llmSendToolResult()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendToolResult) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendToolResult"]
+    subgraph node ["Tool result follow-up node"]
         execute(Request LLM)
     end
     
@@ -705,16 +705,16 @@ Here is an example:
     ```
     <!--- KNIT exampleNodesAndComponentsJava08.java -->
 
-### nodeExecuteMultipleTools
+### Multi-tool execution node
 
-A node that executes multiple tool calls. These calls can optionally be executed in parallel. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools).
+A node that executes multiple tool calls. These calls can optionally be executed in parallel. For details, see [nodeExecuteMultipleTools](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools) (Kotlin) or [AIAgentNode.executeMultipleTools()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.executeMultipleTools) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeExecuteMultipleTools"]
+    subgraph node ["Multi-tool execution node"]
         execute(Execute multiple tool calls)
     end
     
@@ -788,16 +788,16 @@ Here is an example:
     ```
     <!--- KNIT exampleNodesAndComponentsJava09.java -->
 
-### nodeLLMSendMultipleToolResults
+### Multiple tool result follow-up node
 
-A node that adds multiple tool results to the prompt and gets multiple LLM responses. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults).
+A node that adds multiple tool results to the prompt and gets multiple LLM responses. For details, see [nodeLLMSendMultipleToolResults](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults) (Kotlin) or [AIAgentNode.llmSendMultipleToolResults()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendMultipleToolResults) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendMultipleToolResults"]
+    subgraph node ["Multiple tool result follow-up node"]
         execute(Request LLM expecting multiple responses)
     end
     
@@ -861,9 +861,11 @@ Here is an example:
 
 ## Node output transformation
 
-The framework provides the `transform` extension function that allows you to create transformed versions of nodes 
-that apply transformations to their output. This is useful when you need to convert the output of a node 
-to a different type or format while preserving the original node's functionality.
+The framework provides the `transform` extension function in Kotlin that allows you to create 
+transformed versions of nodes that apply transformations to their output. In Java, you achieve 
+the same result by creating intermediate nodes with explicit transformations. This is useful 
+when you need to convert the output of a node to a different type or format while preserving the
+original node's functionality.
 
 ```mermaid
 graph LR
@@ -883,9 +885,9 @@ graph LR
 ```
 <!--- KNIT example-nodes-and-component-15.txt -->
 
-### transform
+### Node transformation
 
-The [`transform()`](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate.transform) function creates a new `AIAgentNodeDelegate` that wraps the original node and applies a transformation function to its output.
+In Kotlin, the [transform()](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate.transform) function creates a new `AIAgentNodeDelegate` that wraps the original node and applies a transformation function to its output. In Java, you need to manually compose nodes with transformation logic using `AIAgentNode.builder()` and explicit type parameters.
 
 === "Kotlin"
 
@@ -975,7 +977,7 @@ Transform the output of a custom node to a different data type:
 
 #### Built-in node transformation
 
-Transform the output of built-in nodes like `nodeLLMRequest`:
+Transform the output of built-in nodes like `nodeLLMRequest` (Kotlin) or `AIAgentNode.llmRequest()` (Java):
 
 === "Kotlin"
 
@@ -1037,7 +1039,7 @@ Transform the output of built-in nodes like `nodeLLMRequest`:
 
 ## Predefined subgraphs
 
-The framework provides predefined subgraphs that encapsulate commonly used patterns and workflows. These subgraphs simplify the development of complex agent strategies by handling the creation of base nodes and edges automatically.
+The framework provides predefined subgraphs that encapsulate commonly used patterns and workflows. These subgraphs simplify the development of complex agent strategies by handling the creation of base nodes and edges automatically. The API is consistent between Kotlin and Java, with Kotlin using DSL functions and Java using builder methods.
 
 By using the predefined subgraphs, you can implement various popular pipelines. Here is an example:
 
@@ -1045,9 +1047,9 @@ By using the predefined subgraphs, you can implement various popular pipelines. 
 2. Run the task.
 3. Validate the task results. If the results are incorrect, return to step 2 with a feedback message to make adjustments.
 
-### subgraphWithTask
+### Task execution subgraph
 
-A subgraph that performs a specific task using provided tools and returns a structured result. It supports multi-response LLM interactions (the assistant may produce several responses interleaved with tool calls) and lets you control how tool calls are executed. For details, see [API reference](api:agents-ext::ai.koog.agents.ext.agent.subgraphWithTask).
+A subgraph that performs a specific task using provided tools and returns a structured result. It supports multi-response LLM interactions (the assistant may produce several responses interleaved with tool calls) and lets you control how tool calls are executed. In Kotlin, use [subgraphWithTask()](api:agents-core::ai.koog.agents.ext.agent.subgraphWithTask), and in Java, use [AIAgentSubgraph.builder().withTask()](api:agents-core::ai.koog.agents.core.agent.entity.TypedAIAgentSubgraphBuilder.withTask).
 
 You can use this subgraph for the following purposes:
 
@@ -1060,8 +1062,9 @@ You can use this subgraph for the following purposes:
 
 The API allows you to fine‑tune execution with optional parameters:
 
-- runMode: controls how tool calls are executed during the task (sequential by default). Use this to switch between different tool execution strategies when supported by the underlying model/executor.
-- assistantResponseRepeatMax: limits how many assistant responses are allowed before concluding the task cannot be completed (defaults to a safe internal limit if not provided).
+- [runMode](api:agents-core::ai.koog.agents.core.agent.entity.SubgraphWithTaskBuilder.runMode): controls how tool calls are executed during the task (sequential by default). Use this to switch between different tool execution strategies when supported by the underlying model/executor.
+- [assistantResponseRepeatMax](api:agents-core::ai.koog.agents.core.agent.entity.SubgraphWithTaskBuilder.assistantResponseRepeatMax
+  ): limits how many assistant responses are allowed before concluding the task cannot be completed (defaults to a safe internal limit if not provided).
 
 You can provide a task to the subgraph as text, configure the LLM if needed, and provide the necessary tools, and the subgraph will process and solve the task. Here is an example:
 
@@ -1103,6 +1106,7 @@ You can provide a task to the subgraph as text, configure the LLM if needed, and
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.agent.ToolCalls;
     import ai.koog.agents.ext.tool.SayToUser;
     import java.util.List;
     class exampleNodesAndComponentsJava13 {
@@ -1127,13 +1131,16 @@ You can provide a task to the subgraph as text, configure the LLM if needed, and
             "You are a helpful assistant that can answer questions about various topics.\n" +
             "Please help with the following query:\n" +
             userQuery)
+        .runMode(ToolCalls.SEQUENTIAL)
+        .assistantResponseRepeatMax(3)
         .build();
     ```
     <!--- KNIT exampleNodesAndComponentsJava13.java -->
 
-### subgraphWithVerification
+### Task execution subgraph with verification
 
-A special version of `subgraphWithTask` that verifies whether a task was performed correctly and provides details about any issues encountered. This subgraph is useful for workflows that require validation or quality checks. For details, see [API reference](api:agents-ext::ai.koog.agents.ext.agent.subgraphWithVerification).
+A special version of `subgraphWithTask` that verifies whether a task was performed correctly and provides details about any issues encountered. This subgraph is useful for workflows that require validation or quality checks. In Kotlin, use [subgraphWithVerification()](api:agents-core::ai.koog.agents.ext.agent.subgraphWithVerification
+), and in Java, use `AIAgentSubgraph.builder().withVerification()`.
 
 You can use this subgraph for the following purposes:
 
@@ -1142,7 +1149,7 @@ You can use this subgraph for the following purposes:
 - Create self-validating components.
 - Generate structured verification results with success/failure status and detailed feedback.
 
-The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a `CriticResult` that indicates whether a task was completed successfully and provides detailed feedback.
+The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a [CriticResult](api:agents-core::ai.koog.agents.ext.agent.CriticResult) that indicates whether a task was completed successfully and provides detailed feedback.
 Here is an example:
 
 === "Kotlin"
@@ -1187,6 +1194,7 @@ Here is an example:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.agent.ToolCalls;
     import ai.koog.agents.ext.tool.SayToUser;
     import java.util.List;
     class exampleNodesAndComponentsJava14 {
@@ -1213,13 +1221,15 @@ Here is an example:
             "3. It follows the project's coding standards\n\n" +
             "Code to verify:\n" +
             codeToVerify)
+        .runMode(ToolCalls.SEQUENTIAL)
+        .assistantResponseRepeatMax(3)
         .build();
     ```
     <!--- KNIT exampleNodesAndComponentsJava14.java -->
 
 ## Predefined strategies and common strategy patterns
 
-The framework provides predefined strategies that combine various nodes.
+Koog provides predefined strategies that combine various nodes.
 The nodes are connected using edges to define the flow of operations, with conditions that specify when to follow each edge.
 
 You can integrate these strategies into your agent workflows if needed.

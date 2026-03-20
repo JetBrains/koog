@@ -24,15 +24,20 @@ History compression is performed at specific steps in the agent workflow:
 
 There are two main approaches to implementing history compression in your agent:
 
-- In a strategy graph.
-- In a custom node.
+- In a strategy graph
+- In a custom node (Kotlin)
+
+!!! warning 
+    Custom nodes are available only in Kotlin.
 
 ### History compression in a strategy graph
 
-To compress the history in a strategy graph, you need to use the `nodeLLMCompressHistory` node.
+To compress the history in a strategy graph, you need to use the `nodeLLMCompressHistory` node in Kotlin or `AIAgentNode.llmCompressHistory()` in Java.
 Depending on which step you decide to perform compression, the following scenarios are available: 
 
-* To compress the history when it becomes too long, you can define a helper function and add the `nodeLLMCompressHistory` node to your strategy graph with the following logic:
+* To compress the history when it becomes too long, check the message count in your edge 
+  conditions and add a history compression node. In Kotlin, you can define a helper extension 
+  function. In Java, use inline lambda expressions in `.onCondition()`:
 
 === "Kotlin"
 
@@ -170,7 +175,7 @@ Depending on which step you decide to perform compression, the following scenari
 In this example, the strategy checks if the history is too long after each tool call.
 The history is compressed before sending the tool result back to the LLM. This prevents the context from growing during long conversations.
 
-* To compress the history between the logical steps (subgraphs) of your strategy, you can implement your strateg as follows:
+* To compress the history between the logical steps (subgraphs) of your strategy, you can implement your strategy as follows:
 
 === "Kotlin"
 
@@ -248,7 +253,7 @@ In this example, the history is compressed after completing the information coll
 
 ### History compression in a custom node
 
-If you are implementing a custom node, you can compress history using the `replaceHistoryWithTLDR()` function as follows:
+If you are implementing a custom node, you can compress history using the `replaceHistoryWithTLDR()` function (Kotlin) as follows:
 
 === "Kotlin"
 
@@ -271,25 +276,13 @@ If you are implementing a custom node, you can compress history using the `repla
     ```
     <!--- KNIT example-history-compression-03.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-01.java -->
-
 This approach gives you more flexibility to implement compression at any point in your custom node logic, based on your specific requirements.
 
 To learn more about custom nodes, see [Custom nodes](custom-nodes.md).
 
 ## History compression strategies
 
-You can customize the compression process by passing an optional `strategy` parameter to `nodeLLMCompressHistory(strategy=...)` or to `replaceHistoryWithTLDR(strategy=...)`.
+You can customize the compression process by passing an optional `strategy` parameter to `nodeLLMCompressHistory(strategy=...)` or `replaceHistoryWithTLDR(strategy=...)` (Kotllin), or `.compressionStrategy()` (Java).
 The framework provides several built-in strategies.
 
 ### WholeHistory (Default)
@@ -354,7 +347,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava03.java -->
 
-* In a custom node:
+* In a custom node (Kotlin only):
 
 === "Kotlin"
 
@@ -377,18 +370,6 @@ You can use it as follows:
     }
     ```
     <!--- KNIT example-history-compression-05.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-02.java -->
 
 ### FromLastNMessages
 
@@ -452,7 +433,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava04.java -->
 
-* In a custom node:
+* In a custom node (Kotlin only):
 
 === "Kotlin"
 
@@ -477,17 +458,6 @@ You can use it as follows:
     ```
     <!--- KNIT example-history-compression-07.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-03.java -->
 
 ### Chunked
 
@@ -551,7 +521,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava05.java -->
 
-* In a custom node:
+* In a custom node (Kotlin only):
 
 === "Kotlin"
 
@@ -575,18 +545,6 @@ You can use it as follows:
     }
     ```
     <!--- KNIT example-history-compression-09.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-04.java -->
 
 ### RetrieveFactsFromHistory
 
@@ -693,7 +651,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava06.java -->
 
-* In a custom node:
+* In a custom node (Kotlin only):
 
 === "Kotlin"
 
@@ -744,19 +702,10 @@ You can use it as follows:
     ```
     <!--- KNIT example-history-compression-11.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-05.java -->
-
 ## Custom history compression strategy implementation
+
+!!! warning
+    Custom history compression strategies are available only in Kotlin.
 
 You can create your own history compression strategy by extending the `HistoryCompressionStrategy` abstract class and implementing the `compress` method.
 
@@ -802,18 +751,6 @@ Here is an example:
     ```
     <!--- KNIT example-history-compression-12.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-06.java -->
-
 In this example, the custom strategy filters messages that contain the word "important" and keeps only those in the compressed history.
 
 Then you can use it as follows:
@@ -841,18 +778,6 @@ Then you can use it as follows:
     ```
     <!--- KNIT example-history-compression-13.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-07.java -->
-
 * In a custom node:
 
 === "Kotlin"
@@ -878,24 +803,12 @@ Then you can use it as follows:
     ```
     <!--- KNIT example-history-compression-14.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-08.java -->
-
 ##  Memory preservation during compression
 
-All history compression methods have the `preserveMemory` parameter that determines whether memory-related messages should be preserved during compression.
+All history compression methods support memory preservation, which determines whether memory-related messages should be preserved during compression. In Kotlin, use the `preserveMemory` parameter. In Java, use the `.preserveMemory()` builder method.
 These are messages that contain facts retrieved from memory or indicate that the memory feature is not enabled.
 
-You can use the `preserveMemory` parameter as follows:
+You can use the `preserveMemory` parameter (Kotlin) and the `.preserveMemory()` builder method (Java) as follows:
 
 * In a strategy graph:
 
@@ -952,7 +865,7 @@ You can use the `preserveMemory` parameter as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava07.java -->
 
-* In a custom node:
+* In a custom node (Kotlin only):
 
 === "Kotlin"
 
@@ -979,15 +892,3 @@ You can use the `preserveMemory` parameter as follows:
     }
     ```
     <!--- KNIT example-history-compression-16.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-history-compression-java-09.java -->
