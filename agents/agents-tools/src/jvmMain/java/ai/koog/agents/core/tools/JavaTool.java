@@ -100,10 +100,8 @@ public abstract class JavaTool<TArgs, TResult> extends Tool<TArgs, TResult> {
         TArgs args,
         @NotNull Continuation<? super TResult> $completion
     ) {
-        return CoroutineUtilsKt.runBlockingIfRequired(
-            $completion.getContext(),
-            ($completionLambda) ->  execute(args)
-        );
+        // FIXME schedule on a different dispatcher to avoid blocking
+        return execute(args);
     }
 
     /**
