@@ -393,71 +393,89 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         )
     }
 
+    private fun OpenAIMessage.Assistant.reasoningMessageOrNull(metaInfo: ResponseMetaInfo): Message.Reasoning? =
+        if (reasoningContent != null) {
+            Message.Reasoning(
+                content = reasoningContent,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
+
+    private fun OpenAIMessage.Assistant.toolCallMessages(metaInfo: ResponseMetaInfo): List<Message.Tool.Call> =
+        toolCalls?.map { toolCall ->
+            Message.Tool.Call(
+                id = toolCall.id,
+                tool = toolCall.function.name,
+                /*
+                 If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
+                 But we always expect arguments to be a JSON object. Fixing this.
+                 */
+                content = toolCall.function.arguments
+                    .takeIf { it.isNotEmpty() }
+                    ?: "{}",
+                metaInfo = metaInfo
+            )
+        } ?: emptyList()
+
+    private fun OpenAIMessage.Assistant.assistantMessageOrNull(
+        finishReason: String?,
+        metaInfo: ResponseMetaInfo
+    ): Message.Assistant? =
+        if (content != null && content.text().isNotEmpty()) {
+            Message.Assistant(
+                content = this.content.text(),
+                finishReason = finishReason,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
+
+    private fun OpenAIMessage.Assistant.audioMessageOrNull(
+        metaInfo: ResponseMetaInfo,
+        finishReason: String? = null,
+    ): Message.Assistant? =
+        if (audio?.data != null) {
+            Message.Assistant(
+                parts = buildList {
+                    audio.transcript?.let { add(ContentPart.Text(it)) }
+                    add(
+                        ContentPart.Audio(
+                            content = AttachmentContent.Binary.Base64(audio.data),
+                            format = "unknown", // FIXME: clarify format from response
+                        )
+                    )
+                },
+                finishReason = finishReason,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
+
     @OptIn(ExperimentalEncodingApi::class)
     protected fun OpenAIMessage.toMessageResponses(
         finishReason: String?,
         metaInfo: ResponseMetaInfo
     ): List<Message.Response> {
-        return when {
-            this is OpenAIMessage.Assistant && !this.toolCalls.isNullOrEmpty() -> {
-                this.toolCalls.map { toolCall ->
-                    Message.Tool.Call(
-                        id = toolCall.id,
-                        tool = toolCall.function.name,
-                        /*
-                         If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
-                         But we always expect arguments to be a JSON object. Fixing this.
-                         */
-                        content = toolCall.function.arguments
-                            .takeIf { it.isNotEmpty() }
-                            ?: "{}",
-                        metaInfo = metaInfo
-                    )
-                }
+        check(this is OpenAIMessage.Assistant) { "Expected OpenAIMessage.Assistant, got $this" }
+        val messageResponses = sequence {
+            yield(reasoningMessageOrNull(metaInfo))
+            yieldAll(toolCallMessages(metaInfo))
+            yield(assistantMessageOrNull(finishReason, metaInfo))
+            yield(audioMessageOrNull(metaInfo, finishReason))
+        }.filterNotNull().toList()
+        if (messageResponses.isEmpty()) {
+            if (finishReason != null) {
+                return listOf(Message.Assistant("", metaInfo, finishReason))
             }
-
-            this is OpenAIMessage.Assistant && this.reasoningContent != null && this.content != null -> listOf(
-                Message.Reasoning(
-                    content = this.reasoningContent,
-                    metaInfo = metaInfo
-                ),
-                Message.Assistant(
-                    content = this.content.text(),
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            this.content != null -> listOf(
-                Message.Assistant(
-                    content = this.content!!.text(),
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            this is OpenAIMessage.Assistant && this.audio?.data != null -> listOf(
-                Message.Assistant(
-                    parts = buildList {
-                        this@toMessageResponses.audio.transcript?.let { add(ContentPart.Text(it)) }
-                        add(
-                            ContentPart.Audio(
-                                content = AttachmentContent.Binary.Base64(this@toMessageResponses.audio.data),
-                                format = "unknown", // FIXME: clarify format from response
-                            )
-                        )
-                    },
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            else -> {
-                val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
-                logger.error(exception) { exception.message }
-                throw exception
-            }
+            val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
+            logger.error(exception) { exception.message }
+            throw exception
         }
+        return messageResponses
     }
 
     protected fun LLModel.requireCapability(capability: LLMCapability, message: String? = null) {
