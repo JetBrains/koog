@@ -281,26 +281,28 @@ public sealed interface Message {
          * @property tool The name of the tool that provided the result.
          * @property parts The parts of the tool result. Only the [ContentPart.Text] part is allowed.
          * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
+         * @property isError Whether this tool result represents an error. Defaults to false.
          */
         @Serializable
         public data class Result(
             override val id: String?,
             override val tool: String,
             override val parts: List<ContentPart.Text>,
-            override val metaInfo: RequestMetaInfo
+            override val metaInfo: RequestMetaInfo,
+            val isError: Boolean = false
         ) : Tool, Request {
 
             /**
              * Single content part tool result message constructor
              */
-            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo) :
-                this(id, tool, listOf(part), metaInfo)
+            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo, isError: Boolean = false) :
+                this(id, tool, listOf(part), metaInfo, isError)
 
             /**
              * Text content tool result message constructor
              */
-            public constructor(id: String?, tool: String, content: String, metaInfo: RequestMetaInfo) :
-                this(id, tool, ContentPart.Text(content), metaInfo)
+            public constructor(id: String?, tool: String, content: String, metaInfo: RequestMetaInfo, isError: Boolean = false) :
+                this(id, tool, ContentPart.Text(content), metaInfo, isError)
 
             override val role: Role = Role.Tool
         }
