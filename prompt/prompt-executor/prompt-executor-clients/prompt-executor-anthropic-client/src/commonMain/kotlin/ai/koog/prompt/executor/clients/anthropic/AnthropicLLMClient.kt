@@ -594,8 +594,8 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         }
 
         return when {
-            // Fix the situation when the model decides to both call tools and talk
-            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+            // When the model calls tools, keep Reasoning (for thinking) and Tool.Call, filter out Assistant text
+            responses.any { it is Message.Tool.Call } -> responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
 
             // If no messages where returned, return an empty message and check stopReason
             responses.isEmpty() -> listOf(
