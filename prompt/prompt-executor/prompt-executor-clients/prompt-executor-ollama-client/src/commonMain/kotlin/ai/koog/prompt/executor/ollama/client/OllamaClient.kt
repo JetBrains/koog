@@ -356,6 +356,14 @@ public class OllamaClient @JvmOverloads constructor(
             setBody(EmbeddingRequestDTO(model = model.id, prompt = text))
         }
 
+        if (!response.status.isSuccess()) {
+            val errorBody = response.bodyAsText()
+            throw LLMClientException(
+                clientName,
+                "Embedding request failed (HTTP ${response.status.value}): $errorBody"
+            )
+        }
+
         val embeddingResponse = response.body<EmbeddingResponseDTO>()
         return embeddingResponse.embedding
     }
