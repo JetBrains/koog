@@ -154,8 +154,88 @@ This is useful for avoiding rate limits, improving throughput, and implementing 
 
 When you execute prompts with this executor, requests to OpenAI models will alternate between `openAI1` and `openAI2` using the round-robin strategy.
 Requests to Anthropic models always go to the single `anthropic` client, as round-robin maintains an independent counter per provider.
+This executor also supports [model selection](#model-selection).
 
 You can also implement custom routing strategies by creating a class that implements the [`LLMClientRouter`](api:prompt-executor-model::ai.koog.prompt.executor.llms.LLMClientRouter) interface.
+
+## Model selection
+
+Model selection lets you choose the most suitable model from the models available in the executor.
+This is useful when you want selection to depend on model characteristics, such as capabilities, context length, or output limits.
+For now, model selection is available only in [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor).
+
+In the default implementation, [`DefaultModelSelector`](api:prompt-executor-model::ai.koog.prompt.executor.model.DefaultModelSelector), selection is step-based:
+
+- **Filters** (hard constraints) remove models.
+- **Rankers** (soft ordering) prioritize remaining models.
+
+See example below for sample usage:
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.selection.execute
+    import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+    import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
+    import ai.koog.prompt.llm.LLMCapability
+    import kotlinx.coroutines.runBlocking
+
+    fun runSelection(promptExecutor: ai.koog.prompt.executor.selection.SelectingPromptExecutor) = runBlocking {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+
+    ```kotlin
+    // Create routing executor with multiple LLM clients
+    val routingExecutor = RoutingLLMPromptExecutor(
+        OpenAILLMClient(apiKey = "openai-key-1"),
+        OpenAILLMClient(apiKey = "openai-key-2"),
+        AnthropicLLMClient(apiKey = "anthropic-key")
+    )
+
+    // Run prompt with model selection based on required characteristics
+    val prompt = prompt("demo"){ system("You are a helpful assistant.") }
+    val response = routingExecutor.execute(prompt) {
+        withCapabilities(LLMCapability.Vision.Image, LLMCapability.ToolChoice)
+        withMinContextLength(100_000)
+        withMostOutputTokens()
+    }
+    ```
+    <!--- KNIT example-prompt-executors-04.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // Create routing executor with multiple LLM clients
+    RoutingLLMPromptExecutor routingExecutor = new RoutingLLMPromptExecutor(
+        new OpenAILLMClient("openai-key-1"),
+        new OpenAILLMClient("openai-key-2"),
+        new AnthropicLLMClient("anthropic-key")
+    );
+
+    // Build a model selector with the required characteristics
+    ModelSelector selector = ModelSelector.builder()
+        .withCapabilities(LLMCapability.Vision.Image.INSTANCE, LLMCapability.ToolChoice.INSTANCE)
+        .withMinContextLength(100_000L)
+        .withMostOutputTokens()
+        .build();
+
+    // Run prompt with model selection
+    Prompt prompt = Prompt.builder("demo")
+        .system("You are a helpful assistant.")
+        .build();
+    List<Message.Response> response = routingExecutor.execute(prompt, selector);
+    ```
+    <!--- KNIT example-prompt-executors-java-04.java -->
 
 ## Pre-defined prompt executors
 
@@ -196,7 +276,7 @@ Here is an example of creating a pre-defined executor:
     // Create an OpenAI executor
     val promptExecutor = simpleOpenAIExecutor("OPENAI_API_KEY")
     ```
-    <!--- KNIT example-prompt-executors-04.kt -->
+    <!--- KNIT example-prompt-executors-05.kt -->
 
 === "Java"
 
@@ -246,7 +326,7 @@ Here is an example:
         model = OpenAIModels.Chat.GPT4o
     )
     ```
-    <!--- KNIT example-prompt-executors-05.kt -->
+    <!--- KNIT example-prompt-executors-06.kt -->
 
 === "Java"
 
@@ -330,7 +410,7 @@ Here is an example of switching between providers:
     // Run the prompt with an Anthropic model; the prompt executor automatically switches to the Anthropic client
     val anthropicResult = executor.execute(p, AnthropicModels.Sonnet_4_5)
     ```
-    <!--- KNIT example-prompt-executors-06.kt -->
+    <!--- KNIT example-prompt-executors-07.kt -->
 
 === "Java"
 
@@ -400,7 +480,7 @@ To configure the fallback mechanism, pass fallback settings when creating a `Mul
         )
     )
     ```
-    <!--- KNIT example-prompt-executors-07.kt -->
+    <!--- KNIT example-prompt-executors-08.kt -->
 
 === "Java"
 
@@ -463,7 +543,7 @@ the prompt executor will use the fallback model:
     // If you pass a Google model, the prompt executor will use the fallback model, as the Google client is not included
     val response = multiExecutor.execute(p, GoogleModels.Gemini2_5Pro)
     ```
-    <!--- KNIT example-prompt-executors-08.kt -->
+    <!--- KNIT example-prompt-executors-09.kt -->
 
 === "Java"
 
@@ -486,9 +566,3 @@ the prompt executor will use the fallback model:
 
 !!! note
     Fallbacks are available for the `execute()` and `executeMultipleChoices()` methods only.
-
-
-
-
-
-

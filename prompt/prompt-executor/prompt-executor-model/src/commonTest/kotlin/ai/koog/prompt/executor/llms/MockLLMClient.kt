@@ -4,6 +4,10 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
+import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MockLLMClient.ResponseSpec.Companion.executeStreamingSuccess
 import ai.koog.prompt.executor.llms.MockLLMClient.ResponseSpec.Companion.executeSuccess
 import ai.koog.prompt.llm.LLMProvider
@@ -21,7 +25,7 @@ import kotlin.jvm.JvmStatic
 internal class MockLLMClient @JvmOverloads constructor(
     private val provider: LLMProvider = LLMProvider.OpenAI,
     val responseSpec: ResponseSpec = ResponseSpec.defaultSpec(provider),
-    val models: List<LLModel> = emptyList(),
+    val models: List<LLModel> = modelsByProvider[provider] ?: emptyList()
 ) : LLMClient() {
 
     internal data class ResponseSpec(
@@ -111,6 +115,13 @@ internal class MockLLMClient @JvmOverloads constructor(
                 )
             )
         }
+
+        private val modelsByProvider = mapOf(
+            LLMProvider.OpenAI to OpenAIModels.models,
+            LLMProvider.Anthropic to AnthropicModels.models,
+            LLMProvider.Google to GoogleModels.models,
+            LLMProvider.DeepSeek to DeepSeekModels.models
+        )
     }
 
     override suspend fun execute(
