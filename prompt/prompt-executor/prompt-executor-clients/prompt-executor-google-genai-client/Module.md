@@ -13,7 +13,10 @@ and thinking models (Gemini 3).
 ## Usage
 
 ```kotlin
-val genaiClient = Client.builder().apiKey("your-api-key").build()
+val genaiClient = Client.builder()
+    .apiKey("your-api-key")
+    .vertexAI(false) // use Vertex API or not
+    .build()
 val llmClient = GoogleGenaiLLMClient(genaiClient)
 
 // Simple text generation

@@ -68,16 +68,18 @@ import kotlin.uuid.Uuid
  * This client delegates all API calls to [com.google.genai.Client] async methods,
  * bridging between Koog's internal types and the SDK's native types.
  *
- * @param client The configured Google GenAI SDK client.
- * @param fallbackThoughtSignature Thought signature used for thinking models when no signature is available.
+ * @property client The configured Google GenAI SDK client.
+ * @property llmProvider The provider for LLM configuration and execution.
+ * @property fallbackThoughtSignature Thought signature used for thinking models when no signature is available.
  *          Default to [DEFAULT_THOUGHT_SIGNATURE]
- * @param ioDispatcher Dispatcher for blocking stream iteration. Defaults to [Dispatchers.IO].
+ * @property ioDispatcher Dispatcher for blocking stream iteration. Defaults to [Dispatchers.IO].
  *   Pass a custom dispatcher for virtual threads, test dispatchers, or application-specific thread pools.
- * @param clock Clock instance used for tracking response metadata timestamps.
+ * @property clock Clock instance used for tracking response metadata timestamps.
  */
 @Suppress("TooManyFunctions")
 public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val client: com.google.genai.Client,
+    private val llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
     private val fallbackThoughtSignature: String = DEFAULT_THOUGHT_SIGNATURE,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO,
     private val clock: Clock = Clock.System
@@ -109,7 +111,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         return GoogleStandardJsonSchemaGenerator
     }
 
-    override fun llmProvider(): LLMProvider = LLMProvider.Google
+    override fun llmProvider(): LLMProvider = llmProvider
 
     @Suppress("TooGenericExceptionCaught")
     private suspend fun <T> callApi(block: suspend () -> T): T = try {
