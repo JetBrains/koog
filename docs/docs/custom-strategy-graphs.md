@@ -487,44 +487,6 @@ For workflows that require executing multiple tools in parallel, you can use the
     ```
     <!--- KNIT example-custom-strategy-graphs-07.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.entity.AIAgentEdge;
-    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
-    import ai.koog.agents.core.agent.entity.AIAgentNode;
-    import ai.koog.agents.core.agent.entity.AIAgentNodeBase;
-    import ai.koog.prompt.message.Message;
-    import java.util.List;
-    class exampleCustomStrategyGraphsJava07 {
-        public static void main(String[] args) {
-            var strategy = AIAgentGraphStrategy.builder("strategy_name")
-                .withInput(String.class)
-                .withOutput(String.class);
-             AIAgentNodeBase<String, List<Message.Tool.Call>> someNode =
-                (AIAgentNodeBase<String, List<Message.Tool.Call>>) (AIAgentNodeBase<?, ?>) AIAgentNode.builder("someNode")
-                    .withInput(String.class)
-                    .withOutput(List.class)
-                    .withAction((input, ctx) -> List.of())
-                    .build();
-    -->
-    <!--- SUFFIX
-        }
-    }
-    -->
-    ```java
-    var executeMultipleTools = AIAgentNode.executeMultipleTools(false, "executeMultipleTools");
-    var processMultipleResults = AIAgentNode.llmSendMultipleToolResults("processMultipleResults");
-
-    strategy.edge(AIAgentEdge.builder()
-        .from(someNode)
-        .to(executeMultipleTools)
-        .build());
-
-    strategy.edge(executeMultipleTools, processMultipleResults);
-    ```
-    <!--- KNIT exampleCustomStrategyGraphsJava07.java -->
-
 You can also use the `toParallelToolCallsRaw` extension function for streaming data:
 
 === "Kotlin"
@@ -539,18 +501,6 @@ You can also use the `toParallelToolCallsRaw` extension function for streaming d
     parseMarkdownStreamToBooks(markdownStream).toParallelToolCallsRaw(BookTool::class).collect()
     ```
     <!--- KNIT example-custom-strategy-graphs-08.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-custom-strategy-graphs-java-01.java -->
 
 To learn more, see [Tools](tools-overview.md#parallel-tool-calls). 
 
@@ -583,18 +533,6 @@ To initiate parallel node runs, use the `parallel` method:
     }
     ```
     <!--- KNIT example-custom-strategy-graphs-09.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    ```
-    <!--- KNIT example-custom-strategy-graphs-java-02.java -->
 
 The code above creates a node named `calc` that runs the `nodeCalcTokens`, `nodeCalcSymbols`, and `nodeCalcWords` nodes 
 in parallel and returns the results as an instance of `AsyncParallelResult`.
@@ -640,50 +578,6 @@ For complex workflows that require different paths based on certain conditions, 
     )
     ```
     <!--- KNIT example-custom-strategy-graphs-10.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.entity.AIAgentEdge;
-    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
-    import ai.koog.agents.core.agent.entity.AIAgentNode;
-    class exampleCustomStrategyGraphsJava08 {
-        public static void main(String[] args) {
-            var strategy = AIAgentGraphStrategy.builder("strategy_name")
-                .withInput(String.class)
-                .withOutput(String.class);
-    -->
-    <!--- SUFFIX
-        }
-    }
-    -->
-    ```java
-    var someNode = AIAgentNode.doNothing(String.class, "someNode");
-
-    var branchA = AIAgentNode.builder("branchA")
-        .withInput(String.class)
-        .withOutput(String.class)
-        .withAction((input, ctx) -> "Branch A: " + input)
-        .build();
-
-    var branchB = AIAgentNode.builder("branchB")
-        .withInput(String.class)
-        .withOutput(String.class)
-        .withAction((input, ctx) -> "Branch B: " + input)
-        .build();
-
-    strategy.edge(AIAgentEdge.builder()
-        .from(someNode)
-        .to(branchA)
-        .onCondition(input -> input.contains("A"))
-        .build());
-    strategy.edge(AIAgentEdge.builder()
-        .from(someNode)
-        .to(branchB)
-        .onCondition(input -> input.contains("B"))
-        .build());
-    ```
-    <!--- KNIT exampleCustomStrategyGraphsJava08.java -->
 
 ## Best practices
 
