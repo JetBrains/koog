@@ -1,50 +1,34 @@
 package ai.koog.integration.tests.utils
 
 object TestCredentials {
-    fun readTestAnthropicKeyFromEnv(): String {
-        return System.getenv("ANTHROPIC_API_TEST_KEY")
-            ?: error("ERROR: environment variable `ANTHROPIC_API_TEST_KEY` is not set")
+    private const val GUIDE_URL =
+        "https://github.com/JetBrains/koog/blob/develop/TESTING.md#required-api-tokens-for-integration-tests"
+
+    private fun requireEnv(name: String): String {
+        return System.getenv(name)
+            ?: error(
+                "Environment variable `$name` is not set. " +
+                    "See $GUIDE_URL for setup instructions."
+            )
     }
 
-    fun readTestOpenAIKeyFromEnv(): String {
-        return System.getenv("OPEN_AI_API_TEST_KEY")
-            ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` is not set")
-    }
+    fun readTestAnthropicKeyFromEnv(): String = requireEnv("ANTHROPIC_API_TEST_KEY")
 
-    fun readTestGoogleAIKeyFromEnv(): String {
-        return System.getenv("GEMINI_API_TEST_KEY")
-            ?: error("ERROR: environment variable `GEMINI_API_TEST_KEY` is not set")
-    }
+    fun readTestOpenAIKeyFromEnv(): String = requireEnv("OPEN_AI_API_TEST_KEY")
 
-    fun readTestOpenRouterKeyFromEnv(): String {
-        return System.getenv("OPEN_ROUTER_API_TEST_KEY")
-            ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` is not set")
-    }
+    fun readTestGoogleAIKeyFromEnv(): String = requireEnv("GEMINI_API_TEST_KEY")
 
-    fun readTestMistralAiKeyFromEnv(): String {
-        return System.getenv("MISTRAL_AI_API_TEST_KEY")
-            ?: error("ERROR: environment variable `MISTRAL_AI_API_TEST_KEY` is not set")
-    }
+    fun readTestOpenRouterKeyFromEnv(): String = requireEnv("OPEN_ROUTER_API_TEST_KEY")
 
-    fun readTestDashscopeKeyFromEnv(): String {
-        return System.getenv("DASHSCOPE_API_TEST_KEY")
-            ?: error("ERROR: environment variable `DASHSCOPE_API_TEST_KEY` is not set")
-    }
+    fun readTestMistralAiKeyFromEnv(): String = requireEnv("MISTRAL_AI_API_TEST_KEY")
 
-    fun readAwsAccessKeyIdFromEnv(): String {
-        return System.getenv("AWS_ACCESS_KEY_ID")
-            ?: error("ERROR: environment variable `AWS_ACCESS_KEY_ID` is not set")
-    }
+    fun readTestDashscopeKeyFromEnv(): String = requireEnv("DASHSCOPE_API_TEST_KEY")
 
-    fun readAwsSecretAccessKeyFromEnv(): String {
-        return System.getenv("AWS_SECRET_ACCESS_KEY")
-            ?: error("ERROR: environment variable `AWS_SECRET_ACCESS_KEY` is not set")
-    }
+    fun readAwsAccessKeyIdFromEnv(): String = requireEnv("AWS_ACCESS_KEY_ID")
 
-    fun readAwsBedrockBearerTokenFromEnv(): String {
-        return System.getenv("AWS_BEARER_TOKEN_BEDROCK")
-            ?: error("ERROR: environment variable `AWS_BEARER_TOKEN_BEDROCK` is not set")
-    }
+    fun readAwsSecretAccessKeyFromEnv(): String = requireEnv("AWS_SECRET_ACCESS_KEY")
+
+    fun readAwsBedrockBearerTokenFromEnv(): String = requireEnv("AWS_BEARER_TOKEN_BEDROCK")
 
     fun readAwsSessionTokenFromEnv(): String? {
         return System.getenv("AWS_SESSION_TOKEN")
@@ -53,13 +37,7 @@ object TestCredentials {
             }
     }
 
-    fun readAwsBedrockGuardrailIdFromEnv(): String {
-        return System.getenv("AWS_BEDROCK_GUARDRAIL_ID")
-            ?: error("ERROR: environment variable `AWS_BEDROCK_GUARDRAIL_ID` is not set")
-    }
+    fun readAwsBedrockGuardrailIdFromEnv(): String = requireEnv("AWS_BEDROCK_GUARDRAIL_ID")
 
-    fun readAwsBedrockGuardrailVersionFromEnv(): String {
-        return System.getenv("AWS_BEDROCK_GUARDRAIL_VERSION")
-            ?: error("ERROR: environment variable `AWS_BEDROCK_GUARDRAIL_VERSION` is not set")
-    }
+    fun readAwsBedrockGuardrailVersionFromEnv(): String = requireEnv("AWS_BEDROCK_GUARDRAIL_VERSION")
 }

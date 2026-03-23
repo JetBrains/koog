@@ -111,6 +111,19 @@ subprojects {
         outputToConsole = true
         coloredOutput = true
     }
+    val envVars = mapOf(
+        "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
+        "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
+        "AWS_BEARER_TOKEN_BEDROCK" to System.getenv("AWS_BEARER_TOKEN_BEDROCK"),
+        "AWS_SECRET_ACCESS_KEY" to System.getenv("AWS_SECRET_ACCESS_KEY"),
+        "AWS_BEDROCK_GUARDRAIL_ID" to System.getenv("AWS_BEDROCK_GUARDRAIL_ID"),
+        "AWS_BEDROCK_GUARDRAIL_VERSION" to System.getenv("AWS_BEDROCK_GUARDRAIL_VERSION"),
+        "DEEPSEEK_API_TEST_KEY" to System.getenv("DEEPSEEK_API_TEST_KEY"),
+        "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
+        "MISTRAL_AI_API_TEST_KEY" to System.getenv("MISTRAL_AI_API_TEST_KEY"),
+        "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
+        "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
+    ).filterValues { it != null }
 
     tasks.withType<Test> {
         testLogging {
@@ -118,21 +131,7 @@ subprojects {
             showExceptions = true
             exceptionFormat = FULL
         }
-        environment.putAll(
-            mapOf(
-                "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
-                "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
-                "AWS_BEARER_TOKEN_BEDROCK" to System.getenv("AWS_BEARER_TOKEN_BEDROCK"),
-                "AWS_SECRET_ACCESS_KEY" to System.getenv("AWS_SECRET_ACCESS_KEY"),
-                "AWS_BEDROCK_GUARDRAIL_ID" to System.getenv("AWS_BEDROCK_GUARDRAIL_ID"),
-                "AWS_BEDROCK_GUARDRAIL_VERSION" to System.getenv("AWS_BEDROCK_GUARDRAIL_VERSION"),
-                "DEEPSEEK_API_TEST_KEY" to System.getenv("DEEPSEEK_API_TEST_KEY"),
-                "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
-                "MISTRAL_AI_API_TEST_KEY" to System.getenv("MISTRAL_AI_API_TEST_KEY"),
-                "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
-                "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
-            )
-        )
+        environment.putAll(envVars)
     }
 }
 
