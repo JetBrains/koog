@@ -36,4 +36,20 @@ public actual class AIAgentConfig actual constructor(
                 maxAgentIterations = maxAgentIterations
             )
     }
+
+    internal actual fun copy(
+        prompt: Prompt,
+        model: LLModel,
+        maxAgentIterations: Int,
+        missingToolsConversionStrategy: MissingToolsConversionStrategy,
+        responseProcessor: ResponseProcessor?,
+        serializer: JSONSerializer
+    ) = AIAgentConfig(
+        prompt = prompt,
+        model = model,
+        maxAgentIterations = maxAgentIterations,
+        missingToolsConversionStrategy = missingToolsConversionStrategy,
+        responseProcessor = responseProcessor,
+        serializer = serializer
+    )
 }
