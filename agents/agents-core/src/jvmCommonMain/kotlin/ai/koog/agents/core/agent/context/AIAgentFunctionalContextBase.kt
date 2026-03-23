@@ -169,7 +169,8 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      *                       Defaults to true.
      * @param executorService An optional `ExecutorService` instance that enables custom thread management for the request.
      *                        Defaults to null.
-     * @return A [Message.Response] object containing the*/
+     * @return A [Message.Response] object containing the message received from the LLM.
+     */
     @JavaAPI
     @JvmOverloads
     public fun requestLLM(
