@@ -349,41 +349,51 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         val systemMessage = mutableListOf<SystemAnthropicMessage>()
         val messages = mutableListOf<AnthropicMessage>()
 
+        // Coalesce consecutive assistant-role content blocks (Reasoning, Assistant, Tool.Call)
+        // into a single AnthropicMessage.Assistant. When extended thinking is enabled with
+        // tool use, thinking and tool_use blocks must be in the same assistant message.
+        // See: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
+        val pendingAssistantContent = mutableListOf<AnthropicContent>()
+
+        fun flushAssistant() {
+            if (pendingAssistantContent.isNotEmpty()) {
+                messages.add(AnthropicMessage.Assistant(content = pendingAssistantContent.toList()))
+                pendingAssistantContent.clear()
+            }
+        }
+
         for (message in prompt.messages) {
             when (message) {
                 is Message.System -> {
+                    // System messages normally only appear at the start of a prompt, but
+                    // flush as a safeguard in case one ever appears after assistant content.
+                    flushAssistant()
                     if (!message.content.isEmpty()) {
                         systemMessage.add(SystemAnthropicMessage(message.content))
                     }
                 }
 
                 is Message.User -> {
+                    flushAssistant()
                     messages.add(message.toAnthropicUserMessage(model))
                 }
 
                 is Message.Assistant -> {
-                    messages.add(
-                        AnthropicMessage.Assistant(
-                            content = listOf(AnthropicContent.Text(message.content))
-                        )
-                    )
+                    pendingAssistantContent.add(AnthropicContent.Text(message.content))
                 }
 
                 is Message.Reasoning -> {
-                    messages.add(
-                        AnthropicMessage.Assistant(
-                            content = listOf(
-                                AnthropicContent.Thinking(
-                                    signature = message.encrypted
-                                        ?: throw IllegalArgumentException("Encrypted signature is required for reasoning messages but was null"),
-                                    thinking = message.content
-                                )
-                            )
+                    pendingAssistantContent.add(
+                        AnthropicContent.Thinking(
+                            signature = message.encrypted
+                                ?: throw IllegalArgumentException("Encrypted signature is required for reasoning messages but was null"),
+                            thinking = message.content
                         )
                     )
                 }
 
                 is Message.Tool.Result -> {
+                    flushAssistant()
                     messages.add(
                         AnthropicMessage.User(
                             content = listOf(
@@ -397,21 +407,17 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 }
 
                 is Message.Tool.Call -> {
-                    // Create a new assistant message with the tool call
-                    messages.add(
-                        AnthropicMessage.Assistant(
-                            content = listOf(
-                                AnthropicContent.ToolUse(
-                                    id = message.id ?: Uuid.random().toString(),
-                                    name = message.tool,
-                                    input = Json.parseToJsonElement(message.content).jsonObject
-                                )
-                            )
+                    pendingAssistantContent.add(
+                        AnthropicContent.ToolUse(
+                            id = message.id ?: Uuid.random().toString(),
+                            name = message.tool,
+                            input = Json.parseToJsonElement(message.content).jsonObject
                         )
                     )
                 }
             }
         }
+        flushAssistant()
 
         val anthropicTools = tools.map { tool ->
             val properties = mutableMapOf<String, JsonElement>()
@@ -594,8 +600,8 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         }
 
         return when {
-            // Fix the situation when the model decides to both call tools and talk
-            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+            // When the model calls tools, keep Reasoning (for thinking) and Tool.Call, filter out Assistant text
+            responses.any { it is Message.Tool.Call } -> responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
 
             // If no messages where returned, return an empty message and check stopReason
             responses.isEmpty() -> listOf(

@@ -377,7 +377,16 @@ public sealed interface AnthropicThinking {
     ) : AnthropicThinking
 
     /**
-     *
+     * Adaptive thinking mode for Opus 4.6+ and Sonnet 4.6+.
+     * The model dynamically decides when and how much to think.
+     * Enables interleaved thinking (thinking between tool calls) automatically on Opus 4.6.
+     */
+    @Serializable
+    @SerialName("adaptive")
+    public class Adaptive : AnthropicThinking
+
+    /**
+     * Disables extended thinking.
      */
     @Serializable
     @SerialName("disabled")
