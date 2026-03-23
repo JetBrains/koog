@@ -17,7 +17,6 @@ import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.asCoroutineContext
 import ai.koog.agents.core.utils.runOnLLMDispatcher
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.prompt.executor.model.StructureFixingParser
@@ -27,6 +26,8 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.coroutines.asCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,6 +37,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow
 import kotlin.reflect.KClass
 
+@OptIn(InternalKoogUtils::class)
 @Suppress("MissingKDocForPublicAPI")
 public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipeline> internal actual constructor(
     @PublishedApi

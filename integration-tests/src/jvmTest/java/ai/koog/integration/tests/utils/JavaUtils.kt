@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.core.utils.runBlockingIfRequired
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
@@ -21,6 +20,8 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.coroutines.withSuspend
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CopyOnWriteArrayList
@@ -32,7 +33,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(InternalAgentsApi::class)
+@OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 object JavaUtils {
     @JvmStatic
     fun assumeAvailable(provider: LLMProvider) {
@@ -44,7 +45,7 @@ object JavaUtils {
         context: AIAgentFunctionalContext,
         message: String,
         outputType: Class<T>
-    ): T = runBlockingIfRequired {
+    ): T = withSuspend {
         context.requestLLMStructured(message, outputType.kotlin, emptyList(), null).getOrThrow().data
     }
 
@@ -70,7 +71,7 @@ object JavaUtils {
     fun getCheckpointsBlocking(
         storageProvider: PersistenceStorageProvider<*>,
         sessionId: String
-    ): List<AgentCheckpointData> = runBlockingIfRequired {
+    ): List<AgentCheckpointData> = withSuspend {
         storageProvider.getCheckpoints(sessionId)
     }
 

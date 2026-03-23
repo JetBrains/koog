@@ -39,6 +39,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(project(":serialization:serialization-jackson"))
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.assertj.core)
             }

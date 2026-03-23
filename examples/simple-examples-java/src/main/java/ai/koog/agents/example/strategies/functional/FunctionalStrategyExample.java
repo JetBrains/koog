@@ -10,6 +10,8 @@ import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
 
+import java.util.List;
+
 public class FunctionalStrategyExample {
 
     public static void main(String[] args) {
@@ -17,10 +19,20 @@ public class FunctionalStrategyExample {
             .openAI(ApiKeyService.getOpenAIApiKey())
             .build();
 
-        // Create tool sets
-        CommunicationTools communicationTools = new CommunicationTools();
-        DatabaseReadTools databaseReadTools = new DatabaseReadTools();
-        DatabaseWriteTools databaseWriteTools = new DatabaseWriteTools();
+        // Function-based tools from classes that implement ToolSet
+        var communicationTools = new CommunicationTools();
+        var databaseReadTools = new DatabaseReadTools();
+        var databaseWriteTools = new DatabaseWriteTools();
+        // Class-based tool
+        var thinkTool = new ThinkTool();
+
+        // Define tools available for the agent
+        var toolRegistry = ToolRegistry.builder()
+            .tools(communicationTools)
+            .tools(databaseReadTools)
+            .tools(databaseWriteTools)
+            .tool(thinkTool)
+            .build();
 
         var functionalAgent = AIAgent.builder()
             .promptExecutor(promptExecutor)
@@ -31,7 +43,7 @@ public class FunctionalStrategyExample {
                 ProblemDescription problem = ctx
                     .subtask("Identify the problem: " + userInput)
                     .withOutput(ProblemDescription.class)  // Type-safe output
-                    .withTools(communicationTools, databaseReadTools)  // Limited tools
+                    .withTools(List.of(thinkTool))  // Limited tools
                     .run();
 
                 // Step 2: Now solve the problem
@@ -39,7 +51,7 @@ public class FunctionalStrategyExample {
                 ProblemSolution solution = ctx
                     .subtask("Solve the problem: " + problem) // Use output from step 1
                     .withOutput(ProblemSolution.class)
-                    .withTools(databaseReadTools, databaseWriteTools)
+                    .withTools(List.of(thinkTool))
                     .run();
 
                 // Verify the solution and try to fix it until the solution is satisfying
@@ -61,13 +73,7 @@ public class FunctionalStrategyExample {
                     }
                 }
             })
-            .toolRegistry(
-                ToolRegistry.builder()
-                    .tools(communicationTools)
-                    .tools(databaseReadTools)
-                    .tools(databaseWriteTools)
-                    .build()
-            )
+            .toolRegistry(toolRegistry)
             .build();
 
         var result = functionalAgent.run("How to make a perfect poached egg?");
