@@ -14,7 +14,7 @@ The rag-base module defines the fundamental abstractions for working with docume
 - The `DocumentWithPayload` data class for associating documents with metadata or payload
 - Support for generic document types, allowing flexibility in the types of documents that can be stored and retrieved
 
-This module serves as the base for all RAG submodules (e.g., vector-storage) by providing a consistent API for document operations. It is designed to be implementation-agnostic, allowing different storage backends to be used interchangeably while maintaining a consistent interface for document management and retrieval.
+This module serves as the base for all RAG submodules (e.g., rag-vector) by providing a consistent API for document operations. It is designed to be implementation-agnostic, allowing different storage backends to be used interchangeably while maintaining a consistent interface for document management and retrieval.
 
 ### Example of usage
 

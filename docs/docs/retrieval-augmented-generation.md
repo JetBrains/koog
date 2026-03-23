@@ -39,8 +39,8 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.rag.base.storage.SimilaritySearchRequest
 import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
-import ai.koog.rag.vector.storage.InMemoryVectorStorage
-import ai.koog.rag.vector.store.EmbeddingStore
+import ai.koog.rag.vector.backend.InMemoryVectorStorageBackend
+import ai.koog.rag.vector.storage.EmbeddingStorage
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Path
 
@@ -120,7 +120,7 @@ To be added later.
 
 ## Choosing where to start
 
-Use `vector-storage` if:
+Use `rag-vector` if:
 
 - you want a local RAG prototype
 - you want a simple reference implementation

@@ -1,5 +1,7 @@
 package ai.koog.rag.base.storage
 
+import ai.koog.rag.base.storage.search.SearchRequest
+import ai.koog.rag.base.storage.search.SearchResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 

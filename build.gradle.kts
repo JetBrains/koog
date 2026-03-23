@@ -259,7 +259,7 @@ dependencies {
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":rag:rag-base"))
-    dokka(project(":rag:vector-storage"))
+    dokka(project(":rag:rag-vector"))
     dokka(project(":utils"))
 }
 

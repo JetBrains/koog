@@ -91,7 +91,7 @@ val included = setOf(
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",
     ":rag:rag-base",
-    ":rag:vector-storage",
+    ":rag:rag-vector",
     ":http-client:http-client-core",
     ":http-client:http-client-ktor",
     ":serialization:serialization-core",

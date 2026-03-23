@@ -8,22 +8,12 @@ package ai.koog.rag.base.storage.capability
  * Consumers can query capabilities at runtime to adapt their search strategy accordingly.
  *
  * @see StorageCapability for the list of available capabilities
- * @see CapabilityDetails for optional per-capability metadata
  */
 public interface CapabilityAwareStorage {
     /**
      * The set of capabilities supported by this storage implementation.
      */
     public val capabilities: Set<StorageCapability>
-
-    /**
-     * Returns optional metadata details for the given [capability], or `null` if no additional
-     * details are available.
-     *
-     * @param capability the capability to retrieve details for
-     * @return capability-specific metadata, or `null`
-     */
-    public fun capabilityDetails(capability: StorageCapability): CapabilityDetails? = null
 
     /**
      * Checks whether this storage supports the given [capability].
