@@ -15,6 +15,7 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-chat-memory-sql", // Optional SQL chat memory provider
     ":agents:agents-features:agents-features-chat-history-jdbc", // Optional JDBC chat history provider
     ":agents:agents-features:agents-features-persistence-jdbc", // Optional JDBC persistence provider
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-genai-client",
     ":agents:agents-mcp-server",
     ":integration-tests",
     ":test-utils",
@@ -129,11 +130,15 @@ kotlin {
                     val text = it.buildFile.readText()
 
                     require("import ai.koog.gradle.publish.maven.Publishing.publishToMaven" in text) {
-                        "Module ${it.path} is used as a dependency for '${project.name}' main jar. Hence, it should be published. If not, please mark it as excluded in ${project.name}/build.gradle.kts"
+                        "Module ${it.path} is used as a dependency for '${project.name}' main jar. " +
+                            "Hence, it should be published. If not, please mark it as excluded " +
+                            "in ${project.name}/build.gradle.kts"
                     }
 
                     require("publishToMaven()" in text) {
-                        "Module ${it.path} is used as a dependency for '${project.name}' main jar. Hence, it should be published. If not, please mark it as excluded in ${project.name}/build.gradle.kts"
+                        "Module ${it.path} is used as a dependency for '${project.name}' main jar. " +
+                            "Hence, it should be published. " +
+                            "If not, please mark it as excluded in ${project.name}/build.gradle.kts"
                     }
                 }
 
