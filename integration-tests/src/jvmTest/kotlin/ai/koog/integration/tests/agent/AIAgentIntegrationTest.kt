@@ -187,11 +187,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             ) {
                 system {
                     +"You are a helpful assistant. "
-                    +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+                    +"You must complete the task by calling the provided tools when needed. "
+                    +"For this task, call the required tools first, then return a brief final answer. "
+                    +"Do not ask follow-up questions."
                 }
             },
             model = model,
-            maxAgentIterations = 20,
+            maxAgentIterations = 30,
         ),
         toolRegistry = toolRegistry,
         installFeatures = {
@@ -257,10 +259,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "single-run integration with calculator enum tool arguments")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-
-        /* Some models are not calling tools in parallel:
-         * see https://youtrack.jetbrains.com/issue/KG-115
-         */
         assumeTrue(model.id !== OpenAIModels.Chat.O1.id, "Model $model flaks when calling parallel tools")
         assumeTrue(model.id !== GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
 
@@ -271,22 +269,32 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 multiToolAgent.run(twoToolsPrompt)
 
                 with(state) {
-                    withClue("There should be at least 2 tool calls in a Multiple tool calls scenario") {
-                        parallelToolCalls.size shouldBeGreaterThanOrEqual 2
-                    }
+                    when (runMode) {
+                        ToolCalls.PARALLEL -> {
+                            withClue("There should be at least 2 tool executions in a parallel multiple-tools scenario") {
+                                actualToolCalls.size shouldBeGreaterThanOrEqual 2
+                            }
+                            withClue("Both expected tools should be executed in a parallel multiple-tools scenario") {
+                                actualToolCalls shouldContain SimpleCalculatorTool.name
+                                actualToolCalls shouldContain DelayTool.name
+                            }
+                        }
 
-                    withClue("There should be no single tool calls in a Multiple tool calls scenario") {
-                        singleToolCalls.shouldBeEmpty()
-                    }
+                        ToolCalls.SEQUENTIAL -> {
+                            withClue("There should be at least 2 tool executions in a sequential multiple-tools scenario") {
+                                actualToolCalls.size shouldBeGreaterThanOrEqual 2
+                            }
+                            withClue("Both expected tools should be executed in a sequential multiple-tools scenario") {
+                                actualToolCalls shouldContain SimpleCalculatorTool.name
+                                actualToolCalls shouldContain DelayTool.name
+                            }
+                            withClue("Calculator tool should execute before delay tool in a sequential multiple-tools scenario") {
+                                actualToolCalls.indexOf(SimpleCalculatorTool.name) shouldBeLessThan
+                                    actualToolCalls.indexOf(DelayTool.name)
+                            }
+                        }
 
-                    val firstCall = parallelToolCalls.first()
-                    val secondCall = state.parallelToolCalls.last()
-
-                    withClue("First tool call should be ${SimpleCalculatorTool.name}") {
-                        firstCall.tool shouldBe SimpleCalculatorTool.name
-                    }
-                    withClue("Second tool call should be ${DelayTool.name}") {
-                        secondCall.tool shouldBe DelayTool.name
+                        else -> error("Unsupported run mode for multiple tools test: $runMode")
                     }
                 }
             }

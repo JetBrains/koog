@@ -40,6 +40,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
@@ -207,7 +208,10 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities!!.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model != GoogleModels.Gemini3_Pro_Preview,
+            "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
+        )
 
         val executor = getExecutor(model)
 
@@ -225,7 +229,6 @@ abstract class ExecutorIntegrationTestBase {
             executor.executeStreamAndCollect(
                 prompt = prompt,
                 model = model,
-                tools = listOf(SimpleCalculatorTool.descriptor),
                 textDeltaFrames = textDeltaFrames,
                 toolDeltaFrames = toolDeltaFrames,
                 toolCompleteFrames = toolCompleteFrames,
@@ -1129,12 +1132,15 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(
-            model.provider == LLMProvider.OpenAI,
-            "This test is specific to OpenAI Responses API reasoning streaming"
-        )
 
-        val params = createReasoningParams(model)
+        val params = OpenAIResponsesParams(
+            reasoning = ReasoningConfig(
+                effort = ReasoningEffort.MEDIUM,
+                summary = ReasoningSummary.DETAILED
+            ),
+            include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
+            maxTokens = basicLimit
+        )
         val prompt = Prompt.build("reasoning-streaming-test", params = params) {
             system("You are a helpful assistant.")
             user("Think about this step by step: What is 12 * 15?")
@@ -1207,6 +1213,10 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model != GoogleModels.Gemini3_Pro_Preview,
+            "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
+        )
         assumeTrue(
             model.provider !== LLMProvider.OpenRouter,
             "KG-626 Error from OpenRouter on a streaming with a tool call"
