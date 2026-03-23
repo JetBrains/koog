@@ -1,12 +1,14 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.agents.annotations.JavaAPI
+import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Clock
 
 /**
@@ -57,10 +59,23 @@ public class PromptBuilder internal constructor(
      * ```
      *
      * @param content The content of the system message
+     * @param cacheControl Optional cache control to apply after this tool definition.
      */
     @JavaAPI
-    public fun system(content: String): PromptBuilder = apply {
-        messages.add(Message.System(content, RequestMetaInfo.create(clock)))
+    @JvmOverloads
+    public fun system(content: String, cacheControl: CacheControl? = null): PromptBuilder = apply {
+        messages.add(Message.System(content, RequestMetaInfo.create(clock), cacheControl))
+    }
+
+    /**
+     * Adds a system message to the prompt using a TextContentBuilder.
+     *
+     * @param cacheControl Optional cache control to apply after this tool definition.
+     * @param init The initialization block for the TextContentBuilder
+     */
+    @JavaAPI
+    public fun system(cacheControl: CacheControl? = null, init: TextContentBuilder.() -> Unit): PromptBuilder = apply {
+        system(TextContentBuilder().apply(init).build(), cacheControl)
     }
 
     /**
@@ -79,9 +94,7 @@ public class PromptBuilder internal constructor(
      * @param init The initialization block for the TextContentBuilder
      */
     @JavaAPI
-    public fun system(init: TextContentBuilder.() -> Unit): PromptBuilder = apply {
-        system(TextContentBuilder().apply(init).build())
-    }
+    public fun system(init: TextContentBuilder.() -> Unit): PromptBuilder = system(null, init)
 
     /**
      * Adds a user message to the prompt with optional attachments.
@@ -90,10 +103,12 @@ public class PromptBuilder internal constructor(
      * This method supports adding parts of the message such as text content or attachments.
      *
      * @param parts Parts of the user message
+     * @param cacheControl Optional cache control to apply after this tool definition.
      */
     @JavaAPI
-    public fun user(parts: List<ContentPart>): PromptBuilder = apply {
-        messages.add(Message.User(parts, RequestMetaInfo.create(clock)))
+    @JvmOverloads
+    public fun user(parts: List<ContentPart>, cacheControl: CacheControl? = null): PromptBuilder = apply {
+        messages.add(Message.User(parts, RequestMetaInfo.create(clock), cacheControl))
     }
 
     /**
@@ -172,10 +187,23 @@ public class PromptBuilder internal constructor(
      * ```
      *
      * @param content The content of the assistant message
+     * @param cacheControl Optional cache control to apply after this tool definition.
      */
     @JavaAPI
-    public fun assistant(content: String): PromptBuilder = apply {
-        messages.add(Message.Assistant(content, finishReason = null, metaInfo = ResponseMetaInfo.create(clock)))
+    @JvmOverloads
+    public fun assistant(content: String, cacheControl: CacheControl? = null): PromptBuilder = apply {
+        messages.add(Message.Assistant(content, finishReason = null, metaInfo = ResponseMetaInfo.create(clock), cacheControl = cacheControl))
+    }
+
+    /**
+     * Adds an assistant message to the prompt using a TextContentBuilder.
+     *
+     * @param cacheControl Optional cache control to apply after this tool definition.
+     * @param init The initialization block for the TextContentBuilder
+     */
+    @JavaAPI
+    public fun assistant(cacheControl: CacheControl? = null, init: TextContentBuilder.() -> Unit): PromptBuilder = apply {
+        assistant(TextContentBuilder().apply(init).build(), cacheControl)
     }
 
     /**
@@ -194,9 +222,7 @@ public class PromptBuilder internal constructor(
      * @param init The initialization block for the TextContentBuilder
      */
     @JavaAPI
-    public fun assistant(init: TextContentBuilder.() -> Unit): PromptBuilder = apply {
-        assistant(TextContentBuilder().apply(init).build())
-    }
+    public fun assistant(init: TextContentBuilder.() -> Unit): PromptBuilder = assistant(null, init)
 
     /**
      * Adds a generic message to the prompt.
