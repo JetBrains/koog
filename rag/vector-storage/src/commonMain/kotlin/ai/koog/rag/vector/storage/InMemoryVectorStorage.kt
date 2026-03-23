@@ -26,8 +26,10 @@ public class InMemoryVectorStorage<Document> : VectorStorage<Document> {
         return docID
     }
 
-    override suspend fun store(id: String, document: Document, vector: Vector) {
+    override suspend fun store(id: String, document: Document, vector: Vector): Boolean {
+        val existed = documentById.containsKey(id)
         documentById[id] = DocumentWithPayload(document, vector)
+        return existed
     }
 
     override suspend fun delete(documentId: String): Boolean {

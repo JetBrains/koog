@@ -1,11 +1,10 @@
 package ai.koog.rag.vector.store
 
-import ai.koog.rag.base.storage.HasScoreThreshold
-import ai.koog.rag.base.storage.HasTextQuery
 import ai.koog.rag.base.storage.Score
 import ai.koog.rag.base.storage.ScoreMetric
 import ai.koog.rag.base.storage.SearchRequest
 import ai.koog.rag.base.storage.SearchResult
+import ai.koog.rag.base.storage.SimilaritySearchRequest
 import ai.koog.rag.base.storage.capability.CapabilityAwareStorage
 import ai.koog.rag.base.storage.capability.StorageCapability
 import ai.koog.rag.vector.embedder.DocumentEmbedder
@@ -51,9 +50,11 @@ public open class EmbeddingStore<Document>(
         request: SearchRequest,
         namespace: String?
     ): List<SearchResult<Document>> {
-        val queryText = (request as? HasTextQuery)?.queryText
-            ?: error("EmbeddingStore requires a request implementing HasTextQuery")
-        val minScore = (request as? HasScoreThreshold)?.minScore ?: 0.0
+        require(request is SimilaritySearchRequest) {
+            "EmbeddingStore requires a SimilaritySearchRequest"
+        }
+        val queryText = request.queryText
+        val minScore = request.minScore ?: 0.0
 
         val results = mutableListOf<SearchResult<Document>>()
         val queryVector = embedder.embed(queryText)
@@ -72,6 +73,7 @@ public open class EmbeddingStore<Document>(
 
         return results
             .sortedByDescending { it.score.value }
+            .drop(request.offset)
             .take(request.limit)
     }
 
@@ -83,10 +85,9 @@ public open class EmbeddingStore<Document>(
     }
 
     override suspend fun update(documents: Map<String, Document>, namespace: String?): List<String> {
-        return documents.map { (id, document) ->
+        return documents.mapNotNull { (id, document) ->
             val vector = embedder.embed(document)
-            storage.store(id, document, vector)
-            id
+            if (storage.store(id, document, vector)) id else null
         }
     }
 

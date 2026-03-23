@@ -29,8 +29,9 @@ public interface VectorStorage<Document> {
      * @param id The unique identifier to assign to the stored document.
      * @param document The document to store.
      * @param vector The pre-computed vector embedding for the document.
+     * @return `true` if a document with the given [id] already existed before the update, `false` if it was newly inserted.
      */
-    public suspend fun store(id: String, document: Document, vector: Vector)
+    public suspend fun store(id: String, document: Document, vector: Vector): Boolean
 
     /**
      * Deletes the document with the specified ID.

@@ -75,17 +75,21 @@ public open class FileVectorStorage<Document, Path>(
         return documentId
     }
 
-    override suspend fun store(id: String, document: Document, vector: Vector) {
+    override suspend fun store(id: String, document: Document, vector: Vector): Boolean {
         val docsDir = documentsDir()
         val vecsDir = vectorsDir()
 
         val docPath = fs.joinPath(docsDir, id)
+        val existed = fs.exists(docPath)
+
         val docText = documentReader.text(document).toString()
         fs.writeText(docPath, docText)
 
         val vecPath = fs.joinPath(vecsDir, id)
         val vectorJson = json.encodeToString(vector)
         fs.writeText(vecPath, vectorJson)
+
+        return existed
     }
 
     override suspend fun delete(documentId: String): Boolean {

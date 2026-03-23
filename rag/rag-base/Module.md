@@ -36,8 +36,8 @@ suspend fun storeAndRetrieveDocuments(
 
     // Retrieve the documents using their IDs
     val retrievedDocuments = reader.get(documentIds)
-    retrievedDocuments.forEach { (id, doc) ->
-        println("Retrieved document $id: ${doc.content}")
+    retrievedDocuments.forEach { doc ->
+        println("Retrieved document: ${doc.content}")
     }
 }
 
