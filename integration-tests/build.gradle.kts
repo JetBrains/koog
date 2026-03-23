@@ -42,6 +42,9 @@ kotlin {
                 )
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
                 implementation(
+                    project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-genai-client")
+                )
+                implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
                 )
                 implementation(libs.junit.jupiter.params)
@@ -54,6 +57,7 @@ kotlin {
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.opentelemetry.sdk.testing)
+                implementation(libs.junit.pioneer)
             }
         }
     }
@@ -72,7 +76,8 @@ tasks.withType<Test> {
     // Forward test-relevant system properties to the test JVM.
     // Exclude JVM-internal properties (java.*, sun.*, jdk.*, etc.) to avoid conflicts
     // when the Gradle daemon runs on a different JDK version than the test toolchain.
-    val jvmInternalPrefixes = setOf("java.", "sun.", "jdk.", "os.", "user.", "file.", "line.", "path.", "native.", "stderr.", "stdout.")
+    val jvmInternalPrefixes =
+        setOf("java.", "sun.", "jdk.", "os.", "user.", "file.", "line.", "path.", "native.", "stderr.", "stdout.")
     System.getProperties().forEach { key, value ->
         val k = key.toString()
         if (jvmInternalPrefixes.none { k.startsWith(it) }) {

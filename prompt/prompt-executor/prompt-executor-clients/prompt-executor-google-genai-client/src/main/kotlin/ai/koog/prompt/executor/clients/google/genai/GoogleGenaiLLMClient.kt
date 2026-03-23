@@ -28,6 +28,8 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
+import com.google.genai.errors.ClientException
+import com.google.genai.errors.ServerException
 import com.google.genai.types.AutomaticFunctionCallingConfig
 import com.google.genai.types.Blob
 import com.google.genai.types.Candidate
@@ -47,8 +49,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -114,6 +116,18 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         block()
     } catch (e: CancellationException) {
         throw e
+    } catch (e: ClientException) {
+        throw LLMClientException(
+            clientName = clientName,
+            message = "Status code: ${e.code()} (${e.status()}). ${e.message}",
+            cause = e
+        )
+    } catch (e: ServerException) {
+        throw LLMClientException(
+            clientName = clientName,
+            message = "Status code: ${e.code()} (${e.status()}). ${e.message}",
+            cause = e
+        )
     } catch (e: Exception) {
         throw LLMClientException(clientName = clientName, message = e.message, cause = e)
     }
@@ -150,39 +164,37 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
         callApi {
             val stream = client.async.models.generateContentStream(model.id, contents, config).await()
-            withContext(ioDispatcher) {
-                stream.use { responseStream ->
-                    for (chunk in responseStream) {
-                        val meta = extractResponseMetaInfo(chunk)
+            stream.use { responseStream ->
+                for (chunk in responseStream) {
+                    val meta = extractResponseMetaInfo(chunk)
 
-                        chunk.candidates().orElse(null)?.firstOrNull()?.let { candidate ->
-                            candidate.content().orElse(null)?.parts()?.orElse(null)
-                                ?.forEachIndexed { index, part ->
-                                    val functionCall = part.functionCall().orElse(null)
-                                    val text = part.text().orElse(null)
+                    chunk.candidates().orElse(null)?.firstOrNull()?.let { candidate ->
+                        candidate.content().orElse(null)?.parts()?.orElse(null)
+                            ?.forEachIndexed { index, part ->
+                                val functionCall = part.functionCall().orElse(null)
+                                val text = part.text().orElse(null)
 
-                                    when {
-                                        functionCall != null -> emitToolCallDelta(
-                                            id = functionCall.id().orElse(null),
-                                            name = functionCall.name().orElse(null),
-                                            args = functionCall.args().orElse(null)
-                                                ?.let { convertMapToJsonObject(it).toString() } ?: "{}",
-                                            index = index
-                                        )
+                                when {
+                                    functionCall != null -> emitToolCallDelta(
+                                        id = functionCall.id().orElse(null),
+                                        name = functionCall.name().orElse(null),
+                                        args = functionCall.args().orElse(null)
+                                            ?.let { convertMapToJsonObject(it).toString() } ?: "{}",
+                                        index = index
+                                    )
 
-                                        text != null -> emitTextDelta(text, index)
-                                    }
+                                    text != null -> emitTextDelta(text, index)
                                 }
-
-                            candidate.finishReason().orElse(null)?.let { reason ->
-                                emitEnd(reason.toString(), meta)
                             }
+
+                        candidate.finishReason().orElse(null)?.let { reason ->
+                            emitEnd(reason.toString(), meta)
                         }
                     }
                 }
             }
         }
-    }.requireEndFrame()
+    }.flowOn(ioDispatcher).requireEndFrame()
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
@@ -627,7 +639,8 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             val isThought = part.thought().orElse(false)
 
             // Create Reasoning for any part with signature, unless the part itself is a thought
-            if (signature != null && !isThought) {
+            // and we haven't already added a reasoning message for this signature.
+            if (signature != null && !isThought && responses.none { it is Message.Reasoning && it.encrypted == signature }) {
                 responses.add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
             }
 
@@ -638,13 +651,25 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             when {
                 text != null -> {
                     if (isThought) {
-                        responses.add(
-                            Message.Reasoning(
-                                content = text,
-                                encrypted = signature,
-                                metaInfo = metaInfo
+                        val existing = if (signature != null) {
+                            responses.filterIsInstance<Message.Reasoning>().find { it.encrypted == signature }
+                        } else {
+                            null
+                        }
+
+                        if (existing != null && existing.content.isEmpty()) {
+                            val index = responses.indexOf(existing)
+                            responses[index] =
+                                existing.copy(parts = listOf(ContentPart.Text(text)))
+                        } else {
+                            responses.add(
+                                Message.Reasoning(
+                                    content = text,
+                                    encrypted = signature,
+                                    metaInfo = metaInfo
+                                )
                             )
-                        )
+                        }
                     } else {
                         responses.add(
                             Message.Assistant(
