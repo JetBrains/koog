@@ -305,6 +305,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #1: ToolDescriptor(
                       name = tool2,
@@ -319,6 +320,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #2: ToolDescriptor(
                       name = tool4,
@@ -333,6 +335,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #3: ToolDescriptor(
                       name = toolBase1,
@@ -341,6 +344,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #4: ToolDescriptor(
                       name = toolBase2OverriddenInInterface,
@@ -355,6 +359,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     """.trimIndent()
                 ),
@@ -374,6 +379,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #1: ToolDescriptor(
                       name = tool1,
@@ -388,6 +394,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #2: ToolDescriptor(
                       name = tool2,
@@ -402,6 +409,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #3: ToolDescriptor(
                       name = tool4,
@@ -416,6 +424,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #4: ToolDescriptor(
                       name = toolBase1,
@@ -424,6 +433,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #5: ToolDescriptor(
                       name = toolBase2OverriddenInInterface,
@@ -438,6 +448,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     """.trimIndent()
                 ),
@@ -457,6 +468,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #1: ToolDescriptor(
                       name = toolBase1,
@@ -465,6 +477,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     #2: ToolDescriptor(
                       name = toolBase2OverriddenInInterface,
@@ -479,6 +492,7 @@ class ToolsFromCallableTest {
                       ]
                       optionalParameters = [
                       ]
+                      cacheControl=null
                     )
                     """.trimIndent()
                 ),

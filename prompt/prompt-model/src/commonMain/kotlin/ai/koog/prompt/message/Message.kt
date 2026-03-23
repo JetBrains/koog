@@ -47,7 +47,7 @@ public sealed interface Message {
     public fun hasAttachments(): Boolean = parts.any { it is ContentPart.Attachment }
 
     /**
-     * Checks weather the message consists of only sungle text content.
+     * Checks weather the message consists of only single text content.
      */
     public fun hasOnlyTextContent(): Boolean = parts.singleOrNull() is ContentPart.Text
 
@@ -109,11 +109,13 @@ public sealed interface Message {
      * @property parts The parts of the user's message.
      * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
      * @property role The role of the message, which is fixed as [Role.User] for this implementation.
+     * @property cacheControl The cache strategy for this message.
      */
     @Serializable
     public data class User @JvmOverloads constructor(
         override val parts: List<ContentPart>,
         override val metaInfo: RequestMetaInfo,
+        val cacheControl: CacheControl? = null,
     ) : Request {
         override val role: Role = Role.User
 
@@ -121,15 +123,15 @@ public sealed interface Message {
          * Single content part user message constructor
          */
         @JvmOverloads
-        public constructor(part: ContentPart, metaInfo: RequestMetaInfo) :
-            this(listOf(part), metaInfo)
+        public constructor(part: ContentPart, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
+            this(listOf(part), metaInfo, cacheControl)
 
         /**
          * Text content user message constructor
          */
         @JvmOverloads
-        public constructor(content: String, metaInfo: RequestMetaInfo) :
-            this(ContentPart.Text(content), metaInfo)
+        public constructor(content: String, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
+            this(ContentPart.Text(content), metaInfo, cacheControl)
     }
 
     /**
@@ -140,12 +142,14 @@ public sealed interface Message {
      * @property finishReason An optional explanation for why the assistant's response was finalized.
      * Defaults to null if not provided.
      * @property role The role associated with the response, which is fixed as `Role.Assistant`.
+     * @property cacheControl The cache strategy for this message.
      */
     @Serializable
     public data class Assistant @JvmOverloads constructor(
         override val parts: List<ContentPart>,
         override val metaInfo: ResponseMetaInfo,
-        val finishReason: String? = null
+        val finishReason: String? = null,
+        val cacheControl: CacheControl? = null,
     ) : Response {
         override val role: Role = Role.Assistant
 
@@ -153,15 +157,15 @@ public sealed interface Message {
          * Single content part assistant message constructor
          */
         @JvmOverloads
-        public constructor(part: ContentPart, metaInfo: ResponseMetaInfo, finishReason: String? = null) :
-            this(listOf(part), metaInfo, finishReason)
+        public constructor(part: ContentPart, metaInfo: ResponseMetaInfo, finishReason: String? = null, cacheControl: CacheControl? = null) :
+            this(listOf(part), metaInfo, finishReason, cacheControl)
 
         /**
          * Text content assistant message constructor
          */
         @JvmOverloads
-        public constructor(content: String, metaInfo: ResponseMetaInfo, finishReason: String? = null) :
-            this(ContentPart.Text(content), metaInfo, finishReason)
+        public constructor(content: String, metaInfo: ResponseMetaInfo, finishReason: String? = null, cacheControl: CacheControl? = null) :
+            this(ContentPart.Text(content), metaInfo, finishReason, cacheControl)
 
         override fun copy(updatedMetaInfo: ResponseMetaInfo): Assistant = this.copy(metaInfo = updatedMetaInfo)
     }
@@ -282,6 +286,7 @@ public sealed interface Message {
          * @property parts The parts of the tool result. Only the [ContentPart.Text] part is allowed.
          * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
          * @property isError Whether this tool result represents an error. Defaults to false.
+         * @property cacheControl The cache strategy for this message.
          */
         @Serializable
         public data class Result(
@@ -289,20 +294,21 @@ public sealed interface Message {
             override val tool: String,
             override val parts: List<ContentPart.Text>,
             override val metaInfo: RequestMetaInfo,
-            val isError: Boolean = false
+            val isError: Boolean = false,
+            val cacheControl: CacheControl? = null,
         ) : Tool, Request {
 
             /**
              * Single content part tool result message constructor
              */
-            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo, isError: Boolean = false) :
-                this(id, tool, listOf(part), metaInfo, isError)
+            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo, isError: Boolean = false, cacheControl: CacheControl? = null) :
+                this(id, tool, listOf(part), metaInfo, isError, cacheControl)
 
             /**
              * Text content tool result message constructor
              */
-            public constructor(id: String?, tool: String, content: String, metaInfo: RequestMetaInfo, isError: Boolean = false) :
-                this(id, tool, ContentPart.Text(content), metaInfo, isError)
+            public constructor(id: String?, tool: String, content: String, metaInfo: RequestMetaInfo, isError: Boolean = false, cacheControl: CacheControl? = null) :
+                this(id, tool, ContentPart.Text(content), metaInfo, isError, cacheControl)
 
             override val role: Role = Role.Tool
         }
@@ -311,14 +317,16 @@ public sealed interface Message {
     /**
      * Represents a system-generated message.
      *
-     * @property parts The parts of the system message. Only the [ContentPart.Text] part is allowed.
+     * @property parts The parts of the system message.
      * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
+     * @property cacheControl The cache strategy for this message.
      *
      */
     @Serializable
     public data class System @JvmOverloads constructor(
         override val parts: List<ContentPart.Text>,
-        override val metaInfo: RequestMetaInfo
+        override val metaInfo: RequestMetaInfo,
+        val cacheControl: CacheControl? = null
     ) : Request {
         override val role: Role = Role.System
 
@@ -326,15 +334,15 @@ public sealed interface Message {
          * Single content part system message constructor
          */
         @JvmOverloads
-        public constructor(part: ContentPart.Text, metaInfo: RequestMetaInfo) :
-            this(listOf(part), metaInfo)
+        public constructor(part: ContentPart.Text, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
+            this(listOf(part), metaInfo, cacheControl)
 
         /**
          * Text content system message constructor
          */
         @JvmOverloads
-        public constructor(content: String, metaInfo: RequestMetaInfo) :
-            this(ContentPart.Text(content), metaInfo)
+        public constructor(content: String, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
+            this(ContentPart.Text(content), metaInfo, cacheControl)
     }
 }
 

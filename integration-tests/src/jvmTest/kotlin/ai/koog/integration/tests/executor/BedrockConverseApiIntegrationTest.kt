@@ -5,11 +5,15 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.PromptUtils.assistantPromptOfAtLeastLength
+import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestCredentials.readAwsAccessKeyIdFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailIdFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailVersionFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSessionTokenFromEnv
+import ai.koog.integration.tests.utils.tools.CalculatorTool
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
@@ -19,18 +23,33 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.bedrock.converse.BedrockConverseParams
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.CacheControl
+import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
+import io.kotest.assertions.withClue
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.string.shouldContain
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.enums.EnumEntries
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Test newer Bedrock Converse API using the same suite of executor tests.
@@ -77,6 +96,11 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         fun allCompletionModels(): Stream<LLModel> {
             return Models.bedrockModels()
         }
+
+        @JvmStatic
+        fun cacheCapableModels(): Stream<LLModel> {
+            return listOf(BedrockModels.AnthropicClaude4_5Sonnet).stream()
+        }
     }
 
     private val client = run {
@@ -97,6 +121,15 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     private val executor: MultiLLMPromptExecutor = MultiLLMPromptExecutor(client)
+
+    private fun JsonObject.validateRequestWasCachedCorrectly() {
+        this.shouldNotBeNull()
+        val cacheRead = this["cacheReadInputTokens"]?.jsonPrimitive?.intOrNull ?: 0
+        val cacheWrite = this["cacheWriteInputTokens"]?.jsonPrimitive?.intOrNull ?: 0
+        withClue("Cache read or cache write should be greater than 0 if the cache point was added correctly") {
+            (cacheRead > 0 || cacheWrite > 0).shouldBeTrue()
+        }
+    }
 
     override fun getLLMClient(model: LLModel): LLMClient {
         require(model.provider == LLMProvider.Bedrock) { "Model ${model.id} is not a Bedrock model" }
@@ -293,5 +326,75 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("reasoningCapableModels")
     override fun integration_testReasoningMultiStep(model: LLModel) {
         super.integration_testReasoningMultiStep(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("cacheCapableModels")
+    fun integration_testCacheControlOnSystemMessage(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val prompt = Prompt.build("test-cache-system") {
+            // Caching requires a minimum prompt length to work.
+            system(assistantPromptOfAtLeastLength(1600), CacheControl.Bedrock.Default)
+            user("What is the capital of France?")
+        }
+
+        withRetry(times = 3, testName = "integration_testCacheControlOnSystemMessage[${model.id}]") {
+            val result = getExecutor(model).execute(prompt, model)
+            result.shouldNotBeNull()
+            result.shouldNotBeEmpty()
+            result.filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
+                content.lowercase().shouldContain("paris")
+                this.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("cacheCapableModels")
+    fun integration_testCacheControlOnUserMessage(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val prompt = Prompt.build("test-cache-user") {
+            // Caching requires a minimum prompt length to work.
+            system(assistantPromptOfAtLeastLength(1600))
+            user(listOf(ContentPart.Text("What is the capital of France?")), CacheControl.Bedrock.Default)
+        }
+
+        withRetry(times = 3, testName = "integration_testCacheControlOnUserMessage[${model.id}]") {
+            val result = getExecutor(model).execute(prompt, model)
+            result.shouldNotBeNull()
+            result.shouldNotBeEmpty()
+            result.filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
+                content.lowercase().shouldContain("paris")
+                this.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("cacheCapableModels")
+    fun integration_testCacheControlOnToolDefinition(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities?.contains(LLMCapability.Tools) ?: false, "Model $model does not support tools")
+
+        val cachedDescriptor = CalculatorTool.descriptor.withCacheControl(CacheControl.Bedrock.Default).copy(
+            // Caching requires a minimum prompt length to work - in the case of tools, this appears to apply specifically to the tool section
+            // rather than the prompt as a whole.
+            description = assistantPromptOfAtLeastLength(1600, CalculatorTool.descriptor.description)
+        )
+        val prompt = Prompt.build("test-cache-tool") {
+            system("You are a helpful assistant with a calculator tool. You MUST call the calculator tool!!!.")
+            user("What is 123 + 456?")
+        }
+
+        withRetry(times = 3, testName = "integration_testCacheControlOnToolDefinition[${model.id}]") {
+            val result = getExecutor(model).execute(prompt, model, listOf(cachedDescriptor))
+            result.shouldNotBeNull()
+            result.shouldNotBeEmpty()
+            result.filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
+                this.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
+            }
+        }
     }
 }
