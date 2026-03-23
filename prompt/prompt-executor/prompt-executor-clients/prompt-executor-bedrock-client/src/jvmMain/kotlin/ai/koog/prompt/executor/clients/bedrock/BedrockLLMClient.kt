@@ -325,7 +325,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        val converseRequest = BedrockConverseConverters.createConverseRequest(prompt, model, tools)
+        val converseRequest = BedrockConverseConverters.createConverseRequest(prompt, model, tools, moderationGuardrailsSettings)
 
         return withContext(Dispatchers.SuitableForIO) {
             try {
@@ -475,7 +475,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
-        val converseRequest = BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools)
+        val converseRequest = BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools, moderationGuardrailsSettings)
 
         return channelFlow {
             withContext(Dispatchers.SuitableForIO) {
