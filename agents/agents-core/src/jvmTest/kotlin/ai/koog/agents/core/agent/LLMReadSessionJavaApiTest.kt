@@ -13,51 +13,17 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
-class LLMWriteSessionJavaApiTest {
+class LLMReadSessionJavaApiTest {
     private val serializer = KotlinxSerializer()
 
     @Test
-    fun writeSession_allowsPromptSwapAndRequest() {
-        val executor = getMockExecutor(serializer) { }
-
-        val config = AIAgentConfig(
-            prompt = Prompt.builder("write-session")
-                .system("base")
-                .build(),
-            model = OpenAIModels.Chat.GPT4o,
-            maxAgentIterations = 3
-        )
-
-        val agent = AIAgent.builder()
-            .agentConfig(config)
-            .functionalStrategy<String, String>(
-                "useWriteSession"
-            ) { ctx: AIAgentFunctionalContext, input: String ->
-                // Mutate prompt inside writeSession and ensure it restores back
-                ctx.llm().writeSession { session ->
-                    val orig = session.prompt
-                    session.prompt = Prompt.builder("temp").system("temporary").user(input).build()
-                    // restore immediately to validate restoration path without invoking suspend APIs here
-                    session.prompt = orig
-                }
-                // Return a deterministic string to prove strategy executed without using suspend APIs
-                "mutated:$input"
-            }
-            .promptExecutor(executor)
-            .build()
-
-        val result = agent.javaNonSuspendRun("hello", null, null)
-        assertEquals("mutated:hello", result)
-    }
-
-    @Test
-    fun javaNonSuspendRunWithSameThreadExecutorWrite() {
+    fun javaNonSuspendRunWithSameThreadExecutorRead() {
         val executor = getMockExecutor(serializer) {
             mockLLMAnswer("ok").asDefaultResponse
         }
 
         val config = AIAgentConfig(
-            prompt = Prompt.builder("write")
+            prompt = Prompt.builder("read")
                 .system("test")
                 .build(),
             model = OpenAIModels.Chat.GPT4o,
@@ -69,9 +35,9 @@ class LLMWriteSessionJavaApiTest {
             val agent = AIAgent.builder()
                 .agentConfig(config)
                 .functionalStrategy(
-                    "write"
+                    "read"
                 ) { ctx: AIAgentFunctionalContext, _: String ->
-                    val response = ctx.llm().writeSession { session ->
+                    val response = ctx.llm().readSession { session ->
                         session.requestLLM(sharedExecutor)
                     }
                     (response as Message.Assistant).content
