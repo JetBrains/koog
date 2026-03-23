@@ -112,7 +112,7 @@ class SpringAiChatAutoConfigurationTest {
             .run { context ->
                 val props = context.getBean<KoogSpringAiChatProperties>()
                 assertTrue(props.enabled)
-                assertTrue(props.dispatcher.type == KoogSpringAiChatProperties.DispatcherType.IO)
+                assertTrue(props.dispatcher.type == ai.koog.spring.ai.common.DispatcherType.IO)
             }
     }
 

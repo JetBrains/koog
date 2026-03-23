@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.spring.ai.common.DispatcherType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -74,7 +75,7 @@ public open class SpringAiChatAutoConfiguration {
         @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
     ): CoroutineDispatcher {
         return when (properties.dispatcher.type) {
-            KoogSpringAiChatProperties.DispatcherType.AUTO -> {
+            DispatcherType.AUTO -> {
                 if (asyncTaskExecutor != null) {
                     logger.info("Koog Spring AI Chat: using Spring AsyncTaskExecutor as dispatcher for blocking model calls")
                     asyncTaskExecutor.asCoroutineDispatcher()
@@ -84,7 +85,7 @@ public open class SpringAiChatAutoConfiguration {
                 }
             }
 
-            KoogSpringAiChatProperties.DispatcherType.IO -> {
+            DispatcherType.IO -> {
                 val parallelism = properties.dispatcher.parallelism
                 if (parallelism > 0) {
                     logger.info("Koog Spring AI Chat: using Dispatchers.IO.limitedParallelism($parallelism) for blocking model calls")

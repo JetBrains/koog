@@ -230,6 +230,7 @@ dependencies {
     dokka(project(":embeddings:embeddings-base"))
     dokka(project(":embeddings:embeddings-llm"))
     dokka(project(":koog-ktor"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-chat-memory"))
     dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-chat"))
     dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-embedding"))
     dokka(project(":koog-spring-boot-starter"))

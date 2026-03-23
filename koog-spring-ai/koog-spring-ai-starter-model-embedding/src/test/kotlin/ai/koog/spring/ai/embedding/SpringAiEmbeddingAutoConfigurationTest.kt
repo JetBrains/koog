@@ -108,7 +108,7 @@ class SpringAiEmbeddingAutoConfigurationTest {
             .run { context ->
                 val props = context.getBean<KoogSpringAiEmbeddingProperties>()
                 assertTrue(props.enabled)
-                assertTrue(props.dispatcher.type == KoogSpringAiEmbeddingProperties.DispatcherType.IO)
+                assertTrue(props.dispatcher.type == ai.koog.spring.ai.common.DispatcherType.IO)
             }
     }
 

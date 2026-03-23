@@ -18,5 +18,6 @@ Both starters are independent — pick one based on how you prefer to manage LLM
 |---|---|---|
 | `koog-spring-ai-starter-model-chat` | Adapts a Spring AI `ChatModel` (with optional `ModerationModel`) into a Koog `LLMClient` and `PromptExecutor` | [Module.md](koog-spring-ai-starter-model-chat/Module.md) |
 | `koog-spring-ai-starter-model-embedding` | Adapts a Spring AI `EmbeddingModel` into a Koog `LLMEmbeddingProvider` | [Module.md](koog-spring-ai-starter-model-embedding/Module.md) |
+| `koog-spring-ai-starter-chat-memory` | Adapts a Spring AI `ChatMemoryRepository` into a Koog `ChatHistoryProvider` | [Module.md](koog-spring-ai-starter-chat-memory/Module.md) |
 
 Each submodule is a fully independent Spring Boot starter with its own auto-configuration, configuration properties, and dispatcher management. See the linked `Module.md` for usage details, configuration reference, and examples.

@@ -26,7 +26,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 dependencies {
     api(project(":koog-spring-ai:koog-spring-ai-common"))
-    api(project(":prompt:prompt-executor:prompt-executor-clients"))
+    api(project(":agents:agents-features:agents-features-memory"))
     implementation(project.dependencies.platform(libs.spring.boot.bom))
     implementation(project.dependencies.platform(libs.spring.ai.bom))
     api(libs.bundles.spring.boot.core)

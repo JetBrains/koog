@@ -1,6 +1,7 @@
 package ai.koog.spring.ai.embedding
 
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.spring.ai.common.DispatcherType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -65,7 +66,7 @@ public open class SpringAiEmbeddingAutoConfiguration {
         @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
     ): CoroutineDispatcher {
         return when (properties.dispatcher.type) {
-            KoogSpringAiEmbeddingProperties.DispatcherType.AUTO -> {
+            DispatcherType.AUTO -> {
                 if (asyncTaskExecutor != null) {
                     logger.info("Koog Spring AI Embedding: using Spring AsyncTaskExecutor as dispatcher for blocking model calls")
                     asyncTaskExecutor.asCoroutineDispatcher()
@@ -75,7 +76,7 @@ public open class SpringAiEmbeddingAutoConfiguration {
                 }
             }
 
-            KoogSpringAiEmbeddingProperties.DispatcherType.IO -> {
+            DispatcherType.IO -> {
                 val parallelism = properties.dispatcher.parallelism
                 if (parallelism > 0) {
                     logger.info("Koog Spring AI Embedding: using Dispatchers.IO.limitedParallelism($parallelism) for blocking model calls")
