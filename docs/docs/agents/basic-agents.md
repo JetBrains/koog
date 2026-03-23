@@ -56,9 +56,7 @@ and provide a [prompt executor](../prompts/prompt-executors.md) with a [language
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    
     import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
-
     class exampleBasicJava01 {
         public static void main(String[] args) {
     -->
@@ -125,9 +123,7 @@ as well as the purpose, context, and instructions related to the task.
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    
     import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
-
     class exampleBasicJava02 {
         public static void main(String[] args) {
     -->
@@ -181,9 +177,7 @@ For example, use the `temperature` parameter to adjust the randomness of the gen
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    
     import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
-
     class exampleBasicJava03 {
         public static void main(String[] args) {
     -->
@@ -287,11 +281,8 @@ First, create a tool by annotating a function (Kotlin) or method (Java) with the
     import ai.koog.agents.core.tools.annotations.Tool;
     import ai.koog.agents.core.tools.reflect.ToolSet;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    
     import java.util.Scanner;
-    
     import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
-
     class exampleBasicJava04 {
         public static void main(String[] args) {
     -->
@@ -415,11 +406,8 @@ For example, a simple agent described here is not likely to require more than 10
     import ai.koog.agents.core.tools.annotations.Tool;
     import ai.koog.agents.core.tools.reflect.ToolSet;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    
     import java.util.Scanner;
-    
     import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
-
     class exampleBasicJava05 {
         public static void main(String[] args) {
     -->
@@ -526,12 +514,8 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
     import ai.koog.agents.core.tools.reflect.ToolSet;
     import ai.koog.agents.features.eventHandler.feature.EventHandler;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-
-    
     import java.util.Scanner;
-    
     import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
-
     class exampleBasicJava06 {
         public static void main(String[] args) {
     -->
