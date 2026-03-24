@@ -20,7 +20,7 @@ import com.google.genai.types.ToolConfig
  * Each overridden method sets a tracking flag and delegates to `super`.
  * Tests verify that the flags are set, proving the override was invoked.
  *
- * Additionally applies a real customization:
+ * Additionally, applies real customization:
  * - Adds a `"source" to "test"` label to every request config
  */
 class CustomizedGoogleGenaiLLMClient(

@@ -519,6 +519,19 @@ class GoogleGenaiChatTest {
     // region Capability validation
 
     @Test
+    fun `execute rejects model with mismatched provider`() = runTest {
+        val anthropicModel = LLModel(
+            provider = LLMProvider.Anthropic,
+            id = "claude-3",
+            capabilities = listOf(LLMCapability.Completion)
+        )
+        val error = assertThrows<IllegalArgumentException> {
+            subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = anthropicModel)
+        }
+        error.message shouldBe "Model provider mismatch: model.provider=${LLMProvider.Anthropic}, client.llmProvider=${LLMProvider.Google}"
+    }
+
+    @Test
     fun `execute rejects model without Completion capability`() = runTest {
         val model = LLModel(provider = LLMProvider.Google, id = "x", capabilities = emptyList())
         assertThrows<IllegalArgumentException> {

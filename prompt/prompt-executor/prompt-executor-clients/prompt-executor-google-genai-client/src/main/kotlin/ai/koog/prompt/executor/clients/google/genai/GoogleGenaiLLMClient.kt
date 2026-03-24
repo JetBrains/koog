@@ -17,6 +17,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.requireMatchingProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -53,6 +54,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.future.await
@@ -64,6 +66,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.util.concurrent.ExecutorService
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -90,6 +93,18 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO,
     private val clock: Clock = Clock.System
 ) : LLMClient(), LLMEmbeddingProvider {
+
+    /**
+     * Java-friendly constructor that accepts an [ExecutorService] for blocking stream iteration.
+     * The executor is converted to a [CoroutineDispatcher] via [asCoroutineDispatcher].
+     */
+    public constructor(
+        client: Client,
+        llmProvider: LLMProvider,
+        fallbackThoughtSignature: String,
+        ioExecutor: ExecutorService,
+        clock: Clock
+    ) : this(client, llmProvider, fallbackThoughtSignature, ioExecutor.asCoroutineDispatcher(), clock)
 
     public companion object {
         private val logger = KotlinLogging.logger { }
@@ -144,6 +159,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     @OptIn(InternalAgentToolsApi::class)
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+        requireMatchingProvider(model)
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -157,6 +173,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = buildStreamFrameFlow {
+        requireMatchingProvider(model)
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -205,6 +222,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<LLMChoice> {
+        requireMatchingProvider(model)
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -650,8 +668,8 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             val isThought = part.thought().orElse(false)
 
             // Non-thought parts with a signature need a Reasoning carrier (unless already added)
-            val needsSignatureCarrier = signature != null && !isThought
-                    && responses.none { it is Message.Reasoning && it.encrypted == signature }
+            val needsSignatureCarrier = signature != null && !isThought &&
+                responses.none { it is Message.Reasoning && it.encrypted == signature }
 
             if (needsSignatureCarrier) {
                 responses.add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
@@ -755,6 +773,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     // region Embedding
 
     override suspend fun embed(text: String, model: LLModel): List<Double> {
+        requireMatchingProvider(model)
         require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
         }
