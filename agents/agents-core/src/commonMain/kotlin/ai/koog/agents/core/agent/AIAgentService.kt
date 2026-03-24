@@ -2,6 +2,8 @@
 
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -458,7 +460,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     outputType: TypeToken = typeToken<Output>(),
     parentAgentId: String? = null,
     clock: Clock = Clock.System
-): Tool<Input, AIAgentTool.AgentToolResult<Output>> = AIAgentTool(
+): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = AIAgentTool(
     agentService = this,
     agentName = agentName,
     agentDescription = agentDescription,
@@ -492,7 +494,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     outputSerializer: KSerializer<Output>,
     parentAgentId: String? = null,
     clock: Clock = Clock.System
-): Tool<Input, AIAgentTool.AgentToolResult<Output>> = createAgentTool(
+): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = createAgentTool(
     agentName = agentName,
     agentDescription = agentDescription,
     inputDescription = inputDescription,
@@ -500,4 +502,4 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     outputType = KSerializerTypeToken(outputSerializer),
     parentAgentId = parentAgentId,
     clock = clock
-)
+) as Tool<AgentToolInput<Input>, AgentToolResult<Output>>

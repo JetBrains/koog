@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -50,7 +51,7 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     json: Json = Json.Default,
-): Tool<Input, AgentToolResult<Output>> {
+): Tool<AgentToolInput<Input>, AgentToolResult<Output>> {
     val service = when (this) {
         is GraphAIAgent -> AIAgentService.fromAgent(this)
         is FunctionalAIAgent -> AIAgentService.fromAgent(this)
@@ -91,7 +92,7 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
     private val inputType: TypeToken,
     private val outputType: TypeToken,
     private val parentAgentId: String? = null
-) : Tool<Input, AgentToolResult<Output>>(
+) : Tool<AgentToolInput<Input>, AgentToolResult<Output>>(
     argsType = inputType,
     resultType = typeToken(AgentToolResult::class, listOf(outputType)),
     descriptor = getToolDescriptor(inputType, agentName, agentDescription)
@@ -138,6 +139,18 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
         val result: Output? = null
     )
 
+
+    /**
+     * Represents the input for [AIAgent] used as [Tool] (see [AIAgent.asTool])
+     *
+     * @param Input The type of the input data expected by the tool.
+     * @property input The input data provided to the agent tool for processing.
+     */
+    @Serializable
+    public data class AgentToolInput<Input>(
+        val input: Input
+    )
+
     @OptIn(InternalKoogSerializationApi::class)
     override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): AgentToolResult<Output> {
         return json.decodeFromJsonElement(
@@ -159,9 +172,11 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
     }
 
     @OptIn(InternalAgentToolsApi::class)
-    override suspend fun execute(args: Input): AgentToolResult<Output> {
+    override suspend fun execute(args: AgentToolInput<Input>): AgentToolResult<Output> {
+        val input = args.input
+
         return try {
-            val result = agentService.createAgentAndRun(args, id = nextToolAgentID())
+            val result = agentService.createAgentAndRun(input, id = nextToolAgentID())
 
             AgentToolResult(
                 successful = true,
