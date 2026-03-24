@@ -27,8 +27,8 @@ There are two main approaches to implementing history compression in your agent:
 - In a strategy graph
 - In a custom node (Kotlin)
 
-!!! warning 
-    Custom nodes are available only in Kotlin.
+!!! warning
+    History compression inside custom node logic is available only in Kotlin.
 
 ### History compression in a strategy graph
 
@@ -252,6 +252,9 @@ The history is compressed before sending the tool result back to the LLM. This p
 In this example, the history is compressed after completing the information collection phase, but before proceeding to the decision-making phase.
 
 ### History compression in a custom node
+
+!!! warning
+    History compression inside custom node logic is available only in Kotlin.
 
 If you are implementing a custom node, you can compress history using the `replaceHistoryWithTLDR()` function (Kotlin) as follows:
 
