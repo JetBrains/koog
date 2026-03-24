@@ -69,8 +69,10 @@ The simplest way to implement a custom node in a graph and define your own custo
     <!--- KNIT exampleCustomNodesJava01.java -->
 
 The code above represents a custom node `myNode` with predefined `Input` and `Output` types, with the optional name
-string parameter (`node_name`). In an actual example, here is a simple node that takes a string input and returns
-the input's length:
+string parameter (`node_name`). In Kotlin, you use the `node` DSL function. In Java, you use the `AIAgentNode.builder()` 
+pattern.
+
+In an actual example, here is a simple node that takes a string input and returns the input's length:
 
 === "Kotlin"
 
@@ -113,8 +115,9 @@ the input's length:
     ```
     <!--- KNIT exampleCustomNodesJava02.java -->
 
-Another way to create a custom node in Kotlin is to define an extension function on `AIAgentSubgraphBuilderBase` that
-calls the `node` function. In Java, you achieve the same reusability by extracting the node builder call into a helper method:
+Another way to create a custom node is to extract it into a reusable function. In Kotlin, you define an extension 
+function on `AIAgentSubgraphBuilderBase` that calls the `node` function. In Java, you extract the node builder call into
+a helper method.
 
 === "Kotlin"
 
@@ -165,7 +168,8 @@ calls the `node` function. In Java, you achieve the same reusability by extracti
     ```
     <!--- KNIT exampleCustomNodesJava03.java -->
 
-This creates a pass-through node that performs some custom logic but returns the input as the output without modification.
+This creates a pass-through node that performs some custom logic but returns the input as the output without 
+modification.
 
 ### Nodes with additional arguments
 
@@ -228,7 +232,8 @@ You can create nodes that accept arguments to customize their behavior:
 
 ### Parameterized nodes
 
-You can define nodes with input and output parameters:
+You can define nodes with generic input and output type parameters. In Kotlin, you use `inline` functions with `reified` 
+type parameters. In Java, you specify the types explicitly when building the node.
 
 === "Kotlin"
 
@@ -280,7 +285,9 @@ You can define nodes with input and output parameters:
 
 ### Stateful nodes
 
-If your node needs to maintain state between runs, you can use closure variables:
+If your node needs to maintain state between runs, you can use closure variables. In Kotlin, you declare a variable in 
+the enclosing function. In Java, you use thread-safe wrappers like `AtomicInteger` since lambda captures must be 
+effectively final.
 
 === "Kotlin"
 
@@ -336,7 +343,8 @@ If your node needs to maintain state between runs, you can use closure variables
 
 ## Node input and output types
 
-Nodes can have different input and output types, which are specified as generic parameters:
+Nodes can have different input and output types. In both Kotlin and Java, these are specified as generic type 
+parameters:
 
 === "Kotlin"
 
@@ -445,7 +453,7 @@ Nodes that perform an operation but return the input as the output.
 
 ### Transformation nodes
 
-Nodes that transform the input into a different output.
+Nodes that transform the input data and produce a modified output.
 
 === "Kotlin"
 
@@ -490,7 +498,8 @@ Nodes that transform the input into a different output.
 
 ### LLM interaction nodes
 
-Nodes that interact with the LLM.
+Nodes that interact with the LLM. In Kotlin, you have fine-grained control over the LLM session. In Java, you typically 
+use pre-built factory methods like `AIAgentNode.llmRequest()` that handle prompt construction automatically.
 
 === "Kotlin"
 
@@ -545,9 +554,12 @@ Nodes that interact with the LLM.
     <!--- KNIT exampleCustomNodesJava10.java -->
 
 !!! note
-    The Kotlin example above shows fine-grained control over the LLM session (custom prompt construction, explicit `requestLLMWithoutTools` call). The Java API provides higher-level factory methods like `AIAgentNode.llmRequest()` that handle prompt construction automatically — the input string becomes the user message. For most use cases this is sufficient; for advanced prompt customization, compose multiple nodes or use a custom subgraph.
+    The Kotlin example above shows fine-grained control over the LLM session (custom prompt construction, explicit `requestLLMWithoutTools` call). The Java API provides higher-level factory methods like `AIAgentNode.llmRequest()` that handle prompt construction automatically, where the input string becomes the user message. For advanced prompt customization, compose multiple nodes or use a custom subgraph.
 
 ### Tool run node
+
+Custom nodes that execute tools. In Kotlin, you can manually construct tool calls and execute them. In Java, you 
+typically use subgraphs that delegate tool orchestration to the LLM.
 
 === "Kotlin"
 
