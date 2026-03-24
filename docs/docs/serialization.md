@@ -24,56 +24,95 @@ plus two convenience methods for converting between `JSONElement` and strings:
 
 The following example shows all key operations:
 
-<!--- INCLUDE
-import ai.koog.serialization.JSONElement
-import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.typeToken
-import kotlinx.serialization.Serializable
+=== "Kotlin"
 
--->
+    <!--- INCLUDE
+    import ai.koog.serialization.JSONElement
+    import ai.koog.serialization.JSONSerializer
+    import ai.koog.serialization.kotlinx.KotlinxSerializer
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    -->
+    ```kotlin
+    @Serializable
+    data class User(val name: String, val age: Int)
 
-```kotlin
-@Serializable
-data class User(val name: String, val age: Int)
+    val serializer: JSONSerializer = KotlinxSerializer()
 
-val serializer: JSONSerializer = KotlinxSerializer()
+    // Encode a data class to a JSON string
+    val json: String = serializer.encodeToString(User("Alice", 30), typeToken<User>())
 
-// Encode a data class to a JSON string
-val json: String = serializer.encodeToString(User("Alice", 30), typeToken<User>())
+    // Decode a JSON string back to a data class
+    val user: User = serializer.decodeFromString(json, typeToken<User>())
 
-// Decode a JSON string back to a data class
-val user: User = serializer.decodeFromString(json, typeToken<User>())
+    // Encode to a JSONElement tree
+    val element: JSONElement = serializer.encodeToJSONElement(user, typeToken<User>())
 
-// Encode to a JSONElement tree
-val element: JSONElement = serializer.encodeToJSONElement(user, typeToken<User>())
+    // Decode from a JSONElement tree
+    val userFromElement: User = serializer.decodeFromJSONElement(element, typeToken<User>())
 
-// Decode from a JSONElement tree
-val userFromElement: User = serializer.decodeFromJSONElement(element, typeToken<User>())
+    // Convert between JSONElement and a raw JSON string
+    val jsonString = """{"key": "value"}"""
+    val jsonElement: JSONElement = serializer.decodeJSONElementFromString(jsonString)
+    val backToString: String = serializer.encodeJSONElementToString(jsonElement)
+    ```
+    <!--- KNIT example-serialization-01.kt -->
 
-// Convert between JSONElement and a raw JSON string
-val jsonString = """{"key": "value"}"""
-val jsonElement: JSONElement = serializer.decodeJSONElementFromString(jsonString)
-val backToString: String = serializer.encodeJSONElementToString(jsonElement)
-```
+=== "Java"
 
-<!--- KNIT example-tool-serialization-01.kt -->
+    <!--- INCLUDE
+    import ai.koog.serialization.JSONElement;
+    import ai.koog.serialization.TypeToken;
+    import ai.koog.serialization.jackson.JacksonSerializer;
+    import com.fasterxml.jackson.annotation.JsonProperty;
+    public class exampleSerializationJava01 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Jackson-serializable class
+    record User(
+        @JsonProperty("name") String name,
+        @JsonProperty("age") int age
+    ) {}
+
+    var serializer = new JacksonSerializer();
+
+    // Encode a data class to a JSON string
+    String json = serializer.encodeToString(new User("Alice", 30), TypeToken.of(User.class));
+
+    // Decode a JSON string back to a data class
+    User user = serializer.decodeFromString(json, TypeToken.of(User.class));
+
+    // Encode to a JSONElement tree
+    JSONElement element = serializer.encodeToJSONElement(user, TypeToken.of(User.class));
+
+    // Decode from a JSONElement tree
+    User userFromElement = serializer.decodeFromJSONElement(element, TypeToken.of(User.class));
+
+    // Convert between JSONElement and a raw JSON string
+    String jsonString = "{\"key\": \"value\"}";
+    JSONElement jsonElement = serializer.decodeJSONElementFromString(jsonString);
+    String backToString = serializer.encodeJSONElementToString(jsonElement);
+    ```
+    <!--- KNIT exampleSerializationJava01.java -->
+
 
 ## Type tokens
 
 `TypeToken` is how Koog passes type information at runtime.
 
-### Kotlin
+=== "Kotlin"
 
-<!--- INCLUDE
-import ai.koog.serialization.typeToken
+    <!--- INCLUDE
+    import ai.koog.serialization.typeToken
+    -->
+    ```kotlin
+    data class MyClass(val value: String)
 
--->
-
-```kotlin
-data class MyClass(val value: String)
-
-fun typeTokenExamples() {
     // Inline reified — preferred in Kotlin
     val tokenReified = typeToken<MyClass>()
 
@@ -82,20 +121,34 @@ fun typeTokenExamples() {
 
     // Generic type — preserves type arguments at runtime
     val tokenGeneric = typeToken<List<String>>()
-}
-```
+    ```
+    <!--- KNIT example-serialization-02.kt -->
 
-<!--- KNIT example-tool-serialization-02.kt -->
+=== "Java"
 
-### Java
+    <!--- INCLUDE
+    import ai.koog.serialization.TypeCapture;
+    import ai.koog.serialization.TypeToken;
+    import java.util.List;
+    public class exampleSerializationJava02 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    record MyClass(
+        String value
+    ) {}
 
-```java
-// Simple class
-TypeToken token = TypeToken.of(MyClass.class);
+    // Simple class
+    TypeToken tokenClass = TypeToken.of(MyClass.class);
 
-// Generic type — use TypeCapture to preserve type arguments
-TypeToken token = TypeToken.of(new TypeCapture<List<String>>() {});
-```
+    // Generic type — use TypeCapture to preserve type arguments
+    TypeToken tokenGeneric = TypeToken.of(new TypeCapture<List<String>>() {});
+    ```
+    <!--- KNIT exampleSerializationJava02.java -->
 
 ## `JSONElement` — library-agnostic JSON tree
 
@@ -113,41 +166,75 @@ JSONElement
     ├── JSONLiteral  – string, number, or boolean
     └── JSONNull     – JSON null singleton
 ```
-<!--- KNIT example-tool-serialization-01.txt -->
+<!--- KNIT example-serialization-01.txt -->
 
 ### Conversion to and from library types
 
 Each serialization integration provides extension functions that let you convert between `JSONElement` and the
-library's own dynamic JSON type. This is useful when you already have a `JsonElement` or `JsonNode` and
-want to pass it to a Koog (or vice versa), without going through a full encode/decode cycle.
+library's own dynamic JSON type. This is useful when you already have a `JsonElement`, `JsonNode`, etc. and
+want to pass it to Koog (or vice versa), without going through a full encode/decode cycle.
+Examples are provided below for each supported library.
 
 ### Building and reading elements
 
-<!--- INCLUDE
-import ai.koog.serialization.JSONArray
-import ai.koog.serialization.JSONLiteral
-import ai.koog.serialization.JSONNull
-import ai.koog.serialization.JSONObject
-import ai.koog.serialization.JSONPrimitive
--->
+=== "Kotlin"
 
-```kotlin
-val obj = JSONObject(
-    mapOf(
-        "name" to JSONPrimitive("Alice"),
-        "age" to JSONPrimitive(30),
-        "active" to JSONPrimitive(true),
+    <!--- INCLUDE
+    import ai.koog.serialization.JSONArray
+    import ai.koog.serialization.JSONLiteral
+    import ai.koog.serialization.JSONNull
+    import ai.koog.serialization.JSONObject
+    import ai.koog.serialization.JSONPrimitive
+    -->
+
+    ```kotlin
+    val obj = JSONObject(
+        mapOf(
+            "name" to JSONPrimitive("Alice"),
+            "age" to JSONPrimitive(30),
+            "active" to JSONPrimitive(true),
+        )
     )
-)
 
-val arr = JSONArray(listOf(JSONPrimitive(1), JSONPrimitive(2), JSONPrimitive(3)))
+    val arr = JSONArray(listOf(JSONPrimitive(1), JSONPrimitive(2), JSONPrimitive(3)))
 
-// Reading values from an object
-val nameContent: String = (obj.entries["name"] as JSONPrimitive).content  // "Alice"
-val age: Int? = (obj.entries["age"] as JSONPrimitive).intOrNull // 30
-```
+    // Reading values from an object
+    val nameContent: String = (obj.entries["name"] as JSONPrimitive).content  // "Alice"
+    val age: Int? = (obj.entries["age"] as JSONPrimitive).intOrNull // 30
+    ```
+    <!--- KNIT example-serialization-03.kt -->
 
-<!--- KNIT example-tool-serialization-03.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.serialization.JSONArray;
+    import ai.koog.serialization.JSONObject;
+    import ai.koog.serialization.JSONPrimitive;
+    import java.util.List;
+    import java.util.Map;
+    public class exampleSerializationJava03 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    JSONObject obj = new JSONObject(
+        Map.of(
+            "name", JSONPrimitive.of("Alice"),
+            "age", JSONPrimitive.of(30),
+            "active", JSONPrimitive.of(true)
+        )
+    );
+
+    JSONArray arr = new JSONArray(List.of(JSONPrimitive.of(1), JSONPrimitive.of(2), JSONPrimitive.of(3)));
+
+    // Reading values from an object
+    String nameContent = ((JSONPrimitive) obj.getEntries().get("name")).getContent();  // "Alice"
+    Integer age = ((JSONPrimitive) obj.getEntries().get("age")).getIntOrNull(); // 30
+    ```
+    <!--- KNIT exampleSerializationJava03.java -->
 
 ## Supported serializers
 
@@ -155,33 +242,61 @@ val age: Int? = (obj.entries["age"] as JSONPrimitive).intOrNull // 30
 
 - **Module**: `ai.koog:serialization-core` (included transitively with `ai.koog:agents-core`)
 - **Backed by**: kotlinx-serialization
-- **JSONElement mappers**: `JsonElement.toKoogJSONElement()` / `JSONElement.toKotlinxJsonElement()` (and per-subtype variants)
 
-<!--- INCLUDE
-import ai.koog.serialization.kotlinx.KotlinxSerializer
-import kotlinx.serialization.json.Json
--->
+=== "Kotlin"
 
-```kotlin
-// Default instance — uses Json.Default
-val defaultSerializer = KotlinxSerializer()
+    <!--- INCLUDE
+    import ai.koog.serialization.kotlinx.KotlinxSerializer
+    import kotlinx.serialization.json.Json
+    -->
 
-// Custom Json configuration
-val customSerializer = KotlinxSerializer(
-    json = Json {
-        ignoreUnknownKeys = true
-        prettyPrint = true
-    }
-)
-```
+    ```kotlin
+    // Default instance — uses Json.Default
+    val defaultSerializer = KotlinxSerializer()
 
-<!--- KNIT example-tool-serialization-04.kt -->
+    // Custom Json configuration
+    val customSerializer = KotlinxSerializer(
+        json = Json {
+            ignoreUnknownKeys = true
+            prettyPrint = true
+        }
+    )
+    ```
+
+    <!--- KNIT example-serialization-04.kt -->
+
+You can also convert between Koog's `JSONElement` and kotlinx-serialization's `JsonElement`
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.serialization.JSONElement
+    import ai.koog.serialization.JSONObject
+    import ai.koog.serialization.JSONPrimitive
+    import ai.koog.serialization.kotlinx.toKoogJSONElement
+    import ai.koog.serialization.kotlinx.toKotlinxJsonElement
+    import kotlinx.serialization.json.JsonElement
+    -->
+    ```kotlin
+    val koogJson: JSONElement = JSONObject(
+        mapOf(
+            "key" to JSONPrimitive("value")
+        )
+    )
+
+    // Convert to kotlinx-serialization dynamic JSON instance
+    val kotlinxJson: JsonElement = koogJson.toKotlinxJsonElement()
+
+    // Convert to Koog dynamic JSON instance
+    val koogJsonConverted: JSONElement = kotlinxJson.toKoogJSONElement()
+    ```
+    <!--- KNIT example-serialization-05.kt -->
+
 
 ### `JacksonSerializer` (JVM only)
 
 - **Module**: `ai.koog:serialization-jackson` (separate dependency)
 - **Backed by**: jackson-databind
-- **JSONElement mappers**: `JsonNode.toKoogJSONElement()` / `JSONElement.toJacksonJsonNode()` (and per-subtype variants)
 
 Add the dependency to your `build.gradle.kts`:
 
@@ -190,58 +305,175 @@ dependencies {
     implementation("ai.koog:serialization-jackson:<version>")
 }
 ```
-<!--- KNIT example-tool-serialization-02.txt -->
+<!--- KNIT example-serialization-02.txt -->
 
 Then create the serializer:
 
-<!--- INCLUDE
-import ai.koog.serialization.jackson.JacksonSerializer
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
--->
+=== "Kotlin"
 
-```kotlin
-// Default instance — uses a fresh ObjectMapper with JSONElementModule pre-registered
-val defaultSerializer = JacksonSerializer()
+    <!--- INCLUDE
+    import ai.koog.serialization.jackson.JacksonSerializer
+    import com.fasterxml.jackson.databind.DeserializationFeature
+    import com.fasterxml.jackson.databind.ObjectMapper
+    -->
 
-// Custom ObjectMapper configuration
-val customSerializer = JacksonSerializer(
-    objectMapper = ObjectMapper().apply {
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    ```kotlin
+    // Default instance — uses a fresh ObjectMapper with JSONElementModule pre-registered
+    val defaultSerializer = JacksonSerializer()
+
+    // Custom ObjectMapper configuration
+    val customSerializer = JacksonSerializer(
+        objectMapper = ObjectMapper().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
+    )
+    ```
+    <!--- KNIT example-serialization-06.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.serialization.jackson.JacksonSerializer;
+    import com.fasterxml.jackson.databind.DeserializationFeature;
+    import com.fasterxml.jackson.databind.ObjectMapper;
+    public class exampleSerializationJava04 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
     }
-)
-```
+    -->
+    ```java
+    // Default instance — uses a fresh ObjectMapper with JSONElementModule pre-registered
+    var defaultSerializer = new JacksonSerializer();
 
-<!--- KNIT example-tool-serialization-05.kt -->
+    // Custom ObjectMapper configuration
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    var customSerializer = new JacksonSerializer(objectMapper);
+    ```
+    <!--- KNIT exampleSerializationJava04.java -->
 
 !!! note
     `JacksonSerializer` automatically registers `JSONElementModule` on the `ObjectMapper` it uses for
     proper serialization/deserialization of the `JSONElement` types.
 
+You can also convert between Koog's `JSONElement` and Jackson's `JsonNode`
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.serialization.JSONElement
+    import ai.koog.serialization.JSONObject
+    import ai.koog.serialization.JSONPrimitive
+    import ai.koog.serialization.jackson.toJacksonJsonNode
+    import ai.koog.serialization.jackson.toKoogJSONElement
+    import com.fasterxml.jackson.databind.JsonNode
+    -->
+    ```kotlin
+    val koogJson: JSONElement = JSONObject(
+        mapOf(
+            "key" to JSONPrimitive("value")
+        )
+    )
+
+    // Convert to Jackson dynamic JSON instance
+    val jacksonJson: JsonNode = koogJson.toJacksonJsonNode()
+
+    // Convert to Koog dynamic JSON instance
+    val koogJsonConverted: JSONElement = jacksonJson.toKoogJSONElement()
+    ```
+    <!--- KNIT example-serialization-07.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.serialization.JSONElement;
+    import ai.koog.serialization.JSONObject;
+    import ai.koog.serialization.JSONPrimitive;
+    import ai.koog.serialization.jackson.JacksonJSONElementMappers;
+    import com.fasterxml.jackson.databind.JsonNode;
+    import java.util.Map;
+    public class exampleSerializationJava05 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    JSONElement koogJson = new JSONObject(
+        Map.of(
+            "key", JSONPrimitive.of("value")
+        )
+    );
+
+    // Convert to Jackson dynamic JSON instance
+    JsonNode jacksonJson = JacksonJSONElementMappers.toJacksonJsonNode(koogJson);
+
+    // Convert to Koog dynamic JSON instance
+    JSONElement koogJsonConverted = JacksonJSONElementMappers.toKoogJSONElement(jacksonJson);
+    ```
+    <!--- KNIT exampleSerializationJava05.java -->
+
+
 ## Configuring the serializer in `AIAgentConfig`
 
-Pass the `serializer` parameter when constructing `AIAgentConfig`.
-If you omit it, `KotlinxSerializer()` is used.
+=== "Kotlin" 
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.serialization.jackson.JacksonSerializer
--->
+    Pass the `serializer` parameter when constructing `AIAgentConfig`.
+    If you omit it, `KotlinxSerializer` is used.
 
-```kotlin
-val agentConfig = AIAgentConfig(
-    prompt = prompt("assistant") {
-        system("You are a helpful assistant.")
-    },
-    model = OpenAIModels.Chat.GPT4o,
-    maxAgentIterations = 10,
-    serializer = JacksonSerializer()
-)
-```
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.config.AIAgentConfig
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.serialization.jackson.JacksonSerializer
+    -->
 
-<!--- KNIT example-tool-serialization-06.kt -->
+    ```kotlin
+    val agentConfig = AIAgentConfig(
+        prompt = prompt("assistant") {
+            system("You are a helpful assistant.")
+        },
+        model = OpenAIModels.Chat.GPT4o,
+        maxAgentIterations = 10,
+        serializer = JacksonSerializer()
+    )
+    ```
+
+    <!--- KNIT example-serialization-08.kt -->
+
+=== "Java"
+
+    Pass the `serializer` parameter when constructing `AIAgentConfig`.
+    If you omit it, `JacksonSerializer` is used.
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.config.AIAgentConfig;
+    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.serialization.jackson.JacksonSerializer;
+    public class exampleSerializationJava06 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var agentConfig = AIAgentConfig.builder()
+        .model(OpenAIModels.Chat.GPT4o)
+        .prompt(
+            Prompt.builder("assistant")
+                .system("You are a helpful assistant")
+                .build()
+        )
+        .maxAgentIterations(10)
+        .serializer(new JacksonSerializer())
+        .build();
+    ```
+    <!--- KNIT exampleSerializationJava06.java -->
 
 ## How tools interact with the serializer
 
