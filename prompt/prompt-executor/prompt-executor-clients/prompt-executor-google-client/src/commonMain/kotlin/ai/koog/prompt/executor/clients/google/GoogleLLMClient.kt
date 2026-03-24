@@ -45,13 +45,6 @@ import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
@@ -91,21 +84,65 @@ public class GoogleClientSettings(
  * This client supports both standard and streaming text generation with
  * optional tool calling capabilities.
  *
- * @param apiKey The API key for the Google AI API
  * @param settings Custom client settings, defaults to standard API endpoint and timeouts
- * @param baseClient Optional custom HTTP client
+ * @param httpClient A preconfigured Koog HTTP client used for API calls. Must have authentication and other
+ *   request defaults already embedded. To use a Ktor-backed client with standard defaults, use the secondary
+ *   constructor that accepts an API key and an [io.ktor.client.HttpClient].
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class GoogleLLMClient @JvmOverloads constructor(
-    private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    private val httpClient: KoogHttpClient,
     private val clock: Clock = Clock.System
 ) : LLMClient(), LLMEmbeddingProvider {
 
+    /**
+     * Secondary constructor for creating a GoogleLLMClient backed with a Ktor HTTP client.
+     *
+     * @param apiKey The API key for the Google AI API
+     * @param settings Custom client settings, defaults to standard API endpoint and timeouts
+     * @param baseClient Ktor HTTP client used for making API requests.
+     * @param clock Clock instance used for tracking response metadata timestamps.
+     */
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: GoogleClientSettings = GoogleClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System
+    ) : this(
+        settings,
+        createConfiguredHttpClient(apiKey, settings, baseClient),
+        clock
+    )
+
     @OptIn(InternalStructuredOutputApi::class)
     private companion object {
+        private const val GOOGLE_CLIENT_NAME = "GoogleLLMClient"
+
         private val logger = KotlinLogging.logger { }
+        private val json = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            encodeDefaults = true
+            explicitNulls = false
+        }
+
+        private fun createConfiguredHttpClient(
+            apiKey: String,
+            settings: GoogleClientSettings,
+            baseClient: HttpClient = HttpClient()
+        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
+            clientName = GOOGLE_CLIENT_NAME,
+            logger = logger,
+            baseClient = baseClient,
+            baseUrl = settings.baseUrl,
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = json,
+            queryParameters = mapOf("key" to apiKey),
+        )
     }
 
     override fun getBasicJsonSchemaGenerator(): GoogleBasicJsonSchemaGenerator {
@@ -116,39 +153,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         return GoogleStandardJsonSchemaGenerator
     }
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        encodeDefaults = true
-        explicitNulls = false
-    }
-
-    private val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
-        clientName = clientName,
-        logger = logger,
-        baseClient = baseClient
-    ) {
-        defaultRequest {
-            url(settings.baseUrl)
-            url.parameters.append("key", apiKey)
-            contentType(ContentType.Application.Json)
-        }
-        install(SSE)
-        install(ContentNegotiation) {
-            json(json)
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
-        }
-    }
-
     /**
      * Provides the Large Language Model (LLM) provider associated with this client.
      *
      * @return The LLM provider, which is Google for this implementation.
      */
+    override val clientName: String = GOOGLE_CLIENT_NAME
+
     override fun llmProvider(): LLMProvider = LLMProvider.Google
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {

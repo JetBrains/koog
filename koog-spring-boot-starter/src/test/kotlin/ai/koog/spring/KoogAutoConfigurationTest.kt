@@ -8,7 +8,6 @@ import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.clients.retry.RetryConfig
@@ -64,7 +63,7 @@ class KoogAutoConfigurationTest {
         )
 
     @Test
-    fun `should not supply executor beans if no apiKey is provided`() {
+    fun `should not supply executor beans if no api key property is provided`() {
         createApplicationContextRunner()
             .run { context ->
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<SingleLLMPromptExecutor>() }
@@ -72,7 +71,7 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
-    fun `should supply OpenAI executor bean with provided apiKey and default baseUrl`() {
+    fun `should supply OpenAI executor bean with default baseUrl`() {
         val configApiKey = "some_api_key"
         createApplicationContextRunner()
             .withPropertyValues(
@@ -82,9 +81,6 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<OpenAILLMClient>(llmClient)
-
-                val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
-                assertEquals(configApiKey, apiKey)
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
@@ -245,7 +241,7 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
-    fun `should supply Anthropic executor bean with provided apiKey and default baseUrl`() {
+    fun `should supply Anthropic executor bean with default baseUrl`() {
         val configApiKey = "some_api_key"
         createApplicationContextRunner()
             .withPropertyValues(
@@ -255,9 +251,6 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<AnthropicLLMClient>(llmClient)
-
-                val apiKey = getPrivateFieldValue(llmClient, "apiKey")
-                assertEquals(configApiKey, apiKey)
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as AnthropicClientSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
@@ -307,7 +300,7 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
-    fun `should supply Google executor bean with provided apiKey and default baseUrl`() {
+    fun `should supply Google executor bean with default baseUrl`() {
         val configApiKey = "some_api_key"
         createApplicationContextRunner()
             .withPropertyValues(
@@ -317,9 +310,6 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<GoogleLLMClient>(llmClient)
-
-                val apiKey = getPrivateFieldValue(llmClient, "apiKey")
-                assertEquals(configApiKey, apiKey)
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as GoogleClientSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
@@ -368,7 +358,7 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
-    fun `should supply OpenRouter executor bean with provided apiKey and default baseUrl`() {
+    fun `should supply OpenRouter executor bean with default baseUrl`() {
         val configApiKey = "some_api_key"
         createApplicationContextRunner()
             .withPropertyValues(
@@ -379,9 +369,6 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<OpenRouterLLMClient>(llmClient)
-
-                val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
-                assertEquals(configApiKey, apiKey)
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
@@ -432,7 +419,7 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
-    fun `should supply DeepSeek executor bean with provided apiKey and default baseUrl`() {
+    fun `should supply DeepSeek executor bean with default baseUrl`() {
         val configApiKey = "some_api_key"
         createApplicationContextRunner()
             .withPropertyValues(
@@ -442,9 +429,6 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<DeepSeekLLMClient>(llmClient)
-
-                val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
-                assertEquals(configApiKey, apiKey)
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
@@ -492,7 +476,7 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
-    fun `should supply MistralAI executor bean with provided apiKey and default baseUrl`() {
+    fun `should supply MistralAI executor bean with default baseUrl`() {
         val configApiKey = "some_api_key"
         createApplicationContextRunner()
             .withPropertyValues(
@@ -502,9 +486,6 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<MistralAILLMClient>(llmClient)
-
-                val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
-                assertEquals(configApiKey, apiKey)
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
