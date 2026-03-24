@@ -110,3 +110,8 @@ Open Telemetry examples
 registerRunExampleTask("runExampleOpenTelemetryApp", "ai.koog.agents.example.features.opentelemetry.OpenTelemetryExample")
 registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.opentelemetry.langfuse.LangfuseExample")
 registerRunExampleTask("runExampleWeaveApp", "ai.koog.agents.example.features.opentelemetry.weave.WeaveExample")
+
+/*
+Custom subgraph examples
+*/
+registerRunExampleTask("runExampleCustomSubgraph", "ai.koog.agents.example.subgraphs.CustomSubgraphExample")
