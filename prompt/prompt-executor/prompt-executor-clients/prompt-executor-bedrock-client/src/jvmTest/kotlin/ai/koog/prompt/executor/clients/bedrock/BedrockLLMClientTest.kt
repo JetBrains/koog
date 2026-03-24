@@ -548,23 +548,32 @@ class BedrockLLMClientTest {
             }
         }
 
-        override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T {
+        override suspend fun <T> converseStream(
+            input: ConverseStreamRequest,
+            block: suspend (ConverseStreamResponse) -> T,
+        ): T {
             onConverseStream(input)
-            return block(ConverseStreamResponse {
-                stream = kotlinx.coroutines.flow.flow {
-                    emit(aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput.ContentBlockDelta(
-                        aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDeltaEvent {
-                            delta = aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDelta.Text("Hello!")
-                            contentBlockIndex = 0
-                        }
-                    ))
-                    emit(aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput.MessageStop(
-                        aws.sdk.kotlin.services.bedrockruntime.model.MessageStopEvent {
-                            stopReason = aws.sdk.kotlin.services.bedrockruntime.model.StopReason.EndTurn
-                        }
-                    ))
+            return block(
+                ConverseStreamResponse {
+                    stream = kotlinx.coroutines.flow.flow {
+                        emit(
+                            aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput.ContentBlockDelta(
+                                aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDeltaEvent {
+                                    delta = aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDelta.Text("Hello!")
+                                    contentBlockIndex = 0
+                                }
+                            )
+                        )
+                        emit(
+                            aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput.MessageStop(
+                                aws.sdk.kotlin.services.bedrockruntime.model.MessageStopEvent {
+                                    stopReason = aws.sdk.kotlin.services.bedrockruntime.model.StopReason.EndTurn
+                                }
+                            )
+                        )
+                    }
                 }
-            })
+            )
         }
 
         override val config: BedrockRuntimeClient.Config get() = throw UnsupportedOperationException()
