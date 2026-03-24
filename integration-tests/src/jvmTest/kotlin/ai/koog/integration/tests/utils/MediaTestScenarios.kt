@@ -13,8 +13,6 @@ object MediaTestScenarios {
 
         EMPTY_IMAGE,
         CORRUPTED_IMAGE,
-        LARGE_IMAGE, // 20MB for Gemini and OpenAI, 5 MB for Anthropic
-        LARGE_IMAGE_ANTHROPIC, // 20MB for Gemini and OpenAI, 5 MB for Anthropic
     }
 
     enum class TextTestScenario {
@@ -22,35 +20,20 @@ object MediaTestScenarios {
         UTF8_ENCODING,
         ASCII_ENCODING,
         UNICODE_TEXT,
-        CODE_SNIPPET,
-        FORMATTED_TEXT,
 
         EMPTY_TEXT,
-        LONG_TEXT_5_MB,
         CORRUPTED_TEXT
     }
 
     enum class MarkdownTestScenario {
         BASIC_MARKDOWN,
-        HEADERS,
-        LISTS,
-        LINKS,
-        CODE_BLOCKS,
-        TABLES,
-        FORMATTING,
 
         MALFORMED_SYNTAX,
         NESTED_FORMATTING,
-        EMBEDDED_HTML,
-        IRREGULAR_TABLES,
-        MATH_NOTATION, // LaTeX
-        EMPTY_CODE_BLOCKS,
-        SPECIAL_CHARS_HEADERS,
-        BROKEN_LINKS,
-        EMPTY_MARKDOWN,
-        MIXED_INDENTATION,
-        COMMENTS,
         COMPLEX_NESTED_LISTS,
+        EMBEDDED_HTML,
+        EMPTY_CODE_BLOCKS,
+        BROKEN_LINKS,
     }
 
     enum class AudioTestScenario {

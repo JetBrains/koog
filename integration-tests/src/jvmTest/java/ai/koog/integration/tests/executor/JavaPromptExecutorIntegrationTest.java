@@ -342,7 +342,6 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
-    @Disabled("KG-725 Java interop fails to pass tools to execute() method")
     public void integration_ToolChoiceNamedShouldPreferSpecifiedTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         MultiLLMPromptExecutor executor = createExecutor(model);

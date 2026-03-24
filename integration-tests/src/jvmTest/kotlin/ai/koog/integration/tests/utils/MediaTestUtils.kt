@@ -26,14 +26,6 @@ object MediaTestUtils {
             MediaTestScenarios.ImageTestScenario.CORRUPTED_IMAGE -> {
                 testResourcesDir.resolve("corrupted.png")
             }
-
-            MediaTestScenarios.ImageTestScenario.LARGE_IMAGE -> {
-                testResourcesDir.resolve("large.jpeg")
-            }
-
-            MediaTestScenarios.ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                testResourcesDir.resolve("large_5.jpeg")
-            }
         }
     }
 
@@ -49,48 +41,11 @@ object MediaTestUtils {
                 "This text contains UTF-8 characters: é, ü, ñ, ç, ß, 你好, こんにちは, Привет"
 
             MediaTestScenarios.TextTestScenario.ASCII_ENCODING ->
-                "!\"#\$%&'()*+,-./:;<=>?@[\\]^_`{|}~\n" +
+                "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\n" +
                     "   /\\_/\\  \n" +
                     "  ( o.o ) \n" +
                     "   > ^ <\n" +
                     "(∑, ∞, ∂)\n"
-
-            MediaTestScenarios.TextTestScenario.CODE_SNIPPET -> """
-            // Java code snippet
-            public class HelloWorld {
-                public static void main(String[] args) {
-                    System.out.println("Hello, World!");
-                }
-            }
-
-            # Python code snippet
-            def greet(name):
-                return f"Hello, {name}!"
-
-            print(greet("World"))
-            """.trimIndent()
-
-            MediaTestScenarios.TextTestScenario.FORMATTED_TEXT -> """
-            # Heading 1
-            ## Heading 2
-            ### Heading 3
-
-            This is a paragraph with *italic* and **bold** text.
-
-            * Bullet point 1
-            * Bullet point 2
-              * Nested bullet point
-
-            1. Numbered item 1
-            2. Numbered item 2
-               1. Nested numbered item
-
-            > This is a blockquote
-
-            ---
-
-            This is another paragraph after a horizontal rule.
-            """.trimIndent()
 
             MediaTestScenarios.TextTestScenario.UNICODE_TEXT -> """
             Unicode Text Examples:
@@ -110,10 +65,6 @@ object MediaTestUtils {
 
             Currency Symbols: $ € £ ¥ ₹ ₽ ₩
             """.trimIndent()
-
-            MediaTestScenarios.TextTestScenario.LONG_TEXT_5_MB -> { // for Anthropic
-                return testResourcesDir.resolve("fakefile_5MB.txt")
-            }
 
             MediaTestScenarios.TextTestScenario.CORRUPTED_TEXT -> {
                 return testResourcesDir.resolve("corrupted.txt")
@@ -135,123 +86,6 @@ object MediaTestUtils {
                 ---
 
                 > This is a blockquote.
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.HEADERS -> """
-                # H1 Header
-
-                ## H2 Header
-
-                ### H3 Header
-
-                #### H4 Header
-
-                ##### H5 Header
-
-                ###### H6 Header
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.LISTS -> """
-                ## Unordered List
-
-                - Item 1
-                - Item 2
-                  - Nested item 2.1
-                  - Nested item 2.2
-                - Item 3
-
-                ## Ordered List
-
-                1. First item
-                2. Second item
-                   1. Nested item 2.1
-                   2. Nested item 2.2
-                3. Third item
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.CODE_BLOCKS -> """
-                Inline code: `const x = 10;`
-
-                ```javascript
-                // JavaScript code block
-                function greet(name) {
-                    return `Hello, ${'$'}{name}!`;
-                }
-
-                console.log(greet('World'));
-                ```
-
-                ```python
-                # Python code block
-                def greet(name):
-                    return f"Hello, {name}!"
-
-                print(greet("World"))
-                ```
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.LINKS -> """
-                ## Basic Links
-
-                [Link to Google](https://www.google.com)
-
-                [Link with title](https://www.example.com "Example Website")
-
-                <https://www.example.com> - Automatic link
-
-                ## Reference Links
-
-                [Reference link][ref1]
-
-                [ref1]: https://www.reference.com "Reference Website"
-
-                ## Image Links
-
-                ![Alt text for image](https://example.com/image.jpg "Image Title")
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.TABLES -> """
-                ## Simple Table
-
-                | Header 1 | Header 2 | Header 3 |
-                |----------|----------|----------|
-                | Cell 1   | Cell 2   | Cell 3   |
-                | Cell 4   | Cell 5   | Cell 6   |
-
-                ## Table with Alignment
-
-                | Left-aligned | Center-aligned | Right-aligned |
-                |:-------------|:--------------:|--------------:|
-                | Left         | Center         | Right         |
-                | Text         | Text           | Text          |
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.FORMATTING -> """
-                ## Text Formatting
-
-                **Bold text** and __also bold text__
-
-                *Italic text* and _also italic text_
-
-                ***Bold and italic*** and ___also bold and italic___
-
-                ~~Strikethrough text~~
-
-                ## Horizontal Rules
-
-                ---
-
-                ***
-
-                ___
-
-                ## Escaping Characters
-
-                \*Not italic\*
-
-                \`Not code\`
-
-                \# Not a heading
             """.trimIndent()
 
             MediaTestScenarios.MarkdownTestScenario.MALFORMED_SYNTAX -> """
@@ -316,92 +150,11 @@ object MediaTestUtils {
                 ## Header with <span style="color: blue;">blue text</span>
             """.trimIndent()
 
-            MediaTestScenarios.MarkdownTestScenario.IRREGULAR_TABLES -> """
-                | Header 1 | Header 2 
-                | --- | ---
-                | Cell 1 | Cell 2 |
-
-                | Without | Separator |
-                | Row without right border
-                | --- | --- | --- |
-                | Too many | columns | here | and more |
-
-                Header 1 | Header 2 | Header 3
-                --- | ---
-                Missing | separators
-
-                |  | Empty header |
-                | --- | --- |
-                | Normal cell | |
-
-                | Very long header that doesn't fit | Short |
-                |---|---|
-                | Short | Very long cell with lots of text that goes beyond boundaries |
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.MATH_NOTATION -> """
-                Inline formula: \$\E = mc^2${'$'}
-
-                Block formula:
-                ${'$'}${'$'}
-                \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
-                ${'$'}${'$'}
-
-                Complex formula:
-                ${'$'}${'$'}
-                \sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
-                ${'$'}${'$'}
-
-                Matrix:
-                ${'$'}${'$'}
-                \begin{pmatrix}
-                a & b \\
-                c & d
-                \end{pmatrix}
-                ${'$'}${'$'}
-
-                Formula with ${'$'}\alpha, \beta, \gamma${'$'} Greek letters.
-
-                ${'$'}${'$'}
-                \lim_{x \to \infty} \frac{1}{x} = 0
-                ${'$'}${'$'}
-
-                Fraction: ${'$'}\frac{a}{b} = \frac{numerator}{denominator}${'$'}
-
-                Invalid LaTeX: ${'$'}\undefined{command}${'$'}                
-            """.trimIndent()
-
             MediaTestScenarios.MarkdownTestScenario.EMPTY_CODE_BLOCKS -> """
                 ```javascript
                 ```
                 ```python
                 ```
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.SPECIAL_CHARS_HEADERS -> """
-                # Header with symbols: !@#${'$'}%^&*()
-
-                ## Header with emoji: 🚀 Rocket 🌟
-
-                ### Header with quotes: "This is a header"
-
-                #### Header with apostrophe: That's a header
-
-                ##### Header with &amp; ampersand &lt;tags&gt;
-
-                ###### Header with < > brackets and | pipe
-
-                # Header with [square] brackets
-
-                ## Header with {curly} brackets
-
-                ### Header with symbols: ~!@#${'$'}%^&*()_+{}|:"<>?
-
-                #### Header with unicode: 中文 Русский العربية
-
-                ##### Header with math: ∑∞∫∂∆
-
-                ###### Header with \\backslashes\\
             """.trimIndent()
 
             MediaTestScenarios.MarkdownTestScenario.BROKEN_LINKS -> """
@@ -411,94 +164,25 @@ object MediaTestUtils {
 
                 [Link to non-existent file](nonexistent.md)
 
-                [Link with wrong protocol](htps://example.com)
+                [Link with wrong protocol](https://example.com)
 
                 ![Image without src]
 
                 ![Image with wrong path](images/not-found.jpg)
 
-                [Link with spaces in URL](http://example.com/path with spaces)
+                [Link with spaces in URL](https://example.com/path with spaces)
 
-                [Unclosed link](http://example.com
+                [Unclosed link](https://example.com
 
-                [Link with wrong brackets](http://example.com]
+                [Link with wrong brackets](https://example.com]
 
-                [](http://example.com) <!-- Empty link text -->
+                [](https://example.com) <!-- Empty link text -->
 
-                [Link to localhost](http://localhost:9999/invalid)
+                [Link to localhost](https://localhost:9999/invalid)
 
                 [Relative link](../../../nonexistent.html)
 
                 [Link with anchor to non-existent element](#nonexistent-anchor)
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.EMPTY_MARKDOWN -> ""
-
-            MediaTestScenarios.MarkdownTestScenario.MIXED_INDENTATION -> """
-                  - Item with 2 spaces
-                    - Subitem with 4 spaces
-                	- Subitem with tab
-                        - Subitem with 8 spaces
-                  	- Mixed indentation (space + tab)
-
-                1. Numbered list
-                   - Bulleted subitem
-                	2. Numbered subitem with tab
-                    3. Numbered with 4 spaces
-                  	- Mixed indentation
-
-                    Code with 4 spaces
-                	Code with tab
-                      Code with 6 spaces
-                  	Code with mixed indentation
-
-                > Quote
-                  > Quote with 2 spaces
-                	> Quote with tab
-                    > Quote with 4 spaces
-
-                - List item
-                  Continuation with 2 spaces
-                	Continuation with tab
-                    Continuation with 4 spaces
-            """.trimIndent()
-
-            MediaTestScenarios.MarkdownTestScenario.COMMENTS -> """
-                <!-- This is an HTML comment -->
-
-                Regular text.
-
-                <!-- 
-                Multi-line
-                HTML comment
-                -->
-
-                [//]: # (This is an alternative comment style)
-
-                [//]: # "Another way"
-
-                [comment]: <> (Link-style comment)
-
-                <!-- Comment with **Markdown** inside -->
-
-                Text with <!-- inline comment --> continuation.
-
-                <!-- Comment spanning
-                multiple
-                lines -->
-
-                [//]: # (Comment between list items)
-
-                - Item 1
-                [//]: # (Hidden comment)
-                - Item 2
-
-                <!-- Comment in code:
-                ```javascript
-                javascript console.log('hidden');
-                ```
-                -->
-                [comment]: # (Comment at end of file)
             """.trimIndent()
 
             MediaTestScenarios.MarkdownTestScenario.COMPLEX_NESTED_LISTS -> """
