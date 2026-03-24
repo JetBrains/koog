@@ -4,9 +4,7 @@ import ai.koog.rag.base.storage.capability.CapabilityAwareStorage
 import ai.koog.rag.base.storage.capability.StorageCapability
 import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
-import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SearchResult
-import ai.koog.rag.base.storage.search.HasFilterExpression
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import ai.koog.rag.vector.backend.VectorStorageBackend
 import ai.koog.rag.vector.embedder.DocumentEmbedder
@@ -27,7 +25,7 @@ import kotlinx.coroutines.flow.flow
 public open class EmbeddingStorage<Document>(
     private val embedder: DocumentEmbedder<Document>,
     private val storage: VectorStorageBackend<Document>
-) : VectorStorage<Document>, CapabilityAwareStorage {
+) : VectorStorage<Document, SimilaritySearchRequest>, CapabilityAwareStorage {
 
     override val capabilities: Set<StorageCapability> = setOf(StorageCapability.SIMILARITY_SEARCH)
 
@@ -53,23 +51,18 @@ public open class EmbeddingStorage<Document>(
         }
     }
 
-    private fun requireNoFilterExpression(request: SearchRequest) {
-        if (request is HasFilterExpression) {
-            require(request.filterExpression == null) {
-                "EmbeddingStorage does not support filter expressions, but filterExpression='${request.filterExpression}' was provided"
-            }
+    private fun requireNoFilterExpression(request: SimilaritySearchRequest) {
+        require(request.filterExpression == null) {
+            "EmbeddingStorage does not support filter expressions, but filterExpression='${request.filterExpression}' was provided"
         }
     }
 
     override suspend fun search(
-        request: SearchRequest,
+        request: SimilaritySearchRequest,
         namespace: String?
     ): List<SearchResult<Document>> {
         requireNoNamespace(namespace)
         requireNoFilterExpression(request)
-        require(request is SimilaritySearchRequest) {
-            "EmbeddingStorage requires a SimilaritySearchRequest"
-        }
         val queryText = request.queryText
         val minScore = request.minScore ?: 0.0
 

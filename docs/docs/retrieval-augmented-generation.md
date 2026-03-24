@@ -126,7 +126,7 @@ The example below wraps a `RetrievalStorage` (the base search interface that `Em
     // Create the RAG storage
     val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
     val documentEmbedder = JVMTextDocumentEmbedder(embedder)
-    val ragStorage: RetrievalStorage<Path> = EmbeddingStorage(documentEmbedder, InMemoryVectorStorageBackend())
+    val ragStorage: RetrievalStorage<Path, SimilaritySearchRequest> = EmbeddingStorage(documentEmbedder, InMemoryVectorStorageBackend())
 
     const val apiKey = "apikey"
     -->

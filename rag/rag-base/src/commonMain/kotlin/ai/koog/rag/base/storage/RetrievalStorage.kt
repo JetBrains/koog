@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.flow
         "ai.koog.rag.base.storage.RetrievalStorage"
     )
 )
-public typealias RankedDocumentStorage<Document> = RetrievalStorage<Document>
+public typealias RankedDocumentStorage<Document> = RetrievalStorage<Document, SearchRequest>
 
 /**
  * Represents a specialization of the DocumentStorage interface that handles ranking documents
@@ -20,8 +20,9 @@ public typealias RankedDocumentStorage<Document> = RetrievalStorage<Document>
  * a similarity score, enabling the filtering and sorting of documents by relevance.
  *
  * @param Document The type of the documents being processed and stored.
+ * @param Request The type of search requests accepted by this storage.
  */
-public interface RetrievalStorage<Document> {
+public interface RetrievalStorage<Document, in Request : SearchRequest> {
     /**
      * Ranks documents in the storage based on their relevance to the given query.
      * Each document is assigned a similarity score that represents how closely it matches the query.
@@ -39,7 +40,7 @@ public interface RetrievalStorage<Document> {
      * @param namespace An optional namespace to scope the search. If null, the default namespace is used.
      * @return A list of search results, each containing a document and its score.
      */
-    public suspend fun search(request: SearchRequest, namespace: String? = null): List<SearchResult<Document>>
+    public suspend fun search(request: Request, namespace: String? = null): List<SearchResult<Document>>
 }
 
 /**
@@ -49,8 +50,8 @@ public interface RetrievalStorage<Document> {
  * @param namespace An optional namespace to scope the search. If null, the default namespace is used.
  * @return A [Flow] emitting search results, each containing a document and its score.
  */
-public fun <Document> RetrievalStorage<Document>.searchAsFlow(
-    request: SearchRequest,
+public fun <Document, Request : SearchRequest> RetrievalStorage<Document, Request>.searchAsFlow(
+    request: Request,
     namespace: String? = null
 ): Flow<SearchResult<Document>> = flow {
     search(request, namespace).forEach { emit(it) }

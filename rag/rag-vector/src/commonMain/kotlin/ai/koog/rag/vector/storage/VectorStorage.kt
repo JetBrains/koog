@@ -4,6 +4,7 @@ import ai.koog.rag.base.storage.DeletionStorage
 import ai.koog.rag.base.storage.IngestionStorage
 import ai.koog.rag.base.storage.ReadStorage
 import ai.koog.rag.base.storage.RetrievalStorage
+import ai.koog.rag.base.storage.search.SearchRequest
 
 /**
  * Interface for a vector storage that combines document ingestion and retrieval.
@@ -12,9 +13,10 @@ import ai.koog.rag.base.storage.RetrievalStorage
  * Implementations handle embedding documents into vectors and storing them for similarity-based retrieval.
  *
  * @param Document The type representing the document being stored.
+ * @param Request The type of search requests accepted by this storage.
  */
-public interface VectorStorage<Document> :
+public interface VectorStorage<Document, in Request : SearchRequest> :
     IngestionStorage<Document>,
     ReadStorage<Document>,
-    RetrievalStorage<Document>,
+    RetrievalStorage<Document, Request>,
     DeletionStorage
