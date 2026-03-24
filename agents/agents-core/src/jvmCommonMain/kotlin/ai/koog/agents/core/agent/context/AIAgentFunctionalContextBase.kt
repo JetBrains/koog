@@ -4,10 +4,10 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
@@ -21,14 +21,13 @@ import ai.koog.agents.core.utils.asCoroutineContext
 import ai.koog.agents.core.utils.runOnLLMDispatcher
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.prompt.executor.model.StructureFixingParser
-import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
@@ -38,33 +37,34 @@ import kotlin.reflect.KClass
 
 @Suppress("MissingKDocForPublicAPI")
 public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipeline> internal actual constructor(
-    @PublishedApi
-    internal actual val delegate: AIAgentFunctionalContextBaseImpl<Pipeline>
-) : AIAgentFunctionalContextBaseAPI<Pipeline> by delegate {
-
-    @JvmOverloads
-    public actual suspend inline fun <reified T> requestLLMStructured(
-        message: String,
-        examples: List<T>,
-        fixingParser: StructureFixingParser?
-    ): Result<StructuredResponse<T>> = delegate.requestLLMStructured(message, examples, fixingParser)
-
-    @JvmOverloads
-    public actual suspend inline fun <reified Output> subtask(
-        taskDescription: String,
-        tools: List<Tool<*, *>>?,
-        llmModel: LLModel?,
-        llmParams: LLMParams?,
-        runMode: ToolCalls,
-        assistantResponseRepeatMax: Int?,
-    ): Output = delegate.subtaskImpl(
-        taskDescription,
-        tools,
-        llmModel,
-        llmParams,
-        runMode,
-        assistantResponseRepeatMax,
-    )
+    environment: AIAgentEnvironment,
+    agentId: String,
+    runId: String,
+    agentInput: Any?,
+    config: AIAgentConfig,
+    llm: AIAgentLLMContext,
+    stateManager: AIAgentStateManager,
+    storage: AIAgentStorage,
+    strategyName: String,
+    pipeline: Pipeline,
+    executionInfo: AgentExecutionInfo,
+    parentContext: AIAgentContext?,
+    storeMap: MutableMap<AIAgentStorageKey<*>, Any>
+) : AIAgentFunctionalContextBaseCommon<Pipeline>(
+    environment = environment,
+    agentId = agentId,
+    runId = runId,
+    agentInput = agentInput,
+    config = config,
+    llm = llm,
+    stateManager = stateManager,
+    storage = storage,
+    strategyName = strategyName,
+    pipeline = pipeline,
+    executionInfo = executionInfo,
+    storeMap = storeMap,
+    parentContext = parentContext
+) {
 
     /**
      * Retrieves the current AI agent environment.
@@ -161,12 +161,6 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun getHistory(executorService: ExecutorService? = null): List<Message> =
         config.runOnStrategyDispatcher(executorService) { getHistory() }
 
-    @JvmOverloads
-    public actual override suspend fun requestLLM(
-        message: String,
-        allowToolCalls: Boolean
-    ): Message.Response = delegate.requestLLM(message, allowToolCalls)
-
     /**
      * Sends a request to the Large Language Model (LLM) and retrieves its response.
      *
@@ -175,7 +169,8 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      *                       Defaults to true.
      * @param executorService An optional `ExecutorService` instance that enables custom thread management for the request.
      *                        Defaults to null.
-     * @return A [Message.Response] object containing the*/
+     * @return A [Message.Response] object containing the message received from the LLM.
+     */
     @JavaAPI
     @JvmOverloads
     public fun requestLLM(
@@ -222,7 +217,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         examples: List<T> = emptyList(),
         fixingParser: StructureFixingParser? = null
     ): Result<StructuredResponse<T>> =
-        delegate.requestLLMStructured(message, clazz.serializer(), examples, fixingParser)
+        requestLLMStructured(message, clazz.serializer(), examples, fixingParser)
 
     /**
      * Sends a request to the Language Learning Model (LLM) for streaming data.
