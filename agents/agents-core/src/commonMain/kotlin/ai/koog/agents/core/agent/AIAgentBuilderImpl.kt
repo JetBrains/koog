@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgentBuilderImpl.Companion.ModelNotSet
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.copy
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig

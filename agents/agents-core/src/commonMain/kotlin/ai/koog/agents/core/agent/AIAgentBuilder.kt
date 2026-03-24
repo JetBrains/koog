@@ -4,7 +4,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.copy
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -479,7 +478,6 @@ public class FunctionalAgentBuilder<Input, Output>(
  * for the agent. This builder allows flexible setup of an agent's functionality and behavior
  * based on the provided configuration and tools.
  *
- * @param State The type representing the state handled by the AI agent.
  * @param strategy The planning strategy used by the agent to process and execute tasks.
  * @param promptExecutor The executor responsible for handling AI prompts.
  * @param toolRegistry The registry of tools available for use by the agent. Defaults to an empty tool registry.

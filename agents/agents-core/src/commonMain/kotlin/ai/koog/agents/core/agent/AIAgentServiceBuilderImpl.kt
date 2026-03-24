@@ -5,7 +5,6 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.AIAgentBuilderImpl.Companion.ModelNotSet
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.copy
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
