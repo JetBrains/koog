@@ -143,3 +143,20 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         public fun builder(): PromptExecutorBuilder = PromptExecutorBuilder()
     }
 }
+
+public interface Xyz {
+    public suspend fun foo(): String
+}
+
+public abstract class BlockingXyz : Xyz {
+    public abstract fun fooBlocking(): String
+    override suspend fun foo(): String = fooBlocking()
+
+    public class Default(private val delegate: Xyz) : BlockingXyz() {
+        override suspend fun foo(): String = delegate.foo()
+
+        override fun fooBlocking(): String = runOnIOBoundDispatcher {
+            delegate.foo()
+        }
+    }
+}
