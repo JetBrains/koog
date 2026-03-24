@@ -1,11 +1,11 @@
 package ai.koog.rag.base.storage
 
 /**
- * Storage interface that provides the ability to ingest (add and update) documents.
+ * Storage interface that provides the ability to write (add and update) documents.
  *
  * @param Document The type of the documents being stored.
  */
-public interface IngestionStorage<Document> {
+public interface WriteStorage<Document> {
     /**
      * Adds new documents to the storage.
      *

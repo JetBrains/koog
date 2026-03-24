@@ -1,9 +1,9 @@
 package ai.koog.rag.vector.storage
 
 import ai.koog.rag.base.storage.DeletionStorage
-import ai.koog.rag.base.storage.IngestionStorage
-import ai.koog.rag.base.storage.ReadStorage
-import ai.koog.rag.base.storage.RetrievalStorage
+import ai.koog.rag.base.storage.LookupStorage
+import ai.koog.rag.base.storage.SearchStorage
+import ai.koog.rag.base.storage.WriteStorage
 import ai.koog.rag.base.storage.search.SearchRequest
 
 /**
@@ -16,7 +16,7 @@ import ai.koog.rag.base.storage.search.SearchRequest
  * @param Request The type of search requests accepted by this storage.
  */
 public interface VectorStorage<Document, in Request : SearchRequest> :
-    IngestionStorage<Document>,
-    ReadStorage<Document>,
-    RetrievalStorage<Document, Request>,
+    WriteStorage<Document>,
+    LookupStorage<Document>,
+    SearchStorage<Document, Request>,
     DeletionStorage

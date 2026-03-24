@@ -1,11 +1,11 @@
 package ai.koog.rag.base.storage
 
 /**
- * Storage interface that provides the ability to read documents by their identifiers.
+ * Storage interface that provides the ability to look up documents by their identifiers.
  *
  * @param Document The type of the documents being read.
  */
-public interface ReadStorage<Document> {
+public interface LookupStorage<Document> {
     /**
      * Gets documents by their identifiers.
      *

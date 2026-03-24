@@ -99,7 +99,7 @@ The steps are:
 
 Instead of injecting all retrieved documents into the prompt upfront, you can expose the RAG storage as a tool that the agent calls on demand. This gives the agent control over when and what to search for.
 
-The example below wraps a `RetrievalStorage` (the base search interface that `EmbeddingStorage` implements) in a function annotated with `@Tool` and `@LLMDescription`, then registers it in a `ToolRegistry` for the agent to use.
+The example below wraps a `SearchStorage` (the base search interface that `EmbeddingStorage` implements) in a function annotated with `@Tool` and `@LLMDescription`, then registers it in a `ToolRegistry` for the agent to use.
 
 === "Kotlin"
 
@@ -114,7 +114,7 @@ The example below wraps a `RetrievalStorage` (the base search interface that `Em
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-    import ai.koog.rag.base.storage.RetrievalStorage
+    import ai.koog.rag.base.storage.SearchStorage
     import ai.koog.rag.base.storage.search.SimilaritySearchRequest
     import ai.koog.rag.vector.embedder.JVMTextDocumentEmbedder
     import ai.koog.rag.vector.backend.InMemoryVectorStorageBackend
@@ -126,7 +126,7 @@ The example below wraps a `RetrievalStorage` (the base search interface that `Em
     // Create the RAG storage
     val embedder = LLMEmbedder(OllamaClient(), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
     val documentEmbedder = JVMTextDocumentEmbedder(embedder)
-    val ragStorage: RetrievalStorage<Path, SimilaritySearchRequest> = EmbeddingStorage(documentEmbedder, InMemoryVectorStorageBackend())
+    val ragStorage: SearchStorage<Path, SimilaritySearchRequest> = EmbeddingStorage(documentEmbedder, InMemoryVectorStorageBackend())
 
     const val apiKey = "apikey"
     -->

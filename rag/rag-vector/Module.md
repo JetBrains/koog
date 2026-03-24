@@ -7,7 +7,7 @@ A module that provides vector-based document storage and retrieval capabilities 
 The rag-vector module extends the rag-base module by implementing document storage with vector embeddings. It enables semantic search and similarity-based document retrieval by converting documents into vector representations. Key components include:
 
 - The `VectorStorageBackend` interface for low-level storage of documents with their pre-computed vector embeddings
-- The `VectorStorage` interface that combines `IngestionStorage`, `RetrievalStorage`, `DeletionStorage`, and `ReadStorage` into a single user-facing abstraction
+- The `VectorStorage` interface that combines `WriteStorage`, `SearchStorage`, `DeletionStorage`, and `LookupStorage` into a single user-facing abstraction
 - The `DocumentEmbedder` interface for converting documents into vector representations
 - The `TextDocumentEmbedder` implementation that works with text documents
 - The `EmbeddingStorage` class that implements `VectorStorage` by composing a `DocumentEmbedder` with a `VectorStorageBackend`
