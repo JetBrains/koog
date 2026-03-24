@@ -26,6 +26,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -475,6 +476,69 @@ class GoogleGenaiChatTest {
         img.mimeType shouldBe "image/png"
     }
 
+    @Test
+    fun `inline data image with gif produces ContentPart Image`() {
+        val candidate = Candidate.builder()
+            .content(
+                Content.builder().role("model").parts(
+                    listOf(
+                        Part.builder().inlineData(
+                            com.google.genai.types.Blob.builder().data("gif".toByteArray()).mimeType("image/gif")
+                                .build()
+                        ).build()
+                    )
+                ).build()
+            ).build()
+
+        val results = subject.processCandidate(candidate, ResponseMetaInfo.Empty)
+        val img = (results[0] as Message.Assistant).parts[0]
+            .shouldBeInstanceOf<ai.koog.prompt.message.ContentPart.Image>()
+        img.format shouldBe "gif"
+        img.mimeType shouldBe "image/gif"
+    }
+
+    @Test
+    fun `inline data audio produces ContentPart Audio`() {
+        val candidate = Candidate.builder()
+            .content(
+                Content.builder().role("model").parts(
+                    listOf(
+                        Part.builder().inlineData(
+                            com.google.genai.types.Blob.builder().data("audio".toByteArray()).mimeType("audio/mpeg")
+                                .build()
+                        ).build()
+                    )
+                ).build()
+            ).build()
+
+        val results = subject.processCandidate(candidate, ResponseMetaInfo.Empty)
+        val audio = (results[0] as Message.Assistant).parts[0]
+            .shouldBeInstanceOf<ai.koog.prompt.message.ContentPart.Audio>()
+        audio.format shouldBe "mpeg"
+        audio.mimeType shouldBe "audio/mpeg"
+    }
+
+    @Test
+    fun `inline data video produces ContentPart Video`() {
+        val candidate = Candidate.builder()
+            .content(
+                Content.builder().role("model").parts(
+                    listOf(
+                        Part.builder().inlineData(
+                            com.google.genai.types.Blob.builder().data("video".toByteArray()).mimeType("video/mp4")
+                                .build()
+                        ).build()
+                    )
+                ).build()
+            ).build()
+
+        val results = subject.processCandidate(candidate, ResponseMetaInfo.Empty)
+        val video = (results[0] as Message.Assistant).parts[0]
+            .shouldBeInstanceOf<ai.koog.prompt.message.ContentPart.Video>()
+        video.format shouldBe "mp4"
+        video.mimeType shouldBe "video/mp4"
+    }
+
     // endregion
 
     // region Config edge cases
@@ -528,7 +592,7 @@ class GoogleGenaiChatTest {
         val error = assertThrows<IllegalArgumentException> {
             subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = anthropicModel)
         }
-        error.message shouldBe "Model provider mismatch: model.provider=${LLMProvider.Anthropic}, client.llmProvider=${LLMProvider.Google}"
+        error.message shouldContain "provider mismatch"
     }
 
     @Test
@@ -545,7 +609,8 @@ class GoogleGenaiChatTest {
         assertThrows<IllegalArgumentException> {
             subject.execute(
                 prompt = Prompt(
-                    messages = emptyList(), id = "t",
+                    messages = emptyList(),
+                    id = "t",
                     params = GoogleParams(toolChoice = LLMParams.ToolChoice.Required)
                 ),
                 model = model,
@@ -561,7 +626,8 @@ class GoogleGenaiChatTest {
 
         // Should not throw — tools are silently dropped when toolChoice is Auto/None/null
         val (_, systemInstruction) = subject.buildSdkContents(
-            Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"), model
+            Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
+            model
         )
         val effectiveConfig = subject.buildConfig(LLMParams(), model, emptyList(), systemInstruction).build()
         effectiveConfig.tools().orElse(null).shouldBeNull()

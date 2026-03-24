@@ -668,8 +668,10 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             val isThought = part.thought().orElse(false)
 
             // Non-thought parts with a signature need a Reasoning carrier (unless already added)
-            val needsSignatureCarrier = signature != null && !isThought &&
-                responses.none { it is Message.Reasoning && it.encrypted == signature }
+            val needsSignatureCarrier =
+                signature != null &&
+                    !isThought &&
+                    responses.none { it is Message.Reasoning && it.encrypted == signature }
 
             if (needsSignatureCarrier) {
                 responses.add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
@@ -728,19 +730,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
                 inlineData != null -> {
                     val mimeType = inlineData.mimeType().orElse("application/octet-stream")
                     val data = inlineData.data().orElse(ByteArray(0))
-                    val contentPart = when (mimeType) {
-                        "image/png", "image/jpeg", "image/webp" -> ContentPart.Image(
-                            content = AttachmentContent.Binary.Bytes(data),
-                            format = mimeType.substringAfter("image/"),
-                            mimeType = mimeType,
-                        )
-
-                        else -> ContentPart.File(
-                            content = AttachmentContent.Binary.Bytes(data),
-                            mimeType = mimeType,
-                            format = mimeType.substringAfterLast('.'),
-                        )
-                    }
+                    val contentPart = inlineDataToContentPart(mimeType, data)
                     responses.add(
                         Message.Assistant(
                             parts = listOf(contentPart),
@@ -808,6 +798,35 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     // endregion
 
     // region Utility functions
+
+    /**
+     * Maps an inline data blob from the SDK response to the appropriate [ContentPart] subtype
+     */
+    private fun inlineDataToContentPart(mimeType: String, data: ByteArray): ContentPart = when {
+        mimeType.startsWith("image/") -> ContentPart.Image(
+            content = AttachmentContent.Binary.Bytes(data),
+            format = mimeType.substringAfter("image/"),
+            mimeType = mimeType,
+        )
+
+        mimeType.startsWith("audio/") -> ContentPart.Audio(
+            content = AttachmentContent.Binary.Bytes(data),
+            format = mimeType.substringAfter("audio/"),
+            mimeType = mimeType,
+        )
+
+        mimeType.startsWith("video/") -> ContentPart.Video(
+            content = AttachmentContent.Binary.Bytes(data),
+            format = mimeType.substringAfter("video/"),
+            mimeType = mimeType,
+        )
+
+        else -> ContentPart.File(
+            content = AttachmentContent.Binary.Bytes(data),
+            mimeType = mimeType,
+            format = mimeType.substringAfterLast('/'),
+        )
+    }
 
     /**
      * Converts a signature string to byte[] for the SDK.
