@@ -11,6 +11,7 @@ java {
 
 dependencies {
     implementation(libs.koog.agents)
+    implementation(libs.koog.serialization.jackson)
     implementation(libs.koog.agents.features.chat.history.jdbc)
     implementation(libs.koog.agents.features.persistence.jdbc)
     implementation(libs.jackson.databind)
