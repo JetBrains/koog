@@ -28,18 +28,21 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
+import com.google.genai.Client
 import com.google.genai.errors.ClientException
 import com.google.genai.errors.ServerException
 import com.google.genai.types.AutomaticFunctionCallingConfig
 import com.google.genai.types.Blob
 import com.google.genai.types.Candidate
 import com.google.genai.types.Content
+import com.google.genai.types.FunctionCall
 import com.google.genai.types.FunctionCallingConfig
 import com.google.genai.types.FunctionCallingConfigMode
 import com.google.genai.types.FunctionDeclaration
 import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.GenerateContentResponse
 import com.google.genai.types.Part
+import com.google.genai.types.Schema
 import com.google.genai.types.ThinkingConfig
 import com.google.genai.types.ThinkingLevel
 import com.google.genai.types.Tool
@@ -51,6 +54,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.future.await
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -65,7 +69,7 @@ import kotlin.uuid.Uuid
 /**
  * Implementation of [LLMClient] for Google's Gemini API using the official Google GenAI Java SDK.
  *
- * This client delegates all API calls to [com.google.genai.Client] async methods,
+ * This client delegates all API calls to [Client] async methods,
  * bridging between Koog's internal types and the SDK's native types.
  *
  * @property client The configured Google GenAI SDK client.
@@ -78,14 +82,14 @@ import kotlin.uuid.Uuid
  */
 @Suppress("TooManyFunctions")
 public open class GoogleGenaiLLMClient @JvmOverloads constructor(
-    private val client: com.google.genai.Client,
+    private val client: Client,
     private val llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
     private val fallbackThoughtSignature: String = DEFAULT_THOUGHT_SIGNATURE,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO,
     private val clock: Clock = Clock.System
 ) : LLMClient(), LLMEmbeddingProvider {
 
-    private companion object {
+    public companion object {
         private val logger = KotlinLogging.logger { }
 
         /**
@@ -93,14 +97,14 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
          *
          * See https://ai.google.dev/gemini-api/docs/thought-signatures
          */
-        public const val DEFAULT_THOUGHT_SIGNATURE = "context_engineering_is_the_way_to_go"
+        public const val DEFAULT_THOUGHT_SIGNATURE: String = "context_engineering_is_the_way_to_go"
 
         /**
          * Constant used to identify and validate the signature of skip-thought processes.
          *
          * See https://ai.google.dev/gemini-api/docs/thought-signatures
          */
-        public const val SKIP_THOUGHT_SIGNATURE = "skip_thought_signature_validator"
+        public const val SKIP_THOUGHT_SIGNATURE: String = "skip_thought_signature_validator"
     }
 
     override fun getBasicJsonSchemaGenerator(): GoogleBasicJsonSchemaGenerator {
@@ -317,7 +321,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
                     val args = parseJsonToMap(message.content)
                     val partBuilder = Part.builder()
                         .functionCall(
-                            com.google.genai.types.FunctionCall.builder()
+                            FunctionCall.builder()
                                 .name(message.tool)
                                 .args(args)
                                 .build()
@@ -797,7 +801,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private fun parseJsonToMap(jsonString: String): Map<String, Any?> {
         if (jsonString.isBlank() || jsonString == "{}") return emptyMap()
         return try {
-            val element = kotlinx.serialization.json.Json.parseToJsonElement(jsonString)
+            val element = Json.parseToJsonElement(jsonString)
             if (element is JsonObject) jsonObjectToMap(element) else emptyMap()
         } catch (e: Exception) {
             logger.error(e) { "Failed to parse JSON args: $jsonString" }
@@ -882,10 +886,10 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     }
 
     /**
-     * Converts a [JsonObject] to an SDK [com.google.genai.types.Schema] for response schema.
+     * Converts a [JsonObject] to an SDK [Schema] for response schema.
      */
-    private fun jsonObjectToSdkSchema(json: JsonObject): com.google.genai.types.Schema {
-        return com.google.genai.types.Schema.fromJson(json.toString())
+    private fun jsonObjectToSdkSchema(json: JsonObject): Schema {
+        return Schema.fromJson(json.toString())
     }
 
     // endregion

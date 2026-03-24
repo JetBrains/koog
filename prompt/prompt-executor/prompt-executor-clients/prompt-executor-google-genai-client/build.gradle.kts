@@ -9,6 +9,15 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+kotlin {
+    explicitApi()
+
+    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+    abiValidation {
+        enabled.set(true)
+    }
+}
+
 dependencies {
     api(project(":agents:agents-tools"))
     api(project(":prompt:prompt-executor:prompt-executor-clients"))
