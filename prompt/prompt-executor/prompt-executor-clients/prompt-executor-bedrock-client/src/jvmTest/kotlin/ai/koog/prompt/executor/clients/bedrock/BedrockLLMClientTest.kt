@@ -485,6 +485,100 @@ class BedrockLLMClientTest {
         }
     }
 
+    @Execution(ExecutionMode.SAME_THREAD)
+    @Test
+    fun `converse API includes guardrail config when settings are provided`() = runTest {
+        var capturedRequest: ConverseRequest? = null
+        val mockClient = createConverseMockClient(onConverse = { capturedRequest = it })
+
+        val client = BedrockLLMClient(
+            mockClient,
+            apiMethod = BedrockAPIMethod.Converse,
+            moderationGuardrailsSettings = BedrockGuardrailsSettings("test-guardrail-id", "2")
+        )
+
+        try {
+            client.execute(Prompt.build("test") { user("Hello") }, BedrockModels.AnthropicClaude4Sonnet, emptyList())
+
+            val guardrailConfig = requireNotNull(capturedRequest?.guardrailConfig) { "Guardrail config should be set" }
+            assertEquals("test-guardrail-id", guardrailConfig.guardrailIdentifier)
+            assertEquals("2", guardrailConfig.guardrailVersion)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Execution(ExecutionMode.SAME_THREAD)
+    @Test
+    fun `converseStream API includes guardrail config when settings are provided`() = runTest {
+        var capturedRequest: ConverseStreamRequest? = null
+        val mockClient = createConverseMockClient(onConverseStream = { capturedRequest = it })
+
+        val client = BedrockLLMClient(
+            mockClient,
+            apiMethod = BedrockAPIMethod.Converse,
+            moderationGuardrailsSettings = BedrockGuardrailsSettings("test-guardrail-id", "2")
+        )
+
+        try {
+            client.executeStreaming(Prompt.build("test") { user("Hello") }, BedrockModels.AnthropicClaude4Sonnet, emptyList()).toList()
+
+            val guardrailConfig = requireNotNull(capturedRequest?.guardrailConfig) { "Guardrail config should be set" }
+            assertEquals("test-guardrail-id", guardrailConfig.guardrailIdentifier)
+            assertEquals("2", guardrailConfig.guardrailVersion)
+        } finally {
+            client.close()
+        }
+    }
+
+    private fun createConverseMockClient(
+        onConverse: (ConverseRequest) -> Unit = {},
+        onConverseStream: (ConverseStreamRequest) -> Unit = {}
+    ): BedrockRuntimeClient = object : BedrockRuntimeClient {
+        override suspend fun converse(input: ConverseRequest): ConverseResponse {
+            onConverse(input)
+            return ConverseResponse {
+                output = aws.sdk.kotlin.services.bedrockruntime.model.ConverseOutput.Message(
+                    aws.sdk.kotlin.services.bedrockruntime.model.Message {
+                        role = aws.sdk.kotlin.services.bedrockruntime.model.ConversationRole.Assistant
+                        content = listOf(aws.sdk.kotlin.services.bedrockruntime.model.ContentBlock.Text("Hello!"))
+                    }
+                )
+                stopReason = aws.sdk.kotlin.services.bedrockruntime.model.StopReason.EndTurn
+            }
+        }
+
+        override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T {
+            onConverseStream(input)
+            return block(ConverseStreamResponse {
+                stream = kotlinx.coroutines.flow.flow {
+                    emit(aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput.ContentBlockDelta(
+                        aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDeltaEvent {
+                            delta = aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDelta.Text("Hello!")
+                            contentBlockIndex = 0
+                        }
+                    ))
+                    emit(aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput.MessageStop(
+                        aws.sdk.kotlin.services.bedrockruntime.model.MessageStopEvent {
+                            stopReason = aws.sdk.kotlin.services.bedrockruntime.model.StopReason.EndTurn
+                        }
+                    ))
+                }
+            })
+        }
+
+        override val config: BedrockRuntimeClient.Config get() = throw UnsupportedOperationException()
+        override suspend fun applyGuardrail(input: ApplyGuardrailRequest) = throw UnsupportedOperationException()
+        override suspend fun countTokens(input: CountTokensRequest) = throw UnsupportedOperationException()
+        override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest) = throw UnsupportedOperationException()
+        override suspend fun invokeModel(input: InvokeModelRequest) = throw UnsupportedOperationException()
+        override suspend fun <T> invokeModelWithBidirectionalStream(input: InvokeModelWithBidirectionalStreamRequest, block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T): T = throw UnsupportedOperationException()
+        override suspend fun <T> invokeModelWithResponseStream(input: InvokeModelWithResponseStreamRequest, block: suspend (InvokeModelWithResponseStreamResponse) -> T): T = throw UnsupportedOperationException()
+        override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest) = throw UnsupportedOperationException()
+        override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest) = throw UnsupportedOperationException()
+        override fun close() {}
+    }
+
     // Helper function to create a counting mock client
     private fun createCountingMockClient(onApplyGuardrail: () -> Unit): BedrockRuntimeClient {
         return object : BedrockRuntimeClient {
