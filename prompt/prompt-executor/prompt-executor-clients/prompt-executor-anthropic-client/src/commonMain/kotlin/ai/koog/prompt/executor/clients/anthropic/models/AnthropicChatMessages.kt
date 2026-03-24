@@ -218,7 +218,7 @@ public sealed interface AnthropicContent {
     public data class ToolResult(
         val toolUseId: String,
         val content: String,
-        val isError: Boolean? = null
+        val isError: Boolean
     ) : AnthropicContent
 }
 

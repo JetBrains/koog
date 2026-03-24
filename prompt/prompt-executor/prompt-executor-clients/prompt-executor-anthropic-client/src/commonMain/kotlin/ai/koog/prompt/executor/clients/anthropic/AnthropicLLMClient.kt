@@ -390,7 +390,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 AnthropicContent.ToolResult(
                                     toolUseId = message.id ?: "",
                                     content = message.content,
-                                    isError = message.isError.takeIf { it }
+                                    isError = message.isError
                                 )
                             )
                         )

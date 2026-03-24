@@ -17,7 +17,6 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 
@@ -265,6 +264,6 @@ class AnthropicToolSerializationTest {
 
         val toolResult = content[0].jsonObject
         assertEquals("tool_result", toolResult["type"]?.jsonPrimitive?.content)
-        assertNull(toolResult["is_error"])
+        assertEquals(false, toolResult["is_error"]?.jsonPrimitive?.booleanOrNull)
     }
 }
