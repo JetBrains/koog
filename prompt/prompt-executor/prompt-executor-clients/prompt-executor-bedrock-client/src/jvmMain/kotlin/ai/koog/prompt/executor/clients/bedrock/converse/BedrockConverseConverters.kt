@@ -29,10 +29,10 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ConverseResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamOutput
 import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentBlock
-import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailConfiguration
-import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailStreamConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentSource
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailStreamConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageSource
