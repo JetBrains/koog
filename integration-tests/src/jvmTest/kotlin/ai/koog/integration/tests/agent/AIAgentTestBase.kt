@@ -34,7 +34,6 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -68,13 +67,6 @@ open class AIAgentTestBase {
         lateinit var testResourcesDir: Path
 
         @JvmStatic
-        fun getLatestModels() = listOf(
-            AnthropicModels.Opus_4_6,
-            OpenAIModels.Chat.GPT5_4,
-            GoogleModels.Gemini3_Flash_Preview,
-        ).stream()
-
-        @JvmStatic
         @BeforeAll
         fun setup() {
             testResourcesDir = AIAgentTestBase::class.java.getResource("/media")!!.toURI().toPath()
@@ -82,7 +74,7 @@ open class AIAgentTestBase {
         }
 
         @JvmStatic
-        fun allModels(): Stream<LLModel> = Models.allCompletionModels()
+        fun latestModels() = Models.latestModels()
 
         @JvmStatic
         fun modelsWithVisionCapability(): Stream<Arguments> = Models.modelsWithVisionCapability()

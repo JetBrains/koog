@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
 import kotlin.time.Duration.Companion.seconds
 
 class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
@@ -45,6 +46,9 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
             )
 
     companion object {
+        @JvmStatic
+        fun allModels(): Stream<LLModel> = Models.allCompletionModels()
+
         @JvmStatic
         @BeforeAll
         fun setup() {
@@ -78,7 +82,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_BuilderWithToolRegistry(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(
@@ -114,7 +118,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_BuilderWithGraphStrategy(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "builder graph-strategy tool integration")
@@ -148,7 +152,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalStrategyWithLambda(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -187,7 +191,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalStrategySimple(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -226,7 +230,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalStrategyWithMultipleSteps(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -304,7 +308,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_BuilderWithMultipleFeatures(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -343,7 +347,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalStrategyErrorHandling(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -380,7 +384,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_BuilderWithTemperatureControl(model: LLModel) = runTest(timeout = 120.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -408,7 +412,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_BuilderWithMaxIterations(model: LLModel) = runTest(timeout = 120.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -430,7 +434,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalStrategyWithExceptionHandling(model: LLModel) = runTest(timeout = 120.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -459,7 +463,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_BuilderWithNumberOfChoices(model: LLModel) = runTest(timeout = 120.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -485,7 +489,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalStrategyWithContextAccess(model: LLModel) = runTest(timeout = 120.seconds) {
         Models.assumeAvailable(model.provider)
 

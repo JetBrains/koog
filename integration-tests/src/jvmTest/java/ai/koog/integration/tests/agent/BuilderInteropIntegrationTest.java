@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BuilderInteropIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_BuilderBasicUsage(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -38,7 +38,7 @@ public class BuilderInteropIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_BuilderWithTemperature(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -57,7 +57,7 @@ public class BuilderInteropIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_BuilderWithToolRegistry(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -78,7 +78,7 @@ public class BuilderInteropIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_EventHandler(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -112,7 +112,7 @@ public class BuilderInteropIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_BuilderWithMaxIterations(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 

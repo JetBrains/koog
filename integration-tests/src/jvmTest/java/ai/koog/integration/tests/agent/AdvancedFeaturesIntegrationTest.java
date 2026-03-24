@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AdvancedFeaturesIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_CustomPipelineFeature(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
