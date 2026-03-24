@@ -12,7 +12,9 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -80,11 +82,19 @@ class AIAgentToolTest {
             agentDescription = "Test agent description",
         )
 
-        assertEquals("testAgent", tool.descriptor.name)
-        assertEquals("Test agent description", tool.descriptor.description)
-        assertEquals(1, tool.descriptor.requiredParameters.size)
-        assertEquals("Test request description", tool.descriptor.requiredParameters[0].description)
-        assertEquals(ToolParameterType.String, tool.descriptor.requiredParameters[0].type)
+        tool.descriptor should {
+            it.name shouldBe "testAgent"
+            it.description shouldBe "Test agent description"
+            it.requiredParameters.size shouldBe 1
+
+            it.requiredParameters[0].type.shouldBeTypeOf<ToolParameterType.Object> {
+                it.properties.size shouldBe 1
+                it.properties[0] should {
+                    it.description shouldBe "Test request description"
+                    it.type shouldBe ToolParameterType.String
+                }
+            }
+        }
     }
 
     @OptIn(InternalAgentToolsApi::class)
