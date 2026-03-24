@@ -3,6 +3,8 @@ package ai.koog.prompt.executor.clients.google.genai
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.resolveEffectiveTools
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -140,19 +142,14 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     // region Execute
 
+    @OptIn(InternalAgentToolsApi::class)
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.supports(LLMCapability.Tools) || tools.isEmpty()) {
-            "Model ${model.id} does not support tools"
-        }
 
-        val (contents, systemInstruction) = buildSdkContents(prompt, model)
-        val config = buildConfig(prompt.params, model, tools, systemInstruction).build()
-        val response = callApi { client.async.models.generateContent(model.id, contents, config).await() }
-        return processResponse(response).first()
+        return doExecute(prompt, model, tools).first()
     }
 
     override fun executeStreaming(
@@ -202,6 +199,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         }
     }.flowOn(ioDispatcher).requireEndFrame()
 
+    @OptIn(InternalAgentToolsApi::class)
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
@@ -211,15 +209,22 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
-        require(model.supports(LLMCapability.Tools) || tools.isEmpty()) {
-            "Model ${model.id} does not support tools"
-        }
         require(model.supports(LLMCapability.MultipleChoices)) {
             "Model ${model.id} does not support multiple choices"
         }
 
+        return doExecute(prompt, model, tools)
+    }
+
+    @OptIn(InternalAgentToolsApi::class)
+    private suspend fun doExecute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<List<Message.Response>> {
+        val effectiveTools = tools.resolveEffectiveTools(model, prompt.params.toolChoice)
         val (contents, systemInstruction) = buildSdkContents(prompt, model)
-        val config = buildConfig(prompt.params, model, tools, systemInstruction).build()
+        val config = buildConfig(prompt.params, model, effectiveTools, systemInstruction).build()
         val response = callApi { client.async.models.generateContent(model.id, contents, config).await() }
         return processResponse(response)
     }
@@ -646,7 +651,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
             // Create Reasoning for any part with signature, unless the part itself is a thought
             // and we haven't already added a reasoning message for this signature.
-            if (signature != null && !isThought && responses.none { it is Message.Reasoning && it.encrypted == signature }) {
+            if (signature != null && !isThought &&
+                responses.none { it is Message.Reasoning && it.encrypted == signature }
+            ) {
                 responses.add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
             }
 

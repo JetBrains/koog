@@ -527,15 +527,31 @@ class GoogleGenaiChatTest {
     }
 
     @Test
-    fun `execute rejects tools when model lacks Tools capability`() = runTest {
+    fun `execute rejects tools when model lacks Tools capability and toolChoice is Required`() = runTest {
         val model = LLModel(provider = LLMProvider.Google, id = "x", capabilities = listOf(LLMCapability.Completion))
         assertThrows<IllegalArgumentException> {
             subject.execute(
-                prompt = Prompt(messages = emptyList(), id = "t"),
+                prompt = Prompt(
+                    messages = emptyList(), id = "t",
+                    params = GoogleParams(toolChoice = LLMParams.ToolChoice.Required)
+                ),
                 model = model,
                 tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = emptyList()))
             )
         }
+    }
+
+    @Test
+    fun `execute silently drops tools when model lacks Tools capability and toolChoice is optional`() = runTest {
+        val model = LLModel(provider = LLMProvider.Google, id = "x", capabilities = listOf(LLMCapability.Completion))
+        val tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = emptyList()))
+
+        // Should not throw — tools are silently dropped when toolChoice is Auto/None/null
+        val (_, systemInstruction) = subject.buildSdkContents(
+            Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"), model
+        )
+        val effectiveConfig = subject.buildConfig(LLMParams(), model, emptyList(), systemInstruction).build()
+        effectiveConfig.tools().orElse(null).shouldBeNull()
     }
 
     // endregion
