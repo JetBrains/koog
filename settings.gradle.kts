@@ -71,7 +71,7 @@ include(":embeddings:embeddings-base")
 include(":embeddings:embeddings-llm")
 
 include(":rag:rag-base")
-include(":rag:vector-storage")
+include(":rag:rag-vector")
 
 include(":a2a:a2a-core")
 include(":a2a:a2a-server")
