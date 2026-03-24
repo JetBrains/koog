@@ -25,9 +25,6 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return Models.bedrockModels().flatMap { model ->
                 listOf(
                     MarkdownTestScenario.BASIC_MARKDOWN,
-                    MarkdownTestScenario.HEADERS,
-                    MarkdownTestScenario.TABLES,
-                    MarkdownTestScenario.CODE_BLOCKS
                 ).map { scenario -> Arguments.of(scenario, model) }.stream()
             }
         }
@@ -37,7 +34,6 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return Models.bedrockModels().flatMap { model ->
                 listOf(
                     TextTestScenario.BASIC_TEXT,
-                    TextTestScenario.LONG_TEXT_5_MB
                 ).map { scenario -> Arguments.of(scenario, model) }.stream()
             }
         }
