@@ -34,13 +34,13 @@ val result = executor.execute(prompt, model)
 ### Example of usage
 
 ```kotlin
-// Creating a prompt executor implementation
+// Creating a custom prompt executor
 class MyPromptExecutor : PromptExecutor() {
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         // Implementation details
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> {
         // Implementation details
     }
 }
@@ -51,8 +51,8 @@ suspend fun processPrompt(executor: PromptExecutor, prompt: Prompt, model: LLMod
     println("Response: $response")
 
     // With streaming
-    executor.executeStreaming(prompt, model).collect { chunk ->
-        print(chunk)
+    executor.executeStreaming(prompt, model).collect { frame ->
+        print(frame)
     }
 }
 ```
@@ -65,14 +65,10 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 
-// Example with SingleLLMPromptExecutor
-val openAIClient = OpenAILLMClient(apiKey = "your-api-key")
-val singleExecutor = SingleLLMPromptExecutor(openAIClient)
-
 // Example with MultiLLMPromptExecutor
+val openAIClient = OpenAILLMClient(apiKey = "your-api-key")
 val anthropicClient = AnthropicLLMClient(apiKey = "your-anthropic-key")
 val multiExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to openAIClient,

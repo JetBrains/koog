@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.selection.ExperimentalSelectionApi
 import ai.koog.prompt.executor.selection.ModelSelection
 import ai.koog.prompt.executor.selection.ModelSelector
 import ai.koog.prompt.llm.LLMProvider
@@ -21,6 +22,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalSelectionApi::class)
 class RoutingLLMPromptExecutorTest {
 
     private val prompt = Prompt.build("test-prompt") {

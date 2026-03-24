@@ -39,21 +39,19 @@ val anthropicClient = AnthropicLLMClient("your-anthropic-api-key")
 val multiExecutor = MultiLLMPromptExecutor(openAIClient, anthropicClient)
 
 // Create a prompt
-val prompt = prompt {
-    systemMessage("You are a helpful assistant.")
-    userMessage("Explain quantum computing in simple terms.")
+val prompt = Prompt.build("example") {
+    system("You are a helpful assistant.")
+    user("Explain quantum computing in simple terms.")
 }
 
-// Execute the prompt
-val response = multiExecutor.execute(
-    prompt = prompt,
-    model = LLModel.GPT_4
-)
+val model = OpenAIModels.Chat.GPT4o
 
+// Execute the prompt
+val response = multiExecutor.execute(prompt = prompt, model = model)
 println(response)
 
 // Streaming execution
-multiExecutor.executeStreaming(prompt, LLModel.GPT_4).collect { chunk ->
-    print(chunk)
+multiExecutor.executeStreaming(prompt, model).collect { frame ->
+    print(frame)
 }
 ```

@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.selection.ExperimentalSelectionApi
 import ai.koog.prompt.executor.selection.ModelSelection
 import ai.koog.prompt.executor.selection.ModelSelector
 import ai.koog.prompt.llm.LLMProvider
@@ -37,7 +38,7 @@ import kotlin.jvm.JvmOverloads
  * @param clientRouter Router responsible for selecting appropriate clients for each request
  * @param fallback Optional fallback configuration when no client is available for the requested model
  */
-@OptIn(ExperimentalRoutingApi::class)
+@OptIn(ExperimentalRoutingApi::class, ExperimentalSelectionApi::class)
 public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     private val clientRouter: LLMClientRouter,
     private val fallback: FallbackPromptExecutorSettings? = null,
@@ -137,6 +138,30 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
+     * Executes a given prompt using the specified tools and model, and returns a list of response messages.
+     *
+     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @param model The LLM model to use for execution.
+     * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
+     */
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<Message.Response> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(model)
+        val response = effectiveClient.execute(prompt, effectiveModel, tools)
+
+        logger.debug { "Response: $response" }
+
+        return response
+    }
+
+    /**
      * Executes [prompt] using the model and client chosen by [modelSelector].
      *
      * Passes all models available in this executor to [modelSelector], then routes to the
@@ -165,6 +190,25 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
+     * Executes the given prompt with the specified model and streams the response in chunks as a flow.
+     *
+     * @param prompt The prompt to execute, containing the messages and parameters.
+     * @param model The LLM model to use for execution.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     **/
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
+        logger.debug { "Executing streaming prompt: $prompt with model: $model" }
+        return flow {
+            val (client, effectiveModel) = chooseClientAndModel(model)
+            emitAll(client.executeStreaming(prompt, effectiveModel, tools))
+        }
+    }
+
+    /**
      * Executes [prompt] using the model and client chosen by [modelSelector] and streams output frames.
      *
      * Passes all models available in this executor to [modelSelector], then routes to the
@@ -187,6 +231,30 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
             val (client, effectiveModel) = chooseClientAndModel(modelSelector)
             emitAll(client.executeStreaming(prompt, effectiveModel, tools))
         }
+    }
+
+    /**
+     * Executes a given prompt using the specified tools and model and returns a list of model choices.
+     *
+     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @param model The LLM model to use for execution.
+     * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
+     */
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+
+        val (client, effectiveModel) = chooseClientAndModel(model)
+        val choices = client.executeMultipleChoices(prompt, effectiveModel, tools)
+
+        logger.debug { "Choices: $choices" }
+
+        return choices
     }
 
     /**
@@ -218,6 +286,25 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
+     * Moderates the provided multi-modal content using the specified model.
+     *
+     * @param prompt The `Prompt` containing the content to be moderated.
+     * @param model The `LLModel` to use for moderation, including its ID and provider information.
+     * @return A `ModerationResult` representing the result of the moderation process.
+     * @throws IllegalArgumentException If no client is found for the model's provider.
+     */
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        logger.debug { "Moderating multi-modal content with model: ${model.id}" }
+
+        val (client, effectiveModel) = chooseClientAndModel(model)
+
+        return client.moderate(prompt, effectiveModel)
+    }
+
+    /**
      * Moderates [prompt] using the model and client chosen by [modelSelector].
      *
      * Passes all models available in this executor to [modelSelector], then routes to the
@@ -234,9 +321,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         modelSelector: ModelSelector
     ): ModerationResult {
         logger.debug { "Moderating multi-modal content with modelSelector: $modelSelector" }
-
         val (client, effectiveModel) = chooseClientAndModel(modelSelector)
-
         return client.moderate(prompt, effectiveModel)
     }
 
@@ -285,6 +370,20 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     override fun close() {
         modelsDiscoveryScope.cancel()
         clientRouter.clients.forEach { it.close() }
+    }
+
+    private fun chooseClientAndModel(requestedModel: LLModel): ExecutionSubject {
+        val lbClient = clientRouter.clientFor(requestedModel)
+        return when {
+            lbClient != null -> lbClient to requestedModel
+
+            effectiveFallback != null -> {
+                logger.debug { "No client found for provider: ${requestedModel.provider}, falling back to model: ${effectiveFallback.second.id}" }
+                effectiveFallback
+            }
+
+            else -> throw IllegalArgumentException("No client found for provider: ${requestedModel.provider}")
+        }
     }
 
     /**

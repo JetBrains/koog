@@ -84,19 +84,11 @@ kotlin {
             dependsOn(nonJvmCommonTest)
         }
 
-        jsMain {
+        webMain {
             dependsOn(nonJvmCommonMain)
         }
 
-        jsTest {
-            dependsOn(nonJvmCommonTest)
-        }
-
-        wasmJsMain {
-            dependsOn(nonJvmCommonMain)
-        }
-
-        wasmJsTest {
+        webTest {
             dependsOn(nonJvmCommonTest)
         }
 

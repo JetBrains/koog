@@ -1,5 +1,5 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalPromptAPI::class)
+@file:OptIn(InternalPromptAPI::class, ExperimentalSelectionApi::class)
 
 package ai.koog.prompt.executor.model
 
@@ -9,6 +9,7 @@ import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.execution.utils.runOnIOBoundDispatcher
+import ai.koog.prompt.executor.selection.ExperimentalSelectionApi
 import ai.koog.prompt.executor.selection.ModelSelector
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice

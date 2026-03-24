@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 
+@OptIn(ExperimentalSelectionApi::class)
 internal class TestSelectingPromptExecutor(
     private val availableModels: List<LLModel>,
 ) : PromptExecutor() {

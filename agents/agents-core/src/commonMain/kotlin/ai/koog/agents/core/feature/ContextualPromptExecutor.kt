@@ -6,6 +6,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.selection.ExperimentalSelectionApi
+import ai.koog.prompt.executor.selection.ModelSelector
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -234,6 +236,47 @@ public class ContextualPromptExecutor(
         )
 
         return result
+    }
+
+    // TODO: Pipeline callbacks (onLLMCallStarting, onLLMCallCompleted, etc.) are not fired for ModelSelector-based
+    //  calls because the final model is not known until the nested executor resolves it. These overrides delegate
+    //  directly to the nested executor without any observability hooks.
+    //  Fix requires model info in client response metadata — tracked separately.
+
+    @OptIn(ExperimentalSelectionApi::class)
+    override suspend fun execute(
+        prompt: Prompt,
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>
+    ): List<Message.Response> {
+        logger.debug { "Executing prompt (no pipeline callbacks): $prompt with modelSelector: $modelSelector" }
+        return executor.execute(prompt, modelSelector, tools)
+    }
+
+    @OptIn(ExperimentalSelectionApi::class)
+    override fun executeStreaming(
+        prompt: Prompt,
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
+        logger.debug { "Executing streaming prompt (no pipeline callbacks): $prompt with modelSelector: $modelSelector" }
+        return executor.executeStreaming(prompt, modelSelector, tools)
+    }
+
+    @OptIn(ExperimentalSelectionApi::class)
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> {
+        logger.debug { "Executing multiple choices (no pipeline callbacks): $prompt with modelSelector: $modelSelector" }
+        return executor.executeMultipleChoices(prompt, modelSelector, tools)
+    }
+
+    @OptIn(ExperimentalSelectionApi::class)
+    override suspend fun moderate(prompt: Prompt, modelSelector: ModelSelector): ModerationResult {
+        logger.debug { "Moderating (no pipeline callbacks): $prompt with modelSelector: $modelSelector" }
+        return executor.moderate(prompt, modelSelector)
     }
 
     override suspend fun models(): List<LLModel> {

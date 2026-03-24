@@ -42,6 +42,7 @@ public annotation class ModelSelectionDsl
  * }
  * ```
  */
+@ExperimentalSelectionApi
 public suspend fun PromptExecutor.execute(
     prompt: Prompt,
     tools: List<ToolDescriptor> = emptyList(),
@@ -60,6 +61,7 @@ public suspend fun PromptExecutor.execute(
  * @param selection Builder block configuring filters and rankers.
  * @return Stream of model output frames.
  */
+@ExperimentalSelectionApi
 public fun PromptExecutor.executeStreaming(
     prompt: Prompt,
     tools: List<ToolDescriptor> = emptyList(),
@@ -78,6 +80,7 @@ public fun PromptExecutor.executeStreaming(
  * @param selection Builder block configuring filters and rankers.
  * @return Generated model choices.
  */
+@ExperimentalSelectionApi
 public suspend fun PromptExecutor.executeMultipleChoices(
     prompt: Prompt,
     tools: List<ToolDescriptor> = emptyList(),
@@ -95,6 +98,7 @@ public suspend fun PromptExecutor.executeMultipleChoices(
  * @param selection Builder block configuring filters and rankers.
  * @return Moderation result.
  */
+@ExperimentalSelectionApi
 public suspend fun PromptExecutor.moderateWithSelection(
     prompt: Prompt,
     selection: ModelSelectorBuilder.() -> Unit,

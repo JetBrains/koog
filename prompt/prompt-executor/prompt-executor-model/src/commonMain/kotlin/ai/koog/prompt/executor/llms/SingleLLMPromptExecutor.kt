@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.selection.ExperimentalSelectionApi
 import ai.koog.prompt.executor.selection.ModelSelector
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -31,11 +32,12 @@ import kotlinx.coroutines.flow.flow
     "Please use MultiLLMPromptExecutor instead",
     replaceWith = ReplaceWith("MultiLLMPromptExecutor", "ai.koog.prompt.executor.llms.MultiLLMPromptExecutor")
 )
+@OptIn(ExperimentalSelectionApi::class)
 public open class SingleLLMPromptExecutor(
     private val llmClient: LLMClient,
 ) : PromptExecutor() {
     private companion object {
-        private val logger = KotlinLogging.logger("ai.koog.prompt.executor.llms.LLMPromptExecutor")
+        private val logger = KotlinLogging.logger {}
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {

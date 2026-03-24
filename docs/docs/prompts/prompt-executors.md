@@ -162,7 +162,9 @@ You can also implement custom routing strategies by creating a class that implem
 
 Model selection lets you choose the most suitable model from the models available in the executor.
 This is useful when you want selection to depend on model characteristics, such as capabilities, context length, or output limits.
-For now, model selection is available only in [`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor).
+Model selection is available in executors that support selector-based methods, including
+[`RoutingLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor)
+and [`MultiLLMPromptExecutor`](api:prompt-executor-llms::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor).
 
 In the default implementation, [`DefaultModelSelector`](api:prompt-executor-model::ai.koog.prompt.executor.model.DefaultModelSelector), selection is step-based:
 
@@ -182,7 +184,7 @@ See example below for sample usage:
     import ai.koog.prompt.llm.LLMCapability
     import kotlinx.coroutines.runBlocking
 
-    fun runSelection(promptExecutor: ai.koog.prompt.executor.selection.SelectingPromptExecutor) = runBlocking {
+    fun runSelection(promptExecutor: ai.koog.prompt.executor.model.PromptExecutor) = runBlocking {
     -->
     <!--- SUFFIX
     }
