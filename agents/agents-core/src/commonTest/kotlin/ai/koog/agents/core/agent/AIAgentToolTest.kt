@@ -1,7 +1,7 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -69,7 +69,7 @@ class AIAgentToolTest {
             agentDescription = "Test agent description",
         )
 
-        val argsJson = tool.encodeArgs(SimpleData("Test input"), serializer)
+        val argsJson = tool.encodeArgs(AgentToolInput(SimpleData("Test input")), serializer)
     }
 
     @OptIn(InternalAgentToolsApi::class)

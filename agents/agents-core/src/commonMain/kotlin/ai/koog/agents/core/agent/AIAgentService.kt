@@ -464,6 +464,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     agentService = this,
     agentName = agentName,
     agentDescription = agentDescription,
+    inputDescription = inputDescription,
     inputType = inputType,
     outputType = outputType,
     parentAgentId = parentAgentId

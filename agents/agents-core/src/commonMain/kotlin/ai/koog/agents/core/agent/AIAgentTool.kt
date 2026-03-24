@@ -3,8 +3,11 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.core.tools.schema.getToolDescriptor
+import ai.koog.agents.core.tools.schema.getJsonSchema
+import ai.koog.agents.core.tools.schema.toToolParameter
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.KSerializerTypeToken
@@ -89,13 +92,29 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
     private val agentService: AIAgentService<Input, Output, *>,
     private val agentName: String,
     private val agentDescription: String,
+    private val inputDescription: String? = null,
     private val inputType: TypeToken,
     private val outputType: TypeToken,
     private val parentAgentId: String? = null
 ) : Tool<AgentToolInput<Input>, AgentToolResult<Output>>(
-    argsType = inputType,
+    argsType = typeToken(AgentToolInput::class, listOf(inputType)),
     resultType = typeToken(AgentToolResult::class, listOf(outputType)),
-    descriptor = getToolDescriptor(inputType, agentName, agentDescription)
+    descriptor = run {
+        val inputSchema = getJsonSchema(inputType)
+        val inputToolParameter = inputSchema.toToolParameter(inputSchema.defs)
+
+        ToolDescriptor(
+            name = agentName,
+            description = agentDescription,
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "input",
+                    description = inputDescription ?: "input",
+                    type = inputToolParameter.type,
+                )
+            )
+        )
+    }
 ) {
     private companion object {
         private val json = Json.Default
@@ -107,6 +126,7 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
         agentService: AIAgentService<Input, Output, *>,
         agentName: String,
         agentDescription: String,
+        inputDescription: String,
         inputSerializer: KSerializer<Input>,
         outputSerializer: KSerializer<Output>,
         parentAgentId: String? = null
@@ -114,6 +134,7 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
         agentService = agentService,
         agentName = agentName,
         agentDescription = agentDescription,
+        inputDescription = inputDescription,
         inputType = KSerializerTypeToken(inputSerializer),
         outputType = KSerializerTypeToken(outputSerializer),
         parentAgentId = parentAgentId
