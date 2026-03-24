@@ -6,6 +6,7 @@ import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
 import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SearchResult
+import ai.koog.rag.base.storage.search.HasFilterExpression
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import ai.koog.rag.vector.backend.VectorStorageBackend
 import ai.koog.rag.vector.embedder.DocumentEmbedder
@@ -46,10 +47,26 @@ public open class EmbeddingStorage<Document>(
     /**
      * Retrieves all documents from an underlying VectorStorageBackend and does similarity search in memory.
      */
+    private fun requireNoNamespace(namespace: String?) {
+        require(namespace == null) {
+            "EmbeddingStorage does not support namespaces, but namespace='$namespace' was provided"
+        }
+    }
+
+    private fun requireNoFilterExpression(request: SearchRequest) {
+        if (request is HasFilterExpression) {
+            require(request.filterExpression == null) {
+                "EmbeddingStorage does not support filter expressions, but filterExpression='${request.filterExpression}' was provided"
+            }
+        }
+    }
+
     override suspend fun search(
         request: SearchRequest,
         namespace: String?
     ): List<SearchResult<Document>> {
+        requireNoNamespace(namespace)
+        requireNoFilterExpression(request)
         require(request is SimilaritySearchRequest) {
             "EmbeddingStorage requires a SimilaritySearchRequest"
         }
@@ -78,6 +95,7 @@ public open class EmbeddingStorage<Document>(
     }
 
     override suspend fun add(documents: List<Document>, namespace: String?): List<String> {
+        requireNoNamespace(namespace)
         return documents.map { doc ->
             val vector = embedder.embed(doc)
             storage.store(doc, vector)
@@ -85,9 +103,12 @@ public open class EmbeddingStorage<Document>(
     }
 
     override suspend fun update(documents: Map<String, Document>, namespace: String?): List<String> {
+        requireNoNamespace(namespace)
         return documents.mapNotNull { (id, document) ->
+            if (storage.read(id) == null) return@mapNotNull null
             val vector = embedder.embed(document)
-            if (storage.store(id, document, vector)) id else null
+            storage.store(id, document, vector)
+            id
         }
     }
 
@@ -95,10 +116,12 @@ public open class EmbeddingStorage<Document>(
         ids: List<String>,
         namespace: String?
     ): List<String> {
+        requireNoNamespace(namespace)
         return ids.filter { storage.delete(it) }
     }
 
     override suspend fun get(ids: List<String>, namespace: String?): List<Document> {
+        requireNoNamespace(namespace)
         return ids.mapNotNull { storage.read(it) }
     }
 

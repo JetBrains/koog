@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -175,6 +176,84 @@ class InMemoryDocumentEmbeddingStorageTest {
 
         otherDocRanks.forEach { score ->
             assertEquals(0.0, score)
+        }
+    }
+
+    @Test
+    fun testUpdateMissingIdDoesNotChangeDocumentCount() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+        val documents = listOf(MockDocument("doc1"), MockDocument("doc2"))
+
+        storage.add(documents)
+        val countBefore = storage.allDocuments().toList().size
+
+        val updatedIds = storage.update(mapOf("non-existent-id" to MockDocument("new doc")))
+
+        assertTrue(updatedIds.isEmpty())
+        val countAfter = storage.allDocuments().toList().size
+        assertEquals(countBefore, countAfter)
+    }
+
+    @Test
+    fun testNamespaceRejectedInAdd() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+
+        assertFailsWith<IllegalArgumentException> {
+            storage.add(listOf(MockDocument("doc")), namespace = "tenant-1")
+        }
+    }
+
+    @Test
+    fun testNamespaceRejectedInSearch() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+
+        assertFailsWith<IllegalArgumentException> {
+            storage.search(SimilaritySearchRequest(queryText = "q", limit = 10), namespace = "tenant-1")
+        }
+    }
+
+    @Test
+    fun testNamespaceRejectedInUpdate() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+
+        assertFailsWith<IllegalArgumentException> {
+            storage.update(mapOf("id" to MockDocument("doc")), namespace = "tenant-1")
+        }
+    }
+
+    @Test
+    fun testNamespaceRejectedInDelete() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+
+        assertFailsWith<IllegalArgumentException> {
+            storage.delete(listOf("id"), namespace = "tenant-1")
+        }
+    }
+
+    @Test
+    fun testNamespaceRejectedInGet() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+
+        assertFailsWith<IllegalArgumentException> {
+            storage.get(listOf("id"), namespace = "tenant-1")
+        }
+    }
+
+    @Test
+    fun testFilterExpressionRejectedInSearch() = runTest {
+        val embedder = MockDocumentEmbedder()
+        val storage = InMemoryDocumentEmbeddingStorage(embedder)
+
+        assertFailsWith<IllegalArgumentException> {
+            storage.search(
+                SimilaritySearchRequest(queryText = "q", limit = 10, filterExpression = "category = 'news'")
+            )
         }
     }
 }
