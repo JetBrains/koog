@@ -23,13 +23,13 @@ public interface VectorStorageBackend<Document> {
     public suspend fun store(document: Document, vector: Vector): String
 
     /**
-     * Stores a document along with its pre-computed vector embedding under the specified ID.
-     * If a document with the given ID already exists, it is replaced.
+     * Updates a document along with its pre-computed vector embedding under the specified ID.
+     * Only updates if a document with the given ID already exists.
      *
-     * @param id The unique identifier to assign to the stored document.
-     * @param document The document to store.
+     * @param id The unique identifier of the document to update.
+     * @param document The updated document.
      * @param vector The pre-computed vector embedding for the document.
-     * @return `true` if a document with the given [id] already existed before the update, `false` if it was newly inserted.
+     * @return `true` if the document was successfully updated, `false` if no document with the given [id] exists.
      */
     public suspend fun store(id: String, document: Document, vector: Vector): Boolean
 

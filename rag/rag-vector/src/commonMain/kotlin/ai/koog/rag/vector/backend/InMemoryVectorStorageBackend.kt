@@ -27,9 +27,9 @@ public class InMemoryVectorStorageBackend<Document> : VectorStorageBackend<Docum
     }
 
     override suspend fun store(id: String, document: Document, vector: Vector): Boolean {
-        val existed = documentById.containsKey(id)
+        if (!documentById.containsKey(id)) return false
         documentById[id] = DocumentWithPayload(document, vector)
-        return existed
+        return true
     }
 
     override suspend fun delete(documentId: String): Boolean {

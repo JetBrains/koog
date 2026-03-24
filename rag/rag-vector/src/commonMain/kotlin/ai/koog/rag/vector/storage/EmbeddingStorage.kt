@@ -1,5 +1,6 @@
 package ai.koog.rag.vector.storage
 
+import ai.koog.embeddings.base.Vector
 import ai.koog.rag.base.storage.capability.CapabilityAwareStorage
 import ai.koog.rag.base.storage.capability.StorageCapability
 import ai.koog.rag.base.storage.search.Score
@@ -18,94 +19,127 @@ import kotlinx.coroutines.flow.flow
  * to the provided [VectorStorageBackend]. This separation allows swapping backends (in-memory,
  * file-based, real vector database) independently from the embedding model.
  *
+ * Subclasses can customize embedding, scoring, or request handling by overriding the
+ * protected template methods [embedDocument], [embedQuery], and [score], without
+ * rewriting entire storage operations.
+ *
  * @param Document The type of the document being stored and ranked.
  * @property embedder A mechanism to generate vector embeddings for documents and queries.
  * @property storage Underlying storage backend to hold documents and their corresponding vector embeddings.
  */
 public open class EmbeddingStorage<Document>(
-    private val embedder: DocumentEmbedder<Document>,
-    private val storage: VectorStorageBackend<Document>
+    protected val embedder: DocumentEmbedder<Document>,
+    protected val storage: VectorStorageBackend<Document>
 ) : VectorStorage<Document, SimilaritySearchRequest>, CapabilityAwareStorage {
 
-    override val capabilities: Set<StorageCapability> = setOf(StorageCapability.SIMILARITY_SEARCH)
+    open override val capabilities: Set<StorageCapability> = setOf(StorageCapability.SIMILARITY_SEARCH)
+
+    /**
+     * Embeds a document into its vector representation.
+     * Subclasses can override this to customize how documents are embedded.
+     *
+     * @param document The document to embed.
+     * @return The vector representation of the document.
+     */
+    protected open suspend fun embedDocument(document: Document): Vector = embedder.embed(document)
+
+    /**
+     * Embeds a query text into its vector representation.
+     * Subclasses can override this to customize how queries are embedded.
+     *
+     * @param queryText The query text to embed.
+     * @return The vector representation of the query.
+     */
+    protected open suspend fun embedQuery(queryText: String): Vector = embedder.embed(queryText)
+
+    /**
+     * Computes a similarity score between a query vector and a document vector.
+     * Subclasses can override this to use a different similarity metric.
+     *
+     * @param queryVector The vector representation of the query.
+     * @param documentVector The vector representation of the document.
+     * @return The similarity score.
+     */
+    protected open fun score(queryVector: Vector, documentVector: Vector): Score =
+        Score(1.0 - embedder.diff(queryVector, documentVector), ScoreMetric.COSINE_SIMILARITY)
+
+    /**
+     * Validates and converts a [SimilaritySearchRequest] before executing a search.
+     * Subclasses can override this to support additional request parameters or apply custom validation.
+     *
+     * @param request The search request to validate.
+     * @return The validated search request.
+     */
+    protected open fun validateSearchRequest(request: SimilaritySearchRequest): SimilaritySearchRequest {
+        requireNoFilterExpression(request)
+        return request
+    }
 
     @Deprecated("Use search instead", ReplaceWith("search(SimilaritySearchRequest(query))"))
-    override fun rankDocuments(query: String): Flow<SearchResult<Document>> = flow {
-        val queryVector = embedder.embed(query)
+    open override fun rankDocuments(query: String): Flow<SearchResult<Document>> = flow {
+        val queryVector = embedQuery(query)
         storage.allDocumentsWithPayload().collect { (document, documentVector) ->
-            emit(
-                SearchResult(
-                    document = document,
-                    score = Score(1.0 - embedder.diff(queryVector, documentVector), ScoreMetric.COSINE_SIMILARITY),
-                )
-            )
+            emit(SearchResult(document = document, score = score(queryVector, documentVector)))
         }
     }
 
     /**
      * Retrieves all documents from an underlying VectorStorageBackend and does similarity search in memory.
      */
-    private fun requireNoNamespace(namespace: String?) {
+    protected fun requireNoNamespace(namespace: String?) {
         require(namespace == null) {
             "EmbeddingStorage does not support namespaces, but namespace='$namespace' was provided"
         }
     }
 
-    private fun requireNoFilterExpression(request: SimilaritySearchRequest) {
+    protected fun requireNoFilterExpression(request: SimilaritySearchRequest) {
         require(request.filterExpression == null) {
             "EmbeddingStorage does not support filter expressions, but filterExpression='${request.filterExpression}' was provided"
         }
     }
 
-    override suspend fun search(
+    open override suspend fun search(
         request: SimilaritySearchRequest,
         namespace: String?
     ): List<SearchResult<Document>> {
         requireNoNamespace(namespace)
-        requireNoFilterExpression(request)
-        val queryText = request.queryText
-        val minScore = request.minScore ?: 0.0
+        val validatedRequest = validateSearchRequest(request)
+        val queryText = validatedRequest.queryText
+        val minScore = validatedRequest.minScore ?: 0.0
 
         val results = mutableListOf<SearchResult<Document>>()
-        val queryVector = embedder.embed(queryText)
+        val queryVector = embedQuery(queryText)
 
         storage.allDocumentsWithPayload().collect { (document, documentVector) ->
-            val similarity = 1.0 - embedder.diff(queryVector, documentVector)
-            if (similarity >= minScore) {
-                results.add(
-                    SearchResult(
-                        document = document,
-                        score = Score(value = similarity, metric = ScoreMetric.COSINE_SIMILARITY)
-                    )
-                )
+            val resultScore = score(queryVector, documentVector)
+            if (resultScore.value >= minScore) {
+                results.add(SearchResult(document = document, score = resultScore))
             }
         }
 
         return results
             .sortedByDescending { it.score.value }
-            .drop(request.offset)
-            .take(request.limit)
+            .drop(validatedRequest.offset)
+            .take(validatedRequest.limit)
     }
 
-    override suspend fun add(documents: List<Document>, namespace: String?): List<String> {
+    open override suspend fun add(documents: List<Document>, namespace: String?): List<String> {
         requireNoNamespace(namespace)
         return documents.map { doc ->
-            val vector = embedder.embed(doc)
+            val vector = embedDocument(doc)
             storage.store(doc, vector)
         }
     }
 
-    override suspend fun update(documents: Map<String, Document>, namespace: String?): List<String> {
+    open override suspend fun update(documents: Map<String, Document>, namespace: String?): List<String> {
         requireNoNamespace(namespace)
         return documents.mapNotNull { (id, document) ->
-            if (storage.read(id) == null) return@mapNotNull null
-            val vector = embedder.embed(document)
-            storage.store(id, document, vector)
-            id
+            val vector = embedDocument(document)
+            if (storage.store(id, document, vector)) id else null
         }
     }
 
-    override suspend fun delete(
+    open override suspend fun delete(
         ids: List<String>,
         namespace: String?
     ): List<String> {
@@ -113,7 +147,7 @@ public open class EmbeddingStorage<Document>(
         return ids.filter { storage.delete(it) }
     }
 
-    override suspend fun get(ids: List<String>, namespace: String?): List<Document> {
+    open override suspend fun get(ids: List<String>, namespace: String?): List<Document> {
         requireNoNamespace(namespace)
         return ids.mapNotNull { storage.read(it) }
     }
@@ -123,5 +157,5 @@ public open class EmbeddingStorage<Document>(
      *
      * @return A flow emitting each document individually.
      */
-    public fun allDocuments(): Flow<Document> = storage.allDocuments()
+    public open fun allDocuments(): Flow<Document> = storage.allDocuments()
 }

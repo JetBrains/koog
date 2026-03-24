@@ -68,28 +68,31 @@ public open class FileVectorStorageBackend<Document, Path>(
         return fs.joinPath(vectorsDir(), documentId)
     }
 
-    @OptIn(ExperimentalUuidApi::class)
-    override suspend fun store(document: Document, vector: Vector): String {
-        val documentId = Uuid.random().toString()
-        store(documentId, document, vector)
-        return documentId
-    }
-
-    override suspend fun store(id: String, document: Document, vector: Vector): Boolean {
+    private suspend fun writeDocumentAndVector(id: String, document: Document, vector: Vector) {
         val docsDir = documentsDir()
         val vecsDir = vectorsDir()
 
         val docPath = fs.joinPath(docsDir, id)
-        val existed = fs.exists(docPath)
-
         val docText = documentReader.text(document).toString()
         fs.writeText(docPath, docText)
 
         val vecPath = fs.joinPath(vecsDir, id)
         val vectorJson = json.encodeToString(vector)
         fs.writeText(vecPath, vectorJson)
+    }
 
-        return existed
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun store(document: Document, vector: Vector): String {
+        val documentId = Uuid.random().toString()
+        writeDocumentAndVector(documentId, document, vector)
+        return documentId
+    }
+
+    override suspend fun store(id: String, document: Document, vector: Vector): Boolean {
+        val docPath = fs.joinPath(documentsDir(), id)
+        if (!fs.exists(docPath)) return false
+        writeDocumentAndVector(id, document, vector)
+        return true
     }
 
     override suspend fun delete(documentId: String): Boolean {
