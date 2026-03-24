@@ -649,11 +649,11 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             val signature = part.thoughtSignature().orElse(null)?.let { signatureFromBytes(it) }
             val isThought = part.thought().orElse(false)
 
-            // Create Reasoning for any part with signature, unless the part itself is a thought
-            // and we haven't already added a reasoning message for this signature.
-            if (signature != null && !isThought &&
-                responses.none { it is Message.Reasoning && it.encrypted == signature }
-            ) {
+            // Non-thought parts with a signature need a Reasoning carrier (unless already added)
+            val needsSignatureCarrier = signature != null && !isThought
+                    && responses.none { it is Message.Reasoning && it.encrypted == signature }
+
+            if (needsSignatureCarrier) {
                 responses.add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
             }
 
