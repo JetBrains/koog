@@ -50,6 +50,8 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ToolUseBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.VideoBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.VideoFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.VideoSource
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailStreamConfiguration
 import aws.smithy.kotlin.runtime.content.Document
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
@@ -253,7 +255,8 @@ internal object BedrockConverseConverters {
     fun createConverseRequest(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailConfig: GuardrailConfiguration? = null
     ): ConverseRequest {
         val params = createConverseRequestParams(prompt, model, tools)
 
@@ -267,6 +270,7 @@ internal object BedrockConverseConverters {
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages
+            this.guardrailConfig = guardrailConfig
         }
     }
 
@@ -276,7 +280,8 @@ internal object BedrockConverseConverters {
     fun createConverseStreamRequest(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailConfig: GuardrailStreamConfiguration? = null
     ): ConverseStreamRequest {
         val params = createConverseRequestParams(prompt, model, tools)
 
@@ -290,6 +295,7 @@ internal object BedrockConverseConverters {
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages
+            this.guardrailConfig = guardrailConfig
         }
     }
 

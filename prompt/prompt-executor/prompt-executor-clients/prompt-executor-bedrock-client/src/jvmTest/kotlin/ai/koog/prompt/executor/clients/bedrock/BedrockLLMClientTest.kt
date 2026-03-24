@@ -485,6 +485,181 @@ class BedrockLLMClientTest {
         }
     }
 
+    @Execution(ExecutionMode.SAME_THREAD)
+    @Test
+    fun `converse API includes guardrail config when settings are provided`() = runTest {
+        val guardrailsSettings = BedrockGuardrailsSettings(
+            guardrailIdentifier = "test-guardrail-id",
+            guardrailVersion = "2"
+        )
+
+        var capturedConverseRequest: ConverseRequest? = null
+
+        val mockClient = object : BedrockRuntimeClient {
+            override suspend fun converse(input: ConverseRequest): ConverseResponse {
+                capturedConverseRequest = input
+                return ConverseResponse {
+                    output = aws.sdk.kotlin.services.bedrockruntime.model.ConverseOutput.Message(
+                        aws.sdk.kotlin.services.bedrockruntime.model.Message {
+                            role = aws.sdk.kotlin.services.bedrockruntime.model.ConversationRole.Assistant
+                            content = listOf(
+                                aws.sdk.kotlin.services.bedrockruntime.model.ContentBlock.Text("Hello!")
+                            )
+                        }
+                    )
+                    stopReason = aws.sdk.kotlin.services.bedrockruntime.model.StopReason.EndTurn
+                }
+            }
+
+            override val config: BedrockRuntimeClient.Config
+                get() = throw UnsupportedOperationException("config not implemented in mock client")
+
+            override suspend fun applyGuardrail(input: ApplyGuardrailRequest): ApplyGuardrailResponse =
+                throw UnsupportedOperationException("applyGuardrail not implemented in mock client")
+
+            override suspend fun <T> converseStream(
+                input: ConverseStreamRequest,
+                block: suspend (ConverseStreamResponse) -> T
+            ): T =
+                throw UnsupportedOperationException("converseStream not implemented in mock client")
+
+            override suspend fun countTokens(input: CountTokensRequest): CountTokensResponse =
+                throw UnsupportedOperationException("countTokens not implemented in mock client")
+
+            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
+                throw UnsupportedOperationException("getAsyncInvoke not implemented in mock client")
+
+            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse =
+                throw UnsupportedOperationException("invokeModel not implemented in mock client")
+
+            override suspend fun <T> invokeModelWithBidirectionalStream(
+                input: InvokeModelWithBidirectionalStreamRequest,
+                block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T
+            ): T =
+                throw UnsupportedOperationException("invokeModelWithBidirectionalStream not implemented in mock client")
+
+            override suspend fun <T> invokeModelWithResponseStream(
+                input: InvokeModelWithResponseStreamRequest,
+                block: suspend (InvokeModelWithResponseStreamResponse) -> T
+            ): T =
+                throw UnsupportedOperationException("invokeModelWithResponseStream not implemented in mock client")
+
+            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse =
+                throw UnsupportedOperationException("listAsyncInvokes not implemented in mock client")
+
+            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse =
+                throw UnsupportedOperationException("startAsyncInvoke not implemented in mock client")
+
+            override fun close() {}
+        }
+
+        val client = BedrockLLMClient(
+            mockClient,
+            apiMethod = BedrockAPIMethod.Converse,
+            moderationGuardrailsSettings = guardrailsSettings
+        )
+
+        try {
+            val prompt = Prompt.build("test") {
+                user("Hello")
+            }
+            val model = BedrockModels.AnthropicClaude4Sonnet
+
+            client.execute(prompt, model, emptyList())
+
+            val request = requireNotNull(capturedConverseRequest) { "Converse request should have been captured" }
+            val guardrailConfig = requireNotNull(request.guardrailConfig) { "Guardrail config should be set" }
+            assertEquals("test-guardrail-id", guardrailConfig.guardrailIdentifier)
+            assertEquals("2", guardrailConfig.guardrailVersion)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Execution(ExecutionMode.SAME_THREAD)
+    @Test
+    fun `converse API does not include guardrail config when settings are not provided`() = runTest {
+        var capturedConverseRequest: ConverseRequest? = null
+
+        val mockClient = object : BedrockRuntimeClient {
+            override suspend fun converse(input: ConverseRequest): ConverseResponse {
+                capturedConverseRequest = input
+                return ConverseResponse {
+                    output = aws.sdk.kotlin.services.bedrockruntime.model.ConverseOutput.Message(
+                        aws.sdk.kotlin.services.bedrockruntime.model.Message {
+                            role = aws.sdk.kotlin.services.bedrockruntime.model.ConversationRole.Assistant
+                            content = listOf(
+                                aws.sdk.kotlin.services.bedrockruntime.model.ContentBlock.Text("Hello!")
+                            )
+                        }
+                    )
+                    stopReason = aws.sdk.kotlin.services.bedrockruntime.model.StopReason.EndTurn
+                }
+            }
+
+            override val config: BedrockRuntimeClient.Config
+                get() = throw UnsupportedOperationException("config not implemented in mock client")
+
+            override suspend fun applyGuardrail(input: ApplyGuardrailRequest): ApplyGuardrailResponse =
+                throw UnsupportedOperationException("applyGuardrail not implemented in mock client")
+
+            override suspend fun <T> converseStream(
+                input: ConverseStreamRequest,
+                block: suspend (ConverseStreamResponse) -> T
+            ): T =
+                throw UnsupportedOperationException("converseStream not implemented in mock client")
+
+            override suspend fun countTokens(input: CountTokensRequest): CountTokensResponse =
+                throw UnsupportedOperationException("countTokens not implemented in mock client")
+
+            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
+                throw UnsupportedOperationException("getAsyncInvoke not implemented in mock client")
+
+            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse =
+                throw UnsupportedOperationException("invokeModel not implemented in mock client")
+
+            override suspend fun <T> invokeModelWithBidirectionalStream(
+                input: InvokeModelWithBidirectionalStreamRequest,
+                block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T
+            ): T =
+                throw UnsupportedOperationException("invokeModelWithBidirectionalStream not implemented in mock client")
+
+            override suspend fun <T> invokeModelWithResponseStream(
+                input: InvokeModelWithResponseStreamRequest,
+                block: suspend (InvokeModelWithResponseStreamResponse) -> T
+            ): T =
+                throw UnsupportedOperationException("invokeModelWithResponseStream not implemented in mock client")
+
+            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse =
+                throw UnsupportedOperationException("listAsyncInvokes not implemented in mock client")
+
+            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse =
+                throw UnsupportedOperationException("startAsyncInvoke not implemented in mock client")
+
+            override fun close() {}
+        }
+
+        val client = BedrockLLMClient(
+            mockClient,
+            apiMethod = BedrockAPIMethod.Converse,
+            moderationGuardrailsSettings = null
+        )
+
+        try {
+            val prompt = Prompt.build("test") {
+                user("Hello")
+            }
+            val model = BedrockModels.AnthropicClaude4Sonnet
+
+            client.execute(prompt, model, emptyList())
+
+            val request = requireNotNull(capturedConverseRequest) { "Converse request should have been captured" }
+            assertEquals(null, request.guardrailConfig, "Guardrail config should be null")
+        } finally {
+            client.close()
+        }
+    }
+
     // Helper function to create a counting mock client
     private fun createCountingMockClient(onApplyGuardrail: () -> Unit): BedrockRuntimeClient {
         return object : BedrockRuntimeClient {

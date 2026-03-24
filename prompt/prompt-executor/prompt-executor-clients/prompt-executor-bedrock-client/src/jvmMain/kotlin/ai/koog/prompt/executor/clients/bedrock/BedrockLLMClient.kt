@@ -30,12 +30,14 @@ import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailAction
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterType
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentSource
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailImageBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailImageSource.Bytes
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailStreamConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailTextBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamRequest
@@ -325,7 +327,13 @@ public class BedrockLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        val converseRequest = BedrockConverseConverters.createConverseRequest(prompt, model, tools)
+        val guardrailConfig = moderationGuardrailsSettings?.let {
+            GuardrailConfiguration {
+                guardrailIdentifier = it.guardrailIdentifier
+                guardrailVersion = it.guardrailVersion
+            }
+        }
+        val converseRequest = BedrockConverseConverters.createConverseRequest(prompt, model, tools, guardrailConfig)
 
         return withContext(Dispatchers.SuitableForIO) {
             try {
@@ -475,7 +483,13 @@ public class BedrockLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
-        val converseRequest = BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools)
+        val guardrailConfig = moderationGuardrailsSettings?.let {
+            GuardrailStreamConfiguration {
+                guardrailIdentifier = it.guardrailIdentifier
+                guardrailVersion = it.guardrailVersion
+            }
+        }
+        val converseRequest = BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools, guardrailConfig)
 
         return channelFlow {
             withContext(Dispatchers.SuitableForIO) {
