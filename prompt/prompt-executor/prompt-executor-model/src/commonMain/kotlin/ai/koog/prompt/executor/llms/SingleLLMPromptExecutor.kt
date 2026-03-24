@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.selection.ModelSelector
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -13,6 +14,8 @@ import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 /**
  * Executes prompts using a direct client for communication with large language model (LLM) providers.
@@ -43,6 +46,12 @@ public open class SingleLLMPromptExecutor(
         return response
     }
 
+    override suspend fun execute(
+        prompt: Prompt,
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>
+    ): List<Message.Response> = execute(prompt, selectSingleModel(modelSelector), tools)
+
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
@@ -50,6 +59,14 @@ public open class SingleLLMPromptExecutor(
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with tools: $tools and model: $model" }
         return llmClient.executeStreaming(prompt, model, tools)
+    }
+
+    override fun executeStreaming(
+        prompt: Prompt,
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = flow {
+        emitAll(executeStreaming(prompt, selectSingleModel(modelSelector), tools))
     }
 
     override suspend fun executeMultipleChoices(
@@ -64,7 +81,16 @@ public open class SingleLLMPromptExecutor(
         return choices
     }
 
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> = executeMultipleChoices(prompt, selectSingleModel(modelSelector), tools)
+
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = llmClient.moderate(prompt, model)
+
+    override suspend fun moderate(prompt: Prompt, modelSelector: ModelSelector): ModerationResult =
+        moderate(prompt, selectSingleModel(modelSelector))
 
     override suspend fun models(): List<LLModel> = llmClient.models()
 
@@ -79,4 +105,11 @@ public open class SingleLLMPromptExecutor(
     override fun close() {
         llmClient.close()
     }
+
+    private suspend fun selectSingleModel(modelSelector: ModelSelector): LLModel =
+        modelSelector
+            .select(models())
+            .ranked
+            .firstOrNull()
+            ?: throw IllegalArgumentException("No model selected by modelSelector")
 }

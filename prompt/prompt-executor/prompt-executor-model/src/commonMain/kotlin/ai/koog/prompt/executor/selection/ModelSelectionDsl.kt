@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.selection
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.selection.ModelFilterAPI.Companion.decide
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
@@ -41,7 +42,7 @@ public annotation class ModelSelectionDsl
  * }
  * ```
  */
-public suspend fun SelectingPromptExecutor.execute(
+public suspend fun PromptExecutor.execute(
     prompt: Prompt,
     tools: List<ToolDescriptor> = emptyList(),
     selection: ModelSelectorBuilder.() -> Unit,
@@ -59,7 +60,7 @@ public suspend fun SelectingPromptExecutor.execute(
  * @param selection Builder block configuring filters and rankers.
  * @return Stream of model output frames.
  */
-public fun SelectingPromptExecutor.executeStreaming(
+public fun PromptExecutor.executeStreaming(
     prompt: Prompt,
     tools: List<ToolDescriptor> = emptyList(),
     selection: ModelSelectorBuilder.() -> Unit,
@@ -77,7 +78,7 @@ public fun SelectingPromptExecutor.executeStreaming(
  * @param selection Builder block configuring filters and rankers.
  * @return Generated model choices.
  */
-public suspend fun SelectingPromptExecutor.executeMultipleChoices(
+public suspend fun PromptExecutor.executeMultipleChoices(
     prompt: Prompt,
     tools: List<ToolDescriptor> = emptyList(),
     selection: ModelSelectorBuilder.() -> Unit,
@@ -94,7 +95,7 @@ public suspend fun SelectingPromptExecutor.executeMultipleChoices(
  * @param selection Builder block configuring filters and rankers.
  * @return Moderation result.
  */
-public suspend fun SelectingPromptExecutor.moderateWithSelection(
+public suspend fun PromptExecutor.moderateWithSelection(
     prompt: Prompt,
     selection: ModelSelectorBuilder.() -> Unit,
 ): ModerationResult = moderate(

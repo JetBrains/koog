@@ -51,11 +51,18 @@ public object ModelSelectors {
     /**
      * Returns a selector that accepts only [model] and rejects all others.
      *
+     * Returns [ModelSelection.EMPTY] when [model] is not among the candidate models.
      * @param model The single model to select.
      */
     @JvmStatic
     public fun specific(model: LLModel): ModelSelector =
-        DefaultModelSelector(filters = listOf(ModelFilters.specific(model)))
+        ModelSelector { models ->
+            if (model in models) {
+                ModelSelection.single(model)
+            } else {
+                ModelSelection.EMPTY
+            }
+        }
 }
 
 /**

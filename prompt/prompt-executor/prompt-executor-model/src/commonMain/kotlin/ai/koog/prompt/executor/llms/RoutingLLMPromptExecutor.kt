@@ -4,9 +4,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.selection.ModelSelection
 import ai.koog.prompt.executor.selection.ModelSelector
-import ai.koog.prompt.executor.selection.SelectingPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -41,7 +41,7 @@ import kotlin.jvm.JvmOverloads
 public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     private val clientRouter: LLMClientRouter,
     private val fallback: FallbackPromptExecutorSettings? = null,
-) : SelectingPromptExecutor() {
+) : PromptExecutor() {
 
     /**
      * Fallback model used when no registered client can serve any model from the selector's ranked result.

@@ -31,7 +31,7 @@ public actual abstract class ModelSelector actual constructor() : ModelSelectorA
         /**
          * Returns a [ModelSelectorBuilder] for constructing a selector with filters and rankers.
          *
-         * Prefer using the [ModelSelectorBuilder] DSL extension functions on [SelectingPromptExecutor]
+         * Prefer using the [ModelSelectorBuilder] DSL extension functions on [ai.koog.prompt.executor.model.PromptExecutor]
          * in Kotlin. This factory is primarily intended for Java callers.
          */
         @JvmStatic

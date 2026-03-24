@@ -5,6 +5,8 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.selection.ModelSelection
+import ai.koog.prompt.executor.selection.ModelSelector
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -97,7 +99,6 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      *
      * @param llmClients Vararg parameter of `LLMClient` instances used to construct the executor.
      */
-    @JvmOverloads
     public constructor (vararg llmClients: LLMClient) : this(llmClients.toList())
 
     /**
@@ -109,16 +110,16 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      */
     private companion object {
         /**
-         * Logger instance used for logging messages within the LLMPromptExecutor and MultiLLMPromptExecutor classes.
+         * Logger instance used for logging messages within the [MultiLLMPromptExecutor] class.
          *
          * This logger is utilized to provide debug logs during the execution of prompts and handling of streaming responses.
          * It primarily tracks operations such as prompt execution initiation, tool usage, and responses received from the
          * respective LLM clients.
          *
          * The logger can aid in debugging by capturing detailed information about the state and flow of operations within
-         * the respective classes.
+         * the class.
          */
-        private val logger = KotlinLogging.logger("ai.koog.prompt.executor.llms.LLMPromptExecutor")
+        private val logger = KotlinLogging.logger {}
     }
 
     /**
@@ -140,107 +141,49 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Executes a given prompt using the specified tools and model, and returns a list of response messages.
-     *
-     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
-     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
-     * @param model The LLM model to use for execution.
-     * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
-     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
-     */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+    override suspend fun execute(
+        prompt: Prompt,
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>,
+    ): List<Message.Response> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and modelSelector: $modelSelector" }
 
-        val provider = model.provider
-
-        val response = when {
-            provider in llmClients -> llmClients[provider]!!.execute(prompt, model, tools)
-
-            fallback != null -> fallbackClient!!.execute(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
-        }
+        val (client, model) = chooseClientAndModel(modelSelector)
+        val response = client.execute(prompt, model, tools)
 
         logger.debug { "Response: $response" }
-
         return response
     }
 
-    /**
-     * Executes the given prompt with the specified model and streams the response in chunks as a flow.
-     *
-     * @param prompt The prompt to execute, containing the messages and parameters.
-     * @param model The LLM model to use for execution.
-     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
-     **/
     override fun executeStreaming(
         prompt: Prompt,
-        model: LLModel,
+        modelSelector: ModelSelector,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
-        logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-
+        logger.debug { "Executing streaming prompt: $prompt with modelSelector: $modelSelector" }
         return flow {
-            val provider = model.provider
-            val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
+            val (client, model) = chooseClientAndModel(modelSelector)
             emitAll(client.executeStreaming(prompt, model, tools))
         }
     }
 
-    /**
-     * Executes a given prompt using the specified tools and model and returns a list of model choices.
-     *
-     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
-     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
-     * @param model The LLM model to use for execution.
-     * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
-     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
-     */
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>
+        modelSelector: ModelSelector,
+        tools: List<ToolDescriptor>,
     ): List<LLMChoice> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        logger.debug { "Executing prompt: $prompt with tools: $tools and modelSelector: $modelSelector" }
 
-        val provider = model.provider
-
-        val choices = when {
-            provider in llmClients -> llmClients[provider]!!.executeMultipleChoices(prompt, model, tools)
-
-            fallback != null -> fallbackClient!!.executeMultipleChoices(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
-        }
+        val (client, model) = chooseClientAndModel(modelSelector)
+        val choices = client.executeMultipleChoices(prompt, model, tools)
 
         logger.debug { "Choices: $choices" }
-
         return choices
     }
 
-    /**
-     * Moderates the provided multi-modal content using the specified model.
-     *
-     * @param prompt The `Prompt` containing the content to be moderated.
-     * @param model The `LLModel` to use for moderation, including its ID and provider information.
-     * @return A `ModerationResult` representing the result of the moderation process.
-     * @throws IllegalArgumentException If no client is found for the model's provider.
-     */
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-        logger.debug { "Moderating multi-modal content with model: ${model.id}" }
-
-        val provider = model.provider
-        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
-
+    override suspend fun moderate(prompt: Prompt, modelSelector: ModelSelector): ModerationResult {
+        logger.debug { "Moderating multi-modal content with modelSelector: $modelSelector" }
+        val (client, model) = chooseClientAndModel(modelSelector)
         return client.moderate(prompt, model)
     }
 
@@ -268,5 +211,29 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
 
     override fun close() {
         llmClients.forEach { (_, client) -> client.close() }
+    }
+
+    private suspend fun chooseClientAndModel(modelSelector: ModelSelector): Pair<LLMClient, LLModel> {
+        val selection = modelSelector.select(models())
+        val selected = chooseClientAndModelFromSelection(selection)
+        return when {
+            selected != null -> selected
+
+            fallback != null -> fallbackClient!! to fallback.fallbackModel
+
+            else -> throw IllegalArgumentException(
+                "No model with an available client selected by modelSelector and no fallback model configured"
+            )
+        }
+    }
+
+    private fun chooseClientAndModelFromSelection(selection: ModelSelection): Pair<LLMClient, LLModel>? {
+        for (model in selection.ranked) {
+            val client = llmClients[model.provider]
+            if (client != null) {
+                return client to model
+            }
+        }
+        return null
     }
 }

@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.selection
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -15,12 +16,18 @@ import kotlinx.coroutines.flow.flow
 
 internal class TestSelectingPromptExecutor(
     private val availableModels: List<LLModel>,
-) : SelectingPromptExecutor() {
+) : PromptExecutor() {
 
     constructor(vararg models: LLModel) : this(models.toList())
 
     var lastSelection: ModelSelection = ModelSelection.EMPTY
         private set
+
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+    ): List<Message.Response> = execute(prompt, ModelSelectors.specific(model), tools)
 
     override suspend fun execute(
         prompt: Prompt,
@@ -31,6 +38,12 @@ internal class TestSelectingPromptExecutor(
         lastSelection = selection
         return listOf(Message.Assistant(content = "Irrelevant for test", metaInfo = ResponseMetaInfo.Empty))
     }
+
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+    ): Flow<StreamFrame> = executeStreaming(prompt, ModelSelectors.specific(model), tools)
 
     override fun executeStreaming(
         prompt: Prompt,
@@ -45,6 +58,12 @@ internal class TestSelectingPromptExecutor(
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+    ): List<LLMChoice> = executeMultipleChoices(prompt, ModelSelectors.specific(model), tools)
+
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
         modelSelector: ModelSelector,
         tools: List<ToolDescriptor>,
     ): List<LLMChoice> {
@@ -53,6 +72,9 @@ internal class TestSelectingPromptExecutor(
             listOf(Message.Assistant(content = "Irrelevant for test", metaInfo = ResponseMetaInfo.Empty))
         )
     }
+
+    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+        moderate(prompt, ModelSelectors.specific(model))
 
     override suspend fun moderate(prompt: Prompt, modelSelector: ModelSelector): ModerationResult {
         lastSelection = modelSelector.select(availableModels)
