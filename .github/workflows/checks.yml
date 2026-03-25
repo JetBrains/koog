@@ -16,12 +16,13 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   # Cancel only when the run is not on main or develop
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' || github.ref != 'refs/heads/develop' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
 
 env:
   JAVA_VERSION: 17
   JAVA_DISTRIBUTION: 'corretto'
-  JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
+  JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvmargs=-Xmx6g"
 
 jobs:
   changes:
@@ -67,11 +68,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: Assemble with Gradle Wrapper
-        run: ./gradlew assemble ktlintCheck
-
-      - name: TestClasses with Gradle Wrapper
-        run: ./gradlew jvmTestClasses jsTestClasses
+      - name: Compile and lint
+        run: ./gradlew ktlintCheck compileKotlinJvm compileKotlinJs compileDebugKotlinAndroid compileKotlinWasmJs jvmTestClasses jsTestClasses
 
   docs:
     needs: changes
@@ -141,8 +139,7 @@ jobs:
 
       - name: Check Split Packages
         if: matrix.os == 'ubuntu-latest' && github.event.pull_request.draft == false
-        run: |-
-          ./gradlew jvmJar && ./gradlew checkSplitPackages
+        run: ./gradlew checkSplitPackages
 
       - name: JvmTest with Gradle Wrapper
         if: matrix.os != 'ubuntu-latest'
