@@ -107,8 +107,11 @@ public object McpToolRegistryProvider {
                     McpMetadataKeys.McpTransportType to when (mcpClient.transport) {
                         is SseClientTransport -> McpTransportType.Tcp
                         is StdioClientTransport -> McpTransportType.Stdio
-                        else -> null
-                    }?.value,
+                        else -> {
+                            logger.warn { "Unknown transport type: ${mcpClient.transport::class.simpleName}" }
+                            McpTransportType.Unknown
+                        }
+                    }.value,
                     McpMetadataKeys.McpSessionId to "",
                     McpMetadataKeys.ServerUrl to serverInfo.url.orEmpty(),
                     McpMetadataKeys.ServerPort to getPort(serverInfo.url),
