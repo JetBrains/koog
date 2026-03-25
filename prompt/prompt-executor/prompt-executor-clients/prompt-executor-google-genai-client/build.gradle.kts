@@ -16,6 +16,10 @@ kotlin {
     abiValidation {
         enabled.set(true)
     }
+
+    compilerOptions {
+        allWarningsAsErrors = true
+    }
 }
 
 dependencies {
