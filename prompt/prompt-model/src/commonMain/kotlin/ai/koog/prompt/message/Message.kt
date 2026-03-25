@@ -285,6 +285,7 @@ public sealed interface Message {
          * @property tool The name of the tool that provided the result.
          * @property parts The parts of the tool result. Only the [ContentPart.Text] part is allowed.
          * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
+         * @property isError Whether this tool result represents an error. Defaults to false.
          * @property cacheControl The cache strategy for this message.
          */
         @Serializable
@@ -293,20 +294,21 @@ public sealed interface Message {
             override val tool: String,
             override val parts: List<ContentPart.Text>,
             override val metaInfo: RequestMetaInfo,
+            val isError: Boolean = false,
             val cacheControl: CacheControl? = null,
         ) : Tool, Request {
 
             /**
              * Single content part tool result message constructor
              */
-            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
-                this(id, tool, listOf(part), metaInfo, cacheControl)
+            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo, isError: Boolean = false, cacheControl: CacheControl? = null) :
+                this(id, tool, listOf(part), metaInfo, isError, cacheControl)
 
             /**
              * Text content tool result message constructor
              */
-            public constructor(id: String?, tool: String, content: String, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
-                this(id, tool, ContentPart.Text(content), metaInfo, cacheControl)
+            public constructor(id: String?, tool: String, content: String, metaInfo: RequestMetaInfo, isError: Boolean = false, cacheControl: CacheControl? = null) :
+                this(id, tool, ContentPart.Text(content), metaInfo, isError, cacheControl)
 
             override val role: Role = Role.Tool
         }

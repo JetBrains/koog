@@ -5,7 +5,10 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -15,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class AnthropicToolSerializationTest {
 
@@ -182,5 +186,84 @@ class AnthropicToolSerializationTest {
         assertTrue(requiredNames.contains("stringParam"))
         assertTrue(requiredNames.contains("nullParam"))
         assertTrue(requiredNames.contains("numberParam"))
+    }
+
+    @Test
+    fun testCreateAnthropicRequestIncludesIsErrorTrueForErrorToolResult() {
+        val client = AnthropicLLMClient(apiKey = "test-key")
+        val model = AnthropicModels.Sonnet_4
+        val metaInfo = RequestMetaInfo.create(Clock.System)
+
+        val requestJson = client.createAnthropicRequest(
+            prompt = Prompt(
+                messages = listOf(
+                    Message.Tool.Result(
+                        id = "tool-call-1",
+                        tool = "my_tool",
+                        content = "Tool execution failed: something went wrong",
+                        metaInfo = metaInfo,
+                        isError = true
+                    )
+                ),
+                id = "id"
+            ),
+            tools = emptyList(),
+            model = model,
+            stream = false
+        )
+
+        val request = json.parseToJsonElement(requestJson).jsonObject
+        val messages = request["messages"]?.jsonArray
+        assertNotNull(messages)
+        assertEquals(1, messages.size)
+
+        val message = messages[0].jsonObject
+        assertEquals("user", message["role"]?.jsonPrimitive?.content)
+
+        val content = message["content"]?.jsonArray
+        assertNotNull(content)
+        assertEquals(1, content.size)
+
+        val toolResult = content[0].jsonObject
+        assertEquals("tool_result", toolResult["type"]?.jsonPrimitive?.content)
+        assertEquals("tool-call-1", toolResult["tool_use_id"]?.jsonPrimitive?.content)
+        assertEquals("Tool execution failed: something went wrong", toolResult["content"]?.jsonPrimitive?.content)
+        assertEquals(true, toolResult["is_error"]?.jsonPrimitive?.booleanOrNull)
+    }
+
+    @Test
+    fun testCreateAnthropicRequestOmitsIsErrorForSuccessfulToolResult() {
+        val client = AnthropicLLMClient(apiKey = "test-key")
+        val model = AnthropicModels.Sonnet_4
+        val metaInfo = RequestMetaInfo.create(Clock.System)
+
+        val requestJson = client.createAnthropicRequest(
+            prompt = Prompt(
+                messages = listOf(
+                    Message.Tool.Result(
+                        id = "tool-call-2",
+                        tool = "my_tool",
+                        content = "Success result",
+                        metaInfo = metaInfo,
+                        isError = false
+                    )
+                ),
+                id = "id"
+            ),
+            tools = emptyList(),
+            model = model,
+            stream = false
+        )
+
+        val request = json.parseToJsonElement(requestJson).jsonObject
+        val messages = request["messages"]?.jsonArray
+        assertNotNull(messages)
+
+        val content = messages[0].jsonObject["content"]?.jsonArray
+        assertNotNull(content)
+
+        val toolResult = content[0].jsonObject
+        assertEquals("tool_result", toolResult["type"]?.jsonPrimitive?.content)
+        assertEquals(false, toolResult["is_error"]?.jsonPrimitive?.booleanOrNull)
     }
 }
