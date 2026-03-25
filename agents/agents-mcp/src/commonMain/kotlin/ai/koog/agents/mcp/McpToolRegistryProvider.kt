@@ -107,8 +107,8 @@ public object McpToolRegistryProvider {
                     McpMetadataKeys.McpTransportType to when (mcpClient.transport) {
                         is SseClientTransport -> McpTransportType.Tcp
                         is StdioClientTransport -> McpTransportType.Stdio
-                        else -> error("Unexpected null for client transport: ${mcpClient.transport}")
-                    }.value,
+                        else -> null
+                    }?.value,
                     McpMetadataKeys.McpSessionId to "",
                     McpMetadataKeys.ServerUrl to serverInfo.url.orEmpty(),
                     McpMetadataKeys.ServerPort to getPort(serverInfo.url),
