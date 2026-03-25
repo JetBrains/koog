@@ -67,9 +67,17 @@ jobs:
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: false
 
       - name: Compile and lint
         run: ./gradlew ktlintCheck compileKotlinJvm compileKotlinJs compileDebugKotlinAndroid compileKotlinWasmJs jvmTestClasses jsTestClasses
+
+      - name: Save Gradle build cache
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.gradle/caches/build-cache-1
+          key: gradle-build-cache-${{ github.run_id }}
 
   docs:
     needs: changes
@@ -131,6 +139,15 @@ jobs:
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: true
+
+      - name: Restore Gradle build cache
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.gradle/caches/build-cache-1
+          key: gradle-build-cache-${{ github.run_id }}
 
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
@@ -232,6 +249,13 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: true
+      - name: Restore Gradle build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.gradle/caches/build-cache-1
+          key: gradle-build-cache-${{ github.run_id }}
       - name: Generate API docs
         #language=bash
         run: |
