@@ -98,9 +98,6 @@ If `MyClass` original KDoc described certain parameters/properties that it accep
 This constructor KDoc can't have `@property` tag for parameters, use only `@param` for all parameters, even if the original was `@property`.
 
 ```kt
-// Required to put on top of the file containing expect classes to suppress IntelliJ warning about the experimental feature
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-
 package com.example
 
 /**
@@ -160,7 +157,7 @@ It should use `by delegate` to delegate all public symbols from `MyClassAPI` to 
 
 ```kt
 // Suppress IntelliJ warnings
-@file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@file:Suppress("MissingKDocForPublicAPI")
 
 package com.example
 
@@ -185,7 +182,7 @@ public symbols not present in the API interface. Such additional public symbols 
 For example, `jvmCommonMain` implementation that uses JVM-specific API
 ```kt
 // Suppress IntelliJ warnings
-@file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@file:Suppress("MissingKDocForPublicAPI")
 
 package com.example
 

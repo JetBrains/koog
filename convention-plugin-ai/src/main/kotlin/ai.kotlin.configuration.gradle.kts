@@ -60,6 +60,12 @@ tasks.withType<KotlinJvmCompile>().configureEach {
         jvmTarget.set(JvmTarget.JVM_11)
         jvmDefault = JvmDefaultMode.ENABLE
         javaParameters = true
+        freeCompilerArgs.addAll(
+            listOf(
+                "-Xexpect-actual-classes",
+                "-Xmulti-dollar-interpolation",
+            )
+        )
     }
 }
 
