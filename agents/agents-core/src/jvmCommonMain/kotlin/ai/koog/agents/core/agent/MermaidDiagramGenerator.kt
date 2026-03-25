@@ -1,7 +1,8 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.agent.entity.AIAgentNode
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 
@@ -15,23 +16,43 @@ private fun GraphData.toMermaidDiagram(): String =
         appendLine("---")
         appendLine("stateDiagram")
 
-        // Render nodes
-        nodes.values
-            .filterNot { it is StartNode }
-            .filterNot { it is FinishNode }
-            .forEach { node ->
-                appendLine("    ${node.toMermaidNode()}")
-            }
-
-        // Add blank line before edges if there are any
-        if (edges.isNotEmpty()) {
-            appendLine()
-            // Render edges
-            edges.forEach { edge ->
-                appendLine("    ${edge.toMermaidEdge()}")
-            }
-        }
+        renderGraphContent(this, this@toMermaidDiagram, indent = "    ")
     }.trimEnd()
+
+/**
+ * Renders graph content (nodes, subgraphs, edges) at a given indentation level.
+ * Used recursively for nested subgraphs.
+ */
+private fun renderGraphContent(
+    sb: StringBuilder,
+    graphData: GraphData,
+    indent: String,
+) {
+    // Render regular nodes (skip start, finish, and subgraph nodes)
+    graphData.nodes.values
+        .filterNot { it is StartNode }
+        .filterNot { it is FinishNode }
+        .filterNot { it is AIAgentSubgraphBase<*, *> }
+        .forEach { node ->
+            sb.appendLine("$indent${node.toMermaidNode()}")
+        }
+
+    // Render subgraphs as composite states
+    graphData.subgraphs.forEach { subgraph ->
+        val sgId = subgraph.id.replace("-", "_")
+        sb.appendLine("${indent}state \"${subgraph.name}\" as $sgId {")
+        renderGraphContent(sb, subgraph.innerData, indent = "$indent    ")
+        sb.appendLine("$indent}")
+    }
+
+    // Add blank line before edges if there are any
+    if (graphData.edges.isNotEmpty()) {
+        sb.appendLine()
+        graphData.edges.forEach { edge ->
+            sb.appendLine("$indent${edge.toMermaidEdge()}")
+        }
+    }
+}
 
 /**
  * Extension function to render an EdgeInfo as a mermaid edge string.
@@ -48,42 +69,26 @@ private fun EdgeInfo.toMermaidEdge(): String {
 }
 
 /**
- * Extension function to render an AIAgentNode as a mermaid node string.
+ * Extension function to render an AIAgentNodeBase as a mermaid node declaration string.
  */
-private fun AIAgentNode<*, *>.toMermaidNode(): String =
+private fun AIAgentNodeBase<*, *>.toMermaidNode(): String =
     when (this) {
-        is StartNode -> {
-            "[*]"
-        }
-
-        is FinishNode -> {
-            "[*]"
-        }
-
-        else -> {
-            "state \"${name}\" as ${id.replace("-", "_")}"
-        }
+        is StartNode -> "[*]"
+        is FinishNode -> "[*]"
+        else -> "state \"${name}\" as ${id.replace("-", "_")}"
     }
 
 /**
- * Converts an AIAgentNode to its mermaid node reference representation.
+ * Converts an AIAgentNodeBase to its mermaid node reference representation.
  *
  * @return A string representing the mermaid node reference. For StartNode and FinishNode,
  * it returns "[*]". For other nodes, it converts the node ID by replacing dashes with underscores.
  */
-private fun AIAgentNode<*, *>.toMermaidNodeRef(): String =
+private fun AIAgentNodeBase<*, *>.toMermaidNodeRef(): String =
     when (this) {
-        is StartNode -> {
-            "[*]"
-        }
-
-        is FinishNode -> {
-            "[*]"
-        }
-
-        else -> {
-            id.replace("-", "_")
-        }
+        is StartNode -> "[*]"
+        is FinishNode -> "[*]"
+        else -> id.replace("-", "_")
     }
 
 /**
