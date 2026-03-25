@@ -45,5 +45,16 @@ dokka {
                 packageListUrl("https://modelcontextprotocol.github.io/kotlin-sdk/package-list")
             }
         }
+
+        // When -Pdokka.jvmOnly=true, suppress non-JVM source sets to speed up Dokka generation
+        val jvmOnly = providers.gradleProperty("dokka.jvmOnly").orElse("false").map { it.toBoolean() }
+        if (jvmOnly.get()) {
+            matching {
+                val name = it.name.lowercase()
+                !name.contains("common") && !name.contains("jvm")
+            }.configureEach {
+                suppress.set(true)
+            }
+        }
     }
 }

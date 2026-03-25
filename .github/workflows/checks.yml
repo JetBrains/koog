@@ -222,7 +222,7 @@ jobs:
           ./gradlew :docs:assemble
 
   dokka:
-    needs: changes
+    needs: compilation
     if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -233,5 +233,10 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v5
       - name: Generate API docs
+        #language=bash
         run: |
-          ./gradlew dokkaGenerate
+          DOKKA_ARGS=""
+          if [[ "${{ github.event.pull_request.draft }}" == "true" ]]; then
+            DOKKA_ARGS="-Pdokka.jvmOnly=true"
+          fi
+          ./gradlew dokkaGenerate $DOKKA_ARGS
