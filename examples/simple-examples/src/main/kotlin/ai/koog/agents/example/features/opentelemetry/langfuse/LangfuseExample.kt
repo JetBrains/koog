@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.mcp.McpToolRegistryProvider
