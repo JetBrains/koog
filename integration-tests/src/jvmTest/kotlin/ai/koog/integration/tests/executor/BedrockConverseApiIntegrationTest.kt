@@ -35,6 +35,7 @@ import kotlin.enums.EnumEntries
 /**
  * Test newer Bedrock Converse API using the same suite of executor tests.
  */
+@Disabled("The provided guardrail ARN is invalid")
 class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     companion object {
         private fun EnumEntries<*>.combineBedrockModels(): Stream<Arguments> {
