@@ -1,8 +1,6 @@
 package ai.koog.prompt.executor.clients.google.genai
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.resolveEffectiveTools
 import ai.koog.prompt.dsl.ModerationResult
@@ -21,8 +19,6 @@ import ai.koog.prompt.executor.clients.requireMatchingProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -35,17 +31,10 @@ import com.google.genai.Client
 import com.google.genai.errors.ClientException
 import com.google.genai.errors.ServerException
 import com.google.genai.types.AutomaticFunctionCallingConfig
-import com.google.genai.types.Blob
 import com.google.genai.types.Candidate
 import com.google.genai.types.Content
-import com.google.genai.types.FunctionCall
-import com.google.genai.types.FunctionCallingConfig
-import com.google.genai.types.FunctionCallingConfigMode
-import com.google.genai.types.FunctionDeclaration
 import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.GenerateContentResponse
-import com.google.genai.types.Part
-import com.google.genai.types.Schema
 import com.google.genai.types.ThinkingConfig
 import com.google.genai.types.ThinkingLevel
 import com.google.genai.types.Tool
@@ -58,18 +47,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.future.await
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.util.concurrent.ExecutorService
 import kotlin.time.Clock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Implementation of [LLMClient] for Google's Gemini API using the official Google GenAI Java SDK.
@@ -85,7 +64,6 @@ import kotlin.uuid.Uuid
  *   Pass a custom dispatcher for virtual threads, test dispatchers, or application-specific thread pools.
  * @property clock Clock instance used for tracking response metadata timestamps.
  */
-@Suppress("TooManyFunctions")
 public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val client: Client,
     private val llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
@@ -123,6 +101,10 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
          */
         public const val SKIP_THOUGHT_SIGNATURE: String = "skip_thought_signature_validator"
     }
+
+    private val conversionUtils = GoogleGenaiConversionUtils(logger)
+    private val requestConverter = GoogleGenaiRequestConverter(fallbackThoughtSignature, conversionUtils)
+    private val responseConverter = GoogleGenaiResponseConverter(logger, clock, conversionUtils)
 
     override fun getBasicJsonSchemaGenerator(): GoogleBasicJsonSchemaGenerator {
         return GoogleBasicJsonSchemaGenerator
@@ -199,7 +181,8 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
                                         id = functionCall.id().orElse(null),
                                         name = functionCall.name().orElse(null),
                                         args = functionCall.args().orElse(null)
-                                            ?.let { convertMapToJsonObject(it).toString() } ?: "{}",
+                                            ?.let { conversionUtils.convertMapToJsonObject(it).toString() }
+                                            ?: "{}",
                                         index = index
                                     )
 
@@ -260,156 +243,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel
     ): Pair<List<Content>, Content?> {
-        val systemParts = mutableListOf<Part>()
-        val contents = mutableListOf<Content>()
-        val pendingCalls = mutableListOf<Part>()
-        val pendingResults = mutableListOf<Part>()
-        var lastSignature: String? = null
-        val isThinkingModel = model.supports(LLMCapability.Thinking)
-
-        fun flushCalls() {
-            if (pendingCalls.isNotEmpty()) {
-                contents += Content.builder().role("model").parts(pendingCalls.toList()).build()
-                pendingCalls.clear()
-            }
-        }
-
-        fun flushResults() {
-            if (pendingResults.isNotEmpty()) {
-                contents += Content.builder().role("user").parts(pendingResults.toList()).build()
-                pendingResults.clear()
-            }
-        }
-
-        fun flushAll() {
-            flushCalls()
-            flushResults()
-        }
-
-        for (message in prompt.messages) {
-            when (message) {
-                is Message.System -> {
-                    systemParts.add(Part.fromText(message.content))
-                }
-
-                is Message.User -> {
-                    flushAll()
-                    contents.add(buildUserContent(message, model))
-                }
-
-                is Message.Assistant -> {
-                    flushAll()
-                    contents.add(buildAssistantContent(message))
-                }
-
-                is Message.Reasoning -> {
-                    flushAll()
-
-                    if (message.content.isNotBlank()) {
-                        val partBuilder = Part.builder().text(message.content).thought(true)
-                        message.encrypted?.let { partBuilder.thoughtSignature(signatureToBytes(it)) }
-                        contents.add(
-                            Content.builder().role("model").parts(listOf(partBuilder.build())).build()
-                        )
-                    } else {
-                        lastSignature = message.encrypted
-                    }
-                }
-
-                is Message.Tool.Result -> {
-                    pendingResults.add(
-                        Part.fromFunctionResponse(
-                            message.tool,
-                            mapOf("result" to message.content)
-                        )
-                    )
-                }
-
-                is Message.Tool.Call -> {
-                    if (pendingCalls.isEmpty()) {
-                        flushResults()
-                    }
-
-                    val signature = lastSignature
-                    lastSignature = null
-
-                    val effectiveSignature = signature ?: if (isThinkingModel) {
-                        fallbackThoughtSignature
-                    } else {
-                        null
-                    }
-
-                    val args = parseJsonToMap(message.content)
-                    val partBuilder = Part.builder()
-                        .functionCall(
-                            FunctionCall.builder()
-                                .name(message.tool)
-                                .args(args)
-                                .build()
-                        )
-                    effectiveSignature?.let { partBuilder.thoughtSignature(signatureToBytes(it)) }
-                    pendingCalls += partBuilder.build()
-                }
-            }
-        }
-        flushAll()
-
-        val systemInstruction = systemParts
-            .takeIf { it.isNotEmpty() }
-            ?.let { Content.builder().parts(it).build() }
-
-        return contents to systemInstruction
-    }
-
-    private fun buildAssistantContent(message: Message.Assistant): Content {
-        return Content.builder().role("model").parts(Part.fromText(message.content)).build()
-    }
-
-    private fun buildUserContent(message: Message.User, model: LLModel): Content {
-        val parts = message.parts.map { part ->
-            when (part) {
-                is ContentPart.Text -> Part.fromText(part.text)
-
-                is ContentPart.Image -> {
-                    require(model.supports(LLMCapability.Vision.Image)) {
-                        "Model ${model.id} does not support images"
-                    }
-                    blobPart(part.content, part.mimeType)
-                }
-
-                is ContentPart.Audio -> {
-                    require(model.supports(LLMCapability.Audio)) {
-                        "Model ${model.id} does not support audio"
-                    }
-                    blobPart(part.content, part.mimeType)
-                }
-
-                is ContentPart.File -> {
-                    require(model.supports(LLMCapability.Document)) {
-                        "Model ${model.id} does not support documents"
-                    }
-                    blobPart(part.content, part.mimeType)
-                }
-
-                is ContentPart.Video -> {
-                    require(model.supports(LLMCapability.Vision.Video)) {
-                        "Model ${model.id} does not support video"
-                    }
-                    blobPart(part.content, part.mimeType)
-                }
-            }
-        }
-        return Content.builder().role("user").parts(parts).build()
-    }
-
-    private fun blobPart(content: AttachmentContent, mimeType: String): Part {
-        val bytes = when (content) {
-            is AttachmentContent.Binary -> content.asBytes()
-            else -> throw IllegalArgumentException("Unsupported attachment content: ${content::class}")
-        }
-        return Part.builder().inlineData(
-            Blob.builder().data(bytes).mimeType(mimeType).build()
-        ).build()
+        return requestConverter.buildSdkContents(prompt, model)
     }
 
     // endregion
@@ -422,98 +256,14 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
      * (e.g. add google search, code execution) before `.build()`.
      */
     protected open fun buildSdkTools(tools: List<ToolDescriptor>): List<Tool.Builder>? {
-        if (tools.isEmpty()) return null
-
-        val declarations = tools.map { tool ->
-            val properties = (tool.requiredParameters + tool.optionalParameters)
-                .associate { it.name to buildParamSchema(it) }
-
-            val schema = mapOf(
-                "type" to "object",
-                "properties" to properties,
-                "required" to tool.requiredParameters.map { it.name }
-            )
-
-            FunctionDeclaration.builder()
-                .name(tool.name)
-                .description(tool.description)
-                .parametersJsonSchema(schema)
-                .build()
-        }
-
-        return listOf(Tool.builder().functionDeclarations(declarations))
-    }
-
-    private fun buildParamSchema(param: ToolParameterDescriptor): Map<String, Any?> {
-        val schema = mutableMapOf<String, Any?>("description" to param.description)
-        putTypeSchema(schema, param.type)
-        return schema
-    }
-
-    private fun putTypeSchema(schema: MutableMap<String, Any?>, type: ToolParameterType) {
-        when (type) {
-            ToolParameterType.Boolean -> schema["type"] = "boolean"
-
-            ToolParameterType.Float -> schema["type"] = "number"
-
-            ToolParameterType.Integer -> schema["type"] = "integer"
-
-            ToolParameterType.String -> schema["type"] = "string"
-
-            ToolParameterType.Null -> schema["type"] = "null"
-
-            is ToolParameterType.Enum -> {
-                schema["type"] = "string"
-                schema["enum"] = type.entries.toList()
-            }
-
-            is ToolParameterType.List -> {
-                schema["type"] = "array"
-                val itemSchema = mutableMapOf<String, Any?>()
-                putTypeSchema(itemSchema, type.itemsType)
-                schema["items"] = itemSchema
-            }
-
-            is ToolParameterType.AnyOf -> {
-                schema["anyOf"] = type.types.map { buildParamSchema(it) }
-            }
-
-            is ToolParameterType.Object -> {
-                schema["type"] = "object"
-                schema["properties"] = type.properties.associate { prop ->
-                    val propSchema = mutableMapOf<String, Any?>("description" to prop.description)
-                    putTypeSchema(propSchema, prop.type)
-                    prop.name to propSchema
-                }
-            }
-        }
+        return GoogleGenaiToolConverter.buildSdkTools(tools)
     }
 
     /**
      * Converts [LLMParams.ToolChoice] to SDK [ToolConfig].
      */
     protected open fun buildSdkToolConfig(toolChoice: LLMParams.ToolChoice?): ToolConfig? {
-        val fcConfig = when (toolChoice) {
-            LLMParams.ToolChoice.Auto -> FunctionCallingConfig.builder()
-                .mode(FunctionCallingConfigMode.Known.AUTO)
-                .build()
-
-            LLMParams.ToolChoice.None -> FunctionCallingConfig.builder()
-                .mode(FunctionCallingConfigMode.Known.NONE)
-                .build()
-
-            LLMParams.ToolChoice.Required -> FunctionCallingConfig.builder()
-                .mode(FunctionCallingConfigMode.Known.ANY)
-                .build()
-
-            is LLMParams.ToolChoice.Named -> FunctionCallingConfig.builder()
-                .mode(FunctionCallingConfigMode.Known.ANY)
-                .allowedFunctionNames(listOf(toolChoice.name))
-                .build()
-
-            null -> return null
-        }
-        return ToolConfig.builder().functionCallingConfig(fcConfig).build()
+        return GoogleGenaiToolConverter.buildSdkToolConfig(toolChoice)
     }
 
     // endregion
@@ -565,10 +315,10 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             @Suppress("REDUNDANT_ELSE_IN_WHEN")
             when (schema) {
                 is LLMParams.Schema.JSON.Basic ->
-                    builder.responseSchema(jsonObjectToSdkSchema(schema.schema))
+                    builder.responseSchema(conversionUtils.jsonObjectToSdkSchema(schema.schema))
 
                 is LLMParams.Schema.JSON.Standard ->
-                    builder.responseJsonSchema(jsonObjectToMap(schema.schema))
+                    builder.responseJsonSchema(conversionUtils.jsonObjectToMap(schema.schema))
 
                 else -> throw IllegalArgumentException("Unsupported schema type: $schema")
             }
@@ -620,18 +370,15 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
      * Override to enrich metadata with additional fields (e.g. model version, response ID, thoughts token count).
      */
     protected open fun extractResponseMetaInfo(response: GenerateContentResponse): ResponseMetaInfo {
-        val usageMetadata = response.usageMetadata().orElse(null)
-        return ResponseMetaInfo.create(
-            clock,
-            totalTokensCount = usageMetadata?.totalTokenCount()?.orElse(null),
-            inputTokensCount = usageMetadata?.promptTokenCount()?.orElse(null),
-            outputTokensCount = usageMetadata?.candidatesTokenCount()?.orElse(null),
-        )
+        return responseConverter.extractResponseMetaInfo(response)
     }
 
     /**
      * Processes a [GenerateContentResponse] into a list of choices.
      * Override to customize the full response-to-choices pipeline.
+     *
+     * Note: This method stays on the client (rather than in [GoogleGenaiResponseConverter])
+     * to preserve virtual dispatch to [extractResponseMetaInfo] and [processCandidate].
      */
     protected open fun processResponse(response: GenerateContentResponse): List<List<Message.Response>> {
         val candidates = response.candidates().orElse(null)
@@ -656,108 +403,11 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
      * Processes a single [Candidate] into internal message format.
      * Override to customize how individual candidates are converted to Koog messages.
      */
-    @OptIn(ExperimentalUuidApi::class)
     protected open fun processCandidate(
         candidate: Candidate,
         metaInfo: ResponseMetaInfo
     ): List<Message.Response> {
-        val parts = candidate.content().orElse(null)?.parts()?.orElse(null).orEmpty()
-        val finishReason = candidate.finishReason().orElse(null)?.toString()
-        val responses = mutableListOf<Message.Response>()
-
-        for (part in parts) {
-            val signature = part.thoughtSignature().orElse(null)?.let { signatureFromBytes(it) }
-            val isThought = part.thought().orElse(false)
-
-            // Non-thought parts with a signature need a Reasoning carrier (unless already added)
-            val needsSignatureCarrier =
-                signature != null &&
-                    !isThought &&
-                    responses.none { it is Message.Reasoning && it.encrypted == signature }
-
-            if (needsSignatureCarrier) {
-                responses.add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
-            }
-
-            val functionCall = part.functionCall().orElse(null)
-            val text = part.text().orElse(null)
-            val inlineData = part.inlineData().orElse(null)
-
-            when {
-                text != null -> {
-                    if (isThought) {
-                        val existing = if (signature != null) {
-                            responses.filterIsInstance<Message.Reasoning>().find { it.encrypted == signature }
-                        } else {
-                            null
-                        }
-
-                        if (existing != null && existing.content.isEmpty()) {
-                            val index = responses.indexOf(existing)
-                            responses[index] =
-                                existing.copy(parts = listOf(ContentPart.Text(text)))
-                        } else {
-                            responses.add(
-                                Message.Reasoning(
-                                    content = text,
-                                    encrypted = signature,
-                                    metaInfo = metaInfo
-                                )
-                            )
-                        }
-                    } else {
-                        responses.add(
-                            Message.Assistant(
-                                content = text,
-                                finishReason = finishReason,
-                                metaInfo = metaInfo
-                            )
-                        )
-                    }
-                }
-
-                functionCall != null -> {
-                    val args = functionCall.args().orElse(null)
-                        ?.let { convertMapToJsonObject(it).toString() } ?: "{}"
-                    responses.add(
-                        Message.Tool.Call(
-                            id = Uuid.random().toString(),
-                            tool = functionCall.name().orElse(""),
-                            content = args,
-                            metaInfo = metaInfo
-                        )
-                    )
-                }
-
-                inlineData != null -> {
-                    val mimeType = inlineData.mimeType().orElse("application/octet-stream")
-                    val data = inlineData.data().orElse(ByteArray(0))
-                    val contentPart = inlineDataToContentPart(mimeType, data)
-                    responses.add(
-                        Message.Assistant(
-                            parts = listOf(contentPart),
-                            finishReason = finishReason,
-                            metaInfo = metaInfo
-                        )
-                    )
-                }
-
-                else -> {
-                    logger.warn { "Unhandled part type in response: $part" }
-                }
-            }
-        }
-
-        return when {
-            responses.any { it is Message.Tool.Call } ->
-                responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
-
-            responses.isEmpty() -> listOf(
-                Message.Assistant(content = "", finishReason = finishReason, metaInfo = metaInfo)
-            )
-
-            else -> responses
-        }
+        return responseConverter.processCandidate(candidate, metaInfo)
     }
 
     // endregion
@@ -795,148 +445,6 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     override fun close() {
         client.close()
-    }
-
-    // endregion
-
-    // region Utility functions
-
-    /**
-     * Maps an inline data blob from the SDK response to the appropriate [ContentPart] subtype
-     */
-    private fun inlineDataToContentPart(mimeType: String, data: ByteArray): ContentPart = when {
-        mimeType.startsWith("image/") -> ContentPart.Image(
-            content = AttachmentContent.Binary.Bytes(data),
-            format = mimeType.substringAfter("image/"),
-            mimeType = mimeType,
-        )
-
-        mimeType.startsWith("audio/") -> ContentPart.Audio(
-            content = AttachmentContent.Binary.Bytes(data),
-            format = mimeType.substringAfter("audio/"),
-            mimeType = mimeType,
-        )
-
-        mimeType.startsWith("video/") -> ContentPart.Video(
-            content = AttachmentContent.Binary.Bytes(data),
-            format = mimeType.substringAfter("video/"),
-            mimeType = mimeType,
-        )
-
-        else -> ContentPart.File(
-            content = AttachmentContent.Binary.Bytes(data),
-            mimeType = mimeType,
-            format = mimeType.substringAfterLast('/'),
-        )
-    }
-
-    /**
-     * Converts a signature string to byte[] for the SDK.
-     *
-     * The Google API returns thought signatures as JSON strings. The SDK expects `byte[]` and
-     * serializes them back to JSON. We use UTF-8 encoding (string → bytes) on requests and
-     * UTF-8 decoding (bytes → string) on responses, preserving the original string value.
-     * This assumes signatures are valid UTF-8 strings (which holds for both base64 and plaintext tokens).
-     */
-    private fun signatureToBytes(value: String): ByteArray = value.encodeToByteArray()
-    private fun signatureFromBytes(value: ByteArray): String = value.decodeToString()
-
-    /**
-     * Parses a JSON string (tool call args) into a Map<String, Object> for the SDK.
-     */
-    @Suppress("TooGenericExceptionCaught")
-    private fun parseJsonToMap(jsonString: String): Map<String, Any?> {
-        if (jsonString.isBlank() || jsonString == "{}") return emptyMap()
-        return try {
-            val element = Json.parseToJsonElement(jsonString)
-            if (element is JsonObject) jsonObjectToMap(element) else emptyMap()
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to parse JSON args: $jsonString" }
-            emptyMap()
-        }
-    }
-
-    /**
-     * Converts a [JsonObject] to a plain Map for the SDK.
-     */
-    private fun jsonObjectToMap(json: JsonObject): Map<String, Any?> {
-        return json.mapValues { (_, v) -> jsonElementToAny(v) }
-    }
-
-    private fun jsonElementToAny(element: JsonElement): Any? = when (element) {
-        is JsonNull -> null
-
-        is JsonPrimitive -> when {
-            element.isString -> element.content
-            element.content == "true" || element.content == "false" -> element.content.toBoolean()
-            else -> element.content.toLongOrNull() ?: element.content.toDoubleOrNull() ?: element.content
-        }
-
-        is JsonObject -> jsonObjectToMap(element)
-
-        is JsonArray -> element.map { jsonElementToAny(it) }
-    }
-
-    /**
-     * Converts a Map<String, Object> from SDK response to a [JsonObject].
-     */
-    private fun convertMapToJsonObject(map: Map<String, Any?>): JsonObject = buildJsonObject {
-        for ((key, value) in map) {
-            when (value) {
-                null -> put(key, JsonNull)
-
-                is String -> put(key, value)
-
-                is Int -> put(key, value.toLong())
-
-                is Long -> put(key, value)
-
-                is Number -> put(key, value.toDouble())
-
-                is Boolean -> put(key, value)
-
-                is Map<*, *> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    put(key, convertMapToJsonObject(value as Map<String, Any?>))
-                }
-
-                is List<*> -> {
-                    put(key, JsonArray(value.map { convertAnyToJsonElement(it) }))
-                }
-
-                else -> put(key, value.toString())
-            }
-        }
-    }
-
-    private fun convertAnyToJsonElement(value: Any?): JsonElement = when (value) {
-        null -> JsonNull
-
-        is String -> JsonPrimitive(value)
-
-        is Int -> JsonPrimitive(value.toLong())
-
-        is Long -> JsonPrimitive(value)
-
-        is Number -> JsonPrimitive(value.toDouble())
-
-        is Boolean -> JsonPrimitive(value)
-
-        is Map<*, *> -> {
-            @Suppress("UNCHECKED_CAST")
-            convertMapToJsonObject(value as Map<String, Any?>)
-        }
-
-        is List<*> -> JsonArray(value.map { convertAnyToJsonElement(it) })
-
-        else -> JsonPrimitive(value.toString())
-    }
-
-    /**
-     * Converts a [JsonObject] to an SDK [Schema] for response schema.
-     */
-    private fun jsonObjectToSdkSchema(json: JsonObject): Schema {
-        return Schema.fromJson(json.toString())
     }
 
     // endregion
