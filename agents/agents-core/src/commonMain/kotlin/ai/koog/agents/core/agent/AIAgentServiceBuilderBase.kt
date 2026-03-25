@@ -1,9 +1,9 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.copy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -99,9 +99,8 @@ public abstract class AIAgentServiceBuilderBase<Self : AIAgentServiceBuilderBase
      * @param systemPrompt The content of the system message to set as the prompt.
      * @return The current builder instance with the updated system prompt.
      */
-    public fun systemPrompt(systemPrompt: String): Self = prompt(
-        ai.koog.prompt.dsl.prompt(id = "agent") { system(systemPrompt) }
-    )
+    public fun systemPrompt(systemPrompt: String): Self =
+        prompt(prompt(config.prompt) { system(systemPrompt) })
 
     /**
      * Sets the prompt to be used by the builder.
