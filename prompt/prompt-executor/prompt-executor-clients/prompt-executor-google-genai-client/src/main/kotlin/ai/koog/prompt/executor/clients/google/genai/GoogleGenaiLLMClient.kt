@@ -299,9 +299,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
                 is Message.Assistant -> {
                     flushAll()
-                    contents.add(
-                        Content.builder().role("model").parts(Part.fromText(message.content)).build()
-                    )
+                    contents.add(buildAssistantContent(message))
                 }
 
                 is Message.Reasoning -> {
@@ -361,6 +359,10 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             ?.let { Content.builder().parts(it).build() }
 
         return contents to systemInstruction
+    }
+
+    private fun buildAssistantContent(message: Message.Assistant): Content {
+        return Content.builder().role("model").parts(Part.fromText(message.content)).build()
     }
 
     private fun buildUserContent(message: Message.User, model: LLModel): Content {
