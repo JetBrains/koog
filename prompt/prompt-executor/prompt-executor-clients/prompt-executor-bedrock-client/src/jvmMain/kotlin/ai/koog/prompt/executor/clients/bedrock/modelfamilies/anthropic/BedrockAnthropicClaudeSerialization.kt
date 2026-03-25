@@ -91,7 +91,8 @@ internal object BedrockAnthropicClaudeSerialization {
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.ToolResult(
                                         toolUseId = msg.id!!,
-                                        content = msg.content
+                                        content = msg.content,
+                                        isError = msg.isError
                                     )
                                 )
                             )
