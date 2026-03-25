@@ -11,23 +11,12 @@ java {
 
 dependencies {
     implementation(libs.koog.agents)
+    implementation(libs.koog.serialization.jackson)
     implementation(libs.koog.agents.features.chat.history.jdbc)
     implementation(libs.koog.agents.features.persistence.jdbc)
     implementation(libs.jackson.databind)
     implementation(libs.logback.classic)
 }
-
-/*
- Java code doesn't complete well and produces false positive red code when it depends on a Kotlin project via Gradle composite build,
- so hacking our own "composite build" version via publishing to maven local
-*/
-
-interface ExecOps {
-    @get:Inject
-    val execOps: ExecOperations
-}
-
-val execOps = objects.newInstance<ExecOps>().execOps
 
 /**
  * Gradle composite build with direct dependency on Koog breaks intellisense in IntelliJ when writing Java (false positive red code, etc.).
@@ -43,33 +32,40 @@ val koogLocalMarker = File(
     ".m2/repository/ai/koog/koog-agents/$koogVersion/koog-agents-$koogVersion.pom"
 )
 
-fun ExecSpec.doPublishKoogToMavenLocal() {
-    workingDir = koogRootDir
-    commandLine(
-        "${koogRootDir.resolve("gradlew").absolutePath}",
-        // KMP modules: root metadata module and only JVM artifacts
+fun doPublishKoogToMavenLocal() {
+    val process = ProcessBuilder(
+        koogRootDir.resolve("gradlew").absolutePath,
         "publishKotlinMultiplatformPublicationToMavenLocal",
         "publishJvmPublicationToMavenLocal",
-        // JVM-only modules
         "publishMavenPublicationToMavenLocal",
         "-Pversion=${koogVersion.removeSuffix("-SNAPSHOT")}",
-    )
+    ).directory(koogRootDir)
+        .start()
+
+    process.inputStream.bufferedReader().forEachLine { line ->
+        logger.lifecycle(line)
+    }
+
+    val exitCode = process.waitFor()
+    if (exitCode != 0) {
+        throw GradleException("publishKoogToMavenLocal failed with exit code $exitCode")
+    }
 }
 
 // Check if koog artifacts exist in mavenLocal. If not, publish them when initializing the script
 if (!koogLocalMarker.exists()) {
     logger.lifecycle("Koog $koogVersion not found in mavenLocal — publishing")
-    execOps.exec {
-        doPublishKoogToMavenLocal()
-    }
+    doPublishKoogToMavenLocal()
     logger.lifecycle("Koog $koogVersion published")
 }
 
-val publishKoogToMavenLocal by tasks.registering(Exec::class) {
+val publishKoogToMavenLocal by tasks.registering {
     group = "setup"
     description = "Publishes the main Koog project to mavenLocal with version $koogVersion (cached by Gradle)"
 
-    doPublishKoogToMavenLocal()
+    doLast {
+        doPublishKoogToMavenLocal()
+    }
 }
 
 //endregion
@@ -103,3 +99,15 @@ registerRunExampleTask("runExampleCalculatorLocal", "ai.koog.agents.example.calc
 registerRunExampleTask("runExampleFunctionalAgentChat", "ai.koog.agents.example.chat.FunctionalAgentChat")
 registerRunExampleTask("runExampleChatMemoryJdbc", "ai.koog.agents.example.chatmemory.ChatMemoryJdbcExample")
 registerRunExampleTask("runExamplePersistenceJdbc", "ai.koog.agents.example.snapshot.PersistenceJdbcExample")
+
+/*
+Open Telemetry examples
+*/
+registerRunExampleTask("runExampleOpenTelemetryApp", "ai.koog.agents.example.features.opentelemetry.OpenTelemetryExample")
+registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.opentelemetry.langfuse.LangfuseExample")
+registerRunExampleTask("runExampleWeaveApp", "ai.koog.agents.example.features.opentelemetry.weave.WeaveExample")
+
+/*
+Custom subgraph examples
+*/
+registerRunExampleTask("runExampleCustomSubgraph", "ai.koog.agents.example.subgraphs.CustomSubgraphExample")

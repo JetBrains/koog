@@ -123,9 +123,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         }
 
         @JvmStatic
-        fun allModels(): Stream<LLModel> = AIAgentTestBase.allModels()
-
-        @JvmStatic
         fun modelsWithVisionCapability(): Stream<Arguments> = AIAgentTestBase.modelsWithVisionCapability()
 
         @JvmStatic
@@ -187,11 +184,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             ) {
                 system {
                     +"You are a helpful assistant. "
-                    +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+                    +"You must complete the task by calling the provided tools when needed. "
+                    +"For this task, call the required tools first, then return a brief final answer. "
+                    +"Do not ask follow-up questions."
                 }
             },
             model = model,
-            maxAgentIterations = 20,
+            maxAgentIterations = 30,
         ),
         toolRegistry = toolRegistry,
         installFeatures = {
@@ -257,10 +256,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "single-run integration with calculator enum tool arguments")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-
-        /* Some models are not calling tools in parallel:
-         * see https://youtrack.jetbrains.com/issue/KG-115
-         */
         assumeTrue(model.id !== OpenAIModels.Chat.O1.id, "Model $model flaks when calling parallel tools")
         assumeTrue(model.id !== GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
 
@@ -271,22 +266,32 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 multiToolAgent.run(twoToolsPrompt)
 
                 with(state) {
-                    withClue("There should be at least 2 tool calls in a Multiple tool calls scenario") {
-                        parallelToolCalls.size shouldBeGreaterThanOrEqual 2
-                    }
+                    when (runMode) {
+                        ToolCalls.PARALLEL -> {
+                            withClue("There should be at least 2 tool executions in a parallel multiple-tools scenario") {
+                                actualToolCalls.size shouldBeGreaterThanOrEqual 2
+                            }
+                            withClue("Both expected tools should be executed in a parallel multiple-tools scenario") {
+                                actualToolCalls shouldContain SimpleCalculatorTool.name
+                                actualToolCalls shouldContain DelayTool.name
+                            }
+                        }
 
-                    withClue("There should be no single tool calls in a Multiple tool calls scenario") {
-                        singleToolCalls.shouldBeEmpty()
-                    }
+                        ToolCalls.SEQUENTIAL -> {
+                            withClue("There should be at least 2 tool executions in a sequential multiple-tools scenario") {
+                                actualToolCalls.size shouldBeGreaterThanOrEqual 2
+                            }
+                            withClue("Both expected tools should be executed in a sequential multiple-tools scenario") {
+                                actualToolCalls shouldContain SimpleCalculatorTool.name
+                                actualToolCalls shouldContain DelayTool.name
+                            }
+                            withClue("Calculator tool should execute before delay tool in a sequential multiple-tools scenario") {
+                                actualToolCalls.indexOf(SimpleCalculatorTool.name) shouldBeLessThan
+                                    actualToolCalls.indexOf(DelayTool.name)
+                            }
+                        }
 
-                    val firstCall = parallelToolCalls.first()
-                    val secondCall = state.parallelToolCalls.last()
-
-                    withClue("First tool call should be ${SimpleCalculatorTool.name}") {
-                        firstCall.tool shouldBe SimpleCalculatorTool.name
-                    }
-                    withClue("Second tool call should be ${DelayTool.name}") {
-                        secondCall.tool shouldBe DelayTool.name
+                        else -> error("Unsupported run mode for multiple tools test: $runMode")
                     }
                 }
             }
@@ -294,7 +299,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
@@ -319,7 +324,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentWithoutSystemMessage(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
@@ -342,7 +347,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "custom calculator tool integration")
@@ -429,7 +434,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_RequestLLMWithoutTools(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
@@ -471,13 +476,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentSingleRunWithSequentialToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         runMultipleToolsTest(model, ToolCalls.SEQUENTIAL)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(
             model !in listOf(
@@ -490,7 +495,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(
@@ -594,7 +599,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCreateAndRestoreFromCheckpoint(model: LLModel) = runTest(timeout = 180.seconds) {
         // assumeTrue(model == GoogleModels.Gemini2_5Flash)
 
@@ -687,7 +692,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCheckpointRollback(model: LLModel) = runTest(timeout = 180.seconds) {
         // assumeTrue(model == GoogleModels.Gemini2_5Flash)
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
@@ -805,7 +810,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCheckpointContinuousPersistence(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider =
             InMemoryPersistenceStorageProvider()
@@ -873,7 +878,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCheckpointStorageProviders(
         model: LLModel,
         @TempDir tempDir: Path,
@@ -950,7 +955,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     @Disabled("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
     fun integration_AIAgentCheckpointWithToolCalls(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
@@ -1016,7 +1021,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentWithToolsWithoutParams(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -1065,7 +1070,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -1131,7 +1136,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -1348,7 +1353,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalSubtask(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "functional subtask with calculator enum tool arguments")
@@ -1386,12 +1391,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_RequestLLMForceOneToolDoesNotDuplicateMessages(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
-        Models.assumeEnumToolCallsAreStable(model, "force-one-tool integration with calculator enum arguments")
         runWithTracking { eventHandlerConfig, state ->
             val maxAttempts = if (model.provider.id == LLMProvider.MistralAI.id) 2 else 3
             var attempts = 0

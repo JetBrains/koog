@@ -115,20 +115,24 @@ public expect class AIAgentConfig(
             maxAgentIterations: Int = 3,
         ): AIAgentConfig
     }
-}
 
-internal fun AIAgentConfig.copy(
-    prompt: Prompt = this.prompt,
-    model: LLModel = this.model,
-    maxAgentIterations: Int = this.maxAgentIterations,
-    missingToolsConversionStrategy: MissingToolsConversionStrategy = this.missingToolsConversionStrategy,
-    responseProcessor: ResponseProcessor? = this.responseProcessor,
-    serializer: JSONSerializer = this.serializer
-): AIAgentConfig = AIAgentConfig(
-    prompt = prompt,
-    model = model,
-    maxAgentIterations = maxAgentIterations,
-    missingToolsConversionStrategy = missingToolsConversionStrategy,
-    responseProcessor = responseProcessor,
-    serializer = serializer
-)
+    /**
+     * Creates a copy of this AI agent configuration with the specified modifications.
+     *
+     * @param prompt The prompt to use for the AI agent. Defaults to the existing prompt.
+     * @param model The LLM model to use for the AI agent. Defaults to the existing model.
+     * @param maxAgentIterations The maximum number of iterations allowed for the AI agent. Defaults to the existing value.
+     * @param missingToolsConversionStrategy The strategy for handling missing tools during the AI agent's execution. Defaults to the existing strategy.
+     * @param responseProcessor The processor for handling responses from the LLM. Defaults to the existing processor.
+     * @param serializer The serializer for handling tool arguments and results. Defaults to the existing serializer.
+     * @return A new instance of [AIAgentConfig] with the specified modifications.
+     */
+    internal fun copy(
+        prompt: Prompt = this.prompt,
+        model: LLModel = this.model,
+        maxAgentIterations: Int = this.maxAgentIterations,
+        missingToolsConversionStrategy: MissingToolsConversionStrategy = this.missingToolsConversionStrategy,
+        responseProcessor: ResponseProcessor? = this.responseProcessor,
+        serializer: JSONSerializer = this.serializer
+    ): AIAgentConfig
+}

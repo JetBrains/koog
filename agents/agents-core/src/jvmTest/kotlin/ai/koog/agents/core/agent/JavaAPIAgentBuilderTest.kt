@@ -4,15 +4,17 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.Prompt.Companion.builder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import junit.framework.TestCase.assertTrue
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import java.util.function.BiFunction
-import kotlin.test.assertEquals
+import java.util.concurrent.Executors
 import kotlin.test.assertNotNull
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -37,7 +39,7 @@ class JavaAPIAgentBuilderTest {
     fun testAIAgentBuilderMethodExists() {
         // Test that AIAgent.builder() static method is accessible
         val builder = AIAgent.builder()
-        assertNotNull(builder)
+        builder.shouldNotBeNull()
     }
 
     @Test
@@ -50,16 +52,16 @@ class JavaAPIAgentBuilderTest {
             .systemPrompt("sys")
             .build()
 
-        assertNotNull(agent)
-        assertEquals(OpenAIModels.Chat.GPT4o, agent.agentConfig.model)
-        assertEquals(50, agent.agentConfig.maxAgentIterations) // default from builder
+        agent.shouldNotBeNull()
+        agent.agentConfig.model.shouldBe(OpenAIModels.Chat.GPT4o)
+        agent.agentConfig.maxAgentIterations.shouldBe(50) // default from builder
     }
 
     @Test
     fun testBuilderWithAgentConfig() {
         // Test the agentConfig() method that's used in Java code
         val config = AIAgentConfig(
-            prompt = Prompt.builder("test-id", testClock)
+            prompt = builder("test-id", testClock)
                 .system("system")
                 .user("user")
                 .assistant("assistant")
@@ -73,10 +75,10 @@ class JavaAPIAgentBuilderTest {
             .agentConfig(config)
             .build()
 
-        assertNotNull(agent)
-        assertEquals(OpenAIModels.Chat.GPT4o, agent.agentConfig.model)
-        assertEquals(100, agent.agentConfig.maxAgentIterations)
-        assertEquals("test-id", agent.agentConfig.prompt.id)
+        agent.shouldNotBeNull()
+        agent.agentConfig.model.shouldBe(OpenAIModels.Chat.GPT4o)
+        agent.agentConfig.maxAgentIterations.shouldBe(100)
+        agent.agentConfig.prompt.id.shouldBe("test-id")
     }
 
     @Test
@@ -90,7 +92,7 @@ class JavaAPIAgentBuilderTest {
             .toolRegistry(toolRegistry)
             .build()
 
-        assertNotNull(agent)
+        agent.shouldNotBeNull()
         // Indirect assertion: agent built successfully with provided registry
     }
 
@@ -99,7 +101,7 @@ class JavaAPIAgentBuilderTest {
         // Test the exact pattern from KoogAgentService.java
         // This matches lines 152-171 of the Java example
         val config = AIAgentConfig(
-            prompt = Prompt.builder("id")
+            prompt = builder("id")
                 .system("system")
                 .user("user")
                 .assistant("assistant")
@@ -113,23 +115,26 @@ class JavaAPIAgentBuilderTest {
             model = OpenAIModels.Chat.GPT4o,
             maxAgentIterations = 100
         )
+        config.prompt.messages.shouldHaveSize(9)
 
         val agent = AIAgent.builder()
             .promptExecutor(getMockExecutor(serializer) { })
             .agentConfig(config)
+            .systemPrompt("sys")
             .build()
 
-        assertNotNull(agent)
-        assertEquals(OpenAIModels.Chat.GPT4o, agent.agentConfig.model)
+        agent.shouldNotBeNull()
+        agent.agentConfig.model.shouldBe(OpenAIModels.Chat.GPT4o)
         // 2 system/user pairs + 2 tool calls + 2 tool results = 6 messages plus initial system => account for actual structure
-        assertTrue(agent.agentConfig.prompt.messages.isNotEmpty())
+        agent.agentConfig.prompt.messages.shouldNotBeEmpty()
+        agent.agentConfig.prompt.messages.shouldHaveSize(10)
     }
 
     @Test
     fun testFunctionalStrategyWithLambda() {
         // Test that functional strategy BiFunction-based Java API can be set
         val config = AIAgentConfig(
-            prompt = Prompt.builder("test-id", testClock)
+            prompt = builder("test-id", testClock)
                 .system("You are a helpful assistant")
                 .build(),
             model = OpenAIModels.Chat.GPT4o,
@@ -138,15 +143,14 @@ class JavaAPIAgentBuilderTest {
 
         val agent = AIAgent.builder()
             .agentConfig(config)
-            .functionalStrategy<String, String>(
-                "echoStrategy",
-                BiFunction { _: AIAgentFunctionalContext, input: String -> "Echo: $input" }
-            )
+            .functionalStrategy(
+                "echoStrategy"
+            ) { _: AIAgentFunctionalContext, input: String -> "Echo: $input" }
             .promptExecutor(getMockExecutor(serializer) { })
             .build()
 
         val result = agent.javaNonSuspendRun("hello", null, null)
-        assertEquals("Echo: hello", result)
+        result.shouldBe("Echo: hello")
     }
 
     @Test
@@ -160,7 +164,7 @@ class JavaAPIAgentBuilderTest {
         }
 
         val config = AIAgentConfig(
-            prompt = Prompt.builder("test-id", testClock)
+            prompt = builder("test-id", testClock)
                 .system("Test system")
                 .build(),
             model = OpenAIModels.Chat.GPT4o,
@@ -176,14 +180,14 @@ class JavaAPIAgentBuilderTest {
             .build()
 
         val result = agent.javaNonSuspendRun("data")
-        assertEquals("Processed: data", result)
+        result.shouldBe("Processed: data")
     }
 
     @Test
     fun testBuilderChaining() {
         // Test that builder methods can be chained fluently
         val config = AIAgentConfig(
-            prompt = Prompt.builder("chaining-test", testClock)
+            prompt = builder("chaining-test", testClock)
                 .system("System message")
                 .build(),
             model = OpenAIModels.Chat.GPT4o,
@@ -199,16 +203,16 @@ class JavaAPIAgentBuilderTest {
             .temperature(0.7)
             .build()
 
-        assertNotNull(agent)
-        assertEquals(25, agent.agentConfig.maxAgentIterations)
-        assertEquals("chaining-test", agent.agentConfig.prompt.id)
+        agent.shouldNotBeNull()
+        agent.agentConfig.maxAgentIterations.shouldBe(25)
+        agent.agentConfig.prompt.id.shouldBe("chaining-test")
     }
 
     @Test
     fun testBuilderWithMultipleConfigurations() {
         // Test that builder can handle multiple configuration calls
         val config1 = AIAgentConfig(
-            prompt = Prompt.builder("config-1", testClock)
+            prompt = builder("config-1", testClock)
                 .system("First config")
                 .build(),
             model = OpenAIModels.Chat.GPT4o,
@@ -216,7 +220,7 @@ class JavaAPIAgentBuilderTest {
         )
 
         val config2 = AIAgentConfig(
-            prompt = Prompt.builder("config-2", testClock)
+            prompt = builder("config-2", testClock)
                 .system("Second config")
                 .build(),
             model = OpenAIModels.Chat.GPT4o,
@@ -229,9 +233,9 @@ class JavaAPIAgentBuilderTest {
             .agentConfig(config2) // Should override config1
             .build()
 
-        assertNotNull(agent)
-        assertEquals(20, agent.agentConfig.maxAgentIterations)
-        assertEquals("config-2", agent.agentConfig.prompt.id)
+        agent.shouldNotBeNull()
+        agent.agentConfig.maxAgentIterations.shouldBe(20)
+        agent.agentConfig.prompt.id.shouldBe("config-2")
     }
 
     @Test
@@ -270,10 +274,90 @@ class JavaAPIAgentBuilderTest {
 
         val prompt = agent.agentConfig.prompt
 
-        assertEquals(id, prompt.id, "Prompt ID should be preserved")
-        assertEquals(temperature, prompt.params.temperature, "Temperature should be preserved")
-        assertEquals(maxTokens, prompt.params.maxTokens, "Prompt params should be preserved")
-        assertEquals(originalSystemPrompt, prompt.messages.first().content, "original messages should be preserved")
-        assertEquals(systemPrompt, prompt.messages.last().content, "system prompt should be added")
+        prompt.id.shouldBe(id)
+        prompt.params.temperature.shouldBe(temperature)
+        prompt.params.maxTokens.shouldBe(maxTokens)
+        prompt.messages.first().content.shouldBe(originalSystemPrompt)
+        prompt.messages.last().content.shouldBe(systemPrompt)
+    }
+
+    @Test
+    fun testBuilderOverridesAgentConfig() {
+        val config = AIAgentConfig(
+            builder("copy-test").system("system").build(),
+            OpenAIModels.Chat.GPT4o,
+            3
+        )
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getMockExecutor(serializer) { })
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .agentConfig(config)
+            .maxIterations(15)
+            .build()
+
+        agent.agentConfig.maxAgentIterations.shouldBe(15)
+    }
+
+    @Test
+    fun testBuilderOverridesPromptParams() {
+        val params = LLMParams(
+            temperature = 0.5,
+        )
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getMockExecutor(serializer) { })
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .prompt(prompt("test-prompt", params) { system("system") })
+            .temperature(0.7)
+            .build()
+
+        agent.agentConfig.prompt.params.temperature.shouldBe(0.7)
+    }
+
+    @Test
+    fun testBuilderOverridesPromptParamsInCustomConfig() {
+        val config = AIAgentConfig(
+            builder("copy-test").system("system").build(),
+            OpenAIModels.Chat.GPT4o,
+            3
+        )
+
+        val agent = AIAgent.builder()
+            .promptExecutor(getMockExecutor(serializer) { })
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .agentConfig(config)
+            .temperature(0.7)
+            .build()
+
+        agent.agentConfig.prompt.params.temperature.shouldBe(0.7)
+    }
+
+    @Test
+    fun testBuilderUpdatePreservesJvmExecutorsFromCustomConfig() {
+        val strategyExecutor = Executors.newSingleThreadExecutor()
+        val llmExecutor = Executors.newSingleThreadExecutor()
+
+        try {
+            val config = AIAgentConfig(
+                prompt = builder("copy-test").system("system").build(),
+                model = OpenAIModels.Chat.GPT4o,
+                maxAgentIterations = 3,
+                agentStrategyExecutorService = strategyExecutor,
+                llmRequestExecutorService = llmExecutor
+            )
+
+            val agent = AIAgent.builder()
+                .promptExecutor(getMockExecutor(serializer) { })
+                .agentConfig(config)
+                .temperature(0.7)
+                .build()
+
+            agent.agentConfig.strategyExecutorService.shouldBe(strategyExecutor)
+            agent.agentConfig.llmRequestExecutorService.shouldBe(llmExecutor)
+        } finally {
+            strategyExecutor.shutdownNow()
+            llmExecutor.shutdownNow()
+        }
     }
 }

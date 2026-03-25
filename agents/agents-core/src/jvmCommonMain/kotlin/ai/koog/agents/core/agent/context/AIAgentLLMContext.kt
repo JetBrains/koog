@@ -20,27 +20,29 @@ import ai.koog.prompt.processor.ResponseProcessor
 import java.util.function.Function
 import kotlin.time.Clock
 
-public actual open class AIAgentLLMContext internal actual constructor(
-    internal actual val delegate: AIAgentLLMContextImpl
-) : AIAgentLLMContextAPI by delegate {
-    public actual constructor(
-        tools: List<ToolDescriptor>,
-        toolRegistry: ToolRegistry,
-        prompt: Prompt,
-        model: LLModel,
-        responseProcessor: ResponseProcessor?,
-        promptExecutor: PromptExecutor,
-        environment: AIAgentEnvironment,
-        config: AIAgentConfig,
-        clock: Clock
-    ) : this(
-        delegate = AIAgentLLMContextImpl(
-            tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock
-        )
-    )
-
+public actual open class AIAgentLLMContext actual constructor(
+    tools: List<ToolDescriptor>,
+    toolRegistry: ToolRegistry,
+    prompt: Prompt,
+    model: LLModel,
+    responseProcessor: ResponseProcessor?,
+    promptExecutor: PromptExecutor,
+    environment: AIAgentEnvironment,
+    config: AIAgentConfig,
+    clock: Clock
+) : AIAgentLLMContextCommon(
+    initialTools = tools,
+    initialToolRegistry = toolRegistry,
+    initialPrompt = prompt,
+    initialModel = model,
+    initialResponseProcessor = responseProcessor,
+    initialPromptExecutor = promptExecutor,
+    initialEnvironment = environment,
+    initialConfig = config,
+    initialClock = clock
+) {
     @JvmOverloads
-    public actual final override suspend fun copy(
+    public override suspend fun copy(
         tools: List<ToolDescriptor>,
         toolRegistry: ToolRegistry,
         prompt: Prompt,
@@ -51,7 +53,7 @@ public actual open class AIAgentLLMContext internal actual constructor(
         config: AIAgentConfig,
         clock: Clock
     ): AIAgentLLMContext =
-        delegate.copy(tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
+        super.copy(tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
 
     /**
      * Executes a block of code within a write session for the AI Agent LLM context.
@@ -91,12 +93,8 @@ public actual open class AIAgentLLMContext internal actual constructor(
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
-    public actual override suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T =
-        delegate.readSession(block)
-
     @JvmOverloads
-    public actual final override fun copy(
+    public override fun copy(
         tools: List<ToolDescriptor>,
         prompt: Prompt,
         model: LLModel,
@@ -106,5 +104,5 @@ public actual open class AIAgentLLMContext internal actual constructor(
         config: AIAgentConfig,
         clock: Clock
     ): AIAgentLLMContext =
-        delegate.copy(tools, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
+        super.copy(tools, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
 }

@@ -57,6 +57,24 @@ public actual class AIAgentConfig actual constructor(
         require(maxAgentIterations > 0) { "maxAgentIterations must be greater than 0" }
     }
 
+    internal actual fun copy(
+        prompt: Prompt,
+        model: LLModel,
+        maxAgentIterations: Int,
+        missingToolsConversionStrategy: MissingToolsConversionStrategy,
+        responseProcessor: ResponseProcessor?,
+        serializer: JSONSerializer
+    ): AIAgentConfig = AIAgentConfig(
+        prompt = prompt,
+        model = model,
+        maxAgentIterations = maxAgentIterations,
+        agentStrategyExecutorService = this.strategyExecutorService,
+        llmRequestExecutorService = this.llmRequestExecutorService,
+        missingToolsConversionStrategy = missingToolsConversionStrategy,
+        responseProcessor = responseProcessor,
+        serializer = serializer
+    )
+
     public actual companion object {
         public actual fun withSystemPrompt(
             prompt: String,
@@ -115,7 +133,7 @@ public actual class AIAgentConfig actual constructor(
             internal var serializer: JSONSerializer = JacksonSerializer()
         ) {
             /**
-             * Sets serializr for underlying tool calls and LLM requests
+             * Sets serializer for underlying tool calls and LLM requests
              *
              * @param serializer The JSON serializer to configure the AI agent with.
              * @return The updated instance of [Companion.AIAgentConfigBuilder]

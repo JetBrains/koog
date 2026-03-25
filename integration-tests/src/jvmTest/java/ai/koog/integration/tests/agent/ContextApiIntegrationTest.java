@@ -12,7 +12,6 @@ import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.StructuredResults;
-import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextApiIntegrationTest extends KoogJavaTestBase {
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_RequestLLMStructuredSimple(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -55,7 +54,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_RequestLLMStructuredComplex(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -83,7 +82,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_LLMWriteSession(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -121,7 +120,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_LLMReadSession(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -154,7 +153,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_SubtaskSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -191,7 +190,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_SubtaskParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -227,7 +226,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_SubtaskSingleRunSequential(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -264,7 +263,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ExecuteMultipleToolsParallel(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -304,7 +303,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ExecuteSingleTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -341,7 +340,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_GetHistory(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -368,7 +367,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldExecuteMultipleHandlersInOrder(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -412,7 +411,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldSupportMultipleHandlers(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -443,7 +442,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldConfigureMultipleEvents(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -470,7 +469,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldTriggerToolEventsInOrder(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 

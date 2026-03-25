@@ -6,7 +6,6 @@ import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
-import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -74,7 +73,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return ImageTestScenario.entries
                 .minus(
                     setOf(
-                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC,
                         ImageTestScenario.EMPTY_IMAGE,
                         ImageTestScenario.CORRUPTED_IMAGE,
                     )
@@ -300,16 +298,8 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
-                ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                    checkExecutorMediaResponse(response)
-                    response.content.shouldNotBeBlank()
-                }
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    response.content.shouldNotBeBlank()
-                }
-
-                ImageTestScenario.LARGE_IMAGE -> {
                     response.content.shouldNotBeBlank()
                 }
             }

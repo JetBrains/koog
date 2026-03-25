@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_6
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_5
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_6
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -24,6 +25,7 @@ import kotlin.jvm.JvmField
  * | [Haiku_4_5]  | Fastest         | $1-$5        | Text, Image, Tools, Document | Text, Tools |
  * | [Sonnet_4]   | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
  * | [Sonnet_4_5] | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
+ * | [Sonnet_4_6] | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4]     | Moderately fast | $15-$75      | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4_1]   | Moderately fast | $15-$75      | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4_5]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
@@ -129,6 +131,31 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
         ) + thinkingCapabilities,
         contextLength = 200_000,
+        maxOutputTokens = 64_000,
+    )
+
+    /**
+     * Claude Sonnet 4.6 suggests the best combination of speed and intelligence.
+     * It’s a full upgrade of the model’s skills across coding, computer use, long-context reasoning, agent planning, knowledge work, and design.
+     *
+     * 1M context window
+     * Knowledge cutoff: Aug 2025
+     *
+     * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
+     */
+    @JvmField
+    public val Sonnet_4_6: LLModel = LLModel(
+        provider = LLMProvider.Anthropic,
+        id = "claude-sonnet-4-6",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Vision.Image,
+            LLMCapability.Document,
+            LLMCapability.Completion,
+        ) + thinkingCapabilities,
+        contextLength = 1_000_000,
         maxOutputTokens = 64_000,
     )
 
@@ -248,6 +275,7 @@ public object AnthropicModels : LLModelDefinitions {
         Opus_4_5,
         Opus_4_6,
         Sonnet_4_5,
+        Sonnet_4_6,
         Haiku_4_5
     )
 
@@ -270,6 +298,7 @@ internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
     Haiku_4_5 to "claude-haiku-4-5-20251001",
     Sonnet_4 to "claude-sonnet-4-20250514",
     Sonnet_4_5 to "claude-sonnet-4-5-20250929",
+    Sonnet_4_6 to "claude-sonnet-4-6",
     Opus_4 to "claude-opus-4-20250514",
     Opus_4_1 to "claude-opus-4-1-20250805",
     Opus_4_5 to "claude-opus-4-5-20251101",

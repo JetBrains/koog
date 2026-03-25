@@ -36,7 +36,7 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         tools: List<ToolDescriptor> = emptyList(),
         executorService: ExecutorService? = null
     ): List<Message.Response> = runOnIOBoundDispatcher(executorService) {
-        execute(prompt, model, emptyList())
+        execute(prompt, model, tools)
     }
 
     /**

@@ -51,7 +51,7 @@ import kotlin.time.Duration.Companion.minutes
 class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
     companion object {
         @JvmStatic
-        fun getLatestModels(): Stream<LLModel> = AIAgentTestBase.getLatestModels()
+        fun getLatestModels(): Stream<LLModel> = AIAgentTestBase.latestModels()
     }
 
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()

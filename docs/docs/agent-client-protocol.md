@@ -25,7 +25,7 @@ This integration provides:
 
 ### Add dependencies
 
-ACP support is an optional [feature](features-overview.md) that is not available in Koog by default.
+ACP support is an optional [feature](features/index.md) that is not available in Koog by default.
 To implement ACP for your Koog agent,
 add a dependency for [ai.koog:agents-features-acp](https://mvnrepository.com/artifact/ai.koog/agents-features-acp),
 which itself has a dependency on [com.agentclientprotocol:acp](https://mvnrepository.com/artifact/com.agentclientprotocol/acp).

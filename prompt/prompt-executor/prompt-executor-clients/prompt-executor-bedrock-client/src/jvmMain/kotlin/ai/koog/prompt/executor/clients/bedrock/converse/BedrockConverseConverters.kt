@@ -2,18 +2,24 @@ package ai.koog.prompt.executor.clients.bedrock.converse
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.executor.clients.bedrock.util.JsonDocumentConverters
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.require
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import aws.sdk.kotlin.services.bedrockruntime.model.AnyToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.AutoToolChoice
+import aws.sdk.kotlin.services.bedrockruntime.model.CachePointBlock
+import aws.sdk.kotlin.services.bedrockruntime.model.CachePointType
+import aws.sdk.kotlin.services.bedrockruntime.model.CacheTtl
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockDelta
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlockStart
@@ -25,6 +31,8 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentSource
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailStreamConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageSource
@@ -68,6 +76,22 @@ internal object BedrockConverseConverters {
         explicitNulls = false
     }
 
+    private fun CacheControl.Bedrock.toBedrockCachePointContentBlock(): ContentBlock =
+        ContentBlock.CachePoint(toBedrockCachePointBlock())
+
+    private fun CacheControl.Bedrock.toBedrockSystemCachePoint(): SystemContentBlock =
+        SystemContentBlock.CachePoint(toBedrockCachePointBlock())
+
+    private fun CacheControl.Bedrock.toBedrockCachePointBlock(): CachePointBlock =
+        CachePointBlock {
+            type = CachePointType.Default
+            ttl = when (this@toBedrockCachePointBlock) {
+                CacheControl.Bedrock.Default -> null
+                CacheControl.Bedrock.FiveMinutes -> CacheTtl.FiveMinutes
+                CacheControl.Bedrock.OneHour -> CacheTtl.OneHour
+            }
+        }
+
     /**
      * Even though [ConverseRequest] and [ConverseStreamRequest] are structurally identical, they don't share a common
      * parent class. This class extracts common request parameters to avoid excessive code duplication.
@@ -82,6 +106,7 @@ internal object BedrockConverseConverters {
         val toolConfig: ToolConfiguration?,
         val system: List<SystemContentBlock>,
         val messages: List<BedrockMessage>,
+        val guardrailSettings: BedrockGuardrailsSettings?,
     )
 
     /**
@@ -90,7 +115,8 @@ internal object BedrockConverseConverters {
     private fun createConverseRequestParams(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailSettings: BedrockGuardrailsSettings? = null,
     ): ConverseRequestParams {
         val params = prompt.params.toBedrockConverseParams()
 
@@ -100,19 +126,29 @@ internal object BedrockConverseConverters {
         // Convert Prompt messages to bedrock message formats
         prompt.messages.forEach { message ->
             when (message) {
-                is Message.System ->
+                is Message.System -> {
                     systemMessages += message.parts.map { SystemContentBlock.Text(it.text) }
+                    message.cacheControl?.let { cc ->
+                        systemMessages += cc.require<CacheControl.Bedrock>().toBedrockSystemCachePoint()
+                    }
+                }
 
                 is Message.User ->
                     messages += BedrockMessage {
                         this.role = ConversationRole.User
-                        this.content = message.parts.map { it.toConverseContentBlock(model) }
+                        this.content = buildList {
+                            addAll(message.parts.map { it.toConverseContentBlock(model) })
+                            addAll(listOfNotNull(message.cacheControl?.require<CacheControl.Bedrock>()?.toBedrockCachePointContentBlock()))
+                        }
                     }
 
                 is Message.Assistant ->
                     messages += BedrockMessage {
                         this.role = ConversationRole.Assistant
-                        this.content = message.parts.map { it.toConverseContentBlock(model) }
+                        this.content = buildList {
+                            addAll(message.parts.map { it.toConverseContentBlock(model) })
+                            addAll(listOfNotNull(message.cacheControl?.require<CacheControl.Bedrock>()?.toBedrockCachePointContentBlock()))
+                        }
                     }
 
                 is Message.Reasoning ->
@@ -206,13 +242,14 @@ internal object BedrockConverseConverters {
                         null -> null
                     }
 
-                    this.tools = tools.map { it.toConverseTool() }
+                    this.tools = tools.flatMap { it.toConverseTools() }
                 }
             } else {
                 null
             },
             system = systemMessages,
             messages = messages,
+            guardrailSettings = guardrailSettings,
         )
     }
 
@@ -222,9 +259,10 @@ internal object BedrockConverseConverters {
     fun createConverseRequest(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailSettings: BedrockGuardrailsSettings? = null,
     ): ConverseRequest {
-        val params = createConverseRequestParams(prompt, model, tools)
+        val params = createConverseRequestParams(prompt, model, tools, guardrailSettings)
 
         @Suppress("DuplicatedCode") // AWS SDK requires duplication
         return ConverseRequest {
@@ -236,6 +274,12 @@ internal object BedrockConverseConverters {
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages
+            params.guardrailSettings?.let { gs ->
+                this.guardrailConfig = GuardrailConfiguration {
+                    this.guardrailIdentifier = gs.guardrailIdentifier
+                    this.guardrailVersion = gs.guardrailVersion
+                }
+            }
         }
     }
 
@@ -245,9 +289,10 @@ internal object BedrockConverseConverters {
     fun createConverseStreamRequest(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailSettings: BedrockGuardrailsSettings? = null,
     ): ConverseStreamRequest {
-        val params = createConverseRequestParams(prompt, model, tools)
+        val params = createConverseRequestParams(prompt, model, tools, guardrailSettings)
 
         @Suppress("DuplicatedCode") // AWS SDK requires duplication
         return ConverseStreamRequest {
@@ -259,6 +304,12 @@ internal object BedrockConverseConverters {
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages
+            params.guardrailSettings?.let { gs ->
+                this.guardrailConfig = GuardrailStreamConfiguration {
+                    this.guardrailIdentifier = gs.guardrailIdentifier
+                    this.guardrailVersion = gs.guardrailVersion
+                }
+            }
         }
     }
 
@@ -273,11 +324,18 @@ internal object BedrockConverseConverters {
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
         val totalTokensCount = response.usage?.totalTokens
+        val cacheReadInputTokens = response.usage?.cacheReadInputTokens
+        val cacheWriteInputTokens = response.usage?.cacheWriteInputTokens
+        val cacheMetadata = buildJsonObject {
+            cacheReadInputTokens?.let { put("cacheReadInputTokens", it) }
+            cacheWriteInputTokens?.let { put("cacheWriteInputTokens", it) }
+        }.takeIf { it.isNotEmpty() }
         val metaInfo = ResponseMetaInfo.create(
             clock,
             totalTokensCount = totalTokensCount,
             inputTokensCount = inputTokensCount,
             outputTokensCount = outputTokensCount,
+            metadata = cacheMetadata,
         )
 
         val content = response.output?.asMessageOrNull()?.content.orEmpty()
@@ -332,6 +390,7 @@ internal object BedrockConverseConverters {
                         totalTokensCount = totalTokensCount,
                         inputTokensCount = inputTokensCount,
                         outputTokensCount = outputTokensCount,
+                        metadata = cacheMetadata,
                     )
                 )
             )
@@ -422,6 +481,10 @@ internal object BedrockConverseConverters {
                             totalTokensCount = usage?.totalTokens,
                             inputTokensCount = usage?.inputTokens,
                             outputTokensCount = usage?.outputTokens,
+                            metadata = buildJsonObject {
+                                usage?.cacheReadInputTokens?.let { put("cacheReadInputTokens", it) }
+                                usage?.cacheWriteInputTokens?.let { put("cacheWriteInputTokens", it) }
+                            }.takeIf { it.isNotEmpty() },
                         )
                     )
                 }
@@ -619,12 +682,12 @@ internal object BedrockConverseConverters {
     }
 
     /**
-     * Convert [ToolDescriptor] to [BedrockTool] format.
+     * Convert [ToolDescriptor] to list of [BedrockTool], including cache point if specified.
      */
-    private fun ToolDescriptor.toConverseTool(): BedrockTool {
+    private fun ToolDescriptor.toConverseTools(): List<BedrockTool> {
         val tool = this
 
-        return BedrockTool.ToolSpec(
+        val toolSpec = BedrockTool.ToolSpec(
             ToolSpecification {
                 val inputSchema = buildJsonObject {
                     put("type", "object")
@@ -652,6 +715,13 @@ internal object BedrockConverseConverters {
                 this.name = tool.name
                 this.description = tool.description
                 this.inputSchema = ToolInputSchema.Json(JsonDocumentConverters.convertToDocument(inputSchema))
+            }
+        )
+
+        return listOfNotNull(
+            toolSpec,
+            tool.cacheControl?.let { cc ->
+                BedrockTool.CachePoint(cc.require<CacheControl.Bedrock>().toBedrockCachePointBlock())
             }
         )
     }

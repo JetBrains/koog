@@ -14,22 +14,24 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlin.time.Clock
 
-public actual open class AIAgentLLMContext internal actual constructor(
-    internal actual val delegate: AIAgentLLMContextImpl
-) : AIAgentLLMContextAPI by delegate {
-    public actual constructor(
-        tools: List<ToolDescriptor>,
-        toolRegistry: ToolRegistry,
-        prompt: Prompt,
-        model: LLModel,
-        responseProcessor: ResponseProcessor?,
-        promptExecutor: PromptExecutor,
-        environment: AIAgentEnvironment,
-        config: AIAgentConfig,
-        clock: Clock
-    ) : this(
-        delegate = AIAgentLLMContextImpl(
-            tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock
-        )
-    )
-}
+public actual open class AIAgentLLMContext actual constructor(
+    tools: List<ToolDescriptor>,
+    toolRegistry: ToolRegistry,
+    prompt: Prompt,
+    model: LLModel,
+    responseProcessor: ResponseProcessor?,
+    promptExecutor: PromptExecutor,
+    environment: AIAgentEnvironment,
+    config: AIAgentConfig,
+    clock: Clock
+) : AIAgentLLMContextCommon(
+    initialTools = tools,
+    initialToolRegistry = toolRegistry,
+    initialPrompt = prompt,
+    initialModel = model,
+    initialResponseProcessor = responseProcessor,
+    initialPromptExecutor = promptExecutor,
+    initialEnvironment = environment,
+    initialConfig = config,
+    initialClock = clock
+)
