@@ -70,7 +70,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_NoErrorsWithoutSystemPrompt(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -93,7 +93,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     @Disabled("KG-734 Parameters from Java builder is not put into the effective prompt params")
     public void integration_ShouldSetPromptParamsViaBuilder(LLModel model) {
         Models.assumeAvailable(model.getProvider());
@@ -110,7 +110,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldFailOnMaxIterationsExhaustion(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model must support tools");
@@ -142,7 +142,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldCallNoArgToolWithoutParams(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model must support tools");
@@ -218,7 +218,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_SubgraphToolShouldReuseAgentTools(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model must support tools");
@@ -329,7 +329,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_HistoryCompressionSupportsBeforeAndAfterToolResult(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model must support tools");
@@ -461,7 +461,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_PersistenceInMemoryProvider(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -503,7 +503,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_PersistenceInFileProvider(
         LLModel model,
         @TempDir Path tempDir
@@ -531,7 +531,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldStoreAndRetrieveValueWithStorageKeys(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -553,7 +553,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldReturnNullForNotExistentKey(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -573,7 +573,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldOverwriteValueForSameKey(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -598,7 +598,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldSupportKeysWithDifferentTypes(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
@@ -624,7 +624,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ShouldIsolateStorageForMultipleRuns(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 

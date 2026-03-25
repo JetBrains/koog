@@ -53,7 +53,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     Path tempDir;
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_GraphStrategyWithTypedNodeAndLlmNode(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         EventRecorder events = new EventRecorder();
@@ -114,7 +114,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_GraphStrategyWithTaskSubgraphAndLimitedTools(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model does not support tools");
@@ -167,7 +167,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_GraphStrategyShouldEmitStrategyNodeSubgraphAndToolEvents(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model does not support tools");
@@ -236,7 +236,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     @Retry
     public void integration_GraphStrategyWithVerificationPath(LLModel model) {
         Models.assumeAvailable(model.getProvider());
@@ -284,7 +284,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_GraphStrategyWithFinishToolSubgraph(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         Assumptions.assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model does not support tools");
@@ -328,7 +328,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_GraphStrategyWithHistoryCompressionNode(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 

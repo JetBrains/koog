@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_AIAgentServiceCreateAndListAgents(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -41,7 +41,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_AIAgentServiceAgentById(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -63,7 +63,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_AIAgentServiceRemoveAgent(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -84,7 +84,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_AIAgentServiceCreateAgentAndRun(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -103,7 +103,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_AIAgentServiceWithCustomToolRegistry(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -145,7 +145,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_BuilderWithCustomId(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -166,7 +166,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_AIAgentServiceBuilderFunctionalStrategy(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
