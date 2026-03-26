@@ -1,7 +1,7 @@
 package ai.koog.agents.example.tone
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolRegistryBuilder
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.dsl.prompt
@@ -87,7 +87,7 @@ object ToneTools {
     /**
      * Helper function to add all tone tools to a ToolStage.Builder.
      */
-    fun ToolRegistry.Builder.tools() {
+    fun ToolRegistryBuilder.tools() {
         tool(PositiveToneTool)
         tool(NegativeToneTool)
         tool(NeutralToneTool)
