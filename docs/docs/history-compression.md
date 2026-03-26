@@ -32,12 +32,20 @@ There are two main approaches to implementing history compression in your agent:
 
 ### History compression in a strategy graph
 
-To compress the history in a strategy graph, you need to use the `nodeLLMCompressHistory` node in Kotlin or `AIAgentNode.llmCompressHistory()` in Java.
+To compress the history in a strategy graph, you need to use the pre-defined node that compresses the current message history into a concise summary:
+
+* **Kotlin**: `nodeLLMCompressHistory`
+* **Java**: `AIAgentNode.llmCompressHistory()`
+
+For more information and specific examples, see [History compression node](nodes-and-components.md#history-compression-node).
+
 Depending on which step you decide to perform compression, the following scenarios are available: 
 
 * To compress the history when it becomes too long, check the message count in your edge 
-  conditions and add a history compression node. In Kotlin, you can define a helper extension 
-  function. In Java, use inline lambda expressions in `.onCondition()`:
+  conditions and add a history compression node. To check the history length, do the following:
+
+* **Kotlin**: Define a helper extension.
+* **Java**: Use inline lambda expressions in `.onCondition()`.
 
 === "Kotlin"
 
@@ -285,7 +293,11 @@ To learn more about custom nodes, see [Custom nodes](custom-nodes.md).
 
 ## History compression strategies
 
-You can customize the compression process by passing an optional `strategy` parameter to `nodeLLMCompressHistory(strategy=...)` or `replaceHistoryWithTLDR(strategy=...)` (Kotllin), or `.compressionStrategy()` (Java).
+You can customize the compression process using the optional `strategy` parameter:
+
+* **Kotlin**: Pass the strategy to `nodeLLMCompressHistory(strategy=...)` or `replaceHistoryWithTLDR(strategy=...)`.
+* **Java**: Use the `.compressionStrategy()` builder method.
+
 The framework provides several built-in strategies.
 
 ### WholeHistory (Default)
@@ -811,7 +823,10 @@ Then you can use it as follows:
 All history compression methods support memory preservation, which determines whether memory-related messages should be preserved during compression. In Kotlin, use the `preserveMemory` parameter. In Java, use the `.preserveMemory()` builder method.
 These are messages that contain facts retrieved from memory or indicate that the memory feature is not enabled.
 
-You can use the `preserveMemory` parameter (Kotlin) and the `.preserveMemory()` builder method (Java) as follows:
+To enable memory preservation:
+
+* **Kotlin**: Use the `preserveMemory` parameter.
+* **Java**: Use the `.preserveMemory()` builder method.
 
 * In a strategy graph:
 
