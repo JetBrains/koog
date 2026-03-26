@@ -1,3 +1,33 @@
+# 0.7.3
+> Published 26 March 2026
+
+## New Features
+
+- **Bedrock prompt caching**: Added `CacheControl` property on Assistant, User, and System messages within the Prompt and integrated explicit cache blocks in the Bedrock Converse API (#1583)
+
+## Bug Fixes
+
+- **Agent deadlock fix**: Fixed deadlock when `agent.run()` is called from within `executor.submit` — when the agent was invoked from a worker thread of the configured `ExecutorService`, `runBlocking(context)` would dispatch the coroutine back onto that executor and park the calling thread ([KG-750](https://youtrack.jetbrains.com/issue/KG-750), #1716)
+- **AIAgentTool for simple agents**: Fixed `AIAgentTool` to support simple agents that accept primitives as input by introducing `AIAgentToolInput` wrapper (#1729)
+- **MCP custom transport**: Fixed runtime crash when using non-default custom MCP transports in `MCPToolRegistryProvider` (#1740)
+- **Anthropic tool error reporting**: Added `is_error` flag for failed tool calls in the Anthropic client so the model is properly informed of tool execution failures (#1700)
+- **DeepSeek reasoning with tool calls**: Ensured `reasoningContent` is preserved and merged with tool calls to satisfy DeepSeek API requirements (#1614)
+
+## Breaking Changes
+
+- **ToolRegistry.Builder removed**: Unified everything under `expect`/`actual` `ToolRegistryBuilder`. Removed `tools(Any)` overload that was interfering with `tools(List)` and causing unexpected bugs (#1746)
+
+## Build
+
+- **Removed stale `coreLibrariesVersion` override**: The convention plugins were setting `coreLibrariesVersion = "2.1.21"` which made published POMs declare kotlin-stdlib 2.1.21, mismatching the actual 2.3.x compiler version. Removed the override so the POM picks up the real compiler version (#1697, #1722)
+
+## Documentation
+
+- Updated serialization documentation with Java snippets (#1732)
+- Added Java implementation for custom subgraphs documentation ([KG-770](https://youtrack.jetbrains.com/issue/KG-770), #1730)
+- Added Java implementation for OpenTelemetry, Langfuse, and Weave integration documentation ([KG-760](https://youtrack.jetbrains.com/issue/KG-760), #1696)
+- Moved "Chat agent with memory" tutorial under "Chat memory" feature section (#1686)
+
 # 0.7.2
 > Published 19 March 2026
 
