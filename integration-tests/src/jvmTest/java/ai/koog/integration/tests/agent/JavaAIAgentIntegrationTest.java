@@ -94,7 +94,6 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
-    @Disabled("KG-734 Parameters from Java builder is not put into the effective prompt params")
     public void integration_ShouldSetPromptParamsViaBuilder(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
