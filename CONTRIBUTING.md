@@ -177,6 +177,23 @@ This project is built with Gradle.
 * Run `./gradlew <module>:check` to test the module you are looking and to speed
   things up during development.
 
+There is also a [Makefile](Makefile) with Gradle command shortcuts that encode the correct flags and task ordering so you don't have to remember them.
+Run `make help` for a full list. Key targets:
+
+* `make help` — shows available commands with descriptions.
+* `make all` — runs clean, format, lint, test, and knit (default target).
+* `make format` — format code with ktlintFormat.
+* `make lint` — run detekt and ktlintCheck.
+* `make test` — run unit tests (JVM) and check ABI compatibility.
+* `make it` — run integration tests.
+* `make ios-test` — run iOS simulator tests.
+* `make knit` — verify that all code snippets in documentation are up-to-date.
+* `make clean` — clean the project.
+* `make publish` — publish to Maven Local.
+* `make build-compose-example` — build the Compose demo app (runs publish first).
+* `make pom` — generate POM files for JVM publications.
+* `make apidocs` — generate API documentation with Dokka.
+
 You can import this project into IDEA, but you have to delegate build actions
 to Gradle (in Preferences -> Build, Execution, Deployment -> Build Tools -> Gradle -> Build and run).
 
