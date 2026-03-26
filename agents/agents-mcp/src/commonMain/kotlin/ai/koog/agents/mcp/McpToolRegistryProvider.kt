@@ -108,7 +108,7 @@ public object McpToolRegistryProvider {
                         is SseClientTransport -> McpTransportType.Tcp
                         is StdioClientTransport -> McpTransportType.Stdio
                         else -> {
-                            logger.warn { "Unknown transport type: ${mcpClient.transport::class.simpleName}" }
+                            logger.warn { "Unknown transport type: ${mcpClient.transport?.let { it::class.simpleName }}" }
                             McpTransportType.Unknown
                         }
                     }.value,
