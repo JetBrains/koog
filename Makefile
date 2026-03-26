@@ -69,16 +69,8 @@ pom:
 # Generate and verify documentation code snippets
 .PHONY: knit
 knit:
-	@echo "🧶 Starting knit generation..."
-	@FILES_BEFORE_KNIT=$$(find docs/src/ -name "*.kt" 2>/dev/null | wc -l || echo "0"); \
-	echo "Files before knit: $$FILES_BEFORE_KNIT"; \
-	./gradlew :docs:knit; \
-	FILES_AFTER_KNIT=$$(find docs/src/ -name "*.kt" 2>/dev/null | wc -l || echo "0"); \
-	echo "Files after knit: $$FILES_AFTER_KNIT"; \
-	KNIT_GENERATED_FILES=$$((FILES_AFTER_KNIT - FILES_BEFORE_KNIT)); \
-	echo "Knit generated $$KNIT_GENERATED_FILES files"; \
-	echo "Starting assemble..."; \
-	./gradlew :docs:assemble
+	@echo "Starting knit generation..."
+	./gradlew :docs:knitAssemble
 
 # Generate API documentation with Dokka
 .PHONY: apidocs
