@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolRegistryBuilder
 import ai.koog.ktor.KoogAgentsConfig.TimeoutConfiguration.Companion.DEFAULT_TIMEOUT
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
@@ -384,7 +385,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          *
          * @param build A lambda function for configuring the tool registry using the `ToolRegistry.Builder`.
          */
-        public fun registerTools(build: ToolRegistry.Builder.() -> Unit) {
+        public fun registerTools(build: ToolRegistryBuilder.() -> Unit) {
             toolRegistry += ToolRegistry {
                 build()
             }

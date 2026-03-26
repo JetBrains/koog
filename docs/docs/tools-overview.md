@@ -41,7 +41,6 @@ Here is an example of how to create the tool registry and add the tool to it:
     import ai.koog.agents.core.tools.ToolRegistry
     import ai.koog.agents.core.tools.annotations.Tool
     import ai.koog.agents.core.tools.reflect.ToolSet
-    import ai.koog.agents.core.tools.reflect.tools
     class MyToolSet : ToolSet {
         @Tool
         fun myTool(): String {
@@ -85,7 +84,6 @@ To merge multiple tool registries, do the following:
     import ai.koog.agents.core.tools.ToolRegistry
     import ai.koog.agents.core.tools.annotations.Tool
     import ai.koog.agents.core.tools.reflect.ToolSet
-    import ai.koog.agents.core.tools.reflect.tools
     class FirstToolSet : ToolSet {
         @Tool
         fun firstSampleTool(): String {
