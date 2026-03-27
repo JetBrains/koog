@@ -10,7 +10,6 @@ import aws.sdk.kotlin.services.bedrockagentcore.model.PayloadType
 import aws.smithy.kotlin.runtime.SdkBaseException
 import aws.smithy.kotlin.runtime.time.Instant
 import org.slf4j.LoggerFactory
-import java.util.UUID
 
 /**
  * A [ChatHistoryProvider] implementation backed by Amazon Bedrock AgentCore Memory.
@@ -81,7 +80,6 @@ public class AgentcoreChatHistoryProvider(
 
         try {
             val request = CreateEventRequest {
-                clientToken = UUID.randomUUID().toString()
                 this.memoryId = this@AgentcoreChatHistoryProvider.memoryId
                 this.actorId = actorId
                 this.sessionId = sessionId
@@ -123,7 +121,7 @@ public class AgentcoreChatHistoryProvider(
                         AgentcoreMessageConverter.conversationalToMessage(
                             payload.value,
                             eventId = eventId,
-                            timestamp = eventTimestamp,
+                            eventTimestamp = eventTimestamp,
                             ignoreUnsupportedValues = ignoreUnsupportedValues
                         )
                     }
