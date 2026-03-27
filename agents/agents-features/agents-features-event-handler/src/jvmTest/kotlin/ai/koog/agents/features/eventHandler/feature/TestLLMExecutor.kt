@@ -3,7 +3,11 @@ package ai.koog.agents.features.eventHandler.feature
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -14,17 +18,25 @@ import kotlinx.coroutines.flow.flow
 import kotlin.time.Clock
 
 class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        return listOf(handlePrompt(prompt))
-    }
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): List<Message.Response> =
+        executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+            listOf(handlePrompt(finalIntent.prompt))
+        }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = flow {
-        handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
-    }
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): Flow<StreamFrame> =
+        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
+            flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
+        }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         // For a compression test, return a summary
@@ -38,10 +50,7 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
         return Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(clock))
     }
 
-    override suspend fun moderate(
-        prompt: Prompt,
-        model: LLModel
-    ): ModerationResult {
+    override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed here")
     }
 

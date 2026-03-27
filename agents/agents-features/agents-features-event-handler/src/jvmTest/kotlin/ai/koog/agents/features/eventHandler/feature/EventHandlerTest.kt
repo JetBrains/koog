@@ -1,7 +1,6 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
@@ -19,9 +18,15 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.eventString
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -601,22 +606,23 @@ class EventHandlerTest {
         val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
-                model: ai.koog.prompt.llm.LLModel,
-                tools: List<ToolDescriptor>
-            ): List<Message.Response> = emptyList()
+                model: LLModel,
+                tools: List<ToolDescriptor>,
+                hooks: PromptExecutorHooks?
+            ): List<Message.Response> =
+                executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { emptyList() }
 
             override fun executeStreaming(
                 prompt: Prompt,
-                model: ai.koog.prompt.llm.LLModel,
-                tools: List<ToolDescriptor>
-            ): Flow<StreamFrame> = flow {
-                throw IllegalStateException(testStreamingErrorMessage)
-            }
+                model: LLModel,
+                tools: List<ToolDescriptor>,
+                hooks: PromptExecutorHooks?
+            ): Flow<StreamFrame> =
+                streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) {
+                    flow { throw IllegalStateException(testStreamingErrorMessage) }
+                }
 
-            override suspend fun moderate(
-                prompt: Prompt,
-                model: ai.koog.prompt.llm.LLModel
-            ): ai.koog.prompt.dsl.ModerationResult {
+            override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
 

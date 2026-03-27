@@ -172,7 +172,11 @@ public class LLMBasedToolCallFixProcessor @JvmOverloads constructor(
             user(response.content)
         }
 
-        val decision = executor.execute(toolCallIntentPrompt, model, emptyList()).first()
+        val decision = executor.execute(
+            prompt = toolCallIntentPrompt,
+            model = model,
+            tools = emptyList()
+        ).first()
 
         return decision is Message.Tool.Call ||
             decision.content.contains(

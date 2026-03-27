@@ -272,7 +272,10 @@ public fun nodeLLMModerateMessage(
             prompt("single-message-moderation") { message(message) }
         }
 
-        val moderationResult = llm.promptExecutor.moderate(moderationPrompt, moderatingModel ?: llm.model)
+        val moderationResult = llm.promptExecutor.moderate(
+            prompt = moderationPrompt,
+            model = moderatingModel ?: llm.model
+        )
 
         ModeratedMessage(message, moderationResult)
     }

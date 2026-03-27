@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -29,8 +30,13 @@ public class PromptExecutorWithChoiceSelection(
     private val executor: PromptExecutor,
     private val choiceSelectionStrategy: ChoiceSelectionStrategy,
 ) : PromptExecutor() {
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        val choices = executor.executeMultipleChoices(prompt, model, tools)
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): List<Message.Response> {
+        val choices = executor.executeMultipleChoices(prompt, model, tools, hooks)
 
         return choiceSelectionStrategy.choose(prompt, choices)
     }
@@ -38,13 +44,15 @@ public class PromptExecutorWithChoiceSelection(
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools)
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools, hooks)
 
     override suspend fun moderate(
         prompt: Prompt,
-        model: LLModel
-    ): ModerationResult = executor.moderate(prompt, model)
+        model: LLModel,
+        hooks: PromptExecutorHooks?
+    ): ModerationResult = executor.moderate(prompt, model, hooks)
 
     override fun close(): Unit = executor.close()
 
@@ -53,6 +61,7 @@ public class PromptExecutorWithChoiceSelection(
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
-    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools)
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools, hooks)
 }

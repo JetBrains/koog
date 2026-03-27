@@ -18,6 +18,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -733,7 +734,8 @@ class SubgraphWithTaskTest {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
-            tools: List<ToolDescriptor>
+            tools: List<ToolDescriptor>,
+            hooks: PromptExecutorHooks?
         ): List<Message.Response> {
             callCount += 1
             val content = if (callCount == 1) invalidArgsJson else validArgsJson
@@ -747,10 +749,15 @@ class SubgraphWithTaskTest {
             )
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>,
+            hooks: PromptExecutorHooks?
+        ): Flow<StreamFrame> =
             emptyFlow()
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult =
             ModerationResult(isHarmful = false, categories = emptyMap())
 
         override fun close() {}

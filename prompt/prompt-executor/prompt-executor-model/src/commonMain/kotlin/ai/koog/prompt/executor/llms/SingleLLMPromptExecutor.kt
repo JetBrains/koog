@@ -4,7 +4,11 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -35,36 +39,52 @@ public open class SingleLLMPromptExecutor(
         private val logger = KotlinLogging.logger("ai.koog.prompt.executor.llms.LLMPromptExecutor")
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        val response = llmClient.execute(prompt, model, tools)
-        logger.debug { "Response: $response" }
-
-        return response
+        return executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+            llmClient.execute(finalIntent.prompt, model, finalIntent.tools)
+                .also { logger.debug { "Response: $it" } }
+        }
     }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with tools: $tools and model: $model" }
-        return llmClient.executeStreaming(prompt, model, tools)
+        return streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
+            llmClient.executeStreaming(finalIntent.prompt, model, finalIntent.tools)
+        }
     }
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
     ): List<LLMChoice> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        val choices = llmClient.executeMultipleChoices(prompt, model, tools)
-        logger.debug { "Choices: $choices" }
-
-        return choices
+        return executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.multipleChoices) { finalIntent ->
+            llmClient.executeMultipleChoices(finalIntent.prompt, model, finalIntent.tools)
+                .also { logger.debug { "Choices: $it" } }
+        }
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = llmClient.moderate(prompt, model)
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel,
+        hooks: PromptExecutorHooks?
+    ): ModerationResult =
+        executeWithHook(InitialExecutionIntent(prompt = prompt, model = model), model, hooks?.moderation) { finalIntent ->
+            llmClient.moderate(finalIntent.prompt, model)
+        }
 
     override suspend fun models(): List<LLModel> = llmClient.models()
 

@@ -3,7 +3,11 @@ package ai.koog.agents.features.tracing.mock
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -20,16 +24,20 @@ class MockLLMExecutor : PromptExecutor() {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        return listOf(handlePrompt(prompt))
-    }
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>, hooks: PromptExecutorHooks?): List<Message.Response> =
+        executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+            listOf(handlePrompt(finalIntent.prompt))
+        }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
     ): Flow<StreamFrame> =
-        flow { handlePrompt(prompt).toStreamFrames().forEach { emit(it) } }
+        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
+            flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
+        }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         val lastMessage = prompt.messages.last()
@@ -47,7 +55,8 @@ class MockLLMExecutor : PromptExecutor() {
 
     override suspend fun moderate(
         prompt: Prompt,
-        model: LLModel
+        model: LLModel,
+        hooks: PromptExecutorHooks?
     ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
     }

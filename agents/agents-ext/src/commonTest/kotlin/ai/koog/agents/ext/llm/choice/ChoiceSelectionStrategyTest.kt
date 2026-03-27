@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -55,7 +56,8 @@ class ChoiceSelectionStrategyTest {
             override suspend fun execute(
                 prompt: Prompt,
                 model: LLModel,
-                tools: List<ToolDescriptor>
+                tools: List<ToolDescriptor>,
+                hooks: PromptExecutorHooks?
             ): List<Message.Response> {
                 return listOf(
                     Message.Assistant(
@@ -68,14 +70,16 @@ class ChoiceSelectionStrategyTest {
             override fun executeStreaming(
                 prompt: Prompt,
                 model: LLModel,
-                tools: List<ToolDescriptor>
+                tools: List<ToolDescriptor>,
+                hooks: PromptExecutorHooks?
             ): Flow<StreamFrame> =
                 streamFrameFlowOf("Default streaming response")
 
             override suspend fun executeMultipleChoices(
                 prompt: Prompt,
                 model: LLModel,
-                tools: List<ToolDescriptor>
+                tools: List<ToolDescriptor>,
+                hooks: PromptExecutorHooks?
             ): List<LLMChoice> {
                 val choice1 =
                     listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
@@ -84,10 +88,7 @@ class ChoiceSelectionStrategyTest {
                 return listOf(choice1, choice2)
             }
 
-            override suspend fun moderate(
-                prompt: Prompt,
-                model: LLModel
-            ): ModerationResult {
+            override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
                 throw UnsupportedOperationException("Moderation is not needed here")
             }
 

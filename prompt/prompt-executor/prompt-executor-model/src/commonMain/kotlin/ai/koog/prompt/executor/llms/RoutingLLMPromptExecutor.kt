@@ -4,7 +4,12 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.ExecutorHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -104,7 +109,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      *
      * `null` when no fallback is configured.
      */
-    private val effectiveFallback: ExecutionSubject? = when {
+    private val effectiveFallback: RoutingExecutionSubject? = when {
         fallback != null -> {
             val fallbackProvider = fallback.fallbackModel.provider
             val fallbackClient = clientRouter.clients
@@ -125,15 +130,19 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-
-        val (effectiveClient, effectiveModel) = chooseClientAndModel(model)
-        val response = effectiveClient.execute(prompt, effectiveModel, tools)
-
-        logger.debug { "Response: $response" }
-
-        return response
+        val initialIntent = InitialExecutionIntent(prompt, tools, model)
+        val (client, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.execute)
+        return executeWithHook(initialIntent, effectiveModel, hooks?.execute) { finalIntent ->
+            client.execute(finalIntent.prompt, effectiveModel, finalIntent.tools)
+                .also { logger.debug { "Response: $it" } }
+        }
     }
 
     /**
@@ -146,13 +155,17 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> {
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): Flow<StreamFrame> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-        return flow {
-            val (client, effectiveModel) = chooseClientAndModel(model)
-            emitAll(client.executeStreaming(prompt, effectiveModel, tools))
-        }
+        val initialIntent = InitialExecutionIntent(prompt, tools, model)
+        val (client, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.streaming)
+        emitAll(
+            streamingWithHook(initialIntent, effectiveModel, hooks?.streaming) { finalIntent ->
+                client.executeStreaming(finalIntent.prompt, effectiveModel, finalIntent.tools)
+            }
+        )
     }
 
     /**
@@ -167,16 +180,16 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
     ): List<LLMChoice> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-
-        val (client, effectiveModel) = chooseClientAndModel(model)
-        val choices = client.executeMultipleChoices(prompt, effectiveModel, tools)
-
-        logger.debug { "Choices: $choices" }
-
-        return choices
+        val initialIntent = InitialExecutionIntent(prompt, tools, model)
+        val (client, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.multipleChoices)
+        return executeWithHook(initialIntent, effectiveModel, hooks?.multipleChoices) { finalIntent ->
+            client.executeMultipleChoices(finalIntent.prompt, effectiveModel, finalIntent.tools)
+                .also { logger.debug { "Choices: $it" } }
+        }
     }
 
     /**
@@ -187,12 +200,17 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @return A `ModerationResult` representing the result of the moderation process.
      * @throws IllegalArgumentException If no client is found for the model's provider.
      */
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel,
+        hooks: PromptExecutorHooks?
+    ): ModerationResult {
         logger.debug { "Moderating multi-modal content with model: ${model.id}" }
-
-        val (client, effectiveModel) = chooseClientAndModel(model)
-
-        return client.moderate(prompt, effectiveModel)
+        val initialIntent = InitialExecutionIntent(prompt = prompt, model = model)
+        val (client, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.moderation)
+        return executeWithHook(initialIntent, effectiveModel, hooks?.moderation) { finalIntent ->
+            client.moderate(finalIntent.prompt, effectiveModel)
+        }
     }
 
     override suspend fun models(): List<LLModel> {
@@ -207,14 +225,21 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         clientRouter.clients.forEach { it.close() }
     }
 
-    private fun chooseClientAndModel(requestedModel: LLModel): ExecutionSubject {
-        val lbClient = clientRouter.clientFor(requestedModel)
+    private suspend fun chooseClientAndModel(
+        intent: InitialExecutionIntent,
+        hook: ExecutorHook?
+    ): RoutingExecutionSubject {
+        val lbClient = clientRouter.clientFor(intent.model)
         return when {
-            lbClient != null -> lbClient to requestedModel
+            lbClient != null -> lbClient to intent.model
             effectiveFallback != null -> effectiveFallback
-            else -> throw IllegalArgumentException("No client found for provider: ${requestedModel.provider}")
+            else -> {
+                val error = IllegalArgumentException("No client found for provider: ${intent.model.provider}")
+                hook?.onModelChoiceFailed(intent, error)
+                throw error
+            }
         }
     }
 }
 
-private typealias ExecutionSubject = Pair<LLMClient, LLModel>
+private typealias RoutingExecutionSubject = Pair<LLMClient, LLModel>

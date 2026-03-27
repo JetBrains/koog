@@ -34,9 +34,10 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
+        hooks: PromptExecutorHooks? = null,
         executorService: ExecutorService? = null
     ): List<Message.Response> = runOnIOBoundDispatcher(executorService) {
-        execute(prompt, model, tools)
+        execute(prompt, model, tools, hooks)
     }
 
     /**
@@ -55,9 +56,15 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
+        hooks: PromptExecutorHooks? = null,
         executorService: ExecutorService? = null
     ): List<LLMChoice> = runOnIOBoundDispatcher(executorService) {
-        executeMultipleChoices(prompt, model, tools)
+        executeMultipleChoices(
+            prompt = prompt,
+            model = model,
+            tools = tools,
+            hooks = hooks
+        )
     }
 
     /**
@@ -75,7 +82,8 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
-    ): Publisher<StreamFrame> = executeStreaming(prompt, model, tools).asPublisher()
+        hooks: PromptExecutorHooks? = null,
+    ): Publisher<StreamFrame> = executeStreaming(prompt, model, tools, hooks).asPublisher()
 
     /**
      * Moderates the content of a given message with attachments using a specified LLM.
@@ -95,9 +103,14 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
     public fun moderate(
         prompt: Prompt,
         model: LLModel,
-        executorService: ExecutorService? = null
+        executorService: ExecutorService? = null,
+        hooks: PromptExecutorHooks? = null,
     ): ModerationResult = runOnIOBoundDispatcher(executorService) {
-        moderate(prompt, model)
+        moderate(
+            prompt = prompt,
+            model = model,
+            hooks = hooks
+        )
     }
 
     /**

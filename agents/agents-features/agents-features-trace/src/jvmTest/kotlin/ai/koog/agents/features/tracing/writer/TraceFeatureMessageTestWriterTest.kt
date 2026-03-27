@@ -38,8 +38,12 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -354,7 +358,9 @@ class TraceFeatureMessageTestWriterTest {
             val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>(nodeLLMRequestStreamingName)
 
             edge(nodeStart forwardTo streamAndCollect)
-            edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+            edge(streamAndCollect forwardTo nodeFinish transformed { messages ->
+                messages.firstOrNull()?.content ?: ""
+            })
         }
 
         val testLLMResponse = "Default test response"
@@ -470,7 +476,9 @@ class TraceFeatureMessageTestWriterTest {
             val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>(nodeStreamingFailedName)
 
             edge(nodeStart forwardTo streamAndCollect)
-            edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+            edge(streamAndCollect forwardTo nodeFinish transformed { messages ->
+                messages.firstOrNull()?.content ?: ""
+            })
         }
 
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
@@ -482,22 +490,29 @@ class TraceFeatureMessageTestWriterTest {
             override suspend fun execute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ToolDescriptor>
-            ): List<Message.Response> = emptyList()
+                tools: List<ToolDescriptor>,
+                hooks: PromptExecutorHooks?
+            ): List<Message.Response> =
+                executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { emptyList() }
 
             override fun executeStreaming(
                 prompt: Prompt,
                 model: LLModel,
-                tools: List<ToolDescriptor>
-            ): Flow<StreamFrame> = flow {
-                val testException = IllegalStateException(testStreamingErrorMessage)
-                testStreamingStackTrace = testException.stackTraceToString()
-                throw testException
-            }
+                tools: List<ToolDescriptor>,
+                hooks: PromptExecutorHooks?
+            ): Flow<StreamFrame> =
+                streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) {
+                    flow {
+                        val testException = IllegalStateException(testStreamingErrorMessage)
+                        testStreamingStackTrace = testException.stackTraceToString()
+                        throw testException
+                    }
+                }
 
             override suspend fun moderate(
                 prompt: Prompt,
-                model: LLModel
+                model: LLModel,
+                hooks: PromptExecutorHooks?
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }

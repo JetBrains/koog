@@ -4,7 +4,11 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -83,10 +87,16 @@ public class MockPromptExecutor internal constructor(
      * @param tools The list of tools available for the execution
      * @return A list containing a single response
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
-
-        return handlePrompt(prompt)
+        return executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+            handlePrompt(finalIntent.prompt)
+        }
     }
 
     /**
@@ -102,18 +112,17 @@ public class MockPromptExecutor internal constructor(
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> {
-        val lastMessage = getLastMessage(prompt)
-        val matchedStream = lastMessage?.let {
-            findExactResponse(it, streamResponseMatcher.exactMatches)
-                ?: findPartialResponse(it, streamResponseMatcher.partialMatches)
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): Flow<StreamFrame> =
+        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
+            val lastMessage = getLastMessage(prompt)
+            val matchedStream = lastMessage?.let {
+                findExactResponse(it, streamResponseMatcher.exactMatches)
+                    ?: findPartialResponse(it, streamResponseMatcher.partialMatches)
+            }
+            matchedStream ?: flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
         }
-
-        return matchedStream ?: flow {
-            execute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
-        }
-    }
 
     /**
      * Processes a given prompt to determine if it adheres to moderation rules and returns a moderation result.
@@ -127,14 +136,15 @@ public class MockPromptExecutor internal constructor(
      */
     override suspend fun moderate(
         prompt: Prompt,
-        model: LLModel
-    ): ModerationResult {
-        val lastMessage = getLastMessage(prompt) ?: return moderationResponseMatcher.defaultResponse
-
-        return findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
-            ?: findPartialResponse(lastMessage, moderationResponseMatcher.exactMatches)
-            ?: moderationResponseMatcher.defaultResponse
-    }
+        model: LLModel,
+        hooks: PromptExecutorHooks?
+    ): ModerationResult =
+        executeWithHook(InitialExecutionIntent(prompt, emptyList(), model), model, hooks?.moderation) { finalIntent ->
+            val lastMessage = getLastMessage(finalIntent.prompt) ?: return@executeWithHook moderationResponseMatcher.defaultResponse
+            findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
+                ?: findPartialResponse(lastMessage, moderationResponseMatcher.partialMatches)
+                ?: moderationResponseMatcher.defaultResponse
+        }
 
     private fun getLastMessage(prompt: Prompt): Message? {
         return if (handleLastAssistantMessage && prompt.messages.any { it is Message.Assistant }) {

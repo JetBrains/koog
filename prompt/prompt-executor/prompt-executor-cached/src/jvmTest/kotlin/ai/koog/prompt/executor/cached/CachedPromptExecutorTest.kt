@@ -5,7 +5,13 @@ import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ResolvedExecutionIntent
+import ai.koog.prompt.executor.model.SimpleExecutorHook
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -17,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 
@@ -61,25 +68,30 @@ class CachedPromptExecutorTest {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
-            tools: List<ToolDescriptor>
-        ): List<Message.Response> {
+            tools: List<ToolDescriptor>,
+            hooks: PromptExecutorHooks?
+        ): List<Message.Response> = executeWithHook(
+            initialIntent = InitialExecutionIntent(prompt, tools, model),
+            hook = hooks?.execute
+        ) {
             executeCalled = true
-            return testResponse
+            testResponse
         }
 
         override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
-            tools: List<ToolDescriptor>
-        ): Flow<StreamFrame> {
+            tools: List<ToolDescriptor>,
+            hooks: PromptExecutorHooks?
+        ): Flow<StreamFrame> = streamingWithHook(
+            initialIntent = InitialExecutionIntent(prompt, tools, model),
+            hook = hooks?.streaming
+        ) {
             executeStreamingCalled = true
-            return streamFrameFlowOf("Streaming response from executor")
+            streamFrameFlowOf("Streaming response from executor")
         }
 
-        override suspend fun moderate(
-            prompt: Prompt,
-            model: LLModel
-        ): ModerationResult {
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
             throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
         }
 
@@ -113,5 +125,62 @@ class CachedPromptExecutorTest {
         assertTrue(executor.executeCalled, "Executor should be called when cache miss")
         assertTrue(cache.putCalled, "Cache put should be called to store the result")
         assertEquals(testResponse, response, "Should return response from executor")
+    }
+
+    @Test
+    fun testHooksNotCalledOnCacheHit() = runTest {
+        // Given
+        val cache = MockPromptCache()
+        val executor = MockPromptExecutor()
+        val cachedExecutor = CachedPromptExecutor(cache, executor, testClock)
+
+        // And
+        var hookCalled = false
+        val hooks = executeTrackingHooks { hookCalled = true }
+
+        // When
+        cache.put(testPrompt, testTools, testResponse)
+
+        // And
+        val result = cachedExecutor.execute(testPrompt, testModel, testTools, hooks)
+
+        // Then
+        assertFalse(executor.executeCalled, "Nested executor must not be called on cache hit")
+        assertFalse(hookCalled, "Hooks must not be called on cache hit")
+        assertEquals(testResponse, result)
+    }
+
+    @Test
+    fun testHooksCalledOnCacheMiss() = runTest {
+        // Given
+        val cache = MockPromptCache()
+        val executor = MockPromptExecutor()
+        val cachedExecutor = CachedPromptExecutor(cache, executor, testClock)
+
+        // And
+        var hookCalled = false
+        val hooks = executeTrackingHooks {
+            hookCalled = true
+        }
+
+        // When
+        val result = cachedExecutor.execute(testPrompt, testModel, testTools, hooks)
+
+        // Then
+        assertTrue(executor.executeCalled, "Nested executor must be called on cache miss")
+        assertTrue(hookCalled, "Hooks must be called on cache miss")
+        assertEquals(testResponse, result)
+    }
+
+    /** Creates a [PromptExecutorHooks] that calls [onCompleted] when execute completes successfully. */
+    private fun executeTrackingHooks(onCompleted: () -> Unit): PromptExecutorHooks = object : PromptExecutorHooks {
+        override val execute = object : SimpleExecutorHook<List<Message.Response>> {
+            override suspend fun onCompleted(
+                intent: ResolvedExecutionIntent,
+                effectiveModel: LLModel,
+                result: List<Message.Response>
+            ) =
+                onCompleted()
+        }
     }
 }

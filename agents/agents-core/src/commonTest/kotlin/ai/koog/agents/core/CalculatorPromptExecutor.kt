@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -30,7 +31,12 @@ object CalculatorChatExecutor : PromptExecutor() {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
+    ): List<Message.Response> {
         val input = prompt.messages.filterIsInstance<Message.User>().joinToString("\n") { it.content }
         val numbers = input.split(Regex("[^0-9.]")).filter { it.isNotEmpty() }.map { it.toFloat() }
         val result = when {
@@ -56,7 +62,8 @@ object CalculatorChatExecutor : PromptExecutor() {
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        hooks: PromptExecutorHooks?
     ): Flow<StreamFrame> =
         flow {
             try {
@@ -68,10 +75,7 @@ object CalculatorChatExecutor : PromptExecutor() {
             }
         }
 
-    override suspend fun moderate(
-        prompt: Prompt,
-        model: LLModel
-    ): ModerationResult {
+    override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for CalculatorExecutor")
     }
 
