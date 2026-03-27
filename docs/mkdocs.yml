@@ -291,7 +291,8 @@ extra_javascript:
   - javascripts/mermaid.mjs
 
 hooks:
-  - process-api-links.py
+  - hooks/process_api_links.py
+  - hooks/remove_blank_lines_in_comments.py
 
 exclude_docs: |
   /snippets/
