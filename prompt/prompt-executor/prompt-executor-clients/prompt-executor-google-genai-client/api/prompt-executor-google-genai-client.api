@@ -5,6 +5,7 @@ public class ai/koog/prompt/executor/clients/google/genai/GoogleGenaiLLMClient :
 	public fun <init> (Lcom/google/genai/Client;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;)V
+	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/concurrent/ExecutorService;Lkotlin/time/Clock;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/time/Clock;)V
 	public synthetic fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/time/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

@@ -84,9 +84,9 @@ internal class GoogleGenaiRequestConverter(
                         contents.add(
                             Content.builder().role("model").parts(listOf(partBuilder.build())).build()
                         )
-                    } else {
-                        lastSignature = message.encrypted
                     }
+                    // Always propagate the signature so subsequent Tool.Call parts can use it
+                    lastSignature = message.encrypted
                 }
 
                 is Message.Tool.Result -> {
@@ -99,17 +99,21 @@ internal class GoogleGenaiRequestConverter(
                 }
 
                 is Message.Tool.Call -> {
-                    if (pendingCalls.isEmpty()) {
+                    val isFirstCallInBatch = pendingCalls.isEmpty()
+                    if (isFirstCallInBatch) {
                         flushResults()
                     }
 
                     val signature = lastSignature
                     lastSignature = null
 
-                    val effectiveSignature = signature ?: if (isThinkingModel) {
-                        fallbackThoughtSignature
+                    // Only the first functionCall part in a parallel batch needs the signature.
+                    // Subsequent parts must not have one (per Google API spec).
+                    // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures
+                    val effectiveSignature = if (isFirstCallInBatch) {
+                        signature ?: if (isThinkingModel) fallbackThoughtSignature else null
                     } else {
-                        null
+                        signature
                     }
 
                     val args = conversionUtils.parseJsonToMap(message.content)

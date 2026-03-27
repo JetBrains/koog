@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.util.Base64
 
 /**
  * Stateless utility methods for JSON/Map bidirectional conversion, SDK [Schema] conversion,
@@ -22,13 +23,11 @@ internal class GoogleGenaiConversionUtils(private val logger: KLogger) {
     /**
      * Converts a signature string to byte[] for the SDK.
      *
-     * The Google API returns thought signatures as JSON strings. The SDK expects `byte[]` and
-     * serializes them back to JSON. We use UTF-8 encoding (string -> bytes) on requests and
-     * UTF-8 decoding (bytes -> string) on responses, preserving the original string value.
-     * This assumes signatures are valid UTF-8 strings (which holds for both base64 and plaintext tokens).
+     * Thought signatures are opaque binary data. We use Base64 encoding to safely
+     * round-trip the raw bytes through the String-based [Message.Reasoning.encrypted] field.
      */
-    fun signatureToBytes(value: String): ByteArray = value.encodeToByteArray()
-    fun signatureFromBytes(value: ByteArray): String = value.decodeToString()
+    fun signatureToBytes(value: String): ByteArray = Base64.getDecoder().decode(value)
+    fun signatureFromBytes(value: ByteArray): String = Base64.getEncoder().encodeToString(value)
 
     // endregion
 
