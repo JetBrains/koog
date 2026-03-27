@@ -108,7 +108,6 @@ class GoogleGenaiChatTest {
             si.shouldNotBeNull()
             si.parts().get()[0].text().get() shouldBe "You are a helpful assistant"
 
-
             // Config reflects params
             temperature().get() shouldBe 0.7f
             maxOutputTokens().get() shouldBe 256
@@ -635,7 +634,8 @@ class GoogleGenaiChatTest {
 
         subject.execute(
             Prompt(
-                messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t",
+                messages = listOf(Message.User("hi", RequestMetaInfo.Empty)),
+                id = "t",
                 params = GoogleParams(
                     thinkingConfig = GoogleThinkingConfig(
                         includeThoughts = true,
@@ -880,7 +880,8 @@ class GoogleGenaiChatTest {
 
         subject.execute(
             Prompt(
-                messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t",
+                messages = listOf(Message.User("hi", RequestMetaInfo.Empty)),
+                id = "t",
                 params = GoogleParams(thinkingConfig = GoogleThinkingConfig(thinkingLevel = thinkingLevel))
             ),
             thinkingModel

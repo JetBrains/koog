@@ -162,7 +162,9 @@ class GoogleGenaiToolConversionTest {
     fun `Enum parameter produces string type with enum values`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t", description = "d", requiredParameters = listOf(
+                name = "t",
+                description = "d",
+                requiredParameters = listOf(
                     ToolParameterDescriptor(
                         "color",
                         "Pick color",
@@ -186,7 +188,9 @@ class GoogleGenaiToolConversionTest {
     fun `List parameter produces array type with items`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t", description = "d", requiredParameters = listOf(
+                name = "t",
+                description = "d",
+                requiredParameters = listOf(
                     ToolParameterDescriptor("tags", "Tag list", ToolParameterType.List(ToolParameterType.String))
                 )
             )
@@ -206,9 +210,13 @@ class GoogleGenaiToolConversionTest {
     fun `AnyOf parameter produces anyOf list`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t", description = "d", requiredParameters = listOf(
+                name = "t",
+                description = "d",
+                requiredParameters = listOf(
                     ToolParameterDescriptor(
-                        "value", "Mixed", ToolParameterType.AnyOf(
+                        "value",
+                        "Mixed",
+                        ToolParameterType.AnyOf(
                             arrayOf(
                                 ToolParameterDescriptor("", "", ToolParameterType.String),
                                 ToolParameterDescriptor("", "", ToolParameterType.Integer)
@@ -235,9 +243,13 @@ class GoogleGenaiToolConversionTest {
     fun `Object parameter produces object type with properties`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t", description = "d", requiredParameters = listOf(
+                name = "t",
+                description = "d",
+                requiredParameters = listOf(
                     ToolParameterDescriptor(
-                        "addr", "Address", ToolParameterType.Object(
+                        "addr",
+                        "Address",
+                        ToolParameterType.Object(
                             properties = listOf(
                                 ToolParameterDescriptor("street", "Street name", ToolParameterType.String),
                                 ToolParameterDescriptor("zip", "Zip code", ToolParameterType.Integer)

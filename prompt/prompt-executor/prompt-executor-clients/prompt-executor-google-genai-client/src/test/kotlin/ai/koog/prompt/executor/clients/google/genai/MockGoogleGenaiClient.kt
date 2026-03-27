@@ -112,22 +112,28 @@ internal fun textResponse(
  */
 internal object TestModels {
     val flash = LLModel(
-        provider = LLMProvider.Google, id = "test-flash",
+        provider = LLMProvider.Google,
+        id = "test-flash",
         capabilities = listOf(LLMCapability.Completion, LLMCapability.Temperature)
     )
     val thinking = LLModel(
-        provider = LLMProvider.Google, id = "test-thinking",
+        provider = LLMProvider.Google,
+        id = "test-thinking",
         capabilities = listOf(LLMCapability.Completion, LLMCapability.Temperature, LLMCapability.Thinking)
     )
     val pro = LLModel(
-        provider = LLMProvider.Google, id = "test-pro",
+        provider = LLMProvider.Google,
+        id = "test-pro",
         capabilities = listOf(
-            LLMCapability.Completion, LLMCapability.Temperature,
-            LLMCapability.Schema.JSON.Basic, LLMCapability.Schema.JSON.Standard,
+            LLMCapability.Completion,
+            LLMCapability.Temperature,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         )
     )
     val fullCapability = LLModel(
-        provider = LLMProvider.Google, id = "test-full",
+        provider = LLMProvider.Google,
+        id = "test-full",
         capabilities = listOf(
             LLMCapability.Completion, LLMCapability.Temperature, LLMCapability.MultipleChoices,
             LLMCapability.Tools, LLMCapability.ToolChoice,
@@ -137,27 +143,33 @@ internal object TestModels {
         )
     )
     val completionOnly = LLModel(
-        provider = LLMProvider.Google, id = "test-completion-only",
+        provider = LLMProvider.Google,
+        id = "test-completion-only",
         capabilities = listOf(LLMCapability.Completion)
     )
     val noCap = LLModel(
-        provider = LLMProvider.Google, id = "test-no-cap",
+        provider = LLMProvider.Google,
+        id = "test-no-cap",
         capabilities = emptyList()
     )
     val multiChoice = LLModel(
-        provider = LLMProvider.Google, id = "test-multi",
+        provider = LLMProvider.Google,
+        id = "test-multi",
         capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices)
     )
     val multiChoiceNoCompletion = LLModel(
-        provider = LLMProvider.Google, id = "test-multi-no-completion",
+        provider = LLMProvider.Google,
+        id = "test-multi-no-completion",
         capabilities = listOf(LLMCapability.MultipleChoices)
     )
     val toolCapable = LLModel(
-        provider = LLMProvider.Google, id = "test-tools",
+        provider = LLMProvider.Google,
+        id = "test-tools",
         capabilities = listOf(LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice)
     )
     val noEmbed = LLModel(
-        provider = LLMProvider.Google, id = "test-no-embed",
+        provider = LLMProvider.Google,
+        id = "test-no-embed",
         capabilities = listOf(LLMCapability.Completion)
     )
 
