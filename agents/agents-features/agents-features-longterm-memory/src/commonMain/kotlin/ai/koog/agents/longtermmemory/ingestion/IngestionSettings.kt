@@ -2,6 +2,8 @@ package ai.koog.agents.longtermmemory.ingestion
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor
+import ai.koog.agents.longtermmemory.model.MemoryRecord
+import ai.koog.rag.base.storage.WriteStorage
 
 /**
  * Settings controlling how messages are persisted (ingested) into the memory repository.
@@ -16,7 +18,7 @@ import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor
  */
 @ExperimentalAgentsApi
 public data class IngestionSettings(
-    val storage: IngestionStorage,
+    val storage: WriteStorage<MemoryRecord>,
     val memoryRecordExtractor: MemoryRecordExtractor? = null,
     val timing: IngestionTiming = IngestionTiming.ON_LLM_CALL,
     val namespace: String? = null

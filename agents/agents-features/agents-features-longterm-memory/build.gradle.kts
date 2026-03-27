@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":prompt:prompt-markdown"))
+                api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)

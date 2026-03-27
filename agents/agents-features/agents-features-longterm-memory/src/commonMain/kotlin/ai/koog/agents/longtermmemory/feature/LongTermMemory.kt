@@ -15,9 +15,9 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
-import ai.koog.agents.longtermmemory.ingestion.IngestionStorage
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor
+import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
 import ai.koog.agents.longtermmemory.retrieval.RetrievalStorage
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
@@ -27,6 +27,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toMessageResponses
+import ai.koog.rag.base.storage.WriteStorage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -204,7 +205,7 @@ public class LongTermMemory(
          * The ingestion storage where memory records will be persisted.
          * Must be set explicitly in the ingestion { } block.
          */
-        public var storage: IngestionStorage? = null
+        public var storage: WriteStorage<MemoryRecord>? = null
 
         /**
          * The extractor that defines how to transform messages into memory records.
@@ -235,7 +236,7 @@ public class LongTermMemory(
         /**
          * Fluent setter for [storage].
          */
-        public fun withStorage(storage: IngestionStorage): IngestionSettingsBuilder = apply { this.storage = storage }
+        public fun withStorage(storage: WriteStorage<MemoryRecord>): IngestionSettingsBuilder = apply { this.storage = storage }
 
         /**
          * Fluent setter for [extractor].
@@ -522,9 +523,9 @@ public class LongTermMemory(
         get() = retrievalSettings?.storage
 
     /**
-     * Property getter for [IngestionStorage] for usage inside strategy nodes
+     * Property getter for [WriteStorage] for usage inside strategy nodes
      */
-    public val ingestionStorage: IngestionStorage?
+    public val ingestionStorage: WriteStorage<MemoryRecord>?
         get() = ingestionSettings?.storage
 }
 

@@ -1,11 +1,11 @@
 package ai.koog.agents.longtermmemory.storage
 
-import ai.koog.agents.longtermmemory.ingestion.IngestionStorage
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest
 import ai.koog.agents.longtermmemory.retrieval.RetrievalStorage
 import ai.koog.agents.longtermmemory.retrieval.SearchRequest
 import ai.koog.agents.longtermmemory.retrieval.SearchResult
+import ai.koog.rag.base.storage.WriteStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.ExperimentalUuidApi
@@ -13,7 +13,7 @@ import kotlin.uuid.Uuid
 
 /**
  * In-memory implementation of [ai.koog.agents.longtermmemory.retrieval.RetrievalStorage]
- * and [ai.koog.agents.longtermmemory.ingestion.IngestionStorage] that stores records in a map.
+ * and [WriteStorage] that stores records in a map.
  *
  * This implementation is useful for testing, development, and scenarios where persistence
  * is not required. All data is stored in memory and will be lost when the application stops.
@@ -28,7 +28,7 @@ import kotlin.uuid.Uuid
  */
 public open class InMemoryRecordStorage(
     private val defaultNamespace: String = "default"
-) : RetrievalStorage, IngestionStorage {
+) : RetrievalStorage, WriteStorage<MemoryRecord> {
 
     private val mutex = Mutex()
     private val namespaceRecords = mutableMapOf<String, MutableMap<String, MemoryRecord>>()
@@ -39,10 +39,10 @@ public open class InMemoryRecordStorage(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun add(records: List<MemoryRecord>, namespace: String?) {
+    override suspend fun add(documents: List<MemoryRecord>, namespace: String?): List<String> {
         mutex.withLock {
             val nsRecords = getRecordsForNamespace(namespace)
-            for (record in records) {
+            for (record in documents) {
                 val recordId = record.id ?: Uuid.random().toString()
                 val recordWithId = if (record.id == null) {
                     record.copy(id = recordId)
@@ -52,6 +52,12 @@ public open class InMemoryRecordStorage(
                 nsRecords[recordId] = recordWithId
             }
         }
+
+        return emptyList() //fixme
+    }
+
+    override suspend fun update(documents: Map<String, MemoryRecord>, namespace: String?): List<String> {
+        TODO("Not yet implemented")
     }
 
     override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult> {
