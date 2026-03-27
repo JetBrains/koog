@@ -9,62 +9,112 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import com.google.genai.types.Candidate
 import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
+import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.GenerateContentResponse
 import com.google.genai.types.Part
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
 import java.util.Base64
+import java.util.concurrent.CompletableFuture
 
+/**
+ * Black-box tests for signature encoding, JSON parsing, Map-to-JSON conversion,
+ * and error handling in [GoogleGenaiLLMClient].
+ */
 class GoogleGenaiUtilsTest {
 
-    private val delegate = mockk<com.google.genai.Client>(relaxed = true)
-    private val subject = CustomizedGoogleGenaiLLMClient(delegate)
+    private val delegate: com.google.genai.Client
+    private val asyncModels: com.google.genai.AsyncModels
+    private val subject: CustomizedGoogleGenaiLLMClient
+
+    init {
+        val (d, am) = mockGoogleGenaiClient()
+        delegate = d
+        asyncModels = am
+        subject = CustomizedGoogleGenaiLLMClient(delegate)
+    }
+
+    // region Helpers
+
+    private class CapturedApiCall {
+        lateinit var contents: List<Content>
+        lateinit var config: GenerateContentConfig
+    }
+
+    private fun mockGenerateContent(response: GenerateContentResponse): CapturedApiCall {
+        val captured = CapturedApiCall()
+        Mockito.`when`(
+            asyncModels.generateContent(
+                any(String::class.java) ?: "",
+                org.mockito.ArgumentMatchers.anyList<Content>(),
+                any(GenerateContentConfig::class.java)
+            )
+        ).thenAnswer { invocation ->
+            captured.contents = invocation.getArgument(1)
+            captured.config = invocation.getArgument(2)
+            CompletableFuture.completedFuture(response)
+        }
+        return captured
+    }
+
+    private fun textResponse(text: String): GenerateContentResponse =
+        GenerateContentResponse.builder()
+            .candidates(
+                listOf(
+                    Candidate.builder()
+                        .content(Content.builder().role("model").parts(Part.fromText(text)).build())
+                        .finishReason("STOP")
+                        .build()
+                )
+            ).build()
+
+    // endregion
 
     // region Signature encoding — binary bytes must survive the round-trip without corruption
 
-    /**
-     * Thought signatures are opaque binary blobs from the Google API.
-     * They cannot be decoded/re-encoded as UTF-8 strings — that corrupts the bytes.
-     * The fix is Base64 encoding, verified here by using bytes outside the valid UTF-8 range.
-     */
     @Test
-    fun `thought signature round-trips through request and response without byte corruption`() {
-        // Bytes that are NOT valid UTF-8 — decodeToString() would corrupt these
+    fun `thought signature round-trips through request and response without byte corruption`() = runTest {
         val rawBytes = byteArrayOf(0x00, 0x01, 0x7F, 0xFF.toByte(), 0xFE.toByte(), 0xD8.toByte())
         val base64Signature = Base64.getEncoder().encodeToString(rawBytes)
 
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
-                Message.Reasoning(
-                    content = "thinking",
-                    encrypted = base64Signature,
-                    metaInfo = ResponseMetaInfo.Empty
-                ),
+                Message.Reasoning(content = "thinking", encrypted = base64Signature, metaInfo = ResponseMetaInfo.Empty),
+                Message.User("follow-up", RequestMetaInfo.Empty),
             ),
             id = "sig-test"
         )
-        val (contents, _) = subject.buildSdkContents(prompt, GoogleModels.Gemini3_Pro_Preview)
-        val thoughtPart = contents[1].parts().orElse(emptyList())[0]
+        // Response sends the same bytes BACK as a thought signature
+        val responsePart = Part.builder().text("answer").thought(true).thoughtSignature(rawBytes).build()
+        val response = GenerateContentResponse.builder()
+            .candidates(
+                listOf(
+                    Candidate.builder()
+                        .content(
+                            Content.builder().role("model").parts(listOf(responsePart, Part.fromText("final"))).build()
+                        )
+                        .finishReason("STOP")
+                        .build()
+                )
+            ).build()
+        val captured = mockGenerateContent(response)
 
-        // The exact raw bytes must be preserved — Base64 guarantees lossless round-trip
-        val sigBytes = thoughtPart.thoughtSignature().orElseThrow()
-        sigBytes shouldBe rawBytes
+        val results = subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
 
-        // Round-trip through response processing
-        val responsePart = Part.builder().text("answer").thought(true).thoughtSignature(sigBytes).build()
-        val candidate = Candidate.builder()
-            .content(Content.builder().role("model").parts(listOf(responsePart)).build())
-            .build()
-        val responses = subject.processCandidate(candidate, ResponseMetaInfo.Empty)
+        // Verify request: thought part carries exact raw bytes
+        val thoughtPart = captured.contents[1].parts().get()[0]
+        thoughtPart.thoughtSignature().get() shouldBe rawBytes
 
-        val reasoning = responses[0].shouldBeInstanceOf<Message.Reasoning>()
-        // The Base64-encoded string is restored exactly — bytes were not corrupted
+        // Verify response: Base64-encoded string is restored exactly
+        val reasoning = results[0].shouldBeInstanceOf<Message.Reasoning>()
         reasoning.encrypted shouldBe base64Signature
     }
 
@@ -73,11 +123,10 @@ class GoogleGenaiUtilsTest {
     // region Signature propagation — reasoning signature must flow to the first tool call
 
     @Test
-    fun `thought signature is propagated from reasoning to first tool call (blank reasoning content)`() {
+    fun `thought signature is propagated from reasoning to first tool call (blank reasoning content)`() = runTest {
         val rawBytes = byteArrayOf(0xAB.toByte(), 0xCD.toByte(), 0xEF.toByte())
         val base64Signature = Base64.getEncoder().encodeToString(rawBytes)
 
-        // Reasoning has no visible content — the content block is skipped, but signature must still propagate
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
@@ -86,17 +135,16 @@ class GoogleGenaiUtilsTest {
             ),
             id = "sig-propagate-blank"
         )
-        val (contents, _) = subject.buildSdkContents(prompt, GoogleModels.Gemini3_Pro_Preview)
+        val captured = mockGenerateContent(textResponse("ok"))
 
-        // contents[0]=user, contents[1]=tool call batch (reasoning had blank content → no separate block)
-        val toolCallPart = contents[1].parts().orElse(emptyList())[0]
-        toolCallPart.thoughtSignature().orElse(null) shouldBe rawBytes
+        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+
+        val toolCallPart = captured.contents[1].parts().get()[0]
+        toolCallPart.thoughtSignature().get() shouldBe rawBytes
     }
 
     @Test
-    fun `thought signature is propagated from reasoning with content to first tool call`() {
-        // This was the bug reported by @andruhon: when reasoning had non-blank content,
-        // the signature was not forwarded to the subsequent tool call parts.
+    fun `thought signature is propagated from reasoning with content to first tool call`() = runTest {
         val rawBytes = byteArrayOf(0x10, 0x20, 0x30)
         val base64Signature = Base64.getEncoder().encodeToString(rawBytes)
 
@@ -112,11 +160,13 @@ class GoogleGenaiUtilsTest {
             ),
             id = "sig-propagate-with-content"
         )
-        val (contents, _) = subject.buildSdkContents(prompt, GoogleModels.Gemini3_Pro_Preview)
+        val captured = mockGenerateContent(textResponse("ok"))
 
-        // contents[0]=user, contents[1]=reasoning block (has visible text), contents[2]=tool call batch
-        val toolCallPart = contents[2].parts().orElse(emptyList())[0]
-        toolCallPart.thoughtSignature().orElse(null) shouldBe rawBytes
+        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+
+        // contents[0]=user, contents[1]=reasoning block, contents[2]=tool call batch
+        val toolCallPart = captured.contents[2].parts().get()[0]
+        toolCallPart.thoughtSignature().get() shouldBe rawBytes
     }
 
     // endregion
@@ -124,10 +174,7 @@ class GoogleGenaiUtilsTest {
     // region Parallel tool calls — only the first call in a batch may carry a signature
 
     @Test
-    fun `only first tool call in parallel batch has signature, subsequent calls do not`() {
-        // Per Google API spec: in a parallel tool call batch, only the first Part may carry
-        // a thoughtSignature. Subsequent parts must have no signature.
-        // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures
+    fun `only first tool call in parallel batch has signature, subsequent calls do not`() = runTest {
         val rawBytes = byteArrayOf(0xAA.toByte(), 0xBB.toByte())
         val base64Signature = Base64.getEncoder().encodeToString(rawBytes)
 
@@ -141,21 +188,19 @@ class GoogleGenaiUtilsTest {
             ),
             id = "parallel-calls"
         )
-        val (contents, _) = subject.buildSdkContents(prompt, GoogleModels.Gemini3_Pro_Preview)
+        val captured = mockGenerateContent(textResponse("ok"))
 
-        // contents[0]=user, contents[1]=model batch with all 3 tool call parts
-        val batchParts = contents[1].parts().orElse(emptyList())
+        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+
+        val batchParts = captured.contents[1].parts().get()
         batchParts shouldHaveSize 3
-
-        // First call carries the signature
-        batchParts[0].thoughtSignature().orElse(null) shouldBe rawBytes
-        // Second and third calls must NOT carry a signature
-        batchParts[1].thoughtSignature().orElse(null).shouldBeNull()
-        batchParts[2].thoughtSignature().orElse(null).shouldBeNull()
+        batchParts[0].thoughtSignature().get() shouldBe rawBytes
+        batchParts[1].thoughtSignature().isPresent shouldBe false
+        batchParts[2].thoughtSignature().isPresent shouldBe false
     }
 
     @Test
-    fun `tool calls without preceding reasoning carry no signature for non-thinking model`() {
+    fun `tool calls without preceding reasoning carry no signature for non-thinking model`() = runTest {
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
@@ -164,20 +209,22 @@ class GoogleGenaiUtilsTest {
             ),
             id = "no-sig-non-thinking"
         )
-        val (contents, _) = subject.buildSdkContents(prompt, GoogleModels.Gemini2_5Flash)
+        val captured = mockGenerateContent(textResponse("ok"))
 
-        val batchParts = contents[1].parts().orElse(emptyList())
+        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+
+        val batchParts = captured.contents[1].parts().get()
         batchParts shouldHaveSize 2
-        batchParts[0].thoughtSignature().orElse(null).shouldBeNull()
-        batchParts[1].thoughtSignature().orElse(null).shouldBeNull()
+        batchParts[0].thoughtSignature().isPresent shouldBe false
+        batchParts[1].thoughtSignature().isPresent shouldBe false
     }
 
     // endregion
 
-    // region JSON parsing (tested via buildSdkContents with Tool.Call args)
+    // region JSON parsing (tested via tool call args round-trip)
 
     @Test
-    fun `tool call with JSON args is correctly parsed in buildSdkContents`() {
+    fun `tool call with JSON args is correctly parsed`() = runTest {
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
@@ -190,17 +237,20 @@ class GoogleGenaiUtilsTest {
             ),
             id = "json-test"
         )
-        val (contents, _) = subject.buildSdkContents(prompt, GoogleModels.Gemini2_5Flash)
+        val captured = mockGenerateContent(textResponse("ok"))
 
-        val fc = contents[1].parts().orElse(emptyList())[0].functionCall().orElseThrow()
-        fc.name().orElse(null) shouldBe "search"
-        val args = fc.args().orElse(emptyMap())
+        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+
+        val fc = captured.contents[1].parts().get()[0].functionCall().get()
+        fc.shouldNotBeNull()
+        fc.name().get() shouldBe "search"
+        val args = fc.args().get()
         args["query"] shouldBe "hello"
         args["limit"] shouldBe 10L
     }
 
     @Test
-    fun `tool call with empty JSON args is handled`() {
+    fun `tool call with empty JSON args is handled`() = runTest {
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
@@ -208,45 +258,66 @@ class GoogleGenaiUtilsTest {
             ),
             id = "empty-args"
         )
-        val (contents, _) = subject.buildSdkContents(prompt, GoogleModels.Gemini2_5Flash)
+        val captured = mockGenerateContent(textResponse("ok"))
 
-        val fc = contents[1].parts().orElse(emptyList())[0].functionCall().orElseThrow()
+        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+
+        val fc = captured.contents[1].parts().get()[0].functionCall().get()
+        fc.shouldNotBeNull()
         fc.args().orElse(emptyMap()) shouldBe emptyMap()
     }
 
     // endregion
 
-    // region Map-to-JSON conversion (tested via processCandidate with function call args)
+    // region Map-to-JSON conversion (tested via function call response)
 
     @Test
-    fun `function call response args are converted to JSON string`() {
-        val candidate = Candidate.builder()
-            .content(
-                Content.builder().role("model").parts(
-                    Part.fromFunctionCall("calc", mapOf("x" to 42, "label" to "test", "flag" to true))
-                ).build()
-            )
-            .build()
+    fun `function call response args are converted to JSON string`() = runTest {
+        val response = GenerateContentResponse.builder()
+            .candidates(
+                listOf(
+                    Candidate.builder().content(
+                        Content.builder().role("model").parts(
+                            Part.fromFunctionCall("calc", mapOf("x" to 42, "label" to "test", "flag" to true))
+                        ).build()
+                    ).build()
+                )
+            ).build()
+        mockGenerateContent(response)
 
-        val results = subject.processCandidate(candidate, ResponseMetaInfo.Empty)
+        val results = subject.execute(
+            Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
+            GoogleModels.Gemini2_5Flash
+        )
+
         val toolCall = results.filterIsInstance<Message.Tool.Call>().single()
         toolCall.tool shouldBe "calc"
-        // Verify the JSON content contains the expected values
         toolCall.content.contains("42") shouldBe true
         toolCall.content.contains("test") shouldBe true
         toolCall.content.contains("true") shouldBe true
     }
 
     @Test
-    fun `function call with null args produces empty JSON object`() {
-        val part = Part.builder()
-            .functionCall(FunctionCall.builder().name("my_tool").build())
-            .build()
-        val candidate = Candidate.builder()
-            .content(Content.builder().role("model").parts(listOf(part)).build())
-            .build()
+    fun `function call with null args produces empty JSON object`() = runTest {
+        val response = GenerateContentResponse.builder()
+            .candidates(
+                listOf(
+                    Candidate.builder().content(
+                        Content.builder().role("model").parts(
+                            listOf(
+                                Part.builder().functionCall(FunctionCall.builder().name("my_tool").build()).build()
+                            )
+                        ).build()
+                    ).build()
+                )
+            ).build()
+        mockGenerateContent(response)
 
-        val results = subject.processCandidate(candidate, ResponseMetaInfo.Empty)
+        val results = subject.execute(
+            Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
+            GoogleModels.Gemini2_5Flash
+        )
+
         val toolCall = results.filterIsInstance<Message.Tool.Call>().single()
         toolCall.tool shouldBe "my_tool"
         toolCall.content shouldBe "{}"
@@ -257,9 +328,15 @@ class GoogleGenaiUtilsTest {
     // region Error handling
 
     @Test
-    fun `processResponse throws LLMClientException on empty candidates`() {
-        val response = GenerateContentResponse.builder().candidates(emptyList()).build()
-        assertThrows<LLMClientException> { subject.processResponse(response) }
+    fun `execute throws LLMClientException on empty candidates`() = runTest {
+        mockGenerateContent(GenerateContentResponse.builder().candidates(emptyList()).build())
+
+        assertThrows<LLMClientException> {
+            subject.execute(
+                Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
+                GoogleModels.Gemini2_5Flash
+            )
+        }
     }
 
     // endregion

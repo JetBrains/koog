@@ -4,38 +4,102 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
+import com.google.genai.types.Candidate
+import com.google.genai.types.Content
+import com.google.genai.types.GenerateContentConfig
+import com.google.genai.types.GenerateContentResponse
+import com.google.genai.types.Part
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
+import java.util.concurrent.CompletableFuture
 import java.util.stream.Stream
 
+/**
+ * Black-box tests for tool conversion and tool-choice config in [GoogleGenaiLLMClient].
+ *
+ * Each test drives the client through `execute(prompt, model, tools)` and inspects
+ * the captured [GenerateContentConfig] that was sent to the Google SDK.
+ */
 class GoogleGenaiToolConversionTest {
 
-    private val delegate = mockk<com.google.genai.Client>(relaxed = true)
-    private val subject = CustomizedGoogleGenaiLLMClient(delegate)
+    private val delegate: com.google.genai.Client
+    private val asyncModels: com.google.genai.AsyncModels
+    private val subject: CustomizedGoogleGenaiLLMClient
+
+    init {
+        val (d, am) = mockGoogleGenaiClient()
+        delegate = d
+        asyncModels = am
+        subject = CustomizedGoogleGenaiLLMClient(delegate)
+    }
+
+    private val toolCapableModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "test-tools",
+        capabilities = listOf(LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice)
+    )
+
+    // region Helpers
+
+    private class CapturedApiCall {
+        lateinit var config: GenerateContentConfig
+    }
+
+    private fun mockGenerateContent(): CapturedApiCall {
+        val captured = CapturedApiCall()
+        val response = GenerateContentResponse.builder()
+            .candidates(
+                listOf(
+                    Candidate.builder()
+                        .content(Content.builder().role("model").parts(Part.fromText("ok")).build())
+                        .build()
+                )
+            ).build()
+        Mockito.`when`(
+            asyncModels.generateContent(
+                any(String::class.java) ?: "",
+                org.mockito.ArgumentMatchers.anyList<Content>(),
+                any(GenerateContentConfig::class.java)
+            )
+        ).thenAnswer { invocation ->
+            captured.config = invocation.getArgument(2)
+            CompletableFuture.completedFuture(response)
+        }
+        return captured
+    }
+
+    private fun userPrompt(params: LLMParams = LLMParams()) = Prompt(
+        messages = listOf(Message.User("q", RequestMetaInfo.Empty)),
+        id = "t",
+        params = params
+    )
+
+    // endregion
 
     // region Scenario: prompt with tools produces correct config
 
     @Test
-    fun `prompt with single tool produces config with function declaration`() {
+    fun `prompt with single tool produces config with function declaration`() = runTest {
         val tools = listOf(
             ToolDescriptor(
                 name = "get_weather",
                 description = "Get current weather for a city",
-                requiredParameters = listOf(
-                    ToolParameterDescriptor("city", "City name", ToolParameterType.String)
-                ),
+                requiredParameters = listOf(ToolParameterDescriptor("city", "City name", ToolParameterType.String)),
                 optionalParameters = listOf(
                     ToolParameterDescriptor(
                         "unit",
@@ -45,36 +109,28 @@ class GoogleGenaiToolConversionTest {
                 )
             )
         )
+        val captured = mockGenerateContent()
 
-        val prompt = Prompt(
-            messages = listOf(Message.User("Weather in Paris?", RequestMetaInfo.Empty)),
-            id = "tool-test",
-            params = GoogleParams(toolChoice = LLMParams.ToolChoice.Auto)
-        )
+        subject.execute(userPrompt(GoogleParams(toolChoice = LLMParams.ToolChoice.Auto)), toolCapableModel, tools)
 
-        val (_, systemInstruction) = subject.buildSdkContents(prompt, GoogleModels.Gemini2_5Flash)
-        val config = subject.buildConfig(prompt.params, GoogleModels.Gemini2_5Flash, tools, systemInstruction).build()
-
-        // Verify tool conversion overrides were invoked
         subject.toolsCustomized shouldBe true
         subject.toolConfigCustomized shouldBe true
 
-        val sdkTools = config.tools().orElse(null)
-        sdkTools.shouldNotBeNull()
+        val sdkTools = captured.config.tools().get()
         sdkTools shouldHaveSize 1
-        val decls = sdkTools[0].functionDeclarations().orElse(emptyList())
+        val decls = sdkTools[0].functionDeclarations().get()
         decls shouldHaveSize 1
-        decls[0].name().orElse(null) shouldBe "get_weather"
-        decls[0].description().orElse(null) shouldBe "Get current weather for a city"
-        decls[0].parametersJsonSchema().orElse(null).shouldNotBeNull()
+        decls[0].name().get() shouldBe "get_weather"
+        decls[0].description().get() shouldBe "Get current weather for a city"
+        decls[0].parametersJsonSchema().get().shouldNotBeNull()
 
-        val toolConfig = config.toolConfig().orElse(null)
+        val toolConfig = captured.config.toolConfig().get()
         toolConfig.shouldNotBeNull()
-        toolConfig.functionCallingConfig().orElse(null)?.mode()?.orElse(null)?.toString() shouldBe "AUTO"
+        toolConfig.functionCallingConfig().get().mode().get().toString() shouldBe "AUTO"
     }
 
     @Test
-    fun `prompt with multiple tools produces config with all declarations`() {
+    fun `prompt with multiple tools produces config with all declarations`() = runTest {
         val tools = listOf(
             ToolDescriptor(
                 name = "search",
@@ -93,23 +149,23 @@ class GoogleGenaiToolConversionTest {
                 )
             )
         )
+        val captured = mockGenerateContent()
 
-        val (_, si) = subject.buildSdkContents(
-            Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
-        )
-        val config = subject.buildConfig(LLMParams(), GoogleModels.Gemini2_5Flash, tools, si).build()
+        subject.execute(userPrompt(), toolCapableModel, tools)
 
-        val decls = config.tools().orElse(null)!![0].functionDeclarations().orElse(emptyList())
+        val decls = captured.config.tools().get()[0].functionDeclarations().get()
         decls shouldHaveSize 2
-        decls[0].name().orElse(null) shouldBe "search"
-        decls[1].name().orElse(null) shouldBe "calculate"
+        decls[0].name().get() shouldBe "search"
+        decls[1].name().get() shouldBe "calculate"
     }
 
     @Test
-    fun `empty tool list produces config with no tools`() {
-        val config = subject.buildConfig(LLMParams(), GoogleModels.Gemini2_5Flash, emptyList(), null).build()
-        config.tools().orElse(null).shouldBeNull()
+    fun `empty tool list produces config with no tools`() = runTest {
+        val captured = mockGenerateContent()
+
+        subject.execute(userPrompt(), toolCapableModel, emptyList())
+
+        captured.config.tools().isPresent shouldBe false
     }
 
     // endregion
@@ -133,7 +189,7 @@ class GoogleGenaiToolConversionTest {
         @Suppress("UNUSED_PARAMETER") displayName: String,
         paramType: ToolParameterType,
         expectedSchemaType: String
-    ) {
+    ) = runTest {
         val tools = listOf(
             ToolDescriptor(
                 name = "test_tool",
@@ -141,23 +197,21 @@ class GoogleGenaiToolConversionTest {
                 requiredParameters = listOf(ToolParameterDescriptor("param", "desc", paramType))
             )
         )
+        val captured = mockGenerateContent()
 
-        val sdkTools = subject.buildSdkTools(tools)
-        sdkTools.shouldNotBeNull()
-        val schema = sdkTools[0].build().functionDeclarations().orElse(emptyList())[0]
-            .parametersJsonSchema().orElse(null) as Map<*, *>
-        val properties = schema["properties"] as Map<*, *>
-        val paramSchema = properties["param"] as Map<*, *>
+        subject.execute(userPrompt(), toolCapableModel, tools)
+
+        val schema = captured.config.tools().get()[0].functionDeclarations().get()[0]
+            .parametersJsonSchema().get() as Map<*, *>
+        val paramSchema = (schema["properties"] as Map<*, *>)["param"] as Map<*, *>
         paramSchema["type"] shouldBe expectedSchemaType
     }
 
     @Test
-    fun `Enum parameter produces string type with enum values`() {
+    fun `Enum parameter produces string type with enum values`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t",
-                description = "d",
-                requiredParameters = listOf(
+                name = "t", description = "d", requiredParameters = listOf(
                     ToolParameterDescriptor(
                         "color",
                         "Pick color",
@@ -166,47 +220,44 @@ class GoogleGenaiToolConversionTest {
                 )
             )
         )
+        val captured = mockGenerateContent()
 
-        val sdkTools = subject.buildSdkTools(tools)!!
-        val schema = sdkTools[0].build().functionDeclarations().orElse(emptyList())[0]
-            .parametersJsonSchema().orElse(null) as Map<*, *>
+        subject.execute(userPrompt(), toolCapableModel, tools)
+
+        val schema = captured.config.tools().get()[0].functionDeclarations().get()[0]
+            .parametersJsonSchema().get() as Map<*, *>
         val paramSchema = (schema["properties"] as Map<*, *>)["color"] as Map<*, *>
         paramSchema["type"] shouldBe "string"
         paramSchema["enum"] shouldBe listOf("red", "blue", "green")
     }
 
     @Test
-    fun `List parameter produces array type with items`() {
+    fun `List parameter produces array type with items`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t",
-                description = "d",
-                requiredParameters = listOf(
+                name = "t", description = "d", requiredParameters = listOf(
                     ToolParameterDescriptor("tags", "Tag list", ToolParameterType.List(ToolParameterType.String))
                 )
             )
         )
+        val captured = mockGenerateContent()
 
-        val sdkTools = subject.buildSdkTools(tools)!!
-        val schema = sdkTools[0].build().functionDeclarations().orElse(emptyList())[0]
-            .parametersJsonSchema().orElse(null) as Map<*, *>
+        subject.execute(userPrompt(), toolCapableModel, tools)
+
+        val schema = captured.config.tools().get()[0].functionDeclarations().get()[0]
+            .parametersJsonSchema().get() as Map<*, *>
         val paramSchema = (schema["properties"] as Map<*, *>)["tags"] as Map<*, *>
         paramSchema["type"] shouldBe "array"
-        val items = paramSchema["items"] as Map<*, *>
-        items["type"] shouldBe "string"
+        (paramSchema["items"] as Map<*, *>)["type"] shouldBe "string"
     }
 
     @Test
-    fun `AnyOf parameter produces anyOf list`() {
+    fun `AnyOf parameter produces anyOf list`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t",
-                description = "d",
-                requiredParameters = listOf(
+                name = "t", description = "d", requiredParameters = listOf(
                     ToolParameterDescriptor(
-                        "value",
-                        "Mixed type",
-                        ToolParameterType.AnyOf(
+                        "value", "Mixed", ToolParameterType.AnyOf(
                             arrayOf(
                                 ToolParameterDescriptor("", "", ToolParameterType.String),
                                 ToolParameterDescriptor("", "", ToolParameterType.Integer)
@@ -216,28 +267,26 @@ class GoogleGenaiToolConversionTest {
                 )
             )
         )
+        val captured = mockGenerateContent()
 
-        val sdkTools = subject.buildSdkTools(tools)!!
-        val schema = sdkTools[0].build().functionDeclarations().orElse(emptyList())[0]
-            .parametersJsonSchema().orElse(null) as Map<*, *>
-        val paramSchema = (schema["properties"] as Map<*, *>)["value"] as Map<*, *>
-        val anyOf = paramSchema["anyOf"] as List<*>
-        anyOf shouldHaveSize 2
-        (anyOf[0] as Map<*, *>)["type"] shouldBe "string"
-        (anyOf[1] as Map<*, *>)["type"] shouldBe "integer"
+        subject.execute(userPrompt(), toolCapableModel, tools)
+
+        val schema = captured.config.tools().get()[0].functionDeclarations().get()[0]
+            .parametersJsonSchema().get() as Map<*, *>
+        val anyOf = (schema["properties"] as Map<*, *>)["value"] as Map<*, *>
+        val anyOfList = anyOf["anyOf"] as List<*>
+        anyOfList shouldHaveSize 2
+        (anyOfList[0] as Map<*, *>)["type"] shouldBe "string"
+        (anyOfList[1] as Map<*, *>)["type"] shouldBe "integer"
     }
 
     @Test
-    fun `Object parameter produces object type with properties`() {
+    fun `Object parameter produces object type with properties`() = runTest {
         val tools = listOf(
             ToolDescriptor(
-                name = "t",
-                description = "d",
-                requiredParameters = listOf(
+                name = "t", description = "d", requiredParameters = listOf(
                     ToolParameterDescriptor(
-                        "addr",
-                        "Address",
-                        ToolParameterType.Object(
+                        "addr", "Address", ToolParameterType.Object(
                             properties = listOf(
                                 ToolParameterDescriptor("street", "Street name", ToolParameterType.String),
                                 ToolParameterDescriptor("zip", "Zip code", ToolParameterType.Integer)
@@ -248,10 +297,12 @@ class GoogleGenaiToolConversionTest {
                 )
             )
         )
+        val captured = mockGenerateContent()
 
-        val sdkTools = subject.buildSdkTools(tools)!!
-        val schema = sdkTools[0].build().functionDeclarations().orElse(emptyList())[0]
-            .parametersJsonSchema().orElse(null) as Map<*, *>
+        subject.execute(userPrompt(), toolCapableModel, tools)
+
+        val schema = captured.config.tools().get()[0].functionDeclarations().get()[0]
+            .parametersJsonSchema().get() as Map<*, *>
         val paramSchema = (schema["properties"] as Map<*, *>)["addr"] as Map<*, *>
         paramSchema["type"] shouldBe "object"
         val props = paramSchema["properties"] as Map<*, *>
@@ -264,47 +315,36 @@ class GoogleGenaiToolConversionTest {
     // region Tool choice modes
 
     @Test
-    fun `ToolChoice Required maps to ANY mode`() {
-        val config = subject.buildConfig(
-            GoogleParams(toolChoice = LLMParams.ToolChoice.Required),
-            GoogleModels.Gemini2_5Flash,
-            emptyList(),
-            null
-        ).build()
-        config.toolConfig().orElse(null)?.functionCallingConfig()?.orElse(null)
-            ?.mode()?.orElse(null)?.toString() shouldBe "ANY"
+    fun `ToolChoice Required maps to ANY mode`() = runTest {
+        val captured = mockGenerateContent()
+        subject.execute(userPrompt(GoogleParams(toolChoice = LLMParams.ToolChoice.Required)), toolCapableModel)
+        captured.config.toolConfig().get().functionCallingConfig().get().mode().get().toString() shouldBe "ANY"
     }
 
     @Test
-    fun `ToolChoice None maps to NONE mode`() {
-        val config = subject.buildConfig(
-            GoogleParams(toolChoice = LLMParams.ToolChoice.None),
-            GoogleModels.Gemini2_5Flash,
-            emptyList(),
-            null
-        ).build()
-        config.toolConfig().orElse(null)?.functionCallingConfig()?.orElse(null)
-            ?.mode()?.orElse(null)?.toString() shouldBe "NONE"
+    fun `ToolChoice None maps to NONE mode`() = runTest {
+        val captured = mockGenerateContent()
+        subject.execute(userPrompt(GoogleParams(toolChoice = LLMParams.ToolChoice.None)), toolCapableModel)
+        captured.config.toolConfig().get().functionCallingConfig().get().mode().get().toString() shouldBe "NONE"
     }
 
     @Test
-    fun `ToolChoice Named maps to ANY with allowedFunctionNames`() {
-        val config = subject.buildConfig(
-            GoogleParams(toolChoice = LLMParams.ToolChoice.Named("get_weather")),
-            GoogleModels.Gemini2_5Flash,
-            emptyList(),
-            null
-        ).build()
-        val fc = config.toolConfig().orElse(null)?.functionCallingConfig()?.orElse(null)
-        fc.shouldNotBeNull()
-        fc.mode().orElse(null)?.toString() shouldBe "ANY"
-        fc.allowedFunctionNames().orElse(emptyList()) shouldBe listOf("get_weather")
+    fun `ToolChoice Named maps to ANY with allowedFunctionNames`() = runTest {
+        val captured = mockGenerateContent()
+        subject.execute(
+            userPrompt(GoogleParams(toolChoice = LLMParams.ToolChoice.Named("get_weather"))),
+            toolCapableModel
+        )
+        val fc = captured.config.toolConfig().get().functionCallingConfig().get()
+        fc.mode().get().toString() shouldBe "ANY"
+        fc.allowedFunctionNames().get() shouldBe listOf("get_weather")
     }
 
     @Test
-    fun `null toolChoice produces no toolConfig`() {
-        val config = subject.buildConfig(LLMParams(), GoogleModels.Gemini2_5Flash, emptyList(), null).build()
-        config.toolConfig().orElse(null).shouldBeNull()
+    fun `null toolChoice produces no toolConfig`() = runTest {
+        val captured = mockGenerateContent()
+        subject.execute(userPrompt(), toolCapableModel)
+        captured.config.toolConfig().isPresent shouldBe false
     }
 
     // endregion

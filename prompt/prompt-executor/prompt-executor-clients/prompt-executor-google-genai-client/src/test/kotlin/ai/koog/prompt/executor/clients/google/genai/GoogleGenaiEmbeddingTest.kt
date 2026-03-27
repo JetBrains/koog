@@ -29,9 +29,9 @@ class GoogleGenaiEmbeddingTest {
             )
             .build()
 
-        val values = response.embeddings().orElse(emptyList())
-            .firstOrNull()?.values()?.orElse(emptyList())
-            ?.map { it.toDouble() } ?: emptyList()
+        val values = response.embeddings().get()
+            .first().values().get()
+            .map { it.toDouble() }
 
         values shouldHaveSize 3
         values[0] shouldBe 0.1f.toDouble()
@@ -43,7 +43,7 @@ class GoogleGenaiEmbeddingTest {
     fun `embedding response with empty embeddings list returns empty`() {
         val response = EmbedContentResponse.builder().embeddings(emptyList()).build()
 
-        val values = response.embeddings().orElse(emptyList())
+        val values = response.embeddings().get()
             .firstOrNull()?.values()?.orElse(emptyList())
             ?.map { it.toDouble() } ?: emptyList()
 
@@ -57,9 +57,9 @@ class GoogleGenaiEmbeddingTest {
             .embeddings(listOf(ContentEmbedding.builder().values(floats).build()))
             .build()
 
-        val values = response.embeddings().orElse(emptyList())
-            .firstOrNull()?.values()?.orElse(emptyList())
-            ?.map { it.toDouble() } ?: emptyList()
+        val values = response.embeddings().get()
+            .first().values().get()
+            .map { it.toDouble() }
 
         values shouldHaveSize 768
         values[0] shouldBe (1f / 1000f).toDouble()

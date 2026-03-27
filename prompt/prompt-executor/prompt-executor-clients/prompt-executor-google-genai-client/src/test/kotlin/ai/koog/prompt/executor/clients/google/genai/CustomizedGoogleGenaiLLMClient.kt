@@ -23,7 +23,7 @@ import com.google.genai.types.ToolConfig
  * Additionally, applies real customization:
  * - Adds a `"source" to "test"` label to every request config
  */
-class CustomizedGoogleGenaiLLMClient(
+internal class CustomizedGoogleGenaiLLMClient(
     client: com.google.genai.Client
 ) : GoogleGenaiLLMClient(client) {
 
@@ -48,12 +48,12 @@ class CustomizedGoogleGenaiLLMClient(
     var metaInfoCustomized = false
         private set
 
-    public override fun buildSdkContents(prompt: Prompt, model: LLModel): Pair<List<Content>, Content?> {
+    override fun buildSdkContents(prompt: Prompt, model: LLModel): Pair<List<Content>, Content?> {
         contentsCustomized = true
         return super.buildSdkContents(prompt, model)
     }
 
-    public override fun buildConfig(
+    override fun buildConfig(
         params: LLMParams,
         model: LLModel,
         tools: List<ToolDescriptor>,
@@ -64,27 +64,27 @@ class CustomizedGoogleGenaiLLMClient(
             .labels(mapOf("source" to "test"))
     }
 
-    public override fun buildSdkTools(tools: List<ToolDescriptor>): List<Tool.Builder>? {
+    override fun buildSdkTools(tools: List<ToolDescriptor>): List<Tool.Builder>? {
         toolsCustomized = true
         return super.buildSdkTools(tools)
     }
 
-    public override fun buildSdkToolConfig(toolChoice: LLMParams.ToolChoice?): ToolConfig? {
+    override fun buildSdkToolConfig(toolChoice: LLMParams.ToolChoice?): ToolConfig? {
         toolConfigCustomized = true
         return super.buildSdkToolConfig(toolChoice)
     }
 
-    public override fun processResponse(response: GenerateContentResponse): List<List<Message.Response>> {
+    override fun processResponse(response: GenerateContentResponse): List<List<Message.Response>> {
         responseCustomized = true
         return super.processResponse(response)
     }
 
-    public override fun processCandidate(candidate: Candidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
+    override fun processCandidate(candidate: Candidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
         candidateCustomized = true
         return super.processCandidate(candidate, metaInfo)
     }
 
-    public override fun extractResponseMetaInfo(response: GenerateContentResponse): ResponseMetaInfo {
+    override fun extractResponseMetaInfo(response: GenerateContentResponse): ResponseMetaInfo {
         metaInfoCustomized = true
         return super.extractResponseMetaInfo(response)
     }
