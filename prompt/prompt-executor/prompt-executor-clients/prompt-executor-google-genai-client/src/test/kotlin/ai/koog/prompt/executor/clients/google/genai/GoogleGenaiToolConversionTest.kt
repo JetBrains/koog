@@ -41,18 +41,18 @@ class GoogleGenaiToolConversionTest {
     private val asyncModels: com.google.genai.AsyncModels
     private val subject: CustomizedGoogleGenaiLLMClient
 
-    init {
-        val (d, am) = mockGoogleGenaiClient()
-        delegate = d
-        asyncModels = am
-        subject = CustomizedGoogleGenaiLLMClient(delegate)
-    }
-
     private val toolCapableModel = LLModel(
         provider = LLMProvider.Google,
         id = "test-tools",
         capabilities = listOf(LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice)
     )
+
+    init {
+        val (d, am) = mockGoogleGenaiClient()
+        delegate = d
+        asyncModels = am
+        subject = CustomizedGoogleGenaiLLMClient(delegate, models = listOf(toolCapableModel))
+    }
 
     // region Helpers
 
@@ -73,7 +73,7 @@ class GoogleGenaiToolConversionTest {
         Mockito.`when`(
             asyncModels.generateContent(
                 any(String::class.java) ?: "",
-                org.mockito.ArgumentMatchers.anyList<Content>(),
+                org.mockito.ArgumentMatchers.anyList(),
                 any(GenerateContentConfig::class.java)
             )
         ).thenAnswer { invocation ->

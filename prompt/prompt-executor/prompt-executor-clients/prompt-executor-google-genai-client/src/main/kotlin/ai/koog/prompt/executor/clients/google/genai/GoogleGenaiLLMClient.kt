@@ -63,13 +63,15 @@ import kotlin.time.Clock
  * @property ioDispatcher Dispatcher for blocking stream iteration. Defaults to [Dispatchers.IO].
  *   Pass a custom dispatcher for virtual threads, test dispatchers, or application-specific thread pools.
  * @property clock Clock instance used for tracking response metadata timestamps.
+ * @property models List of [LLModel] instances returned by [models]. Defaults to [GoogleModels.models].
  */
 public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val client: Client,
     private val llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
     private val fallbackThoughtSignature: String = DEFAULT_THOUGHT_SIGNATURE,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO,
-    private val clock: Clock = Clock.System
+    private val clock: Clock = Clock.System,
+    private val models: List<LLModel> = GoogleModels.models
 ) : LLMClient(), LLMEmbeddingProvider {
 
     /**
@@ -81,8 +83,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         llmProvider: LLMProvider,
         fallbackThoughtSignature: String,
         ioExecutor: ExecutorService,
-        clock: Clock
-    ) : this(client, llmProvider, fallbackThoughtSignature, ioExecutor.asCoroutineDispatcher(), clock)
+        clock: Clock,
+        models: List<LLModel> = GoogleModels.models
+    ) : this(client, llmProvider, fallbackThoughtSignature, ioExecutor.asCoroutineDispatcher(), clock, models)
 
     public companion object {
         private val logger = KotlinLogging.logger { }
@@ -137,11 +140,18 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         throw LLMClientException(clientName = clientName, message = e.message, cause = e)
     }
 
+    private fun requireSupportedModel(model: LLModel) {
+        require(model in models) {
+            "Model ${model.id} is not in the supported models list"
+        }
+    }
+
     // region Execute
 
     @OptIn(InternalAgentToolsApi::class)
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         requireMatchingProvider(model)
+        requireSupportedModel(model)
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -156,6 +166,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = buildStreamFrameFlow {
         requireMatchingProvider(model)
+        requireSupportedModel(model)
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -206,6 +217,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         tools: List<ToolDescriptor>
     ): List<LLMChoice> {
         requireMatchingProvider(model)
+        requireSupportedModel(model)
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -416,6 +428,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         requireMatchingProvider(model)
+        requireSupportedModel(model)
         require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
         }
@@ -423,6 +436,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         logger.debug { "Embedding text with model: ${model.id}" }
 
         val response = callApi { client.async.models.embedContent(model.id, text, null).await() }
+
         return response.embeddings().orElse(emptyList())
             .firstOrNull()
             ?.values()?.orElse(emptyList())
@@ -440,7 +454,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     }
 
     public override suspend fun models(): List<LLModel> {
-        return GoogleModels.models
+        return models
     }
 
     override fun close() {

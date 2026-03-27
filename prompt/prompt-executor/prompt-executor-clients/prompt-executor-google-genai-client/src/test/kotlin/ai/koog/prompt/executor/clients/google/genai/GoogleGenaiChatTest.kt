@@ -3,7 +3,6 @@ package ai.koog.prompt.executor.clients.google.genai
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
@@ -62,17 +61,24 @@ class GoogleGenaiChatTest {
     private val asyncModels: com.google.genai.AsyncModels
     private val subject: CustomizedGoogleGenaiLLMClient
 
-    init {
-        val (d, am) = mockGoogleGenaiClient()
-        delegate = d
-        asyncModels = am
-        subject = CustomizedGoogleGenaiLLMClient(delegate)
-    }
-
-    /** Model with all capabilities for multimodal tests */
+    // Custom test models — unit tests don't depend on real GoogleModels definitions
+    private val flashModel = LLModel(
+        provider = LLMProvider.Google, id = "test-flash",
+        capabilities = listOf(LLMCapability.Completion, LLMCapability.Temperature)
+    )
+    private val thinkingModel = LLModel(
+        provider = LLMProvider.Google, id = "test-thinking",
+        capabilities = listOf(LLMCapability.Completion, LLMCapability.Temperature, LLMCapability.Thinking)
+    )
+    private val proModel = LLModel(
+        provider = LLMProvider.Google, id = "test-pro",
+        capabilities = listOf(
+            LLMCapability.Completion, LLMCapability.Temperature,
+            LLMCapability.Schema.JSON.Basic, LLMCapability.Schema.JSON.Standard,
+        )
+    )
     private val fullCapabilityModel = LLModel(
-        provider = LLMProvider.Google,
-        id = "test-full",
+        provider = LLMProvider.Google, id = "test-full",
         capabilities = listOf(
             LLMCapability.Completion, LLMCapability.Temperature, LLMCapability.MultipleChoices,
             LLMCapability.Tools, LLMCapability.ToolChoice,
@@ -81,6 +87,33 @@ class GoogleGenaiChatTest {
             LLMCapability.Schema.JSON.Basic, LLMCapability.Schema.JSON.Standard,
         )
     )
+    private val completionOnlyModel = LLModel(
+        provider = LLMProvider.Google, id = "test-completion-only",
+        capabilities = listOf(LLMCapability.Completion)
+    )
+    private val noCapModel = LLModel(
+        provider = LLMProvider.Google, id = "test-no-cap", capabilities = emptyList()
+    )
+    private val multiChoiceModel = LLModel(
+        provider = LLMProvider.Google, id = "test-multi",
+        capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices)
+    )
+    private val multiChoiceNoCompletionModel = LLModel(
+        provider = LLMProvider.Google, id = "test-multi-no-completion",
+        capabilities = listOf(LLMCapability.MultipleChoices)
+    )
+
+    private val supportedModels = listOf(
+        flashModel, thinkingModel, proModel, fullCapabilityModel,
+        completionOnlyModel, noCapModel, multiChoiceModel, multiChoiceNoCompletionModel,
+    )
+
+    init {
+        val (d, am) = mockGoogleGenaiClient()
+        delegate = d
+        asyncModels = am
+        subject = CustomizedGoogleGenaiLLMClient(delegate, models = supportedModels)
+    }
 
     // region Helpers
 
@@ -95,7 +128,7 @@ class GoogleGenaiChatTest {
         Mockito.`when`(
             asyncModels.generateContent(
                 any(String::class.java) ?: "",
-                org.mockito.ArgumentMatchers.anyList<Content>(),
+                org.mockito.ArgumentMatchers.anyList(),
                 any(GenerateContentConfig::class.java)
             )
         ).thenAnswer { invocation ->
@@ -141,29 +174,33 @@ class GoogleGenaiChatTest {
         )
         val captured = mockGenerateContent(textResponse("4"))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+        subject.execute(prompt, flashModel)
 
         // Verify customization overrides were invoked through the execute path
         subject.contentsCustomized shouldBe true
         subject.configCustomized shouldBe true
-
-        // Custom label added by CustomizedGoogleGenaiLLMClient.buildConfig
-        captured.config.labels().get() shouldBe mapOf("source" to "test")
-
-        // System message extracted as systemInstruction in config
-        val si = captured.config.systemInstruction().get()
-        si.shouldNotBeNull()
-        si.parts().get()[0].text().get() shouldBe "You are a helpful assistant"
 
         // Only user message in contents
         captured.contents shouldHaveSize 1
         captured.contents[0].role().get() shouldBe "user"
         captured.contents[0].parts().get()[0].text().get() shouldBe "What is 2+2?"
 
-        // Config reflects params
-        captured.config.temperature().get() shouldBe 0.7f
-        captured.config.maxOutputTokens().get() shouldBe 256
-        captured.config.automaticFunctionCalling().get().disable().get() shouldBe true
+        with(captured.config) {
+            // Custom label added by CustomizedGoogleGenaiLLMClient.buildConfig
+
+            labels().get() shouldBe mapOf("source" to "test")
+
+            // System message extracted as systemInstruction in config
+            val si = systemInstruction().get()
+            si.shouldNotBeNull()
+            si.parts().get()[0].text().get() shouldBe "You are a helpful assistant"
+
+
+            // Config reflects params
+            temperature().get() shouldBe 0.7f
+            maxOutputTokens().get() shouldBe 256
+            automaticFunctionCalling().get().disable().get() shouldBe true
+        }
     }
 
     @Test
@@ -174,7 +211,7 @@ class GoogleGenaiChatTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("What is 2+2?", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         subject.responseCustomized shouldBe true
@@ -182,12 +219,13 @@ class GoogleGenaiChatTest {
         subject.candidateCustomized shouldBe true
 
         results shouldHaveSize 1
-        val assistant = results[0].shouldBeInstanceOf<Message.Assistant>()
-        assistant.content shouldBe "4"
-        assistant.finishReason shouldBe "STOP"
-        assistant.metaInfo.inputTokensCount shouldBe 12
-        assistant.metaInfo.outputTokensCount shouldBe 1
-        assistant.metaInfo.totalTokensCount shouldBe 13
+        results[0].shouldBeInstanceOf<Message.Assistant> {
+            it.content shouldBe "4"
+            it.finishReason shouldBe "STOP"
+            it.metaInfo.inputTokensCount shouldBe 12
+            it.metaInfo.outputTokensCount shouldBe 1
+            it.metaInfo.totalTokensCount shouldBe 13
+        }
     }
 
     // endregion
@@ -207,7 +245,7 @@ class GoogleGenaiChatTest {
         )
         val captured = mockGenerateContent(textResponse("6"))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+        subject.execute(prompt, flashModel)
 
         captured.config.systemInstruction().get().parts().get()[0].text().get() shouldBe "You are a math tutor"
 
@@ -225,63 +263,64 @@ class GoogleGenaiChatTest {
     // region Scenario: tool calling flow
 
     @Test
-    fun `tool calling - full prompt with reasoning + parallel calls + results produces correct grouping`() = runTest {
-        val sigAbc = Base64.getEncoder().encodeToString("sig-abc".toByteArray())
-        val prompt = Prompt(
-            messages = listOf(
-                Message.System("You can use tools", RequestMetaInfo.Empty),
-                Message.User("What's the weather in Paris and London?", RequestMetaInfo.Empty),
-                Message.Reasoning(encrypted = sigAbc, content = "", metaInfo = ResponseMetaInfo.Empty),
-                Message.Tool.Call(
-                    id = "c1",
-                    tool = "get_weather",
-                    content = """{"city":"Paris"}""",
-                    metaInfo = ResponseMetaInfo.Empty
+    fun `tool calling - full prompt with reasoning + parallel calls + results produces correct grouping`() =
+        runTest {
+            val sigAbc = Base64.getEncoder().encodeToString("sig-abc".toByteArray())
+            val prompt = Prompt(
+                messages = listOf(
+                    Message.System("You can use tools", RequestMetaInfo.Empty),
+                    Message.User("What's the weather in Paris and London?", RequestMetaInfo.Empty),
+                    Message.Reasoning(encrypted = sigAbc, content = "", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(
+                        id = "c1",
+                        tool = "get_weather",
+                        content = """{"city":"Paris"}""",
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
+                    Message.Tool.Call(
+                        id = "c2",
+                        tool = "get_weather",
+                        content = """{"city":"London"}""",
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
+                    Message.Tool.Result(
+                        id = "c1",
+                        tool = "get_weather",
+                        content = "Sunny 25C",
+                        metaInfo = RequestMetaInfo.Empty
+                    ),
+                    Message.Tool.Result(
+                        id = "c2",
+                        tool = "get_weather",
+                        content = "Rainy 15C",
+                        metaInfo = RequestMetaInfo.Empty
+                    ),
                 ),
-                Message.Tool.Call(
-                    id = "c2",
-                    tool = "get_weather",
-                    content = """{"city":"London"}""",
-                    metaInfo = ResponseMetaInfo.Empty
-                ),
-                Message.Tool.Result(
-                    id = "c1",
-                    tool = "get_weather",
-                    content = "Sunny 25C",
-                    metaInfo = RequestMetaInfo.Empty
-                ),
-                Message.Tool.Result(
-                    id = "c2",
-                    tool = "get_weather",
-                    content = "Rainy 15C",
-                    metaInfo = RequestMetaInfo.Empty
-                ),
-            ),
-            id = "tool-flow"
-        )
-        val captured = mockGenerateContent(textResponse("It's sunny in Paris and rainy in London"))
+                id = "tool-flow"
+            )
+            val captured = mockGenerateContent(textResponse("It's sunny in Paris and rainy in London"))
 
-        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+            subject.execute(prompt, thinkingModel)
 
-        captured.config.systemInstruction().get().shouldNotBeNull()
-        captured.contents shouldHaveSize 3
+            captured.config.systemInstruction().get().shouldNotBeNull()
+            captured.contents shouldHaveSize 3
 
-        captured.contents[0].role().get() shouldBe "user"
-        captured.contents[0].parts().get()[0].text().get() shouldBe "What's the weather in Paris and London?"
+            captured.contents[0].role().get() shouldBe "user"
+            captured.contents[0].parts().get()[0].text().get() shouldBe "What's the weather in Paris and London?"
 
-        val callParts = captured.contents[1].parts().get()
-        callParts shouldHaveSize 2
-        callParts[0].functionCall().get().name().get() shouldBe "get_weather"
-        callParts[0].thoughtSignature().get() shouldBe "sig-abc".toByteArray()
-        callParts[1].functionCall().get().name().get() shouldBe "get_weather"
-        // Per Google API spec: only the first call in a batch carries the signature
-        callParts[1].thoughtSignature().isPresent shouldBe false
+            val callParts = captured.contents[1].parts().get()
+            callParts shouldHaveSize 2
+            callParts[0].functionCall().get().name().get() shouldBe "get_weather"
+            callParts[0].thoughtSignature().get() shouldBe "sig-abc".toByteArray()
+            callParts[1].functionCall().get().name().get() shouldBe "get_weather"
+            // Per Google API spec: only the first call in a batch carries the signature
+            callParts[1].thoughtSignature().isPresent shouldBe false
 
-        val resultParts = captured.contents[2].parts().get()
-        resultParts shouldHaveSize 2
-        resultParts[0].functionResponse().get().name().get() shouldBe "get_weather"
-        resultParts[1].functionResponse().get().name().get() shouldBe "get_weather"
-    }
+            val resultParts = captured.contents[2].parts().get()
+            resultParts shouldHaveSize 2
+            resultParts[0].functionResponse().get().name().get() shouldBe "get_weather"
+            resultParts[1].functionResponse().get().name().get() shouldBe "get_weather"
+        }
 
     @Test
     fun `tool calling - response with function calls filters out text and preserves signatures`() = runTest {
@@ -310,7 +349,7 @@ class GoogleGenaiChatTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("weather?", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         results.none { it is Message.Assistant } shouldBe true
@@ -338,7 +377,7 @@ class GoogleGenaiChatTest {
         )
         val captured = mockGenerateContent(textResponse("result"))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+        subject.execute(prompt, flashModel)
 
         val callPart = captured.contents[1].parts().get()[0]
         callPart.functionCall().get().name().get() shouldBe "search"
@@ -367,7 +406,7 @@ class GoogleGenaiChatTest {
         )
         val captured = mockGenerateContent(textResponse("More details..."))
 
-        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+        subject.execute(prompt, thinkingModel)
 
         captured.contents shouldHaveSize 4
         val thoughtPart = captured.contents[1].parts().get()[0]
@@ -397,13 +436,14 @@ class GoogleGenaiChatTest {
             )
             .usageMetadata(
                 GenerateContentResponseUsageMetadata.builder()
-                    .promptTokenCount(20).candidatesTokenCount(30).totalTokenCount(50).thoughtsTokenCount(15).build()
+                    .promptTokenCount(20).candidatesTokenCount(30).totalTokenCount(50).thoughtsTokenCount(15)
+                    .build()
             ).build()
         mockGenerateContent(response)
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("question", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         results shouldHaveSize 2
@@ -434,7 +474,7 @@ class GoogleGenaiChatTest {
         )
         val captured = mockGenerateContent(textResponse("""{"name":"pasta"}"""))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Pro)
+        subject.execute(prompt, proModel)
 
         captured.config.responseMimeType().get() shouldBe "application/json"
         captured.config.responseSchema().get() shouldBe Schema.fromJson("""{"type":"object"}""")
@@ -455,7 +495,7 @@ class GoogleGenaiChatTest {
         )
         val captured = mockGenerateContent(textResponse("""{"name":"pasta"}"""))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Pro)
+        subject.execute(prompt, proModel)
 
         captured.config.responseMimeType().get() shouldBe "application/json"
         captured.config.responseJsonSchema().get() shouldBe mapOf("type" to "object")
@@ -481,10 +521,6 @@ class GoogleGenaiChatTest {
             ).build()
         mockGenerateContent(response)
 
-        val multiChoiceModel = LLModel(
-            provider = LLMProvider.Google, id = "multi",
-            capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices)
-        )
         val choices = subject.executeMultipleChoices(
             Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
             multiChoiceModel
@@ -504,7 +540,7 @@ class GoogleGenaiChatTest {
         assertThrows<LLMClientException> {
             subject.execute(
                 Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-                GoogleModels.Gemini2_5Flash
+                flashModel
             )
         }
     }
@@ -519,7 +555,7 @@ class GoogleGenaiChatTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         results shouldHaveSize 1
@@ -532,7 +568,7 @@ class GoogleGenaiChatTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         val meta = results[0].metaInfo
@@ -549,7 +585,8 @@ class GoogleGenaiChatTest {
                     Content.builder().role("model").parts(
                         listOf(
                             Part.builder().inlineData(
-                                com.google.genai.types.Blob.builder().data("img".toByteArray()).mimeType("image/png")
+                                com.google.genai.types.Blob.builder().data("img".toByteArray())
+                                    .mimeType("image/png")
                                     .build()
                             ).build()
                         )
@@ -561,7 +598,7 @@ class GoogleGenaiChatTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         val img = (results[0] as Message.Assistant).parts[0].shouldBeInstanceOf<ContentPart.Image>()
@@ -577,7 +614,8 @@ class GoogleGenaiChatTest {
                     Content.builder().role("model").parts(
                         listOf(
                             Part.builder().inlineData(
-                                com.google.genai.types.Blob.builder().data("audio".toByteArray()).mimeType("audio/mpeg")
+                                com.google.genai.types.Blob.builder().data("audio".toByteArray())
+                                    .mimeType("audio/mpeg")
                                     .build()
                             ).build()
                         )
@@ -589,7 +627,7 @@ class GoogleGenaiChatTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         val audio = (results[0] as Message.Assistant).parts[0].shouldBeInstanceOf<ContentPart.Audio>()
@@ -605,7 +643,8 @@ class GoogleGenaiChatTest {
                     Content.builder().role("model").parts(
                         listOf(
                             Part.builder().inlineData(
-                                com.google.genai.types.Blob.builder().data("video".toByteArray()).mimeType("video/mp4")
+                                com.google.genai.types.Blob.builder().data("video".toByteArray())
+                                    .mimeType("video/mp4")
                                     .build()
                             ).build()
                         )
@@ -617,7 +656,7 @@ class GoogleGenaiChatTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         val video = (results[0] as Message.Assistant).parts[0].shouldBeInstanceOf<ContentPart.Video>()
@@ -640,7 +679,7 @@ class GoogleGenaiChatTest {
         )
         val captured = mockGenerateContent(textResponse("hello"))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Pro)
+        subject.execute(prompt, proModel)
 
         captured.config.systemInstruction().get().parts().get()[0].text().get() shouldBe "Be helpful"
     }
@@ -651,7 +690,7 @@ class GoogleGenaiChatTest {
 
         subject.execute(
             Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Pro
+            proModel
         )
 
         captured.config.maxOutputTokens().isPresent shouldBe false
@@ -661,8 +700,7 @@ class GoogleGenaiChatTest {
 
     @Test
     fun `config omits temperature for model without Temperature capability`() = runTest {
-        val noTempModel =
-            LLModel(provider = LLMProvider.Google, id = "no-temp", capabilities = listOf(LLMCapability.Completion))
+        val noTempModel = completionOnlyModel // has Completion but no Temperature
         val captured = mockGenerateContent(textResponse("ok"))
 
         subject.execute(
@@ -691,7 +729,7 @@ class GoogleGenaiChatTest {
                     )
                 )
             ),
-            GoogleModels.Gemini3_Pro_Preview
+            thinkingModel
         )
 
         val tc = captured.config.thinkingConfig().get()
@@ -706,47 +744,114 @@ class GoogleGenaiChatTest {
 
     @Test
     fun `execute rejects model with mismatched provider`() = runTest {
-        val anthropicModel =
-            LLModel(provider = LLMProvider.Anthropic, id = "claude-3", capabilities = listOf(LLMCapability.Completion))
+        val model = LLModel(
+            provider = LLMProvider.Anthropic,
+            id = "claude-3",
+            capabilities = listOf(LLMCapability.Completion)
+        )
         val error = assertThrows<IllegalArgumentException> {
-            subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = anthropicModel)
+            subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = model)
         }
         error.message shouldContain "provider mismatch"
     }
 
     @Test
     fun `execute rejects model without Completion capability`() = runTest {
-        val model = LLModel(provider = LLMProvider.Google, id = "x", capabilities = emptyList())
-        assertThrows<IllegalArgumentException> {
-            subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = model)
+        val error = assertThrows<IllegalArgumentException> {
+            subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = noCapModel)
         }
+        error.message shouldContain "does not support chat completions"
+    }
+
+    @Test
+    fun `execute rejects unsupported model`() = runTest {
+        val unknownModel = LLModel(provider = LLMProvider.Google, id = "unknown", capabilities = listOf(LLMCapability.Completion))
+        val error = assertThrows<IllegalArgumentException> {
+            subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = unknownModel)
+        }
+        error.message shouldContain "is not in the supported models list"
     }
 
     @Test
     fun `execute rejects tools when model lacks Tools capability and toolChoice is Required`() = runTest {
-        val model = LLModel(provider = LLMProvider.Google, id = "x", capabilities = listOf(LLMCapability.Completion))
-        assertThrows<IllegalArgumentException> {
+        val error = assertThrows<IllegalArgumentException> {
             subject.execute(
-                prompt = Prompt(
-                    messages = emptyList(),
-                    id = "t",
-                    params = GoogleParams(toolChoice = LLMParams.ToolChoice.Required)
-                ),
-                model = model,
+                prompt = Prompt(messages = emptyList(), id = "t", params = GoogleParams(toolChoice = LLMParams.ToolChoice.Required)),
+                model = completionOnlyModel,
                 tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = emptyList()))
             )
         }
+        error.message shouldContain "does not support tools"
+    }
+
+    @Test
+    fun `executeMultipleChoices rejects model with mismatched provider`() = runTest {
+        val model = LLModel(provider = LLMProvider.Anthropic, id = "claude", capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices))
+        val error = assertThrows<IllegalArgumentException> {
+            subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = model)
+        }
+        error.message shouldContain "provider mismatch"
+    }
+
+    @Test
+    fun `executeMultipleChoices rejects model without Completion capability`() = runTest {
+        val error = assertThrows<IllegalArgumentException> {
+            subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = multiChoiceNoCompletionModel)
+        }
+        error.message shouldContain "does not support chat completions"
+    }
+
+    @Test
+    fun `executeMultipleChoices rejects model without MultipleChoices capability`() = runTest {
+        val error = assertThrows<IllegalArgumentException> {
+            subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = completionOnlyModel)
+        }
+        error.message shouldContain "does not support multiple choices"
+    }
+
+    @Test
+    fun `executeMultipleChoices rejects unsupported model`() = runTest {
+        val unknownModel = LLModel(provider = LLMProvider.Google, id = "unknown", capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices))
+        val error = assertThrows<IllegalArgumentException> {
+            subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = unknownModel)
+        }
+        error.message shouldContain "is not in the supported models list"
+    }
+
+    @Test
+    fun `executeStreaming rejects model with mismatched provider`() = runTest {
+        val model = LLModel(provider = LLMProvider.Anthropic, id = "claude", capabilities = listOf(LLMCapability.Completion))
+        val error = assertThrows<IllegalArgumentException> {
+            subject.executeStreaming(prompt = Prompt(messages = emptyList(), id = "t"), model = model).collect {}
+        }
+        error.message shouldContain "provider mismatch"
+    }
+
+    @Test
+    fun `executeStreaming rejects model without Completion capability`() = runTest {
+        val error = assertThrows<IllegalArgumentException> {
+            subject.executeStreaming(prompt = Prompt(messages = emptyList(), id = "t"), model = noCapModel).collect {}
+        }
+        error.message shouldContain "does not support chat completions"
+    }
+
+    @Test
+    fun `executeStreaming rejects unsupported model`() = runTest {
+        val unknownModel = LLModel(provider = LLMProvider.Google, id = "unknown", capabilities = listOf(LLMCapability.Completion))
+        val error = assertThrows<IllegalArgumentException> {
+            subject.executeStreaming(prompt = Prompt(messages = emptyList(), id = "t"), model = unknownModel).collect {}
+        }
+        error.message shouldContain "is not in the supported models list"
     }
 
     @Test
     fun `execute silently drops tools when model lacks Tools capability and toolChoice is optional`() = runTest {
-        val model = LLModel(provider = LLMProvider.Google, id = "x", capabilities = listOf(LLMCapability.Completion))
         val tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = emptyList()))
         val captured = mockGenerateContent(textResponse("ok"))
 
         subject.execute(
             prompt = Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
-            model = model,
+            model = completionOnlyModel,
             tools = tools
         )
 
@@ -876,7 +981,7 @@ class GoogleGenaiChatTest {
                 messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t",
                 params = GoogleParams(thinkingConfig = GoogleThinkingConfig(thinkingLevel = thinkingLevel))
             ),
-            GoogleModels.Gemini3_Pro_Preview
+            thinkingModel
         )
 
         captured.config.thinkingConfig().get().thinkingLevel().get().toString() shouldBe expectedLevel

@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.google.genai
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -23,9 +24,11 @@ import com.google.genai.types.ToolConfig
  * Additionally, applies real customization:
  * - Adds a `"source" to "test"` label to every request config
  */
+
 internal class CustomizedGoogleGenaiLLMClient(
-    client: com.google.genai.Client
-) : GoogleGenaiLLMClient(client) {
+    client: com.google.genai.Client,
+    models: List<LLModel> = GoogleModels.models
+) : GoogleGenaiLLMClient(client, models = models) {
 
     var contentsCustomized = false
         private set

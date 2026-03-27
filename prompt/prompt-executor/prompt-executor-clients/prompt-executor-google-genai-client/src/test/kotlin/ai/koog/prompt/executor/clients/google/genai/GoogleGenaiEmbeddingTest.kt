@@ -7,6 +7,7 @@ import com.google.genai.types.ContentEmbedding
 import com.google.genai.types.EmbedContentResponse
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -15,7 +16,12 @@ import org.junit.jupiter.api.assertThrows
 class GoogleGenaiEmbeddingTest {
 
     private val delegate = mockk<com.google.genai.Client>(relaxed = true)
-    private val subject = CustomizedGoogleGenaiLLMClient(delegate)
+
+    private val noEmbedModel = LLModel(
+        provider = LLMProvider.Google, id = "no-embed", capabilities = listOf(LLMCapability.Completion)
+    )
+
+    private val subject = CustomizedGoogleGenaiLLMClient(delegate, models = listOf(noEmbedModel))
 
     // region Scenario: embedding response extraction
 
@@ -72,13 +78,22 @@ class GoogleGenaiEmbeddingTest {
 
     @Test
     fun `embed rejects model without Embed capability`() = runTest {
-        val model =
-            LLModel(
-                provider = LLMProvider.Google,
-                id = "no-embed",
-                capabilities = listOf(LLMCapability.Completion)
-            )
-        assertThrows<IllegalArgumentException> { subject.embed("hello", model) }
+        val error = assertThrows<IllegalArgumentException> { subject.embed("hello", noEmbedModel) }
+        error.message shouldContain "does not support embedding"
+    }
+
+    @Test
+    fun `embed rejects model with mismatched provider`() = runTest {
+        val model = LLModel(provider = LLMProvider.Anthropic, id = "claude-embed", capabilities = listOf(LLMCapability.Embed))
+        val error = assertThrows<IllegalArgumentException> { subject.embed("hello", model) }
+        error.message shouldContain "provider mismatch"
+    }
+
+    @Test
+    fun `embed rejects unsupported model`() = runTest {
+        val unknownModel = LLModel(provider = LLMProvider.Google, id = "unknown-embed", capabilities = listOf(LLMCapability.Embed))
+        val error = assertThrows<IllegalArgumentException> { subject.embed("hello", unknownModel) }
+        error.message shouldContain "is not in the supported models list"
     }
 
     // endregion

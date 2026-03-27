@@ -2,7 +2,9 @@ package ai.koog.prompt.executor.clients.google.genai
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -34,11 +36,20 @@ class GoogleGenaiUtilsTest {
     private val asyncModels: com.google.genai.AsyncModels
     private val subject: CustomizedGoogleGenaiLLMClient
 
+    private val flashModel = LLModel(
+        provider = LLMProvider.Google, id = "test-flash",
+        capabilities = listOf(LLMCapability.Completion)
+    )
+    private val thinkingModel = LLModel(
+        provider = LLMProvider.Google, id = "test-thinking",
+        capabilities = listOf(LLMCapability.Completion, LLMCapability.Thinking)
+    )
+
     init {
         val (d, am) = mockGoogleGenaiClient()
         delegate = d
         asyncModels = am
-        subject = CustomizedGoogleGenaiLLMClient(delegate)
+        subject = CustomizedGoogleGenaiLLMClient(delegate, models = listOf(flashModel, thinkingModel))
     }
 
     // region Helpers
@@ -53,7 +64,7 @@ class GoogleGenaiUtilsTest {
         Mockito.`when`(
             asyncModels.generateContent(
                 any(String::class.java) ?: "",
-                org.mockito.ArgumentMatchers.anyList<Content>(),
+                org.mockito.ArgumentMatchers.anyList(),
                 any(GenerateContentConfig::class.java)
             )
         ).thenAnswer { invocation ->
@@ -107,7 +118,7 @@ class GoogleGenaiUtilsTest {
             ).build()
         val captured = mockGenerateContent(response)
 
-        val results = subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+        val results = subject.execute(prompt, thinkingModel)
 
         // Verify request: thought part carries exact raw bytes
         val thoughtPart = captured.contents[1].parts().get()[0]
@@ -137,7 +148,7 @@ class GoogleGenaiUtilsTest {
         )
         val captured = mockGenerateContent(textResponse("ok"))
 
-        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+        subject.execute(prompt, thinkingModel)
 
         val toolCallPart = captured.contents[1].parts().get()[0]
         toolCallPart.thoughtSignature().get() shouldBe rawBytes
@@ -162,7 +173,7 @@ class GoogleGenaiUtilsTest {
         )
         val captured = mockGenerateContent(textResponse("ok"))
 
-        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+        subject.execute(prompt, thinkingModel)
 
         // contents[0]=user, contents[1]=reasoning block, contents[2]=tool call batch
         val toolCallPart = captured.contents[2].parts().get()[0]
@@ -190,7 +201,7 @@ class GoogleGenaiUtilsTest {
         )
         val captured = mockGenerateContent(textResponse("ok"))
 
-        subject.execute(prompt, GoogleModels.Gemini3_Pro_Preview)
+        subject.execute(prompt, thinkingModel)
 
         val batchParts = captured.contents[1].parts().get()
         batchParts shouldHaveSize 3
@@ -211,7 +222,7 @@ class GoogleGenaiUtilsTest {
         )
         val captured = mockGenerateContent(textResponse("ok"))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+        subject.execute(prompt, flashModel)
 
         val batchParts = captured.contents[1].parts().get()
         batchParts shouldHaveSize 2
@@ -239,7 +250,7 @@ class GoogleGenaiUtilsTest {
         )
         val captured = mockGenerateContent(textResponse("ok"))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+        subject.execute(prompt, flashModel)
 
         val fc = captured.contents[1].parts().get()[0].functionCall().get()
         fc.shouldNotBeNull()
@@ -260,7 +271,7 @@ class GoogleGenaiUtilsTest {
         )
         val captured = mockGenerateContent(textResponse("ok"))
 
-        subject.execute(prompt, GoogleModels.Gemini2_5Flash)
+        subject.execute(prompt, flashModel)
 
         val fc = captured.contents[1].parts().get()[0].functionCall().get()
         fc.shouldNotBeNull()
@@ -287,7 +298,7 @@ class GoogleGenaiUtilsTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         val toolCall = results.filterIsInstance<Message.Tool.Call>().single()
@@ -315,7 +326,7 @@ class GoogleGenaiUtilsTest {
 
         val results = subject.execute(
             Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
-            GoogleModels.Gemini2_5Flash
+            flashModel
         )
 
         val toolCall = results.filterIsInstance<Message.Tool.Call>().single()
@@ -334,7 +345,7 @@ class GoogleGenaiUtilsTest {
         assertThrows<LLMClientException> {
             subject.execute(
                 Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
-                GoogleModels.Gemini2_5Flash
+                flashModel
             )
         }
     }
