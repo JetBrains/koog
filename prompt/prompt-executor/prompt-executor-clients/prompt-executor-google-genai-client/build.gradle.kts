@@ -36,7 +36,6 @@ dependencies {
 
     testImplementation(project(":test-utils"))
     testImplementation(libs.mockk)
-    testImplementation(libs.mockito.junit.jupiter)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.junit.jupiter.params)

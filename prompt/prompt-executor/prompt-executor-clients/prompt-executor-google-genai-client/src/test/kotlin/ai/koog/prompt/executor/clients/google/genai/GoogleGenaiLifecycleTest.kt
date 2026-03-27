@@ -8,6 +8,7 @@ import ai.koog.prompt.llm.LLModel
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -43,12 +44,13 @@ class GoogleGenaiLifecycleTest {
 
     @Test
     fun `moderate throws UnsupportedOperationException`() = runTest {
-        assertThrows<UnsupportedOperationException> {
+        val error = assertThrows<UnsupportedOperationException> {
             subject.moderate(
                 prompt = Prompt(messages = emptyList(), id = "test"),
                 model = GoogleModels.Gemini2_5Flash
             )
         }
+        error.message shouldContain "Moderation is not supported"
     }
 
     @Test

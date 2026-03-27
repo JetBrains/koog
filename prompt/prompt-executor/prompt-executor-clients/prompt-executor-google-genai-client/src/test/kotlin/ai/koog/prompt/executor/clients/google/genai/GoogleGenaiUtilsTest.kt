@@ -2,29 +2,23 @@ package ai.koog.prompt.executor.clients.google.genai
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import com.google.genai.types.Candidate
 import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
-import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.GenerateContentResponse
 import com.google.genai.types.Part
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito
 import java.util.Base64
-import java.util.concurrent.CompletableFuture
 
 /**
  * Black-box tests for signature encoding, JSON parsing, Map-to-JSON conversion,
@@ -36,57 +30,18 @@ class GoogleGenaiUtilsTest {
     private val asyncModels: com.google.genai.AsyncModels
     private val subject: CustomizedGoogleGenaiLLMClient
 
-    private val flashModel = LLModel(
-        provider = LLMProvider.Google, id = "test-flash",
-        capabilities = listOf(LLMCapability.Completion)
-    )
-    private val thinkingModel = LLModel(
-        provider = LLMProvider.Google, id = "test-thinking",
-        capabilities = listOf(LLMCapability.Completion, LLMCapability.Thinking)
-    )
+    private val flashModel get() = TestModels.flash
+    private val thinkingModel get() = TestModels.thinking
 
     init {
         val (d, am) = mockGoogleGenaiClient()
         delegate = d
         asyncModels = am
-        subject = CustomizedGoogleGenaiLLMClient(delegate, models = listOf(flashModel, thinkingModel))
+        subject = CustomizedGoogleGenaiLLMClient(delegate, models = TestModels.all)
     }
 
-    // region Helpers
-
-    private class CapturedApiCall {
-        lateinit var contents: List<Content>
-        lateinit var config: GenerateContentConfig
-    }
-
-    private fun mockGenerateContent(response: GenerateContentResponse): CapturedApiCall {
-        val captured = CapturedApiCall()
-        Mockito.`when`(
-            asyncModels.generateContent(
-                any(String::class.java) ?: "",
-                org.mockito.ArgumentMatchers.anyList(),
-                any(GenerateContentConfig::class.java)
-            )
-        ).thenAnswer { invocation ->
-            captured.contents = invocation.getArgument(1)
-            captured.config = invocation.getArgument(2)
-            CompletableFuture.completedFuture(response)
-        }
-        return captured
-    }
-
-    private fun textResponse(text: String): GenerateContentResponse =
-        GenerateContentResponse.builder()
-            .candidates(
-                listOf(
-                    Candidate.builder()
-                        .content(Content.builder().role("model").parts(Part.fromText(text)).build())
-                        .finishReason("STOP")
-                        .build()
-                )
-            ).build()
-
-    // endregion
+    private fun mockGenerateContent(response: GenerateContentResponse) =
+        asyncModels.stubGenerateContent(response)
 
     // region Signature encoding — binary bytes must survive the round-trip without corruption
 
@@ -103,15 +58,12 @@ class GoogleGenaiUtilsTest {
             ),
             id = "sig-test"
         )
-        // Response sends the same bytes BACK as a thought signature
         val responsePart = Part.builder().text("answer").thought(true).thoughtSignature(rawBytes).build()
         val response = GenerateContentResponse.builder()
             .candidates(
                 listOf(
                     Candidate.builder()
-                        .content(
-                            Content.builder().role("model").parts(listOf(responsePart, Part.fromText("final"))).build()
-                        )
+                        .content(Content.builder().role("model").parts(listOf(responsePart, Part.fromText("final"))).build())
                         .finishReason("STOP")
                         .build()
                 )
@@ -162,11 +114,7 @@ class GoogleGenaiUtilsTest {
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
-                Message.Reasoning(
-                    content = "I should search for this",
-                    encrypted = base64Signature,
-                    metaInfo = ResponseMetaInfo.Empty
-                ),
+                Message.Reasoning(content = "I should search for this", encrypted = base64Signature, metaInfo = ResponseMetaInfo.Empty),
                 Message.Tool.Call(id = "1", tool = "calc", content = "{}", metaInfo = ResponseMetaInfo.Empty),
             ),
             id = "sig-propagate-with-content"
@@ -239,12 +187,7 @@ class GoogleGenaiUtilsTest {
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
-                Message.Tool.Call(
-                    id = "1",
-                    tool = "search",
-                    content = """{"query":"hello","limit":10}""",
-                    metaInfo = ResponseMetaInfo.Empty
-                ),
+                Message.Tool.Call(id = "1", tool = "search", content = """{"query":"hello","limit":10}""", metaInfo = ResponseMetaInfo.Empty),
             ),
             id = "json-test"
         )
@@ -303,9 +246,9 @@ class GoogleGenaiUtilsTest {
 
         val toolCall = results.filterIsInstance<Message.Tool.Call>().single()
         toolCall.tool shouldBe "calc"
-        toolCall.content.contains("42") shouldBe true
-        toolCall.content.contains("test") shouldBe true
-        toolCall.content.contains("true") shouldBe true
+        toolCall.content shouldContain "42"
+        toolCall.content shouldContain "test"
+        toolCall.content shouldContain "true"
     }
 
     @Test
@@ -315,9 +258,7 @@ class GoogleGenaiUtilsTest {
                 listOf(
                     Candidate.builder().content(
                         Content.builder().role("model").parts(
-                            listOf(
-                                Part.builder().functionCall(FunctionCall.builder().name("my_tool").build()).build()
-                            )
+                            listOf(Part.builder().functionCall(FunctionCall.builder().name("my_tool").build()).build())
                         ).build()
                     ).build()
                 )
@@ -342,12 +283,13 @@ class GoogleGenaiUtilsTest {
     fun `execute throws LLMClientException on empty candidates`() = runTest {
         mockGenerateContent(GenerateContentResponse.builder().candidates(emptyList()).build())
 
-        assertThrows<LLMClientException> {
+        val error = assertThrows<LLMClientException> {
             subject.execute(
                 Prompt(messages = listOf(Message.User("q", RequestMetaInfo.Empty)), id = "t"),
                 flashModel
             )
         }
+        error.message shouldContain "Empty candidates"
     }
 
     // endregion

@@ -16,12 +16,7 @@ import org.junit.jupiter.api.assertThrows
 class GoogleGenaiEmbeddingTest {
 
     private val delegate = mockk<com.google.genai.Client>(relaxed = true)
-
-    private val noEmbedModel = LLModel(
-        provider = LLMProvider.Google, id = "no-embed", capabilities = listOf(LLMCapability.Completion)
-    )
-
-    private val subject = CustomizedGoogleGenaiLLMClient(delegate, models = listOf(noEmbedModel))
+    private val subject = CustomizedGoogleGenaiLLMClient(delegate, models = TestModels.all)
 
     // region Scenario: embedding response extraction
 
@@ -78,7 +73,7 @@ class GoogleGenaiEmbeddingTest {
 
     @Test
     fun `embed rejects model without Embed capability`() = runTest {
-        val error = assertThrows<IllegalArgumentException> { subject.embed("hello", noEmbedModel) }
+        val error = assertThrows<IllegalArgumentException> { subject.embed("hello", TestModels.noEmbed) }
         error.message shouldContain "does not support embedding"
     }
 

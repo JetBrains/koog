@@ -20,7 +20,6 @@ import ai.koog.prompt.params.LLMParams
 import com.google.genai.types.Candidate
 import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
-import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.GenerateContentResponse
 import com.google.genai.types.GenerateContentResponseUsageMetadata
 import com.google.genai.types.Part
@@ -38,22 +37,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito
 import java.util.Base64
-import java.util.concurrent.CompletableFuture
 
 /**
  * Black-box tests for [GoogleGenaiLLMClient].
  *
  * Every test drives the client through the public [ai.koog.prompt.executor.clients.LLMClientAPI]
  * surface (`execute`, `executeMultipleChoices`, etc.) and verifies behaviour by:
- *   - capturing what was sent to `client.async.models.generateContent` (via Mockito), or
+ *   - capturing what was sent to `client.async.models.generateContent` (via mockk), or
  *   - asserting on the [Message.Response] list returned by `execute`.
- *
- * The Google GenAI SDK uses Java public fields (`Client.async`, `AsyncClient.models`)
- * rather than getter methods. Mockito with [Mockito.RETURNS_DEEP_STUBS] handles this
- * transparently; mockk does not.
  */
 class GoogleGenaiChatTest {
 
@@ -61,104 +53,25 @@ class GoogleGenaiChatTest {
     private val asyncModels: com.google.genai.AsyncModels
     private val subject: CustomizedGoogleGenaiLLMClient
 
-    // Custom test models — unit tests don't depend on real GoogleModels definitions
-    private val flashModel = LLModel(
-        provider = LLMProvider.Google, id = "test-flash",
-        capabilities = listOf(LLMCapability.Completion, LLMCapability.Temperature)
-    )
-    private val thinkingModel = LLModel(
-        provider = LLMProvider.Google, id = "test-thinking",
-        capabilities = listOf(LLMCapability.Completion, LLMCapability.Temperature, LLMCapability.Thinking)
-    )
-    private val proModel = LLModel(
-        provider = LLMProvider.Google, id = "test-pro",
-        capabilities = listOf(
-            LLMCapability.Completion, LLMCapability.Temperature,
-            LLMCapability.Schema.JSON.Basic, LLMCapability.Schema.JSON.Standard,
-        )
-    )
-    private val fullCapabilityModel = LLModel(
-        provider = LLMProvider.Google, id = "test-full",
-        capabilities = listOf(
-            LLMCapability.Completion, LLMCapability.Temperature, LLMCapability.MultipleChoices,
-            LLMCapability.Tools, LLMCapability.ToolChoice,
-            LLMCapability.Vision.Image, LLMCapability.Vision.Video,
-            LLMCapability.Audio, LLMCapability.Document,
-            LLMCapability.Schema.JSON.Basic, LLMCapability.Schema.JSON.Standard,
-        )
-    )
-    private val completionOnlyModel = LLModel(
-        provider = LLMProvider.Google, id = "test-completion-only",
-        capabilities = listOf(LLMCapability.Completion)
-    )
-    private val noCapModel = LLModel(
-        provider = LLMProvider.Google, id = "test-no-cap", capabilities = emptyList()
-    )
-    private val multiChoiceModel = LLModel(
-        provider = LLMProvider.Google, id = "test-multi",
-        capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices)
-    )
-    private val multiChoiceNoCompletionModel = LLModel(
-        provider = LLMProvider.Google, id = "test-multi-no-completion",
-        capabilities = listOf(LLMCapability.MultipleChoices)
-    )
-
-    private val supportedModels = listOf(
-        flashModel, thinkingModel, proModel, fullCapabilityModel,
-        completionOnlyModel, noCapModel, multiChoiceModel, multiChoiceNoCompletionModel,
-    )
+    // Aliases for readability
+    private val flashModel get() = TestModels.flash
+    private val thinkingModel get() = TestModels.thinking
+    private val proModel get() = TestModels.pro
+    private val fullCapabilityModel get() = TestModels.fullCapability
+    private val completionOnlyModel get() = TestModels.completionOnly
+    private val noCapModel get() = TestModels.noCap
+    private val multiChoiceModel get() = TestModels.multiChoice
+    private val multiChoiceNoCompletionModel get() = TestModels.multiChoiceNoCompletion
 
     init {
         val (d, am) = mockGoogleGenaiClient()
         delegate = d
         asyncModels = am
-        subject = CustomizedGoogleGenaiLLMClient(delegate, models = supportedModels)
+        subject = CustomizedGoogleGenaiLLMClient(delegate, models = TestModels.all)
     }
 
-    // region Helpers
-
-    private class CapturedApiCall {
-        lateinit var modelId: String
-        lateinit var contents: List<Content>
-        lateinit var config: GenerateContentConfig
-    }
-
-    private fun mockGenerateContent(response: GenerateContentResponse): CapturedApiCall {
-        val captured = CapturedApiCall()
-        Mockito.`when`(
-            asyncModels.generateContent(
-                any(String::class.java) ?: "",
-                org.mockito.ArgumentMatchers.anyList(),
-                any(GenerateContentConfig::class.java)
-            )
-        ).thenAnswer { invocation ->
-            captured.modelId = invocation.getArgument(0)
-            captured.contents = invocation.getArgument(1)
-            captured.config = invocation.getArgument(2)
-            CompletableFuture.completedFuture(response)
-        }
-        return captured
-    }
-
-    private fun textResponse(
-        text: String,
-        finishReason: String = "STOP",
-        usageMetadata: GenerateContentResponseUsageMetadata? = null
-    ): GenerateContentResponse {
-        val builder = GenerateContentResponse.builder()
-            .candidates(
-                listOf(
-                    Candidate.builder()
-                        .content(Content.builder().role("model").parts(Part.fromText(text)).build())
-                        .finishReason(finishReason)
-                        .build()
-                )
-            )
-        usageMetadata?.let { builder.usageMetadata(it) }
-        return builder.build()
-    }
-
-    // endregion
+    private fun mockGenerateContent(response: GenerateContentResponse) =
+        asyncModels.stubGenerateContent(response)
 
     // region Scenario: simple chat round-trip
 
@@ -537,12 +450,13 @@ class GoogleGenaiChatTest {
     fun `empty candidates throws LLMClientException`() = runTest {
         mockGenerateContent(GenerateContentResponse.builder().candidates(emptyList()).build())
 
-        assertThrows<LLMClientException> {
+        val error = assertThrows<LLMClientException> {
             subject.execute(
                 Prompt(messages = listOf(Message.User("hi", RequestMetaInfo.Empty)), id = "t"),
                 flashModel
             )
         }
+        error.message shouldContain "Empty candidates"
     }
 
     @Test
