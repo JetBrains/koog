@@ -46,10 +46,7 @@ The basic form of testing involves mocking LLM responses to ensure deterministic
     <!--- INCLUDE
     import ai.koog.agents.core.tools.ToolRegistry
     import ai.koog.agents.testing.tools.getMockExecutor
-
-
     val toolRegistry = ToolRegistry {}
-
     -->
     ```kotlin
     // Create a mock LLM executor
@@ -102,7 +99,6 @@ You can mock the LLM to call specific tools based on input patterns:
     import ai.koog.serialization.typeToken
     import kotlinx.serialization.Serializable
     import ai.koog.agents.core.tools.annotations.LLMDescription
-
     public object CreateTool : Tool<CreateTool.Args, String>(
         argsType = typeToken<Args>(),
         resultType = typeToken<String>(),
@@ -119,10 +115,8 @@ You can mock the LLM to call specific tools based on input patterns:
             @property:LLMDescription("Message from the agent")
             val message: String
         )
-
         override suspend fun execute(args: Args): String = args.message
     }
-
     public object SearchTool : Tool<SearchTool.Args, String>(
         argsType = typeToken<Args>(),
         resultType = typeToken<String>(),
@@ -139,11 +133,8 @@ You can mock the LLM to call specific tools based on input patterns:
             @property:LLMDescription("Message from the agent")
             val query: String
         )
-
         override suspend fun execute(args: Args): String = args.query
     }
-
-
     public object AnalyzeTool : Tool<AnalyzeTool.Args, String>(
         argsType = typeToken<Args>(),
         resultType = typeToken<String>(),
@@ -160,13 +151,10 @@ You can mock the LLM to call specific tools based on input patterns:
             @property:LLMDescription("Message from the agent")
             val query: String
         )
-
         override suspend fun execute(args: Args): String = args.query
     }
-
     typealias PositiveToneTool = SayToUser
     typealias NegativeToneTool = SayToUser
-
     val mockLLMApi = getMockExecutor {
     -->
     <!--- SUFFIX
@@ -230,9 +218,7 @@ To enable the testing mode on an agent, use the `withTesting()` function within 
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.withTesting
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     // Create the agent with testing enabled
     fun main() {
     -->
@@ -280,7 +266,6 @@ Start by validating the fundamental structure of your agent's graph:
 === "Kotlin"
 
     <!--- INCLUDE
-
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.environment.ReceivedToolResult
     import ai.koog.agents.example.exampleTesting03.mockLLMApi
@@ -288,12 +273,8 @@ Start by validating the fundamental structure of your agent's graph:
     import ai.koog.agents.testing.feature.testGraph
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
-
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
     -->
     <!--- SUFFIX
     }
@@ -368,12 +349,8 @@ Start with simple input and output validations for individual nodes:
     import ai.koog.agents.testing.feature.toolCallMessage
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
-
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -383,7 +360,6 @@ Start with simple input and output validations for individual nodes:
             testGraph<String, String>("test") {
                 assertNodes {
                     val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-        
     -->
     <!--- SUFFIX
                 }
@@ -441,7 +417,6 @@ You can also test nodes that run tools:
     import ai.koog.serialization.typeToken
     import kotlinx.serialization.Serializable
     import ai.koog.agents.core.tools.annotations.LLMDescription
-
     object SolveTool : SimpleTool<SolveTool.Args>(
         argsType = typeToken<Args>(),
         name = "message",
@@ -452,16 +427,12 @@ You can also test nodes that run tools:
             @property:LLMDescription("Message from the agent")
             val message: String
         )
-
         override suspend fun execute(args: Args): String {
             return args.message
         }
     }
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -471,7 +442,6 @@ You can also test nodes that run tools:
             testGraph<String, String>("test") {
                 assertNodes {
                     val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-        
     -->
     <!--- SUFFIX
                 }
@@ -525,29 +495,22 @@ For more complex scenarios, you can test nodes with structured inputs and output
     import ai.koog.serialization.typeToken
     import kotlinx.serialization.Serializable
     import ai.koog.agents.core.tools.annotations.LLMDescription
-
     object AnalyzeTool : Tool<AnalyzeTool.Args, String>(
         argsType = typeToken<Args>(),
         resultType = typeToken<String>(),
         name = "message",
         description = "Service tool, used by the agent to talk with user"
     ) {
-
         @Serializable
         data class Args(
             @property:LLMDescription("Message from the agent")
             val query: String,
             val depth: Int
         )
-
         override suspend fun execute(args: Args): String = args.query
     }
-
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -607,7 +570,6 @@ You can also test complex tool call scenarios with detailed result structures:
     import ai.koog.prompt.message.Message
     import ai.koog.serialization.typeToken
     import kotlinx.serialization.Serializable
-
     object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>(
         argsType = typeToken<Args>(),
         resultType = typeToken<Result>(),
@@ -619,14 +581,12 @@ You can also test complex tool call scenarios with detailed result structures:
             val query: String,
             val depth: Int
         )
-
         @Serializable
         data class Result(
             val analysis: String,
             val confidence: Double,
             val metadata: Map<String, String> = mapOf()
         )
-
         override suspend fun execute(args: Args): Result {
             return Result(
                 args.query, 0.95,
@@ -634,11 +594,8 @@ You can also test complex tool call scenarios with detailed result structures:
             )
         }
     }
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -708,11 +665,8 @@ Start with simple edge connection tests:
     import ai.koog.prompt.message.Message
     import kotlinx.serialization.KSerializer
     import kotlinx.serialization.Serializable
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -773,11 +727,8 @@ You can test a more complex routing logic based on the content of outputs:
     import ai.koog.agents.testing.feature.testGraph
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -833,12 +784,8 @@ For sophisticated agents, you can test conditional routing based on structured d
     import ai.koog.agents.testing.feature.toolResult
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
-
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -894,12 +841,8 @@ You can also test complex decision paths based on different result properties:
     import ai.koog.agents.testing.feature.toolResult
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
-
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
-
         AIAgent(
             // Constructor arguments
             promptExecutor = mockLLMApi,
@@ -1272,10 +1215,7 @@ Use the subgraph assertions, `verifySubgraph`, and node references:
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.testGraph
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
-
-
     val llmModel = OpenAIModels.Chat.GPT4o
-
     fun main() {
         AIAgent(
             // Constructor arguments
@@ -1329,8 +1269,6 @@ Use pattern matching methods:
 
     <!--- INCLUDE
     import ai.koog.agents.testing.tools.getMockExecutor
-
-
     val promptExecutor = 
     -->
     ```kotlin

@@ -58,7 +58,6 @@ This is the most general approach: react to each frame kind.
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.prompt.streaming.StreamFrame
-    
     val strategy = strategy<String, String>("strategy_name") {
         val node by node<Unit, Unit> {
     -->
@@ -258,7 +257,6 @@ You can listen to stream events in [agent event handlers](features/agent-event-h
     import ai.koog.agents.features.eventHandler.feature.handleEvents
     import ai.koog.prompt.streaming.StreamFrame
     import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition
-    
     fun GraphAIAgent.FeatureContext.installStreamingApi() {
     -->
     <!--- SUFFIX
