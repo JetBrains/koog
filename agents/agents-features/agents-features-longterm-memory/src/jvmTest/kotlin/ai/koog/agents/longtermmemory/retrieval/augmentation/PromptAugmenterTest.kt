@@ -186,7 +186,7 @@ class PromptAugmenterTest {
             user("Hello")
         }
 
-        val customAugmenter = PromptAugmenter { prompt, context ->
+        val customAugmenter = PromptAugmenter { prompt, _ ->
             prompt // no-op augmenter
         }
 

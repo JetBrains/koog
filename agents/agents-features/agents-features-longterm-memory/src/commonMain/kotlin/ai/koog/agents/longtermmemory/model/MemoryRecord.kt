@@ -10,6 +10,7 @@ import kotlin.time.Instant
  * @property content The main textual content to be embedded and searched
  * @property id Unique identifier for the record
  * @property metadata Flexible key-value metadata for filtering and custom fields
+ * @property timestamp Timestamp indicating when the memory record was created
  */
 @Serializable
 public data class MemoryRecord(

@@ -17,9 +17,13 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
+import ai.koog.agents.longtermmemory.retrieval.LastUserMessageQueryExtractor
+import ai.koog.agents.longtermmemory.retrieval.QueryExtractor
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
 import ai.koog.prompt.dsl.Prompt
@@ -141,11 +145,27 @@ public class LongTermMemory(
         public var storage: SearchStorage<MemoryRecord, SearchRequest>? = null
 
         /**
+         * The extractor that defines how to derive the search query from the prompt.
+         * Defaults to [LastUserMessageQueryExtractor].
+         *
+         * @see QueryExtractor
+         * @see LastUserMessageQueryExtractor
+         */
+        public var queryExtractor: QueryExtractor = LastUserMessageQueryExtractor()
+
+        /**
          * The search strategy that defines how to search the retrieval storage.
          *
          * @see SearchStrategy
          */
-        public var searchStrategy: SearchStrategy? = null
+        public var searchStrategy: SearchStrategy = SimilaritySearchStrategy()
+
+        /**
+         * When `true` (default), retrieval and prompt augmentation happen automatically
+         * before each LLM call. When `false`, the storage and strategy are still accessible
+         * for manual use inside graph strategy nodes.
+         */
+        public var enableAutomaticRetrieval: Boolean = true
 
         /**
          * The augmenter that defines how retrieved context is inserted into the prompt.
@@ -157,9 +177,20 @@ public class LongTermMemory(
         public var promptAugmenter: PromptAugmenter = SystemPromptAugmenter()
 
         /**
+         * Namespace (table/collection name) for a request.
+         */
+        public var namespace: String? = null
+
+        /**
          * Fluent setter for [storage].
          */
         public fun withStorage(storage: SearchStorage<MemoryRecord, SearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
+
+        /**
+         * Fluent setter for [queryExtractor].
+         */
+        public fun withQueryExtractor(queryExtractor: QueryExtractor): RetrievalSettingsBuilder =
+            apply { this.queryExtractor = queryExtractor }
 
         /**
          * Fluent setter for [searchStrategy].
@@ -168,9 +199,10 @@ public class LongTermMemory(
             apply { this.searchStrategy = searchStrategy }
 
         /**
-         * Namespace (table/collection name) for a request.
+         * Fluent setter for [enableAutomaticRetrieval].
          */
-        public var namespace: String? = null
+        public fun withEnableAutomaticRetrieval(enable: Boolean): RetrievalSettingsBuilder =
+            apply { this.enableAutomaticRetrieval = enable }
 
         /**
          * Fluent setter for [promptAugmenter].
@@ -191,8 +223,10 @@ public class LongTermMemory(
             val retrievalStorage = storage ?: error("storage must be set in retrieval { } block")
             return RetrievalSettings(
                 retrievalStorage,
+                queryExtractor,
                 searchStrategy,
                 promptAugmenter,
+                enableAutomaticRetrieval,
                 namespace
             )
         }
@@ -227,12 +261,24 @@ public class LongTermMemory(
          * }
          * ```
          */
-        public var extractionStrategy: ExtractionStrategy? = null
+        public var extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy()
+
+        /**
+         * When `true` (default), ingestion happens automatically after LLM calls or on agent
+         * completion (depending on [timing]). When `false`, the storage is still accessible
+         * for manual use inside graph strategy nodes.
+         */
+        public var enableAutomaticIngestion: Boolean = true
 
         /**
          * When to mapMessages messages. Defaults to [IngestionTiming.ON_LLM_CALL].
          */
         public var timing: IngestionTiming = IngestionTiming.ON_LLM_CALL
+
+        /**
+         * Namespace (table/collection name) for a request.
+         */
+        public var namespace: String? = null
 
         /**
          * Fluent setter for [storage].
@@ -246,9 +292,10 @@ public class LongTermMemory(
             apply { this.extractionStrategy = extractionStrategy }
 
         /**
-         * Namespace (table/collection name) for a request.
+         * Fluent setter for [enableAutomaticIngestion].
          */
-        public var namespace: String? = null
+        public fun withEnableAutomaticIngestion(enable: Boolean): IngestionSettingsBuilder =
+            apply { this.enableAutomaticIngestion = enable }
 
         /**
          * Fluent setter for [timing].
@@ -266,7 +313,7 @@ public class LongTermMemory(
          */
         public fun build(): IngestionSettings {
             val ingestionStorage = storage ?: error("storage must be set in ingestion { } block")
-            return IngestionSettings(ingestionStorage, extractionStrategy, timing, namespace)
+            return IngestionSettings(ingestionStorage, extractionStrategy, timing, enableAutomaticIngestion, namespace)
         }
     }
 
@@ -298,19 +345,19 @@ public class LongTermMemory(
                 ingestionSettings = config.ingestionSettings,
             )
 
-            val extractionStrategy = config.ingestionSettings?.extractionStrategy
-            val searchStrategy = config.retrievalSettings?.searchStrategy
+            val enableIngestion = config.ingestionSettings?.enableAutomaticIngestion == true
+            val enableRetrieval = config.retrievalSettings?.enableAutomaticRetrieval == true
 
-            if (extractionStrategy == null && searchStrategy == null) {
+            if (!enableIngestion && !enableRetrieval) {
                 return ltmFeature
             }
 
             // Note: ingestion interceptors on "Starting" events must be registered before
             // retrieval interceptors so that messages are ingested before prompt augmentation.
-            if (extractionStrategy != null) {
+            if (enableIngestion) {
                 installIngestionInterceptors(ltmFeature, pipeline)
             }
-            if (searchStrategy != null) {
+            if (enableRetrieval) {
                 installRetrievalInterceptors(ltmFeature, pipeline)
             }
             installCleanupInterceptors(ltmFeature, pipeline)
@@ -457,13 +504,13 @@ public class LongTermMemory(
             ingestion: IngestionSettings,
             messages: List<Message>,
         ) {
-            val records = ingestion.extractionStrategy?.extract(messages) ?: return
+            val records = ingestion.extractionStrategy.extract(messages)
             if (records.isEmpty()) {
                 return
             }
 
             try {
-                ingestion.storage.add(records, ingestion.namespace) //fixme: upsert?
+                ingestion.storage.add(records, ingestion.namespace)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -478,17 +525,15 @@ public class LongTermMemory(
             prompt: Prompt,
             retrieval: RetrievalSettings,
         ): Prompt? {
-            // TODO: the input for retrieval (last user message or custom) must be configurable via QueryExtractor.
-            val lastUserMessage = prompt.messages.lastOrNull { it.role == Message.Role.User } ?: return null
+            val query = retrieval.queryExtractor.extract(prompt) ?: return null
 
-            val searchStrategy = retrieval.searchStrategy ?: return null
             val searchResults = try {
-                val request = searchStrategy.create(lastUserMessage.content)
+                val request = retrieval.searchStrategy.create(query)
                 retrieval.storage.search(request, retrieval.namespace)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.error(e) { "Failed to search memory records for $searchStrategy." }
+                logger.error(e) { "Failed to search memory records for ${retrieval.searchStrategy}." }
                 emptyList()
             }
             if (searchResults.isEmpty()) {

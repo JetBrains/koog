@@ -1,6 +1,8 @@
 package ai.koog.agents.longtermmemory.storage
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
+import ai.koog.rag.base.storage.DeletionStorage
+import ai.koog.rag.base.storage.LookupStorage
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
 import ai.koog.rag.base.storage.search.KeywordSearchRequest
@@ -30,7 +32,10 @@ import kotlin.uuid.Uuid
  */
 public open class InMemoryRecordStorage(
     private val defaultNamespace: String = "default"
-) : SearchStorage<MemoryRecord, SearchRequest>, WriteStorage<MemoryRecord> {
+) : SearchStorage<MemoryRecord, SearchRequest>,
+    WriteStorage<MemoryRecord>,
+    LookupStorage<MemoryRecord>,
+    DeletionStorage {
 
     private val mutex = Mutex()
     private val namespaceRecords = mutableMapOf<String, MutableMap<String, MemoryRecord>>()
@@ -42,24 +47,29 @@ public open class InMemoryRecordStorage(
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun add(documents: List<MemoryRecord>, namespace: String?): List<String> {
-        mutex.withLock {
+        return mutex.withLock {
             val nsRecords = getRecordsForNamespace(namespace)
-            for (record in documents) {
+            documents.map { record ->
                 val recordId = record.id ?: Uuid.random().toString()
-                val recordWithId = if (record.id == null) {
-                    record.copy(id = recordId)
-                } else {
-                    record
-                }
+                val recordWithId = if (record.id == null) record.copy(id = recordId) else record
                 nsRecords[recordId] = recordWithId
+                recordId
             }
         }
-
-        return emptyList() //fixme
     }
 
     override suspend fun update(documents: Map<String, MemoryRecord>, namespace: String?): List<String> {
-        TODO("Not yet implemented")
+        return mutex.withLock {
+            val nsRecords = getRecordsForNamespace(namespace)
+            val updated = mutableListOf<String>()
+            for ((id, record) in documents) {
+                if (nsRecords.containsKey(id)) {
+                    nsRecords[id] = record.copy(id = id)
+                    updated.add(id)
+                }
+            }
+            updated
+        }
     }
 
     override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<MemoryRecord>> {
@@ -72,6 +82,26 @@ public open class InMemoryRecordStorage(
             )
 
             else -> throw UnsupportedOperationException("InMemoryRecordStorage supports only KeywordSearchRequest.")
+        }
+    }
+
+    override suspend fun delete(
+        ids: List<String>,
+        namespace: String?
+    ): List<String> {
+        return mutex.withLock {
+            val nsRecords = getRecordsForNamespace(namespace)
+            ids.filter { nsRecords.remove(it) != null }
+        }
+    }
+
+    override suspend fun get(
+        ids: List<String>,
+        namespace: String?
+    ): List<MemoryRecord> {
+        return mutex.withLock {
+            val nsRecords = getRecordsForNamespace(namespace)
+            ids.mapNotNull { nsRecords[it] }
         }
     }
 

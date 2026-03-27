@@ -93,7 +93,7 @@ public class KeywordSearchStrategy(
     public val filterExpression: String? = null
 ) : SearchStrategy {
     override fun create(query: String): SearchRequest =
-        KeywordSearchRequest(query, topK, 0,similarityThreshold, filterExpression)
+        KeywordSearchRequest(query, topK, 0, similarityThreshold, filterExpression)
 
     /**
      * Builder for [KeywordSearchStrategy].

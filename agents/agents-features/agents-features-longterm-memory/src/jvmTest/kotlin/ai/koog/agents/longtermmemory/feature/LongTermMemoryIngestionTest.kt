@@ -10,8 +10,8 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
