@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.resolveEffectiveTools
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
@@ -35,6 +36,7 @@ import com.google.genai.types.Candidate
 import com.google.genai.types.Content
 import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.GenerateContentResponse
+import com.google.genai.types.ListModelsConfig
 import com.google.genai.types.ThinkingConfig
 import com.google.genai.types.ThinkingLevel
 import com.google.genai.types.Tool
@@ -48,6 +50,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.future.await
 import java.util.concurrent.ExecutorService
+import kotlin.jvm.optionals.getOrDefault
 import kotlin.time.Clock
 
 /**
@@ -78,12 +81,13 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
      * Java-friendly constructor that accepts an [ExecutorService] for blocking stream iteration.
      * The executor is converted to a [CoroutineDispatcher] via [asCoroutineDispatcher].
      */
+    @JvmOverloads
     public constructor(
         client: Client,
-        llmProvider: LLMProvider,
-        fallbackThoughtSignature: String,
         ioExecutor: ExecutorService,
-        clock: Clock,
+        llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
+        fallbackThoughtSignature: String = DEFAULT_THOUGHT_SIGNATURE,
+        clock: Clock = Clock.System,
         models: List<LLModel> = GoogleModels.models
     ) : this(client, llmProvider, fallbackThoughtSignature, ioExecutor.asCoroutineDispatcher(), clock, models)
 
@@ -140,18 +144,11 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         throw LLMClientException(clientName = clientName, message = e.message, cause = e)
     }
 
-    private fun requireSupportedModel(model: LLModel) {
-        require(model in models) {
-            "Model ${model.id} is not in the supported models list"
-        }
-    }
-
     // region Execute
 
-    @OptIn(InternalAgentToolsApi::class)
+    @OptIn(InternalAgentToolsApi::class, InternalLLMClientApi::class)
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         requireMatchingProvider(model)
-        requireSupportedModel(model)
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -160,13 +157,13 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         return doExecute(prompt, model, tools).first()
     }
 
+    @OptIn(InternalLLMClientApi::class)
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = buildStreamFrameFlow {
         requireMatchingProvider(model)
-        requireSupportedModel(model)
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -210,14 +207,13 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         }
     }.flowOn(ioDispatcher).requireEndFrame()
 
-    @OptIn(InternalAgentToolsApi::class)
+    @OptIn(InternalAgentToolsApi::class, InternalLLMClientApi::class)
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<LLMChoice> {
         requireMatchingProvider(model)
-        requireSupportedModel(model)
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -426,9 +422,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     // region Embedding
 
+    @OptIn(InternalLLMClientApi::class)
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         requireMatchingProvider(model)
-        requireSupportedModel(model)
         require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
         }
@@ -437,9 +433,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
         val response = callApi { client.async.models.embedContent(model.id, text, null).await() }
 
-        return response.embeddings().orElse(emptyList())
+        return response.embeddings().getOrDefault(emptyList())
             .firstOrNull()
-            ?.values()?.orElse(emptyList())
+            ?.values()?.getOrDefault(emptyList())
             ?.map { it.toDouble() }
             ?: emptyList()
     }
@@ -454,7 +450,10 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     }
 
     public override suspend fun models(): List<LLModel> {
-        return models
+        val knownModelsById = this.models.associateBy { it.id }
+        return client.models.list(ListModelsConfig.builder().build()).map {
+            responseConverter.convertModel(it, llmProvider, knownModelsById)
+        }
     }
 
     override fun close() {

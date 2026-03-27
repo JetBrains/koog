@@ -52,7 +52,11 @@ class GoogleGenaiToolConversionTest {
                 description = "Get current weather for a city",
                 requiredParameters = listOf(ToolParameterDescriptor("city", "City name", ToolParameterType.String)),
                 optionalParameters = listOf(
-                    ToolParameterDescriptor("unit", "Temperature unit", ToolParameterType.Enum(arrayOf("celsius", "fahrenheit")))
+                    ToolParameterDescriptor(
+                        "unit",
+                        "Temperature unit",
+                        ToolParameterType.Enum(arrayOf("celsius", "fahrenheit"))
+                    )
                 )
             )
         )
@@ -79,8 +83,22 @@ class GoogleGenaiToolConversionTest {
     @Test
     fun `prompt with multiple tools produces config with all declarations`() = runTest {
         val tools = listOf(
-            ToolDescriptor(name = "search", description = "Search the web", requiredParameters = listOf(ToolParameterDescriptor("query", "Search query", ToolParameterType.String))),
-            ToolDescriptor(name = "calculate", description = "Do math", requiredParameters = listOf(ToolParameterDescriptor("expression", "Math expression", ToolParameterType.String)))
+            ToolDescriptor(
+                name = "search",
+                description = "Search the web",
+                requiredParameters = listOf(ToolParameterDescriptor("query", "Search query", ToolParameterType.String))
+            ),
+            ToolDescriptor(
+                name = "calculate",
+                description = "Do math",
+                requiredParameters = listOf(
+                    ToolParameterDescriptor(
+                        "expression",
+                        "Math expression",
+                        ToolParameterType.String
+                    )
+                )
+            )
         )
         val captured = mockGenerateContent()
 
@@ -123,7 +141,13 @@ class GoogleGenaiToolConversionTest {
         paramType: ToolParameterType,
         expectedSchemaType: String
     ) = runTest {
-        val tools = listOf(ToolDescriptor(name = "test_tool", description = "test", requiredParameters = listOf(ToolParameterDescriptor("param", "desc", paramType))))
+        val tools = listOf(
+            ToolDescriptor(
+                name = "test_tool",
+                description = "test",
+                requiredParameters = listOf(ToolParameterDescriptor("param", "desc", paramType))
+            )
+        )
         val captured = mockGenerateContent()
 
         subject.execute(userPrompt(), toolCapableModel, tools)
@@ -136,9 +160,17 @@ class GoogleGenaiToolConversionTest {
 
     @Test
     fun `Enum parameter produces string type with enum values`() = runTest {
-        val tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = listOf(
-            ToolParameterDescriptor("color", "Pick color", ToolParameterType.Enum(arrayOf("red", "blue", "green")))
-        )))
+        val tools = listOf(
+            ToolDescriptor(
+                name = "t", description = "d", requiredParameters = listOf(
+                    ToolParameterDescriptor(
+                        "color",
+                        "Pick color",
+                        ToolParameterType.Enum(arrayOf("red", "blue", "green"))
+                    )
+                )
+            )
+        )
         val captured = mockGenerateContent()
 
         subject.execute(userPrompt(), toolCapableModel, tools)
@@ -152,9 +184,13 @@ class GoogleGenaiToolConversionTest {
 
     @Test
     fun `List parameter produces array type with items`() = runTest {
-        val tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = listOf(
-            ToolParameterDescriptor("tags", "Tag list", ToolParameterType.List(ToolParameterType.String))
-        )))
+        val tools = listOf(
+            ToolDescriptor(
+                name = "t", description = "d", requiredParameters = listOf(
+                    ToolParameterDescriptor("tags", "Tag list", ToolParameterType.List(ToolParameterType.String))
+                )
+            )
+        )
         val captured = mockGenerateContent()
 
         subject.execute(userPrompt(), toolCapableModel, tools)
@@ -168,12 +204,20 @@ class GoogleGenaiToolConversionTest {
 
     @Test
     fun `AnyOf parameter produces anyOf list`() = runTest {
-        val tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = listOf(
-            ToolParameterDescriptor("value", "Mixed", ToolParameterType.AnyOf(arrayOf(
-                ToolParameterDescriptor("", "", ToolParameterType.String),
-                ToolParameterDescriptor("", "", ToolParameterType.Integer)
-            )))
-        )))
+        val tools = listOf(
+            ToolDescriptor(
+                name = "t", description = "d", requiredParameters = listOf(
+                    ToolParameterDescriptor(
+                        "value", "Mixed", ToolParameterType.AnyOf(
+                            arrayOf(
+                                ToolParameterDescriptor("", "", ToolParameterType.String),
+                                ToolParameterDescriptor("", "", ToolParameterType.Integer)
+                            )
+                        )
+                    )
+                )
+            )
+        )
         val captured = mockGenerateContent()
 
         subject.execute(userPrompt(), toolCapableModel, tools)
@@ -189,15 +233,21 @@ class GoogleGenaiToolConversionTest {
 
     @Test
     fun `Object parameter produces object type with properties`() = runTest {
-        val tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = listOf(
-            ToolParameterDescriptor("addr", "Address", ToolParameterType.Object(
-                properties = listOf(
-                    ToolParameterDescriptor("street", "Street name", ToolParameterType.String),
-                    ToolParameterDescriptor("zip", "Zip code", ToolParameterType.Integer)
-                ),
-                requiredProperties = listOf("street")
-            ))
-        )))
+        val tools = listOf(
+            ToolDescriptor(
+                name = "t", description = "d", requiredParameters = listOf(
+                    ToolParameterDescriptor(
+                        "addr", "Address", ToolParameterType.Object(
+                            properties = listOf(
+                                ToolParameterDescriptor("street", "Street name", ToolParameterType.String),
+                                ToolParameterDescriptor("zip", "Zip code", ToolParameterType.Integer)
+                            ),
+                            requiredProperties = listOf("street")
+                        )
+                    )
+                )
+            )
+        )
         val captured = mockGenerateContent()
 
         subject.execute(userPrompt(), toolCapableModel, tools)
@@ -232,7 +282,10 @@ class GoogleGenaiToolConversionTest {
     @Test
     fun `ToolChoice Named maps to ANY with allowedFunctionNames`() = runTest {
         val captured = mockGenerateContent()
-        subject.execute(userPrompt(GoogleParams(toolChoice = LLMParams.ToolChoice.Named("get_weather"))), toolCapableModel)
+        subject.execute(
+            userPrompt(GoogleParams(toolChoice = LLMParams.ToolChoice.Named("get_weather"))),
+            toolCapableModel
+        )
         val fc = captured.config.toolConfig().get().functionCallingConfig().get()
         fc.mode().get().toString() shouldBe "ANY"
         fc.allowedFunctionNames().get() shouldBe listOf("get_weather")

@@ -16,12 +16,19 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.utils.io.SuitableForIO
 import com.google.genai.Client
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.junitpioneer.jupiter.ExpectedToFail
+import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 import kotlin.enums.EnumEntries
 
@@ -220,8 +227,6 @@ class GoogleGenaiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testBase64EncodedAttachment(model)
     }
 
-    @Disabled
-    @ExpectedToFail("flaky! tune timeouts!")
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNative(model: LLModel) {
@@ -240,8 +245,6 @@ class GoogleGenaiIntegrationTest : ExecutorIntegrationTestBase() {
         super.integration_testStructuredOutputManual(model)
     }
 
-    @ExpectedToFail("flaky! tune timeouts!")
-    @Disabled
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) {
@@ -265,5 +268,15 @@ class GoogleGenaiIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("reasoningCapableModels")
     override fun integration_testReasoningMultiStep(model: LLModel) {
         super.integration_testReasoningMultiStep(model)
+    }
+
+    @Test
+    @Timeout(value = 1, unit = TimeUnit.MINUTES)
+    fun integration_testGetModel(): Unit = runBlocking(Dispatchers.SuitableForIO) {
+        val models = client.models()
+        models.shouldNotBeEmpty()
+        models.forEach {
+            it.provider shouldBe client.llmProvider()
+        }
     }
 }

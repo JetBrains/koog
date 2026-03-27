@@ -63,7 +63,9 @@ class GoogleGenaiUtilsTest {
             .candidates(
                 listOf(
                     Candidate.builder()
-                        .content(Content.builder().role("model").parts(listOf(responsePart, Part.fromText("final"))).build())
+                        .content(
+                            Content.builder().role("model").parts(listOf(responsePart, Part.fromText("final"))).build()
+                        )
                         .finishReason("STOP")
                         .build()
                 )
@@ -114,7 +116,11 @@ class GoogleGenaiUtilsTest {
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
-                Message.Reasoning(content = "I should search for this", encrypted = base64Signature, metaInfo = ResponseMetaInfo.Empty),
+                Message.Reasoning(
+                    content = "I should search for this",
+                    encrypted = base64Signature,
+                    metaInfo = ResponseMetaInfo.Empty
+                ),
                 Message.Tool.Call(id = "1", tool = "calc", content = "{}", metaInfo = ResponseMetaInfo.Empty),
             ),
             id = "sig-propagate-with-content"
@@ -187,7 +193,12 @@ class GoogleGenaiUtilsTest {
         val prompt = Prompt(
             messages = listOf(
                 Message.User("query", RequestMetaInfo.Empty),
-                Message.Tool.Call(id = "1", tool = "search", content = """{"query":"hello","limit":10}""", metaInfo = ResponseMetaInfo.Empty),
+                Message.Tool.Call(
+                    id = "1",
+                    tool = "search",
+                    content = """{"query":"hello","limit":10}""",
+                    metaInfo = ResponseMetaInfo.Empty
+                ),
             ),
             id = "json-test"
         )

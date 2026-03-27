@@ -1,12 +1,17 @@
 package ai.koog.prompt.executor.clients.google.genai
 
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import com.google.genai.types.Candidate
 import com.google.genai.types.GenerateContentResponse
+import com.google.genai.types.Model
 import io.github.oshai.kotlinlogging.KLogger
+import kotlin.jvm.optionals.getOrDefault
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -52,7 +57,7 @@ internal class GoogleGenaiResponseConverter(
         for (part in parts) {
             val signature = part.thoughtSignature().orElse(null)
                 ?.let { conversionUtils.signatureFromBytes(it) }
-            val isThought = part.thought().orElse(false)
+            val isThought = part.thought().getOrDefault(false)
 
             // Non-thought parts with a signature need a Reasoning carrier (unless already added)
             val needsSignatureCarrier =
@@ -107,7 +112,7 @@ internal class GoogleGenaiResponseConverter(
                     responses.add(
                         Message.Tool.Call(
                             id = Uuid.random().toString(),
-                            tool = functionCall.name().orElse(""),
+                            tool = functionCall.name().getOrDefault(""),
                             content = args,
                             metaInfo = metaInfo
                         )
@@ -115,8 +120,8 @@ internal class GoogleGenaiResponseConverter(
                 }
 
                 inlineData != null -> {
-                    val mimeType = inlineData.mimeType().orElse("application/octet-stream")
-                    val data = inlineData.data().orElse(ByteArray(0))
+                    val mimeType = inlineData.mimeType().getOrDefault("application/octet-stream")
+                    val data = inlineData.data().getOrDefault(ByteArray(0))
                     val contentPart = inlineDataToContentPart(mimeType, data)
                     responses.add(
                         Message.Assistant(
@@ -171,6 +176,83 @@ internal class GoogleGenaiResponseConverter(
             content = AttachmentContent.Binary.Bytes(data),
             mimeType = mimeType,
             format = mimeType.substringAfterLast('/'),
+        )
+    }
+
+    /**
+     * Converts a Google GenAI SDK [Model] to a Koog [LLModel].
+     *
+     * If the model's name matches a known model in [knownModelsById], the known definition
+     * (with pre-configured capabilities) is returned. Otherwise, a new [LLModel] is built
+     * from the SDK metadata with capabilities inferred from [Model.supportedActions] and [Model.thinking].
+     *
+     * **NB! This method tries its best to infer capabilities from the model's metadata or name, but it's not
+     * perfect. It's possible that the metadata does not accurately represent the model's capabilities.**
+     *
+     * @param model The SDK model descriptor returned by the list-models API.
+     * @param provider The [LLMProvider] to assign (Google or Vertex).
+     * @param knownModelsById Pre-defined models keyed by id, used for capability lookup.
+     */
+    fun convertModel(
+        model: Model,
+        provider: LLMProvider,
+        knownModelsById: Map<String, LLModel> = emptyMap()
+    ): LLModel {
+        val name = model.name().orElse(null) ?: return LLModel(provider = provider, id = "unknown")
+
+        // Strip the "models/" prefix that the API returns (e.g. "models/gemini-2.5-flash" → "gemini-2.5-flash")
+        val id = name.removePrefix("models/")
+
+        // Return the known model if we have one — it has hand-curated capabilities
+        knownModelsById[id]?.let { return it }
+
+        val actions = model.supportedActions().getOrDefault(emptyList())
+        val supportsGeneration = "generateContent" in actions
+        val supportsEmbedding = "embedContent" in actions || id.contains("embedding", ignoreCase = true)
+        val supportsAudio = id.contains("audio", ignoreCase = true)
+        val supportsImage = id.contains("image", ignoreCase = true)
+        val supportsVideo = id.contains("veo", ignoreCase = true)
+
+        // Build capabilities from SDK metadata for unknown models.
+        // Modality capabilities (Vision, Audio, Video, Document) are NOT inferred here —
+        // the API does not expose supported input modalities. Those are only set on
+        // known models with hand-curated definitions in GoogleModels.
+        val capabilities = buildList {
+            if (supportsGeneration) {
+                add(LLMCapability.Completion)
+                add(LLMCapability.Temperature)
+                add(LLMCapability.Tools)
+                add(LLMCapability.ToolChoice)
+                add(LLMCapability.MultipleChoices)
+            }
+
+            if (supportsEmbedding) {
+                add(LLMCapability.Embed)
+            }
+
+            if (supportsImage) {
+                add(LLMCapability.Vision.Image)
+            }
+
+            if (supportsAudio) {
+                add(LLMCapability.Audio)
+            }
+
+            if (supportsVideo) {
+                add(LLMCapability.Vision.Video)
+            }
+
+            if (model.thinking().getOrDefault(false)) {
+                add(LLMCapability.Thinking)
+            }
+        }
+
+        return LLModel(
+            provider = provider,
+            id = id,
+            capabilities = capabilities,
+            contextLength = model.inputTokenLimit().orElse(null)?.toLong(),
+            maxOutputTokens = model.outputTokenLimit().orElse(null)?.toLong(),
         )
     }
 }

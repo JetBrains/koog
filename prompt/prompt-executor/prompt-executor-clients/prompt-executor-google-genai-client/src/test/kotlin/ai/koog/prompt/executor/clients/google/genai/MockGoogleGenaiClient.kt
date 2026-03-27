@@ -37,7 +37,7 @@ internal fun mockGoogleGenaiClient(): Pair<Client, AsyncModels> {
     return client to asyncModels
 }
 
-private fun setField(target: Any, fieldName: String, value: Any) {
+internal fun setField(target: Any, fieldName: String, value: Any) {
     var clazz: Class<*> = target.javaClass
     while (clazz != Any::class.java) {
         try {

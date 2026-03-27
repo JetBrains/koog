@@ -678,19 +678,14 @@ class GoogleGenaiChatTest {
     }
 
     @Test
-    fun `execute rejects unsupported model`() = runTest {
-        val unknownModel = LLModel(provider = LLMProvider.Google, id = "unknown", capabilities = listOf(LLMCapability.Completion))
-        val error = assertThrows<IllegalArgumentException> {
-            subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = unknownModel)
-        }
-        error.message shouldContain "is not in the supported models list"
-    }
-
-    @Test
     fun `execute rejects tools when model lacks Tools capability and toolChoice is Required`() = runTest {
         val error = assertThrows<IllegalArgumentException> {
             subject.execute(
-                prompt = Prompt(messages = emptyList(), id = "t", params = GoogleParams(toolChoice = LLMParams.ToolChoice.Required)),
+                prompt = Prompt(
+                    messages = emptyList(),
+                    id = "t",
+                    params = GoogleParams(toolChoice = LLMParams.ToolChoice.Required)
+                ),
                 model = completionOnlyModel,
                 tools = listOf(ToolDescriptor(name = "t", description = "d", requiredParameters = emptyList()))
             )
@@ -700,7 +695,11 @@ class GoogleGenaiChatTest {
 
     @Test
     fun `executeMultipleChoices rejects model with mismatched provider`() = runTest {
-        val model = LLModel(provider = LLMProvider.Anthropic, id = "claude", capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices))
+        val model = LLModel(
+            provider = LLMProvider.Anthropic,
+            id = "claude",
+            capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices)
+        )
         val error = assertThrows<IllegalArgumentException> {
             subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = model)
         }
@@ -710,7 +709,10 @@ class GoogleGenaiChatTest {
     @Test
     fun `executeMultipleChoices rejects model without Completion capability`() = runTest {
         val error = assertThrows<IllegalArgumentException> {
-            subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = multiChoiceNoCompletionModel)
+            subject.executeMultipleChoices(
+                prompt = Prompt(messages = emptyList(), id = "t"),
+                model = multiChoiceNoCompletionModel
+            )
         }
         error.message shouldContain "does not support chat completions"
     }
@@ -718,23 +720,18 @@ class GoogleGenaiChatTest {
     @Test
     fun `executeMultipleChoices rejects model without MultipleChoices capability`() = runTest {
         val error = assertThrows<IllegalArgumentException> {
-            subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = completionOnlyModel)
+            subject.executeMultipleChoices(
+                prompt = Prompt(messages = emptyList(), id = "t"),
+                model = completionOnlyModel
+            )
         }
         error.message shouldContain "does not support multiple choices"
     }
 
     @Test
-    fun `executeMultipleChoices rejects unsupported model`() = runTest {
-        val unknownModel = LLModel(provider = LLMProvider.Google, id = "unknown", capabilities = listOf(LLMCapability.Completion, LLMCapability.MultipleChoices))
-        val error = assertThrows<IllegalArgumentException> {
-            subject.executeMultipleChoices(prompt = Prompt(messages = emptyList(), id = "t"), model = unknownModel)
-        }
-        error.message shouldContain "is not in the supported models list"
-    }
-
-    @Test
     fun `executeStreaming rejects model with mismatched provider`() = runTest {
-        val model = LLModel(provider = LLMProvider.Anthropic, id = "claude", capabilities = listOf(LLMCapability.Completion))
+        val model =
+            LLModel(provider = LLMProvider.Anthropic, id = "claude", capabilities = listOf(LLMCapability.Completion))
         val error = assertThrows<IllegalArgumentException> {
             subject.executeStreaming(prompt = Prompt(messages = emptyList(), id = "t"), model = model).collect {}
         }
@@ -747,15 +744,6 @@ class GoogleGenaiChatTest {
             subject.executeStreaming(prompt = Prompt(messages = emptyList(), id = "t"), model = noCapModel).collect {}
         }
         error.message shouldContain "does not support chat completions"
-    }
-
-    @Test
-    fun `executeStreaming rejects unsupported model`() = runTest {
-        val unknownModel = LLModel(provider = LLMProvider.Google, id = "unknown", capabilities = listOf(LLMCapability.Completion))
-        val error = assertThrows<IllegalArgumentException> {
-            subject.executeStreaming(prompt = Prompt(messages = emptyList(), id = "t"), model = unknownModel).collect {}
-        }
-        error.message shouldContain "is not in the supported models list"
     }
 
     @Test
