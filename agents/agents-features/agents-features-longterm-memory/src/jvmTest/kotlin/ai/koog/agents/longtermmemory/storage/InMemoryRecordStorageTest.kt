@@ -1,7 +1,7 @@
 package ai.koog.agents.longtermmemory.storage
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest
+import ai.koog.rag.base.storage.search.KeywordSearchRequest
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -38,7 +38,7 @@ class InMemoryRecordStorageTest {
             defaultNamespace,
         )
 
-        val searchResults = repository.search(KeywordSearchRequest(query = "content"), defaultNamespace).map { it.record.id }
+        val searchResults = repository.search(KeywordSearchRequest(queryText = "content"), defaultNamespace).map { it.document.id }
         assertEquals(2, searchResults.size)
         assertContains(searchResults, "id-1")
         assertContains(searchResults, "id-2")
@@ -56,10 +56,10 @@ class InMemoryRecordStorageTest {
             defaultNamespace,
         )
 
-        val results = repository.search(KeywordSearchRequest(query = "programming"), defaultNamespace)
+        val results = repository.search(KeywordSearchRequest(queryText = "programming"), defaultNamespace)
 
         assertEquals(2, results.size)
-        assertTrue(results.all { it.record.content.contains("programming") })
+        assertTrue(results.all { it.document.content.contains("programming") })
     }
 
     @Test
@@ -74,7 +74,7 @@ class InMemoryRecordStorageTest {
             defaultNamespace,
         )
 
-        val results = repository.search(KeywordSearchRequest(query = "Test", limit = 2), defaultNamespace)
+        val results = repository.search(KeywordSearchRequest(queryText = "Test", limit = 2), defaultNamespace)
 
         assertEquals(2, results.size)
     }
@@ -90,7 +90,7 @@ class InMemoryRecordStorageTest {
             defaultNamespace,
         )
 
-        val results = repository.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
+        val results = repository.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
 
         assertEquals(2, results.size)
     }

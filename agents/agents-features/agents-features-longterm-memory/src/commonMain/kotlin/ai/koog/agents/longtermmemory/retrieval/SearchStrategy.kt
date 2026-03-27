@@ -1,5 +1,9 @@
 package ai.koog.agents.longtermmemory.retrieval
 
+import ai.koog.rag.base.storage.search.KeywordSearchRequest
+import ai.koog.rag.base.storage.search.SearchRequest
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
+
 /**
  * Search strategy for creating search requests during prompt augmentation.
  *
@@ -89,7 +93,7 @@ public class KeywordSearchStrategy(
     public val filterExpression: String? = null
 ) : SearchStrategy {
     override fun create(query: String): SearchRequest =
-        KeywordSearchRequest(query, topK, similarityThreshold, filterExpression)
+        KeywordSearchRequest(query, topK, 0,similarityThreshold, filterExpression)
 
     /**
      * Builder for [KeywordSearchStrategy].
@@ -139,7 +143,7 @@ public class SimilaritySearchStrategy(
     public val filterExpression: String? = null
 ) : SearchStrategy {
     override fun create(query: String): SearchRequest =
-        SimilaritySearchRequest(query, topK, similarityThreshold, filterExpression)
+        SimilaritySearchRequest(query, topK, 0, similarityThreshold, filterExpression)
 
     /**
      * Builder for [SimilaritySearchStrategy].

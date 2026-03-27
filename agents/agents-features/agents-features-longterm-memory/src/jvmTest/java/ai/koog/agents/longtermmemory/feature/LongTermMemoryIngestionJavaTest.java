@@ -4,12 +4,11 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming;
 import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor;
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
-import ai.koog.agents.testing.tools.MockExecutorBuilder;
 import ai.koog.agents.testing.tools.MockPromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
+import ai.koog.rag.base.storage.search.KeywordSearchRequest;
 import ai.koog.serialization.JSONSerializer;
 import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
@@ -161,7 +160,7 @@ public class LongTermMemoryIngestionJavaTest {
                     new LongTermMemory.RetrievalSettingsBuilder()
                         .withStorage(storage)
                         .withSearchStrategy(query ->
-                            new KeywordSearchRequest(query, 15, 0.5, null)
+                            new KeywordSearchRequest(query, 15, 0, 0.5, null)
                         )
                         .build()
                 );

@@ -1,8 +1,11 @@
 package ai.koog.agents.longtermmemory.retrieval
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
+import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
+import ai.koog.rag.base.storage.SearchStorage
+import ai.koog.rag.base.storage.search.SearchRequest
 
 /**
  * Settings controlling how memory records are retrieved and injected into prompts (RAG).
@@ -14,7 +17,7 @@ import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmente
  */
 @ExperimentalAgentsApi
 public data class RetrievalSettings(
-    val storage: RetrievalStorage,
+    val storage: SearchStorage<MemoryRecord, SearchRequest>,
     val searchStrategy: SearchStrategy? = null,
     val promptAugmenter: PromptAugmenter = SystemPromptAugmenter(),
     val namespace: String? = null

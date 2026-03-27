@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
@@ -13,7 +12,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringMemoryRecordExtractor
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest
 import ai.koog.agents.longtermmemory.retrieval.KeywordSearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
@@ -26,6 +24,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.rag.base.storage.search.KeywordSearchRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -128,7 +127,7 @@ class LongTermMemoryRetrievalTest {
                     this.storage = storage
                     searchStrategy = SearchStrategy { _ ->
                         searchCalled = true
-                        KeywordSearchRequest(query = "Kotlin")
+                        KeywordSearchRequest(queryText = "Kotlin")
                     }
                 }
             }
@@ -168,7 +167,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = SearchStrategy { _ -> KeywordSearchRequest(query = "Kotlin") }
+                    searchStrategy = SearchStrategy { _ -> KeywordSearchRequest(queryText = "Kotlin") }
                 }
             }
         }
@@ -479,7 +478,7 @@ class LongTermMemoryRetrievalTest {
                 retrieval {
                     storage = retrievalStorage
                     searchStrategy = SearchStrategy { _ ->
-                        KeywordSearchRequest(query = "Kotlin")
+                        KeywordSearchRequest(queryText = "Kotlin")
                     }
                     promptAugmenter = UserPromptAugmenter()
                 }
@@ -502,8 +501,8 @@ class LongTermMemoryRetrievalTest {
         )
 
         // Verify ingestion stored the ORIGINAL user message, not the augmented one
-        val ingestedRecords = ingestionStorage.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
+        val ingestedRecords = ingestionStorage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
         assertEquals(1, ingestedRecords.size)
-        assertEquals(originalUserMessage, ingestedRecords.first().record.content)
+        assertEquals(originalUserMessage, ingestedRecords.first().document.content)
     }
 }

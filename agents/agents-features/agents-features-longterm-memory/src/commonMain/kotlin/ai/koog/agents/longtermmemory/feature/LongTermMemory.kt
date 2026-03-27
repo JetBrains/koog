@@ -19,7 +19,6 @@ import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
-import ai.koog.agents.longtermmemory.retrieval.RetrievalStorage
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
@@ -27,7 +26,9 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toMessageResponses
+import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
+import ai.koog.rag.base.storage.search.SearchRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -137,7 +138,7 @@ public class LongTermMemory(
          * The retrieval storage to search for relevant memory records.
          * Must be set explicitly in the retrieval { } block.
          */
-        public var storage: RetrievalStorage? = null
+        public var storage: SearchStorage<MemoryRecord, SearchRequest>? = null
 
         /**
          * The search strategy that defines how to search the retrieval storage.
@@ -158,7 +159,7 @@ public class LongTermMemory(
         /**
          * Fluent setter for [storage].
          */
-        public fun withStorage(storage: RetrievalStorage): RetrievalSettingsBuilder = apply { this.storage = storage }
+        public fun withStorage(storage: SearchStorage<MemoryRecord, SearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
 
         /**
          * Fluent setter for [searchStrategy].
@@ -517,9 +518,9 @@ public class LongTermMemory(
     }
 
     /**
-     * Property getter for [RetrievalStorage] for usage inside strategy nodes
+     * Property getter for [SearchStorage] for usage inside strategy nodes
      */
-    public val retrievalStorage: RetrievalStorage?
+    public val retrievalStorage: SearchStorage<MemoryRecord, SearchRequest>?
         get() = retrievalSettings?.storage
 
     /**

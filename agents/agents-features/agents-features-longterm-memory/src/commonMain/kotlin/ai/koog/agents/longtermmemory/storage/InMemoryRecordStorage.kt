@@ -1,18 +1,20 @@
 package ai.koog.agents.longtermmemory.storage
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest
-import ai.koog.agents.longtermmemory.retrieval.RetrievalStorage
-import ai.koog.agents.longtermmemory.retrieval.SearchRequest
-import ai.koog.agents.longtermmemory.retrieval.SearchResult
+import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
+import ai.koog.rag.base.storage.search.KeywordSearchRequest
+import ai.koog.rag.base.storage.search.Score
+import ai.koog.rag.base.storage.search.ScoreMetric
+import ai.koog.rag.base.storage.search.SearchRequest
+import ai.koog.rag.base.storage.search.SearchResult
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * In-memory implementation of [ai.koog.agents.longtermmemory.retrieval.RetrievalStorage]
+ * In-memory implementation of [SearchStorage]
  * and [WriteStorage] that stores records in a map.
  *
  * This implementation is useful for testing, development, and scenarios where persistence
@@ -28,7 +30,7 @@ import kotlin.uuid.Uuid
  */
 public open class InMemoryRecordStorage(
     private val defaultNamespace: String = "default"
-) : RetrievalStorage, WriteStorage<MemoryRecord> {
+) : SearchStorage<MemoryRecord, SearchRequest>, WriteStorage<MemoryRecord> {
 
     private val mutex = Mutex()
     private val namespaceRecords = mutableMapOf<String, MutableMap<String, MemoryRecord>>()
@@ -60,12 +62,12 @@ public open class InMemoryRecordStorage(
         TODO("Not yet implemented")
     }
 
-    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult> {
+    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<MemoryRecord>> {
         return when (request) {
             is KeywordSearchRequest -> searchByText( // TODO: use filterExpression after switching to Filter DSL
-                request.query,
+                request.queryText,
                 request.limit,
-                request.similarityThreshold,
+                request.minScore ?: 0.0,
                 namespace
             )
 
@@ -78,14 +80,14 @@ public open class InMemoryRecordStorage(
         limit: Int,
         similarityThreshold: Double,
         namespace: String?
-    ): List<SearchResult> {
+    ): List<SearchResult<MemoryRecord>> {
         val allRecords = mutex.withLock { getRecordsForNamespace(namespace).values.toList() }
         val queryLower = query.lowercase()
 
         return allRecords
             .filter { it.content.lowercase().contains(queryLower) }
-            .map { record -> SearchResult(record, 1.0) }
-            .filter { it.similarity >= similarityThreshold }
+            .map { record -> SearchResult(record, Score(1.0, ScoreMetric.COSINE_SIMILARITY)) }
+            .filter { it.score.value >= similarityThreshold }
             .take(limit)
     }
 
