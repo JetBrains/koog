@@ -66,7 +66,7 @@ import kotlin.time.Clock
  * @property ioDispatcher Dispatcher for blocking stream iteration. Defaults to [Dispatchers.IO].
  *   Pass a custom dispatcher for virtual threads, test dispatchers, or application-specific thread pools.
  * @property clock Clock instance used for tracking response metadata timestamps.
- * @property models List of [LLModel] instances returned by [models]. Defaults to [GoogleModels.models].
+ * @property knownModels List of known [LLModel] used in [knownModels]. Defaults to [GoogleModels.models].
  */
 public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val client: Client,
@@ -74,7 +74,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val fallbackThoughtSignature: String = DEFAULT_THOUGHT_SIGNATURE,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO,
     private val clock: Clock = Clock.System,
-    private val models: List<LLModel> = GoogleModels.models
+    private val knownModels: List<LLModel> = GoogleModels.models
 ) : LLMClient(), LLMEmbeddingProvider {
 
     /**
@@ -88,8 +88,15 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
         fallbackThoughtSignature: String = DEFAULT_THOUGHT_SIGNATURE,
         clock: Clock = Clock.System,
-        models: List<LLModel> = GoogleModels.models
-    ) : this(client, llmProvider, fallbackThoughtSignature, ioExecutor.asCoroutineDispatcher(), clock, models)
+        knownModels: List<LLModel> = GoogleModels.models
+    ) : this(
+        client = client,
+        llmProvider = llmProvider,
+        fallbackThoughtSignature = fallbackThoughtSignature,
+        ioDispatcher = ioExecutor.asCoroutineDispatcher(),
+        clock = clock,
+        knownModels = knownModels
+    )
 
     public companion object {
         private val logger = KotlinLogging.logger { }
@@ -450,7 +457,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     }
 
     public override suspend fun models(): List<LLModel> {
-        val knownModelsById = this.models.associateBy { it.id }
+        val knownModelsById = this.knownModels.associateBy { it.id }
         return client.models.list(ListModelsConfig.builder().build()).map {
             responseConverter.convertModel(it, llmProvider, knownModelsById)
         }

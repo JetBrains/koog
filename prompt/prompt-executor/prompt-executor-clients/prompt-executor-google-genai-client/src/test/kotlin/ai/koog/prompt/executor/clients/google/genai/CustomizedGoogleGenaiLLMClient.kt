@@ -28,7 +28,7 @@ import com.google.genai.types.ToolConfig
 internal class CustomizedGoogleGenaiLLMClient(
     client: com.google.genai.Client,
     models: List<LLModel> = GoogleModels.models
-) : GoogleGenaiLLMClient(client, models = models) {
+) : GoogleGenaiLLMClient(client=client, knownModels = models) {
 
     var contentsCustomized = false
         private set
