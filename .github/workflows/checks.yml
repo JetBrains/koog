@@ -143,7 +143,6 @@ jobs:
           cache-read-only: true
 
       - name: Restore Gradle build cache
-        if: matrix.os == 'ubuntu-latest'
         uses: actions/cache/restore@v4
         with:
           path: ~/.gradle/caches/build-cache-1
