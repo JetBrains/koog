@@ -166,10 +166,21 @@ public class LongTermMemory(
             apply { this.searchStrategy = searchStrategy }
 
         /**
+         * Namespace (table/collection name) for a request.
+         */
+        public var namespace: String? = null
+
+        /**
          * Fluent setter for [promptAugmenter].
          */
         public fun withPromptAugmenter(augmenter: PromptAugmenter): RetrievalSettingsBuilder =
             apply { this.promptAugmenter = augmenter }
+
+        /**
+         * Fluent setter for [namespace].
+         */
+        public fun withNamespace(namespace: String): RetrievalSettingsBuilder =
+            apply { this.namespace = namespace }
 
         /**
          * RetrievalSettings builder.
@@ -179,7 +190,8 @@ public class LongTermMemory(
             return RetrievalSettings(
                 retrievalStorage,
                 searchStrategy,
-                promptAugmenter
+                promptAugmenter,
+                namespace
             )
         }
     }
@@ -232,16 +244,27 @@ public class LongTermMemory(
             apply { this.extractor = extractor }
 
         /**
+         * Namespace (table/collection name) for a request.
+         */
+        public var namespace: String? = null
+
+        /**
          * Fluent setter for [timing].
          */
         public fun withTiming(timing: IngestionTiming): IngestionSettingsBuilder = apply { this.timing = timing }
+
+        /**
+         * Fluent setter for [namespace].
+         */
+        public fun withNamespace(namespace: String): IngestionSettingsBuilder =
+            apply { this.namespace = namespace }
 
         /**
          * IngestionSettings builder.
          */
         public fun build(): IngestionSettings {
             val ingestionStorage = storage ?: error("storage must be set in ingestion { } block")
-            return IngestionSettings(ingestionStorage, extractor, timing)
+            return IngestionSettings(ingestionStorage, extractor, timing, namespace)
         }
     }
 
