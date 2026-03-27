@@ -20,22 +20,22 @@ import kotlinx.serialization.json.JsonPrimitive
  * @property lastMessageOnly When `true`, only the last message for each matching role is extracted.
  *   Defaults to `false`.
  */
-public class FilteringMemoryRecordExtractor(
+public class FilteringExtractionStrategy(
     public val messageRolesToExtract: Set<Message.Role> = setOf(Message.Role.User, Message.Role.Assistant),
     public val lastMessageOnly: Boolean = false,
-) : MemoryRecordExtractor {
+) : ExtractionStrategy {
 
     private val messageRoleFieldNameInMetadata = "messageRole"
 
     /**
-     * Builder for [FilteringMemoryRecordExtractor].
+     * Builder for [FilteringExtractionStrategy].
      *
-     * Provides a fluent API for constructing a [FilteringMemoryRecordExtractor],
+     * Provides a fluent API for constructing a [FilteringExtractionStrategy],
      * which is convenient for Java users.
      *
      * Example usage (Java):
      * ```java
-     * new FilteringMemoryRecordExtractor.Builder()
+     * new FilteringExtractionStrategy.Builder()
      *     .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
      *     .withLastMessageOnly(true)
      *     .build()
@@ -61,9 +61,9 @@ public class FilteringMemoryRecordExtractor(
         public fun withLastMessageOnly(lastMessageOnly: Boolean): Builder =
             apply { this.lastMessageOnly = lastMessageOnly }
 
-        /** Builds a [FilteringMemoryRecordExtractor] from the current settings. */
-        public fun build(): FilteringMemoryRecordExtractor =
-            FilteringMemoryRecordExtractor(extractRoles, lastMessageOnly)
+        /** Builds a [FilteringExtractionStrategy] from the current settings. */
+        public fun build(): FilteringExtractionStrategy =
+            FilteringExtractionStrategy(extractRoles, lastMessageOnly)
     }
 
     override suspend fun extract(messages: List<Message>): List<MemoryRecord> {

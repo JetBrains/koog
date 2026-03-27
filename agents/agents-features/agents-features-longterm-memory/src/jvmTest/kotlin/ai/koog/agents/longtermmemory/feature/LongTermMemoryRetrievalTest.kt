@@ -10,7 +10,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringMemoryRecordExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.KeywordSearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
@@ -411,7 +411,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor()
+                    extractionStrategy = FilteringExtractionStrategy()
                 }
             }
         }
@@ -484,7 +484,7 @@ class LongTermMemoryRetrievalTest {
                 }
                 ingestion {
                     storage = ingestionStorage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_LLM_CALL
                 }
             }

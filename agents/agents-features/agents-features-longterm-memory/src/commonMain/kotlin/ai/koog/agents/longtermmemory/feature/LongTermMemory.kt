@@ -16,7 +16,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
@@ -114,7 +114,7 @@ public class LongTermMemory(
          * Example usage:
          * ```kotlin
          * ingestion {
-         *     extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+         *     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
          * }
          * ```
          */
@@ -212,22 +212,22 @@ public class LongTermMemory(
          * The extractor that defines how to transform messages into memory records.
          *
          * Pre-built ingesters are available:
-         * - [ai.koog.agents.longtermmemory.ingestion.extraction.FilteringMemoryRecordExtractor] - Filters messages by role
+         * - [ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy] - Filters messages by role
          *
          * Example usage:
          * ```kotlin
          * // Use pre-built extractor with parameters
-         * extractor = FilteringMemoryRecordExtractor(
+         * extractionStrategy = FilteringExtractionStrategy(
          *     messageRolesToExtract = setOf(Message.Role.User)
          * )
          *
          * // Or use lambda for custom logic
-         * extractor = MemoryRecordExtractor { messages ->
-         *     messages.map { MemoryRecord.Plain(content = it.content) }
+         * extractionStrategy = ExtractionStrategy { messages ->
+         *     messages.map { MemoryRecord(content = it.content) }
          * }
          * ```
          */
-        public var extractor: MemoryRecordExtractor? = null
+        public var extractionStrategy: ExtractionStrategy? = null
 
         /**
          * When to mapMessages messages. Defaults to [IngestionTiming.ON_LLM_CALL].
@@ -240,10 +240,10 @@ public class LongTermMemory(
         public fun withStorage(storage: WriteStorage<MemoryRecord>): IngestionSettingsBuilder = apply { this.storage = storage }
 
         /**
-         * Fluent setter for [extractor].
+         * Fluent setter for [extractionStrategy].
          */
-        public fun withExtractor(extractor: MemoryRecordExtractor): IngestionSettingsBuilder =
-            apply { this.extractor = extractor }
+        public fun withExtractionStrategy(extractionStrategy: ExtractionStrategy): IngestionSettingsBuilder =
+            apply { this.extractionStrategy = extractionStrategy }
 
         /**
          * Namespace (table/collection name) for a request.
@@ -266,7 +266,7 @@ public class LongTermMemory(
          */
         public fun build(): IngestionSettings {
             val ingestionStorage = storage ?: error("storage must be set in ingestion { } block")
-            return IngestionSettings(ingestionStorage, extractor, timing, namespace)
+            return IngestionSettings(ingestionStorage, extractionStrategy, timing, namespace)
         }
     }
 
@@ -298,16 +298,16 @@ public class LongTermMemory(
                 ingestionSettings = config.ingestionSettings,
             )
 
-            val ingestionExtractor = config.ingestionSettings?.memoryRecordExtractor
+            val extractionStrategy = config.ingestionSettings?.extractionStrategy
             val searchStrategy = config.retrievalSettings?.searchStrategy
 
-            if (ingestionExtractor == null && searchStrategy == null) {
+            if (extractionStrategy == null && searchStrategy == null) {
                 return ltmFeature
             }
 
             // Note: ingestion interceptors on "Starting" events must be registered before
             // retrieval interceptors so that messages are ingested before prompt augmentation.
-            if (ingestionExtractor != null) {
+            if (extractionStrategy != null) {
                 installIngestionInterceptors(ltmFeature, pipeline)
             }
             if (searchStrategy != null) {
@@ -457,13 +457,13 @@ public class LongTermMemory(
             ingestion: IngestionSettings,
             messages: List<Message>,
         ) {
-            val records = ingestion.memoryRecordExtractor?.extract(messages) ?: return
+            val records = ingestion.extractionStrategy?.extract(messages) ?: return
             if (records.isEmpty()) {
                 return
             }
 
             try {
-                ingestion.storage.add(records, ingestion.namespace)
+                ingestion.storage.add(records, ingestion.namespace) //fixme: upsert?
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

@@ -10,8 +10,8 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringMemoryRecordExtractor
-import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -87,7 +87,7 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Default FilteringMemoryRecordExtractor (User + Assistant)
+    // Default FilteringExtractionStrategy (User + Assistant)
     // ==========================================
 
     @Test
@@ -107,7 +107,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor()
+                    extractionStrategy = FilteringExtractionStrategy()
                 }
             }
         }
@@ -148,7 +148,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -180,7 +180,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_LLM_CALL
                 }
             }
@@ -218,7 +218,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(messageRolesToExtract = setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(messageRolesToExtract = setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -307,7 +307,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -338,7 +338,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_LLM_CALL
                 }
             }
@@ -377,7 +377,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -429,7 +429,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -462,7 +462,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -496,7 +496,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User, Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User, Message.Role.Assistant))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -517,7 +517,7 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Custom MemoryRecordExtractor
+    // Custom ExtractionStrategy
     // ==========================================
 
     @Test
@@ -537,7 +537,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = MemoryRecordExtractor { messages ->
+                    extractionStrategy = ExtractionStrategy { messages ->
                         messages.filter { it.role == Message.Role.Assistant }
                             .flatMap { it.content.split(". ") }
                             .map { it.trim().removeSuffix(".") }
@@ -574,7 +574,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = MemoryRecordExtractor { messages ->
+                    extractionStrategy = ExtractionStrategy { messages ->
                         messages
                             .filter { it.role == Message.Role.Assistant }
                             .map { MemoryRecord(content = it.content.uppercase()) }
@@ -614,7 +614,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = MemoryRecordExtractor { emptyList() }
+                    extractionStrategy = ExtractionStrategy { emptyList() }
                 }
             }
         }

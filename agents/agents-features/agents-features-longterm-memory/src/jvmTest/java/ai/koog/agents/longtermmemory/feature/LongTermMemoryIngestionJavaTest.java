@@ -3,7 +3,7 @@ package ai.koog.agents.longtermmemory.feature;
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming;
-import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor;
+import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
 import ai.koog.agents.testing.tools.MockPromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
@@ -43,8 +43,8 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractor(
-                            MemoryRecordExtractor.builder()
+                        .withExtractionStrategy(
+                            ExtractionStrategy.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                                 .withLastMessageOnly(false)
@@ -78,8 +78,8 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractor(
-                            MemoryRecordExtractor.builder()
+                        .withExtractionStrategy(
+                            ExtractionStrategy.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                                 .build()
@@ -112,8 +112,8 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractor(
-                            MemoryRecordExtractor.builder()
+                        .withExtractionStrategy(
+                            ExtractionStrategy.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.Assistant)))
                                 .withLastMessageOnly(true)
@@ -147,8 +147,8 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractor(
-                            MemoryRecordExtractor.builder()
+                        .withExtractionStrategy(
+                            ExtractionStrategy.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                                 .build()

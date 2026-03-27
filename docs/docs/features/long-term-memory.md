@@ -116,7 +116,7 @@ Use ingestion without retrieval to build up a memory storage over time:
         ingestion {
             storage = myVectorDbStorage
             namespace = "my-collection"  // optional: scope to a specific namespace/collection
-            extractor = FilteringMemoryRecordExtractor(
+            extractor = FilteringExtractionStrategy(
                 messageRolesToExtract = setOf(Message.Role.User, Message.Role.Assistant)
             )
             timing = IngestionTiming.ON_LLM_CALL
@@ -130,7 +130,7 @@ Use ingestion without retrieval to build up a memory storage over time:
     var ingestionSettings = new LongTermMemory.IngestionSettingsBuilder()
         .withStorage(myVectorDbStorage)
         .withExtractor(
-            MemoryRecordExtractor.builder()
+            ExtractionStrategy.builder()
                 .filtering()
                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                 .withLastMessageOnly(false)
