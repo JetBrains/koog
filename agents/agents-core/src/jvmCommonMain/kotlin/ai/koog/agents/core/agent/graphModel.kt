@@ -6,9 +6,6 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
-import io.github.oshai.kotlinlogging.KotlinLogging
-
-private val logger = KotlinLogging.logger {}
 
 /**
  * The type of a node in the diagram model.
@@ -74,7 +71,7 @@ internal fun AIAgentGraphStrategy<*, *>.collectGraphData(): GraphData {
 }
 
 /**
- * Collects graph data for a single level (strategy or subgraph) by traversing from start node.
+ * Collects graph data for a single level (strategy or subgraph) by traversing from the start node.
  * Subgraphs encountered during traversal are collected recursively.
  */
 private fun collectGraphLevel(
@@ -148,13 +145,8 @@ private data class RawEdgeInfo(
  * Extension function to extract edges from a node using public API only.
  */
 private fun AIAgentNodeBase<*, *>.extractEdges(): List<RawEdgeInfo> =
-    try {
-        this.edges.mapNotNull { edge ->
-            extractEdgeInfo(edge)
-        }
-    } catch (e: ReflectiveOperationException) {
-        logger.warn(e) { "Could not extract edges from node '$name'" }
-        emptyList()
+    this.edges.map { edge ->
+        extractEdgeInfo(edge)
     }
 
 /**
@@ -175,17 +167,12 @@ private fun extractConditionLabel(str: String?): String? =
  * Extracts edge information from an AIAgentEdge.
  * Uses the public `toNode` property directly; reflection only for `forwardOutput` (internal).
  */
-private fun extractEdgeInfo(edge: AIAgentEdge<*, *>): RawEdgeInfo? {
+private fun extractEdgeInfo(edge: AIAgentEdge<*, *>): RawEdgeInfo {
     val toNode = edge.toNode
 
-    val forwardOutput =
-        try {
-            edge::class.java.methods
-                .firstOrNull { it.name == "getForwardOutput\$agents_core" || it.name == "getForwardOutput" }
-                ?.invoke(edge)
-        } catch (_: ReflectiveOperationException) {
-            null
-        }
+    val forwardOutput = edge::class.java.methods
+        .firstOrNull { it.name == $$"getForwardOutput$agents_core" || it.name == "getForwardOutput" }
+        ?.invoke(edge)
 
     return RawEdgeInfo(toNode, extractConditionFromForwardOutput(forwardOutput))
 }
