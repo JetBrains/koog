@@ -1,5 +1,7 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
@@ -9,6 +11,8 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.ext.agent.CriticResult
+import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -214,6 +218,133 @@ class MermaidDiagramGeneratorTest {
                 [*] --> node1
                 node1 --> sg1
                 sg1 --> [*]
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Should generate diagram via MermaidDiagramGenerator object`() {
+        val myStrategy = strategy<String, String>("object-test") {
+            val nodeCallLLM by nodeLLMRequest()
+            edge(nodeStart forwardTo nodeCallLLM)
+            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+        }
+
+        val fromExtension = myStrategy.asMermaidDiagram()
+        val fromObject = MermaidDiagramGenerator.generate(myStrategy)
+
+        fromObject shouldBe fromExtension
+    }
+
+    @Test
+    fun `Should generate diagram for minimal graph with no intermediate nodes`() {
+        val myStrategy = strategy<String, String>("minimal-strategy") {
+            nodeStart then nodeFinish
+        }
+
+        val diagram = myStrategy.asMermaidDiagram()
+
+        diagram shouldBe
+            // language=mermaid
+            """
+            ---
+            title: minimal-strategy
+            ---
+            stateDiagram
+
+                [*] --> [*]
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Should sanitize special characters in node names for Mermaid IDs`() {
+        val myStrategy = strategy<String, String>("special-chars") {
+            val node1 by node<String, String>("node-with-dashes") { it }
+            val node2 by node<String, String>("node.with.dots") { it }
+
+            nodeStart then node1 then node2 then nodeFinish
+        }
+
+        val diagram = myStrategy.asMermaidDiagram()
+
+        diagram shouldBe
+            // language=mermaid
+            """
+            ---
+            title: special-chars
+            ---
+            stateDiagram
+                state "node-with-dashes" as node_with_dashes
+                state "node.with.dots" as node_with_dots
+
+                [*] --> node_with_dashes
+                node_with_dashes --> node_with_dots
+                node_with_dots --> [*]
+            """.trimIndent()
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    @Test
+    fun `Should generate diagram for strategy with subgraphWithVerification`() {
+        val myStrategy = strategy<String, String>("verification-strategy") {
+            val node1 by node<String, String>("prepare") { it }
+
+            val verify by subgraphWithVerification<String>(
+                toolSelectionStrategy = ToolSelectionStrategy.NONE,
+            ) { input -> "Verify: $input" }
+
+            val extractResult by node<CriticResult<String>, String>("extractResult") {
+                it.input
+            }
+
+            nodeStart then node1 then verify then extractResult then nodeFinish
+        }
+
+        val diagram = myStrategy.asMermaidDiagram()
+
+        diagram shouldBe
+            // language=mermaid
+            """
+            ---
+            title: verification-strategy
+            ---
+            stateDiagram
+                state "prepare" as prepare
+                state "extractResult" as extractResult
+                state "verify" as verify {
+                    state "saveInput" as saveInput
+                    state "provideResult" as provideResult
+                    state "verifyTask" as verifyTask {
+                        state "setupTask" as setupTask
+                        state "nodeCallLLM" as nodeCallLLM
+                        state "nodeDecide" as nodeDecide
+                        state "callToolsHacked" as callToolsHacked
+                        state "handleAssistantMessage" as handleAssistantMessage
+                        state "finalizeTask" as finalizeTask
+                        state "sendToolsResults" as sendToolsResults
+
+                        [*] --> setupTask
+                        setupTask --> nodeCallLLM
+                        nodeCallLLM --> nodeDecide
+                        nodeDecide --> callToolsHacked : transformed
+                        nodeDecide --> handleAssistantMessage : transformed
+                        nodeDecide --> [*] : transformed
+                        callToolsHacked --> finalizeTask : transformed
+                        callToolsHacked --> sendToolsResults
+                        handleAssistantMessage --> nodeDecide
+                        finalizeTask --> [*]
+                        sendToolsResults --> nodeDecide
+                    }
+
+                    [*] --> saveInput
+                    saveInput --> verifyTask
+                    verifyTask --> provideResult
+                    provideResult --> [*]
+                }
+
+                [*] --> prepare
+                prepare --> verify
+                verify --> extractResult
+                extractResult --> [*]
             """.trimIndent()
     }
 }
