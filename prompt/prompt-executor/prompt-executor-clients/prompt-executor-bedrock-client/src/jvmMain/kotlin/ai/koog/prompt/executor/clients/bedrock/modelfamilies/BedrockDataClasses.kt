@@ -22,6 +22,7 @@ public data class BedrockAnthropicInvokeModel(
     val messages: List<BedrockAnthropicInvokeModelMessage> = emptyList(),
     val tools: List<BedrockAnthropicInvokeModelTool>? = null,
     @SerialName("tool_choice") val toolChoice: BedrockAnthropicToolChoice? = null,
+    @SerialName("output_config") val outputConfig: BedrockAnthropicOutputConfig? = null,
 ) {
     /**
      * Provides shared logic and utility functions for managing and interacting with the
@@ -186,6 +187,28 @@ public data class BedrockAnthropicInvokeModelToolResultContent(
 public data class BedrockAnthropicToolChoice(
     val type: String,
     val name: String? = null,
+)
+
+/**
+ * Represents the output configuration for Anthropic via Bedrock.
+ *
+ * @property format The requested output format of the response.
+ */
+@Serializable
+public data class BedrockAnthropicOutputConfig(
+    val format: BedrockAnthropicOutputConfigFormat,
+)
+
+/**
+ * Represents the output format for Anthropic via Bedrock.
+ *
+ * @property schema The output format's schema.
+ * @property type The schema's type, such as "json_schema".
+ */
+@Serializable
+public data class BedrockAnthropicOutputConfigFormat(
+    val schema: JsonObject,
+    val type: String
 )
 
 /**

@@ -563,7 +563,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
             is BedrockModelFamilies.AnthropicClaude -> {
                 json.encodeToString(
                     BedrockAnthropicInvokeModel.serializer(),
-                    BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
+                    BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
                 )
             }
 

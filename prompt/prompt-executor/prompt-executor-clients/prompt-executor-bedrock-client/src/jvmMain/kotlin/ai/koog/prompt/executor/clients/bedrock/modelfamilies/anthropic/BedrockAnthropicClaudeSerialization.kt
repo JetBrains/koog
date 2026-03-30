@@ -11,9 +11,13 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInv
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelTool
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicOutputConfig
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicOutputConfigFormat
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicResponse
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -125,6 +129,7 @@ internal object BedrockAnthropicClaudeSerialization {
 
     internal fun createAnthropicRequest(
         prompt: Prompt,
+        model: LLModel,
         tools: List<ToolDescriptor>
     ): BedrockAnthropicInvokeModel {
         val systemText = prompt.messages.filterIsInstance<Message.System>().joinToString("\n") { it.content }
@@ -176,6 +181,22 @@ internal object BedrockAnthropicClaudeSerialization {
             null
         }
 
+        val bedrockOutputSchema = if (
+            model.supports(LLMCapability.Schema.JSON.Basic) ||
+            model.supports(LLMCapability.Schema.JSON.Standard)
+        ) {
+            (prompt.params.schema as? LLMParams.Schema.JSON)?.let { json ->
+                BedrockAnthropicOutputConfig(
+                    format = BedrockAnthropicOutputConfigFormat(
+                        type = "json_schema",
+                        schema = json.schema
+                    )
+                )
+            }
+        } else {
+            null
+        }
+
         return BedrockAnthropicInvokeModel(
             anthropicVersion = "bedrock-2023-05-31",
             maxTokens = maxTokens,
@@ -183,7 +204,8 @@ internal object BedrockAnthropicClaudeSerialization {
             temperature = temperature,
             messages = messages,
             tools = bedrockTools,
-            toolChoice = bedrockToolChoice
+            toolChoice = bedrockToolChoice,
+            outputConfig = bedrockOutputSchema
         )
     }
 

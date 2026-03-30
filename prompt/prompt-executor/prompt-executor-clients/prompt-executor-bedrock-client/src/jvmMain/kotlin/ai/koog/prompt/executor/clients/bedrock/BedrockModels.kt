@@ -125,6 +125,11 @@ public object BedrockModels : LLModelDefinitions {
         LLMCapability.Embed
     )
 
+    private val structuredOutputCapabilities: List<LLMCapability> = listOf(
+        LLMCapability.Schema.JSON.Basic,
+        LLMCapability.Schema.JSON.Standard
+    )
+
     // Full capabilities (multimodal + tools)
     private val fullCapabilities: List<LLMCapability> =
         standardCapabilities + toolCapabilities + multimodalCapabilities
@@ -133,6 +138,13 @@ public object BedrockModels : LLModelDefinitions {
     private val novaCapabilities: List<LLMCapability> = standardCapabilities + listOf(
         LLMCapability.Tools,
     )
+
+    // Add JSON structured output capabilities to model if not present
+    private fun LLModel.withStructuredOutputCapabilities(): LLModel {
+        val existingCapabilities = this.capabilities.orEmpty()
+        val combinedCapabilities = (existingCapabilities + structuredOutputCapabilities).distinct()
+        return this.copy(capabilities = combinedCapabilities)
+    }
 
     /**
      * Claude 4 Opus - Anthropic's previous flagship model
@@ -174,7 +186,7 @@ public object BedrockModels : LLModelDefinitions {
      *
      */
     public val AnthropicClaude45Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4_5,
+        AnthropicModels.Opus_4_5.withStructuredOutputCapabilities(),
         "anthropic.claude-opus-4-5-20251101-v1:0",
     ).effectiveModel
 
@@ -185,7 +197,7 @@ public object BedrockModels : LLModelDefinitions {
      *
      */
     public val AnthropicClaude46Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4_6,
+        AnthropicModels.Opus_4_6.withStructuredOutputCapabilities(),
         "anthropic.claude-opus-4-6-v1",
     ).effectiveModel
 
@@ -218,7 +230,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Optimized for both quality and efficiency
      */
     public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4_5,
+        AnthropicModels.Sonnet_4_5.withStructuredOutputCapabilities(),
         "anthropic.claude-sonnet-4-5-20250929-v1:0",
     ).effectiveModel
 
@@ -227,7 +239,7 @@ public object BedrockModels : LLModelDefinitions {
      * It’s a full upgrade of the model’s skills across coding, computer use, long-context reasoning, agent planning, knowledge work, and design.
      */
     public val AnthropicClaude4_6Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4_6,
+        AnthropicModels.Sonnet_4_6.withStructuredOutputCapabilities(),
         "anthropic.claude-sonnet-4-6",
     ).effectiveModel
 
@@ -258,7 +270,7 @@ public object BedrockModels : LLModelDefinitions {
      * and high-volume user experiences.
      */
     public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_4_5,
+        AnthropicModels.Haiku_4_5.withStructuredOutputCapabilities(),
         "anthropic.claude-haiku-4-5-20251001-v1:0",
     ).effectiveModel
 

@@ -3,7 +3,9 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.anthropic
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
@@ -12,10 +14,16 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.serializer
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -38,6 +46,19 @@ class BedrockAnthropicClaudeSerializationTest {
     private val toolName = "get_weather"
     private val toolDescription = "Get current weather for a city"
     private val toolId = "toolu_01234567"
+    private val model = BedrockModels.AnthropicClaude46Opus
+
+    @Serializable
+    @SerialName("WeatherForecast")
+    @LLMDescription("Weather forecast for a given location")
+    data class WeatherForecast(
+        @property:LLMDescription("Temperature in Celsius")
+        val temperature: Int,
+        @property:LLMDescription("Weather conditions (e.g., sunny, cloudy, rainy)")
+        val conditions: String,
+        @property:LLMDescription("Chance of precipitation in percentage")
+        val precipitation: Int
+    )
 
     @Test
     fun `createAnthropicRequest with basic prompt`() {
@@ -48,7 +69,7 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessage)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, emptyList())
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
 
         assertNotNull(request)
         assertEquals(BedrockAnthropicInvokeModel.MAX_TOKENS_DEFAULT, request.maxTokens)
@@ -72,7 +93,7 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessage)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, emptyList())
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
 
         assertNotNull(request)
 
@@ -112,7 +133,7 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessageQuestion)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
 
         assertNotNull(request)
 
@@ -140,27 +161,58 @@ class BedrockAnthropicClaudeSerializationTest {
         val promptAuto = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
             user(userMessageQuestion)
         }
-        val requestAuto = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptAuto, tools)
+        val requestAuto = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptAuto, model, tools)
         assertEquals("auto", requestAuto.toolChoice?.type)
 
         val promptNone = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.None)) {
             user(userMessageQuestion)
         }
-        val requestNone = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNone, tools)
+        val requestNone = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNone, model, tools)
         assertEquals("none", requestNone.toolChoice?.type)
 
         val promptRequired = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Required)) {
             user(userMessageQuestion)
         }
-        val requestRequired = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptRequired, tools)
+        val requestRequired = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptRequired, model, tools)
         assertEquals("any", requestRequired.toolChoice?.type)
 
         val promptNamed = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Named(toolName))) {
             user(userMessageQuestion)
         }
-        val requestNamed = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNamed, tools)
+        val requestNamed = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNamed, model, tools)
         assertTrue(requestNamed.toolChoice is BedrockAnthropicToolChoice)
         assertEquals(toolName, requestNamed.toolChoice.name)
+    }
+
+    @Test
+    fun `createAnthropicRequest with json schema`() {
+        val basicSchema = BasicJsonSchemaGenerator.generate(
+            json = Json,
+            name = "WeatherForecast",
+            serializer = serializer<WeatherForecast>(),
+            descriptionOverrides = emptyMap()
+        )
+        val standardSchema = StandardJsonSchemaGenerator.generate(
+            json = Json,
+            name = "WeatherForecast",
+            serializer = serializer<WeatherForecast>(),
+            descriptionOverrides = emptyMap()
+        )
+
+        val promptBasic = Prompt.build("test", params = LLMParams(schema = basicSchema)) {
+            user(userMessageQuestion)
+        }
+        val requestBasic = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptBasic, model, emptyList())
+        assertEquals("json_schema", requestBasic.outputConfig?.format?.type)
+        assertEquals(basicSchema.schema, requestBasic.outputConfig?.format?.schema)
+
+        val promptStandard = Prompt.build("test", params = LLMParams(schema = standardSchema)) {
+            user(userMessageQuestion)
+        }
+        val requestStandard =
+            BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptStandard, model, emptyList())
+        assertEquals("json_schema", requestStandard.outputConfig?.format?.type)
+        assertEquals(standardSchema.schema, requestStandard.outputConfig?.format?.schema)
     }
 
     @Test
@@ -489,7 +541,7 @@ class BedrockAnthropicClaudeSerializationTest {
         val prompt = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
             user(userMessageQuestion)
         }
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
         assertNotNull(request)
         assertNotNull(request.tools)
         assertEquals(1, request.tools.size)
