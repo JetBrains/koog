@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory
  *   If `false`, they cause an [IllegalStateException].
  * @throws AgentcoreMemoryException.ConfigurationException if [memoryId] is blank.
  */
-public class AgentcoreChatHistoryProvider(
+public class AgentcoreChatHistoryProvider @JvmOverloads constructor(
     public val client: BedrockAgentCoreClient,
     public val memoryId: String,
     defaultSession: String = AgentcoreConversationIdParser.DEFAULT_SESSION,
@@ -87,9 +87,9 @@ public class AgentcoreChatHistoryProvider(
                 eventTimestamp = Instant.now()
             }
 
-            logger.info("Sending request payload $deltaPayloads")
+            logger.debug("Creating an event with ${deltaPayloads.size} messages for actor $actorId and session $sessionId")
             val response = client.createEvent(request)
-            logger.info("Created event ${response.event}")
+            logger.debug("Created an event with id ${response.event?.eventId}")
         } catch (e: SdkBaseException) {
             throw AgentcoreMemoryException.WriteException(
                 "Failed to save messages for conversation: $conversationId",
@@ -101,9 +101,9 @@ public class AgentcoreChatHistoryProvider(
     override suspend fun load(conversationId: String): List<Message> {
         val (actorId, sessionId) = conversationIdParser.parse(conversationId)
 
+        logger.debug("Requesting events for actor $actorId and session $sessionId")
         val events: List<Event> = fetchEvents(actorId, sessionId, eventsLimit = totalEventsLimit)
-
-        logger.info("Loaded ${events.flatMap { it.payload }} payloads")
+        logger.debug("Received a response with ${events.size} events")
 
         return eventsToMessages(events)
     }
