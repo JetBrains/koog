@@ -1,6 +1,6 @@
 package ai.koog.spring.ai.memory
 
-import ai.koog.spring.ai.common.DispatcherProperties
+import ai.koog.spring.ai.common.DispatcherConfig
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
@@ -16,5 +16,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 public data class KoogSpringAiChatMemoryProperties(
     val enabled: Boolean = true,
     val chatMemoryRepositoryBeanName: String? = null,
-    val dispatcher: DispatcherProperties = DispatcherProperties(),
+    val dispatcher: DispatcherConfig = DispatcherConfig(),
 )

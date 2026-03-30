@@ -8,12 +8,10 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository
-import org.springframework.ai.chat.messages.MessageType
 import org.springframework.ai.chat.messages.ToolResponseMessage
 
 class SpringAiChatHistoryProviderTest {
@@ -30,7 +28,7 @@ class SpringAiChatHistoryProviderTest {
         )
     }
 
-    // --- Passing tests: text round-trip ---
+    // region Passing tests: text round-trip
 
     @Test
     fun testSystemUserAssistantTextRoundTrip() = runTest {
@@ -97,7 +95,8 @@ class SpringAiChatHistoryProviderTest {
         assertEquals("Second", loaded[0].content)
     }
 
-    // --- Filtering tests: non-persistable messages are silently dropped on store ---
+    // endregion
+    // region Filtering tests: non-persistable messages are silently dropped on store
 
     @Test
     fun testToolCallMessageIsFilteredOnStore() = runTest {
@@ -180,18 +179,22 @@ class SpringAiChatHistoryProviderTest {
         assertTrue(loaded.isEmpty())
     }
 
-    // --- Load tests: Spring TOOL messages are skipped ---
+    // region Load tests: Spring TOOL messages are skipped
 
     @Test
-    fun testSpringToolMessageIsSkippedOnLoad() {
+    fun testSpringToolMessageIsSkippedOnLoad() = runTest {
+        val conversationId = "conv-tool-skip"
         val toolResponse = ToolResponseMessage.ToolResponse("id-1", "search", "result")
         val toolMessage = ToolResponseMessage.builder()
             .responses(listOf(toolResponse))
             .build()
 
-        assertEquals(MessageType.TOOL, toolMessage.messageType)
+        // Inject a TOOL message directly into the repository, bypassing the store filter
+        repository.saveAll(conversationId, listOf(toolMessage))
 
-        val result = springMessageToKoogMessage(toolMessage)
-        assertNull(result, "TOOL messages should be skipped (return null) on load")
+        val loaded = adapter.load(conversationId)
+        assertTrue(loaded.isEmpty(), "TOOL messages should be skipped on load")
     }
+
+    // endregion
 }

@@ -1,6 +1,6 @@
 package ai.koog.spring.ai.embedding
 
-import ai.koog.spring.ai.common.DispatcherProperties
+import ai.koog.spring.ai.common.DispatcherConfig
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
@@ -17,5 +17,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 public data class KoogSpringAiEmbeddingProperties(
     val enabled: Boolean = true,
     val embeddingModelBeanName: String? = null,
-    val dispatcher: DispatcherProperties = DispatcherProperties(),
+    val dispatcher: DispatcherConfig = DispatcherConfig(),
 )

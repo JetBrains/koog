@@ -3,25 +3,18 @@ package ai.koog.spring.ai.common
 /**
  * Dispatcher settings for blocking Spring AI calls.
  *
- * @property type The dispatcher type to use. Default: [DispatcherType.AUTO].
- * @property parallelism Maximum parallelism for the dispatcher. When greater than 0 and [DispatcherType.IO]
- *   is selected, `Dispatchers.IO.limitedParallelism(parallelism)` is used instead of the unbounded `Dispatchers.IO`.
+ * - [Auto]: Automatically detect the best dispatcher. Uses Spring's `AsyncTaskExecutor` when
+ *   available (e.g. virtual-thread executor), otherwise falls back to `Dispatchers.IO`.
+ * - [IO]: Use [kotlinx.coroutines.Dispatchers.IO], optionally limited to [IO.parallelism] threads.
  */
-public data class DispatcherProperties(
-    val type: DispatcherType = DispatcherType.AUTO,
-    val parallelism: Int = 0,
-)
+public sealed interface DispatcherProperties {
 
-/**
- * Dispatcher type for blocking Spring AI calls.
- */
-public enum class DispatcherType {
     /**
      * Automatically detect the best dispatcher.
      *
      * When Spring Boot's `spring.threads.virtual.enabled=true` is set, an
      * [org.springframework.core.task.AsyncTaskExecutor] backed by virtual threads
-     * is available in the application context. In [AUTO] mode the dispatcher is
+     * is available in the application context. In [Auto] mode the dispatcher is
      * derived from that executor, so users only need the standard Spring Boot
      * property to opt into virtual threads.
      *
@@ -35,13 +28,48 @@ public enum class DispatcherType {
      * can cause thread starvation or deadlocks. In such setups, prefer [IO] or enable
      * virtual threads.
      */
-    AUTO,
+    public data object Auto : DispatcherProperties
 
     /**
      * Use [kotlinx.coroutines.Dispatchers.IO].
      *
-     * When [DispatcherProperties.parallelism] is greater than 0, uses
+     * When [parallelism] is greater than 0, uses
      * `Dispatchers.IO.limitedParallelism(parallelism)` to cap concurrency.
+     *
+     * @property parallelism Maximum parallelism for the dispatcher. When `null` or 0,
+     *   the unbounded `Dispatchers.IO` is used.
      */
+    public data class IO(
+        val parallelism: Int? = null
+    ) : DispatcherProperties
+}
+
+/**
+ * Spring Boot–bindable configuration that maps to a [DispatcherProperties] sealed variant.
+ *
+ * Properties:
+ * - `type` – `AUTO` (default) or `IO`.
+ * - `parallelism` – only meaningful when `type = IO`.
+ *
+ * @see DispatcherProperties
+ */
+public data class DispatcherConfig(
+    val type: DispatcherType = DispatcherType.AUTO,
+    val parallelism: Int = 0,
+) {
+    /**
+     * Converts this bindable configuration into the corresponding [DispatcherProperties] variant.
+     */
+    public fun toDispatcherProperties(): DispatcherProperties = when (type) {
+        DispatcherType.AUTO -> DispatcherProperties.Auto
+        DispatcherType.IO -> DispatcherProperties.IO(parallelism.takeIf { it > 0 })
+    }
+}
+
+/**
+ * Dispatcher type for blocking Spring AI calls.
+ */
+public enum class DispatcherType {
+    AUTO,
     IO,
 }

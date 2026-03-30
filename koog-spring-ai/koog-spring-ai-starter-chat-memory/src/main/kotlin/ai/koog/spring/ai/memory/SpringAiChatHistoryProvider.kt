@@ -5,7 +5,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.memory.ChatMemoryRepository
@@ -47,8 +46,8 @@ import org.springframework.ai.chat.messages.Message as SpringMessage
  * @param dispatcher the [CoroutineDispatcher] used for blocking repository calls
  */
 public class SpringAiChatHistoryProvider(
-    private val repository: ChatMemoryRepository,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    internal val repository: ChatMemoryRepository,
+    private val dispatcher: CoroutineDispatcher,
 ) : ChatHistoryProvider {
 
     private val logger = LoggerFactory.getLogger(SpringAiChatHistoryProvider::class.java)
@@ -94,25 +93,25 @@ public class SpringAiChatHistoryProvider(
             }
         }
     }
-}
 
-/**
- * Converts a Spring AI [SpringMessage] to a Koog [Message].
- *
- * Only SYSTEM, USER, and ASSISTANT message types are mapped.
- * TOOL messages are skipped (returns `null`) because typical repositories
- * (e.g., JDBC) cannot round-trip them with usable payload.
- */
-internal fun springMessageToKoogMessage(springMessage: SpringMessage): Message? {
-    return when (springMessage.messageType) {
-        MessageType.SYSTEM -> Message.System(springMessage.text ?: "", RequestMetaInfo.Empty)
-        MessageType.USER -> Message.User(springMessage.text ?: "", RequestMetaInfo.Empty)
-        MessageType.ASSISTANT -> Message.Assistant(springMessage.text ?: "", ResponseMetaInfo.Empty)
-        MessageType.TOOL -> {
-            LoggerFactory.getLogger(SpringAiChatHistoryProvider::class.java).debug(
-                "Skipping Spring AI TOOL message on load; not mappable to a Koog message type"
-            )
-            null
+    /**
+     * Converts a Spring AI [SpringMessage] to a Koog [Message].
+     *
+     * Only SYSTEM, USER, and ASSISTANT message types are mapped.
+     * TOOL messages are skipped (returns `null`) because typical repositories
+     * (e.g., JDBC) cannot round-trip them with usable payload.
+     */
+    private fun springMessageToKoogMessage(springMessage: SpringMessage): Message? {
+        return when (springMessage.messageType) {
+            MessageType.SYSTEM -> Message.System(springMessage.text ?: "", RequestMetaInfo.Empty)
+            MessageType.USER -> Message.User(springMessage.text ?: "", RequestMetaInfo.Empty)
+            MessageType.ASSISTANT -> Message.Assistant(springMessage.text ?: "", ResponseMetaInfo.Empty)
+            MessageType.TOOL -> {
+                logger.debug(
+                    "Skipping Spring AI TOOL message on load; not mappable to a Koog message type"
+                )
+                null
+            }
         }
     }
 }

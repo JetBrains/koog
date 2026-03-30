@@ -9,7 +9,7 @@ providing **text-only conversation persistence** — not full Koog prompt-state 
 
 It auto-configures:
 
-- A Koog `ChatHistoryProvider` (`SpringAiChatMemoryRepositoryAdapter`) that delegates to a Spring AI `ChatMemoryRepository`
+- A Koog `ChatHistoryProvider` (`SpringAiChatHistoryProvider`) that delegates to a Spring AI `ChatMemoryRepository`
 
 This lets you reuse any Spring AI–compatible chat memory store (JDBC, Redis, Cassandra, etc.)
 as the backing storage for Koog agent conversation history.

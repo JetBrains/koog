@@ -90,7 +90,73 @@ class SpringAiChatMemoryAutoConfigurationTest {
             .withBean("repo1", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
             .withBean("repo2", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
             .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<ChatHistoryProvider>() }
+            }
+    }
+
+    @Test
+    fun `should use named config only when single ChatMemoryRepository and selector property are both set`() {
+        val myRepo = mockk<ChatMemoryRepository>(relaxed = true)
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.chat-memory.chat-memory-repository-bean-name=myRepo")
+            .withBean("myRepo", ChatMemoryRepository::class.java, { myRepo })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                val provider = context.getBean<ChatHistoryProvider>()
+                assertInstanceOf<SpringAiChatHistoryProvider>(provider)
+                // Only one ChatHistoryProvider bean — no duplicate
+                assertTrue(context.getBeansOfType(ChatHistoryProvider::class.java).size == 1)
+            }
+    }
+
+    // ---- mutual exclusion: single candidate + selector set ----
+    @Test
+    fun `should create exactly one ChatHistoryProvider using named path when single repo and selector are both set`() {
+        val myRepo = mockk<ChatMemoryRepository>(relaxed = true)
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.chat-memory.chat-memory-repository-bean-name=myRepo")
+            .withBean("myRepo", ChatMemoryRepository::class.java, { myRepo })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                val providers = context.getBeansOfType(ChatHistoryProvider::class.java)
+                assertTrue(providers.size == 1, "Expected exactly one ChatHistoryProvider, got ${providers.size}")
+                val provider = providers.values.single()
+                assertInstanceOf<SpringAiChatHistoryProvider>(provider)
+                assertSame(myRepo, provider.repository)
+            }
+    }
+
+    // ---- mutual exclusion: multiple candidates + no selector ----
+    @Test
+    fun `should not create ChatHistoryProvider and not fail when multiple repos exist and no selector is set`() {
+        contextRunner()
+            .withBean("repo1", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
+            .withBean("repo2", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                assertTrue(
+                    context.getBeansOfType(ChatHistoryProvider::class.java).isEmpty(),
+                    "Expected no ChatHistoryProvider when multiple repos exist and no selector is set"
+                )
+            }
+    }
+
+    // ---- mutual exclusion: selector set to empty string ----
+    @Test
+    fun `should fail on startup when selector is set to empty string because named path activates with empty bean name`() {
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.chat-memory.chat-memory-repository-bean-name=")
+            .withBean("myRepo", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
+            .run { context ->
+                // Spring treats "" as a present value equal to "", so havingValue="" on SingleChatMemoryRepositoryConfiguration
+                // matches (the condition passes), AND the plain @ConditionalOnProperty on NamedChatMemoryRepositoryConfiguration
+                // also matches (any non-false present value satisfies it). Both configs activate; the named path
+                // then calls beanFactory.getBean("", ChatMemoryRepository::class.java) with an empty name, which fails.
+                assertTrue(
+                    context.startupFailure != null,
+                    "Expected startup failure when selector is set to empty string"
+                )
             }
     }
 
@@ -98,13 +164,14 @@ class SpringAiChatMemoryAutoConfigurationTest {
 
     @Test
     fun `should resolve ChatMemoryRepository by bean name when configured`() {
+        val myRepo = mockk<ChatMemoryRepository>(relaxed = true)
         contextRunner()
             .withPropertyValues("koog.spring.ai.chat-memory.chat-memory-repository-bean-name=myRepo")
-            .withBean("myRepo", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
+            .withBean("myRepo", ChatMemoryRepository::class.java, { myRepo })
             .withBean("otherRepo", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
             .run { context ->
-                val provider = context.getBean<ChatHistoryProvider>()
-                assertInstanceOf<SpringAiChatHistoryProvider>(provider)
+                val provider = assertInstanceOf<SpringAiChatHistoryProvider>(context.getBean<ChatHistoryProvider>())
+                assertSame(myRepo, provider.repository)
             }
     }
 

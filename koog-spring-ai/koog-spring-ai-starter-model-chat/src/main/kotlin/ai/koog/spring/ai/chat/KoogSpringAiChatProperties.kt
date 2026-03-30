@@ -1,6 +1,6 @@
 package ai.koog.spring.ai.chat
 
-import ai.koog.spring.ai.common.DispatcherProperties
+import ai.koog.spring.ai.common.DispatcherConfig
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
@@ -27,5 +27,5 @@ public data class KoogSpringAiChatProperties(
     val chatModelBeanName: String? = null,
     val moderationModelBeanName: String? = null,
     val provider: String? = null,
-    val dispatcher: DispatcherProperties = DispatcherProperties(),
+    val dispatcher: DispatcherConfig = DispatcherConfig(),
 )

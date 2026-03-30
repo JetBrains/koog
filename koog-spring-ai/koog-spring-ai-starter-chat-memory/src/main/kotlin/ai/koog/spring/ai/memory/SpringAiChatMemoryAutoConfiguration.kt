@@ -1,14 +1,14 @@
 package ai.koog.spring.ai.memory
 
 import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
-import ai.koog.spring.ai.common.DispatcherType
+import ai.koog.spring.ai.common.DispatcherProperties
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.memory.ChatMemoryRepository
 import org.springframework.beans.factory.BeanFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
@@ -19,7 +19,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
-import org.springframework.lang.Nullable
 
 /**
  * Auto-configuration for the Koog Spring AI Chat Memory adapter.
@@ -60,10 +59,11 @@ public open class SpringAiChatMemoryAutoConfiguration {
     @ConditionalOnMissingBean(name = ["koogSpringAiChatMemoryDispatcher"])
     public open fun koogSpringAiChatMemoryDispatcher(
         properties: KoogSpringAiChatMemoryProperties,
-        @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
+        @Qualifier("applicationTaskExecutor") asyncTaskExecutorProvider: ObjectProvider<AsyncTaskExecutor>,
     ): CoroutineDispatcher {
-        return when (properties.dispatcher.type) {
-            DispatcherType.AUTO -> {
+        val asyncTaskExecutor = asyncTaskExecutorProvider.ifAvailable
+        return when (val dispatcher = properties.dispatcher.toDispatcherProperties()) {
+            is DispatcherProperties.Auto -> {
                 if (asyncTaskExecutor != null) {
                     logger.info("Koog Spring AI Chat Memory: using Spring AsyncTaskExecutor as dispatcher")
                     asyncTaskExecutor.asCoroutineDispatcher()
@@ -73,9 +73,9 @@ public open class SpringAiChatMemoryAutoConfiguration {
                 }
             }
 
-            DispatcherType.IO -> {
-                val parallelism = properties.dispatcher.parallelism
-                if (parallelism > 0) {
+            is DispatcherProperties.IO -> {
+                val parallelism = dispatcher.parallelism
+                if (parallelism != null && parallelism > 0) {
                     logger.info("Koog Spring AI Chat Memory: using Dispatchers.IO.limitedParallelism($parallelism)")
                     Dispatchers.IO.limitedParallelism(parallelism)
                 } else {
@@ -87,12 +87,14 @@ public open class SpringAiChatMemoryAutoConfiguration {
     }
 
     /**
-     * Repository configuration — activated when a bean-name selector is provided.
+     * Chat memory repository configuration — activated when a bean-name selector property is provided.
+     *
+     * Resolves the [ChatMemoryRepository] from the application context by the configured bean name.
      */
-    @Configuration
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnProperty(prefix = "koog.spring.ai.chat-memory", name = ["chat-memory-repository-bean-name"])
-    public open class NamedRepositoryConfiguration {
-        private val logger = LoggerFactory.getLogger(NamedRepositoryConfiguration::class.java)
+    public open class NamedChatMemoryRepositoryConfiguration {
+        private val logger = LoggerFactory.getLogger(NamedChatMemoryRepositoryConfiguration::class.java)
 
         @Bean
         @ConditionalOnMissingBean(ChatHistoryProvider::class)
@@ -103,26 +105,42 @@ public open class SpringAiChatMemoryAutoConfiguration {
         ): ChatHistoryProvider {
             val beanName = properties.chatMemoryRepositoryBeanName!!
             logger.info("Koog Spring AI Chat Memory: resolving ChatMemoryRepository bean by name='$beanName' (text-only conversation memory)")
-            val repository = beanFactory.getBean(beanName, ChatMemoryRepository::class.java)
-            return SpringAiChatHistoryProvider(repository = repository, dispatcher = dispatcher)
+            val repo = beanFactory.getBean(beanName, ChatMemoryRepository::class.java)
+            return SpringAiChatHistoryProvider(repository = repo, dispatcher = dispatcher)
         }
     }
 
     /**
-     * Repository configuration — activated when no bean-name selector is set and a single ChatMemoryRepository candidate exists.
+     * Chat memory repository configuration — activated when no bean-name selector is set
+     * and a single [ChatMemoryRepository] candidate exists.
+     *
+     * This is the default fallback path. It is mutually exclusive with [NamedChatMemoryRepositoryConfiguration] for
+     * the common cases:
+     * - selector absent → `matchIfMissing = true` activates this config; [NamedChatMemoryRepositoryConfiguration] does not match
+     * - selector non-empty (e.g. `"myBean"`) → [NamedChatMemoryRepositoryConfiguration] matches; `havingValue = ""` does not
+     *   match a non-empty value, so this config does not activate
+     * - selector set to literal `""` → both configs activate (Spring treats `""` as a present value that satisfies
+     *   both `havingValue = ""` and the plain `@ConditionalOnProperty` on the named path); the named path then
+     *   attempts `beanFactory.getBean("", ChatMemoryRepository::class.java)` which fails at startup
      */
-    @Configuration
-    @ConditionalOnMissingBean(ChatHistoryProvider::class)
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnSingleCandidate(ChatMemoryRepository::class)
-    public open class SingleRepositoryConfiguration {
-        private val logger = LoggerFactory.getLogger(SingleRepositoryConfiguration::class.java)
+    @ConditionalOnProperty(
+        prefix = "koog.spring.ai.chat-memory",
+        name = ["chat-memory-repository-bean-name"],
+        havingValue = "",
+        matchIfMissing = true
+    )
+    public open class SingleChatMemoryRepositoryConfiguration {
+        private val logger = LoggerFactory.getLogger(SingleChatMemoryRepositoryConfiguration::class.java)
 
         @Bean
+        @ConditionalOnMissingBean(ChatHistoryProvider::class)
         public open fun springAiChatHistoryProvider(
             repository: ChatMemoryRepository,
             @Qualifier("koogSpringAiChatMemoryDispatcher") dispatcher: CoroutineDispatcher,
         ): ChatHistoryProvider {
-            logger.info("Koog Spring AI Chat Memory: creating text-only ChatHistoryProvider backed by single ChatMemoryRepository")
+            logger.info("Koog Spring AI Chat Memory: using single ChatMemoryRepository candidate as ChatHistoryProvider backend")
             return SpringAiChatHistoryProvider(repository = repository, dispatcher = dispatcher)
         }
     }
