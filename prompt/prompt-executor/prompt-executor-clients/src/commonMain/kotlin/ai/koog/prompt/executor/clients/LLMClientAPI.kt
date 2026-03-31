@@ -3,7 +3,6 @@ package ai.koog.prompt.executor.clients
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -15,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * API for [LLMClient]
  */
-public interface LLMClientAPI : AutoCloseable {
+public interface LLMClientAPI : LLMProviderAware, AutoCloseable {
     /**
      * Executes a prompt and returns a list of response messages.
      *
@@ -88,13 +87,6 @@ public interface LLMClientAPI : AutoCloseable {
     public suspend fun models(): List<LLModel> {
         throw UnsupportedOperationException("Not implemented for this client")
     }
-
-    /**
-     * Retrieves the LLMProvider instance associated with this client.
-     *
-     * @return The LLMProvider instance used for executing prompts and managing LLM operations.
-     */
-    public fun llmProvider(): LLMProvider
 
     /**
      * Standard JSON schema generator supported by the LLMClient.

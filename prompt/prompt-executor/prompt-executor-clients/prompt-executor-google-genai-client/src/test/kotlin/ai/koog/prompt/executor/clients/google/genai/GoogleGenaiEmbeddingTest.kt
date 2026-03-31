@@ -3,8 +3,9 @@ package ai.koog.prompt.executor.clients.google.genai
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import com.google.genai.types.ContentEmbedding
+import com.google.genai.types.EmbedContentConfig
 import com.google.genai.types.EmbedContentResponse
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -12,59 +13,38 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.util.concurrent.ExecutorService
 
 class GoogleGenaiEmbeddingTest {
 
-    private val delegate = mockk<com.google.genai.Client>(relaxed = true)
-    private val subject = CustomizedGoogleGenaiLLMClient(delegate, models = TestModels.all)
+    private val mockPair = mockGoogleGenaiClient()
+    private val delegate = mockPair.first
+    private val asyncModels = mockPair.second
+    private val subject = GoogleGenaiEmbeddingProvider(delegate)
 
-    // region Scenario: embedding response extraction
+    // region embed() response extraction
 
     @Test
-    fun `embedding response with 3 values is extracted as List of Double`() {
-        val response = EmbedContentResponse.builder()
-            .embeddings(
-                listOf(
-                    ContentEmbedding.builder().values(listOf(0.1f, 0.2f, 0.3f)).build()
-                )
-            )
-            .build()
+    fun `embed returns empty list for empty embeddings response`() = runTest {
+        val emptyResponse = EmbedContentResponse.builder().embeddings(emptyList()).build()
+        asyncModels.stubEmbedContent(emptyResponse)
 
-        val values = response.embeddings().get()
-            .first().values().get()
-            .map { it.toDouble() }
+        val result = subject.embed("hello", TestModels.embed)
 
-        values shouldHaveSize 3
-        values[0] shouldBe 0.1f.toDouble()
-        values[1] shouldBe 0.2f.toDouble()
-        values[2] shouldBe 0.3f.toDouble()
+        result.shouldBeEmpty()
     }
 
     @Test
-    fun `embedding response with empty embeddings list returns empty`() {
-        val response = EmbedContentResponse.builder().embeddings(emptyList()).build()
-
-        val values = response.embeddings().get()
-            .firstOrNull()?.values()?.orElse(emptyList())
-            ?.map { it.toDouble() } ?: emptyList()
-
-        values shouldHaveSize 0
-    }
-
-    @Test
-    fun `embedding response with high-dimensional vector preserves all values`() {
+    fun `embed preserves all values`() = runTest {
         val floats = (1..768).map { it.toFloat() / 1000f }
-        val response = EmbedContentResponse.builder()
-            .embeddings(listOf(ContentEmbedding.builder().values(floats).build()))
-            .build()
+        asyncModels.stubEmbedContent(embedResponse(floats))
 
-        val values = response.embeddings().get()
-            .first().values().get()
-            .map { it.toDouble() }
+        val result = subject.embed("hello", TestModels.embed)
 
-        values shouldHaveSize 768
-        values[0] shouldBe (1f / 1000f).toDouble()
-        values[767] shouldBe (768f / 1000f).toDouble()
+        result shouldHaveSize 768
+        result.forEachIndexed { index, d ->
+            d shouldBe floats[index].toDouble()
+        }
     }
 
     // endregion
@@ -74,7 +54,7 @@ class GoogleGenaiEmbeddingTest {
     @Test
     fun `embed rejects model without Embed capability`() = runTest {
         val error = assertThrows<IllegalArgumentException> { subject.embed("hello", TestModels.noEmbed) }
-        error.message shouldContain "does not support embedding"
+        error.message shouldContain "does not support embed capability"
     }
 
     @Test
@@ -83,6 +63,22 @@ class GoogleGenaiEmbeddingTest {
             LLModel(provider = LLMProvider.Anthropic, id = "claude-embed", capabilities = listOf(LLMCapability.Embed))
         val error = assertThrows<IllegalArgumentException> { subject.embed("hello", model) }
         error.message shouldContain "provider mismatch"
+    }
+
+    // endregion
+
+    // region EmbedContentConfig passthrough
+
+    @Test
+    fun `embed passes provided EmbedContentConfig to the API`() = runTest {
+        val customConfig = EmbedContentConfig.builder().outputDimensionality(256).build()
+        val providerWithConfig = GoogleGenaiEmbeddingProvider(delegate, embedContentConfig = customConfig)
+        val captured = asyncModels.stubEmbedContent(embedResponse(0.1f))
+
+        providerWithConfig.embed("hello", TestModels.embed)
+
+        captured.config shouldBe customConfig
+        captured.config.outputDimensionality().get() shouldBe 256
     }
 
     // endregion

@@ -674,7 +674,7 @@ class GoogleGenaiChatTest {
         val error = assertThrows<IllegalArgumentException> {
             subject.execute(prompt = Prompt(messages = emptyList(), id = "t"), model = noCapModel)
         }
-        error.message shouldContain "does not support chat completions"
+        error.message shouldBe "Model test-no-cap does not support completion capability."
     }
 
     @Test

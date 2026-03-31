@@ -27,3 +27,12 @@ public data class LLModel(
      */
     public fun supports(capability: LLMCapability): Boolean = capabilities?.contains(capability) ?: false
 }
+
+/**
+ * Checks if the Large Language Model (LLM) supports a specific capability.
+ * @param capability The capability to check for, represented by an instance of [LLMCapability].
+ */
+public fun LLModel.requireCapability(capability: LLMCapability): Unit =
+    require(supports(capability)) {
+        "Model $id does not support ${capability.id} capability."
+    }

@@ -8,7 +8,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiLLMClient.Companion.DEFAULT_THOUGHT_SIGNATURE
@@ -20,6 +19,7 @@ import ai.koog.prompt.executor.clients.requireMatchingProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.requireCapability
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -29,8 +29,6 @@ import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
 import com.google.genai.Client
-import com.google.genai.errors.ClientException
-import com.google.genai.errors.ServerException
 import com.google.genai.types.AutomaticFunctionCallingConfig
 import com.google.genai.types.Candidate
 import com.google.genai.types.Content
@@ -42,7 +40,6 @@ import com.google.genai.types.ThinkingLevel
 import com.google.genai.types.Tool
 import com.google.genai.types.ToolConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -50,7 +47,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.future.await
 import java.util.concurrent.ExecutorService
-import kotlin.jvm.optionals.getOrDefault
 import kotlin.time.Clock
 
 /**
@@ -75,7 +71,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.SuitableForIO,
     private val clock: Clock = Clock.System,
     private val knownModels: List<LLModel> = GoogleModels.models
-) : LLMClient(), LLMEmbeddingProvider {
+) : LLMClient() {
 
     /**
      * Java-friendly constructor that accepts an [ExecutorService] for blocking stream iteration.
@@ -130,36 +126,16 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     override fun llmProvider(): LLMProvider = llmProvider
 
-    @Suppress("TooGenericExceptionCaught")
-    private suspend fun <T> callApi(block: suspend () -> T): T = try {
-        block()
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: ClientException) {
-        throw LLMClientException(
-            clientName = clientName,
-            message = "Status code: ${e.code()} (${e.status()}). ${e.message}",
-            cause = e
-        )
-    } catch (e: ServerException) {
-        throw LLMClientException(
-            clientName = clientName,
-            message = "Status code: ${e.code()} (${e.status()}). ${e.message}",
-            cause = e
-        )
-    } catch (e: Exception) {
-        throw LLMClientException(clientName = clientName, message = e.message, cause = e)
-    }
+    private suspend fun <T> callApi(block: suspend () -> T): T =
+        callGoogleGenaiApi(clientName, block)
 
     // region Execute
 
     @OptIn(InternalAgentToolsApi::class, InternalLLMClientApi::class)
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         requireMatchingProvider(model)
+        model.requireCapability(LLMCapability.Completion)
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        require(model.supports(LLMCapability.Completion)) {
-            "Model ${model.id} does not support chat completions"
-        }
 
         return doExecute(prompt, model, tools).first()
     }
@@ -423,28 +399,6 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         metaInfo: ResponseMetaInfo
     ): List<Message.Response> {
         return responseConverter.processCandidate(candidate, metaInfo)
-    }
-
-    // endregion
-
-    // region Embedding
-
-    @OptIn(InternalLLMClientApi::class)
-    override suspend fun embed(text: String, model: LLModel): List<Double> {
-        requireMatchingProvider(model)
-        require(model.supports(LLMCapability.Embed)) {
-            "Model ${model.id} does not support embedding."
-        }
-
-        logger.debug { "Embedding text with model: ${model.id}" }
-
-        val response = callApi { client.async.models.embedContent(model.id, text, null).await() }
-
-        return response.embeddings().getOrDefault(emptyList())
-            .firstOrNull()
-            ?.values()?.getOrDefault(emptyList())
-            ?.map { it.toDouble() }
-            ?: emptyList()
     }
 
     // endregion

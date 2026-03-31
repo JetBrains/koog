@@ -1,20 +1,38 @@
-public class ai/koog/prompt/executor/clients/google/genai/GoogleGenaiLLMClient : ai/koog/prompt/executor/clients/LLMClient, ai/koog/prompt/executor/clients/LLMEmbeddingProvider {
+public class ai/koog/prompt/executor/clients/google/genai/GoogleGenaiEmbeddingProvider : ai/koog/prompt/executor/clients/LLMEmbeddingProvider {
+	public fun <init> (Lcom/google/genai/Client;)V
+	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;)V
+	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;)V
+	public synthetic fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;)V
+	public synthetic fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+}
+
+public class ai/koog/prompt/executor/clients/google/genai/GoogleGenaiLLMClient : ai/koog/prompt/executor/clients/LLMClient {
 	public static final field Companion Lai/koog/prompt/executor/clients/google/genai/GoogleGenaiLLMClient$Companion;
 	public static final field DEFAULT_THOUGHT_SIGNATURE Ljava/lang/String;
 	public static final field SKIP_THOUGHT_SIGNATURE Ljava/lang/String;
 	public fun <init> (Lcom/google/genai/Client;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;)V
-	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/concurrent/ExecutorService;Lkotlin/time/Clock;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/time/Clock;)V
-	public synthetic fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/time/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/time/Clock;Ljava/util/List;)V
+	public synthetic fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/time/Clock;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlin/time/Clock;)V
+	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlin/time/Clock;Ljava/util/List;)V
+	public synthetic fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Lkotlin/time/Clock;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	protected fun buildConfig (Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lcom/google/genai/types/Content;)Lcom/google/genai/types/GenerateContentConfig$Builder;
 	protected fun buildSdkContents (Lai/koog/prompt/dsl/Prompt;Lai/koog/prompt/llm/LLModel;)Lkotlin/Pair;
 	protected fun buildSdkToolConfig (Lai/koog/prompt/params/LLMParams$ToolChoice;)Lcom/google/genai/types/ToolConfig;
 	protected fun buildSdkTools (Ljava/util/List;)Ljava/util/List;
 	public fun close ()V
-	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun execute (Lai/koog/prompt/dsl/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeMultipleChoices (Lai/koog/prompt/dsl/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeStreaming (Lai/koog/prompt/dsl/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;

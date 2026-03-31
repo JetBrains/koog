@@ -7,6 +7,9 @@ import com.google.genai.AsyncModels
 import com.google.genai.Client
 import com.google.genai.types.Candidate
 import com.google.genai.types.Content
+import com.google.genai.types.ContentEmbedding
+import com.google.genai.types.EmbedContentConfig
+import com.google.genai.types.EmbedContentResponse
 import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.GenerateContentResponse
 import com.google.genai.types.GenerateContentResponseUsageMetadata
@@ -79,9 +82,44 @@ internal fun AsyncModels.stubGenerateContent(response: GenerateContentResponse):
     return captured
 }
 
+/**
+ * Holds the arguments captured from `AsyncModels.embedContent(...)`.
+ */
+internal class CapturedEmbedCall {
+    lateinit var modelId: String
+    lateinit var text: String
+    lateinit var config: EmbedContentConfig
+}
+
+/**
+ * Stubs [AsyncModels.embedContent] to return [response].
+ */
+internal fun AsyncModels.stubEmbedContent(response: EmbedContentResponse): CapturedEmbedCall {
+    val captured = CapturedEmbedCall()
+    every { embedContent(any<String>(), any<String>(), any<EmbedContentConfig>()) } answers {
+        captured.modelId = firstArg()
+        captured.text = secondArg()
+        captured.config = thirdArg()
+        CompletableFuture.completedFuture(response)
+    }
+    return captured
+}
+
 // endregion
 
 // region Response builders
+
+/** Builds an [EmbedContentResponse] with a single embedding from the given float values. */
+internal fun embedResponse(vararg values: Float): EmbedContentResponse =
+    EmbedContentResponse.builder()
+        .embeddings(listOf(ContentEmbedding.builder().values(values.toList()).build()))
+        .build()
+
+/** Builds an [EmbedContentResponse] with a single embedding from the given float list. */
+internal fun embedResponse(values: List<Float>): EmbedContentResponse =
+    EmbedContentResponse.builder()
+        .embeddings(listOf(ContentEmbedding.builder().values(values).build()))
+        .build()
 
 /** Builds a minimal valid [GenerateContentResponse] with a single text candidate. */
 internal fun textResponse(
@@ -172,12 +210,17 @@ internal object TestModels {
         id = "test-no-embed",
         capabilities = listOf(LLMCapability.Completion)
     )
+    val embed = LLModel(
+        provider = LLMProvider.Google,
+        id = "test-embed",
+        capabilities = listOf(LLMCapability.Embed)
+    )
 
     /** All test models — pass to [CustomizedGoogleGenaiLLMClient] constructor. */
     val all: List<LLModel> = listOf(
         flash, thinking, pro, fullCapability,
         completionOnly, noCap, multiChoice, multiChoiceNoCompletion,
-        toolCapable, noEmbed,
+        toolCapable, noEmbed, embed,
     )
 }
 
