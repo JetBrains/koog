@@ -1,8 +1,8 @@
 package ai.koog.integration.tests.features
 
+import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.features.chathistory.aws.AgentcoreChatHistoryProvider
 import ai.koog.integration.tests.utils.TestCredentials.readAwsAccessKeyIdFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFromEnv
