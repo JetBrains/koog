@@ -44,6 +44,9 @@ kotlin {
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
                 )
+                implementation(project(":agents:agents-features:agents-features-chat-history-aws"))
+
+                // External libraries
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.kotlinx.serialization.json)
@@ -52,6 +55,7 @@ kotlin {
                 implementation(libs.aws.sdk.kotlin.sts)
                 implementation(libs.aws.sdk.kotlin.bedrock)
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
+                implementation(libs.aws.sdk.kotlin.bedrockagentcore)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.opentelemetry.sdk.testing)
             }
