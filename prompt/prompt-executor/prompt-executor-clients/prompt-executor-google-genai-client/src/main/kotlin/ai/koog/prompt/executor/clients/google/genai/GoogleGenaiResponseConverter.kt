@@ -1,5 +1,7 @@
 package ai.koog.prompt.executor.clients.google.genai
 
+import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiConversionUtils.convertMapToJsonObject
+import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiConversionUtils.signatureFromBytes
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -26,7 +28,6 @@ import kotlin.uuid.Uuid
 internal class GoogleGenaiResponseConverter(
     private val logger: KLogger,
     private val clock: Clock,
-    private val conversionUtils: GoogleGenaiConversionUtils
 ) {
 
     /**
@@ -56,7 +57,7 @@ internal class GoogleGenaiResponseConverter(
 
         for (part in parts) {
             val signature = part.thoughtSignature().orElse(null)
-                ?.let { conversionUtils.signatureFromBytes(it) }
+                ?.let { signatureFromBytes(it) }
             val isThought = part.thought().getOrDefault(false)
 
             // Non-thought parts with a signature need a Reasoning carrier (unless already added)
@@ -84,6 +85,7 @@ internal class GoogleGenaiResponseConverter(
 
                         if (existing != null && existing.content.isEmpty()) {
                             val index = responses.indexOf(existing)
+                            check(index >= 0) { "Reasoning message not found in responses" }
                             responses[index] =
                                 existing.copy(parts = listOf(ContentPart.Text(text)))
                         } else {
@@ -108,7 +110,7 @@ internal class GoogleGenaiResponseConverter(
 
                 functionCall != null -> {
                     val args = functionCall.args().orElse(null)
-                        ?.let { conversionUtils.convertMapToJsonObject(it).toString() } ?: "{}"
+                        ?.let { convertMapToJsonObject(it).toString() } ?: "{}"
                     responses.add(
                         Message.Tool.Call(
                             id = Uuid.random().toString(),

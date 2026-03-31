@@ -1,12 +1,8 @@
-public class ai/koog/prompt/executor/clients/google/genai/GoogleGenaiEmbeddingProvider : ai/koog/prompt/executor/clients/LLMEmbeddingProvider {
+public class ai/koog/prompt/executor/clients/google/genai/GoogleGenaiEmbeddingProvider : ai/koog/prompt/executor/clients/LLMEmbeddingProvider, ai/koog/prompt/executor/clients/LLMProviderAware {
 	public fun <init> (Lcom/google/genai/Client;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;)V
 	public fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;)V
 	public synthetic fun <init> (Lcom/google/genai/Client;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;)V
-	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;)V
-	public fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;)V
-	public synthetic fun <init> (Lcom/google/genai/Client;Ljava/util/concurrent/ExecutorService;Lai/koog/prompt/llm/LLMProvider;Lcom/google/genai/types/EmbedContentConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
 }

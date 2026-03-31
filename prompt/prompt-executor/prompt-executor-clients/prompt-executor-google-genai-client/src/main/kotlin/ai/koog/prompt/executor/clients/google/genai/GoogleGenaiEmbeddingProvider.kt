@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.google.genai
 
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.LLMProviderAware
 import ai.koog.prompt.executor.clients.requireMatchingProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -11,7 +12,6 @@ import com.google.genai.Client
 import com.google.genai.types.EmbedContentConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.future.await
-import java.util.concurrent.ExecutorService
 import kotlin.jvm.optionals.getOrDefault
 
 /**
@@ -28,19 +28,7 @@ public open class GoogleGenaiEmbeddingProvider @JvmOverloads constructor(
     private val client: Client,
     private val llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
     private val embedContentConfig: EmbedContentConfig = EmbedContentConfig.builder().build(),
-) : LLMEmbeddingProvider {
-
-    /**
-     * Java-friendly constructor that accepts an [ExecutorService].
-     * Provided for API consistency with [GoogleGenaiLLMClient].
-     */
-    @JvmOverloads
-    public constructor(
-        client: Client,
-        @Suppress("UNUSED_PARAMETER") ioExecutor: ExecutorService,
-        llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
-        embedContentConfig: EmbedContentConfig = EmbedContentConfig.builder().build(),
-    ) : this(client = client, llmProvider = llmProvider, embedContentConfig = embedContentConfig)
+) : LLMEmbeddingProvider, LLMProviderAware {
 
     private val logger = KotlinLogging.logger { }
 

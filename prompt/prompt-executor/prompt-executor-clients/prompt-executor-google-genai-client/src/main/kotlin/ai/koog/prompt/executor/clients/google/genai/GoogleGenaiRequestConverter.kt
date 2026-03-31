@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.clients.google.genai
 
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiConversionUtils.parseJsonToMap
+import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiConversionUtils.signatureToBytes
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
@@ -15,11 +17,9 @@ import com.google.genai.types.Part
  * Converts a Koog [Prompt] into Google GenAI SDK [Content] objects and system instructions.
  *
  * @property fallbackThoughtSignature Thought signature used for thinking models when no signature is available.
- * @property conversionUtils Shared utilities for JSON parsing and signature encoding.
  */
 internal class GoogleGenaiRequestConverter(
     private val fallbackThoughtSignature: String,
-    private val conversionUtils: GoogleGenaiConversionUtils
 ) {
 
     /**
@@ -29,7 +29,8 @@ internal class GoogleGenaiRequestConverter(
      */
     fun buildSdkContents(
         prompt: Prompt,
-        model: LLModel
+        model: LLModel,
+        clientName: String,
     ): Pair<List<Content>, Content?> {
         val systemParts = mutableListOf<Part>()
         val contents = mutableListOf<Content>()
@@ -79,7 +80,7 @@ internal class GoogleGenaiRequestConverter(
                     if (message.content.isNotBlank()) {
                         val partBuilder = Part.builder().text(message.content).thought(true)
                         message.encrypted?.let {
-                            partBuilder.thoughtSignature(conversionUtils.signatureToBytes(it))
+                            partBuilder.thoughtSignature(signatureToBytes(it))
                         }
                         contents.add(
                             Content.builder().role("model").parts(listOf(partBuilder.build())).build()
@@ -116,7 +117,7 @@ internal class GoogleGenaiRequestConverter(
                         signature
                     }
 
-                    val args = conversionUtils.parseJsonToMap(message.content)
+                    val args = parseJsonToMap(message.content, clientName)
                     val partBuilder = Part.builder()
                         .functionCall(
                             FunctionCall.builder()
@@ -125,7 +126,7 @@ internal class GoogleGenaiRequestConverter(
                                 .build()
                         )
                     effectiveSignature?.let {
-                        partBuilder.thoughtSignature(conversionUtils.signatureToBytes(it))
+                        partBuilder.thoughtSignature(signatureToBytes(it))
                     }
                     pendingCalls += partBuilder.build()
                 }

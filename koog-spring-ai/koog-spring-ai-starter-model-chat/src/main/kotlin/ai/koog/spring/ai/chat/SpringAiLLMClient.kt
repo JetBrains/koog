@@ -161,7 +161,7 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.call() failed: ${e.message}", e)
         }
-        val usage = chatResponse.metadata?.usage
+        val usage = chatResponse.metadata.usage
         chatResponse.results.flatMap { generation ->
             springGenerationToKoogResponses(generation, clock, usage)
         }

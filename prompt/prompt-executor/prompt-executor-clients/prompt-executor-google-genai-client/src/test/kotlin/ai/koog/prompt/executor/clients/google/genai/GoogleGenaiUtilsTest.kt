@@ -10,6 +10,7 @@ import com.google.genai.types.Content
 import com.google.genai.types.FunctionCall
 import com.google.genai.types.GenerateContentResponse
 import com.google.genai.types.Part
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -232,6 +233,28 @@ class GoogleGenaiUtilsTest {
         fc.args().orElse(emptyMap()) shouldBe emptyMap()
     }
 
+    @Test
+    fun `tool call with malformed JSON args throws LLMClientException`() = runTest {
+        val prompt = Prompt(
+            messages = listOf(
+                Message.User("query", RequestMetaInfo.Empty),
+                Message.Tool.Call(
+                    id = "1",
+                    tool = "search",
+                    content = "not valid json{{{",
+                    metaInfo = ResponseMetaInfo.Empty
+                ),
+            ),
+            id = "malformed-json"
+        )
+        mockGenerateContent(textResponse("ok"))
+
+        val error = assertThrows<LLMClientException> {
+            subject.execute(prompt, flashModel)
+        }
+        error.message shouldContain "Failed to parse tool call JSON args"
+    }
+
     // endregion
 
     // region Map-to-JSON conversion (tested via function call response)
@@ -257,9 +280,7 @@ class GoogleGenaiUtilsTest {
 
         val toolCall = results.filterIsInstance<Message.Tool.Call>().single()
         toolCall.tool shouldBe "calc"
-        toolCall.content shouldContain "42"
-        toolCall.content shouldContain "test"
-        toolCall.content shouldContain "true"
+        toolCall.content shouldEqualJson """{"x":42,"label":"test","flag":true}"""
     }
 
     @Test

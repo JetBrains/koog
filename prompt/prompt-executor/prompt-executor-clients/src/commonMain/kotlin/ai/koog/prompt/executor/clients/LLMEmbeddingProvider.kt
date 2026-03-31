@@ -7,7 +7,7 @@ import ai.koog.prompt.llm.LLModel
  *
  * Extends [LLMProviderAware] to support shared provider-validation logic.
  */
-public interface LLMEmbeddingProvider : LLMProviderAware {
+public interface LLMEmbeddingProvider {
     /**
      * Embeds the given text using into a vector of double-precision numbers.
      *

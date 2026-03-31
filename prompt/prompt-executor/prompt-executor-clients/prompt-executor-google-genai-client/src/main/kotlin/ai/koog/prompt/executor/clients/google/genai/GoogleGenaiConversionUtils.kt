@@ -1,7 +1,8 @@
 package ai.koog.prompt.executor.clients.google.genai
 
+import ai.koog.prompt.executor.clients.LLMClientException
 import com.google.genai.types.Schema
-import io.github.oshai.kotlinlogging.KLogger
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -16,16 +17,10 @@ import java.util.Base64
  * Stateless utility methods for JSON/Map bidirectional conversion, SDK [Schema] conversion,
  * and thought-signature encoding used across the Google GenAI client converters.
  */
-internal class GoogleGenaiConversionUtils(private val logger: KLogger) {
+internal object GoogleGenaiConversionUtils {
 
     // region Signature encoding
 
-    /**
-     * Converts a signature string to byte[] for the SDK.
-     *
-     * Thought signatures are opaque binary data. We use Base64 encoding to safely
-     * round-trip the raw bytes through the String-based [Message.Reasoning.encrypted] field.
-     */
     fun signatureToBytes(value: String): ByteArray = Base64.getDecoder().decode(value)
     fun signatureFromBytes(value: ByteArray): String = Base64.getEncoder().encodeToString(value)
 
@@ -35,16 +30,20 @@ internal class GoogleGenaiConversionUtils(private val logger: KLogger) {
 
     /**
      * Parses a JSON string (tool call args) into a Map<String, Object> for the SDK.
+     *
+     * @throws LLMClientException if the JSON string cannot be parsed.
      */
-    @Suppress("TooGenericExceptionCaught")
-    fun parseJsonToMap(jsonString: String): Map<String, Any?> {
+    fun parseJsonToMap(jsonString: String, clientName: String): Map<String, Any?> {
         if (jsonString.isBlank() || jsonString == "{}") return emptyMap()
         return try {
             val element = Json.parseToJsonElement(jsonString)
             if (element is JsonObject) jsonObjectToMap(element) else emptyMap()
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to parse JSON args: $jsonString" }
-            emptyMap()
+        } catch (e: SerializationException) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = "Failed to parse tool call JSON args: $jsonString",
+                cause = e
+            )
         }
     }
 

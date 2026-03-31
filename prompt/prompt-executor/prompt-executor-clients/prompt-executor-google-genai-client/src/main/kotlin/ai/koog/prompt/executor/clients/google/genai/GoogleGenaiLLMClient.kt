@@ -10,6 +10,9 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
+import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiConversionUtils.convertMapToJsonObject
+import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiConversionUtils.jsonObjectToMap
+import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiConversionUtils.jsonObjectToSdkSchema
 import ai.koog.prompt.executor.clients.google.genai.GoogleGenaiLLMClient.Companion.DEFAULT_THOUGHT_SIGNATURE
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
@@ -24,6 +27,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.params.LLMParams.Schema.JSON
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
@@ -64,6 +68,7 @@ import kotlin.time.Clock
  * @property clock Clock instance used for tracking response metadata timestamps.
  * @property knownModels List of known [LLModel] used in [knownModels]. Defaults to [GoogleModels.models].
  */
+@Suppress("TooManyFunctions")
 public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     private val client: Client,
     private val llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
@@ -112,9 +117,8 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         public const val SKIP_THOUGHT_SIGNATURE: String = "skip_thought_signature_validator"
     }
 
-    private val conversionUtils = GoogleGenaiConversionUtils(logger)
-    private val requestConverter = GoogleGenaiRequestConverter(fallbackThoughtSignature, conversionUtils)
-    private val responseConverter = GoogleGenaiResponseConverter(logger, clock, conversionUtils)
+    private val requestConverter = GoogleGenaiRequestConverter(fallbackThoughtSignature)
+    private val responseConverter = GoogleGenaiResponseConverter(logger, clock)
 
     override fun getBasicJsonSchemaGenerator(): GoogleBasicJsonSchemaGenerator {
         return GoogleBasicJsonSchemaGenerator
@@ -126,8 +130,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     override fun llmProvider(): LLMProvider = llmProvider
 
-    private suspend fun <T> callApi(block: suspend () -> T): T =
-        callGoogleGenaiApi(clientName, block)
+    private suspend fun <T> callApi(block: suspend () -> T): T = callGoogleGenaiApi(clientName, block)
 
     // region Execute
 
@@ -162,24 +165,23 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
                     val meta = extractResponseMetaInfo(chunk)
 
                     chunk.candidates().orElse(null)?.firstOrNull()?.let { candidate ->
-                        candidate.content().orElse(null)?.parts()?.orElse(null)
-                            ?.forEachIndexed { index, part ->
-                                val functionCall = part.functionCall().orElse(null)
-                                val text = part.text().orElse(null)
+                        candidate.content().orElse(null)?.parts()?.orElse(null)?.forEachIndexed { index, part ->
+                            val functionCall = part.functionCall().orElse(null)
+                            val text = part.text().orElse(null)
 
-                                when {
-                                    functionCall != null -> emitToolCallDelta(
-                                        id = functionCall.id().orElse(null),
-                                        name = functionCall.name().orElse(null),
-                                        args = functionCall.args().orElse(null)
-                                            ?.let { conversionUtils.convertMapToJsonObject(it).toString() }
-                                            ?: "{}",
-                                        index = index
-                                    )
+                            when {
+                                functionCall != null -> emitToolCallDelta(
+                                    id = functionCall.id().orElse(null),
+                                    name = functionCall.name().orElse(null),
+                                    args = functionCall.args().orElse(null)
+                                        ?.let { convertMapToJsonObject(it).toString() }
+                                        ?: "{}",
+                                    index = index
+                                )
 
-                                    text != null -> emitTextDelta(text, index)
-                                }
+                                text != null -> emitTextDelta(text, index)
                             }
+                        }
 
                         candidate.finishReason().orElse(null)?.let { reason ->
                             emitEnd(reason.toString(), meta)
@@ -232,9 +234,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
      */
     protected open fun buildSdkContents(
         prompt: Prompt,
-        model: LLModel
+        model: LLModel,
     ): Pair<List<Content>, Content?> {
-        return requestConverter.buildSdkContents(prompt, model)
+        return requestConverter.buildSdkContents(prompt, model, clientName)
     }
 
     // endregion
@@ -273,10 +275,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
     ): GenerateContentConfig.Builder {
         val googleParams = asGoogleParams(params)
 
-        val builder = GenerateContentConfig.builder()
-            .automaticFunctionCalling(
-                AutomaticFunctionCallingConfig.builder().disable(true).build()
-            )
+        val builder = GenerateContentConfig.builder().automaticFunctionCalling(
+            AutomaticFunctionCallingConfig.builder().disable(true).build()
+        )
 
         // Generation parameters
         if (model.supports(LLMCapability.Temperature)) {
@@ -303,15 +304,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
             }
             builder.responseMimeType("application/json")
 
-            @Suppress("REDUNDANT_ELSE_IN_WHEN")
             when (schema) {
-                is LLMParams.Schema.JSON.Basic ->
-                    builder.responseSchema(conversionUtils.jsonObjectToSdkSchema(schema.schema))
-
-                is LLMParams.Schema.JSON.Standard ->
-                    builder.responseJsonSchema(conversionUtils.jsonObjectToMap(schema.schema))
-
-                else -> throw IllegalArgumentException("Unsupported schema type: $schema")
+                is JSON.Basic -> builder.responseSchema(jsonObjectToSdkSchema(schema.schema))
+                is JSON.Standard -> builder.responseJsonSchema(jsonObjectToMap(schema.schema))
             }
         }
 
