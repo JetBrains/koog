@@ -227,7 +227,7 @@ public object OllamaModels : LLModelDefinitions {
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools,
-                LLMCapability.Reasoning,
+                LLMCapability.Thinking,
             ),
             contextLength = 40_960,
         )
@@ -252,7 +252,7 @@ public object OllamaModels : LLModelDefinitions {
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools,
-                LLMCapability.Reasoning,
+                LLMCapability.Thinking,
             ),
             contextLength = 40_960,
         )
@@ -362,7 +362,7 @@ public object OllamaModels : LLModelDefinitions {
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools,
-                LLMCapability.Reasoning,
+                LLMCapability.Thinking,
             ),
             contextLength = 32_768,
         )

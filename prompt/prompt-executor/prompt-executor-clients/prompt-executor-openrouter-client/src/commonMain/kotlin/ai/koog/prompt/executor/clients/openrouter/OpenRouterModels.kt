@@ -37,7 +37,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Phi4Reasoning: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "microsoft/phi-4-reasoning:free",
-        capabilities = standardCapabilities + LLMCapability.Reasoning,
+        capabilities = standardCapabilities + LLMCapability.Thinking,
         contextLength = 32_768,
     )
 
@@ -107,7 +107,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Claude3_7Sonnet: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3.7-sonnet",
-        capabilities = multimodalCapabilities + LLMCapability.Reasoning,
+        capabilities = multimodalCapabilities + LLMCapability.Thinking,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -120,7 +120,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Claude4Sonnet: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-sonnet-4",
-        capabilities = multimodalCapabilities + LLMCapability.Reasoning,
+        capabilities = multimodalCapabilities + LLMCapability.Thinking,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -133,7 +133,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Claude4_1Opus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-opus-4.1",
-        capabilities = multimodalCapabilities + LLMCapability.Reasoning,
+        capabilities = multimodalCapabilities + LLMCapability.Thinking,
         contextLength = 200_000,
         maxOutputTokens = 32_000,
     )
@@ -150,7 +150,7 @@ public object OpenRouterModels : LLModelDefinitions {
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice,
-            LLMCapability.Reasoning,
+            LLMCapability.Thinking,
         ),
         contextLength = 200_000,
         maxOutputTokens = 64_000,
@@ -168,7 +168,7 @@ public object OpenRouterModels : LLModelDefinitions {
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice,
-            LLMCapability.Reasoning,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_000_000,
         maxOutputTokens = 64_000,
@@ -186,7 +186,7 @@ public object OpenRouterModels : LLModelDefinitions {
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice,
-            LLMCapability.Reasoning,
+            LLMCapability.Thinking,
         ),
         contextLength = 200_000,
         maxOutputTokens = 32_000,
@@ -569,7 +569,7 @@ public object OpenRouterModels : LLModelDefinitions {
         capabilities = multimodalCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice,
-            LLMCapability.Reasoning,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
@@ -586,7 +586,7 @@ public object OpenRouterModels : LLModelDefinitions {
         capabilities = multimodalCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice,
-            LLMCapability.Reasoning,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
@@ -603,7 +603,7 @@ public object OpenRouterModels : LLModelDefinitions {
         capabilities = multimodalCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice,
-            LLMCapability.Reasoning,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
@@ -635,7 +635,7 @@ public object OpenRouterModels : LLModelDefinitions {
         id = "qwen/qwen3-vl-8b-instruct",
         capabilities = multimodalCapabilities + listOf(
             LLMCapability.ToolChoice,
-            LLMCapability.Reasoning,
+            LLMCapability.Thinking,
         ),
         contextLength = 131_072,
         maxOutputTokens = 33_000,

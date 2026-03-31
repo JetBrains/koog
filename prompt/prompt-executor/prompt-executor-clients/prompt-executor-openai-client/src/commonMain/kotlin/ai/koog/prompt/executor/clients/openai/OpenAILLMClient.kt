@@ -185,7 +185,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             parallelToolCalls = chatParams.parallelToolCalls,
             prediction = chatParams.speculation?.let { OpenAIStaticContent(OpenAIContent.Text(it)) },
             presencePenalty = chatParams.presencePenalty,
-            promptCacheKey = chatParams.promptCacheKey, reasoningEffort = model.takeIf { it.supports(LLMCapability.Reasoning) }
+            promptCacheKey = chatParams.promptCacheKey, reasoningEffort = model.takeIf { it.supports(LLMCapability.Thinking) }
                 ?.let { chatParams.reasoningEffort },
             responseFormat = responseFormat,
             safetyIdentifier = chatParams.safetyIdentifier,
@@ -239,7 +239,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             model = model.id,
             parallelToolCalls = params.parallelToolCalls,
             promptCacheKey = params.promptCacheKey,
-            reasoning = model.takeIf { it.supports(LLMCapability.Reasoning) }
+            reasoning = model.takeIf { it.supports(LLMCapability.Thinking) }
                 ?.let { params.reasoning },
             safetyIdentifier = params.safetyIdentifier,
             serviceTier = params.serviceTier,
@@ -794,7 +794,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                     is Message.Reasoning -> {
                         flushPendingCalls()
-                        if (model.supports(LLMCapability.Reasoning)) {
+                        if (model.supports(LLMCapability.Thinking)) {
                             add(
                                 Item.Reasoning(
                                     id = message.id ?: Uuid.random().toString(),
