@@ -10,6 +10,8 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.IncompleteStreamException
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -185,6 +187,14 @@ public class RetryingLLMClient @JvmOverloads constructor(
 
     override fun close() {
         delegate.close()
+    }
+
+    override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+        return delegate.getStandardJsonSchemaGenerator()
+    }
+
+    override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+        return delegate.getBasicJsonSchemaGenerator()
     }
 }
 

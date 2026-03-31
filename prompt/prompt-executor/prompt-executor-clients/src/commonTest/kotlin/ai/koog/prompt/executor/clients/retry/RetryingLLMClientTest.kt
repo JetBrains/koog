@@ -16,6 +16,8 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitTextDelta
 import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.streaming.streamFrameFlowOf
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -440,6 +442,28 @@ class RetryingLLMClientTest {
         assertEquals(1, mockClient.streamCalls) // No retry after first frame
     }
 
+    @Test
+    fun testBasicJsonSchemaGeneratorDelegation() = runTest {
+        val mockClient = MockLLMClient()
+
+        val retryingClient = RetryingLLMClient(mockClient)
+
+        val result = retryingClient.getBasicJsonSchemaGenerator()
+
+        assertEquals(mockClient.basicJsonSchemaGeneratorDefault, result)
+    }
+
+    @Test
+    fun testStandardJsonSchemaGeneratorDelegation() = runTest {
+        val mockClient = MockLLMClient()
+
+        val retryingClient = RetryingLLMClient(mockClient)
+
+        val result = retryingClient.getStandardJsonSchemaGenerator()
+
+        assertEquals(mockClient.standardJsonSchemaGeneratorDefault, result)
+    }
+
     // Mock LLMClient for testing
     private class MockLLMClient(
         private val executeResponse: List<Message.Response> = emptyList(),
@@ -452,6 +476,9 @@ class RetryingLLMClientTest {
         private val throwCancellation: Boolean = false,
         private val llmProvider: LLMProvider = LLMProvider.OpenAI,
     ) : LLMClient() {
+
+        val basicJsonSchemaGeneratorDefault = object : BasicJsonSchemaGenerator() {}
+        val standardJsonSchemaGeneratorDefault = object : StandardJsonSchemaGenerator() {}
 
         var executeCalls = 0
         var streamCalls = 0
@@ -527,6 +554,14 @@ class RetryingLLMClientTest {
 
         override fun close() {
             // No resources to close
+        }
+
+        override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+            return basicJsonSchemaGeneratorDefault
+        }
+
+        override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+            return standardJsonSchemaGeneratorDefault
         }
     }
 }
