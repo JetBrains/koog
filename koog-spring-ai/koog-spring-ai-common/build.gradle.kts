@@ -6,6 +6,8 @@ version = rootProject.version
 plugins {
     id("ai.kotlin.jvm")
     id("ai.kotlin.jvm.publish")
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.management)
 }
 kotlin {
     explicitApi()
@@ -21,5 +23,9 @@ tasks.withType<JavaCompile>().configureEach {
     sourceCompatibility = JavaVersion.VERSION_17.toString()
     targetCompatibility = JavaVersion.VERSION_17.toString()
     options.compilerArgs.add("-parameters")
+}
+dependencies {
+    implementation(project.dependencies.platform(libs.spring.boot.bom))
+    api(libs.bundles.spring.boot.core)
 }
 publishToMaven()

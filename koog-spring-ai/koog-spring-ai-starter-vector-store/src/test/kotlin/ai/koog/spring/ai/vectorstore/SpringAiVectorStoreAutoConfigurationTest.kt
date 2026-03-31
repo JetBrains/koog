@@ -4,6 +4,7 @@ import ai.koog.rag.base.storage.DeletionStorage
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
+import ai.koog.spring.ai.common.DispatcherType
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -28,18 +29,30 @@ class SpringAiVectorStoreAutoConfigurationTest {
     private fun contextRunner(): ApplicationContextRunner = ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(SpringAiVectorStoreAutoConfiguration::class.java))
 
+    // ---- enabled / disabled ----
+
     @Test
-    fun `should not create Koog storage beans when no VectorStore is present`() {
+    fun testCreateDispatcherWhenEnabledByDefault() {
         contextRunner().run { context ->
-            assertThrows<NoSuchBeanDefinitionException> { context.getBean<KoogVectorStore>() }
-            assertThrows<NoSuchBeanDefinitionException> { context.getBean<WriteStorage<DocumentWithMetadata>>() }
-            assertThrows<NoSuchBeanDefinitionException> { context.getBean<SearchStorage<DocumentWithMetadata, SimilaritySearchRequest>>() }
-            assertThrows<NoSuchBeanDefinitionException> { context.getBean<DeletionStorage>() }
+            assertNotNull(context.getBean("koogSpringAiVectorStoreDispatcher"))
         }
     }
 
     @Test
-    fun `should create adapter and Koog storage beans when single VectorStore is present`() {
+    fun testNotCreateAnyBeansWhenDisabled() {
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.vectorstore.enabled=false")
+            .withBean(VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
+            .run { context ->
+                assertThrows<NoSuchBeanDefinitionException> { context.getBean<KoogVectorStore>() }
+                assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAiVectorStoreDispatcher") }
+            }
+    }
+
+    // ---- single VectorStore ----
+
+    @Test
+    fun testCreateAdapterAndKoogStorageBeansWhenSingleVectorStoreIsPresent() {
         contextRunner()
             .withBean(VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
             .run { context ->
@@ -51,17 +64,45 @@ class SpringAiVectorStoreAutoConfigurationTest {
     }
 
     @Test
-    fun `should not create Koog storage beans when multiple VectorStores are present without selector`() {
+    fun testNotCreateKoogStorageBeansWhenNoVectorStoreIsPresent() {
+        contextRunner().run { context ->
+            assertThrows<NoSuchBeanDefinitionException> { context.getBean<KoogVectorStore>() }
+            assertThrows<NoSuchBeanDefinitionException> { context.getBean<WriteStorage<DocumentWithMetadata>>() }
+            assertThrows<NoSuchBeanDefinitionException> { context.getBean<SearchStorage<DocumentWithMetadata, SimilaritySearchRequest>>() }
+            assertThrows<NoSuchBeanDefinitionException> { context.getBean<DeletionStorage>() }
+        }
+    }
+
+    // ---- user-supplied KoogVectorStore ----
+
+    @Test
+    fun testNotCreateKoogVectorStoreWhenUserProvidesOne() {
+        val userStore = mockk<KoogVectorStore>(relaxed = true)
+        contextRunner()
+            .withBean(VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
+            .withBean(KoogVectorStore::class.java, { userStore })
+            .run { context ->
+                assertSame(userStore, context.getBean<KoogVectorStore>())
+            }
+    }
+
+    // ---- multiple VectorStores without selector ----
+
+    @Test
+    fun testNotCreateKoogStorageBeansWhenMultipleVectorStoresArePresentWithoutSelector() {
         contextRunner()
             .withBean("store1", VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
             .withBean("store2", VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
             .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<KoogVectorStore>() }
             }
     }
 
+    // ---- named VectorStore selection ----
+
     @Test
-    fun `should resolve VectorStore by bean name when configured`() {
+    fun testResolveVectorStoreByBeanNameWhenConfigured() {
         contextRunner()
             .withPropertyValues("koog.spring.ai.vectorstore.vector-store-bean-name=myVectorStore")
             .withBean("myVectorStore", VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
@@ -72,25 +113,59 @@ class SpringAiVectorStoreAutoConfigurationTest {
     }
 
     @Test
-    fun `should not create beans when disabled`() {
+    fun testResolveByBeanNameWhenSelectorPresentAndSingleVectorStoreExists() {
+        val store = mockk<VectorStore>(relaxed = true)
         contextRunner()
-            .withPropertyValues("koog.spring.ai.vectorstore.enabled=false")
-            .withBean(VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
+            .withPropertyValues("koog.spring.ai.vectorstore.vector-store-bean-name=myStore")
+            .withBean("myStore", VectorStore::class.java, { store })
             .run { context ->
-                assertThrows<NoSuchBeanDefinitionException> { context.getBean<KoogVectorStore>() }
-                assertThrows<NoSuchBeanDefinitionException> { context.getBean("koogSpringAiVectorStoreDispatcher") }
+                assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<KoogVectorStore>())
             }
     }
 
     @Test
-    fun `should create dispatcher bean`() {
-        contextRunner().run { context ->
-            assertNotNull(context.getBean("koogSpringAiVectorStoreDispatcher"))
-        }
+    fun testFailWhenVectorStoreBeanNameRefersToNonExistentBean() {
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.vectorstore.vector-store-bean-name=doesNotExist")
+            .withBean("actualStore", VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
+            .run { context ->
+                assertInstanceOf<BeanCreationException>(context.startupFailure)
+            }
     }
 
+    // ---- mutual exclusion: single candidate + selector set ----
+
     @Test
-    fun `should bind properties`() {
+    fun testCreateExactlyOneKoogVectorStoreUsingNamedPathWhenSingleStoreAndSelectorAreSet() {
+        val myStore = mockk<VectorStore>(relaxed = true)
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.vectorstore.vector-store-bean-name=myStore")
+            .withBean("myStore", VectorStore::class.java, { myStore })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                val stores = context.getBeansOfType(KoogVectorStore::class.java)
+                assertTrue(stores.size == 1, "Expected exactly one KoogVectorStore, got ${stores.size}")
+            }
+    }
+
+    // ---- mutual exclusion: selector set to empty string ----
+    @Test
+    fun testEmptyStringSelectorTreatedAsMissingAndUsesSingleCandidate() {
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.vectorstore.vector-store-bean-name=")
+            .withBean("myStore", VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
+            .run { context ->
+                // @ConditionalOnPropertyMissingOrEmpty treats "" as missing/empty, so only
+                // SingleVectorStoreConfiguration activates; NamedVectorStoreConfiguration does not match.
+                assertTrue(context.startupFailure == null, "Context should start successfully when selector is empty string")
+                assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<KoogVectorStore>())
+            }
+    }
+
+    // ---- properties binding ----
+
+    @Test
+    fun testBindProperties() {
         contextRunner()
             .withPropertyValues(
                 "koog.spring.ai.vectorstore.enabled=true",
@@ -102,12 +177,14 @@ class SpringAiVectorStoreAutoConfigurationTest {
                 val properties = context.getBean<KoogSpringAiVectorStoreProperties>()
                 assertTrue(properties.enabled)
                 assertEquals("vectorStore", properties.vectorStoreBeanName)
-                assertSame(KoogSpringAiVectorStoreProperties.DispatcherType.IO, properties.dispatcher.type)
+                assertSame(DispatcherType.IO, properties.dispatcher.type)
             }
     }
 
+    // ---- dispatcher ----
+
     @Test
-    fun `AUTO dispatcher should use AsyncTaskExecutor when available`() {
+    fun testAutoDispatcherUsesAsyncTaskExecutorWhenAvailable() {
         val executor = mockk<AsyncTaskExecutor>(relaxed = true)
         contextRunner()
             .withBean("applicationTaskExecutor", AsyncTaskExecutor::class.java, { executor })
@@ -119,32 +196,21 @@ class SpringAiVectorStoreAutoConfigurationTest {
     }
 
     @Test
-    fun `AUTO dispatcher should fall back to Dispatchers_IO when no AsyncTaskExecutor`() {
+    fun testAutoDispatcherFallsBackToDispatchersIOWhenNoAsyncTaskExecutor() {
         contextRunner().run { context ->
             val dispatcher = context.getBean("koogSpringAiVectorStoreDispatcher") as CoroutineDispatcher
-            assertNotNull(dispatcher)
             assertSame(kotlinx.coroutines.Dispatchers.IO, dispatcher)
         }
     }
 
     @Test
-    fun `should resolve by bean name when selector present and single VectorStore exists`() {
-        val store = mockk<VectorStore>(relaxed = true)
+    fun testNotOverrideUserProvidedDispatcher() {
+        val customDispatcher = kotlinx.coroutines.Dispatchers.Unconfined
         contextRunner()
-            .withPropertyValues("koog.spring.ai.vectorstore.vector-store-bean-name=myStore")
-            .withBean("myStore", VectorStore::class.java, { store })
+            .withBean("koogSpringAiVectorStoreDispatcher", CoroutineDispatcher::class.java, { customDispatcher })
             .run { context ->
-                assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<KoogVectorStore>())
-            }
-    }
-
-    @Test
-    fun `should fail when vector-store-bean-name refers to non-existent bean`() {
-        contextRunner()
-            .withPropertyValues("koog.spring.ai.vectorstore.vector-store-bean-name=doesNotExist")
-            .withBean("actualStore", VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
-            .run { context ->
-                assertInstanceOf<BeanCreationException>(context.startupFailure)
+                val dispatcher = context.getBean("koogSpringAiVectorStoreDispatcher") as CoroutineDispatcher
+                assertSame(customDispatcher, dispatcher)
             }
     }
 }

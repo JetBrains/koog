@@ -19,4 +19,36 @@ public data class DocumentWithMetadata @JvmOverloads constructor(
             }
         }
     }
+
+    /**
+     * Java-friendly builder for [DocumentWithMetadata].
+     *
+     * Usage from Java:
+     * ```java
+     * DocumentWithMetadata doc = new DocumentWithMetadata.Builder("Hello world")
+     *     .metadata("author", "Alice")
+     *     .metadata("year", 2024)
+     *     .id("doc-1")
+     *     .build();
+     * ```
+     */
+    public class Builder(private val content: String) {
+        private val metadata: MutableMap<String, Any> = mutableMapOf()
+        private var id: String? = null
+
+        /** Adds a single metadata entry. */
+        public fun metadata(key: String, value: Any): Builder = apply { metadata[key] = value }
+
+        /** Replaces all metadata with the given map. */
+        public fun metadata(map: Map<String, Any>): Builder = apply {
+            metadata.clear()
+            metadata.putAll(map)
+        }
+
+        /** Sets the document id. */
+        public fun id(id: String?): Builder = apply { this.id = id }
+
+        /** Builds the [DocumentWithMetadata] instance. */
+        public fun build(): DocumentWithMetadata = DocumentWithMetadata(content, metadata, id)
+    }
 }

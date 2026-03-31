@@ -50,14 +50,28 @@ class SpringAiChatAutoConfigurationTest {
     }
 
     @Test
-    fun `should not create LLMClient when ChatModel is present but LLMClient already exists`() {
+    fun `should create auto-configured LLMClient alongside user-defined LLMClient`() {
         val existingClient = mockk<LLMClient>(relaxed = true)
         contextRunner()
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
-            .withBean(LLMClient::class.java, { existingClient })
+            .withBean("userLLMClient", LLMClient::class.java, { existingClient })
             .run { context ->
-                val client = context.getBean<LLMClient>()
-                assertTrue(client === existingClient)
+                val clients = context.getBeansOfType(LLMClient::class.java)
+                assertTrue(clients.size == 2, "Expected 2 LLMClient beans (auto-configured + user), got ${clients.size}")
+                assertTrue(clients.values.any { it is SpringAiLLMClient }, "Auto-configured SpringAiLLMClient should be present")
+                assertTrue(clients.values.any { it === existingClient }, "User-defined LLMClient should be present")
+            }
+    }
+
+    @Test
+    fun `should compose all LLMClients into PromptExecutor when user-defined LLMClient coexists`() {
+        val existingClient = mockk<LLMClient>(relaxed = true)
+        contextRunner()
+            .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .withBean("userLLMClient", LLMClient::class.java, { existingClient })
+            .run { context ->
+                val executor = context.getBean<PromptExecutor>()
+                assertInstanceOf<MultiLLMPromptExecutor>(executor)
             }
     }
 
@@ -119,19 +133,15 @@ class SpringAiChatAutoConfigurationTest {
 
     // ---- mutual exclusion: selector set to empty string ----
     @Test
-    fun `should fail on startup when chat-model-bean-name is set to empty string because named path activates with empty bean name`() {
+    fun `should treat empty string selector as missing and use single candidate`() {
         contextRunner()
             .withPropertyValues("koog.spring.ai.chat.chat-model-bean-name=")
             .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
-                // Spring treats "" as a present value equal to "", so havingValue="" on SingleChatModelConfiguration
-                // matches (the condition passes), AND the plain @ConditionalOnProperty on NamedChatModelConfiguration
-                // also matches (any non-false present value satisfies it). Both configs activate; the named path
-                // then calls beanFactory.getBean("", ChatModel::class.java) with an empty name, which fails.
-                assertTrue(
-                    context.startupFailure != null,
-                    "Expected startup failure when chat-model-bean-name is set to empty string"
-                )
+                // @ConditionalOnPropertyMissingOrEmpty treats "" as missing/empty, so only
+                // SingleChatModelConfiguration activates; NamedChatModelConfiguration does not match.
+                assertTrue(context.startupFailure == null, "Context should start successfully when selector is empty string")
+                assertInstanceOf<SpringAiLLMClient>(context.getBean<LLMClient>())
             }
     }
 

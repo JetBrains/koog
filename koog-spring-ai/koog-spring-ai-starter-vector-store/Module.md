@@ -59,6 +59,7 @@ class MyKnowledgeBase(
 
 - If a single `VectorStore` bean exists in the context, it is used automatically.
 - If multiple `VectorStore` beans exist, set `koog.spring.ai.vectorstore.vector-store-bean-name` to select one.
+- When `vector-store-bean-name` is set, the single-candidate path is suppressed — exactly one `KoogVectorStore` is created via the named path.
 - The dispatcher for blocking VectorStore calls defaults to `AUTO`, which uses Spring's `AsyncTaskExecutor` if available, otherwise falls back to `Dispatchers.IO`.
 
 ### Configuration properties (`koog.spring.ai.vectorstore`)
@@ -69,6 +70,21 @@ class MyKnowledgeBase(
 | `vector-store-bean-name` | `String?` | `null` | Bean name of the `VectorStore` to use when multiple stores are present |
 | `dispatcher.type` | `AUTO` / `IO` | `AUTO` | Dispatcher for blocking VectorStore calls |
 | `dispatcher.parallelism` | `Int` | `0` (= unbounded) | Max concurrency for `IO` dispatcher |
+
+### Dispatcher types
+
+- **`AUTO`** (default): Uses a Spring-managed `AsyncTaskExecutor` if available (e.g., when `spring.threads.virtual.enabled=true` in Spring Boot 3.2+), otherwise falls back to `Dispatchers.IO`. This lets you opt into virtual threads with a single standard Spring Boot property.
+- **`IO`**: Always uses `Dispatchers.IO`. When `dispatcher.parallelism` is greater than 0, uses `Dispatchers.IO.limitedParallelism(parallelism)` to cap concurrency.
+
+### Multi-store contexts
+
+When multiple `VectorStore` beans are registered, specify which one to use:
+
+```properties
+koog.spring.ai.vectorstore.vector-store-bean-name=pgVectorStore
+```
+
+Without a selector, the auto-configuration activates only when a single candidate exists.
 
 ### Current limitations
 
