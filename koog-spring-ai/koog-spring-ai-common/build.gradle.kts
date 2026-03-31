@@ -6,8 +6,6 @@ version = rootProject.version
 plugins {
     id("ai.kotlin.jvm")
     id("ai.kotlin.jvm.publish")
-    alias(libs.plugins.kotlin.spring)
-    alias(libs.plugins.spring.management)
 }
 kotlin {
     explicitApi()
@@ -23,19 +21,5 @@ tasks.withType<JavaCompile>().configureEach {
     sourceCompatibility = JavaVersion.VERSION_17.toString()
     targetCompatibility = JavaVersion.VERSION_17.toString()
     options.compilerArgs.add("-parameters")
-}
-dependencies {
-    api(project(":koog-spring-ai:koog-spring-ai-common"))
-    api(project(":prompt:prompt-executor:prompt-executor-clients"))
-    implementation(project.dependencies.platform(libs.spring.boot.bom))
-    implementation(project.dependencies.platform(libs.spring.ai.bom))
-    api(libs.bundles.spring.boot.core)
-    api(libs.spring.ai.model)
-    implementation(libs.kotlinx.coroutines.core)
-
-    testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.mockk)
-    testRuntimeOnly(libs.junit.platform.launcher)
 }
 publishToMaven()

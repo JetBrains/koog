@@ -95,8 +95,10 @@ include(":serialization:serialization-jackson")
 
 include(":koog-spring-boot-starter")
 
+include(":koog-spring-ai:koog-spring-ai-common")
 include(":koog-spring-ai:koog-spring-ai-starter-model-chat")
 include(":koog-spring-ai:koog-spring-ai-starter-model-embedding")
+include(":koog-spring-ai:koog-spring-ai-starter-chat-memory")
 
 include(":koog-ktor")
 include(":docs")

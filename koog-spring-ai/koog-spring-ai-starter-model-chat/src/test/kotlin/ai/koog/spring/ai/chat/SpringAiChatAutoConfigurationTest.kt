@@ -67,7 +67,71 @@ class SpringAiChatAutoConfigurationTest {
             .withBean("chatModel1", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .withBean("chatModel2", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<LLMClient>() }
+            }
+    }
+
+    @Test
+    fun `should use named config only when single ChatModel and selector property are both set`() {
+        val targetModel = mockk<ChatModel>(relaxed = true)
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.chat.chat-model-bean-name=myChat")
+            .withBean("myChat", ChatModel::class.java, { targetModel })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                val client = context.getBean<LLMClient>()
+                assertInstanceOf<SpringAiLLMClient>(client)
+                // Only one LLMClient bean — no duplicate
+                assertTrue(context.getBeansOfType(LLMClient::class.java).size == 1)
+            }
+    }
+
+    // ---- mutual exclusion: single candidate + selector set ----
+    @Test
+    fun `should create exactly one LLMClient using named path when single ChatModel and selector are both set`() {
+        val targetModel = mockk<ChatModel>(relaxed = true)
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.chat.chat-model-bean-name=myChat")
+            .withBean("myChat", ChatModel::class.java, { targetModel })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                val clients = context.getBeansOfType(LLMClient::class.java)
+                assertTrue(clients.size == 1, "Expected exactly one LLMClient, got ${clients.size}")
+                assertInstanceOf<SpringAiLLMClient>(clients.values.single())
+            }
+    }
+
+    // ---- mutual exclusion: multiple candidates + no selector ----
+    @Test
+    fun `should not create LLMClient and not fail when multiple ChatModels exist and no selector is set`() {
+        contextRunner()
+            .withBean("chatModel1", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .withBean("chatModel2", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                assertTrue(
+                    context.getBeansOfType(LLMClient::class.java).isEmpty(),
+                    "Expected no LLMClient when multiple ChatModels exist and no selector is set"
+                )
+            }
+    }
+
+    // ---- mutual exclusion: selector set to empty string ----
+    @Test
+    fun `should fail on startup when chat-model-bean-name is set to empty string because named path activates with empty bean name`() {
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.chat.chat-model-bean-name=")
+            .withBean("myChat", ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
+            .run { context ->
+                // Spring treats "" as a present value equal to "", so havingValue="" on SingleChatModelConfiguration
+                // matches (the condition passes), AND the plain @ConditionalOnProperty on NamedChatModelConfiguration
+                // also matches (any non-false present value satisfies it). Both configs activate; the named path
+                // then calls beanFactory.getBean("", ChatModel::class.java) with an empty name, which fails.
+                assertTrue(
+                    context.startupFailure != null,
+                    "Expected startup failure when chat-model-bean-name is set to empty string"
+                )
             }
     }
 
@@ -112,7 +176,8 @@ class SpringAiChatAutoConfigurationTest {
             .run { context ->
                 val props = context.getBean<KoogSpringAiChatProperties>()
                 assertTrue(props.enabled)
-                assertTrue(props.dispatcher.type == KoogSpringAiChatProperties.DispatcherType.IO)
+                assertTrue(props.dispatcher.type == ai.koog.spring.ai.common.DispatcherType.IO)
+                assertTrue(props.dispatcher.toDispatcherProperties() is ai.koog.spring.ai.common.DispatcherProperties.IO)
             }
     }
 

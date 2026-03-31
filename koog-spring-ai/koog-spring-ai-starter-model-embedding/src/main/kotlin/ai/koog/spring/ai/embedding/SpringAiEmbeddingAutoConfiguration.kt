@@ -1,13 +1,14 @@
 package ai.koog.spring.ai.embedding
 
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.spring.ai.common.DispatcherProperties
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.ai.embedding.EmbeddingModel
 import org.springframework.beans.factory.BeanFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
@@ -18,7 +19,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
-import org.springframework.lang.Nullable
 
 /**
  * Auto-configuration for the Koog Spring AI Embedding Model adapter.
@@ -62,10 +62,11 @@ public open class SpringAiEmbeddingAutoConfiguration {
     @ConditionalOnMissingBean(name = ["koogSpringAiEmbeddingDispatcher"])
     public open fun koogSpringAiEmbeddingDispatcher(
         properties: KoogSpringAiEmbeddingProperties,
-        @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
+        @Qualifier("applicationTaskExecutor") asyncTaskExecutorProvider: ObjectProvider<AsyncTaskExecutor>,
     ): CoroutineDispatcher {
-        return when (properties.dispatcher.type) {
-            KoogSpringAiEmbeddingProperties.DispatcherType.AUTO -> {
+        val asyncTaskExecutor = asyncTaskExecutorProvider.ifAvailable
+        return when (val dispatcher = properties.dispatcher.toDispatcherProperties()) {
+            is DispatcherProperties.Auto -> {
                 if (asyncTaskExecutor != null) {
                     logger.info("Koog Spring AI Embedding: using Spring AsyncTaskExecutor as dispatcher for blocking model calls")
                     asyncTaskExecutor.asCoroutineDispatcher()
@@ -75,9 +76,9 @@ public open class SpringAiEmbeddingAutoConfiguration {
                 }
             }
 
-            KoogSpringAiEmbeddingProperties.DispatcherType.IO -> {
-                val parallelism = properties.dispatcher.parallelism
-                if (parallelism > 0) {
+            is DispatcherProperties.IO -> {
+                val parallelism = dispatcher.parallelism
+                if (parallelism != null && parallelism > 0) {
                     logger.info("Koog Spring AI Embedding: using Dispatchers.IO.limitedParallelism($parallelism) for blocking model calls")
                     Dispatchers.IO.limitedParallelism(parallelism)
                 } else {
@@ -91,7 +92,7 @@ public open class SpringAiEmbeddingAutoConfiguration {
     /**
      * Embedding model configuration — activated when a bean-name selector is provided.
      */
-    @Configuration
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnProperty(prefix = "koog.spring.ai.embedding", name = ["embedding-model-bean-name"])
     public open class NamedEmbeddingModelConfiguration {
         private val logger = LoggerFactory.getLogger(NamedEmbeddingModelConfiguration::class.java)
@@ -111,15 +112,31 @@ public open class SpringAiEmbeddingAutoConfiguration {
     }
 
     /**
-     * Embedding model configuration — activated when no bean-name selector is set and a single EmbeddingModel candidate exists.
+     * Embedding model configuration — activated when no bean-name selector is set
+     * and a single [EmbeddingModel] candidate exists.
+     *
+     * This is the default fallback path. It is mutually exclusive with [NamedEmbeddingModelConfiguration] for
+     * the common cases:
+     * - selector absent → `matchIfMissing = true` activates this config; [NamedEmbeddingModelConfiguration] does not match
+     * - selector non-empty (e.g. `"myBean"`) → [NamedEmbeddingModelConfiguration] matches; `havingValue = ""` does not
+     *   match a non-empty value, so this config does not activate
+     * - selector set to literal `""` → both configs activate (Spring treats `""` as a present value that satisfies
+     *   both `havingValue = ""` and the plain `@ConditionalOnProperty` on the named path); the named path then
+     *   attempts `beanFactory.getBean("", EmbeddingModel::class.java)` which fails at startup
      */
-    @Configuration
-    @ConditionalOnMissingBean(LLMEmbeddingProvider::class)
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnSingleCandidate(EmbeddingModel::class)
+    @ConditionalOnProperty(
+        prefix = "koog.spring.ai.embedding",
+        name = ["embedding-model-bean-name"],
+        havingValue = "",
+        matchIfMissing = true
+    )
     public open class SingleEmbeddingModelConfiguration {
         private val logger = LoggerFactory.getLogger(SingleEmbeddingModelConfiguration::class.java)
 
         @Bean
+        @ConditionalOnMissingBean(LLMEmbeddingProvider::class)
         public open fun springAiEmbeddingModelLLMEmbeddingProvider(
             embeddingModel: EmbeddingModel,
             @Qualifier("koogSpringAiEmbeddingDispatcher") dispatcher: CoroutineDispatcher,

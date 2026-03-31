@@ -46,8 +46,10 @@ val excluded = setOf(
     ":serialization:serialization-jackson",
 
     ":koog-spring-ai",
+    ":koog-spring-ai:koog-spring-ai-common",
     ":koog-spring-ai:koog-spring-ai-starter-model-chat",
     ":koog-spring-ai:koog-spring-ai-starter-model-embedding",
+    ":koog-spring-ai:koog-spring-ai-starter-chat-memory",
 
     project.path, // the current project should not depend on itself
 )
