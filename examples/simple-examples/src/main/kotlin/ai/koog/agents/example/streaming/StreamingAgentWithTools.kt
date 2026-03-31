@@ -2,7 +2,6 @@ package ai.koog.agents.example.streaming
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
@@ -18,6 +17,9 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
+import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
@@ -38,8 +40,14 @@ suspend fun main() {
                     println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
                 }
                 onLLMStreamingFrameReceived { context ->
-                    (context.streamFrame as? StreamFrame.TextDelta)?.let { frame ->
-                        print(frame.text)
+                    when (val frame = context.streamFrame) {
+                        is StreamFrame.ReasoningComplete -> println("Reasoning complete:id=${frame.id}\ntext=${frame.text}\nsummary=${frame.summary}")
+                        is StreamFrame.TextComplete -> println("Text complete")
+                        is StreamFrame.ToolCallComplete -> println("Tool call complete")
+                        is StreamFrame.ReasoningDelta -> println("Reasoning delta:id=${frame.id}\ntext=${frame.text}\nsummary=${frame.summary}")
+                        is StreamFrame.TextDelta -> println("Text delta:\n${frame.text}")
+                        is StreamFrame.ToolCallDelta -> println("Tool call delta:\n${frame.content}")
+                        is StreamFrame.End -> println("End")
                     }
                 }
                 onLLMStreamingFailed {
@@ -74,10 +82,14 @@ private fun openAiAgent(
 ) = AIAgent.builder()
     .graphStrategy { streamingWithToolsStrategy() }
     .promptExecutor(executor)
-    .prompt(prompt("agent", OpenAIResponsesParams(temperature = 0.0)) {
+    .prompt(prompt("agent", OpenAIResponsesParams(
+        temperature = 1.0,
+        reasoning = ReasoningConfig(effort = ReasoningEffort.MEDIUM, summary = ReasoningSummary.AUTO)
+    ))
+    {
         system("You're responsible for running a Switch and perform operations on it by request")
     })
-    .llmModel(OpenAIModels.Chat.GPT4oMini)
+    .llmModel(OpenAIModels.Chat.GPT5_1)
     .toolRegistry(toolRegistry)
     .install(installFeatures)
     .build()

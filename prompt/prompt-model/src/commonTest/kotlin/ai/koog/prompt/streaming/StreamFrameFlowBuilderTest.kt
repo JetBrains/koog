@@ -166,20 +166,19 @@ class StreamFrameFlowBuilderTest {
     fun testSwitchingFromToolCallToReasoningEmitsPendingToolCall() = runTest {
         val frames = buildStreamFrameFlow {
             emitToolCallDelta(id = "call_1", name = "search", args = "{}", 0)
-            emitReasoningDelta(text = "Now thinking...", index = 1)
+            emitReasoningDelta(id = "rs_123", text = "Now thinking...", index = 1)
             emitEnd()
         }.toList()
 
-        assertContentEquals(
-            listOf(
-                StreamFrame.ToolCallDelta("call_1", "search", "{}", 0),
-                StreamFrame.ToolCallComplete("call_1", "search", "{}", 0),
-                StreamFrame.ReasoningDelta(text = "Now thinking...", index = 1),
-                StreamFrame.ReasoningComplete(listOf("Now thinking..."), null, null, 1),
-                StreamFrame.End(null, ResponseMetaInfo.Empty)
-            ),
-            frames
+        val expectedFrames = listOf(
+            StreamFrame.ToolCallDelta("call_1", "search", "{}", 0),
+            StreamFrame.ToolCallComplete("call_1", "search", "{}", 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Now thinking...", index = 1),
+            StreamFrame.ReasoningComplete(id = "rs_123", listOf("Now thinking..."), null, null, 1),
+            StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
+
+        assertContentEquals(expectedFrames, frames)
     }
 
     @Test
@@ -188,47 +187,48 @@ class StreamFrameFlowBuilderTest {
             emitTextDelta("Start with text", 0)
             emitToolCallDelta(id = "call_1", name = "calculator", args = "{\"a\": 5}", 1)
             emitTextDelta("Continue after tool with text", 2)
-            emitReasoningDelta(text = "Now switch from text to thinking...", index = 3)
-            emitReasoningDelta(summary = "Summary thinking", index = 3)
+            emitReasoningDelta(id = "rs_12", text = "Now switch from text to thinking...", index = 3)
+            emitReasoningDelta(id = "rs_12", summary = "Summary thinking", index = 3)
             emitToolCallDelta(id = "call_2", name = "search", args = "{}", 4)
-            emitReasoningDelta(text = "Now switch from tool to thinking...", index = 5)
-            emitReasoningDelta(summary = "Summary thinking", index = 5)
+            emitReasoningDelta(id = "rs_123", text = "Now switch from tool to thinking...", index = 5)
+            emitReasoningDelta(id = "rs_123", summary = "Summary thinking", index = 5)
             emitTextDelta("Finally switch from reasoning to text ", 6)
             emitEnd()
         }.toList()
 
-        assertContentEquals(
-            listOf(
-                StreamFrame.TextDelta("Start with text", 0),
-                StreamFrame.TextComplete("Start with text", 0),
-                StreamFrame.ToolCallDelta("call_1", "calculator", "{\"a\": 5}", 1),
-                StreamFrame.ToolCallComplete("call_1", "calculator", "{\"a\": 5}", 1),
-                StreamFrame.TextDelta("Continue after tool with text", 2),
-                StreamFrame.TextComplete("Continue after tool with text", 2),
-                StreamFrame.ReasoningDelta(text = "Now switch from text to thinking...", index = 3),
-                StreamFrame.ReasoningDelta(summary = "Summary thinking", index = 3),
-                StreamFrame.ReasoningComplete(
-                    listOf("Now switch from text to thinking..."),
-                    listOf("Summary thinking"),
-                    null,
-                    3
-                ),
-                StreamFrame.ToolCallDelta("call_2", "search", "{}", 4),
-                StreamFrame.ToolCallComplete("call_2", "search", "{}", 4),
-                StreamFrame.ReasoningDelta(text = "Now switch from tool to thinking...", index = 5),
-                StreamFrame.ReasoningDelta(summary = "Summary thinking", index = 5),
-                StreamFrame.ReasoningComplete(
-                    listOf("Now switch from tool to thinking..."),
-                    listOf("Summary thinking"),
-                    null,
-                    5
-                ),
-                StreamFrame.TextDelta("Finally switch from reasoning to text ", 6),
-                StreamFrame.TextComplete("Finally switch from reasoning to text ", 6),
-                StreamFrame.End(null, ResponseMetaInfo.Empty)
+        val expectedFrames = listOf(
+            StreamFrame.TextDelta("Start with text", 0),
+            StreamFrame.TextComplete("Start with text", 0),
+            StreamFrame.ToolCallDelta("call_1", "calculator", "{\"a\": 5}", 1),
+            StreamFrame.ToolCallComplete("call_1", "calculator", "{\"a\": 5}", 1),
+            StreamFrame.TextDelta("Continue after tool with text", 2),
+            StreamFrame.TextComplete("Continue after tool with text", 2),
+            StreamFrame.ReasoningDelta(id = "rs_12", text = "Now switch from text to thinking...", index = 3),
+            StreamFrame.ReasoningDelta(id = "rs_12", summary = "Summary thinking", index = 3),
+            StreamFrame.ReasoningComplete(
+                id = "rs_12",
+                listOf("Now switch from text to thinking..."),
+                listOf("Summary thinking"),
+                null,
+                3
             ),
-            frames
+            StreamFrame.ToolCallDelta("call_2", "search", "{}", 4),
+            StreamFrame.ToolCallComplete("call_2", "search", "{}", 4),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Now switch from tool to thinking...", index = 5),
+            StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary thinking", index = 5),
+            StreamFrame.ReasoningComplete(
+                id = "rs_123",
+                listOf("Now switch from tool to thinking..."),
+                listOf("Summary thinking"),
+                null,
+                5
+            ),
+            StreamFrame.TextDelta("Finally switch from reasoning to text ", 6),
+            StreamFrame.TextComplete("Finally switch from reasoning to text ", 6),
+            StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
+
+        assertContentEquals(expectedFrames, frames)
     }
 
     @Test

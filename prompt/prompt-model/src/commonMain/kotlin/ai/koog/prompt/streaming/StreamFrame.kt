@@ -51,10 +51,14 @@ public sealed interface StreamFrame {
     /**
      * Represents a frame of a streaming response from a LLM with reasoning text delta.
      *
+     * @property id The id of the reasoning text.
      * @property text The text to append to the reasoning text.
+     * @property summary The summary of the reasoning text.
+     * @property index The index of the frame in the list of frames.
      */
     @Serializable
     public data class ReasoningDelta(
+        val id: String? = null,
         val text: String? = null,
         val summary: String? = null,
         override val index: Int? = null
@@ -63,10 +67,15 @@ public sealed interface StreamFrame {
     /**
      * Represents a frame of a streaming response from a LLM with reasoning text delta.
      *
+     * @property id The id of the reasoning text.
      * @property text The text to append to the reasoning text.
+     * @property summary The summary of the reasoning text.
+     * @param encrypted The encrypted text of the reasoning text.
+     * @property index The index of the frame in the list of frames.
      */
     @Serializable
     public data class ReasoningComplete(
+        val id: String?,
         val text: List<String>,
         val summary: List<String>? = null,
         public val encrypted: String? = null,

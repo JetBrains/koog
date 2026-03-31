@@ -741,7 +741,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )

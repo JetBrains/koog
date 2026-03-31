@@ -105,7 +105,7 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Completion
+            LLMCapability.Completion,
         ) + thinkingCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
@@ -184,7 +184,7 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Completion
+            LLMCapability.Completion,
         ) + thinkingCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 32_000,
@@ -209,7 +209,7 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Completion
+            LLMCapability.Completion,
         ) + thinkingCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 32_000,
