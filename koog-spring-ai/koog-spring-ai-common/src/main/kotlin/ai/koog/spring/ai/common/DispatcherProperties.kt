@@ -1,5 +1,11 @@
 package ai.koog.spring.ai.common
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import org.slf4j.Logger
+import org.springframework.core.task.AsyncTaskExecutor
+
 /**
  * Dispatcher settings for blocking Spring AI calls.
  *
@@ -72,4 +78,47 @@ public data class DispatcherConfig(
 public enum class DispatcherType {
     AUTO,
     IO,
+}
+
+/**
+ * Resolves a [kotlinx.coroutines.CoroutineDispatcher] from the given [DispatcherConfig] and
+ * optional [org.springframework.core.task.AsyncTaskExecutor].
+ *
+ * This is the shared implementation behind every `koogSpringAi*Dispatcher` bean factory method.
+ *
+ * @param dispatcherConfig the dispatcher configuration bound from Spring Boot properties
+ * @param asyncTaskExecutor the Spring `AsyncTaskExecutor` if available, or `null`
+ * @param logger the SLF4J logger to use for informational messages
+ * @param componentName a human-readable component label used in log messages
+ *   (e.g. `"Koog Spring AI Chat"`)
+ * @return the resolved [kotlinx.coroutines.CoroutineDispatcher]
+ */
+public fun resolveDispatcher(
+    dispatcherConfig: DispatcherConfig,
+    asyncTaskExecutor: AsyncTaskExecutor?,
+    logger: Logger,
+    componentName: String,
+): CoroutineDispatcher {
+    return when (val dispatcher = dispatcherConfig.toDispatcherProperties()) {
+        is DispatcherProperties.Auto -> {
+            if (asyncTaskExecutor != null) {
+                logger.info("$componentName: using Spring AsyncTaskExecutor as dispatcher")
+                asyncTaskExecutor.asCoroutineDispatcher()
+            } else {
+                logger.info("$componentName: no AsyncTaskExecutor found, falling back to Dispatchers.IO")
+                Dispatchers.IO
+            }
+        }
+
+        is DispatcherProperties.IO -> {
+            val parallelism = dispatcher.parallelism
+            if (parallelism != null && parallelism > 0) {
+                logger.info("$componentName: using Dispatchers.IO.limitedParallelism($parallelism)")
+                Dispatchers.IO.limitedParallelism(parallelism)
+            } else {
+                logger.info("$componentName: using Dispatchers.IO")
+                Dispatchers.IO
+            }
+        }
+    }
 }

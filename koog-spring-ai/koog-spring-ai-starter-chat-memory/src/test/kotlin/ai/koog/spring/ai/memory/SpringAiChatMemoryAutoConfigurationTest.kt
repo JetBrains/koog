@@ -144,19 +144,15 @@ class SpringAiChatMemoryAutoConfigurationTest {
 
     // ---- mutual exclusion: selector set to empty string ----
     @Test
-    fun `should fail on startup when selector is set to empty string because named path activates with empty bean name`() {
+    fun `should treat empty string selector as missing and use single candidate`() {
         contextRunner()
             .withPropertyValues("koog.spring.ai.chat-memory.chat-memory-repository-bean-name=")
             .withBean("myRepo", ChatMemoryRepository::class.java, { mockk<ChatMemoryRepository>(relaxed = true) })
             .run { context ->
-                // Spring treats "" as a present value equal to "", so havingValue="" on SingleChatMemoryRepositoryConfiguration
-                // matches (the condition passes), AND the plain @ConditionalOnProperty on NamedChatMemoryRepositoryConfiguration
-                // also matches (any non-false present value satisfies it). Both configs activate; the named path
-                // then calls beanFactory.getBean("", ChatMemoryRepository::class.java) with an empty name, which fails.
-                assertTrue(
-                    context.startupFailure != null,
-                    "Expected startup failure when selector is set to empty string"
-                )
+                // @ConditionalOnPropertyMissingOrEmpty treats "" as missing/empty, so only
+                // SingleChatMemoryRepositoryConfiguration activates; NamedChatMemoryRepositoryConfiguration does not match.
+                assertTrue(context.startupFailure == null, "Context should start successfully when selector is empty string")
+                assertInstanceOf<SpringAiChatHistoryProvider>(context.getBean<ChatHistoryProvider>())
             }
     }
 

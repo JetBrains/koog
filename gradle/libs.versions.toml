@@ -130,6 +130,7 @@ reactor-kotlin-extensions = { module = "io.projectreactor.kotlin:reactor-kotlin-
 # Spring AI
 spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "spring-ai" }
 spring-ai-model = { module = "org.springframework.ai:spring-ai-model" }
+spring-ai-vectorstore = { module = "org.springframework.ai:spring-ai-vector-store" }
 
 [bundles]
 spring-boot-core = [

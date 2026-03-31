@@ -233,6 +233,7 @@ dependencies {
     dokka(project(":koog-spring-ai:koog-spring-ai-starter-chat-memory"))
     dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-chat"))
     dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-embedding"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-vector-store"))
     dokka(project(":koog-spring-boot-starter"))
     dokka(project(":prompt:prompt-cache:prompt-cache-files"))
     dokka(project(":prompt:prompt-cache:prompt-cache-model"))

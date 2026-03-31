@@ -102,5 +102,5 @@ Without a selector, the auto-configuration activates only when a single candidat
 
   The auto-configuration picks it up automatically via optional injection.
 
-- **Custom `LLMClient`**: Register your own `LLMClient` bean to override the auto-configured adapter entirely.
+- **Custom `LLMClient`**: Register your own `LLMClient` bean(s) — they will be composed together with the auto-configured adapter into the `MultiLLMPromptExecutor`. To suppress the auto-configured adapter, register a bean named `springAiChatModelLLMClient`.
 - **Custom `PromptExecutor`**: Register your own `PromptExecutor` bean to override the auto-configured `MultiLLMPromptExecutor`.

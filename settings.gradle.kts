@@ -99,6 +99,7 @@ include(":koog-spring-ai:koog-spring-ai-common")
 include(":koog-spring-ai:koog-spring-ai-starter-model-chat")
 include(":koog-spring-ai:koog-spring-ai-starter-model-embedding")
 include(":koog-spring-ai:koog-spring-ai-starter-chat-memory")
+include(":koog-spring-ai:koog-spring-ai-starter-vector-store")
 
 include(":koog-ktor")
 include(":docs")

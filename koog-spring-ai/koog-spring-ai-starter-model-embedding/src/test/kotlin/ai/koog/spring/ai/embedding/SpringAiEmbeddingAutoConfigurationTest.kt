@@ -136,19 +136,15 @@ class SpringAiEmbeddingAutoConfigurationTest {
 
     // ---- mutual exclusion: selector set to empty string ----
     @Test
-    fun `should fail on startup when embedding-model-bean-name is set to empty string because named path activates with empty bean name`() {
+    fun `should treat empty string selector as missing and use single candidate`() {
         contextRunner()
             .withPropertyValues("koog.spring.ai.embedding.embedding-model-bean-name=")
             .withBean("myEmb", EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
             .run { context ->
-                // Spring treats "" as a present value equal to "", so havingValue="" on SingleEmbeddingModelConfiguration
-                // matches (the condition passes), AND the plain @ConditionalOnProperty on NamedEmbeddingModelConfiguration
-                // also matches (any non-false present value satisfies it). Both configs activate; the named path
-                // then calls beanFactory.getBean("", EmbeddingModel::class.java) with an empty name, which fails.
-                assertTrue(
-                    context.startupFailure != null,
-                    "Expected startup failure when embedding-model-bean-name is set to empty string"
-                )
+                // @ConditionalOnPropertyMissingOrEmpty treats "" as missing/empty, so only
+                // SingleEmbeddingModelConfiguration activates; NamedEmbeddingModelConfiguration does not match.
+                assertTrue(context.startupFailure == null, "Context should start successfully when selector is empty string")
+                assertInstanceOf<SpringAiLLMEmbeddingProvider>(context.getBean<LLMEmbeddingProvider>())
             }
     }
 
