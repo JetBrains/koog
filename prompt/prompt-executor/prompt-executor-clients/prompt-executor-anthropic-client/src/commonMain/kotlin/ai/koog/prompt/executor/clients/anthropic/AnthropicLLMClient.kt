@@ -15,6 +15,8 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicModelsResponse
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicOutputConfig
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicOutputFormat
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamDeltaContentType
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamEventType
@@ -26,6 +28,8 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicUsage
 import ai.koog.prompt.executor.clients.anthropic.models.DocumentSource
 import ai.koog.prompt.executor.clients.anthropic.models.ImageSource
 import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
+import ai.koog.prompt.executor.clients.anthropic.structure.AnthropicBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.anthropic.structure.AnthropicStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -463,8 +467,13 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             null -> null
         }
 
-        require(anthropicParams.schema == null) {
-            "Anthropic does not currently support native structured output."
+        val outputConfig = anthropicParams.schema?.let { schema ->
+            require(schema is LLMParams.Schema.JSON) {
+                "Anthropic only supports JSON schemas for structured output"
+            }
+            AnthropicOutputConfig(
+                format = AnthropicOutputFormat.JsonSchema(schema = schema.schema)
+            )
         }
 
         // Always include max_tokens as it's required by the API
@@ -474,6 +483,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             maxTokens = anthropicParams.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
             container = anthropicParams.container,
             mcpServers = anthropicParams.mcpServers,
+            outputConfig = outputConfig,
             serviceTier = anthropicParams.serviceTier,
             stopSequence = anthropicParams.stopSequences,
             stream = stream,
@@ -712,6 +722,14 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
      * @return This method does not return a value as it always throws an exception.
      * @throws UnsupportedOperationException Always thrown, as moderation is not supported by the Anthropic API.
      */
+    override fun getBasicJsonSchemaGenerator(): AnthropicBasicJsonSchemaGenerator {
+        return AnthropicBasicJsonSchemaGenerator
+    }
+
+    override fun getStandardJsonSchemaGenerator(): AnthropicStandardJsonSchemaGenerator {
+        return AnthropicStandardJsonSchemaGenerator
+    }
+
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by Anthropic API" }
         throw UnsupportedOperationException("Moderation is not supported by Anthropic API.")

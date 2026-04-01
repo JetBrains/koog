@@ -176,6 +176,21 @@ internal object BedrockAnthropicClaudeSerialization {
             null
         }
 
+        val outputConfig = params.schema?.let { schema ->
+            require(schema is LLMParams.Schema.JSON) {
+                "Bedrock Anthropic only supports JSON schemas for structured output"
+            }
+            buildJsonObject {
+                put(
+                    "format",
+                    buildJsonObject {
+                        put("type", "json_schema")
+                        put("schema", schema.schema)
+                    }
+                )
+            }
+        }
+
         return BedrockAnthropicInvokeModel(
             anthropicVersion = "bedrock-2023-05-31",
             maxTokens = maxTokens,
@@ -183,7 +198,8 @@ internal object BedrockAnthropicClaudeSerialization {
             temperature = temperature,
             messages = messages,
             tools = bedrockTools,
-            toolChoice = bedrockToolChoice
+            toolChoice = bedrockToolChoice,
+            outputConfig = outputConfig
         )
     }
 

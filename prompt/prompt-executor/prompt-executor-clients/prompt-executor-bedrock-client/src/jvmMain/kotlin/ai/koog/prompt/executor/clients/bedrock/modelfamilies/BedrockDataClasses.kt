@@ -22,6 +22,7 @@ public data class BedrockAnthropicInvokeModel(
     val messages: List<BedrockAnthropicInvokeModelMessage> = emptyList(),
     val tools: List<BedrockAnthropicInvokeModelTool>? = null,
     @SerialName("tool_choice") val toolChoice: BedrockAnthropicToolChoice? = null,
+    @SerialName("output_config") val outputConfig: JsonObject? = null,
 ) {
     /**
      * Provides shared logic and utility functions for managing and interacting with the
