@@ -65,7 +65,7 @@ jobs:
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Assemble with Gradle Wrapper
         run: ./gradlew assemble ktlintCheck
@@ -132,7 +132,7 @@ jobs:
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
@@ -206,7 +206,7 @@ jobs:
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@v6
       - name: Verify code snippets in docs
         run: |
           echo "Starting knit generation..."
@@ -234,7 +234,7 @@ jobs:
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@v6
       - name: Generate API docs
         run: |
           ./gradlew dokkaGenerate
