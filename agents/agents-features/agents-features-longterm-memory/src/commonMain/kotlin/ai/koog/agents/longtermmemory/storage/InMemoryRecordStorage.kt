@@ -26,8 +26,10 @@ import kotlin.uuid.Uuid
  *
  * ## Limitations:
  * - Data is not persisted and will be lost on application restart
- * - Supports only keyword search using simple substring matching
- * - Filter expressions are not supported
+ * - Both [ai.koog.rag.base.storage.search.KeywordSearchRequest] and
+ *   [ai.koog.rag.base.storage.search.SimilaritySearchRequest] are accepted, but both are
+ *   implemented as simple case-insensitive substring matching; no vector embeddings are used
+ * - Filter expressions are ignored
  *
  * @param defaultNamespace The default namespace to use when none is specified in method calls.
  *                         Defaults to "default".

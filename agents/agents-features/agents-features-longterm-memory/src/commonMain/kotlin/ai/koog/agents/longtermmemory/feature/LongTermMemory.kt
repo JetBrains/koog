@@ -519,7 +519,7 @@ public class LongTermMemory(
         }
 
         /**
-         * Returns an augmented prompt only if there are relevant memory records for the last user's message.
+         * Returns an augmented prompt only if there are relevant memory records for the query extracted by queryExtractor.
          */
         private suspend fun getAugmentedPromptOrNull(
             prompt: Prompt,
@@ -588,15 +588,15 @@ public fun AIAgentContext.longTermMemory(): LongTermMemory = featureOrThrow(Long
  * Executes the given [action] in the context of the [LongTermMemory] feature installed on this agent.
  *
  * This is the primary way to access long-term memory storages from within strategy nodes.
- * Inside the [action] block, you can use [LongTermMemory.retrievalSettings] and
- * [LongTermMemory.ingestionSettings] to search and add memory records.
+ * Inside the [action] block, you can use [LongTermMemory.retrievalStorage] and
+ * [LongTermMemory.ingestionStorage] to search and add memory records.
  *
  * Example usage:
  * ```kotlin
  * val myNode by node<String, Unit> {
  *     withLongTermMemory {
- *         this.getIngestionStorage()?.add(records, namespace)
- *         val results = this.getRetrievalStorage()?.search(request, namespace)
+ *         ingestionStorage?.add(records, namespace = "my-namespace")
+ *         val results = retrievalStorage?.search(request, namespace = "my-namespace")
  *     }
  * }
  * ```

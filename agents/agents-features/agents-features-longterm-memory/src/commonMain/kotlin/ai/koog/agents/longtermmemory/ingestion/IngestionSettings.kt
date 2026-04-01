@@ -14,7 +14,11 @@ import ai.koog.rag.base.storage.WriteStorage
  *   Pre-built ingesters are available:
  *   - [ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy] - Filters messages by role
  *   Custom ingesters can be provided as lambdas via the [ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy] SAM interface.
- * @param timing When to mapMessages messages. Defaults to [IngestionTiming.ON_LLM_CALL].
+ * @param timing When to ingest messages. Defaults to [IngestionTiming.ON_LLM_CALL].
+ *   - [IngestionTiming.ON_LLM_CALL]: prompt messages are ingested before each LLM call starts,
+ *     and the assistant output is ingested after completion or stream completion.
+ *   - [IngestionTiming.ON_AGENT_COMPLETION]: the final accumulated session prompt/history is
+ *     ingested once at agent completion.
  * @param enableAutomaticIngestion When `true` (default), ingestion happens automatically after LLM
  *   calls or on agent completion (depending on [timing]). When `false`, the storage is still
  *   accessible for manual use inside graph strategy nodes via [ai.koog.agents.longtermmemory.feature.withLongTermMemory].

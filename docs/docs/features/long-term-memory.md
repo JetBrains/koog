@@ -26,7 +26,7 @@ The `LongTermMemory` feature adds persistent memory to Koog AI agents via two in
         install(LongTermMemory) {
             retrieval {
                 storage = myStorage
-                searchStrategy = KeywordSearchStrategy(topK = 5)
+                searchStrategy = SimilaritySearchStrategy(topK = 5)
             }
         }
     }
@@ -47,8 +47,8 @@ The `LongTermMemory` feature adds persistent memory to Koog AI agents via two in
             config.retrieval(
                 new LongTermMemory.RetrievalSettingsBuilder()
                     .withStorage(myStorage)
-                    .withSearchStrategy(query ->
-                        new KeywordSearchRequest(query, 15, 0.5, null)
+                    .withSearchStrategy(
+                        SearchStrategy.builder().similarity().withTopK(5).build()
                     )
                     .build()
             );
@@ -143,9 +143,9 @@ By default, the retrieval flow uses the last user message as the search query. Y
 
 | Strategy                                                  | Behavior                 |
 |-----------------------------------------------------------|--------------------------|
-| `KeywordSearchStrategy()`                                 | Full-text/lexical keyword matching |
-| `SimilaritySearchStrategy()`                              | Vector similarity semantic search (default) |
-| `query -> new KeywordSearchRequest(query, 20, 0.0, null)` | Custom search via lambda |
+| `SimilaritySearchStrategy()`                              | Vector similarity semantic search — **default and recommended** |
+| ~~`KeywordSearchStrategy()`~~                             | Full-text/lexical keyword matching — **deprecated**, use only for tests or legacy compatibility |
+| `query -> new SimilaritySearchRequest(query, 20, 0, 0.0, null)` | Custom search via lambda |
 
 ## Ingestion Only
 
@@ -187,8 +187,8 @@ Use ingestion without retrieval to build up a memory storage over time:
 
 | Timing | Behavior |
 |---|---|
-| `ON_LLM_CALL` | Ingests messages on each LLM call/stream (enables intra-session RAG) |
-| `ON_AGENT_COMPLETION` | Ingests all messages at once when the agent run completes |
+| `ON_LLM_CALL` | Prompt messages are ingested before each LLM call starts; assistant output is ingested after completion or stream completion. Enables intra-session RAG. |
+| `ON_AGENT_COMPLETION` | The final accumulated session prompt/history is ingested once at agent completion. |
 
 ## Disabling Automatic Behavior
 
@@ -243,11 +243,11 @@ val myNode by node<String, Unit> {
     withLongTermMemory {
         // Manually add records
         val record = MemoryRecord(content = "important fact")
-        ingestionStorage?.add(listOf(record), ingestionSettings?.namespace)
+        ingestionStorage?.add(listOf(record), namespace = "my-namespace")
 
         // Manually search
-        val request = SimilaritySearchRequest(query = input, limit = 5)
-        val results = retrievalStorage?.search(request, retrievalSettings?.namespace)
+        val request = SimilaritySearchRequest(queryText = input, limit = 5)
+        val results = retrievalStorage?.search(request, namespace = "my-namespace")
     }
 }
 ```
@@ -302,4 +302,4 @@ class MyVectorDbStorage : SearchStorage<TextDocument, SearchRequest>, WriteStora
 }
 ```
 
-For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory with keyword-based search.
+For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory. It accepts both `KeywordSearchRequest` and `SimilaritySearchRequest`, but implements both as simple case-insensitive substring matching (no vector embeddings).

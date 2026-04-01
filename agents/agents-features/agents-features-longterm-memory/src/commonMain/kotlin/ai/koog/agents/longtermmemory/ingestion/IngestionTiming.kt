@@ -8,13 +8,14 @@ import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 @ExperimentalAgentsApi
 public enum class IngestionTiming {
     /**
-     * Ingest each message as soon as the LLM call completes.
+     * Prompt messages are ingested before each LLM call starts, and the assistant output
+     * is ingested after the call completes (or after stream completion for streaming calls).
      * Enables intra-session RAG and provides crash resilience.
      */
     ON_LLM_CALL,
 
     /**
-     * Ingest all messages at once when the agent run completes.
+     * The final accumulated session prompt/history is ingested once at agent completion.
      * Enables holistic extraction/summarization and avoids critical-path latency.
      */
     ON_AGENT_COMPLETION,

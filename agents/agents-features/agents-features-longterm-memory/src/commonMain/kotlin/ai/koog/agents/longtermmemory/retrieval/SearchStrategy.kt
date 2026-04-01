@@ -8,8 +8,15 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
  * This is a functional interface (SAM) that defines how a user query string
  * should be transformed into a [SimilaritySearchRequest] for storage.
  *
+ * **[SimilaritySearchStrategy] is the default and recommended implementation.**
+ * It uses vector embeddings for semantic search and works with all supported vector backends.
+ *
+ * [KeywordSearchStrategy] is deprecated and should only be used for tests or legacy
+ * compatibility cases where a vector backend is not available.
+ *
  * Pre-built implementations are available for common search types:
- * - [SimilaritySearchStrategy] - Vector similarity search (semantic search)
+ * - [SimilaritySearchStrategy] - Vector similarity search (semantic search) — **recommended**
+ * - [KeywordSearchStrategy] - Lexical keyword search — **deprecated**, use only for tests/compatibility
  *
  * ### Usage Examples
  *
