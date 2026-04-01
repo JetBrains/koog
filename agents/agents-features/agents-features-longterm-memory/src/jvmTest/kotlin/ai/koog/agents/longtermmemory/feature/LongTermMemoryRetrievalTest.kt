@@ -12,8 +12,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.prompt.dsl.Prompt
@@ -275,12 +275,12 @@ class LongTermMemoryRetrievalTest {
     }
 
     // ==========================================
-    // Keyword search builder integration
+    // Similarity search builder integration
     // ==========================================
 
     @Test
     @Timeout(5)
-    fun `keywordSearch builder retrieves matching records`() = runTest {
+    fun `similaritySearch builder retrieves matching records`() = runTest {
         val storage = InMemoryRecordStorage()
         storage.add(
             listOf(
@@ -306,20 +306,20 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }
 
         val result = agent.run("Kotlin")
 
-        assertTrue(augmented, "Prompt should be augmented with keyword search results")
+        assertTrue(augmented, "Prompt should be augmented with similarity search results")
         assertEquals("AUGMENTED", result)
     }
 
     @Test
     @Timeout(5)
-    fun `keywordSearch builder returns no augmentation when query does not match`() = runTest {
+    fun `similaritySearch builder returns no augmentation when query does not match`() = runTest {
         val storage = InMemoryRecordStorage()
         storage.add(
             listOf(
@@ -344,7 +344,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }
@@ -379,7 +379,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }
@@ -436,7 +436,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }

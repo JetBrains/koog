@@ -11,7 +11,6 @@ The agents-features-longterm-memory module adds long-term memory capabilities to
 - **Flexible storage**: Plug any backend via `SearchStorage` / `WriteStorage` interfaces from the `rag-base` module; an in-memory `InMemoryRecordStorage` is included for testing
 - **Configurable timing**: Ingest per-LLM-call or on agent completion
 - **Prompt augmentation modes**: System prompt or user prompt or custom implementation
-- **Custom query extraction**: Define how the search query is derived from the prompt via `QueryExtractor`
 
 ### Key Components
 

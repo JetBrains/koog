@@ -24,8 +24,10 @@ public class FilteringExtractionStrategy(
     public val lastMessageOnly: Boolean = false,
 ) : ExtractionStrategy {
 
-    private val messageRoleFieldNameInMetadata = "messageRole"
-    private val timestampFieldNameInMetadata = "timestampMs"
+    private companion object {
+        private const val MESSAGE_ROLE_FIELD_NAME = "messageRole"
+        private const val TIMESTAMP_FIELD_NAME = "timestampMs"
+    }
 
     /**
      * Builder for [FilteringExtractionStrategy].
@@ -80,8 +82,8 @@ public class FilteringExtractionStrategy(
     private fun messageToMemoryRecord(message: Message): TextDocument = MemoryRecord(
         content = message.content,
         metadata = mapOf(
-            messageRoleFieldNameInMetadata to message.role.name,
-            timestampFieldNameInMetadata to message.metaInfo.timestamp.toEpochMilliseconds()
+            MESSAGE_ROLE_FIELD_NAME to message.role.name,
+            TIMESTAMP_FIELD_NAME to message.metaInfo.timestamp.toEpochMilliseconds()
         ),
     )
 }

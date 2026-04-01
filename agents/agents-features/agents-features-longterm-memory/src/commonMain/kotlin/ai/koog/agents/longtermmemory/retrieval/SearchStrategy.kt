@@ -11,12 +11,8 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
  * **[SimilaritySearchStrategy] is the default and recommended implementation.**
  * It uses vector embeddings for semantic search and works with all supported vector backends.
  *
- * [KeywordSearchStrategy] is deprecated and should only be used for tests or legacy
- * compatibility cases where a vector backend is not available.
- *
  * Pre-built implementations are available for common search types:
  * - [SimilaritySearchStrategy] - Vector similarity search (semantic search) — **recommended**
- * - [KeywordSearchStrategy] - Lexical keyword search — **deprecated**, use only for tests/compatibility
  *
  * ### Usage Examples
  *
@@ -72,70 +68,6 @@ public class SearchStrategyBuilder {
      * Returns its [SimilaritySearchStrategy.Builder] for further configuration.
      */
     public fun similarity(): SimilaritySearchStrategy.Builder = SimilaritySearchStrategy.Builder()
-
-    /**
-     * Select the [KeywordSearchStrategy] implementation.
-     * Returns its [KeywordSearchStrategy.Builder] for further configuration.
-     */
-    @Deprecated(
-        message = "KeywordSearchStrategy is deprecated. Vector backends require SimilaritySearchStrategy. Use similarity() instead.",
-        replaceWith = ReplaceWith("similarity()")
-    )
-    @Suppress("DEPRECATION")
-    public fun keyword(): KeywordSearchStrategy.Builder = KeywordSearchStrategy.Builder()
-}
-
-/**
- * Keyword search mode using full-text/lexical matching.
- *
- * @property topK Maximum number of results to return
- * @property similarityThreshold Minimum similarity score (0.0 to 1.0)
- * @property filterExpression Optional metadata filter expression for pre-filtering
- * @deprecated Keyword search is not supported by vector backends. Use [SimilaritySearchStrategy] instead.
- */
-@Deprecated(
-    message = "Keyword search is not supported by vector backends. Use SimilaritySearchStrategy instead.",
-    replaceWith = ReplaceWith("SimilaritySearchStrategy")
-)
-public class KeywordSearchStrategy(
-    public val topK: Int = 10,
-    public val similarityThreshold: Double = 0.0,
-    public val filterExpression: String? = null
-) : SearchStrategy {
-    override fun create(query: String): SimilaritySearchRequest =
-        SimilaritySearchRequest(query, topK, 0, similarityThreshold, filterExpression)
-
-    /**
-     * Builder for [KeywordSearchStrategy].
-     *
-     * @see KeywordSearchStrategy
-     */
-    public class Builder {
-        /** Maximum number of results to return. */
-        public var topK: Int = 10
-
-        /** Minimum similarity score (0.0 to 1.0). */
-        public var similarityThreshold: Double = 0.0
-
-        /** Optional metadata filter expression for pre-filtering. */
-        public var filterExpression: String? = null
-
-        /** Fluent setter for [topK]. */
-        public fun withTopK(topK: Int): Builder = apply { this.topK = topK }
-
-        /** Fluent setter for [similarityThreshold]. */
-        public fun withSimilarityThreshold(similarityThreshold: Double): Builder =
-            apply { this.similarityThreshold = similarityThreshold }
-
-        /** Fluent setter for [filterExpression]. */
-        public fun withFilterExpression(filterExpression: String?): Builder =
-            apply { this.filterExpression = filterExpression }
-
-        /** Builds a [KeywordSearchStrategy] from the current settings. */
-        @Suppress("DEPRECATION")
-        public fun build(): KeywordSearchStrategy =
-            KeywordSearchStrategy(topK, similarityThreshold, filterExpression)
-    }
 }
 
 /**
