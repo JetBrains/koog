@@ -1,5 +1,6 @@
 package ai.koog.spring.ai.vectorstore
 
+import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.DeletionStorage
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
@@ -57,8 +58,8 @@ class SpringAiVectorStoreAutoConfigurationTest {
             .withBean(VectorStore::class.java, { mockk<VectorStore>(relaxed = true) })
             .run { context ->
                 assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<KoogVectorStore>())
-                assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<WriteStorage<DocumentWithMetadata>>())
-                assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<SearchStorage<DocumentWithMetadata, SimilaritySearchRequest>>())
+                assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<WriteStorage<TextDocument>>())
+                assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<SearchStorage<TextDocument, SimilaritySearchRequest>>())
                 assertInstanceOf<SpringAiKoogVectorStore>(context.getBean<DeletionStorage>())
             }
     }
@@ -67,8 +68,8 @@ class SpringAiVectorStoreAutoConfigurationTest {
     fun testNotCreateKoogStorageBeansWhenNoVectorStoreIsPresent() {
         contextRunner().run { context ->
             assertThrows<NoSuchBeanDefinitionException> { context.getBean<KoogVectorStore>() }
-            assertThrows<NoSuchBeanDefinitionException> { context.getBean<WriteStorage<DocumentWithMetadata>>() }
-            assertThrows<NoSuchBeanDefinitionException> { context.getBean<SearchStorage<DocumentWithMetadata, SimilaritySearchRequest>>() }
+            assertThrows<NoSuchBeanDefinitionException> { context.getBean<WriteStorage<TextDocument>>() }
+            assertThrows<NoSuchBeanDefinitionException> { context.getBean<SearchStorage<TextDocument, SimilaritySearchRequest>>() }
             assertThrows<NoSuchBeanDefinitionException> { context.getBean<DeletionStorage>() }
         }
     }
