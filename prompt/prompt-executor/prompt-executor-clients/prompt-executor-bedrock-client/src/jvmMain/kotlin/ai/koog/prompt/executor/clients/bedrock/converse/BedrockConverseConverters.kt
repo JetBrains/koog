@@ -34,6 +34,11 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ImageBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageSource
 import aws.sdk.kotlin.services.bedrockruntime.model.InferenceConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.JsonSchemaDefinition
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputConfig
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormat
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormatStructure
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormatType
 import aws.sdk.kotlin.services.bedrockruntime.model.PerformanceConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.PromptVariableValues
 import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningContentBlock
@@ -97,6 +102,7 @@ internal object BedrockConverseConverters {
         val modelId: String,
         val inferenceConfig: InferenceConfiguration,
         val additionalModelRequestFields: Document?,
+        val outputConfig: OutputConfig?,
         val performanceConfig: PerformanceConfiguration?,
         val promptVariables: Map<String, PromptVariableValues>?,
         val requestMetadata: Map<String, String>?,
@@ -194,6 +200,23 @@ internal object BedrockConverseConverters {
             }
         }
 
+        val outputConfig = params.schema?.let { schema ->
+            require(schema is LLMParams.Schema.JSON) {
+                "Bedrock Converse only supports JSON schemas for structured output"
+            }
+            OutputConfig {
+                this.textFormat = OutputFormat {
+                    this.type = OutputFormatType.JsonSchema
+                    this.structure = OutputFormatStructure.JsonSchema(
+                        JsonSchemaDefinition {
+                            this.name = schema.name
+                            this.schema = schema.schema.toString()
+                        }
+                    )
+                }
+            }
+        }
+
         return ConverseRequestParams(
             modelId = model.id,
             inferenceConfig = InferenceConfiguration {
@@ -204,6 +227,7 @@ internal object BedrockConverseConverters {
             },
             additionalModelRequestFields = params.additionalProperties
                 ?.let { JsonDocumentConverters.convertToDocument(JsonObject(it)) },
+            outputConfig = outputConfig,
             performanceConfig = params.performanceConfig,
             promptVariables = params.promptVariables,
             requestMetadata = params.requestMetadata,
@@ -262,6 +286,7 @@ internal object BedrockConverseConverters {
             this.modelId = params.modelId
             this.inferenceConfig = params.inferenceConfig
             this.additionalModelRequestFields = params.additionalModelRequestFields
+            this.outputConfig = params.outputConfig
             this.performanceConfig = params.performanceConfig
             this.promptVariables = params.promptVariables
             this.toolConfig = params.toolConfig
@@ -285,6 +310,7 @@ internal object BedrockConverseConverters {
             this.modelId = params.modelId
             this.inferenceConfig = params.inferenceConfig
             this.additionalModelRequestFields = params.additionalModelRequestFields
+            this.outputConfig = params.outputConfig
             this.performanceConfig = params.performanceConfig
             this.promptVariables = params.promptVariables
             this.toolConfig = params.toolConfig
