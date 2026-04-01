@@ -8,7 +8,7 @@ import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
 import ai.koog.agents.testing.tools.MockExecutorBuilder;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-import ai.koog.rag.base.storage.search.KeywordSearchRequest;
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest;
 import ai.koog.serialization.JSONSerializer;
 import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
@@ -61,7 +61,7 @@ public class LongTermMemoryRetrievalJavaTest {
 
         var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
             .withStorage(storage)
-            .withSearchStrategy(query -> new KeywordSearchRequest(query, 20, 0, 0.0, null))
+            .withSearchStrategy(query -> new SimilaritySearchRequest(query, 20, 0, 0.0, null))
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);

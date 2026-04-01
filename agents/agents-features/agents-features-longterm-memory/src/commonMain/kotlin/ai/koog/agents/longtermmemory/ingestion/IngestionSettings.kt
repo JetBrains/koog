@@ -3,7 +3,7 @@ package ai.koog.agents.longtermmemory.ingestion
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
-import ai.koog.agents.longtermmemory.model.MemoryRecord
+import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.WriteStorage
 
 /**
@@ -22,7 +22,7 @@ import ai.koog.rag.base.storage.WriteStorage
  */
 @ExperimentalAgentsApi
 public data class IngestionSettings(
-    val storage: WriteStorage<MemoryRecord>,
+    val storage: WriteStorage<TextDocument>,
     val extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy(),
     val timing: IngestionTiming = IngestionTiming.ON_LLM_CALL,
     val enableAutomaticIngestion: Boolean = true,

@@ -18,7 +18,6 @@ import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
-import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.LastUserMessageQueryExtractor
 import ai.koog.agents.longtermmemory.retrieval.QueryExtractor
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
@@ -30,9 +29,10 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toMessageResponses
+import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
-import ai.koog.rag.base.storage.search.SearchRequest
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -142,7 +142,7 @@ public class LongTermMemory(
          * The retrieval storage to search for relevant memory records.
          * Must be set explicitly in the retrieval { } block.
          */
-        public var storage: SearchStorage<MemoryRecord, SearchRequest>? = null
+        public var storage: SearchStorage<TextDocument, SimilaritySearchRequest>? = null
 
         /**
          * The extractor that defines how to derive the search query from the prompt.
@@ -184,7 +184,7 @@ public class LongTermMemory(
         /**
          * Fluent setter for [storage].
          */
-        public fun withStorage(storage: SearchStorage<MemoryRecord, SearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
+        public fun withStorage(storage: SearchStorage<TextDocument, SimilaritySearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
 
         /**
          * Fluent setter for [queryExtractor].
@@ -240,7 +240,7 @@ public class LongTermMemory(
          * The ingestion storage where memory records will be persisted.
          * Must be set explicitly in the ingestion { } block.
          */
-        public var storage: WriteStorage<MemoryRecord>? = null
+        public var storage: WriteStorage<TextDocument>? = null
 
         /**
          * The extractor that defines how to transform messages into memory records.
@@ -257,7 +257,7 @@ public class LongTermMemory(
          *
          * // Or use lambda for custom logic
          * extractionStrategy = ExtractionStrategy { messages ->
-         *     messages.map { MemoryRecord(content = it.content) }
+         *     messages.map { TextDocument(content = it.content) }
          * }
          * ```
          */
@@ -283,7 +283,7 @@ public class LongTermMemory(
         /**
          * Fluent setter for [storage].
          */
-        public fun withStorage(storage: WriteStorage<MemoryRecord>): IngestionSettingsBuilder = apply { this.storage = storage }
+        public fun withStorage(storage: WriteStorage<TextDocument>): IngestionSettingsBuilder = apply { this.storage = storage }
 
         /**
          * Fluent setter for [extractionStrategy].
@@ -565,13 +565,13 @@ public class LongTermMemory(
     /**
      * Property getter for [SearchStorage] for usage inside strategy nodes
      */
-    public val retrievalStorage: SearchStorage<MemoryRecord, SearchRequest>?
+    public val retrievalStorage: SearchStorage<TextDocument, SimilaritySearchRequest>?
         get() = retrievalSettings?.storage
 
     /**
      * Property getter for [WriteStorage] for usage inside strategy nodes
      */
-    public val ingestionStorage: WriteStorage<MemoryRecord>?
+    public val ingestionStorage: WriteStorage<TextDocument>?
         get() = ingestionSettings?.storage
 }
 

@@ -1,13 +1,13 @@
 package ai.koog.agents.longtermmemory.ingestion.extraction
 
-import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.prompt.message.Message
+import ai.koog.rag.base.TextDocument
 
 /**
  * Extractor of memory records during message ingestion.
  *
  * This is a functional interface (SAM) that defines how a list of messages
- * should be transformed into a list of [MemoryRecord]s for storage.
+ * should be transformed into a list of [TextDocument]s for storage.
  * It provides flexibility in how messages are filtered, transformed, and
  * converted into memory records while maintaining type safety.
  *
@@ -52,7 +52,7 @@ public fun interface ExtractionStrategy {
      * @param messages The messages to transform into memory records
      * @return List of memory records to be stored
      */
-    public suspend fun extract(messages: List<Message>): List<MemoryRecord>
+    public suspend fun extract(messages: List<Message>): List<TextDocument>
 
     /**
      * Companion object with a builder method.

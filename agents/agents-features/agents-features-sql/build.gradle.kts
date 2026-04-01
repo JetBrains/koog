@@ -14,7 +14,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-snapshot"))
-                api(project(":rag:rag-base")) //fixme: is it really needed?
+                api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.serialization.kotlinx.json)

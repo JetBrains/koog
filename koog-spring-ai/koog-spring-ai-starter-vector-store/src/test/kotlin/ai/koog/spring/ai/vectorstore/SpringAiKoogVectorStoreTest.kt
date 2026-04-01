@@ -107,7 +107,7 @@ class SpringAiKoogVectorStoreTest {
         )
 
         val meta = results.first().document.metadata
-        assertEquals("testing", meta["topic"])
+        assertEquals("testing", meta!!["topic"])
         assertEquals(1, meta["priority"])
         assertEquals(true, meta["active"])
     }
@@ -168,7 +168,7 @@ class SpringAiKoogVectorStoreTest {
 
         assertEquals("update-me", results.first().id)
         assertEquals("updated content", results.first().document.content)
-        assertEquals("v", results.first().document.metadata["k"])
+        assertEquals("v", results.first().document.metadata!!["k"])
     }
 
     @Test

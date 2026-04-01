@@ -287,15 +287,15 @@ install(LongTermMemory) {
 Implement `SearchStorage` and/or `WriteStorage` to connect to your vector database:
 
 ```kotlin
-class MyVectorDbStorage : SearchStorage<MemoryRecord, SearchRequest>, WriteStorage<MemoryRecord> {
+class MyVectorDbStorage : SearchStorage<TextDocument, SearchRequest>, WriteStorage<TextDocument> {
     override suspend fun search(
         request: SearchRequest, namespace: String?
-    ): List<SearchResult<MemoryRecord>> {
+    ): List<SearchResult<TextDocument>> {
         // Query your vector DB
     }
 
     override suspend fun add(
-        records: List<MemoryRecord>, namespace: String?
+        records: List<TextDocument>, namespace: String?
     ) {
         // Upsert into your vector DB
     }

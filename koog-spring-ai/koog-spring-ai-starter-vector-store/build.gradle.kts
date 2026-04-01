@@ -37,7 +37,6 @@ dependencies {
     api(libs.bundles.spring.boot.core)
     api(libs.spring.ai.vectorstore)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.kotlinx.coroutines.test)

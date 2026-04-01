@@ -1,6 +1,7 @@
 package ai.koog.agents.longtermmemory.storage
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
+import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.DeletionStorage
 import ai.koog.rag.base.storage.LookupStorage
 import ai.koog.rag.base.storage.SearchStorage
@@ -10,6 +11,7 @@ import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
 import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SearchResult
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.ExperimentalUuidApi
@@ -32,39 +34,44 @@ import kotlin.uuid.Uuid
  */
 public open class InMemoryRecordStorage(
     private val defaultNamespace: String = "default"
-) : SearchStorage<MemoryRecord, SearchRequest>,
-    WriteStorage<MemoryRecord>,
-    LookupStorage<MemoryRecord>,
+) : SearchStorage<TextDocument, SearchRequest>,
+    WriteStorage<TextDocument>,
+    LookupStorage<TextDocument>,
     DeletionStorage {
 
     private val mutex = Mutex()
-    private val namespaceRecords = mutableMapOf<String, MutableMap<String, MemoryRecord>>()
+    private val namespaceRecords = mutableMapOf<String, MutableMap<String, TextDocument>>()
 
-    private fun getRecordsForNamespace(namespace: String? = null): MutableMap<String, MemoryRecord> {
+    private fun getRecordsForNamespace(namespace: String? = null): MutableMap<String, TextDocument> {
         val ns = namespace ?: defaultNamespace
         return namespaceRecords.getOrPut(ns) { mutableMapOf() }
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun add(documents: List<MemoryRecord>, namespace: String?): List<String> {
+    override suspend fun add(documents: List<TextDocument>, namespace: String?): List<String> {
         return mutex.withLock {
             val nsRecords = getRecordsForNamespace(namespace)
-            documents.map { record ->
-                val recordId = record.id ?: Uuid.random().toString()
-                val recordWithId = if (record.id == null) record.copy(id = recordId) else record
+            documents.map { doc ->
+                val recordId = doc.id ?: Uuid.random().toString()
+                val recordWithId =
+                    if (doc.id == null) {
+                        MemoryRecord(doc.content, recordId, doc.metadata)
+                    } else {
+                        MemoryRecord(doc.content, doc.id, doc.metadata)
+                    }
                 nsRecords[recordId] = recordWithId
                 recordId
             }
         }
     }
 
-    override suspend fun update(documents: Map<String, MemoryRecord>, namespace: String?): List<String> {
+    override suspend fun update(documents: Map<String, TextDocument>, namespace: String?): List<String> {
         return mutex.withLock {
             val nsRecords = getRecordsForNamespace(namespace)
             val updated = mutableListOf<String>()
             for ((id, record) in documents) {
                 if (nsRecords.containsKey(id)) {
-                    nsRecords[id] = record.copy(id = id)
+                    nsRecords[id] = MemoryRecord(record.content, record.id, record.metadata)
                     updated.add(id)
                 }
             }
@@ -72,16 +79,23 @@ public open class InMemoryRecordStorage(
         }
     }
 
-    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<MemoryRecord>> {
+    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<TextDocument>> {
         return when (request) {
-            is KeywordSearchRequest -> searchByText( // TODO: use filterExpression after switching to Filter DSL
+            is KeywordSearchRequest -> searchByText(
                 request.queryText,
                 request.limit,
                 request.minScore ?: 0.0,
                 namespace
             )
 
-            else -> throw UnsupportedOperationException("InMemoryRecordStorage supports only KeywordSearchRequest.")
+            is SimilaritySearchRequest -> searchByText( // TODO: use filterExpression after switching to Filter DSL
+                request.queryText,
+                request.limit,
+                request.minScore ?: 0.0,
+                namespace
+            )
+
+            else -> throw UnsupportedOperationException("InMemoryRecordStorage supports only KeywordSearchRequest and SimilaritySearchRequest.")
         }
     }
 
@@ -98,7 +112,7 @@ public open class InMemoryRecordStorage(
     override suspend fun get(
         ids: List<String>,
         namespace: String?
-    ): List<MemoryRecord> {
+    ): List<TextDocument> {
         return mutex.withLock {
             val nsRecords = getRecordsForNamespace(namespace)
             ids.mapNotNull { nsRecords[it] }
@@ -110,7 +124,7 @@ public open class InMemoryRecordStorage(
         limit: Int,
         similarityThreshold: Double,
         namespace: String?
-    ): List<SearchResult<MemoryRecord>> {
+    ): List<SearchResult<TextDocument>> {
         val allRecords = mutex.withLock { getRecordsForNamespace(namespace).values.toList() }
         val queryLower = query.lowercase()
 

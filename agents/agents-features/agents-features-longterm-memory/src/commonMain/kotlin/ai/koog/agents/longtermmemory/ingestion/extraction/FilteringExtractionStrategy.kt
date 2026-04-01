@@ -2,8 +2,7 @@ package ai.koog.agents.longtermmemory.ingestion.extraction
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.prompt.message.Message
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import ai.koog.rag.base.TextDocument
 
 /**
  * Default extractor that filters messages by role.
@@ -26,6 +25,7 @@ public class FilteringExtractionStrategy(
 ) : ExtractionStrategy {
 
     private val messageRoleFieldNameInMetadata = "messageRole"
+    private val timestampFieldNameInMetadata = "timestampMs"
 
     /**
      * Builder for [FilteringExtractionStrategy].
@@ -66,7 +66,7 @@ public class FilteringExtractionStrategy(
             FilteringExtractionStrategy(extractRoles, lastMessageOnly)
     }
 
-    override suspend fun extract(messages: List<Message>): List<MemoryRecord> {
+    override suspend fun extract(messages: List<Message>): List<TextDocument> {
         val filtered: List<Message> = if (lastMessageOnly) {
             messageRolesToExtract.mapNotNull { role ->
                 messages.lastOrNull { it.role == role }
@@ -77,13 +77,11 @@ public class FilteringExtractionStrategy(
         return filtered.map { messageToMemoryRecord(it) }
     }
 
-    private fun messageToMemoryRecord(message: Message): MemoryRecord = MemoryRecord(
+    private fun messageToMemoryRecord(message: Message): TextDocument = MemoryRecord(
         content = message.content,
-        metadata = JsonObject(
-            mapOf(
-                messageRoleFieldNameInMetadata to JsonPrimitive(message.role.name),
-            )
+        metadata = mapOf(
+            messageRoleFieldNameInMetadata to message.role.name,
+            timestampFieldNameInMetadata to message.metaInfo.timestamp.toEpochMilliseconds()
         ),
-        timestamp = message.metaInfo.timestamp
     )
 }

@@ -1,18 +1,15 @@
 package ai.koog.agents.longtermmemory.retrieval
 
-import ai.koog.rag.base.storage.search.KeywordSearchRequest
-import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 
 /**
  * Search strategy for creating search requests during prompt augmentation.
  *
  * This is a functional interface (SAM) that defines how a user query string
- * should be transformed into a [SearchRequest] for storage.
+ * should be transformed into a [SimilaritySearchRequest] for storage.
  *
  * Pre-built implementations are available for common search types:
  * - [SimilaritySearchStrategy] - Vector similarity search (semantic search)
- * - [KeywordSearchStrategy] - Full-text/keyword search
  *
  * ### Usage Examples
  *
@@ -23,20 +20,20 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
  * }
  * ```
  *
- * **Custom implementation as lambda (Java):
+ * **Custom implementation as lambda (Java):**
  * ```java
  * SearchStrategy customStrategy = (query) ->
- *     new SimilaritySearchRequest(query, 5, 0.8, null);
+ *     new SimilaritySearchRequest(query, 5, 0, 0.8, null);
  * ```
  */
 public fun interface SearchStrategy {
     /**
-     * Maps a query string into a [SearchRequest] for the storage.
+     * Maps a query string into a [SimilaritySearchRequest] for the storage.
      *
      * @param query The user's query string (typically the last user message content)
-     * @return The search request to be executed
+     * @return The similarity search request to be executed
      */
-    public fun create(query: String): SearchRequest
+    public fun create(query: String): SimilaritySearchRequest
 
     /**
      * Companion object with a builder method.
@@ -73,27 +70,33 @@ public class SearchStrategyBuilder {
      * Select the [KeywordSearchStrategy] implementation.
      * Returns its [KeywordSearchStrategy.Builder] for further configuration.
      */
+    @Deprecated(
+        message = "KeywordSearchStrategy is deprecated. Vector backends require SimilaritySearchStrategy. Use similarity() instead.",
+        replaceWith = ReplaceWith("similarity()")
+    )
+    @Suppress("DEPRECATION")
     public fun keyword(): KeywordSearchStrategy.Builder = KeywordSearchStrategy.Builder()
 }
 
 /**
  * Keyword search mode using full-text/lexical matching.
  *
- * This mode uses traditional text matching instead of vector similarity,
- * which can be useful for exact term matching or when semantic search
- * is not needed.
- *
  * @property topK Maximum number of results to return
  * @property similarityThreshold Minimum similarity score (0.0 to 1.0)
  * @property filterExpression Optional metadata filter expression for pre-filtering
+ * @deprecated Keyword search is not supported by vector backends. Use [SimilaritySearchStrategy] instead.
  */
+@Deprecated(
+    message = "Keyword search is not supported by vector backends. Use SimilaritySearchStrategy instead.",
+    replaceWith = ReplaceWith("SimilaritySearchStrategy")
+)
 public class KeywordSearchStrategy(
     public val topK: Int = 10,
     public val similarityThreshold: Double = 0.0,
     public val filterExpression: String? = null
 ) : SearchStrategy {
-    override fun create(query: String): SearchRequest =
-        KeywordSearchRequest(query, topK, 0, similarityThreshold, filterExpression)
+    override fun create(query: String): SimilaritySearchRequest =
+        SimilaritySearchRequest(query, topK, 0, similarityThreshold, filterExpression)
 
     /**
      * Builder for [KeywordSearchStrategy].
@@ -122,6 +125,7 @@ public class KeywordSearchStrategy(
             apply { this.filterExpression = filterExpression }
 
         /** Builds a [KeywordSearchStrategy] from the current settings. */
+        @Suppress("DEPRECATION")
         public fun build(): KeywordSearchStrategy =
             KeywordSearchStrategy(topK, similarityThreshold, filterExpression)
     }
@@ -142,7 +146,7 @@ public class SimilaritySearchStrategy(
     public val similarityThreshold: Double = 0.0,
     public val filterExpression: String? = null
 ) : SearchStrategy {
-    override fun create(query: String): SearchRequest =
+    override fun create(query: String): SimilaritySearchRequest =
         SimilaritySearchRequest(query, topK, 0, similarityThreshold, filterExpression)
 
     /**

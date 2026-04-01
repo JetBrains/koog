@@ -1,5 +1,6 @@
 package ai.koog.spring.ai.vectorstore
 
+import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.FilteringDeletionStorage
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
@@ -13,6 +14,6 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
  * capabilities (ingestion, retrieval, deletion) through one dependency.
  */
 public interface KoogVectorStore :
-    WriteStorage<DocumentWithMetadata>,
-    SearchStorage<DocumentWithMetadata, SimilaritySearchRequest>,
+    WriteStorage<TextDocument>,
+    SearchStorage<TextDocument, SimilaritySearchRequest>,
     FilteringDeletionStorage

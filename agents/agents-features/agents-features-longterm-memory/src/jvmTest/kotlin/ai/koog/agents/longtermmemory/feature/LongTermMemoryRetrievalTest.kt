@@ -24,7 +24,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.rag.base.storage.search.KeywordSearchRequest
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -127,7 +127,7 @@ class LongTermMemoryRetrievalTest {
                     this.storage = storage
                     searchStrategy = SearchStrategy { _ ->
                         searchCalled = true
-                        KeywordSearchRequest(queryText = "Kotlin")
+                        SimilaritySearchRequest(queryText = "Kotlin")
                     }
                 }
             }
@@ -167,7 +167,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = SearchStrategy { _ -> KeywordSearchRequest(queryText = "Kotlin") }
+                    searchStrategy = SearchStrategy { _ -> SimilaritySearchRequest(queryText = "Kotlin") }
                 }
             }
         }
@@ -263,7 +263,7 @@ class LongTermMemoryRetrievalTest {
                     this.storage = storage
                     searchStrategy = SearchStrategy { query ->
                         capturedQuery = query
-                        KeywordSearchRequest(query)
+                        SimilaritySearchRequest(query)
                     }
                 }
             }
@@ -478,7 +478,7 @@ class LongTermMemoryRetrievalTest {
                 retrieval {
                     storage = retrievalStorage
                     searchStrategy = SearchStrategy { _ ->
-                        KeywordSearchRequest(queryText = "Kotlin")
+                        SimilaritySearchRequest(queryText = "Kotlin")
                     }
                     promptAugmenter = UserPromptAugmenter()
                 }
@@ -501,7 +501,7 @@ class LongTermMemoryRetrievalTest {
         )
 
         // Verify ingestion stored the ORIGINAL user message, not the augmented one
-        val ingestedRecords = ingestionStorage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
+        val ingestedRecords = ingestionStorage.search(SimilaritySearchRequest(queryText = "Kotlin"), defaultNamespace)
         assertEquals(1, ingestedRecords.size)
         assertEquals(originalUserMessage, ingestedRecords.first().document.content)
     }
