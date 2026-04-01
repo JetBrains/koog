@@ -147,6 +147,7 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-haiku-4.5",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
         ),
@@ -163,6 +164,7 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-sonnet-4.5",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
         ),
@@ -179,6 +181,7 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-opus-4.5",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
         ),
@@ -195,6 +198,7 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-sonnet-4.6",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
         ),
@@ -211,6 +215,7 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-opus-4.6",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
         ),
