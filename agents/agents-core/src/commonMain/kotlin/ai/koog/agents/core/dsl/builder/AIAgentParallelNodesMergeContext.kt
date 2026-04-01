@@ -47,14 +47,17 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val strategyName: String get() = underlyingContextBase.strategyName
     override val pipeline: AIAgentGraphPipeline get() = underlyingContextBase.pipeline
 
+    @Suppress("DEPRECATION")
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         underlyingContextBase.store(key, value)
     }
 
+    @Suppress("DEPRECATION")
     override fun <T> get(key: AIAgentStorageKey<*>): T? {
         return underlyingContextBase.get(key)
     }
 
+    @Suppress("DEPRECATION")
     override fun remove(key: AIAgentStorageKey<*>): Boolean {
         return underlyingContextBase.remove(key)
     }

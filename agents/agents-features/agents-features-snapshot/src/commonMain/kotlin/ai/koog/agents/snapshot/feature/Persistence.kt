@@ -297,7 +297,7 @@ public class Persistence(
     }
 
     @Deprecated("Use setExecutionPoint with JSONElement instead of JsonElement")
-    public fun setExecutionPoint(
+    public suspend fun setExecutionPoint(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
@@ -317,7 +317,7 @@ public class Persistence(
      * @param messageHistory The message history to set for the agent
      * @param input The input data to set for the agent
      */
-    public fun setExecutionPoint(
+    public suspend fun setExecutionPoint(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
@@ -334,7 +334,7 @@ public class Persistence(
     }
 
     @Deprecated("Use setExecutionPointAfterNode with JSONElement instead of JsonElement")
-    public fun setExecutionPointAfterNode(
+    public suspend fun setExecutionPointAfterNode(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
@@ -354,7 +354,7 @@ public class Persistence(
      * @param messageHistory The sequence of messages representing the agent's prior interactions.
      * @param output The output data to associate with the specified execution point.
      */
-    public fun setExecutionPointAfterNode(
+    public suspend fun setExecutionPointAfterNode(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,

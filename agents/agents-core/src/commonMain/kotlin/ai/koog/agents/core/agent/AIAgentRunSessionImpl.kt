@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.session.AIAgentRunSession
+import ai.koog.agents.core.agent.session.AIAgentSessionInputs
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.runCatchingCancellable
@@ -52,11 +53,17 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
         ?: error("Context is not available before running the session. Call run() to start the session and initialize the context.")
 
     override suspend fun run(
-        input: Input
+        input: Input,
+        sessionInputs: AIAgentSessionInputs?,
     ): Output {
         state = AIAgentState.Starting()
         val context = ctxBuilder(input, id, agent.id)
         ctx = context
+
+        sessionInputs?.storage?.let { inputStorage ->
+            context.storage.putAll(inputStorage.toMap())
+        }
+
         val runResult = withPreparedPipeline(context, agent.id, sessionPipeline) {
             try {
                 logger.debug { formatLog(id, id, "Starting agent execution") }
