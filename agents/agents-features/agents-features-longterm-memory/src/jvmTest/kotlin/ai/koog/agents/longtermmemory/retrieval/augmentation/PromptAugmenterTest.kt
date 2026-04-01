@@ -1,9 +1,12 @@
 package ai.koog.agents.longtermmemory.retrieval.augmentation
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.SearchResult
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
+import ai.koog.rag.base.TextDocument
+import ai.koog.rag.base.storage.search.Score
+import ai.koog.rag.base.storage.search.ScoreMetric
+import ai.koog.rag.base.storage.search.SearchResult
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -13,8 +16,8 @@ import kotlin.test.assertTrue
  */
 class PromptAugmenterTest {
 
-    private fun searchResults(vararg contents: String): List<SearchResult> =
-        contents.map { SearchResult(record = MemoryRecord(content = it), similarity = 1.0) }
+    private fun searchResults(vararg contents: String): List<SearchResult<TextDocument>> =
+        contents.map { SearchResult(document = MemoryRecord(content = it), Score(1.0, ScoreMetric.COSINE_SIMILARITY)) }
 
     @Test
     fun testAugmentWithSystemMessageMode() {
@@ -184,7 +187,7 @@ class PromptAugmenterTest {
             user("Hello")
         }
 
-        val customAugmenter = PromptAugmenter { prompt, context ->
+        val customAugmenter = PromptAugmenter { prompt, _ ->
             prompt // no-op augmenter
         }
 

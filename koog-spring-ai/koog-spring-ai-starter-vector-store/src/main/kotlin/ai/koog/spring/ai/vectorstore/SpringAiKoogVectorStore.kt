@@ -1,5 +1,6 @@
 package ai.koog.spring.ai.vectorstore
 
+import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
 import ai.koog.rag.base.storage.search.SearchResult
@@ -23,7 +24,7 @@ public class SpringAiKoogVectorStore(
     /**
      * It adds documents with randomly generated ids for null ids, otherwise it adds documents with specified ids.
      */
-    override suspend fun add(documents: List<DocumentWithMetadata>, namespace: String?): List<String> {
+    override suspend fun add(documents: List<TextDocument>, namespace: String?): List<String> {
         require(namespace == null) { "Namespace scoping is not yet supported by SpringAiKoogVectorStore" }
         documents.forEach { validateMetadata(it.metadata) }
         return withContext(dispatcher) {
@@ -48,7 +49,7 @@ public class SpringAiKoogVectorStore(
     /**
      * It deletes old documents by their ids and adds new documents. Spring AI VectorStore does not support transactional update.
      */
-    override suspend fun update(documents: Map<String, DocumentWithMetadata>, namespace: String?): List<String> {
+    override suspend fun update(documents: Map<String, TextDocument>, namespace: String?): List<String> {
         require(namespace == null) { "Namespace scoping is not yet supported by SpringAiKoogVectorStore" }
         documents.values.forEach { validateMetadata(it.metadata) }
         documents.forEach { (id, document) ->
@@ -123,7 +124,7 @@ public class SpringAiKoogVectorStore(
     /**
      * Does similarity search, because Spring AI VectorStore currently supports only similaritySearch.
      */
-    override suspend fun search(request: SimilaritySearchRequest, namespace: String?): List<SearchResult<DocumentWithMetadata>> {
+    override suspend fun search(request: SimilaritySearchRequest, namespace: String?): List<SearchResult<TextDocument>> {
         require(namespace == null) { "Namespace scoping is not yet supported by SpringAiKoogVectorStore" }
         require(request.limit >= 0) { "limit must be non-negative, but was ${request.limit}" }
         require(request.offset >= 0) { "offset must be non-negative, but was ${request.offset}" }
@@ -181,7 +182,8 @@ public class SpringAiKoogVectorStore(
             Double::class,
         )
 
-        fun validateMetadata(metadata: Map<String, Any>) {
+        fun validateMetadata(metadata: Map<String, Any>?) {
+            requireNotNull(metadata) { "metadata can not be null" }
             metadata.forEach { (key, value) ->
                 require(value::class in ALLOWED_TYPES) {
                     "Metadata value for key '$key' must be a primitive type " +

@@ -4,18 +4,16 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringMemoryRecordExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.prompt.dsl.Prompt
@@ -26,6 +24,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -128,7 +127,7 @@ class LongTermMemoryRetrievalTest {
                     this.storage = storage
                     searchStrategy = SearchStrategy { _ ->
                         searchCalled = true
-                        KeywordSearchRequest(query = "Kotlin")
+                        SimilaritySearchRequest(queryText = "Kotlin")
                     }
                 }
             }
@@ -168,7 +167,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = SearchStrategy { _ -> KeywordSearchRequest(query = "Kotlin") }
+                    searchStrategy = SearchStrategy { _ -> SimilaritySearchRequest(queryText = "Kotlin") }
                 }
             }
         }
@@ -264,7 +263,7 @@ class LongTermMemoryRetrievalTest {
                     this.storage = storage
                     searchStrategy = SearchStrategy { query ->
                         capturedQuery = query
-                        KeywordSearchRequest(query)
+                        SimilaritySearchRequest(query)
                     }
                 }
             }
@@ -276,12 +275,12 @@ class LongTermMemoryRetrievalTest {
     }
 
     // ==========================================
-    // Keyword search builder integration
+    // Similarity search builder integration
     // ==========================================
 
     @Test
     @Timeout(5)
-    fun `keywordSearch builder retrieves matching records`() = runTest {
+    fun `similaritySearch builder retrieves matching records`() = runTest {
         val storage = InMemoryRecordStorage()
         storage.add(
             listOf(
@@ -307,20 +306,20 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }
 
         val result = agent.run("Kotlin")
 
-        assertTrue(augmented, "Prompt should be augmented with keyword search results")
+        assertTrue(augmented, "Prompt should be augmented with similarity search results")
         assertEquals("AUGMENTED", result)
     }
 
     @Test
     @Timeout(5)
-    fun `keywordSearch builder returns no augmentation when query does not match`() = runTest {
+    fun `similaritySearch builder returns no augmentation when query does not match`() = runTest {
         val storage = InMemoryRecordStorage()
         storage.add(
             listOf(
@@ -345,7 +344,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }
@@ -380,7 +379,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }
@@ -412,7 +411,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor()
+                    extractionStrategy = FilteringExtractionStrategy()
                 }
             }
         }
@@ -437,7 +436,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = KeywordSearchStrategy(topK = 5)
+                    searchStrategy = SimilaritySearchStrategy(topK = 5)
                 }
             }
         }
@@ -479,13 +478,13 @@ class LongTermMemoryRetrievalTest {
                 retrieval {
                     storage = retrievalStorage
                     searchStrategy = SearchStrategy { _ ->
-                        KeywordSearchRequest(query = "Kotlin")
+                        SimilaritySearchRequest(queryText = "Kotlin")
                     }
                     promptAugmenter = UserPromptAugmenter()
                 }
                 ingestion {
                     storage = ingestionStorage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_LLM_CALL
                 }
             }
@@ -502,8 +501,8 @@ class LongTermMemoryRetrievalTest {
         )
 
         // Verify ingestion stored the ORIGINAL user message, not the augmented one
-        val ingestedRecords = ingestionStorage.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
+        val ingestedRecords = ingestionStorage.search(SimilaritySearchRequest(queryText = "Kotlin"), defaultNamespace)
         assertEquals(1, ingestedRecords.size)
-        assertEquals(originalUserMessage, ingestedRecords.first().record.content)
+        assertEquals(originalUserMessage, ingestedRecords.first().document.content)
     }
 }

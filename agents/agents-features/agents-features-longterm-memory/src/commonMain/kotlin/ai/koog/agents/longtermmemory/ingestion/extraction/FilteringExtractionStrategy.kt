@@ -2,8 +2,7 @@ package ai.koog.agents.longtermmemory.ingestion.extraction
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.prompt.message.Message
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import ai.koog.rag.base.TextDocument
 
 /**
  * Default extractor that filters messages by role.
@@ -20,22 +19,25 @@ import kotlinx.serialization.json.JsonPrimitive
  * @property lastMessageOnly When `true`, only the last message for each matching role is extracted.
  *   Defaults to `false`.
  */
-public class FilteringMemoryRecordExtractor(
+public class FilteringExtractionStrategy(
     public val messageRolesToExtract: Set<Message.Role> = setOf(Message.Role.User, Message.Role.Assistant),
     public val lastMessageOnly: Boolean = false,
-) : MemoryRecordExtractor {
+) : ExtractionStrategy {
 
-    private val messageRoleFieldNameInMetadata = "messageRole"
+    private companion object {
+        private const val MESSAGE_ROLE_FIELD_NAME = "messageRole"
+        private const val TIMESTAMP_FIELD_NAME = "timestampMs"
+    }
 
     /**
-     * Builder for [FilteringMemoryRecordExtractor].
+     * Builder for [FilteringExtractionStrategy].
      *
-     * Provides a fluent API for constructing a [FilteringMemoryRecordExtractor],
+     * Provides a fluent API for constructing a [FilteringExtractionStrategy],
      * which is convenient for Java users.
      *
      * Example usage (Java):
      * ```java
-     * new FilteringMemoryRecordExtractor.Builder()
+     * new FilteringExtractionStrategy.Builder()
      *     .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
      *     .withLastMessageOnly(true)
      *     .build()
@@ -61,12 +63,12 @@ public class FilteringMemoryRecordExtractor(
         public fun withLastMessageOnly(lastMessageOnly: Boolean): Builder =
             apply { this.lastMessageOnly = lastMessageOnly }
 
-        /** Builds a [FilteringMemoryRecordExtractor] from the current settings. */
-        public fun build(): FilteringMemoryRecordExtractor =
-            FilteringMemoryRecordExtractor(extractRoles, lastMessageOnly)
+        /** Builds a [FilteringExtractionStrategy] from the current settings. */
+        public fun build(): FilteringExtractionStrategy =
+            FilteringExtractionStrategy(extractRoles, lastMessageOnly)
     }
 
-    override suspend fun extract(messages: List<Message>): List<MemoryRecord> {
+    override suspend fun extract(messages: List<Message>): List<TextDocument> {
         val filtered: List<Message> = if (lastMessageOnly) {
             messageRolesToExtract.mapNotNull { role ->
                 messages.lastOrNull { it.role == role }
@@ -77,13 +79,11 @@ public class FilteringMemoryRecordExtractor(
         return filtered.map { messageToMemoryRecord(it) }
     }
 
-    private fun messageToMemoryRecord(message: Message): MemoryRecord = MemoryRecord(
+    private fun messageToMemoryRecord(message: Message): TextDocument = MemoryRecord(
         content = message.content,
-        metadata = JsonObject(
-            mapOf(
-                messageRoleFieldNameInMetadata to JsonPrimitive(message.role.name),
-            )
+        metadata = mapOf(
+            MESSAGE_ROLE_FIELD_NAME to message.role.name,
+            TIMESTAMP_FIELD_NAME to message.metaInfo.timestamp.toEpochMilliseconds()
         ),
-        timestamp = message.metaInfo.timestamp
     )
 }

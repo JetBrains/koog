@@ -4,17 +4,15 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringMemoryRecordExtractor
-import ai.koog.agents.longtermmemory.ingestion.extraction.MemoryRecordExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
@@ -25,6 +23,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.rag.base.storage.search.KeywordSearchRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -88,7 +87,7 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Default FilteringMemoryRecordExtractor (User + Assistant)
+    // Default FilteringExtractionStrategy (User + Assistant)
     // ==========================================
 
     @Test
@@ -108,7 +107,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor()
+                    extractionStrategy = FilteringExtractionStrategy()
                 }
             }
         }
@@ -116,14 +115,14 @@ class LongTermMemoryIngestionTest {
         agent.run("Tell me about coroutines")
 
         assertTrue(storage.size() >= 2, "Both user and assistant messages should be stored")
-        val results = storage.search(KeywordSearchRequest(query = "coroutines"), defaultNamespace)
+        val results = storage.search(KeywordSearchRequest(queryText = "coroutines"), defaultNamespace)
         assertTrue(
-            results.any { it.record.content.contains("Kotlin coroutines") },
+            results.any { it.document.content.contains("Kotlin coroutines") },
             "Assistant message should be stored"
         )
-        val userResults = storage.search(KeywordSearchRequest(query = "Tell me about"), defaultNamespace)
+        val userResults = storage.search(KeywordSearchRequest(queryText = "Tell me about"), defaultNamespace)
         assertTrue(
-            userResults.any { it.record.content.contains("Tell me about coroutines") },
+            userResults.any { it.document.content.contains("Tell me about coroutines") },
             "User message should be stored"
         )
     }
@@ -149,7 +148,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -157,9 +156,9 @@ class LongTermMemoryIngestionTest {
         agent.run("Hello")
 
         assertTrue(storage.size() > 0, "At least one record should be stored")
-        val results = storage.search(KeywordSearchRequest(query = "assistant response"), defaultNamespace)
+        val results = storage.search(KeywordSearchRequest(queryText = "assistant response"), defaultNamespace)
         assertTrue(
-            results.any { it.record.content.contains("assistant response to store") },
+            results.any { it.document.content.contains("assistant response to store") },
             "Assistant response should be stored"
         )
     }
@@ -181,7 +180,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_LLM_CALL
                 }
             }
@@ -190,14 +189,14 @@ class LongTermMemoryIngestionTest {
         agent.run("User question about Kotlin")
 
         assertTrue(storage.size() > 0, "At least one user message should be stored")
-        val results = storage.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
+        val results = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
         assertTrue(
-            results.any { it.record.content.contains("User question about Kotlin") },
+            results.any { it.document.content.contains("User question about Kotlin") },
             "User message should be stored"
         )
-        val assistantResults = storage.search(KeywordSearchRequest(query = "Assistant"), defaultNamespace)
+        val assistantResults = storage.search(KeywordSearchRequest(queryText = "Assistant"), defaultNamespace)
         assertTrue(
-            assistantResults.none { it.record.content.contains("Assistant reply") },
+            assistantResults.none { it.document.content.contains("Assistant reply") },
             "Assistant messages should NOT be stored"
         )
     }
@@ -219,20 +218,20 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(messageRolesToExtract = setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(messageRolesToExtract = setOf(Message.Role.Assistant))
                 }
             }
         }
 
         agent.run("What is Kotlin?")
 
-        val allResults = storage.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
+        val allResults = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
         assertTrue(
-            allResults.none { it.record.content.contains("What is Kotlin") },
+            allResults.none { it.document.content.contains("What is Kotlin") },
             "User message should NOT be stored"
         )
         assertTrue(
-            allResults.any { it.record.content.contains("Kotlin is a modern language") },
+            allResults.any { it.document.content.contains("Kotlin is a modern language") },
             "Assistant message should be stored"
         )
     }
@@ -308,7 +307,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -316,10 +315,10 @@ class LongTermMemoryIngestionTest {
         agent.run("Hello")
 
         assertEquals(1, storage.size(), "Streaming frames should be stored as a memory record")
-        val results = storage.search(KeywordSearchRequest(query = "Hello world"), defaultNamespace)
+        val results = storage.search(KeywordSearchRequest(queryText = "Hello world"), defaultNamespace)
         assertEquals(1, results.size)
         assertTrue(
-            results.first().record.content.contains("Hello world!"),
+            results.first().document.content.contains("Hello world!"),
             "Concatenated streaming content should be stored"
         )
     }
@@ -339,7 +338,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_LLM_CALL
                 }
             }
@@ -348,11 +347,11 @@ class LongTermMemoryIngestionTest {
         agent.run("User streaming question about Kotlin")
 
         assertTrue(storage.size() > 0, "User message should be stored during streaming")
-        val results = storage.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
-        assertTrue(results.any { it.record.content.contains("User streaming question about Kotlin") })
-        val streamResults = storage.search(KeywordSearchRequest(query = "Streaming reply"), defaultNamespace)
+        val results = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
+        assertTrue(results.any { it.document.content.contains("User streaming question about Kotlin") })
+        val streamResults = storage.search(KeywordSearchRequest(queryText = "Streaming reply"), defaultNamespace)
         assertTrue(
-            streamResults.none { it.record.content.contains("Streaming reply") },
+            streamResults.none { it.document.content.contains("Streaming reply") },
             "Streaming assistant response should NOT be stored"
         )
     }
@@ -378,7 +377,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -388,8 +387,8 @@ class LongTermMemoryIngestionTest {
 
         assertTrue(storage.size() > 0, "Records should be stored after agent completion")
         val results =
-            storage.search(KeywordSearchRequest(query = "assistant response stored on completion"), defaultNamespace)
-        assertTrue(results.any { it.record.content.contains("assistant response stored on completion") })
+            storage.search(KeywordSearchRequest(queryText = "assistant response stored on completion"), defaultNamespace)
+        assertTrue(results.any { it.document.content.contains("assistant response stored on completion") })
     }
 
     @Test
@@ -430,7 +429,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -463,7 +462,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -472,10 +471,10 @@ class LongTermMemoryIngestionTest {
         agent.run("User question about Kotlin")
 
         assertTrue(storage.size() > 0, "User message should be stored on completion")
-        val results = storage.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
-        assertTrue(results.any { it.record.content.contains("User question about Kotlin") })
+        val results = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
+        assertTrue(results.any { it.document.content.contains("User question about Kotlin") })
         assertTrue(
-            results.none { it.record.content.contains("Assistant reply") },
+            results.none { it.document.content.contains("Assistant reply") },
             "Assistant messages should NOT be stored"
         )
     }
@@ -497,7 +496,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = FilteringMemoryRecordExtractor(setOf(Message.Role.User, Message.Role.Assistant))
+                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User, Message.Role.Assistant))
                     timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
@@ -506,19 +505,19 @@ class LongTermMemoryIngestionTest {
         agent.run("User question about Kotlin")
 
         assertTrue(storage.size() >= 2, "Both user and assistant records should be stored")
-        val results = storage.search(KeywordSearchRequest(query = "Kotlin"), defaultNamespace)
+        val results = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
         assertTrue(
-            results.any { it.record.content.contains("User question about Kotlin") },
+            results.any { it.document.content.contains("User question about Kotlin") },
             "User message should be stored"
         )
         assertTrue(
-            results.any { it.record.content.contains("Assistant response about Kotlin") },
+            results.any { it.document.content.contains("Assistant response about Kotlin") },
             "Assistant message should be stored"
         )
     }
 
     // ==========================================
-    // Custom MemoryRecordExtractor
+    // Custom ExtractionStrategy
     // ==========================================
 
     @Test
@@ -538,7 +537,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = MemoryRecordExtractor { messages ->
+                    extractionStrategy = ExtractionStrategy { messages ->
                         messages.filter { it.role == Message.Role.Assistant }
                             .flatMap { it.content.split(". ") }
                             .map { it.trim().removeSuffix(".") }
@@ -552,10 +551,10 @@ class LongTermMemoryIngestionTest {
         agent.run("Hello")
 
         assertEquals(3, storage.size(), "Custom extractor should split into 3 separate records")
-        val results = storage.search(KeywordSearchRequest(query = "sentence"), defaultNamespace)
-        assertTrue(results.any { it.record.content.contains("First sentence") })
-        assertTrue(results.any { it.record.content.contains("Second sentence") })
-        assertTrue(results.any { it.record.content.contains("Third sentence") })
+        val results = storage.search(KeywordSearchRequest(queryText = "sentence"), defaultNamespace)
+        assertTrue(results.any { it.document.content.contains("First sentence") })
+        assertTrue(results.any { it.document.content.contains("Second sentence") })
+        assertTrue(results.any { it.document.content.contains("Third sentence") })
     }
 
     @Test
@@ -575,7 +574,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = MemoryRecordExtractor { messages ->
+                    extractionStrategy = ExtractionStrategy { messages ->
                         messages
                             .filter { it.role == Message.Role.Assistant }
                             .map { MemoryRecord(content = it.content.uppercase()) }
@@ -587,9 +586,9 @@ class LongTermMemoryIngestionTest {
         agent.run("What is the answer?")
 
         assertTrue(storage.size() > 0, "At least one record should be stored")
-        val results = storage.search(KeywordSearchRequest(query = "ANSWER"), defaultNamespace)
+        val results = storage.search(KeywordSearchRequest(queryText = "ANSWER"), defaultNamespace)
         assertTrue(
-            results.any { it.record.content == "THE ANSWER IS 42" },
+            results.any { it.document.content == "THE ANSWER IS 42" },
             "Custom extractor should have uppercased the content"
         )
     }
@@ -615,7 +614,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractor = MemoryRecordExtractor { emptyList() }
+                    extractionStrategy = ExtractionStrategy { emptyList() }
                 }
             }
         }

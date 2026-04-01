@@ -1,86 +1,86 @@
 package ai.koog.agents.longtermmemory.ingestion.extraction
 
-import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.prompt.message.Message
+import ai.koog.rag.base.TextDocument
 
 /**
  * Extractor of memory records during message ingestion.
  *
  * This is a functional interface (SAM) that defines how a list of messages
- * should be transformed into a list of [MemoryRecord]s for storage.
+ * should be transformed into a list of [TextDocument]s for storage.
  * It provides flexibility in how messages are filtered, transformed, and
  * converted into memory records while maintaining type safety.
  *
  * Pre-built implementations are available for common ingestion patterns:
- * - [FilteringMemoryRecordExtractor] - Filters messages by role
+ * - [FilteringExtractionStrategy] - Filters messages by role
  *
  * ### Usage Examples
  *
  * **Using pre-built extractors (Kotlin):**
  * ```kotlin
  * // Extract User and Assistant messages (default)
- * val extractor = FilteringMemoryRecordExtractor()
+ * val extractor = FilteringExtractionStrategy()
  *
  * // Extract only User messages
- * val extractor = FilteringMemoryRecordExtractor(
+ * val extractor = FilteringExtractionStrategy(
  *     messageRolesToExtract = setOf(Message.Role.User)
  * )
  * ```
  *
  * **Custom implementation as lambda (Kotlin):**
  * ```kotlin
- * val customExtractor = MemoryRecordExtractor { messages ->
+ * val customExtractor = ExtractionStrategy { messages ->
  *     messages
  *         .filter { it.role == Message.Role.Assistant }
- *         .extract { MemoryRecord.Plain(content = summarize(it.content)) }
+ *         .extract { MemoryRecord(content = summarize(it.content)) }
  * }
  * ```
  *
  * **Custom implementation as lambda (Java):**
  * ```java
- * MemoryRecordExtractor customExtractor = (messages) ->
+ * ExtractionStrategy customExtractor = (messages) ->
  *     messages.stream()
  *         .filter(m -> m.getRole() == Message.Role.Assistant)
- *         .extract(m -> new MemoryRecord.Plain(m.getContent()))
+ *         .extract(m -> new MemoryRecord(m.getContent()))
  *         .collect(Collectors.toList());
  * ```
  */
-public fun interface MemoryRecordExtractor {
+public fun interface ExtractionStrategy {
     /**
      * Transforms a list of messages into a list of memory records for storage.
      *
      * @param messages The messages to transform into memory records
      * @return List of memory records to be stored
      */
-    public suspend fun extract(messages: List<Message>): List<MemoryRecord>
+    public suspend fun extract(messages: List<Message>): List<TextDocument>
 
     /**
      * Companion object with a builder method.
      */
     public companion object {
         /**
-         * Returns a builder that lets you choose a default [MemoryRecordExtractor] implementation.
+         * Returns a builder that lets you choose a default [ExtractionStrategy] implementation.
          *
          * Example usage (Java):
          * ```java
-         * MemoryRecordExtractor.builder()
+         * ExtractionStrategy.builder()
          *     .filtering()
          *     .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
          *     .build()
          * ```
          */
         @kotlin.jvm.JvmStatic
-        public fun builder(): MemoryRecordExtractorBuilder = MemoryRecordExtractorBuilder()
+        public fun builder(): ExtractionStrategyBuilder = ExtractionStrategyBuilder()
     }
 }
 
 /**
- * Intermediate builder that lets callers select a [MemoryRecordExtractor] implementation.
+ * Intermediate builder that lets callers select a [ExtractionStrategy] implementation.
  */
-public class MemoryRecordExtractorBuilder {
+public class ExtractionStrategyBuilder {
     /**
-     * Select the [FilteringMemoryRecordExtractor] implementation.
-     * Returns its [FilteringMemoryRecordExtractor.Builder] for further configuration.
+     * Select the [FilteringExtractionStrategy] implementation.
+     * Returns its [FilteringExtractionStrategy.Builder] for further configuration.
      */
-    public fun filtering(): FilteringMemoryRecordExtractor.Builder = FilteringMemoryRecordExtractor.Builder()
+    public fun filtering(): FilteringExtractionStrategy.Builder = FilteringExtractionStrategy.Builder()
 }

@@ -1,9 +1,10 @@
 package ai.koog.agents.longtermmemory.retrieval.augmentation
 
-import ai.koog.agents.longtermmemory.retrieval.SearchResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.rag.base.TextDocument
+import ai.koog.rag.base.storage.search.SearchResult
 
 /**
  * A [PromptAugmenter] that inserts retrieved context as a user message before the last user message.
@@ -69,7 +70,7 @@ public class UserPromptAugmenter(
         public fun build(): UserPromptAugmenter = UserPromptAugmenter(template, contextPrefix)
     }
 
-    override fun augment(originalPrompt: Prompt, relevantContext: List<SearchResult>): Prompt {
+    override fun augment(originalPrompt: Prompt, relevantContext: List<SearchResult<TextDocument>>): Prompt {
         if (relevantContext.isEmpty()) return originalPrompt
         if (originalPrompt.messages.none { it is Message.User }) return originalPrompt
 
