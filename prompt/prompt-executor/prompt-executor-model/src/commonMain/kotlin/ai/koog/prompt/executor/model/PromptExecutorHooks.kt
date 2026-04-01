@@ -153,9 +153,10 @@ public class ResolvedExecutionIntent private constructor(
 
     public constructor(
         initialExecutionIntent: InitialExecutionIntent,
-        executionArgOverrides: ExecutionArgOverrides
+        executionArgOverrides: ExecutionArgOverrides?
     ) : this(
         prompt = when (executionArgOverrides) {
+            null -> initialExecutionIntent.prompt
             NoOverrides -> initialExecutionIntent.prompt
             is UseDifferentPrompt -> executionArgOverrides.prompt
         },

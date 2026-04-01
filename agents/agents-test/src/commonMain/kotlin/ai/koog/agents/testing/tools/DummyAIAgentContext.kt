@@ -14,6 +14,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
@@ -34,6 +35,9 @@ import kotlin.uuid.Uuid
 public class DummyAIAgentContext(
     private val builder: AIAgentContextMockBuilder,
     override val agentId: String = "DummyAgentId",
+    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(
+        builder.config ?: AIAgentConfig(Prompt.Empty, OllamaModels.Meta.LLAMA_3_2, 100)
+    )
 ) : AIAgentGraphContextBase {
     override val parentContext: AIAgentGraphContextBase? = null
 
@@ -67,11 +71,6 @@ public class DummyAIAgentContext(
     private var _strategyName: String? = builder.strategyName
     private var _executionInfo: AgentExecutionInfo? = builder.executionInfo
 
-    @OptIn(InternalAgentsApi::class)
-    private var _pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(
-        _config ?: AIAgentConfig(Prompt.Empty, OllamaModels.Meta.LLAMA_3_2, 100)
-    )
-
     override val environment: AIAgentEnvironment
         get() = _environment ?: throw NotImplementedError("Environment is not mocked")
 
@@ -98,10 +97,6 @@ public class DummyAIAgentContext(
 
     override val strategyName: String
         get() = _strategyName ?: throw NotImplementedError("Strategy name is not mocked")
-
-    @OptIn(InternalAgentsApi::class)
-    override val pipeline: AIAgentGraphPipeline
-        get() = _pipeline
 
     override var executionInfo: AgentExecutionInfo
         get() = _executionInfo ?: throw NotImplementedError("Execution info is not mocked")
