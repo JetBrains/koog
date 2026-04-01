@@ -119,7 +119,7 @@ object Models {
     @JvmStatic
     fun openAIReasoningModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT5_2,
+            OpenAIModels.Chat.GPT5_4,
         )
     }
 

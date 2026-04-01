@@ -15,12 +15,15 @@ class StreamFrameFlowBuilderTest {
         val frames = buildStreamFrameFlow {
             emitTextDelta("Hello", 0)
             emitTextDelta(" World", 0)
+            emitEnd()
         }.toList()
 
         assertContentEquals(
             listOf(
                 StreamFrame.TextDelta("Hello", 0),
-                StreamFrame.TextDelta(" World", 0)
+                StreamFrame.TextDelta(" World", 0),
+                StreamFrame.TextComplete("Hello World", 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
             ),
             frames
         )
@@ -31,12 +34,15 @@ class StreamFrameFlowBuilderTest {
         val frames = buildStreamFrameFlow {
             emitReasoningDelta(text = "Thinking...", index = 0)
             emitReasoningDelta(text = " step 2", index = 0)
+            emitEnd()
         }.toList()
 
         assertContentEquals(
             listOf(
                 StreamFrame.ReasoningDelta(text = "Thinking...", index = 0),
-                StreamFrame.ReasoningDelta(text = " step 2", index = 0)
+                StreamFrame.ReasoningDelta(text = " step 2", index = 0),
+                StreamFrame.ReasoningComplete(id = null, text = listOf("Thinking... step 2"), index = 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
             ),
             frames
         )
@@ -47,12 +53,76 @@ class StreamFrameFlowBuilderTest {
         val frames = buildStreamFrameFlow {
             emitReasoningDelta(summary = "Summary part 1", index = 0)
             emitReasoningDelta(summary = " part 2", index = 0)
+            emitEnd()
         }.toList()
 
         assertContentEquals(
             listOf(
                 StreamFrame.ReasoningDelta(summary = "Summary part 1", index = 0),
-                StreamFrame.ReasoningDelta(summary = " part 2", index = 0)
+                StreamFrame.ReasoningDelta(summary = " part 2", index = 0),
+                StreamFrame.ReasoningComplete(
+                    id = null,
+                    text = emptyList(),
+                    summary = listOf("Summary part 1 part 2"),
+                    index = 0
+                ),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
+    fun testEmitReasoningTextAndSummary() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(text = "Thinking...", index = 0)
+            emitReasoningDelta(text = " step 2", index = 0)
+            emitReasoningDelta(summary = "Summary part 1", index = 0)
+            emitReasoningDelta(summary = " part 2", index = 0)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ReasoningDelta(text = "Thinking...", index = 0),
+                StreamFrame.ReasoningDelta(text = " step 2", index = 0),
+                StreamFrame.ReasoningDelta(summary = "Summary part 1", index = 0),
+                StreamFrame.ReasoningDelta(summary = " part 2", index = 0),
+                StreamFrame.ReasoningComplete(
+                    id = null,
+                    text = listOf("Thinking... step 2"),
+                    summary = listOf("Summary part 1 part 2"),
+                    index = 0
+                ),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
+    fun testEmitReasoningTextAndSummaryWithIds() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(id = "rs_123", text = "Thinking...", index = 0)
+            emitReasoningDelta(id = "rs_123", text = " step 2", index = 0)
+            emitReasoningDelta(id = "rs_123", summary = "Summary part 1", index = 0)
+            emitReasoningDelta(id = "rs_123", summary = " part 2", index = 0)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking...", index = 0),
+                StreamFrame.ReasoningDelta(id = "rs_123", text = " step 2", index = 0),
+                StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary part 1", index = 0),
+                StreamFrame.ReasoningDelta(id = "rs_123", summary = " part 2", index = 0),
+                StreamFrame.ReasoningComplete(
+                    id = "rs_123",
+                    text = listOf("Thinking... step 2"),
+                    summary = listOf("Summary part 1 part 2"),
+                    index = 0
+                ),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
             ),
             frames
         )
@@ -175,6 +245,30 @@ class StreamFrameFlowBuilderTest {
             StreamFrame.ToolCallComplete("call_1", "search", "{}", 0),
             StreamFrame.ReasoningDelta(id = "rs_123", text = "Now thinking...", index = 1),
             StreamFrame.ReasoningComplete(id = "rs_123", listOf("Now thinking..."), null, null, 1),
+            StreamFrame.End(null, ResponseMetaInfo.Empty)
+        )
+
+        assertContentEquals(expectedFrames, frames)
+    }
+
+    @Test
+    fun testSwitchBetweenReasoningWithDifferentIds() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(id = "rs_12", summary = "Summary part 1", index = 0)
+            emitReasoningDelta(id = "rs_123", summary = " part 2", index = 1)
+            emitEnd()
+        }.toList()
+
+        val expectedFrames = listOf(
+            StreamFrame.ReasoningDelta(id = "rs_12", summary = "Summary part 1", index = 0),
+            StreamFrame.ReasoningComplete(
+                id = "rs_12",
+                text = emptyList(),
+                summary = listOf("Summary part 1"),
+                index = 0
+            ),
+            StreamFrame.ReasoningDelta(id = "rs_123", summary = " part 2", index = 1),
+            StreamFrame.ReasoningComplete(id = "rs_123", text = emptyList(), summary = listOf(" part 2"), index = 1),
             StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
 

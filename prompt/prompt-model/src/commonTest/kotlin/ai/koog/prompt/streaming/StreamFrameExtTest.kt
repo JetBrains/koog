@@ -201,6 +201,7 @@ internal class StreamFrameExtTest {
 
         val expectedMessages = listOf(
             Message.Reasoning(
+                id = "rs_123",
                 parts = listOf(ContentPart.Text("Thinking step 1"), ContentPart.Text("Thinking step 2")),
                 summary = listOf(ContentPart.Text("Summary")),
                 encrypted = "encrypted_content",
@@ -258,6 +259,7 @@ internal class StreamFrameExtTest {
 
         val expectedMessages = listOf(
             Message.Reasoning(
+                id = "rs_123",
                 parts = listOf(ContentPart.Text("Thinking step 1"), ContentPart.Text("Thinking step 2")),
                 summary = listOf(ContentPart.Text("Summary")),
                 encrypted = "encrypted_content",

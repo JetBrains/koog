@@ -12,7 +12,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -139,6 +138,18 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
     override fun integration_testExecuteStreamingWithTools(model: LLModel) {
         super.integration_testExecuteStreamingWithTools(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#openAIReasoningModels")
+    override fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) {
+        super.integration_testReasoningStreamingSummaryDeltas(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#openAIReasoningModels")
+    override fun integration_testReasoningStreamingWithEncryptedContent(model: LLModel) {
+        super.integration_testReasoningStreamingWithEncryptedContent(model)
     }
 
     @ParameterizedTest
@@ -293,19 +304,6 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
     override fun integration_testReasoningWithEncryption(model: LLModel) {
         super.integration_testReasoningWithEncryption(model)
-    }
-
-    @Disabled("KG-767 OpenAILLMClient loses Responses API reasoning summary stream events")
-    @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.utils.Models#openAIReasoningModels")
-    override fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) {
-        super.integration_testReasoningStreamingSummaryDeltas(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.utils.Models#openAIReasoningModels")
-    override fun integration_testReasoningStreamingWithEncryptedContent(model: LLModel) {
-        super.integration_testReasoningStreamingWithEncryptedContent(model)
     }
 
     @ParameterizedTest

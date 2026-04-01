@@ -234,8 +234,8 @@ public class StreamFrameFlowBuilder(
         if (pendingReasoning != null) {
             flowCollector.emitReasoningComplete(
                 id = pendingReasoning.id,
-                text = pendingReasoning.textDelta ?: "",
-                summary = pendingReasoning.summaryDelta,
+                text = pendingReasoning.textDelta?.let { listOf(pendingReasoning.textDelta) } ?: emptyList(),
+                summary = pendingReasoning.summaryDelta?.let { listOf(pendingReasoning.summaryDelta) },
                 index = pendingReasoning.index
             )
         }
