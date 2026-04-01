@@ -35,6 +35,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterConfid
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterType
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentPolicyAction
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentPolicyAssessment
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentSource
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailStreamProcessingMode
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelResponse
@@ -52,6 +53,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.random.Random.Default.nextInt
@@ -68,6 +70,34 @@ import kotlin.time.Duration.Companion.milliseconds
 import aws.sdk.kotlin.services.bedrockruntime.model.Message as BedrockMessage
 
 class BedrockLLMClientTest {
+
+    companion object {
+        /*
+         * This is obscure, but it has a purpose.
+         *
+         * 1. GuardrailContentSource is a class with a static initializer (<clinit>)
+         * 2. GuardrailContentSource.values() returns a list of its inheritors
+         * 3. GuardrailContentSource.Input and GuardrailContentSource.Output are inheritors of GuardrailContentSource and are Kotlin objects (singletons)
+         * 4. Accessing GuardrailContentSource.Input or GuardrailContentSource.Output triggers their own class initialization, which is also synchronized by the JVM
+         * 5. During GuardrailContentSource initialization, we eagerly construct `values` list, which references Input and Output
+         * 6. If two threads initialize these in different orders:
+         *    - Thread A starts initializing GuardrailContentSource and, while building `values`, tries to initialize Output
+         *    - Thread B starts initializing Output and, as part of that, needs GuardrailContentSource to be initialized first
+         * 7. This creates a circular wait:
+         *    - Thread A holds GuardrailContentSource init lock and waits for Output
+         *    - Thread B holds Output init lock and waits for GuardrailContentSource
+         * 8. Result: JVM class initialization deadlock.
+         *
+         * We can avoid this by force-initing values before all tests, so we do
+         * Alternatively, we could run tests sequentially, but that's not ideal for CI speed
+         * */
+        @BeforeAll
+        @JvmStatic
+        fun setUp() {
+            print("GuardrailContentSource values: ${GuardrailContentSource.values()}")
+        }
+    }
+
     @Test
     fun `can create BedrockLLMClient`() {
         val client = BedrockLLMClient(
