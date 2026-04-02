@@ -26,7 +26,7 @@ import org.springframework.ai.embedding.EmbeddingRequest
 public class SpringAiLLMEmbeddingProvider(
     private val embeddingModel: EmbeddingModel,
     private val dispatcher: CoroutineDispatcher,
-) : LLMEmbeddingProvider {
+) : LLMEmbeddingProvider() {
 
     /**
      * Java-friendly builder access.
@@ -90,6 +90,25 @@ public class SpringAiLLMEmbeddingProvider(
         )
         try {
             embeddingModel.call(request).result.output.map { it.toDouble() }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException("spring-ai-embedding", "EmbeddingModel.call() failed: ${e.message}", e)
+        }
+    }
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> = withContext(dispatcher) {
+        val request = EmbeddingRequest(
+            inputs,
+            EmbeddingOptions.builder()
+                .model(model.id)
+                .build()
+        )
+        try {
+            embeddingModel.call(request).results.map { result -> result.output.map { it.toDouble() } }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -8,4 +8,4 @@ package ai.koog.prompt.executor.clients
  *
  * Implements [AutoCloseable] as LLM clients typically work with IO resources. Always close it when finished.
  */
-public actual abstract class LLMClient actual constructor() : LLMClientAPI
+public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLMEmbeddingProviderAPI

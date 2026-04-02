@@ -446,6 +446,8 @@ class RetryingLLMClientTest {
         private val streamResponse: Flow<StreamFrame> = flowOf(),
         private val multipleChoicesResponse: List<LLMChoice> = emptyList(),
         private val moderateResponse: ModerationResult = ModerationResult(false, emptyMap()),
+        private val embedResponse: List<Double> = emptyList(),
+        private val batchEmbedResponse: List<List<Double>> = emptyList(),
         private var failuresBeforeSuccess: Int = 0,
         private var streamFailuresBeforeSuccess: Int = 0,
         private val failureMessage: String = "Mock failure",
@@ -457,11 +459,15 @@ class RetryingLLMClientTest {
         var streamCalls = 0
         var multipleChoicesCalls = 0
         var moderateCalls = 0
+        var embedCalls = 0
+        var batchEmbedCalls = 0
 
         private var executeFailures = 0
         private var streamFailures = 0
         private var multipleChoicesFailures = 0
         private var moderateFailures = 0
+        private var embedFailures = 0
+        private var batchEmbedFailures = 0
 
         override fun llmProvider(): LLMProvider = llmProvider
 
@@ -523,6 +529,34 @@ class RetryingLLMClientTest {
             }
 
             return moderateResponse
+        }
+
+        override suspend fun embed(
+            text: String,
+            model: LLModel
+        ): List<Double> {
+            embedCalls++
+
+            if (embedFailures < failuresBeforeSuccess) {
+                embedFailures++
+                throw RuntimeException(failureMessage)
+            }
+
+            return embedResponse
+        }
+
+        override suspend fun embed(
+            inputs: List<String>,
+            model: LLModel
+        ): List<List<Double>> {
+            batchEmbedCalls++
+
+            if (batchEmbedFailures < failuresBeforeSuccess) {
+                batchEmbedFailures++
+                throw RuntimeException(failureMessage)
+            }
+
+            return batchEmbedResponse
         }
 
         override fun close() {

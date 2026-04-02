@@ -6,7 +6,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
 import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
@@ -76,7 +76,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
     logger = staticLogger,
     toolsConverter = toolsConverter
 ),
-    LLMEmbeddingProvider {
+    LLMEmbeddingProviderAPI {
 
     @JvmOverloads
     public constructor(
@@ -257,5 +257,13 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         val embedding = response.data.first().embedding
         logger.debug { "Received embedding with ${embedding.size} dimensions" }
         return embedding
+    }
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        logger.warn { "Batch embedding is not supported by OpenRouter API" }
+        throw UnsupportedOperationException("Batch embedding is not supported by OpenRouter API.")
     }
 }

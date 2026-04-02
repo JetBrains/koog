@@ -120,6 +120,20 @@ public class RetryingLLMClient @JvmOverloads constructor(
         delegate.models()
     }
 
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> = withRetry("embed") {
+        delegate.embed(text, model)
+    }
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> = withRetry("embed") {
+        delegate.embed(inputs, model)
+    }
+
     private suspend fun <T> withRetry(
         operation: String,
         block: suspend () -> T

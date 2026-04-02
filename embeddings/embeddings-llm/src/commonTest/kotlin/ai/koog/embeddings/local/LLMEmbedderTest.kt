@@ -76,7 +76,7 @@ class LLMEmbedderTest {
         }
     }
 
-    class MockEmbedderClient : LLMEmbeddingProvider {
+    class MockEmbedderClient : LLMEmbeddingProvider() {
         private val embeddings = mutableMapOf<String, Vector>()
 
         fun mockEmbedding(text: String, vector: Vector) {
@@ -85,6 +85,13 @@ class LLMEmbedderTest {
 
         override suspend fun embed(text: String, model: LLModel): List<Double> {
             return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
+        }
+
+        override suspend fun embed(
+            inputs: List<String>,
+            model: LLModel
+        ): List<List<Double>> {
+            return inputs.map { embed(it, model) }
         }
     }
 }

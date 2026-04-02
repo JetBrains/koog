@@ -168,4 +168,20 @@ public class DashscopeLLMClient @JvmOverloads constructor(
         logger.warn { "Moderation is not supported by DashScope API" }
         throw UnsupportedOperationException("Moderation is not supported by DashScope API.")
     }
+
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> {
+        logger.warn { "Embedding is not supported by DashScope API" }
+        throw UnsupportedOperationException("Embedding is not supported by DashScope API.")
+    }
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        logger.warn { "Embedding is not supported by DashScope API" }
+        throw UnsupportedOperationException("Embedding is not supported by DashScope API.")
+    }
 }

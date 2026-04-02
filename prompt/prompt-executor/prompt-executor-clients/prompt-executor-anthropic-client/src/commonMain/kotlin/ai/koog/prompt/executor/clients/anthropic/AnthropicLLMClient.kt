@@ -722,8 +722,6 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
      * Attempts to moderate the content of a given prompt using a specific language model.
      * This method is not supported by the Anthropic API and will always throw an exception.
      *
-     * @param prompt The prompt to be moderated, containing messages and optional configuration parameters.
-     * @param model The language model to use for moderation.
      * @return This method does not return a value as it always throws an exception.
      * @throws UnsupportedOperationException Always thrown, as moderation is not supported by the Anthropic API.
      */
@@ -738,6 +736,22 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by Anthropic API" }
         throw UnsupportedOperationException("Moderation is not supported by Anthropic API.")
+    }
+
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> {
+        logger.warn { "Embedding is not supported by Anthropic API" }
+        throw UnsupportedOperationException("Embedding is not supported by Anthropic API.")
+    }
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        logger.warn { "Embedding is not supported by Anthropic API" }
+        throw UnsupportedOperationException("Embedding is not supported by Anthropic API.")
     }
 
     override fun close() {

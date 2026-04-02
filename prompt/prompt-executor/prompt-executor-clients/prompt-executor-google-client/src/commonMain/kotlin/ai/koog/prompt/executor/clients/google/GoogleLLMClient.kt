@@ -10,10 +10,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
+import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingBatchRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingBatchResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingConfig
@@ -94,7 +95,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     private val httpClient: KoogHttpClient,
     private val clock: Clock = Clock.System
-) : LLMClient(), LLMEmbeddingProvider {
+) : LLMClient() {
 
     /**
      * Secondary constructor for creating a GoogleLLMClient backed with a Ktor HTTP client.
@@ -856,6 +857,42 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             )
 
             return response.embedding.values
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
+    }
+
+    override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
+        require(model.supports(LLMCapability.Embed)) {
+            "Model ${model.id} does not support embedding."
+        }
+
+        logger.debug { "Embedding input with model: ${model.id}" }
+
+        val request = GoogleEmbeddingBatchRequest(
+            model = "models/${model.id}",
+            requests = inputs.map {
+                GoogleContent(
+                    parts = listOf(GooglePart.Text(it))
+                )
+            }
+        )
+
+        try {
+            val response = httpClient.post(
+                path = "${settings.defaultPath}/${model.id}:${settings.embedContentMethod}",
+                request = request,
+                requestBodyType = GoogleEmbeddingBatchRequest::class,
+                responseType = GoogleEmbeddingBatchResponse::class,
+            )
+
+            return response.embeddings.map { it.values }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

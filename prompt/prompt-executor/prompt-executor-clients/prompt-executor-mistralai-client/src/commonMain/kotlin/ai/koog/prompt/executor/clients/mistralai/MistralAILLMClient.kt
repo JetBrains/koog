@@ -8,7 +8,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequest
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionResponse
@@ -82,7 +82,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
     logger = staticLogger,
     toolsConverter = toolsConverter,
 ),
-    LLMEmbeddingProvider {
+    LLMEmbeddingProviderAPI {
 
     @JvmOverloads
     public constructor(
@@ -214,11 +214,18 @@ public open class MistralAILLMClient @JvmOverloads constructor(
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
+        return embed(listOf(text), model).first()
+    }
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
         model.requireCapability(LLMCapability.Embed)
 
         logger.debug { "Embedding text with model: ${model.id}" }
 
-        val request = MistralAIEmbeddingRequest(model = model.id, input = text)
+        val request = MistralAIEmbeddingRequest(model = model.id, inputs = inputs)
 
         val mistralAIResponse = try {
             httpClient.post(
@@ -237,11 +244,10 @@ public open class MistralAILLMClient @JvmOverloads constructor(
             )
         }
 
-        return mistralAIResponse.data.firstOrNull()?.embedding ?: run {
-            val exception = LLMClientException(clientName, "Empty data in MistralAI embedding response")
-            logger.error(exception) { exception.message }
-            throw exception
-        }
+        val result = mistralAIResponse.data.map { it.embedding }
+        require(inputs.size == result.size) { "The size of input list and embedding result must match" }
+
+        return result
     }
 
     /**

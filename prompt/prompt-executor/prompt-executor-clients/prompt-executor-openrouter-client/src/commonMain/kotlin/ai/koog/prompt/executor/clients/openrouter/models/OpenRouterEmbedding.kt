@@ -18,6 +18,12 @@ internal data class OpenRouterEmbeddingResponse(
 )
 
 @Serializable
+internal data class OpenRouterEmbeddingBatchRequest(
+    val model: String,
+    val input: List<String>
+)
+
+@Serializable
 internal data class OpenRouterEmbeddingData(
     val embedding: List<Double>,
     val index: Int

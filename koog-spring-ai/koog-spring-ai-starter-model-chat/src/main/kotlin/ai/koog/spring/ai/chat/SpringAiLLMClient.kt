@@ -329,4 +329,18 @@ public class SpringAiLLMClient(
 
         return chatOptionsCustomizer.customize(options, params, model)
     }
+
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        TODO("Not yet implemented")
+    }
 }
