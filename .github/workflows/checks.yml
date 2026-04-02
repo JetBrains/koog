@@ -29,8 +29,8 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
-      docs: ${{ steps.filter.outputs.docs_any_changed }}
+      koog-src: ${{ steps.filter.outputs.koog-src_any_modified }}
+      docs: ${{ steps.filter.outputs.docs_any_modified }}
     steps:
       - uses: actions/checkout@v6
 
