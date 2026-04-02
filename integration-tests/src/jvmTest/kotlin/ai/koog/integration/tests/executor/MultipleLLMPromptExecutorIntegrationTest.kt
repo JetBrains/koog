@@ -22,6 +22,24 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     companion object {
         @JvmStatic
+        fun bedrockMarkdownScenarioModelCombinations(): Stream<Arguments> {
+            return Models.bedrockModels().flatMap { model ->
+                listOf(
+                    MarkdownTestScenario.BASIC_MARKDOWN,
+                ).map { scenario -> Arguments.of(scenario, model) }.stream()
+            }
+        }
+
+        @JvmStatic
+        fun bedrockTextScenarioModelCombinations(): Stream<Arguments> {
+            return Models.bedrockModels().flatMap { model ->
+                listOf(
+                    TextTestScenario.BASIC_TEXT,
+                ).map { scenario -> Arguments.of(scenario, model) }.stream()
+            }
+        }
+
+        @JvmStatic
         fun markdownScenarioModelCombinations(): Stream<Arguments> {
             return MediaTestScenarios.markdownScenarioModelCombinations()
         }
@@ -40,6 +58,17 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         fun audioScenarioModelCombinations(): Stream<Arguments> {
             return MediaTestScenarios.audioScenarioModelCombinations()
         }
+
+        @JvmStatic
+        fun providersWithModelsRequestSupport(): Stream<Arguments> {
+            return Stream.of(
+                LLMProvider.OpenAI,
+                LLMProvider.MistralAI,
+                LLMProvider.OpenRouter,
+                LLMProvider.Google,
+                LLMProvider.Anthropic
+            ).map { provider -> Arguments.of(provider) }
+        }
     }
 
     private val executor: MultiLLMPromptExecutor = run {
@@ -57,11 +86,16 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     override fun getExecutor(model: LLModel): PromptExecutor = executor
 
     @ParameterizedTest
-    @MethodSource("markdownScenarioModelCombinations")
+    @MethodSource("markdownScenarioModelCombinations", "bedrockMarkdownScenarioModelCombinations")
     override fun integration_testMarkdownProcessingBasic(
         scenario: MarkdownTestScenario,
         model: LLModel
     ) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testMarkdownProcessingBasic(scenario, model)
     }
 
@@ -72,8 +106,13 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("textScenarioModelCombinations")
+    @MethodSource("textScenarioModelCombinations", "bedrockTextScenarioModelCombinations")
     override fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
         super.integration_testTextProcessingBasic(scenario, model)
     }
 
@@ -267,5 +306,17 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("ai.koog.integration.tests.utils.Models#openAIReasoningModels")
     override fun integration_testReasoningStreamingWithEncryptedContent(model: LLModel) {
         super.integration_testReasoningStreamingWithEncryptedContent(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
+    override fun integration_testReasoningMultiStep(model: LLModel) {
+        super.integration_testReasoningMultiStep(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("providersWithModelsRequestSupport")
+    override fun integration_testGetModels(provider: LLMProvider) {
+        super.integration_testGetModels(provider)
     }
 }
