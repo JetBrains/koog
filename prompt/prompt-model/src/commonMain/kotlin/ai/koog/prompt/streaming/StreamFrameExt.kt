@@ -1,8 +1,11 @@
+@file:JvmName("StreamFrameExt")
+
 package ai.koog.prompt.streaming
 
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import kotlin.jvm.JvmName
 
 /**
  * Converts a list of [Message.Response] to a list of [StreamFrame].
