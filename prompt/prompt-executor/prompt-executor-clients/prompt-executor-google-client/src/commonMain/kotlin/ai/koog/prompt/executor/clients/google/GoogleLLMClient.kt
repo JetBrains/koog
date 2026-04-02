@@ -76,6 +76,7 @@ public class GoogleClientSettings(
     public val generateContentMethod: String = "generateContent",
     public val streamGenerateContentMethod: String = "streamGenerateContent",
     public val embedContentMethod: String = "embedContent",
+    public val batchEmbedContentsMethod: String = "batchEmbedContents",
     public val fallbackThoughtSignature: String = "context_engineering_is_the_way_to_go",
 )
 
@@ -888,17 +889,19 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         logger.debug { "Embedding input with model: ${model.id}" }
 
         val request = GoogleEmbeddingBatchRequest(
-            model = "models/${model.id}",
             requests = inputs.map {
-                GoogleContent(
-                    parts = listOf(GooglePart.Text(it))
+                GoogleEmbeddingRequest(
+                    model = "models/${model.id}",
+                    content = GoogleContent(
+                        parts = listOf(GooglePart.Text(it))
+                    )
                 )
             }
         )
 
         try {
             val response = httpClient.post(
-                path = "${settings.defaultPath}/${model.id}:${settings.embedContentMethod}",
+                path = "${settings.defaultPath}/${model.id}:${settings.batchEmbedContentsMethod}",
                 request = request,
                 requestBodyType = GoogleEmbeddingBatchRequest::class,
                 responseType = GoogleEmbeddingBatchResponse::class,

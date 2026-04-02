@@ -66,6 +66,14 @@ object Models {
         )
     }
 
+    @JvmStatic
+    fun batchEmbeddingModels(): Stream<LLModel> {
+        return Stream.of(
+            MistralAIModels.Embeddings.MistralEmbed,
+            GoogleModels.Embeddings.GeminiEmbedding001,
+        )
+    }
+
     /**
      * Returns models that support content moderation capabilities.
      *

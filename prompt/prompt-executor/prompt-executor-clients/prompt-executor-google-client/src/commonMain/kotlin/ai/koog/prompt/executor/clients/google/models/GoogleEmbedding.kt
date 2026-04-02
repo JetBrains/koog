@@ -15,8 +15,7 @@ internal data class GoogleEmbeddingResponse(
 
 @Serializable
 internal data class GoogleEmbeddingBatchRequest(
-    val model: String,
-    val requests: List<GoogleContent>
+    val requests: List<GoogleEmbeddingRequest>
 )
 
 @Serializable

@@ -235,7 +235,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
 
         logger.debug { "Embedding text with model: ${model.id}" }
 
-        val request = MistralAIEmbeddingRequest(model = model.id, inputs = inputs)
+        val request = MistralAIEmbeddingRequest(model = model.id, input = inputs)
 
         val mistralAIResponse = try {
             httpClient.post(

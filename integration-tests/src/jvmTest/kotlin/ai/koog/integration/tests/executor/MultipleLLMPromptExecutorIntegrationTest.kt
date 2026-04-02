@@ -283,6 +283,12 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#batchEmbeddingModels")
+    override fun integration_testEmbedBatch(model: LLModel) {
+        super.integration_testEmbedBatch(model)
+    }
+
+    @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.utils.Models#moderationModels")
     override fun integration_testSingleMessageModeration(model: LLModel) {
         super.integration_testSingleMessageModeration(model)

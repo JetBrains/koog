@@ -11,7 +11,6 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
-import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
@@ -85,7 +84,7 @@ public class OllamaClient @JvmOverloads constructor(
     private val clock: Clock = Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
-) : LLMClient(), LLMEmbeddingProviderAPI {
+) : LLMClient() {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
