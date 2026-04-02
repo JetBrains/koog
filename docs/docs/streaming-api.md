@@ -443,7 +443,7 @@ derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.streaming.StreamFrame;
     import java.util.concurrent.Flow;
-    class exampleStreamingApiJava04 {
+    class exampleStreamingApiJava03 {
         public static void main(String[] args) {
             var node = AIAgentNode.builder("streamNode")
                 .withInput(String.class)
