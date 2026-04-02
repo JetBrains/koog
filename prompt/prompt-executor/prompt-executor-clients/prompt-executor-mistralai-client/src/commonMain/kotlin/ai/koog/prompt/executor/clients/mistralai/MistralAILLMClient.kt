@@ -8,7 +8,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequest
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionResponse
@@ -83,8 +82,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter,
-),
-    LLMEmbeddingProviderAPI {
+) {
 
     @JvmOverloads
     public constructor(

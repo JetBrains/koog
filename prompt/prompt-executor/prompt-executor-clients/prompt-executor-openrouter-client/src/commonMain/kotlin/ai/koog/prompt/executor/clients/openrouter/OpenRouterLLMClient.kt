@@ -6,7 +6,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
 import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
@@ -75,8 +74,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
-),
-    LLMEmbeddingProviderAPI {
+) {
 
     @JvmOverloads
     public constructor(

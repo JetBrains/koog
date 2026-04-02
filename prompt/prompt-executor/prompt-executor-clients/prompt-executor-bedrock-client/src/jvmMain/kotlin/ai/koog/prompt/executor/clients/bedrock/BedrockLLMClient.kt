@@ -8,7 +8,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
 import ai.koog.prompt.executor.clients.bedrock.converse.BedrockConverseConverters
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon.BedrockAmazonNovaSerialization
@@ -139,7 +138,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     private val fallbackModelFamily: BedrockModelFamilies? = null,
     private val clock: Clock = Clock.System,
-) : LLMClient(), LLMEmbeddingProviderAPI {
+) : LLMClient() {
 
     private val logger = KotlinLogging.logger {}
 
