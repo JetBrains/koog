@@ -8,6 +8,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
@@ -24,13 +25,11 @@ import kotlin.time.Clock
 /**
  * Represents an instance of planner agent using [AIAgentPlannerStrategy].
  *
- * @param State The type of the state.
- * @param Plan The type of the plan.
- * @property id The unique identifier for the agent instance.
  * @property promptExecutor The executor responsible for processing prompts.
  * @property agentConfig The configuration for the agent.
  * @property strategy The strategy for processing input and generating output.
  * @property toolRegistry The registry of tools available for the agent. Defaults to an empty registry if not specified.
+ * @property id The unique identifier for the agent instance.
  * @property clock The clock used to calculate message timestamps
  * @property installFeatures Lambda for installing additional features within the agent environment.
  */
@@ -89,12 +88,8 @@ public class PlannerAIAgent<Input, Output>(
     }
 
     override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentPlannerContext {
-        val environment = GenericAgentEnvironment(
-            agentId = this.id,
-            logger = logger,
-            toolRegistry = toolRegistry,
-            serializer = agentConfig.serializer,
-        )
+        val environment = prepareEnvironment()
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
 
         val initialLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
@@ -107,8 +102,6 @@ public class PlannerAIAgent<Input, Output>(
             config = agentConfig,
             clock = clock
         )
-
-        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
 
         // Context
         val initialAgentContext = AIAgentPlannerContext(
@@ -150,4 +143,19 @@ public class PlannerAIAgent<Input, Output>(
 
         return updatedAgentContext
     }
+
+    //region Private Methods
+
+    private fun prepareEnvironment(): AIAgentEnvironment {
+        val baseEnvironment = GenericAgentEnvironment(
+            agentId = this.id,
+            logger = logger,
+            toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
+        )
+
+        return baseEnvironment
+    }
+
+    //endregion Private Methods
 }
