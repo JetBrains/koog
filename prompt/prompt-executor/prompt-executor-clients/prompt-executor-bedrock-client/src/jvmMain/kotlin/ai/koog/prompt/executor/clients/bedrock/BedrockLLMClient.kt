@@ -498,6 +498,17 @@ public class BedrockLLMClient @JvmOverloads constructor(
         }.let { BedrockConverseConverters.transformConverseStreamChunks(it, clock) }
     }
 
+    /**
+     * Embeds the given text using the AWS Bedrock InvokeModel API.
+     *
+     * Supports Amazon Titan Embed (v1 and v2) and Cohere embedding model families.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of floating-point values representing the embedding vector.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     * @throws LLMClientException if the model family does not support embeddings.
+     */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         model.requireCapability(LLMCapability.Embed)
 
@@ -549,6 +560,11 @@ public class BedrockLLMClient @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Batch embedding is not currently supported by the Bedrock client.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     override suspend fun embed(
         inputs: List<String>,
         model: LLModel

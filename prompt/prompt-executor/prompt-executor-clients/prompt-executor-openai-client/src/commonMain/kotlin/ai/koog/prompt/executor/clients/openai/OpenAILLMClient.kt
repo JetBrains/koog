@@ -529,6 +529,11 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         return openAIResponse.data.first().embedding
     }
 
+    /**
+     * Batch embedding is not supported by the OpenAI API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
         logger.warn { "Batch embedding is not supported by OpenAI API" }
         throw UnsupportedOperationException("Batch embedding is not supported by OpenAI API.")

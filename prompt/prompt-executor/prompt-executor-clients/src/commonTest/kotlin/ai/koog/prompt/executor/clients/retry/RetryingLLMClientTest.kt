@@ -386,6 +386,73 @@ class RetryingLLMClientTest {
     }
 
     @Test
+    fun testRetryEmbed() = runTest {
+        val expectedEmbedding = listOf(0.1, 0.2, 0.3)
+
+        val mockClient = MockLLMClient(
+            embedResponse = expectedEmbedding,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 503"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 2,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.embed("hello", testModel)
+
+        assertEquals(expectedEmbedding, result)
+        assertEquals(2, mockClient.embedCalls)
+    }
+
+    @Test
+    fun testRetryBatchEmbed() = runTest {
+        val expectedEmbeddings = listOf(listOf(0.1, 0.2), listOf(0.3, 0.4))
+
+        val mockClient = MockLLMClient(
+            batchEmbedResponse = expectedEmbeddings,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 429"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 2,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.embed(listOf("hello", "world"), testModel)
+
+        assertEquals(expectedEmbeddings, result)
+        assertEquals(2, mockClient.batchEmbedCalls)
+    }
+
+    @Test
+    fun testEmbedNoRetryOnUnsupportedOperation() = runTest {
+        val mockClient = MockLLMClient(
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 400 Bad Request"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 3)
+        )
+
+        assertFailsWith<RuntimeException> {
+            retryingClient.embed("hello", testModel)
+        }
+
+        assertEquals(1, mockClient.embedCalls) // No retry on non-retryable error
+    }
+
+    @Test
     fun testIncompleteStreamExceptionBeforeFirstFrameTriggersRetry() = runTest {
         var callCount = 0
         val mockClient = MockLLMClient(

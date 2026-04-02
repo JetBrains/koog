@@ -24,6 +24,8 @@ import kotlin.jvm.JvmOverloads
  * @property streamingChunks The sequence of chunks to emit from [executeStreaming].
  * @property choices The list of [LLMChoice] to return from [executeMultipleChoices].
  * @property moderationResult The [ModerationResult] to return from [moderate].
+ * @property embedResult The embedding vector to return from [embed] for a single text input.
+ * @property batchEmbedResult The list of embedding vectors to return from [embed] for batch input.
  * @property llmProvider [LLMProvider] associated with the client or [LLMProvider.OpenAI], if not defined
  */
 public class CapturingLLMClient @JvmOverloads constructor(

@@ -50,8 +50,10 @@ import kotlin.time.Clock
  *
  * @property baseUrl The base URL of the Mistral AI API. Defaults to "https://api.mistral.ai".
  * @property chatCompletionsPath The path of the Mistral AI Chat Completions API. Defaults to "v1/chat/completions".
- * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ * @property embeddingsPath The path of the Mistral AI Embeddings API. Defaults to "v1/embeddings".
+ * @property moderationPath The path of the Mistral AI Moderations API. Defaults to "v1/moderations".
  * @property modelsPath The path of the Mistral AI Models API. Defaults to "v1/models".
+ * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
  */
 public class MistralAIClientSettings(
     baseUrl: String = "https://api.mistral.ai",
@@ -217,6 +219,14 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         return embed(listOf(text), model).first()
     }
 
+    /**
+     * Embeds the given inputs using the MistralAI embeddings API.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of embedding vectors, one per input string.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
     override suspend fun embed(
         inputs: List<String>,
         model: LLModel

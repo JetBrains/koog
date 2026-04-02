@@ -371,6 +371,15 @@ public class OllamaClient @JvmOverloads constructor(
         return embeddingResponse.embeddings
     }
 
+    /**
+     * Embeds the given inputs using the Ollama embeddings API.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability
+     *   and belong to [LLMProvider.Ollama].
+     * @return A list of embedding vectors, one per input string.
+     * @throws LLMClientException if the model does not have the Embed capability.
+     */
     override suspend fun embed(
         inputs: List<String>,
         model: LLModel

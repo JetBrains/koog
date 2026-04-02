@@ -830,10 +830,14 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         return models.map { id -> modelsById[id] ?: LLModel(provider = llmProvider(), id = id) }
     }
 
-    override fun close() {
-        httpClient.close()
-    }
-
+    /**
+     * Embeds the given text using the Google AI embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of floating-point values representing the embedding vector.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
@@ -868,6 +872,14 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Embeds the given inputs using the Google AI batch embeddings API.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of embedding vectors, one per input string.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
     override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
         require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
@@ -902,5 +914,9 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                 cause = e
             )
         }
+    }
+
+    override fun close() {
+        httpClient.close()
     }
 }

@@ -3,7 +3,9 @@
 package ai.koog.prompt.executor.clients
 
 /**
- * Extension of the LLMClient interface which includes functionality for generating text embeddings
- * in addition to executing prompts and streaming outputs.
+ * Abstract base class for LLM embedding providers on Wasm/JS.
+ *
+ * Implements [LLMEmbeddingProviderAPI]. Platform-specific blocking wrappers are not available on
+ * this target; use the suspending [embed] methods from [LLMEmbeddingProviderAPI] directly.
  */
 public actual abstract class LLMEmbeddingProvider actual constructor() : LLMEmbeddingProviderAPI

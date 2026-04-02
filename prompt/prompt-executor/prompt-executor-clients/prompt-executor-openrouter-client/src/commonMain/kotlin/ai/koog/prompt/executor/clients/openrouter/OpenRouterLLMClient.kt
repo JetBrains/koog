@@ -224,6 +224,14 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
     }
 
+    /**
+     * Embeds the given text using the OpenRouter embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of floating-point values representing the embedding vector.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         model.requireCapability(LLMCapability.Embed)
         logger.debug { "Embedding text (${text.length} chars) with model: ${model.id}" }
@@ -259,6 +267,11 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         return embedding
     }
 
+    /**
+     * Batch embedding is not supported by the OpenRouter API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     override suspend fun embed(
         inputs: List<String>,
         model: LLModel

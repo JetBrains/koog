@@ -330,17 +330,33 @@ public class SpringAiLLMClient(
         return chatOptionsCustomizer.customize(options, params, model)
     }
 
+    /**
+     * Embedding via [SpringAiLLMClient] is not supported.
+     * Use `SpringAiLLMEmbeddingProvider` for embedding with Spring AI.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     override suspend fun embed(
         text: String,
         model: LLModel
     ): List<Double> {
-        TODO("Not yet implemented")
+        throw UnsupportedOperationException(
+            "Embedding is not supported by SpringAiLLMClient. Use SpringAiLLMEmbeddingProvider instead."
+        )
     }
 
+    /**
+     * Batch embedding via [SpringAiLLMClient] is not supported.
+     * Use `SpringAiLLMEmbeddingProvider` for embedding with Spring AI.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     override suspend fun embed(
         inputs: List<String>,
         model: LLModel
     ): List<List<Double>> {
-        TODO("Not yet implemented")
+        throw UnsupportedOperationException(
+            "Embedding is not supported by SpringAiLLMClient. Use SpringAiLLMEmbeddingProvider instead."
+        )
     }
 }

@@ -10,17 +10,25 @@ import ai.koog.prompt.llm.LLModel
 import java.util.concurrent.ExecutorService
 
 /**
- * Extension of the LLMClient interface which includes functionality for generating text embeddings
- * in addition to executing prompts and streaming outputs.
+ * JVM-specific abstract base class for LLM embedding providers.
+ *
+ * Extends [LLMEmbeddingProviderAPI] with blocking Java-friendly wrapper methods so that Java
+ * callers can invoke embedding without dealing with Kotlin coroutines directly.
+ * The blocking wrappers run on an IO-bound dispatcher unless a custom [ExecutorService] is provided.
  */
 public actual abstract class LLMEmbeddingProvider actual constructor() : LLMEmbeddingProviderAPI {
 
     /**
-     * Embeds the given text using into a vector of double-precision numbers.
+     * Blocking Java-friendly wrapper around [embed] for single-text embedding.
+     *
+     * Runs the suspending [embed] call on an IO-bound dispatcher and blocks until the result
+     * is available.
      *
      * @param text The text to embed.
      * @param model The model to use for embedding. Must have the Embed capability.
-     * @return A list of floating-point values representing the embedding.
+     * @param executorService An optional [ExecutorService] to control the execution context.
+     *   If `null`, a default IO-bound dispatcher is used.
+     * @return A list of floating-point values representing the embedding vector.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
     @JavaAPI
@@ -33,12 +41,16 @@ public actual abstract class LLMEmbeddingProvider actual constructor() : LLMEmbe
     ): List<Double> = runOnIOBoundDispatcher(executorService) { embed(text, model) }
 
     /**
-     * Embeds the given input using the given model into a vector of double-precision numbers.
+     * Blocking Java-friendly wrapper around [embed] for batch embedding.
      *
-     * @param inputs The input to embed.
+     * Runs the suspending [embed] call on an IO-bound dispatcher and blocks until the result
+     * is available.
+     *
+     * @param inputs The list of texts to embed.
      * @param model The model to use for embedding. Must have the Embed capability.
-     * @return A list of lists of floating-point values representing the embedding.
-     * Each inner list represents a single input embedding.
+     * @param executorService An optional [ExecutorService] to control the execution context.
+     *   If `null`, a default IO-bound dispatcher is used.
+     * @return A list of embedding vectors, one per input string.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
     @JavaAPI

@@ -718,13 +718,6 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return response.data.map { modelsById[it.id] ?: LLModel(id = it.id, provider = LLMProvider.Anthropic) }
     }
 
-    /**
-     * Attempts to moderate the content of a given prompt using a specific language model.
-     * This method is not supported by the Anthropic API and will always throw an exception.
-     *
-     * @return This method does not return a value as it always throws an exception.
-     * @throws UnsupportedOperationException Always thrown, as moderation is not supported by the Anthropic API.
-     */
     override fun getBasicJsonSchemaGenerator(): AnthropicBasicJsonSchemaGenerator {
         return AnthropicBasicJsonSchemaGenerator
     }
@@ -733,11 +726,21 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return AnthropicStandardJsonSchemaGenerator
     }
 
+    /**
+     * Moderation is not supported by the Anthropic API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by Anthropic API" }
         throw UnsupportedOperationException("Moderation is not supported by Anthropic API.")
     }
 
+    /**
+     * Embedding is not supported by the Anthropic API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     override suspend fun embed(
         text: String,
         model: LLModel
@@ -746,6 +749,11 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         throw UnsupportedOperationException("Embedding is not supported by Anthropic API.")
     }
 
+    /**
+     * Batch embedding is not supported by the Anthropic API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
     override suspend fun embed(
         inputs: List<String>,
         model: LLModel

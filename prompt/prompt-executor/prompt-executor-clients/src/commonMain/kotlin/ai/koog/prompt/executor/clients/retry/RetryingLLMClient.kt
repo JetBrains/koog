@@ -120,6 +120,13 @@ public class RetryingLLMClient @JvmOverloads constructor(
         delegate.models()
     }
 
+    /**
+     * Embeds the given text, retrying on transient failures according to [config].
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding.
+     * @return A list of floating-point values representing the embedding vector.
+     */
     override suspend fun embed(
         text: String,
         model: LLModel
@@ -127,6 +134,13 @@ public class RetryingLLMClient @JvmOverloads constructor(
         delegate.embed(text, model)
     }
 
+    /**
+     * Embeds the given inputs, retrying on transient failures according to [config].
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding.
+     * @return A list of embedding vectors, one per input string.
+     */
     override suspend fun embed(
         inputs: List<String>,
         model: LLModel
