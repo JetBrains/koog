@@ -1,6 +1,7 @@
 # Streaming API
 
-Koog’s **Streaming API** lets you consume **LLM output incrementally** as a `Flow<StreamFrame>`. Instead of waiting for a full response, your code can:
+Koog’s **Streaming API** lets you consume **LLM output incrementally** as a `Flow<StreamFrame>` in Kotlin / `Flow.Publisher<StreamFrame>` in Java.
+Instead of waiting for a full response, your code can:
 
 - render assistant text as it arrives,
 - detect **tool calls** live and act on them,
@@ -8,18 +9,41 @@ Koog’s **Streaming API** lets you consume **LLM output incrementally** as a `F
 
 The stream carries **typed frames** organized into two categories:
 
-**Delta frames** (incremental/partial content):
-- `StreamFrame.TextDelta(text: String, index: Int?)` — incremental assistant text
-- `StreamFrame.ReasoningDelta(text: String?, summary: String?, index: Int?)` — incremental reasoning text and summary
-- `StreamFrame.ToolCallDelta(id: String?, name: String?, content: String?, index: Int?)` — partial tool invocation
+=== "Kotlin"
 
-**Complete frames** (full content):
-- `StreamFrame.TextComplete(text: String)` — complete assistant text
-- `StreamFrame.ReasoningComplete(text: List<String>, summary: List<String>?)` — complete reasoning with optional summary
-- `StreamFrame.ToolCallComplete(id: String?, name: String, content: String)` — complete tool invocation
+    **Delta frames** (incremental/partial content):
 
-**End marker**:
-- `StreamFrame.End(finishReason: String?)` — end-of-stream marker
+    - `StreamFrame.TextDelta(text: String, index: Int?)` — incremental assistant text
+    - `StreamFrame.ReasoningDelta(text: String?, summary: String?, index: Int?)` — incremental reasoning text and summary
+    - `StreamFrame.ToolCallDelta(id: String?, name: String?, content: String?, index: Int?)` — partial tool invocation
+
+    **Complete frames** (full content):
+
+    - `StreamFrame.TextComplete(text: String, index: Int?)` — complete assistant text
+    - `StreamFrame.ReasoningComplete(text: List<String>, summary: List<String>?, encrypted: String?, index: Int?)` — complete reasoning with optional summary and encrypted content
+    - `StreamFrame.ToolCallComplete(id: String?, name: String, content: String, index: Int?)` — complete tool invocation
+
+    **End marker**:
+
+    - `StreamFrame.End(finishReason: String?, metaInfo: ResponseMetaInfo)` — end-of-stream marker with response metadata
+
+=== "Java"
+
+    **Delta frames** (incremental/partial content):
+
+    - `StreamFrame.TextDelta` — incremental assistant text. Fields: `getText()`, `getIndex()`.
+    - `StreamFrame.ReasoningDelta` — incremental reasoning text and summary. Fields: `getText()`, `getSummary()`, `getIndex()`.
+    - `StreamFrame.ToolCallDelta` — partial tool invocation. Fields: `getId()`, `getName()`, `getContent()`, `getIndex()`.
+
+    **Complete frames** (full content):
+
+    - `StreamFrame.TextComplete` — complete assistant text. Fields: `getText()`, `getIndex()`.
+    - `StreamFrame.ReasoningComplete` — complete reasoning with optional summary and encrypted content. Fields: `getText()` (returns `List<String>`), `getSummary()` (returns `List<String>`), `getEncrypted()`, `getIndex()`.
+    - `StreamFrame.ToolCallComplete` — complete tool invocation. Fields: `getId()`, `getName()`, `getContent()`, `getIndex()`. Also provides `getContentJson()` and `getContentJsonResult()` for JSON parsing.
+
+    **End marker**:
+
+    - `StreamFrame.End` — end-of-stream marker. Fields: `getFinishReason()`, `getMetaInfo()`.
 
 Helpers are provided to extract plain text, convert frames to `Message.Response` objects, and safely **combine chunked tool calls**.
 
@@ -91,14 +115,68 @@ This is the most general approach: react to each frame kind.
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import java.util.concurrent.Flow;
+    class exampleStreamingApiJava01 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("streamNode")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
     -->
     <!--- SUFFIX
-    **/
+                return null;
+            })
+            .build();
+        }
+    }
     -->
     ```java
+    ctx.getLlm().writeSession(session -> {
+        session.appendPrompt(prompt -> {
+            prompt.user("Tell me a joke, then call a tool with JSON args.");
+            return null;
+        });
+
+        Flow.Publisher<StreamFrame> stream = session.requestLLMStreaming();
+
+        stream.subscribe(new Flow.Subscriber<>() {
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(StreamFrame frame) {
+                if (frame instanceof StreamFrame.TextDelta delta) {
+                    System.out.print(delta.getText());
+                } else if (frame instanceof StreamFrame.ReasoningDelta reasoning) {
+                    System.out.print("[Reasoning] text=" + reasoning.getText()
+                        + " summary=" + reasoning.getSummary());
+                } else if (frame instanceof StreamFrame.ToolCallComplete toolCall) {
+                    System.out.println("\nTool call: " + toolCall.getName()
+                        + " args=" + toolCall.getContent());
+                } else if (frame instanceof StreamFrame.End end) {
+                    System.out.println("\n[END] reason=" + end.getFinishReason());
+                }
+                // Handle other frame types (TextComplete, ToolCallDelta, etc.)
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                System.err.println("Stream error: " + throwable.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+            }
+        });
+
+        return null;
+    });
     ```
-    <!--- KNIT example-streaming-api-java-01.java -->
+    <!--- KNIT exampleStreamingApiJava01.java -->
 
 
 It is important to note that you can parse the output by working directly with a raw string stream.
@@ -140,64 +218,191 @@ Here is a raw string stream with the Markdown definition of the output structure
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import ai.koog.prompt.structure.StructureDefinition;
+    import java.util.concurrent.Flow;
+    class exampleStreamingApiJava02 {
+        static StructureDefinition markdownBookDefinition() { return null; }
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("streamNode")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
     -->
     <!--- SUFFIX
-    **/
+                return null;
+            })
+            .build();
+        }
+    }
     -->
     ```java
+    StructureDefinition mdDefinition = markdownBookDefinition();
+
+    ctx.getLlm().writeSession(session -> {
+        session.appendPrompt(prompt -> {
+            prompt.user(input);
+        });
+
+        Flow.Publisher<StreamFrame> stream = session.requestLLMStreaming(mdDefinition);
+
+        // Access the raw frames directly
+        stream.subscribe(new Flow.Subscriber<>() {
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(StreamFrame frame) {
+                // Process each frame as it arrives
+                System.out.println("Received frame: " + frame);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                System.err.println("Stream error: " + throwable.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+            }
+        });
+
+        return null;
+    });
     ```
-    <!--- KNIT example-streaming-api-java-02.java -->
+    <!--- KNIT exampleStreamingApiJava02.java -->
 
 ### Working with reasoning frames
 
 Models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1) emit reasoning frames during streaming. You can access both the reasoning process and its summary:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.prompt.streaming.StreamFrame
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    appendPrompt { user("Solve this complex problem: ...") }
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.prompt.streaming.StreamFrame
 
-    val stream = requestLLMStreaming()
-    val reasoningSteps = mutableListOf<String>()
-    val summarySteps = mutableListOf<String>()
+    val strategy = strategy<String, String>("strategy_name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        appendPrompt { user("Solve this complex problem: ...") }
 
-    stream.collect { frame ->
-        when (frame) {
-            is StreamFrame.ReasoningDelta -> {
-                frame.text?.let { 
-                    reasoningSteps.add(it)
-                    print(frame.text) // Display reasoning as it arrives
+        val stream = requestLLMStreaming()
+        val reasoningSteps = mutableListOf<String>()
+        val summarySteps = mutableListOf<String>()
+
+        stream.collect { frame ->
+            when (frame) {
+                is StreamFrame.ReasoningDelta -> {
+                    frame.text?.let { 
+                        reasoningSteps.add(it)
+                        print(frame.text) // Display reasoning as it arrives
+                    }
+                    frame.summary?.let {
+                        summarySteps.add(it)
+                        print(frame.summary) // Display reasoning summary as it arrives
+                    }
                 }
-                frame.summary?.let {
-                    summarySteps.add(it)
-                    print(frame.summary) // Display reasoning summary as it arrives
+                is StreamFrame.ReasoningComplete -> {
+                    // Access complete reasoning
+                    println("\nComplete reasoning: ${frame.text.joinToString("")}")
+                    println("Summary: ${frame.summary?.joinToString("") ?: "N/A"}")
                 }
+                is StreamFrame.TextDelta -> print(frame.text)
+                is StreamFrame.End -> println("\n[END]")
+                else -> {}
             }
-            is StreamFrame.ReasoningComplete -> {
-                // Access complete reasoning
-                println("\nComplete reasoning: ${frame.text.joinToString("")}")
-                println("Summary: ${frame.summary?.joinToString("") ?: "N/A"}")
-            }
-            is StreamFrame.TextDelta -> print(frame.text)
-            is StreamFrame.End -> println("\n[END]")
-            else -> {}
         }
     }
-}
-```
-<!--- KNIT example-streaming-api-reasoning-01.kt -->
+    ```
+    <!--- KNIT example-streaming-api-reasoning-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import java.util.ArrayList;
+    import java.util.List;
+    import java.util.concurrent.Flow;
+    import java.util.stream.Collectors;
+    class exampleStreamingApiReasoningJava01 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("reasoningNode")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                return null;
+            })
+            .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        session.appendPrompt(prompt -> {
+            prompt.user("Solve this complex problem: ...");
+            return null;
+        });
+
+        Flow.Publisher<StreamFrame> stream = session.requestLLMStreaming();
+        List<String> reasoningSteps = new ArrayList<>();
+        List<String> summarySteps = new ArrayList<>();
+
+        stream.subscribe(new Flow.Subscriber<StreamFrame>() {
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(StreamFrame frame) {
+                if (frame instanceof StreamFrame.ReasoningDelta reasoning) {
+                    if (reasoning.getText() != null) {
+                        reasoningSteps.add(reasoning.getText());
+                        System.out.print(reasoning.getText());
+                    }
+                    if (reasoning.getSummary() != null) {
+                        summarySteps.add(reasoning.getSummary());
+                        System.out.print(reasoning.getSummary());
+                    }
+                } else if (frame instanceof StreamFrame.ReasoningComplete complete) {
+                    // Access complete reasoning
+                    System.out.println("\nComplete reasoning: "
+                        + String.join("", complete.getText()));
+                    System.out.println("Summary: "
+                        + (complete.getSummary() != null
+                            ? String.join("", complete.getSummary()) : "N/A"));
+                } else if (frame instanceof StreamFrame.TextDelta delta) {
+                    System.out.print(delta.getText());
+                } else if (frame instanceof StreamFrame.End) {
+                    System.out.println("\n[END]");
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) { }
+
+            @Override
+            public void onComplete() { }
+        });
+
+        return null;
+    });
+    ```
+    <!--- KNIT exampleStreamingApiReasoningJava01.java -->
 
 ### Working with a raw text stream (derived)
 
@@ -235,14 +440,57 @@ derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import java.util.concurrent.Flow;
+    class exampleStreamingApiJava03 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("streamNode")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
     -->
     <!--- SUFFIX
-    **/
+                return null;
+            })
+            .build();
+        }
+    }
     -->
     ```java
+    ctx.getLlm().writeSession(session -> {
+        Flow.Publisher<StreamFrame> frames = session.requestLLMStreaming();
+
+        // Stream text chunks as they come (equivalent of filterTextOnly):
+        StringBuilder fullText = new StringBuilder();
+        frames.subscribe(new Flow.Subscriber<>() {
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(StreamFrame frame) {
+                if (frame instanceof StreamFrame.TextDelta delta) {
+                    System.out.print(delta.getText());
+                    fullText.append(delta.getText());
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) { }
+
+            @Override
+            public void onComplete() {
+                // fullText now contains all text (equivalent of collectText)
+                System.out.println("\n---\n" + fullText);
+            }
+        });
+
+        return null;
+    });
     ```
-    <!--- KNIT example-streaming-api-java-03.java -->
+    <!--- KNIT exampleStreamingApiJava03.java -->
 
 ### Listening to stream events in event handlers
 
@@ -267,6 +515,7 @@ You can listen to stream events in [agent event handlers](features/agent-event-h
         onToolCallStarting { context ->
             println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
         }
+
         onLLMStreamingFrameReceived { context ->
             when (val frame = context.streamFrame) {
                 is StreamFrame.TextDelta -> print(frame.text)
@@ -274,9 +523,11 @@ You can listen to stream events in [agent event handlers](features/agent-event-h
                 else -> {} // Handle other frame types if needed
             }
         }
+
         onLLMStreamingFailed { context ->
             println("❌ Error: ${context.error}")
         }
+
         onLLMStreamingCompleted {
             println("🏁 Done")
         }
@@ -287,18 +538,53 @@ You can listen to stream events in [agent event handlers](features/agent-event-h
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.eventHandler.feature.EventHandler;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    class exampleStreamingApiJava04 {
+        public static void main(String[] args) {
+            AIAgent.builder()
+                .promptExecutor(PromptExecutor.builder().ollama().build())
+                .llmModel(OllamaModels.Meta.LLAMA_3_2)
     -->
     <!--- SUFFIX
-    **/
+            .build();
+        }
+    }
     -->
     ```java
+    .install(EventHandler.Feature, config -> {
+        config.onToolCallStarting(ctx -> {
+            System.out.println("\nUsing " + ctx.getToolName() + " with " + ctx.getToolArgs() + "... ");
+        });
+
+        config.onLLMStreamingFrameReceived(ctx -> {
+            StreamFrame frame = ctx.getStreamFrame();
+            if (frame instanceof StreamFrame.TextDelta delta) {
+                System.out.print(delta.getText());
+            } else if (frame instanceof StreamFrame.ReasoningDelta reasoning) {
+                System.out.print("[Reasoning] text=" + reasoning.getText()
+                    + " summary=" + reasoning.getSummary());
+            }
+        });
+
+        config.onLLMStreamingFailed(ctx -> {
+            System.out.println("Error: " + ctx.getError());
+        });
+
+        config.onLLMStreamingCompleted(ctx -> {
+            System.out.println("Done");
+        });
+    })
     ```
-    <!--- KNIT example-streaming-api-java-04.java -->
+    <!--- KNIT exampleStreamingApiJava04.java -->
 
 ### Converting frames to `Message.Response`
 
 You can transform a collected list of frames to standard message objects:
+
 - `toAssistantMessageOrNull()` — extracts `Message.Assistant` from text frames
 - `toReasoningMessageOrNull()` — extracts `Message.Reasoning` from reasoning frames
 - `toToolCallMessages()` — extracts `Message.Tool.Call` from tool call frames
@@ -342,26 +628,17 @@ First, define a data class to represent your structured data:
 === "Java"
 
     <!--- INCLUDE
-    /**
+    class exampleStreamingApiJava05 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
-    -->
-    ```java
-    // A simple Java POJO equivalent to the Kotlin @Serializable data class.
-    public class Book {
-        public final String title;
-        public final String author;
-        public final String description;
-
-        public Book(String title, String author, String description) {
-            this.title = title;
-            this.author = author;
-            this.description = description;
         }
     }
+    -->
+    ```java
+    // TODO not yet supported in Java
     ```
-    <!--- KNIT exampleStreamingApiJava01.java -->
+    <!--- KNIT exampleStreamingApiJava05.java -->
 
 #### 2. Define the Markdown structure
 
@@ -400,14 +677,17 @@ Create a definition that specifies how your data should be structured in Markdow
 === "Java"
 
     <!--- INCLUDE
-    /**
+    class exampleStreamingApiJava06 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    // TODO not yet supported in Java
     ```
-    <!--- KNIT example-streaming-api-java-05.java -->
+    <!--- KNIT exampleStreamingApiJava06.java -->
 
 #### 3. Create a parser for your data structure
 
@@ -446,14 +726,17 @@ The `markdownStreamingParser` provides several handlers for different Markdown e
 === "Java"
 
     <!--- INCLUDE
-    /**
+    class exampleStreamingApiJava07 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    // TODO not yet supported in Java
     ```
-    <!--- KNIT example-streaming-api-java-06.java -->
+    <!--- KNIT exampleStreamingApiJava07.java -->
 
 Using the defined handlers, you can implement a function that parses the Markdown stream and emits your data objects 
 with the `markdownStreamingParser` function.
@@ -511,14 +794,17 @@ with the `markdownStreamingParser` function.
 === "Java"
 
     <!--- INCLUDE
-    /**
+    class exampleStreamingApiJava08 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    // TODO not yet supported in Java
     ```
-    <!--- KNIT example-streaming-api-java-07.java -->
+    <!--- KNIT exampleStreamingApiJava08.java -->
 
 #### 4. Use the parser in your agent strategy
 
@@ -562,14 +848,17 @@ with the `markdownStreamingParser` function.
 === "Java"
 
     <!--- INCLUDE
-    /**
+    class exampleStreamingApiJava09 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    // TODO not yet supported in Java
     ```
-    <!--- KNIT example-streaming-api-java-08.java -->
+    <!--- KNIT exampleStreamingApiJava09.java -->
 
 ### Advanced usage: Streaming with tools
 
@@ -614,10 +903,25 @@ The following sections provide a brief step-by-step guide on how to define a too
 === "Java"
 
     <!--- INCLUDE
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
     -->
     ```java
+    class BookTool implements ToolSet {
+        @Tool
+        @LLMDescription("A tool to parse book information from Markdown")
+        public String book(
+            @LLMDescription("Title of the book") String title,
+            @LLMDescription("Author of the book") String author,
+            @LLMDescription("Description of the book") String description
+        ) {
+            System.out.println(title + " by " + author + ":\n " + description);
+            return "Done";
+        }
+    }
     ```
-    <!--- KNIT example-streaming-api-java-09.java -->
+    <!--- KNIT exampleStreamingApiJava10.java -->
 
 ### 2. Use the tool with streaming data
 
@@ -666,37 +970,131 @@ The following sections provide a brief step-by-step guide on how to define a too
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import ai.koog.prompt.structure.StructureDefinition;
+    import java.util.concurrent.Flow;
+    class exampleStreamingApiJava11 {
+        static StructureDefinition markdownBookDefinition() { return null; }
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    var strategy = AIAgentGraphStrategy.builder("library-assistant")
+        .withInput(String.class)
+        .withOutput(Void.class);
+
+    var getMdOutput = AIAgentNode.builder("getMdOutput")
+        .withInput(String.class)
+        .withOutput(Void.class)
+        .withAction((input, ctx) -> {
+            StructureDefinition mdDefinition = markdownBookDefinition();
+
+            ctx.getLlm().writeSession(session -> {
+                session.appendPrompt(prompt -> {
+                    prompt.user(input);
+                    return null;
+                });
+
+                Flow.Publisher<StreamFrame> markdownStream = session.requestLLMStreaming(mdDefinition);
+
+                // Process streamed frames and invoke tools on ToolCallComplete frames
+                markdownStream.subscribe(new Flow.Subscriber<StreamFrame>() {
+                    @Override
+                    public void onSubscribe(Flow.Subscription subscription) {
+                        subscription.request(Long.MAX_VALUE);
+                    }
+
+                    @Override
+                    public void onNext(StreamFrame frame) {
+                        if (frame instanceof StreamFrame.ToolCallComplete toolCall) {
+                            System.out.println("Tool call: " + toolCall.getName()
+                                + " args=" + toolCall.getContent());
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) { }
+
+                    @Override
+                    public void onComplete() { }
+                });
+
+                return null;
+            });
+
+            return null;
+        })
+        .build();
+
+    strategy.edge(strategy.nodeStart, getMdOutput);
+    strategy.edge(getMdOutput, strategy.nodeFinish);
     ```
-    <!--- KNIT example-streaming-api-java-10.java -->
+    <!--- KNIT exampleStreamingApiJava11.java -->
 
 ### 3. Register the tool in your agent configuration
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.example.exampleStreamingApi10.BookTool
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+=== "Kotlin"
 
--->
-```kotlin
-val toolRegistry = ToolRegistry {
-    tool(BookTool())
-}
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.example.exampleStreamingApi10.BookTool
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 
-val runner = AIAgent(
-    promptExecutor = simpleOpenAIExecutor("OPENAI_API_KEY"),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    toolRegistry = toolRegistry
-)
-```
-<!--- KNIT example-streaming-api-12.kt -->
+    -->
+    ```kotlin
+    val toolRegistry = ToolRegistry {
+        tool(BookTool())
+    }
+
+    val runner = AIAgent(
+        promptExecutor = simpleOpenAIExecutor("OPENAI_API_KEY"),
+        llmModel = OpenAIModels.Chat.GPT4o,
+        toolRegistry = toolRegistry
+    )
+    ```
+    <!--- KNIT example-streaming-api-12.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    class exampleStreamingApiJava12 {
+        static class BookTool implements ToolSet {
+            @Tool
+            @LLMDescription("A tool to parse book information")
+            public String book(String title, String author, String description) { return "Done"; }
+        }
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    ToolRegistry toolRegistry = ToolRegistry.builder()
+        .tools(new BookTool())
+        .build();
+
+    AIAgent<String, String> runner = AIAgent.<String, String>builder()
+        .promptExecutor(PromptExecutor.builder().openAI("OPENAI_API_KEY").build())
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .toolRegistry(toolRegistry)
+        .build();
+    ```
+    <!--- KNIT exampleStreamingApiJava12.java -->
 
 ## Best practices
 
