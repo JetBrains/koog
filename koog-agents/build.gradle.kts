@@ -52,6 +52,8 @@ val excluded = setOf(
     ":koog-spring-ai:koog-spring-ai-starter-chat-memory",
     ":koog-spring-ai:koog-spring-ai-starter-vector-store",
 
+    ":agents:agents-features:agents-features-longterm-memory-aws", // Optional AWS LongTermMemory provider
+
     project.path, // the current project should not depend on itself
 )
 
