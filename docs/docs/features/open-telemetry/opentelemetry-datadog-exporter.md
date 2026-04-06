@@ -9,21 +9,25 @@ For background on Koog's OpenTelemetry support, see the [OpenTelemetry support](
 
 ## Setup instructions
 
-1. Create a Datadog account at [https://www.datadoghq.com/](https://www.datadoghq.com/)
-2. Get your API key from [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys)
-3. Pass the Datadog API key to the Datadog exporter.
-   This can be done by providing it as a parameter to the `addDatadogExporter()` function, or by setting an environment variable:
+1) Create a Datadog account at [https://www.datadoghq.com/](https://www.datadoghq.com/)
+
+2) Get your API key from [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys)
+
+3) Pass the Datadog API key to the Datadog exporter.
+This can be done by providing it as a parameter to the `addDatadogExporter()` function, or by setting an environment variable:
 
 ```bash
 export DD_API_KEY="<your-api-key>"
 ```
 
-4. (Optional) Configure the Datadog site. Datadog operates in multiple regions. By default, the exporter sends traces to `datadoghq.com` (US1 region).
-   To use a different region, set the `DD_SITE` environment variable or pass the `datadogSite` parameter to `addDatadogExporter()`:
+4) (Optional) Configure the Datadog site. Datadog operates in multiple regions. By default, the exporter sends traces to `datadoghq.com` (US1 region).
+To use a different region, set the `DD_SITE` environment variable or pass the `datadogSite` parameter to `addDatadogExporter()`:
 
 ```bash
 export DD_SITE="datadoghq.eu"
 ```
+
+Common site values:
 
 | Site | Region |
 |------|--------|
