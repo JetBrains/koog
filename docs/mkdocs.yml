@@ -52,6 +52,7 @@ nav:
           - Agent persistence: features/agent-persistence.md
           - OpenTelemetry:
               - features/open-telemetry/index.md
+              - Datadog Exporter: features/open-telemetry/opentelemetry-datadog-exporter.md
               - Langfuse Exporter: features/open-telemetry/opentelemetry-langfuse-exporter.md
               - Weave Exporter: features/open-telemetry/opentelemetry-weave-exporter.md
           - Custom features: features/custom-features.md
@@ -193,6 +194,7 @@ plugins:
           - features/agent-persistence.md: This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
           - features/custom-features.md: This page provides details on how to implement custom features in Koog. The page includes information about the basic feature structure and implementation, as well as a practical example of a custom feature.
           - features/open-telemetry/index.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
+          - features/open-telemetry/opentelemetry-datadog-exporter.md: This page provides information about Koog's built-in support for exporting agent traces to Datadog, a monitoring and analytics platform with dedicated LLM Observability capabilities. The page provides details about Datadog integration configuration and an example of its use.
           - features/open-telemetry/opentelemetry-langfuse-exporter.md: This page provides information about Koog's built-in support for exporting agent traces to Langfuse, a platform for observability and analytics of AI applications. The page provides details about LangFuse integration configuration and an example of its use.
           - features/open-telemetry/opentelemetry-weave-exporter.md: This page provides details about W&B Weave integration in Koog to capture prompts, completions, system context, and execution traces and visualize them directly in a W&B workspace. The page provides details about W&B Weave integration setup, configuration and an example of its use.
         History compression:
