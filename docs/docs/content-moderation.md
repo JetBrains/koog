@@ -125,7 +125,7 @@ You can use the `moderate` method directly on an LLMClient instance:
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.dsl.ModerationResult;
 
-    public class Example {
+    class ExampleContentModeration01 {
         public void main(String apiKey) {
     -->
     <!--- SUFFIX
@@ -204,7 +204,7 @@ Here is an example of using content moderation with the Llama Guard 3 model thro
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
 
-    public class Example {
+    class ExampleContentModeration02 {
         public void main() {
     -->
     <!--- SUFFIX
@@ -290,7 +290,7 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
 
-    public class Example {
+    class ExampleContentModeration03 {
         public void main(String openAIApiKey) {
     -->
     <!--- SUFFIX
@@ -338,6 +338,7 @@ The moderation process returns a `ModerationResult` object with the following st
 
     <!--- INCLUDE
     import ai.koog.prompt.dsl.ModerationCategory
+    import ai.koog.prompt.dsl.ModerationCategoryResult
     import kotlinx.serialization.Serializable
     -->
     ```kotlin
@@ -385,7 +386,7 @@ The moderation process returns a `ModerationResult` object with the following st
     import java.util.Map;
     import java.util.List;
 
-    public class Example {
+    class ExampleContentModeration04 {
     -->
     <!--- SUFFIX
     }
@@ -620,16 +621,15 @@ In Koog, the structure of the response above maps to the following response:
     import java.util.Map;
     import java.util.List;
 
-    public class Example {
+    class ExampleContentModeration05 {
         public void main() {
-            ModerationResult result =
     -->
     <!--- SUFFIX
         }
     }
     -->
     ```java
-    new ModerationResult(
+    ModerationResult result = new ModerationResult(
         true,
         Map.of(
             ModerationCategory.Harassment, new ModerationCategoryResult(false, 0.0001, List.of()),
@@ -731,25 +731,6 @@ In Koog, the OpenAI response above is presented as follows:
     import ai.koog.prompt.dsl.ModerationResult;
     import java.util.Map;
     import java.util.List;
-
-    ModerationResult result = new ModerationResult(
-        false,
-        Map.of(
-            ModerationCategory.Harassment, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.HarassmentThreatening, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Hate, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.HateThreatening, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Sexual, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SexualMinors, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Violence, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.ViolenceGraphic, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarm, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarmIntent, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarmInstructions, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Illicit, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.IllicitViolent, new ModerationCategoryResult(false, 0.0001, List.of())
-        )
-    );
     -->
     ```java
     ModerationResult result = new ModerationResult(
@@ -828,25 +809,6 @@ This is translated to the following result in Koog:
     import ai.koog.prompt.dsl.ModerationCategoryResult;
     import ai.koog.prompt.dsl.ModerationResult;
     import java.util.Map;
-
-    ModerationResult result = new ModerationResult(
-        true,
-        Map.of(
-            ModerationCategory.Harassment, new ModerationCategoryResult(false),
-            ModerationCategory.HarassmentThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Hate, new ModerationCategoryResult(true),    // from S10
-            ModerationCategory.HateThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Sexual, new ModerationCategoryResult(false),
-            ModerationCategory.SexualMinors, new ModerationCategoryResult(false),
-            ModerationCategory.Violence, new ModerationCategoryResult(false),
-            ModerationCategory.ViolenceGraphic, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarm, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmIntent, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmInstructions, new ModerationCategoryResult(false),
-            ModerationCategory.Illicit, new ModerationCategoryResult(true),    // from S1
-            ModerationCategory.IllicitViolent, new ModerationCategoryResult(true)     // from S1
-        )
-    );
     -->
     ```java
     ModerationResult result = new ModerationResult(
@@ -918,25 +880,6 @@ Koog translates the response in the following way:
     import ai.koog.prompt.dsl.ModerationCategoryResult;
     import ai.koog.prompt.dsl.ModerationResult;
     import java.util.Map;
-
-    ModerationResult result = new ModerationResult(
-        false,
-        Map.of(
-            ModerationCategory.Harassment, new ModerationCategoryResult(false),
-            ModerationCategory.HarassmentThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Hate, new ModerationCategoryResult(false),
-            ModerationCategory.HateThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Sexual, new ModerationCategoryResult(false),
-            ModerationCategory.SexualMinors, new ModerationCategoryResult(false),
-            ModerationCategory.Violence, new ModerationCategoryResult(false),
-            ModerationCategory.ViolenceGraphic, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarm, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmIntent, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmInstructions, new ModerationCategoryResult(false),
-            ModerationCategory.Illicit, new ModerationCategoryResult(false),
-            ModerationCategory.IllicitViolent, new ModerationCategoryResult(false)
-        )
-    );
     -->
     ```java
     ModerationResult result = new ModerationResult(
