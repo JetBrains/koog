@@ -3,6 +3,7 @@ package ai.koog.integration.tests.utils
 object TestCredentials {
     private const val GUIDE_URL =
         "https://github.com/JetBrains/koog/blob/develop/TESTING.md#required-api-tokens-for-integration-tests"
+    private val AWS_BEDROCK_GUARDRAIL_VERSION_PATTERN = Regex("^(?:DRAFT|[1-9][0-9]{0,7})$")
 
     private fun requireEnv(name: String): String {
         return System.getenv(name)
@@ -39,5 +40,13 @@ object TestCredentials {
 
     fun readAwsBedrockGuardrailIdFromEnv(): String = requireEnv("AWS_BEDROCK_GUARDRAIL_ID")
 
-    fun readAwsBedrockGuardrailVersionFromEnv(): String = requireEnv("AWS_BEDROCK_GUARDRAIL_VERSION")
+    fun readAwsBedrockGuardrailVersionFromEnv(): String {
+        val value = requireEnv("AWS_BEDROCK_GUARDRAIL_VERSION")
+        require(AWS_BEDROCK_GUARDRAIL_VERSION_PATTERN.matches(value)) {
+            "Environment variable `AWS_BEDROCK_GUARDRAIL_VERSION` has invalid format. " +
+                "Expected `DRAFT` or an integer between 1 and 99999999 without leading zeros. " +
+                "See $GUIDE_URL for setup instructions."
+        }
+        return value
+    }
 }
