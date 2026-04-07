@@ -141,14 +141,14 @@ public sealed interface AnthropicMessage {
      */
     @Serializable
     @SerialName("user")
-    public data class User(override val content: List<AnthropicContent>, val cacheControl: AnthropicCacheControl? = null) : AnthropicMessage
+    public data class User(override val content: List<AnthropicContent>) : AnthropicMessage
 
     /**
      * Assistant Anthropic message.
      */
     @Serializable
     @SerialName("assistant")
-    public data class Assistant(override val content: List<AnthropicContent>, val cacheControl: AnthropicCacheControl? = null) : AnthropicMessage
+    public data class Assistant(override val content: List<AnthropicContent>) : AnthropicMessage
 }
 
 /**
@@ -234,10 +234,12 @@ public sealed interface AnthropicContent {
      * with the discriminator "text" to identify their type in the context of polymorphic serialization.
      *
      * @property text The textual content being represented.
+     * @property cacheControl Optional cache control directive for explicit breakpoint prompt caching.
+     *   When set on the last content block in the list, all content blocks are eligible for caching.
      */
     @Serializable
     @SerialName("text")
-    public data class Text(val text: String) : AnthropicContent
+    public data class Text(val text: String, val cacheControl: AnthropicCacheControl? = null) : AnthropicContent
 
     /**
      * Represents a thinking process.
@@ -261,7 +263,7 @@ public sealed interface AnthropicContent {
      */
     @Serializable
     @SerialName("image")
-    public data class Image(val source: ImageSource) : AnthropicContent
+    public data class Image(val source: ImageSource, val cacheControl: AnthropicCacheControl? = null) : AnthropicContent
 
     /**
      * Represents a document that originates from a specified source.
@@ -271,7 +273,7 @@ public sealed interface AnthropicContent {
      */
     @Serializable
     @SerialName("document")
-    public data class Document(val source: DocumentSource) : AnthropicContent
+    public data class Document(val source: DocumentSource, val cacheControl: AnthropicCacheControl? = null) : AnthropicContent
 
     /**
      * Represents the usage of a tool in a structured format.
@@ -291,7 +293,8 @@ public sealed interface AnthropicContent {
     public data class ToolUse(
         val id: String,
         val name: String,
-        val input: JsonObject
+        val input: JsonObject,
+        val cacheControl: AnthropicCacheControl? = null
     ) : AnthropicContent
 
     /**
@@ -307,7 +310,8 @@ public sealed interface AnthropicContent {
     public data class ToolResult(
         val toolUseId: String,
         val content: String,
-        val isError: Boolean
+        val isError: Boolean,
+        val cacheControl: AnthropicCacheControl? = null
     ) : AnthropicContent
 }
 
@@ -566,8 +570,8 @@ public data class AnthropicResponse(
 public data class AnthropicUsage(
     val inputTokens: Int? = null,
     val outputTokens: Int? = null,
-    val cacheCreationInputTokens: Int? = null,
     val cacheReadInputTokens: Int? = null,
+    val cacheCreationInputTokens: Int? = null
 )
 
 /**

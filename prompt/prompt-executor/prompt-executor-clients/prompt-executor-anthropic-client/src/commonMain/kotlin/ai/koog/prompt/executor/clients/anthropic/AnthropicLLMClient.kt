@@ -391,8 +391,12 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 is Message.Assistant -> {
                     messages.add(
                         AnthropicMessage.Assistant(
-                            content = listOf(AnthropicContent.Text(message.content)),
-                            cacheControl = message.cacheControl?.toAnthropicCacheControl()
+                            content = listOf(
+                                AnthropicContent.Text(
+                                    text = message.content,
+                                    cacheControl = message.cacheControl?.toAnthropicCacheControl()
+                                )
+                            ),
                         )
                     )
                 }
@@ -418,10 +422,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 AnthropicContent.ToolResult(
                                     toolUseId = message.id ?: "",
                                     content = message.content,
-                                    isError = message.isError
+                                    isError = message.isError,
+                                    cacheControl = message.cacheControl?.toAnthropicCacheControl()
                                 )
                             ),
-                            cacheControl = message.cacheControl?.toAnthropicCacheControl()
                         )
                     )
                 }
@@ -434,7 +438,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 AnthropicContent.ToolUse(
                                     id = message.id ?: Uuid.random().toString(),
                                     name = message.tool,
-                                    input = Json.parseToJsonElement(message.content).jsonObject
+                                    input = Json.parseToJsonElement(message.content).jsonObject,
                                 )
                             ),
                         )
@@ -531,7 +535,12 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         val listOfContent = buildList {
             parts.forEach { part ->
                 when (part) {
-                    is ContentPart.Text -> add(AnthropicContent.Text(part.text))
+                    is ContentPart.Text -> add(
+                        AnthropicContent.Text(
+                            part.text,
+                            cacheControl = cacheControl?.toAnthropicCacheControl()
+                        )
+                    )
 
                     is ContentPart.Image -> {
                         require(model.supports(LLMCapability.Vision.Image)) {
@@ -549,7 +558,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                             )
                         }
 
-                        add(AnthropicContent.Image(imageSource))
+                        add(AnthropicContent.Image(imageSource, cacheControl = cacheControl?.toAnthropicCacheControl()))
                     }
 
                     is ContentPart.File -> {
@@ -571,7 +580,12 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                             )
                         }
 
-                        add(AnthropicContent.Document(documentSource))
+                        add(
+                            AnthropicContent.Document(
+                                documentSource,
+                                cacheControl = cacheControl?.toAnthropicCacheControl()
+                            )
+                        )
                     }
 
                     else -> throw LLMClientException(
@@ -582,7 +596,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             }
         }
 
-        return AnthropicMessage.User(content = listOfContent, cacheControl = cacheControl?.toAnthropicCacheControl())
+        return AnthropicMessage.User(content = listOfContent)
     }
 
     private fun processAnthropicResponse(response: AnthropicResponse): List<Message.Response> {

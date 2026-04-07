@@ -120,7 +120,9 @@ class AnthropicCacheControlTest {
         val messages = request["messages"]?.jsonArray
         assertNotNull(messages)
         val userMsg = messages[0].jsonObject
-        val cacheControl = userMsg["cache_control"]?.jsonObject
+        val content = userMsg["content"]?.jsonArray
+        assertNotNull(content)
+        val cacheControl = content[0].jsonObject["cache_control"]?.jsonObject
         assertNotNull(cacheControl)
         assertEquals("ephemeral", cacheControl["type"]?.jsonPrimitive?.content)
         assertNotNull(cacheControl["ttl"])
@@ -137,7 +139,9 @@ class AnthropicCacheControlTest {
         val messages = request["messages"]?.jsonArray
         assertNotNull(messages)
         val userMsg = messages[0].jsonObject
-        val cacheControl = userMsg["cache_control"]?.jsonObject
+        val content = userMsg["content"]?.jsonArray
+        assertNotNull(content)
+        val cacheControl = content[0].jsonObject["cache_control"]?.jsonObject
         assertNotNull(cacheControl)
         assertEquals("ephemeral", cacheControl["type"]?.jsonPrimitive?.content)
         assertNull(cacheControl["ttl"])
@@ -154,7 +158,9 @@ class AnthropicCacheControlTest {
         val messages = request["messages"]?.jsonArray
         assertNotNull(messages)
         val userMsg = messages[0].jsonObject
-        assertNull(userMsg["cache_control"])
+        val content = userMsg["content"]?.jsonArray
+        assertNotNull(content)
+        assertNull(content[0].jsonObject["cache_control"])
     }
 
     // --- Assistant messages ---
@@ -173,7 +179,9 @@ class AnthropicCacheControlTest {
         // Second message is the assistant message
         val assistantMsg = messages[1].jsonObject
         assertEquals("assistant", assistantMsg["role"]?.jsonPrimitive?.content)
-        val cacheControl = assistantMsg["cache_control"]?.jsonObject
+        val content = assistantMsg["content"]?.jsonArray
+        assertNotNull(content)
+        val cacheControl = content[0].jsonObject["cache_control"]?.jsonObject
         assertNotNull(cacheControl)
         assertEquals("ephemeral", cacheControl["type"]?.jsonPrimitive?.content)
     }
@@ -191,7 +199,9 @@ class AnthropicCacheControlTest {
         assertNotNull(messages)
         val assistantMsg = messages[1].jsonObject
         assertEquals("assistant", assistantMsg["role"]?.jsonPrimitive?.content)
-        val cacheControl = assistantMsg["cache_control"]?.jsonObject
+        val content = assistantMsg["content"]?.jsonArray
+        assertNotNull(content)
+        val cacheControl = content[0].jsonObject["cache_control"]?.jsonObject
         assertNotNull(cacheControl)
         assertEquals("ephemeral", cacheControl["type"]?.jsonPrimitive?.content)
         assertNull(cacheControl["ttl"])
@@ -209,7 +219,9 @@ class AnthropicCacheControlTest {
         val messages = request["messages"]?.jsonArray
         assertNotNull(messages)
         val assistantMsg = messages[1].jsonObject
-        assertNull(assistantMsg["cache_control"])
+        val content = assistantMsg["content"]?.jsonArray
+        assertNotNull(content)
+        assertNull(content[0].jsonObject["cache_control"])
     }
 
     // --- Tool result messages ---
@@ -236,7 +248,9 @@ class AnthropicCacheControlTest {
         assertNotNull(messages)
         val toolResultMsg = messages[0].jsonObject
         assertEquals("user", toolResultMsg["role"]?.jsonPrimitive?.content)
-        val cacheControl = toolResultMsg["cache_control"]?.jsonObject
+        val content = toolResultMsg["content"]?.jsonArray
+        assertNotNull(content)
+        val cacheControl = content[0].jsonObject["cache_control"]?.jsonObject
         assertNotNull(cacheControl)
         assertEquals("ephemeral", cacheControl["type"]?.jsonPrimitive?.content)
     }
@@ -261,7 +275,9 @@ class AnthropicCacheControlTest {
         val messages = request["messages"]?.jsonArray
         assertNotNull(messages)
         val toolResultMsg = messages[0].jsonObject
-        assertNull(toolResultMsg["cache_control"])
+        val content = toolResultMsg["content"]?.jsonArray
+        assertNotNull(content)
+        assertNull(content[0].jsonObject["cache_control"])
     }
 
     // --- Tool definitions ---
