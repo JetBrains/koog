@@ -208,8 +208,12 @@ In a write session, you can also modify these properties:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.tools.ToolDescriptor;
+    import java.util.Collections;
     class exampleSessionsJava03 {
         public static void main(String[] args) {
+            var newTools = Collections.<ToolDescriptor>emptyList();
+
             var node = AIAgentNode.builder("node_name")
                 .withInput(String.class)
                 .withOutput(Void.class)
@@ -225,14 +229,13 @@ In a write session, you can also modify these properties:
     ```java
     ctx.getLlm().writeSession(session -> {
         // Modify the prompt
-        session.appendPrompt(prompt -> {
-            prompt.user("New user message");
+        session.appendPrompt(promptBuilder -> {
+            promptBuilder.user("New user message");
             return null;
         });
 
         // Modify the tools
-        var updatedTools = session.getTools().stream().toList();
-        session.setTools(updatedTools);
+        session.setTools(newTools);
         return null;
     });
     ```
@@ -409,7 +412,7 @@ For more advanced use cases, methods for structured and streaming requests are p
 
 2. `requestLLMStructuredOneShot()`: similar to `requestLLMStructured()` but without retries or corrections.
 
-3. `requestLLMStreaming()`: makes a streaming request to the LLM, returning a flow of response chunks.
+3. `requestLLMStreaming()`: makes a streaming request to the LLM, returning a flow of response chunks. You can learn more about streaming on the [Streaming API](streaming-api.md) page.
 
 Example:
 
@@ -543,18 +546,18 @@ In a write session, you can add messages to the prompt (conversation history) us
     -->
     ```java
     ctx.getLlm().writeSession(session -> {
-        session.appendPrompt(prompt -> {
+        session.appendPrompt(promptBuilder -> {
             // Add a system message
-            prompt.system("You are a helpful assistant.");
+            promptBuilder.system("You are a helpful assistant.");
 
             // Add a user message
-            prompt.user("Hello, can you help me with a coding question?");
+            promptBuilder.user("Hello, can you help me with a coding question?");
 
             // Add an assistant message
-            prompt.assistant("Of course! What's your question?");
+            promptBuilder.assistant("Of course! What's your question?");
 
             // Add follow-up context after tool execution
-            prompt.assistant("Tool execution completed successfully.");
+            promptBuilder.assistant("Tool execution completed successfully.");
             return null;
         });
         return null;
@@ -675,8 +678,8 @@ When you make an LLM request in a write session, the response is automatically a
     ```java
     ctx.getLlm().writeSession(session -> {
         // Add a user message
-        session.appendPrompt(prompt -> {
-            prompt.user("What's the capital of France?");
+        session.appendPrompt(promptBuilder -> {
+            promptBuilder.user("What's the capital of France?");
             return null;
         });
 
