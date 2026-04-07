@@ -18,11 +18,11 @@ import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
-import ai.koog.prompt.executor.clients.requireMatchingProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.requireCapability
+import ai.koog.prompt.llm.requireMatchingProvider
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -136,7 +136,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
     @OptIn(InternalAgentToolsApi::class, InternalLLMClientApi::class)
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        requireMatchingProvider(model)
+        model.requireMatchingProvider(llmProvider())
         model.requireCapability(LLMCapability.Completion)
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
@@ -149,11 +149,9 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = buildStreamFrameFlow {
-        requireMatchingProvider(model)
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-        require(model.supports(LLMCapability.Completion)) {
-            "Model ${model.id} does not support chat completions"
-        }
+        model.requireMatchingProvider(llmProvider())
+        model.requireCapability(LLMCapability.Completion)
 
         val (contents, systemInstruction) = buildSdkContents(prompt, model)
         val config = buildConfig(prompt.params, model, tools, systemInstruction).build()
@@ -198,14 +196,10 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<LLMChoice> {
-        requireMatchingProvider(model)
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
-        require(model.supports(LLMCapability.Completion)) {
-            "Model ${model.id} does not support chat completions"
-        }
-        require(model.supports(LLMCapability.MultipleChoices)) {
-            "Model ${model.id} does not support multiple choices"
-        }
+        model.requireMatchingProvider(llmProvider())
+        model.requireCapability(LLMCapability.Completion)
+        model.requireCapability(LLMCapability.MultipleChoices)
 
         return doExecute(prompt, model, tools)
     }
@@ -299,9 +293,7 @@ public open class GoogleGenaiLLMClient @JvmOverloads constructor(
 
         // Response format (structured output schema)
         googleParams.schema?.let { schema ->
-            require(model.supports(schema.capability)) {
-                "Model ${model.id} does not support structured output schema ${schema.name}"
-            }
+            model.requireCapability(schema.capability)
             builder.responseMimeType("application/json")
 
             when (schema) {

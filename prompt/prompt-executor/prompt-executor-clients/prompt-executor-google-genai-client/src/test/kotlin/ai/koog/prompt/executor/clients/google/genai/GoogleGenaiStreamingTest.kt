@@ -31,6 +31,6 @@ class GoogleGenaiStreamingTest {
                 model = TestModels.noCap
             ).collect {}
         }
-        error.message shouldContain "does not support chat completions"
+        error.message shouldContain "does not support completion capability"
     }
 }

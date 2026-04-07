@@ -2,12 +2,11 @@ package ai.koog.prompt.executor.clients.google.genai
 
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
-import ai.koog.prompt.executor.clients.LLMProviderAware
-import ai.koog.prompt.executor.clients.requireMatchingProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.requireCapability
+import ai.koog.prompt.llm.requireMatchingProvider
 import com.google.genai.Client
 import com.google.genai.types.EmbedContentConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -28,15 +27,15 @@ public open class GoogleGenaiEmbeddingProvider @JvmOverloads constructor(
     private val client: Client,
     private val llmProvider: LLMProvider = if (client.vertexAI()) LLMProvider.Vertex else LLMProvider.Google,
     private val embedContentConfig: EmbedContentConfig = EmbedContentConfig.builder().build(),
-) : LLMEmbeddingProvider, LLMProviderAware {
+) : LLMEmbeddingProvider {
 
     private val logger = KotlinLogging.logger { }
 
-    override fun llmProvider(): LLMProvider = llmProvider
+    public fun llmProvider(): LLMProvider = llmProvider
 
     @OptIn(InternalLLMClientApi::class)
     override suspend fun embed(text: String, model: LLModel): List<Double> {
-        requireMatchingProvider(model)
+        model.requireMatchingProvider(llmProvider())
         model.requireCapability(LLMCapability.Embed)
 
         logger.debug { "Embedding text with model: ${model.id}" }

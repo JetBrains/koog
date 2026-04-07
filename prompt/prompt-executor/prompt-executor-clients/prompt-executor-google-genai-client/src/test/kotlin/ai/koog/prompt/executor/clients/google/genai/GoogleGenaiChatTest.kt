@@ -714,7 +714,7 @@ class GoogleGenaiChatTest {
                 model = multiChoiceNoCompletionModel
             )
         }
-        error.message shouldContain "does not support chat completions"
+        error.message shouldContain "does not support completion capability"
     }
 
     @Test
@@ -725,7 +725,7 @@ class GoogleGenaiChatTest {
                 model = completionOnlyModel
             )
         }
-        error.message shouldContain "does not support multiple choices"
+        error.message shouldContain "does not support multipleChoices capability"
     }
 
     @Test
@@ -743,7 +743,7 @@ class GoogleGenaiChatTest {
         val error = assertThrows<IllegalArgumentException> {
             subject.executeStreaming(prompt = Prompt(messages = emptyList(), id = "t"), model = noCapModel).collect {}
         }
-        error.message shouldContain "does not support chat completions"
+        error.message shouldContain "does not support completion capability"
     }
 
     @Test
