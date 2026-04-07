@@ -55,7 +55,9 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import kotlin.jvm.JvmOverloads
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
@@ -352,9 +354,9 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         }.requireEndFrame()
     }
 
-    internal fun CacheControl.toAnthropicCacheControl(): AnthropicCacheControlBlock? {
+    internal fun CacheControl.toAnthropicCacheControl(): AnthropicCacheControlBlock {
         return when (this.require<AnthropicCacheControl>()) {
-            AnthropicCacheControl.Default -> null
+            AnthropicCacheControl.Default -> AnthropicCacheControlBlock.Ephemeral()
             AnthropicCacheControl.OneHour -> AnthropicCacheControlBlock.Ephemeral(CacheTtl.OneHour)
         }
     }
@@ -505,7 +507,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             model = settings.modelVersionsMap[model] ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
             maxTokens = anthropicParams.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
-            cacheControl = anthropicParams.cacheControl,
+            cacheControl = anthropicParams.cacheControl?.toAnthropicCacheControl(),
             container = anthropicParams.container,
             mcpServers = anthropicParams.mcpServers,
             outputConfig = outputConfig,
@@ -588,11 +590,20 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
         val totalTokensCount = response.usage?.let { it.inputTokens?.plus(it.outputTokens ?: 0) ?: it.outputTokens }
+        val cacheCreationInputTokens = response.usage?.cacheCreationInputTokens
+        val cacheReadInputTokens = response.usage?.cacheReadInputTokens
+
+        val cacheMetadata = buildJsonObject {
+            cacheCreationInputTokens?.let { put("cacheCreationInputTokens", it) }
+            cacheReadInputTokens?.let { put("cacheReadInputTokens", it) }
+        }.takeIf { it.isNotEmpty() }
+
         val metaInfo = ResponseMetaInfo.create(
             clock,
             totalTokensCount = totalTokensCount,
             inputTokensCount = inputTokensCount,
             outputTokensCount = outputTokensCount,
+            metadata = cacheMetadata,
         )
 
         val responses = response.content.map { content ->

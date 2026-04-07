@@ -1,6 +1,5 @@
 package ai.koog.prompt.executor.clients.anthropic
 
-import ai.koog.prompt.executor.clients.anthropic.models.AnthropicCacheControl
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMCPServerURLDefinition
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicServiceTier
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking

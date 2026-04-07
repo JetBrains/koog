@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmInline
 
 /**
  * Represents the output configuration for Anthropic structured output.
@@ -193,7 +194,9 @@ public sealed interface AnthropicCacheControl {
      */
     @Serializable
     @SerialName("ephemeral")
-    public data class Ephemeral(val ttl: CacheTtl? = null) : AnthropicCacheControl
+    public data class Ephemeral(
+        val ttl: CacheTtl? = null
+    ) : AnthropicCacheControl
 }
 
 /**
@@ -204,13 +207,11 @@ public sealed interface AnthropicCacheControl {
  * to support interoperability with serialization formats.
  */
 @InternalLLMClientApi
+@JvmInline
 @Serializable
-public sealed class CacheTtl {
-    public abstract val value: String
-
-    @Serializable
-    public object OneHour : CacheTtl() {
-        override val value: String = "1h"
+public value class CacheTtl(public val value: String) {
+    public companion object {
+        public val OneHour: CacheTtl = CacheTtl("1h")
     }
 }
 
