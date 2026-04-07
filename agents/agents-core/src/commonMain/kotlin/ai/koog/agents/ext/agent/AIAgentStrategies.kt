@@ -1,3 +1,5 @@
+@file:JvmName("AIAgentStrategies")
+
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -21,6 +23,7 @@ import ai.koog.agents.core.environment.result
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructuredRequestConfig
+import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
 
 // FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
