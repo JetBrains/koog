@@ -29,7 +29,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * between different LLM providers within the system.
          */
         @JvmField
-        public val OpenAI: LLMProvider = OpenAILLMProvider()
+        public val OpenAI: OpenAILLMProvider = OpenAILLMProvider
 
         /**
          * Represents the Anthropic Large Language Model (LLM) provider.
@@ -39,7 +39,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * Large Language Models and their associated operations.
          */
         @JvmField
-        public val Anthropic: LLMProvider = AnthropicLLMProvider()
+        public val Anthropic: AnthropicLLMProvider = AnthropicLLMProvider
 
         /**
          * Represents the Google provider for Large Language Models (LLMs).
@@ -50,7 +50,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * an LLM instance.
          */
         @JvmField
-        public val Google: LLMProvider = GoogleLLMProvider()
+        public val Google: GoogleLLMProvider = GoogleLLMProvider
 
         /**
          * Represents the Meta large language model (LLM) provider.
@@ -59,7 +59,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * It can be used to configure or interact with Meta-based language models.
          */
         @JvmField
-        public val Meta: LLMProvider = MetaLLMProvider()
+        public val Meta: MetaLLMProvider = MetaLLMProvider
 
         /**
          * Represents the Alibaba Large Language Model (LLM) provider.
@@ -69,14 +69,14 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * within model configurations or operations.
          */
         @JvmField
-        public val Alibaba: LLMProvider = AlibabaLLMProvider()
+        public val Alibaba: AlibabaLLMProvider = AlibabaLLMProvider
 
         /**
          * Represents the OpenRouter provider for large language models (LLMs).
          * This constant is part of the available LLM providers within the [LLMProvider] enumeration.
          */
         @JvmField
-        public val OpenRouter: LLMProvider = OpenRouterLLMProvider()
+        public val OpenRouter: OpenRouterLLMProvider = OpenRouterLLMProvider
 
         /**
          * Represents the Ollama provider for a Large Language Model (LLM).
@@ -85,7 +85,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * It can be used to specify or identify the provider associated with an LLM instance.
          */
         @JvmField
-        public val Ollama: LLMProvider = OllamaLLMProvider()
+        public val Ollama: OllamaLLMProvider = OllamaLLMProvider
 
         /**
          * Represents the Bedrock provider for Large Language Models (LLMs).
@@ -94,7 +94,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * LLM service. It can be utilized to identify or configure functionality specific to the Bedrock provider.
          */
         @JvmField
-        public val Bedrock: LLMProvider = BedrockLLMProvider()
+        public val Bedrock: BedrockLLMProvider = BedrockLLMProvider
 
         /**
          * Represents the DeepSeek LLM provider, a predefined member of the [LLMProvider] class.
@@ -104,7 +104,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * used to identify, execute, or assist in tasks requiring substantial context understanding.
          */
         @JvmField
-        public val DeepSeek: LLMProvider = DeepSeekLLMProvider()
+        public val DeepSeek: DeepSeekLLMProvider = DeepSeekLLMProvider
 
         /**
          * Represents the MistralAI Large Language Model (LLM) provider.
@@ -113,43 +113,43 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          * instances of MistralAI language models in the system.
          */
         @JvmField
-        public val MistralAI: LLMProvider = MistralAILLMProvider()
+        public val MistralAI: MistralAILLMProvider = MistralAILLMProvider
 
         /**
          * Represents the Oracle Cloud Infrastructure (OCI) Generative AI provider.
          */
         @JvmField
-        public val OCI: LLMProvider = OCILLMProvider()
+        public val OCI: OCILLMProvider = OCILLMProvider
 
         /**
          * Represents the MiniMax Large Language Model provider.
          */
         @JvmField
-        public val MiniMax: LLMProvider = MiniMaxLLMProvider()
+        public val MiniMax: MiniMaxLLMProvider = MiniMaxLLMProvider
 
         /**
          * Represents the ZhipuAI (智谱AI) Large Language Model provider.
          */
         @JvmField
-        public val ZhipuAI: LLMProvider = ZhipuAILLMProvider()
+        public val ZhipuAI: ZhipuAILLMProvider = ZhipuAILLMProvider
 
         /**
          * Represents the Hugging Face Large Language Model provider.
          */
         @JvmField
-        public val HuggingFace: LLMProvider = HuggingFaceLLMProvider()
+        public val HuggingFace: HuggingFaceLLMProvider = HuggingFaceLLMProvider
 
         /**
          * Represents the Azure OpenAI provider.
          */
         @JvmField
-        public val Azure: LLMProvider = AzureLLMProvider()
+        public val Azure: AzureLLMProvider = AzureLLMProvider
 
         /**
          * Represents the Google VertexAI provider.
          */
         @JvmField
-        public val Vertex: LLMProvider = VertexLLMProvider()
+        public val Vertex: VertexLLMProvider = VertexLLMProvider
     }
 }
 
@@ -164,7 +164,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
  * related to Google's language model are required.
  */
 @Serializable
-public class GoogleLLMProvider : LLMProvider("google", "Google")
+public object GoogleLLMProvider : LLMProvider("google", "Google")
 
 /**
  * Represents the OpenAI provider in the Large Language Model (LLM) ecosystem.
@@ -177,7 +177,7 @@ public class GoogleLLMProvider : LLMProvider("google", "Google")
  * to leverage OpenAI's capabilities within various applications or systems.
  */
 @Serializable
-public class OpenAILLMProvider : LLMProvider("openai", "OpenAI")
+public object OpenAILLMProvider : LLMProvider("openai", "OpenAI")
 
 /**
  * Represents the Anthropic LLM provider.
@@ -188,7 +188,7 @@ public class OpenAILLMProvider : LLMProvider("openai", "OpenAI")
  * Use this object to reference or configure language models provided by Anthropic in the context of an LLM system.
  */
 @Serializable
-public class AnthropicLLMProvider : LLMProvider("anthropic", "Anthropic")
+public object AnthropicLLMProvider : LLMProvider("anthropic", "Anthropic")
 
 /**
  * Represents the "Meta" large language model provider in the system.
@@ -198,7 +198,7 @@ public class AnthropicLLMProvider : LLMProvider("anthropic", "Anthropic")
  * Meta platform across the application.
  */
 @Serializable
-public class MetaLLMProvider : LLMProvider("meta", "Meta")
+public object MetaLLMProvider : LLMProvider("meta", "Meta")
 
 /**
  * Represents Alibaba as a specific provider of Large Language Models (LLMs).
@@ -208,7 +208,7 @@ public class MetaLLMProvider : LLMProvider("meta", "Meta")
  * selections to specify Alibaba as the chosen provider.
  */
 @Serializable
-public class AlibabaLLMProvider : LLMProvider("alibaba", "Alibaba")
+public object AlibabaLLMProvider : LLMProvider("alibaba", "Alibaba")
 
 /**
  * Represents the OpenRouter provider within the available set of large language model providers.
@@ -221,7 +221,7 @@ public class AlibabaLLMProvider : LLMProvider("alibaba", "Alibaba")
  * providers for large language model functionalities and capabilities.
  */
 @Serializable
-public class OpenRouterLLMProvider : LLMProvider("openrouter", "OpenRouter")
+public object OpenRouterLLMProvider : LLMProvider("openrouter", "OpenRouter")
 
 /**
  * Represents the Ollama provider within the available set of large language model providers.
@@ -234,7 +234,7 @@ public class OpenRouterLLMProvider : LLMProvider("openrouter", "OpenRouter")
  * providers for large language model functionalities and capabilities.
  */
 @Serializable
-public class OllamaLLMProvider : LLMProvider("ollama", "Ollama")
+public object OllamaLLMProvider : LLMProvider("ollama", "Ollama")
 
 /**
  * Represents the AWS Bedrock provider within the available set of large language model providers.
@@ -247,7 +247,7 @@ public class OllamaLLMProvider : LLMProvider("ollama", "Ollama")
  * providers for large language model functionalities and capabilities.
  */
 @Serializable
-public class BedrockLLMProvider : LLMProvider("bedrock", "AWS Bedrock")
+public object BedrockLLMProvider : LLMProvider("bedrock", "AWS Bedrock")
 
 /**
  * Represents the DeepSeek provider within the available set of large language model providers.
@@ -261,7 +261,7 @@ public class BedrockLLMProvider : LLMProvider("bedrock", "AWS Bedrock")
  * providers for large language model functionalities and capabilities.
  */
 @Serializable
-public class DeepSeekLLMProvider : LLMProvider("deepseek", "DeepSeek")
+public object DeepSeekLLMProvider : LLMProvider("deepseek", "DeepSeek")
 
 /**
  * Represents the Mistral AI provider within the available set of large language model providers.
@@ -275,7 +275,7 @@ public class DeepSeekLLMProvider : LLMProvider("deepseek", "DeepSeek")
  * providers for large language model functionalities and capabilities.
  */
 @Serializable
-public class MistralAILLMProvider : LLMProvider("mistralai", "MistralAI")
+public object MistralAILLMProvider : LLMProvider("mistralai", "MistralAI")
 
 /**
  * Represents the Oracle Cloud Infrastructure (OCI) Generative AI provider.
@@ -283,7 +283,7 @@ public class MistralAILLMProvider : LLMProvider("mistralai", "MistralAI")
  * Oracle is identified by its unique ID ("oci") and display name ("OCI").
  */
 @Serializable
-public class OCILLMProvider : LLMProvider("oci", "OCI")
+public object OCILLMProvider : LLMProvider("oci", "OCI")
 
 /**
  * Represents the MiniMax Large Language Model provider.
@@ -291,7 +291,7 @@ public class OCILLMProvider : LLMProvider("oci", "OCI")
  * MiniMax is identified by its unique ID ("minimax") and display name ("MiniMax").
  */
 @Serializable
-public class MiniMaxLLMProvider : LLMProvider("minimax", "MiniMax")
+public object MiniMaxLLMProvider : LLMProvider("minimax", "MiniMax")
 
 /**
  * Represents the ZhipuAI (智谱AI) Large Language Model provider.
@@ -299,7 +299,7 @@ public class MiniMaxLLMProvider : LLMProvider("minimax", "MiniMax")
  * ZhipuAI is identified by its unique ID ("zhipuai") and display name ("ZhipuAI").
  */
 @Serializable
-public class ZhipuAILLMProvider : LLMProvider("zhipuai", "ZhipuAI")
+public object ZhipuAILLMProvider : LLMProvider("zhipuai", "ZhipuAI")
 
 /**
  * Represents the Hugging Face Large Language Model provider.
@@ -307,7 +307,7 @@ public class ZhipuAILLMProvider : LLMProvider("zhipuai", "ZhipuAI")
  * HuggingFace is identified by its unique ID ("huggingface") and display name ("Hugging Face").
  */
 @Serializable
-public class HuggingFaceLLMProvider : LLMProvider("huggingface", "Hugging Face")
+public object HuggingFaceLLMProvider : LLMProvider("huggingface", "Hugging Face")
 
 /**
  * Represents the Azure OpenAI provider.
@@ -315,7 +315,7 @@ public class HuggingFaceLLMProvider : LLMProvider("huggingface", "Hugging Face")
  * ElevenLabs is identified by its unique ID ("azure") and display name ("Azure OpenAI").
  */
 @Serializable
-public class AzureLLMProvider : LLMProvider("azure", "Azure OpenAI")
+public object AzureLLMProvider : LLMProvider("azure", "Azure OpenAI")
 
 /**
  * Represents the Google VertexAI provider.
@@ -323,4 +323,4 @@ public class AzureLLMProvider : LLMProvider("azure", "Azure OpenAI")
  * StabilityAI is identified by its unique ID ("vertex") and display name ("Google VertexAI").
  */
 @Serializable
-public class VertexLLMProvider : LLMProvider("vertex", "Google VertexAI")
+public object VertexLLMProvider : LLMProvider("vertex", "Google VertexAI")
