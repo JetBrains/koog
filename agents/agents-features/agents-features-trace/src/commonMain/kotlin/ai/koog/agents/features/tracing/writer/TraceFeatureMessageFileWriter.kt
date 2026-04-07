@@ -43,7 +43,16 @@ import kotlin.jvm.JvmOverloads
  * @param sinkOpener Returns a [Sink] for writing to the file, this class manages its lifecycle.
  * @param format Optional custom formatter for trace events
  */
-public class TraceFeatureMessageFileWriter<Path> @JvmOverloads constructor(
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+public expect class TraceFeatureMessageFileWriter<Path> @JvmOverloads constructor(
+    targetPath: Path,
+    sinkOpener: (Path) -> Sink,
+    format: ((FeatureMessage) -> String)? = null,
+) : FeatureMessageFileWriter<Path> {
+    override fun FeatureMessage.toFileString(): String
+}
+
+internal class TraceFeatureMessageFileWriterImpl<Path> @JvmOverloads constructor(
     targetPath: Path,
     sinkOpener: (Path) -> Sink,
     private val format: ((FeatureMessage) -> String)? = null,
