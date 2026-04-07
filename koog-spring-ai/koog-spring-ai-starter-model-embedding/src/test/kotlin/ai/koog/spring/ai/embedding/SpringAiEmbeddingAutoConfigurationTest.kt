@@ -91,6 +91,64 @@ class SpringAiEmbeddingAutoConfigurationTest {
     }
 
     @Test
+    fun `should use named config only when single EmbeddingModel and selector property are both set`() {
+        val targetModel = mockk<EmbeddingModel>(relaxed = true)
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.embedding.embedding-model-bean-name=myEmb")
+            .withBean("myEmb", EmbeddingModel::class.java, { targetModel })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                val provider = context.getBean<LLMEmbeddingProvider>()
+                assertInstanceOf<SpringAiLLMEmbeddingProvider>(provider)
+                // Only one LLMEmbeddingProvider bean — no duplicate
+                assertTrue(context.getBeansOfType(LLMEmbeddingProvider::class.java).size == 1)
+            }
+    }
+
+    // ---- mutual exclusion: single candidate + selector set ----
+    @Test
+    fun `should create exactly one LLMEmbeddingProvider using named path when single EmbeddingModel and selector are both set`() {
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.embedding.embedding-model-bean-name=myEmb")
+            .withBean("myEmb", EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                val providers = context.getBeansOfType(LLMEmbeddingProvider::class.java)
+                assertTrue(providers.size == 1, "Expected exactly one LLMEmbeddingProvider, got ${providers.size}")
+                assertInstanceOf<SpringAiLLMEmbeddingProvider>(providers.values.single())
+            }
+    }
+
+    // ---- mutual exclusion: multiple candidates + no selector ----
+    @Test
+    fun `should not create LLMEmbeddingProvider and not fail when multiple EmbeddingModels exist and no selector is set`() {
+        contextRunner()
+            .withBean("embModel1", EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
+            .withBean("embModel2", EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
+            .run { context ->
+                assertTrue(context.startupFailure == null, "Context should start without failure")
+                assertTrue(
+                    context.getBeansOfType(LLMEmbeddingProvider::class.java).isEmpty(),
+                    "Expected no LLMEmbeddingProvider when multiple EmbeddingModels exist and no selector is set"
+                )
+            }
+    }
+
+    // ---- mutual exclusion: selector set to empty string ----
+    @Test
+    fun `should treat empty string selector as missing and use single candidate`() {
+        contextRunner()
+            .withPropertyValues("koog.spring.ai.embedding.embedding-model-bean-name=")
+            .withBean("myEmb", EmbeddingModel::class.java, { mockk<EmbeddingModel>(relaxed = true) })
+            .run { context ->
+                // @ConditionalOnPropertyMissingOrEmpty treats "" as missing/empty, so only
+                // SingleEmbeddingModelConfiguration activates; NamedEmbeddingModelConfiguration does not match.
+                assertTrue(context.startupFailure == null, "Context should start successfully when selector is empty string")
+                assertInstanceOf<SpringAiLLMEmbeddingProvider>(context.getBean<LLMEmbeddingProvider>())
+            }
+    }
+
+    @Test
     fun `should create dispatcher bean`() {
         contextRunner()
             .run { context ->
@@ -108,7 +166,8 @@ class SpringAiEmbeddingAutoConfigurationTest {
             .run { context ->
                 val props = context.getBean<KoogSpringAiEmbeddingProperties>()
                 assertTrue(props.enabled)
-                assertTrue(props.dispatcher.type == KoogSpringAiEmbeddingProperties.DispatcherType.IO)
+                assertTrue(props.dispatcher.type == ai.koog.spring.ai.common.DispatcherType.IO)
+                assertTrue(props.dispatcher.toDispatcherProperties() is ai.koog.spring.ai.common.DispatcherProperties.IO)
             }
     }
 

@@ -2,13 +2,13 @@ package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest;
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings;
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy;
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
 import ai.koog.agents.testing.tools.MockExecutorBuilder;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest;
 import ai.koog.serialization.JSONSerializer;
 import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
@@ -40,12 +40,12 @@ public class LongTermMemoryRetrievalJavaTest {
     }
 
     @Test
-    public void testKeywordSearchViaSearchStrategy() {
+    public void testSimilaritySearchViaSearchStrategyDefaultTopK() {
         InMemoryRecordStorage storage = new InMemoryRecordStorage();
 
         var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
             .withStorage(storage)
-            .withSearchStrategy(SearchStrategy.builder().keyword().withTopK(10).build())
+            .withSearchStrategy(SearchStrategy.builder().similarity().withTopK(10).build())
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);
@@ -56,12 +56,12 @@ public class LongTermMemoryRetrievalJavaTest {
     }
 
     @Test
-    public void testKeywordSearchViaLambda() {
+    public void testCustomSearchViaLambda() {
         InMemoryRecordStorage storage = new InMemoryRecordStorage();
 
         var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
             .withStorage(storage)
-            .withSearchStrategy(query -> new KeywordSearchRequest(query, 20, 0.0, null))
+            .withSearchStrategy(query -> new SimilaritySearchRequest(query, 20, 0, 0.0, null))
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);
@@ -91,13 +91,13 @@ public class LongTermMemoryRetrievalJavaTest {
     }
 
     @Test
-    public void testKeywordSearchWithUserPromptAugmenter() {
+    public void testSimilaritySearchWithUserPromptAugmenter() {
         InMemoryRecordStorage storage = new InMemoryRecordStorage();
 
         var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
             .withStorage(storage)
             .withSearchStrategy(
-                SearchStrategy.builder().keyword().withTopK(5).withSimilarityThreshold(0.1).build()
+                SearchStrategy.builder().similarity().withTopK(5).withSimilarityThreshold(0.1).build()
             )
             .withPromptAugmenter(PromptAugmenter.builder().user().build())
             .build();
@@ -128,13 +128,13 @@ public class LongTermMemoryRetrievalJavaTest {
     }
 
     @Test
-    public void testKeywordSearchViaSearchStrategyWithThreshold() {
+    public void testSimilaritySearchViaSearchStrategyWithThreshold() {
         InMemoryRecordStorage storage = new InMemoryRecordStorage();
 
         var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
             .withStorage(storage)
             .withSearchStrategy(
-                SearchStrategy.builder().keyword().withTopK(5).withSimilarityThreshold(0.1).build()
+                SearchStrategy.builder().similarity().withTopK(5).withSimilarityThreshold(0.1).build()
             )
             .build();
 

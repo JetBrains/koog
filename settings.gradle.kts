@@ -20,6 +20,7 @@ include(":agents:agents-features:agents-features-opentelemetry")
 include(":agents:agents-features:agents-features-sql")
 include(":agents:agents-features:agents-features-chat-memory-sql")
 include(":agents:agents-features:agents-features-chat-history-jdbc")
+include(":agents:agents-features:agents-features-chat-history-aws")
 include(":agents:agents-features:agents-features-persistence-jdbc")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-features:agents-features-tokenizer")
@@ -71,7 +72,7 @@ include(":embeddings:embeddings-base")
 include(":embeddings:embeddings-llm")
 
 include(":rag:rag-base")
-include(":rag:vector-storage")
+include(":rag:rag-vector")
 
 include(":a2a:a2a-core")
 include(":a2a:a2a-server")
@@ -94,8 +95,11 @@ include(":serialization:serialization-jackson")
 
 include(":koog-spring-boot-starter")
 
+include(":koog-spring-ai:koog-spring-ai-common")
 include(":koog-spring-ai:koog-spring-ai-starter-model-chat")
 include(":koog-spring-ai:koog-spring-ai-starter-model-embedding")
+include(":koog-spring-ai:koog-spring-ai-starter-chat-memory")
+include(":koog-spring-ai:koog-spring-ai-starter-vector-store")
 
 include(":koog-ktor")
 include(":docs")

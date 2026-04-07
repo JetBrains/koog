@@ -1,6 +1,5 @@
 package ai.koog.agents.core.tools.reflect
 
-import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
@@ -105,31 +104,6 @@ public fun <T : Any> KClass<out T>.asTools(
 @OptIn(InternalAgentToolsApi::class)
 public inline fun <reified T : Any> T.asToolsByClass(): List<ToolFromCallable<*>> {
     return T::class.asTools(thisRef = this)
-}
-
-/**
- * Registers [toolFunction] as a tool in the [ToolRegistry].
- *
- * @see asTool
- */
-@OptIn(InternalAgentToolsApi::class)
-public fun ToolRegistry.Builder.tool(
-    toolFunction: KFunction<*>,
-    thisRef: Any? = null,
-    name: String? = null,
-    description: String? = null
-): ToolRegistry.Builder = apply {
-    tool(toolFunction.asTool(thisRef, name, description))
-}
-
-/**
- * Registers a set of tools from the [instance] in the [ToolRegistry] .
- */
-@OptIn(InternalAgentToolsApi::class)
-public fun ToolRegistry.Builder.tools(
-    instance: Any,
-) {
-    tools(instance::class.asTools(instance))
 }
 
 /**

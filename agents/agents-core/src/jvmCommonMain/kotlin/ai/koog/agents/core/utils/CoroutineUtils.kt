@@ -7,6 +7,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.runBlocking
@@ -81,22 +82,23 @@ public fun <T> AIAgentConfig.runOnStrategyDispatcher(
 internal val AGENT_CONTEXT_ELEMENT: ThreadLocal<CoroutineContext> = ThreadLocal()
 
 /**
- * Executes a suspending [block] by either using [runBlocking] or immediately executing it if already
- * on the target dispatcher.
+ * Executes a suspending [block] as a bridge from blocking (Java) code into the coroutine world.
+ * It uses [AGENT_CONTEXT_ELEMENT] to track the current logical dispatcher across blocking boundaries
+ * and avoid deadlocks in two scenarios:
  *
- * This function handles the "bridge" between the non-suspending Java API and the suspending internal logic.
- * It uses [AGENT_CONTEXT_ELEMENT] to track the execution state across blocking boundaries.
+ * **Re-entrant call (AGENT_CONTEXT_ELEMENT is set):** the current thread is already inside a
+ * `runBlocking` started by this function. If the target dispatcher matches the existing one,
+ * using `runBlocking(context)` would try to re-dispatch onto the same executor — which may be
+ * single-threaded and already blocked. `runBlocking(EmptyCoroutineContext)` avoids the re-dispatch
+ * by running inline on the current thread's event loop instead.
  *
- * ### Deadlock Prevention Logic:
- * If the current thread is already associated with a [CoroutineContext] (stored in [AGENT_CONTEXT_ELEMENT]):
- * 1. It compares the [targetDispatcher] with the [existingDispatcher].
- * 2. If they match (or [targetDispatcher] is null), it uses `runBlocking(EmptyCoroutineContext)`.
- *    This starts a nested event loop on the **current thread** without trying to reschedule the task
- *    on the dispatcher's executor service. This is vital because the executor might be single-threaded
- *    and currently blocked by the outer `runBlocking` call.
- *
- * If the dispatchers differ, it performs a standard `runBlocking(context)`, which may block the current
- * thread while the block executes on a different thread pool (e.g., switching from Strategy to LLM pool).
+ * **First entry (AGENT_CONTEXT_ELEMENT is null):** the calling thread may itself be a worker of
+ * the target executor (e.g. `agent.run()` called from inside `executor.submit()`). In that case,
+ * `runBlocking(context)` would dispatch the coroutine onto the executor and then park the calling
+ * thread waiting for it — but the calling thread IS the only worker, so the coroutine never runs.
+ * `runBlocking(EmptyCoroutineContext)` runs the coroutine inline on the current thread, bypassing
+ * the executor queue entirely. The TARGET context is stored in [AGENT_CONTEXT_ELEMENT] (not the
+ * actual `coroutineContext`) so that nested calls can still compare dispatchers correctly.
  *
  * @param context The coroutine context to use for execution. Defaults to [EmptyCoroutineContext].
  * @param block The suspending block to execute.
@@ -113,18 +115,28 @@ public fun <T> runBlockingIfRequired(context: CoroutineContext = EmptyCoroutineC
         val existingDispatcher = existingContext[ContinuationInterceptor] as? CoroutineDispatcher
 
         if (targetDispatcher == null || targetDispatcher == existingDispatcher) {
-            // We are already on the same dispatcher.
-            // Using a new runBlocking with EmptyCoroutineContext will block the current thread
-            // but won't try to dispatch to the executor again, avoiding deadlock.
+            // Same dispatcher: running runBlocking(context) would re-dispatch onto the same
+            // executor that is already blocked waiting for us — deadlock. Run inline instead.
             return runBlocking(EmptyCoroutineContext) {
                 block()
             }
         }
     }
 
-    return runBlocking(context) {
+    // First entry from non-coroutine code (AGENT_CONTEXT_ELEMENT == null).
+    // runBlocking(context) would dispatch the coroutine onto the executor and park this thread.
+    //
+    // If this thread is itself a worker of that executor, the coroutine would sit in the queue
+    // with no thread available to run it - deadlock.
+    //
+    // runBlocking(EmptyCoroutineContext) runs the coroutine inline on the current thread, so
+    // the executor queue is never involved.
+    //
+    // Note: we store the TARGET context (not coroutineContext) in AGENT_CONTEXT_ELEMENT so that
+    // nested calls compare against the intended dispatcher, not the BlockingEventLoop.
+    return runBlocking(EmptyCoroutineContext) {
         val old = AGENT_CONTEXT_ELEMENT.get()
-        AGENT_CONTEXT_ELEMENT.set(coroutineContext)
+        AGENT_CONTEXT_ELEMENT.set(context)
         try {
             block()
         } finally {
@@ -145,6 +157,18 @@ public fun <T> runBlockingIfRequired(context: CoroutineContext = EmptyCoroutineC
  */
 @InternalAgentsApi
 public suspend fun <T> AIAgentConfig.submitToMainDispatcher(block: () -> T): T {
+    // If the current thread is a worker of strategyExecutorService and is blocked inside
+    // runBlocking's event loop, it cannot drain the executor's task queue. Submitting block()
+    // via executor.execute would queue it there and suspend waiting, but nobody can pick it.
+    // Detect this case and run block() directly on the current thread instead.
+    val existingContext = AGENT_CONTEXT_ELEMENT.get()
+    if (existingContext != null) {
+        val existingExecutor = (existingContext[ContinuationInterceptor] as? ExecutorCoroutineDispatcher)?.executor
+        if (existingExecutor != null && existingExecutor === strategyExecutorService) {
+            return block()
+        }
+    }
+
     val result = CompletableDeferred<T>()
 
     (strategyExecutorService ?: Dispatchers.Default.asExecutor()).execute {

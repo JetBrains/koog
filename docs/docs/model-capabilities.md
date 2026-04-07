@@ -279,13 +279,14 @@ In the tables below:
 
     | Model      | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) |
     |------------|-------------|-------------|------------|-------|-------------|----------------|
-    | Opus_4_6   | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
-    | Opus_4_5   | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
+    | Opus_4_6   | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
+    | Opus_4_5   | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Opus_4_1   | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
     | Opus_4     | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
-    | Sonnet_4_5 | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
+    | Sonnet_4_6 | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
+    | Sonnet_4_5 | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Sonnet_4   | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
-    | Haiku_4_5  | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
+    | Haiku_4_5  | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Haiku_3    | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
 
 ??? "Ollama models"

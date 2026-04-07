@@ -21,8 +21,8 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
-      code-agent: ${{steps.filter.outputs.code-agent_any_changed }}
+      koog-src: ${{ steps.filter.outputs.koog-src_any_modified }}
+      code-agent: ${{steps.filter.outputs.code-agent_any_modified }}
     steps:
       - uses: actions/checkout@v6
 

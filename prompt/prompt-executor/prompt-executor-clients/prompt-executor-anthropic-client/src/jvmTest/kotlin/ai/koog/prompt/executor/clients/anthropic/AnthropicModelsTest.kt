@@ -10,6 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class AnthropicModelsTest {
 
@@ -22,6 +23,42 @@ class AnthropicModelsTest {
                 expected = LLMProvider.Anthropic,
                 actual = model.provider,
                 message = "Anthropic model ${model.id} doesn't have Anthropic provider but ${model.provider}."
+            )
+        }
+    }
+
+    @Test
+    fun `Claude 4_5 and newer models should support structured output`() {
+        val modelsWithSchema = listOf(
+            AnthropicModels.Haiku_4_5,
+            AnthropicModels.Sonnet_4_5,
+            AnthropicModels.Sonnet_4_6,
+            AnthropicModels.Opus_4_5,
+            AnthropicModels.Opus_4_6,
+        )
+
+        modelsWithSchema.forEach { model ->
+            assertTrue(
+                model.supports(LLMCapability.Schema.JSON.Standard),
+                "Model ${model.id} should support Schema.JSON.Standard capability"
+            )
+        }
+    }
+
+    @Test
+    fun `Pre-4_5 models should not support structured output`() {
+        @Suppress("DEPRECATION")
+        val modelsWithoutSchema = listOf(
+            AnthropicModels.Haiku_3,
+            AnthropicModels.Sonnet_4,
+            AnthropicModels.Opus_4,
+            AnthropicModels.Opus_4_1,
+        )
+
+        modelsWithoutSchema.forEach { model ->
+            assertTrue(
+                !model.supports(LLMCapability.Schema.JSON.Standard),
+                "Model ${model.id} should NOT support Schema.JSON.Standard capability"
             )
         }
     }

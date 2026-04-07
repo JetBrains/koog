@@ -4,15 +4,15 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.spring.ai.common.conditions.ConditionalOnPropertyMissingOrEmpty
+import ai.koog.spring.ai.common.conditions.ConditionalOnPropertyNotEmpty
+import ai.koog.spring.ai.common.resolveDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.moderation.ModerationModel
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.beans.factory.ObjectProvider
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
@@ -24,7 +24,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
-import org.springframework.lang.Nullable
 
 /**
  * Auto-configuration for the Koog Spring AI Chat Model adapter.
@@ -71,78 +70,72 @@ public open class SpringAiChatAutoConfiguration {
     @ConditionalOnMissingBean(name = ["koogSpringAiChatDispatcher"])
     public open fun koogSpringAiChatDispatcher(
         properties: KoogSpringAiChatProperties,
-        @Autowired(required = false) @Qualifier("applicationTaskExecutor") @Nullable asyncTaskExecutor: AsyncTaskExecutor?,
+        @Qualifier("applicationTaskExecutor") asyncTaskExecutorProvider: ObjectProvider<AsyncTaskExecutor>,
     ): CoroutineDispatcher {
-        return when (properties.dispatcher.type) {
-            KoogSpringAiChatProperties.DispatcherType.AUTO -> {
-                if (asyncTaskExecutor != null) {
-                    logger.info("Koog Spring AI Chat: using Spring AsyncTaskExecutor as dispatcher for blocking model calls")
-                    asyncTaskExecutor.asCoroutineDispatcher()
-                } else {
-                    logger.info("Koog Spring AI Chat: no AsyncTaskExecutor found, falling back to Dispatchers.IO for blocking model calls")
-                    Dispatchers.IO
-                }
-            }
-
-            KoogSpringAiChatProperties.DispatcherType.IO -> {
-                val parallelism = properties.dispatcher.parallelism
-                if (parallelism > 0) {
-                    logger.info("Koog Spring AI Chat: using Dispatchers.IO.limitedParallelism($parallelism) for blocking model calls")
-                    Dispatchers.IO.limitedParallelism(parallelism)
-                } else {
-                    logger.info("Koog Spring AI Chat: using Dispatchers.IO for blocking model calls")
-                    Dispatchers.IO
-                }
-            }
-        }
+        return resolveDispatcher(
+            dispatcherConfig = properties.dispatcher,
+            asyncTaskExecutor = asyncTaskExecutorProvider.ifAvailable,
+            logger = logger,
+            componentName = "Koog Spring AI Chat",
+        )
     }
 
     /**
-     * Chat model configuration — activated when a bean-name selector is provided.
+     * Chat model configuration — activated when a bean-name selector property is provided.
+     *
+     * Resolves the [ChatModel] from the application context by the configured bean name.
      */
-    @Configuration
-    @ConditionalOnProperty(prefix = "koog.spring.ai.chat", name = ["chat-model-bean-name"])
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnPropertyNotEmpty(prefix = "koog.spring.ai.chat", name = "chat-model-bean-name")
     public open class NamedChatModelConfiguration {
         private val logger = LoggerFactory.getLogger(NamedChatModelConfiguration::class.java)
 
         @Bean
-        @ConditionalOnMissingBean(LLMClient::class)
+        @ConditionalOnMissingBean(name = ["springAiChatModelLLMClient"])
         public open fun springAiChatModelLLMClient(
             beanFactory: BeanFactory,
             properties: KoogSpringAiChatProperties,
             @Qualifier("koogSpringAiChatDispatcher") dispatcher: CoroutineDispatcher,
-            @Autowired(required = false) @Nullable chatOptionsCustomizer: ChatOptionsCustomizer?,
-            @Autowired(required = false) @Nullable llmProvider: LLMProvider?,
+            chatOptionsCustomizerProvider: ObjectProvider<ChatOptionsCustomizer>,
+            llmProviderProvider: ObjectProvider<LLMProvider>,
             moderationModelProvider: ObjectProvider<ModerationModel>,
         ): LLMClient {
             val beanName = properties.chatModelBeanName!!
             logger.info("Koog Spring AI Chat: resolving ChatModel bean by name='$beanName'")
             val chatModel = beanFactory.getBean(beanName, ChatModel::class.java)
-            return createLLMClient(chatModel, beanFactory, properties, dispatcher, chatOptionsCustomizer, llmProvider, moderationModelProvider, logger)
+            return createLLMClient(chatModel, beanFactory, properties, dispatcher, chatOptionsCustomizerProvider.ifUnique, llmProviderProvider.ifUnique, moderationModelProvider, logger)
         }
     }
 
     /**
-     * Chat model configuration — activated when no bean-name selector is set and a single ChatModel candidate exists.
+     * Chat model configuration — activated when no bean-name selector is set
+     * and a single [ChatModel] candidate exists.
+     *
+     * This is the default fallback path. It is mutually exclusive with [NamedChatModelConfiguration] for
+     * the common cases:
+     * - selector absent → [ConditionalOnPropertyMissingOrEmpty] activates this config; [NamedChatModelConfiguration] does not match
+     * - selector non-empty (e.g. `"myBean"`) → [NamedChatModelConfiguration] matches; [ConditionalOnPropertyMissingOrEmpty] does not activate
+     * - selector set to literal `""` → treated as missing/empty; [ConditionalOnPropertyMissingOrEmpty] activates this config; [NamedChatModelConfiguration] does not match
      */
-    @Configuration
-    @ConditionalOnMissingBean(LLMClient::class)
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnSingleCandidate(ChatModel::class)
+    @ConditionalOnPropertyMissingOrEmpty(prefix = "koog.spring.ai.chat", name = "chat-model-bean-name")
     public open class SingleChatModelConfiguration {
         private val logger = LoggerFactory.getLogger(SingleChatModelConfiguration::class.java)
 
         @Bean
+        @ConditionalOnMissingBean(name = ["springAiChatModelLLMClient"])
         public open fun springAiChatModelLLMClient(
             chatModel: ChatModel,
             beanFactory: BeanFactory,
             properties: KoogSpringAiChatProperties,
             @Qualifier("koogSpringAiChatDispatcher") dispatcher: CoroutineDispatcher,
-            @Autowired(required = false) @Nullable chatOptionsCustomizer: ChatOptionsCustomizer?,
-            @Autowired(required = false) @Nullable llmProvider: LLMProvider?,
+            chatOptionsCustomizerProvider: ObjectProvider<ChatOptionsCustomizer>,
+            llmProviderProvider: ObjectProvider<LLMProvider>,
             moderationModelProvider: ObjectProvider<ModerationModel>,
         ): LLMClient {
             logger.info("Koog Spring AI Chat: using single ChatModel candidate as LLMClient backend")
-            return createLLMClient(chatModel, beanFactory, properties, dispatcher, chatOptionsCustomizer, llmProvider, moderationModelProvider, logger)
+            return createLLMClient(chatModel, beanFactory, properties, dispatcher, chatOptionsCustomizerProvider.ifUnique, llmProviderProvider.ifUnique, moderationModelProvider, logger)
         }
     }
 

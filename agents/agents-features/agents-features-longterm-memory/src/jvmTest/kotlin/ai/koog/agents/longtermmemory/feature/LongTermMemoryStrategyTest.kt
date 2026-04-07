@@ -4,16 +4,16 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.KeywordSearchRequest
-import ai.koog.agents.longtermmemory.retrieval.SearchResult
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.rag.base.TextDocument
+import ai.koog.rag.base.storage.search.SearchResult
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -40,7 +40,7 @@ class LongTermMemoryStrategyTest {
 
         val memoryStorage = InMemoryRecordStorage(myNamespace)
 
-        val searchResults = mutableListOf<SearchResult>()
+        val searchResults = mutableListOf<SearchResult<TextDocument>>()
 
         val strategy = strategy<String, String>(
             "ltm-basic-test",
@@ -62,7 +62,7 @@ class LongTermMemoryStrategyTest {
             val searchRecords by node<Unit, Unit> {
                 searchResults += withLongTermMemory {
                     this.retrievalStorage?.search(
-                        KeywordSearchRequest(query = "Kotlin", limit = 10),
+                        SimilaritySearchRequest(queryText = "Kotlin", limit = 10),
                         myNamespace
                     ) ?: emptyList()
                 }
@@ -98,6 +98,6 @@ class LongTermMemoryStrategyTest {
 
         assertEquals(3, memoryStorage.size())
         assertEquals(2, searchResults.size)
-        assertTrue(searchResults.all { it.record.content.contains("Kotlin") })
+        assertTrue(searchResults.all { it.document.content.contains("Kotlin") })
     }
 }

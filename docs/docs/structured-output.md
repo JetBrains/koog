@@ -554,6 +554,7 @@ import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.anthropic.structure.AnthropicBasicJsonSchemaGenerator
 import ai.koog.prompt.llm.LLMProvider
 import kotlinx.coroutines.runBlocking
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -577,6 +578,11 @@ val openAiStructure = JsonStructure.create<WeatherForecast>(
     examples = exampleForecasts
 )
 
+val anthropicStructure = JsonStructure.create<WeatherForecast>(
+    schemaGenerator = AnthropicBasicJsonSchemaGenerator,
+    examples = exampleForecasts
+)
+
 val promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_KEY"))
 
 // The advanced API uses StructuredRequestConfig instead of simple parameters
@@ -589,6 +595,7 @@ val structuredResponse = promptExecutor.executeStructured(
     config = StructuredRequestConfig(
         byProvider = mapOf(
             LLMProvider.OpenAI to StructuredRequest.Native(openAiStructure),
+            LLMProvider.Anthropic to StructuredRequest.Native(anthropicStructure),
         ),
         default = StructuredRequest.Manual(genericStructure)
     ),
@@ -606,7 +613,7 @@ Different schema generators are available depending on your needs:
 
 - **StandardJsonSchemaGenerator**: Full JSON Schema with support for polymorphism, definitions, and recursive references
 - **BasicJsonSchemaGenerator**: Simplified schema without polymorphism support, compatible with more models  
-- **Provider-specific generators**: Optimized schemas for specific LLM providers (OpenAI, Google, etc.)
+- **Provider-specific generators**: Optimized schemas for specific LLM providers (OpenAI, Anthropic, Google, etc.)
 
 ### Usage across all layers
 

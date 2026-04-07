@@ -80,6 +80,8 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Document,
             LLMCapability.Completion,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ) + thinkingCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
@@ -129,6 +131,8 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Document,
             LLMCapability.Completion,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ) + thinkingCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
@@ -136,7 +140,7 @@ public object AnthropicModels : LLModelDefinitions {
 
     /**
      * Claude Sonnet 4.6 suggests the best combination of speed and intelligence.
-     * It’s a full upgrade of the model’s skills across coding, computer use, long-context reasoning, agent planning, knowledge work, and design.
+     * It's a full upgrade of the model's skills across coding, computer use, long-context reasoning, agent planning, knowledge work, and design.
      *
      * 1M context window
      * Knowledge cutoff: Aug 2025
@@ -154,6 +158,8 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Document,
             LLMCapability.Completion,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ) + thinkingCapabilities,
         contextLength = 1_000_000,
         maxOutputTokens = 64_000,
@@ -211,8 +217,8 @@ public object AnthropicModels : LLModelDefinitions {
 
     /**
      * Claude Opus 4.5 is Anthropic's premium model with the best combination of speed and intelligence.
-     * It’s intelligent, efficient, and the best model in the world for coding, agents, and computer use.
-     * It’s also meaningfully better at everyday tasks like deep research and working with slides and spreadsheets.
+     * It's intelligent, efficient, and the best model in the world for coding, agents, and computer use.
+     * It's also meaningfully better at everyday tasks like deep research and working with slides and spreadsheets.
      *
      * 200K context window
      * Knowledge cutoff: August 2025
@@ -229,7 +235,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Completion
+            LLMCapability.Completion,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ) + thinkingCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
@@ -259,6 +267,8 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Document,
             LLMCapability.Completion,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ) + thinkingCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 1_000_000,
@@ -270,12 +280,12 @@ public object AnthropicModels : LLModelDefinitions {
     private val supportedModels: List<LLModel> = listOf(
         Haiku_3,
         Sonnet_4,
+        Sonnet_4_5,
+        Sonnet_4_6,
         Opus_4,
         Opus_4_1,
         Opus_4_5,
         Opus_4_6,
-        Sonnet_4_5,
-        Sonnet_4_6,
         Haiku_4_5
     )
 

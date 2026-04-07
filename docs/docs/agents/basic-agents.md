@@ -239,7 +239,6 @@ First, create a tool by annotating a function (Kotlin) or method (Java) with the
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import ai.koog.agents.core.tools.annotations.LLMDescription
     import ai.koog.agents.core.tools.annotations.Tool
-    import ai.koog.agents.core.tools.reflect.tool
     -->
     ```kotlin
     @Tool
@@ -372,7 +371,6 @@ For example, a simple agent described here is not likely to require more than 10
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import ai.koog.agents.core.tools.annotations.LLMDescription
     import ai.koog.agents.core.tools.annotations.Tool
-    import ai.koog.agents.core.tools.reflect.tool
     @Tool
     @LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
     fun askUser(
@@ -471,7 +469,6 @@ Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agen
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import ai.koog.agents.core.tools.annotations.LLMDescription
     import ai.koog.agents.core.tools.annotations.Tool
-    import ai.koog.agents.core.tools.reflect.tool
     @Tool
     @LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
     fun askUser(

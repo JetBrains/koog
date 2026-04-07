@@ -13,7 +13,6 @@ import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
-import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,7 +44,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_SimpleFunctionalStrategyWithRetry(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -73,7 +72,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_MultiStepFunctionalStrategy(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -99,7 +98,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_FunctionalStrategyWithManualToolHandling(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -138,7 +137,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_Subtask(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
@@ -185,7 +184,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_CustomStrategyWithValidation(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 

@@ -83,7 +83,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_shouldExecutePrompt(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assertThat(model.getProvider()).isNotNull();
@@ -260,7 +260,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolChoiceRequiredShouldEmitToolCall(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         MultiLLMPromptExecutor executor = createExecutor(model);
@@ -287,7 +287,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolWithoutArgsShouldProduceValidResponse(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         MultiLLMPromptExecutor executor = createExecutor(model);
@@ -315,7 +315,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolChoiceNoneShouldNotEmitToolCalls(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         MultiLLMPromptExecutor executor = createExecutor(model);
@@ -341,8 +341,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
-    @Disabled("KG-725 Java interop fails to pass tools to execute() method")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolChoiceNamedShouldPreferSpecifiedTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         MultiLLMPromptExecutor executor = createExecutor(model);
@@ -371,7 +370,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_MultipleChoicesShouldRespectNumberOfChoices(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.MultipleChoices.INSTANCE), "Model does not support multiple choices");
@@ -400,7 +399,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_StreamingWithToolsShouldEmitToolFrames(LLModel model) throws InterruptedException {
         Models.assumeAvailable(model.getProvider());
         MultiLLMPromptExecutor executor = createExecutor(model);
@@ -434,7 +433,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_MultipleSystemMessagesShouldExecute(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         MultiLLMPromptExecutor executor = createExecutor(model);
@@ -460,7 +459,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_StructuredOutputBasicSchemaShouldReturnJson(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Schema.JSON.Basic.INSTANCE), "Model does not support Basic JSON schema");
@@ -498,7 +497,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_StructuredOutputStandardSchemaShouldReturnJson(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Schema.JSON.Standard.INSTANCE), "Model does not support Standard JSON schema");
@@ -536,7 +535,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_DifferentToolSchemaTypesShouldEmitValidToolCalls(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model does not support tools");
@@ -628,7 +627,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     }
 
     @ParameterizedTest
-    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#getLatestModels")
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_StructuredOutputFixingParserPathShouldRecoverMalformedJson(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Schema.JSON.Standard.INSTANCE), "Model does not support Standard JSON schema");

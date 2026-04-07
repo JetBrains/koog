@@ -230,8 +230,10 @@ dependencies {
     dokka(project(":embeddings:embeddings-base"))
     dokka(project(":embeddings:embeddings-llm"))
     dokka(project(":koog-ktor"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-chat-memory"))
     dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-chat"))
     dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-embedding"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-vector-store"))
     dokka(project(":koog-spring-boot-starter"))
     dokka(project(":prompt:prompt-cache:prompt-cache-files"))
     dokka(project(":prompt:prompt-cache:prompt-cache-model"))
@@ -258,7 +260,7 @@ dependencies {
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":rag:rag-base"))
-    dokka(project(":rag:vector-storage"))
+    dokka(project(":rag:rag-vector"))
     dokka(project(":utils"))
 }
 

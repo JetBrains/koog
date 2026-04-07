@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.bedrock.converse
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.executor.clients.bedrock.util.JsonDocumentConverters
 import ai.koog.prompt.llm.LLMCapability
@@ -30,10 +31,17 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.DocumentSource
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailStreamConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.ImageSource
 import aws.sdk.kotlin.services.bedrockruntime.model.InferenceConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.JsonSchemaDefinition
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputConfig
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormat
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormatStructure
+import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormatType
 import aws.sdk.kotlin.services.bedrockruntime.model.PerformanceConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.PromptVariableValues
 import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningContentBlock
@@ -97,12 +105,14 @@ internal object BedrockConverseConverters {
         val modelId: String,
         val inferenceConfig: InferenceConfiguration,
         val additionalModelRequestFields: Document?,
+        val outputConfig: OutputConfig?,
         val performanceConfig: PerformanceConfiguration?,
         val promptVariables: Map<String, PromptVariableValues>?,
         val requestMetadata: Map<String, String>?,
         val toolConfig: ToolConfiguration?,
         val system: List<SystemContentBlock>,
         val messages: List<BedrockMessage>,
+        val guardrailSettings: BedrockGuardrailsSettings?,
     )
 
     /**
@@ -111,7 +121,8 @@ internal object BedrockConverseConverters {
     private fun createConverseRequestParams(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailSettings: BedrockGuardrailsSettings? = null,
     ): ConverseRequestParams {
         val params = prompt.params.toBedrockConverseParams()
 
@@ -194,6 +205,23 @@ internal object BedrockConverseConverters {
             }
         }
 
+        val outputConfig = params.schema?.let { schema ->
+            require(schema is LLMParams.Schema.JSON) {
+                "Bedrock Converse only supports JSON schemas for structured output"
+            }
+            OutputConfig {
+                this.textFormat = OutputFormat {
+                    this.type = OutputFormatType.JsonSchema
+                    this.structure = OutputFormatStructure.JsonSchema(
+                        JsonSchemaDefinition {
+                            this.name = schema.name
+                            this.schema = schema.schema.toString()
+                        }
+                    )
+                }
+            }
+        }
+
         return ConverseRequestParams(
             modelId = model.id,
             inferenceConfig = InferenceConfiguration {
@@ -204,6 +232,7 @@ internal object BedrockConverseConverters {
             },
             additionalModelRequestFields = params.additionalProperties
                 ?.let { JsonDocumentConverters.convertToDocument(JsonObject(it)) },
+            outputConfig = outputConfig,
             performanceConfig = params.performanceConfig,
             promptVariables = params.promptVariables,
             requestMetadata = params.requestMetadata,
@@ -244,6 +273,7 @@ internal object BedrockConverseConverters {
             },
             system = systemMessages,
             messages = messages,
+            guardrailSettings = guardrailSettings,
         )
     }
 
@@ -253,20 +283,28 @@ internal object BedrockConverseConverters {
     fun createConverseRequest(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailSettings: BedrockGuardrailsSettings? = null,
     ): ConverseRequest {
-        val params = createConverseRequestParams(prompt, model, tools)
+        val params = createConverseRequestParams(prompt, model, tools, guardrailSettings)
 
         @Suppress("DuplicatedCode") // AWS SDK requires duplication
         return ConverseRequest {
             this.modelId = params.modelId
             this.inferenceConfig = params.inferenceConfig
             this.additionalModelRequestFields = params.additionalModelRequestFields
+            this.outputConfig = params.outputConfig
             this.performanceConfig = params.performanceConfig
             this.promptVariables = params.promptVariables
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages
+            params.guardrailSettings?.let { gs ->
+                this.guardrailConfig = GuardrailConfiguration {
+                    this.guardrailIdentifier = gs.guardrailIdentifier
+                    this.guardrailVersion = gs.guardrailVersion
+                }
+            }
         }
     }
 
@@ -276,20 +314,28 @@ internal object BedrockConverseConverters {
     fun createConverseStreamRequest(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        guardrailSettings: BedrockGuardrailsSettings? = null,
     ): ConverseStreamRequest {
-        val params = createConverseRequestParams(prompt, model, tools)
+        val params = createConverseRequestParams(prompt, model, tools, guardrailSettings)
 
         @Suppress("DuplicatedCode") // AWS SDK requires duplication
         return ConverseStreamRequest {
             this.modelId = params.modelId
             this.inferenceConfig = params.inferenceConfig
             this.additionalModelRequestFields = params.additionalModelRequestFields
+            this.outputConfig = params.outputConfig
             this.performanceConfig = params.performanceConfig
             this.promptVariables = params.promptVariables
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages
+            params.guardrailSettings?.let { gs ->
+                this.guardrailConfig = GuardrailStreamConfiguration {
+                    this.guardrailIdentifier = gs.guardrailIdentifier
+                    this.guardrailVersion = gs.guardrailVersion
+                }
+            }
         }
     }
 

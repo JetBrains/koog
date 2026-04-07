@@ -119,7 +119,7 @@ Learn about the core components of Koog agents in detail:
 
     ---
 
-    Retain and retrieve knowledge across conversations using [vector embeddings](embeddings.md), [ranked document storage](ranked-document-storage.md), and [shared agent memory](features/agent-memory.md)
+    Retain and retrieve knowledge across conversations using [vector embeddings](embeddings.md), [RAG](retrieval-augmented-generation.md), and [shared agent memory](features/agent-memory.md)
 
 -   :material-timeline-text:{ .lg .middle } [**Tracing**](features/tracing.md)
 

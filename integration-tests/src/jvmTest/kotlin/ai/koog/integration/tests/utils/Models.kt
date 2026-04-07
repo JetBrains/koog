@@ -25,9 +25,7 @@ object Models {
     @JvmStatic
     fun anthropicModels(): Stream<LLModel> {
         return Stream.of(
-            AnthropicModels.Opus_4_6,
             AnthropicModels.Haiku_4_5,
-            AnthropicModels.Sonnet_4_6,
         )
     }
 
@@ -35,9 +33,6 @@ object Models {
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
             GoogleModels.Gemini3_Flash_Preview,
-            GoogleModels.Gemini3_Pro_Preview,
-            GoogleModels.Gemini2_5Pro,
-            GoogleModels.Gemini2_5Flash,
         )
     }
 
@@ -91,6 +86,15 @@ object Models {
     }
 
     @JvmStatic
+    fun latestModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Chat.GPT5_4,
+            AnthropicModels.Haiku_4_5,
+            GoogleModels.Gemini3_Flash_Preview,
+        )
+    }
+
+    @JvmStatic
     fun allCompletionModels(): Stream<LLModel> {
         return Stream.of(
             openAIModels(),
@@ -115,9 +119,6 @@ object Models {
     @JvmStatic
     fun openAIReasoningModels(): Stream<LLModel> {
         return Stream.of(
-            // KG-726 Responses from several OpenAI models are completing without receiving an End frame
-            // OpenAIModels.Chat.GPT5_1CodexMax,
-            OpenAIModels.Chat.GPT5_1Codex,
             OpenAIModels.Chat.GPT5_2,
         )
     }

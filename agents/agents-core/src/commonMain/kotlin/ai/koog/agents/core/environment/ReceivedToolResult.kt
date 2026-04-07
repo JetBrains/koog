@@ -62,7 +62,8 @@ public data class ReceivedToolResult(
         id = id,
         tool = tool,
         content = content,
-        metaInfo = RequestMetaInfo.create(clock)
+        metaInfo = RequestMetaInfo.create(clock),
+        isError = resultKind !is ToolResultKind.Success // Failure and ValidationError both represent tool errors
     )
 }
 
