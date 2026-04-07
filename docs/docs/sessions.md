@@ -37,7 +37,7 @@ The key difference is that write sessions can modify the conversation history, w
 
 Sessions have a defined lifecycle:
 
-1. **Creation**: a session is created using `llm.writeSession { ... }` or `llm.readSession { ... }`.
+1. **Creation**: a session is created, e.g., using `llm.writeSession { ... }` or `llm.readSession { ... }`.
 2. **Active phase**: the session is active while the lambda block is executing.
 3. **Termination**: the session is automatically closed when the lambda block completes.
 
@@ -47,32 +47,65 @@ Sessions implement the `AutoCloseable` interface, ensuring they are properly cle
 
 ### Creating sessions
 
-Sessions are created using extension functions on the `AIAgentLLMContext` class:
+Sessions are created using methods of the `AIAgentLLMContext` class:
+=== "Kotlin"
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
 
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    // Creating a write session
+    llm.writeSession {
+        // Session code here
+    }
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-// Creating a write session
-llm.writeSession {
-    // Session code here
-}
+    // Creating a read session
+    llm.readSession {
+        // Session code here
+    }
+    ```
+    <!--- KNIT example-sessions-01.kt -->
 
-// Creating a read session
-llm.readSession {
-    // Session code here
-}
-```
-<!--- KNIT example-sessions-01.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava01 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    // Creating a write session
+    ctx.getLlm().writeSession(session -> {
+        // Session code here
+        return null;
+    });
+
+    // Creating a read session
+    ctx.getLlm().readSession(session -> {
+        // Session code here
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava01.java -->
 
 These functions take a lambda block that runs within the context of the session. The session is automatically closed
 when the block completes.
@@ -91,54 +124,122 @@ This ensures that the conversation history is not corrupted by concurrent modifi
 
 Within a session, you can access the prompt and tools:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
 
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.readSession {
-    val messageCount = prompt.messages.size
-    val availableTools = tools.map { it.name }
-}
-```
-<!--- KNIT example-sessions-02.kt -->
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.readSession {
+        val messageCount = prompt.messages.size
+        val availableTools = tools.map { it.name }
+    }
+    ```
+    <!--- KNIT example-sessions-02.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava02 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().readSession(session -> {
+        int messageCount = session.getPrompt().getMessages().size();
+        var availableTools = session.getTools().stream().map(tool -> tool.getName()).toList();
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava02.java -->
 
 In a write session, you can also modify these properties:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.tools.ToolDescriptor
+=== "Kotlin"
 
-val newTools = listOf<ToolDescriptor>()
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.tools.ToolDescriptor
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    // Modify the prompt
-    appendPrompt {
-        user("New user message")
+    val newTools = listOf<ToolDescriptor>()
+
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
     }
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Modify the prompt
+        appendPrompt {
+            user("New user message")
+        }
 
-    // Modify the tools
-    tools = newTools
-}
-```
-<!--- KNIT example-sessions-03.kt -->
+        // Modify the tools
+        tools = newTools
+    }
+    ```
+    <!--- KNIT example-sessions-03.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.tools.ToolDescriptor;
+    import java.util.Collections;
+    class exampleSessionsJava03 {
+        public static void main(String[] args) {
+            var newTools = Collections.<ToolDescriptor>emptyList();
+
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        // Modify the prompt
+        session.appendPrompt(promptBuilder -> {
+            promptBuilder.user("New user message");
+            return null;
+        });
+
+        // Modify the tools
+        session.setTools(newTools);
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava03.java -->
 
 For more information, see the detailed API reference for [AIAgentLLMReadSession](api:agents-core::ai.koog.agents.core.agent.session.AIAgentLLMReadSession) and [AIAgentLLMWriteSession](api:agents-core::ai.koog.agents.core.agent.session.AIAgentLLMWriteSession).
 
@@ -156,37 +257,73 @@ The most common methods for making LLM requests are:
 3. `requestLLMWithoutTools()`: makes a request to the LLM with the current prompt but without any tools, returning a
    single response.
 
-4. `requestLLMForceOneTool`: makes a request to the LLM with the current prompt and tools, forcing the use of one tool.
+4. `requestLLMForceOneTool()`: makes a request to the LLM with the current prompt and tools, forcing the use of one tool.
 
-5. `requestLLMOnlyCallingTools`: makes a request to the LLM that should be processed by only using tools.
+5. `requestLLMOnlyCallingTools()`: makes a request to the LLM that should be processed by only using tools.
 
 Example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
 
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    // Make a request with tools enabled
-    val response = requestLLM()
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Make a request with tools enabled
+        val response = requestLLM()
 
-    // Make a request without tools
-    val responseWithoutTools = requestLLMWithoutTools()
+        // Make a request without tools
+        val responseWithoutTools = requestLLMWithoutTools()
 
-    // Make a request that returns multiple responses
-    val responses = requestLLMMultiple()
-}
-```
-<!--- KNIT example-sessions-04.kt -->
+        // Make a request that returns multiple responses
+        val responses = requestLLMMultiple()
+    }
+    ```
+    <!--- KNIT example-sessions-04.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    class exampleSessionsJava04 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        // Make a request with tools enabled
+        var response = session.requestLLM();
+
+        // Make a request without tools
+        var responseWithoutTools = session.requestLLMWithoutTools();
+
+        // Make a request that returns multiple responses
+        var responses = session.requestLLMMultiple();
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava04.java -->
 
 ### How requests work
 
@@ -196,80 +333,148 @@ LLM requests are made when you explicitly call one of the request methods. The k
 2. **Immediate execution**: when you call a request method, the request is made immediately, and the method blocks
 until a response is received.
 3. **Automatic history update**: in a write session, the response is automatically added to the conversation history.
-4. **No implicit requests**: the system does not make implicit requests; you need to explicitly call a request method.
 
 ### Request methods with tools
 
 When making requests with tools enabled, the LLM may respond with a tool call instead of a text response. The request
 methods handle this transparently:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.prompt.message.Message
+=== "Kotlin"
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    val response = requestLLM()
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.prompt.message.Message
 
-    // The response might be a tool call or a text response
-    if (response is Message.Tool.Call) {
-        // Handle tool call
-    } else {
-        // Handle text response
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
     }
-}
-```
-<!--- KNIT example-sessions-05.kt -->
+    -->
+    ```kotlin
+    llm.writeSession {
+        val response = requestLLM()
+
+        // The response might be a tool call or a text response
+        if (response is Message.Tool.Call) {
+            // Handle tool call
+        } else {
+            // Handle text response
+        }
+    }
+    ```
+    <!--- KNIT example-sessions-05.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    class exampleSessionsJava05 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        var response = session.requestLLM();
+
+        // The response might be a tool call or a text response
+        if (response instanceof Message.Tool.Call) {
+            // Handle tool call
+        } else {
+            // Handle text response
+        }
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava05.java -->
 
 In practice, you typically do not need to check the response type manually, as the agent graph handles this routing
 automatically.
 
 ### Structured and streaming requests
 
-For more advanced use cases, the platform provides methods for structured and streaming requests:
+For more advanced use cases, methods for structured and streaming requests are provided:
 
 1. `requestLLMStructured()`: requests the LLM to provide a response in a specific structured format.
 
 2. `requestLLMStructuredOneShot()`: similar to `requestLLMStructured()` but without retries or corrections.
 
-3. `requestLLMStreaming()`: makes a streaming request to the LLM, returning a flow of response chunks.
+3. `requestLLMStreaming()`: makes a streaming request to the LLM, returning a flow of response chunks. You can learn more about streaming on the [Streaming API](streaming-api.md) page.
 
 Example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.example.exampleParallelNodeExecution07.JokeRating
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.example.exampleParallelNodeExecution07.JokeRating
 
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    // Make a structured request
-    val structuredResponse = requestLLMStructured<JokeRating>()
-
-    // Make a streaming request
-    val responseStream = requestLLMStreaming()
-    responseStream.collect { chunk ->
-        // Process each chunk as it arrives
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
     }
-}
-```
-<!--- KNIT example-sessions-06.kt -->
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Make a structured request
+        val structuredResponse = requestLLMStructured<JokeRating>()
+
+        // Make a streaming request
+        val responseStream = requestLLMStreaming()
+        responseStream.collect { chunk ->
+            // Process each chunk as it arrives
+        }
+    }
+    ```
+    <!--- KNIT example-sessions-06.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava06 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        // Make a non-tool request
+        var responseWithoutTools = session.requestLLMWithoutTools();
+
+        // Make a streaming request
+        var responseStream = session.requestLLMStreaming();
+        // Process chunks from Flow.Publisher<StreamFrame>
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava06.java -->
 
 ## Managing conversation history
 
@@ -277,104 +482,215 @@ llm.writeSession {
 
 In a write session, you can add messages to the prompt (conversation history) using the `appendPrompt` method:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.RequestMetaInfo
-import kotlin.time.Clock
+=== "Kotlin"
 
-val myToolResult = Message.Tool.Result(
-    id = "",
-    tool = "",
-    content = "",
-    metaInfo = RequestMetaInfo(Clock.System.now())
-)
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.prompt.message.Message
+    import ai.koog.prompt.message.RequestMetaInfo
+    import kotlin.time.Clock
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    appendPrompt {
-        // Add a system message
-        system("You are a helpful assistant.")
+    val myToolResult = Message.Tool.Result(
+        id = "",
+        tool = "",
+        content = "",
+        metaInfo = RequestMetaInfo(Clock.System.now())
+    )
 
-        // Add a user message
-        user("Hello, can you help me with a coding question?")
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        appendPrompt {
+            // Add a system message
+            system("You are a helpful assistant.")
 
-        // Add an assistant message
-        assistant("Of course! What's your question?")
+            // Add a user message
+            user("Hello, can you help me with a coding question?")
 
-        // Add a tool result
-        tool {
-            result(myToolResult)
+            // Add an assistant message
+            assistant("Of course! What's your question?")
+
+            // Add a tool result
+            tool {
+                result(myToolResult)
+            }
         }
     }
-}
-```
-<!--- KNIT example-sessions-07.kt -->
+    ```
+    <!--- KNIT example-sessions-07.kt -->
 
-You can also completely rewrite the prompt using the `rewritePrompt` method:
+=== "Java"
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.prompt.message.Message
-
-val filteredMessages = emptyList<Message>()
-
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    rewritePrompt { oldPrompt ->
-        // Create a new prompt based on the old one
-        oldPrompt.copy(messages = filteredMessages)
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava07 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
     }
-}
-```
-<!--- KNIT example-sessions-08.kt -->
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        session.appendPrompt(promptBuilder -> {
+            // Add a system message
+            promptBuilder.system("You are a helpful assistant.");
+
+            // Add a user message
+            promptBuilder.user("Hello, can you help me with a coding question?");
+
+            // Add an assistant message
+            promptBuilder.assistant("Of course! What's your question?");
+
+            // Add follow-up context after tool execution
+            promptBuilder.assistant("Tool execution completed successfully.");
+            return null;
+        });
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava07.java -->
+
+You can also completely rewrite the prompt by assigning a new `Prompt` object to the `prompt` property:
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.prompt.message.Message
+
+    val filteredMessages = emptyList<Message>()
+
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Create a new prompt based on the old one
+        prompt = prompt.copy(messages = filteredMessages)
+    }
+    ```
+    <!--- KNIT example-sessions-08.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.dsl.Prompt;
+    class exampleSessionsJava08 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        var oldPrompt = session.getPrompt();
+        // Rebuild and replace the prompt (manual rewrite approach in Java)
+        session.setPrompt(
+            Prompt.builder(oldPrompt.getId())
+                .user("Retained summary of previous conversation")
+                .build()
+        );
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava08.java -->
 
 ### Automatic history update on response
 
 When you make an LLM request in a write session, the response is automatically added to the conversation history:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
 
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    // Add a user message
-    appendPrompt {
-        user("What's the capital of France?")
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
     }
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Add a user message
+        appendPrompt {
+            user("What's the capital of France?")
+        }
 
-    // Make a request – the response is automatically added to the history
-    val response = requestLLM()
+        // Make a request - the response is automatically added to the history
+        val response = requestLLM()
 
-    // The prompt now includes both the user message and the model's response
-}
-```
-<!--- KNIT example-sessions-09.kt -->
+        // The prompt now includes both the user message and the model's response
+    }
+    ```
+    <!--- KNIT example-sessions-09.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava09 {
+        public static void main(String[] args) {
+            var node = AIAgentNode.builder("node_name")
+                .withInput(String.class)
+                .withOutput(Void.class)
+                .withAction((input, ctx) -> {
+    -->
+    <!--- SUFFIX
+                    return null;
+                })
+                .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        // Add a user message
+        session.appendPrompt(promptBuilder -> {
+            promptBuilder.user("What's the capital of France?");
+            return null;
+        });
+
+        // Make a request - the response is automatically added to the history
+        var response = session.requestLLM();
+
+        // The prompt now includes both the user message and the model's response
+        return null;
+    });
+    ```
+    <!--- KNIT exampleSessionsJava09.java -->
 
 This automatic history update is the key feature of write sessions, ensuring that the conversation flows naturally.
 
@@ -383,26 +699,45 @@ This automatic history update is the key feature of write sessions, ensuring tha
 For long-running conversations, the history can grow large and consume a lot of tokens. The platform provides methods
 for compressing history:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+=== "Kotlin"
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    // Compress the history using a TLDR approach
-    replaceHistoryWithTLDR(HistoryCompressionStrategy.WholeHistory, preserveMemory = true)
-}
-```
-<!--- KNIT example-sessions-10.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Compress the history using a TLDR approach
+        replaceHistoryWithTLDR(HistoryCompressionStrategy.WholeHistory, preserveMemory = true)
+    }
+    ```
+    <!--- KNIT example-sessions-10.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava10 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Use the dedicated Java node for history compression.
+    var compressHistory = AIAgentNode.llmCompressHistory("compressHistory");
+    ```
+    <!--- KNIT exampleSessionsJava10.java -->
 
 You can also use the `nodeLLMCompressHistory` node in a strategy graph to compress history at specific points.
 
@@ -424,79 +759,118 @@ Write sessions provide several methods for calling tools:
 
 Example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.core.agent.session.callTool
-import ai.koog.agents.core.agent.session.callToolRaw
+=== "Kotlin"
 
-val myTool = AskUser
-val myArgs = AskUser.Args("this is a string")
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.ext.tool.AskUser
+    import ai.koog.agents.core.agent.session.callTool
+    import ai.koog.agents.core.agent.session.callToolRaw
 
-typealias MyTool = AskUser
+    val myTool = AskUser
+    val myArgs = AskUser.Args("this is a string")
+
+    typealias MyTool = AskUser
 
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    // Call a tool by reference
-    val result = callTool(myTool, myArgs)
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Call a tool by reference
+        val result = callTool(myTool, myArgs)
 
-    // Call a tool by name
-    val result2 = callTool("myToolName", myArgs)
+        // Call a tool by name
+        val result2 = callTool("myToolName", myArgs)
 
-    // Call a tool by class
-    val result3 = callTool(MyTool::class, myArgs)
+        // Call a tool by class
+        val result3 = callTool(MyTool::class, myArgs)
 
-    // Call a tool and get the raw result
-    val rawResult = callToolRaw("myToolName", myArgs)
-}
-```
-<!--- KNIT example-sessions-11.kt -->
+        // Call a tool and get the raw result
+        val rawResult = callToolRaw("myToolName", myArgs)
+    }
+    ```
+    <!--- KNIT example-sessions-11.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava11 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Java uses dedicated tool-execution nodes in graph strategies.
+    var executeTool = AIAgentNode.executeTool("executeTool");
+    var sendToolResult = AIAgentNode.llmSendToolResult("sendToolResult");
+    ```
+    <!--- KNIT exampleSessionsJava11.java -->
 
 ### Parallel tool runs
 
 To run multiple tools in parallel, write sessions provide extension functions on `Flow`:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.ext.tool.AskUser
-import kotlinx.coroutines.flow.flow
+=== "Kotlin"
 
-typealias MyTool = AskUser
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.ext.tool.AskUser
+    import kotlinx.coroutines.flow.flow
 
-val data = ""
-fun parseDataToArgs(data: String) = flow { emit(AskUser.Args(data)) }
+    typealias MyTool = AskUser
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    // Run tools in parallel
-    parseDataToArgs(data).toParallelToolCalls(MyTool::class).collect { result ->
-        // Process each result
+    val data = ""
+    fun parseDataToArgs(data: String) = flow { emit(AskUser.Args(data)) }
+
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
     }
+    -->
+    ```kotlin
+    llm.writeSession {
+        // Run tools in parallel
+        parseDataToArgs(data).toParallelToolCalls(MyTool::class).collect { result ->
+            // Process each result
+        }
 
-    // Run tools in parallel and get raw results
-    parseDataToArgs(data).toParallelToolCallsRaw(MyTool::class).collect { rawResult ->
-        // Process each raw result
+        // Run tools in parallel and get raw results
+        parseDataToArgs(data).toParallelToolCallsRaw(MyTool::class).collect { rawResult ->
+            // Process each raw result
+        }
     }
-}
-```
-<!--- KNIT example-sessions-12.kt -->
+    ```
+    <!--- KNIT example-sessions-12.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava12 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Java equivalent for multi-tool execution in parallel: use executeMultipleTools node.
+    var executeMultipleTools = AIAgentNode.executeMultipleTools(true, "executeMultipleTools");
+    ```
+    <!--- KNIT exampleSessionsJava12.java -->
 
 This is useful for processing large amounts of data efficiently.
 
@@ -536,25 +910,44 @@ block has completed. Make sure all session operations are performed within the s
 
 If your history becomes too large and consumes too many tokens, use history compression techniques:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+=== "Kotlin"
 
-val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    replaceHistoryWithTLDR(HistoryCompressionStrategy.FromLastNMessages(10), preserveMemory = true)
-}
-```
-<!--- KNIT example-sessions-13.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+        val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        replaceHistoryWithTLDR(HistoryCompressionStrategy.FromLastNMessages(10), preserveMemory = true)
+    }
+    ```
+    <!--- KNIT example-sessions-13.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleSessionsJava13 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Compress recent history with the Java compression node.
+    var compressHistory = AIAgentNode.llmCompressHistory("compressHistory");
+    ```
+    <!--- KNIT exampleSessionsJava13.java -->
 
 For more information, see [History compression](history-compression.md)
 
