@@ -390,9 +390,6 @@ Use the `messageFilter` property to filter events. For example, to trace only no
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import kotlinx.coroutines.runBlocking
-    import kotlinx.io.buffered
-    import kotlinx.io.files.Path
-    import kotlinx.io.files.SystemFileSystem
     const val input = "What's the weather like in New York?"
     fun main() {
     runBlocking {
@@ -401,10 +398,6 @@ Use the `messageFilter` property to filter events. For example, to trace only no
     promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
     ) {
-    val writer = TraceFeatureMessageFileWriter(
-    outputPath,
-    { path: Path -> SystemFileSystem.sink(path).buffered() }
-    )
     -->
     <!--- SUFFIX
             }
@@ -413,10 +406,7 @@ Use the `messageFilter` property to filter events. For example, to trace only no
     -->
     ```kotlin
     install(Tracing) {
-        val fileWriter = TraceFeatureMessageFileWriter(
-            outputPath, 
-            { path: Path -> SystemFileSystem.sink(path).buffered() }
-        )
+        val fileWriter = TraceFeatureMessageFileWriter.create(outputPath)
         addMessageProcessor(fileWriter)
         
         // Only trace LLM calls
@@ -430,14 +420,39 @@ Use the `messageFilter` property to filter events. For example, to trace only no
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent;
+    import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent;
+    import ai.koog.agents.features.tracing.feature.Tracing;
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    import java.nio.file.Files;
+    import java.nio.file.Path;
+    public class exampleEventsJava01 {
+        public static void main(String[] args) {
+            var outputPath = Path.of("/path/to/trace.log");
+            var agent = AIAgent.builder()
+                .promptExecutor(PromptExecutor.builder().ollama().build())
+                .llmModel(OllamaModels.Meta.LLAMA_3_2)
     -->
     <!--- SUFFIX
-    **/
+            .build();
+        }
+    }
     -->
     ```java
+    .install(Tracing.Feature, config -> {
+        var fileWriter = TraceFeatureMessageFileWriter.create(outputPath);
+        config.addMessageProcessor(fileWriter);
+
+        // Only trace LLM calls
+        fileWriter.setMessageFilter(message ->
+            message instanceof LLMCallStartingEvent || message instanceof LLMCallCompletedEvent
+        );
+    })
     ```
-    <!--- KNIT example-events-java-01.java -->
+    <!--- KNIT exampleEventsJava01.java -->
 
 ### Can I use multiple message processors?
 
@@ -461,7 +476,6 @@ Yes, you can add multiple message processors to trace to different destinations 
     import kotlinx.io.files.Path
     import kotlinx.io.files.SystemFileSystem
     const val input = "What's the weather like in New York?"
-    val syncOpener = { path: Path -> SystemFileSystem.sink(path).buffered() }
     val logger = KotlinLogging.logger {}
     val connectionConfig = DefaultServerConnectionConfig(host = ai.koog.agents.example.exampleTracing06.host, port = ai.koog.agents.example.exampleTracing06.port)
     fun main() {
@@ -480,7 +494,7 @@ Yes, you can add multiple message processors to trace to different destinations 
     ```kotlin
     install(Tracing) {
         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
-        addMessageProcessor(TraceFeatureMessageFileWriter(outputPath, syncOpener))
+        addMessageProcessor(TraceFeatureMessageFileWriter.create(outputPath))
         addMessageProcessor(TraceFeatureMessageRemoteWriter(connectionConfig))
     }
     ```
@@ -489,14 +503,37 @@ Yes, you can add multiple message processors to trace to different destinations 
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.tracing.feature.Tracing;
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter;
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageLogWriter;
+    import ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriter;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    import org.slf4j.LoggerFactory;
+    import java.nio.file.Files;
+    import java.nio.file.Path;
+    public class exampleEventsJava02 {
+        public static void main(String[] args) {
+            var logger = LoggerFactory.getLogger("tracing");
+            var outputPath = Path.of("/path/to/trace.log");
+            var agent = AIAgent.builder()
+                .promptExecutor(PromptExecutor.builder().ollama().build())
+                .llmModel(OllamaModels.Meta.LLAMA_3_2)
     -->
     <!--- SUFFIX
-    **/
+            .build();
+        }
+    }
     -->
     ```java
+    .install(Tracing.Feature, config -> {
+        config.addMessageProcessor(TraceFeatureMessageLogWriter.create(logger));
+        config.addMessageProcessor(TraceFeatureMessageFileWriter.create(outputPath));
+        config.addMessageProcessor(new TraceFeatureMessageRemoteWriter());
+    })
     ```
-    <!--- KNIT example-events-java-02.java -->
+    <!--- KNIT exampleEventsJava02.java -->
 
 ### How can I create a custom message processor?
 
@@ -513,54 +550,44 @@ Implement the `FeatureMessageProcessor` interface:
     import ai.koog.agents.features.tracing.feature.Tracing
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
     import ai.koog.prompt.executor.ollama.client.OllamaModels
-    import kotlinx.coroutines.runBlocking
     import kotlinx.coroutines.flow.MutableStateFlow
     import kotlinx.coroutines.flow.StateFlow
     import kotlinx.coroutines.flow.asStateFlow
+    import kotlinx.coroutines.runBlocking
     fun main() {
     runBlocking {
-    // Creating an agent
-    val agent = AIAgent(
-    promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2,
-    ) {
     -->
     <!--- SUFFIX
-            }
         }
     }
     -->
     ```kotlin
     class CustomTraceProcessor : FeatureMessageProcessor() {
 
-        // Current open state of the processor
-        private var _isOpen = MutableStateFlow(false)
-
-        override val isOpen: StateFlow<Boolean>
-            get() = _isOpen.asStateFlow()
-        
         override suspend fun processMessage(message: FeatureMessage) {
             // Custom processing logic
-            when (message) {
-                is NodeExecutionStartingEvent -> {
-                    // Process node start event
-                }
-
-                is LLMCallCompletedEvent -> {
-                    // Process LLM call end event 
-                }
-                // Handle other event types 
+            if (message is NodeExecutionStartingEvent) {
+                // Process node start event
+            } else if (message is LLMCallCompletedEvent) {
+                // Process LLM call end event
+            } else {
+                // Handle other event types
             }
         }
 
         override suspend fun close() {
-            // Close connections of established
+            // Close connections if established
         }
     }
 
-    // Use your custom processor
-    install(Tracing) {
-        addMessageProcessor(CustomTraceProcessor())
+    val agent = AIAgent(
+        promptExecutor = simpleOllamaAIExecutor(),
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+    ) {
+        install(Tracing) {
+            // Use your custom processor
+            addMessageProcessor(CustomTraceProcessor())
+        }
     }
     ```
     <!--- KNIT example-events-03.kt -->
@@ -568,13 +595,52 @@ Implement the `FeatureMessageProcessor` interface:
 === "Java"
 
     <!--- INCLUDE
-    /**
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.feature.message.FeatureMessage;
+    import ai.koog.agents.core.feature.message.FeatureMessageProcessor;
+    import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent;
+    import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent;
+    import ai.koog.agents.features.tracing.feature.Tracing;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    public class exampleEventsJava03 {
+        public static void main(String[] args) {
     -->
     <!--- SUFFIX
-    **/
+        }
+    }
     -->
     ```java
+    class CustomTraceProcessor extends FeatureMessageProcessor {
+
+        @Override
+        protected void handleMessage(FeatureMessage message) {
+            // Custom processing logic
+            if (message instanceof NodeExecutionStartingEvent) {
+                // Process node start event
+            } else if (message instanceof LLMCallCompletedEvent) {
+                // Process LLM call end event
+            } else {
+                // Handle other event types
+            }
+        }
+
+        @Override
+        public void handleClose() {
+            // Close connections if established
+        }
+    }
+
+    var agent = AIAgent.builder()
+        .promptExecutor(PromptExecutor.builder().ollama().build())
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+
+        .install(Tracing.Feature, config -> {
+            // Use your custom processor
+            config.addMessageProcessor(new CustomTraceProcessor());
+        })
+        .build();
     ```
-    <!--- KNIT example-events-java-03.java -->
+    <!--- KNIT exampleEventsJava03.java -->
 
 For more information about existing event types that can be handled by message processors, see [Predefined event types](#predefined-event-types).

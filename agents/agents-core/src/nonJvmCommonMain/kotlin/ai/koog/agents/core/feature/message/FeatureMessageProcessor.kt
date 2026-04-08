@@ -1,24 +1,22 @@
 package ai.koog.agents.core.feature.message
 
 import ai.koog.utils.io.Closeable
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Represents a provider responsible for handling outbound feature messages or events.
+ * Abstract class responsible for processing feature messages or events within the system.
  *
- * Feature processors are used to encapsulate feature-related logic and provide a common interface
- * for handling feature messages and events, such as
- *   - Node started
- *   - Node finished
- *   - Strategy started, etc.
+ * The `FeatureMessageProcessor` serves as a foundational interface for implementing processors
+ * that handle various feature-related messages. These messages, represented by the [FeatureMessage]
+ * type, encapsulate relevant information about events or updates in the system.
  *
- * Implementations of this interface are designed to process feature messages,
- * which are encapsulated in the [FeatureMessage] type and presented as a model
- * for an event to be sent to a target stream. These messages carry
- * information about various events or updates related to features in the system.
+ * This class provides mechanisms to filter incoming messages, manage processing states, and ensure
+ * proper handling through a defined workflow.
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-public expect abstract class FeatureMessageProcessor() : Closeable {
+public actual abstract class FeatureMessageProcessor actual constructor() : Closeable {
     /**
      * A filter for messages to be sent to message processors.
      *
@@ -27,7 +25,7 @@ public expect abstract class FeatureMessageProcessor() : Closeable {
      *
      * By default, all messages are processed (the filter returns true for all messages).
      */
-    public var messageFilter: (FeatureMessage) -> Boolean
+    public actual var messageFilter: (FeatureMessage) -> Boolean = { true }
         private set
 
     /**
@@ -38,33 +36,25 @@ public expect abstract class FeatureMessageProcessor() : Closeable {
      *
      * @param filter A lambda function that accepts a [FeatureMessage] and returns a boolean
      * indicating whether the message should be processed (`true`) or ignored (`false`).
-     *
-     * Example:
-     * ```kotlin
-     *   processor.setMessageFilter { message ->
-     *     message is LLMCallStartingEvent ||
-     *     message is LLMCallCompletedEvent
-     *   }
-     * ```
      */
-    public fun setMessageFilter(filter: (FeatureMessage) -> Boolean)
+    public actual fun setMessageFilter(filter: (FeatureMessage) -> Boolean) {
+        messageFilter = filter
+    }
 
-    /**
-     * A [StateFlow] representing the current open state of the processor.
-     */
-    public open val isOpen: StateFlow<Boolean>
+    private val _isOpen: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    /**
-     * Initializes the feature output stream provider to ensure it is ready for use.
-     */
-    public open suspend fun initialize()
+    /** A [StateFlow] representing the current open state of the processor. */
+    public actual open val isOpen: StateFlow<Boolean> = _isOpen.asStateFlow()
+
+    /** Initializes the feature output stream provider to ensure it is ready for use. */
+    public actual open suspend fun initialize() {}
 
     /**
      * Handles an incoming feature message or event for processing.
      *
      * @param message the feature message to be handled.
      */
-    protected open suspend fun processMessage(message: FeatureMessage)
+    protected actual open suspend fun processMessage(message: FeatureMessage) {}
 
     /**
      * Receives and processes an incoming feature message.
@@ -74,10 +64,12 @@ public expect abstract class FeatureMessageProcessor() : Closeable {
      *
      * @param message The incoming feature message to be evaluated and potentially processed.
      */
-    public suspend fun onMessage(message: FeatureMessage)
+    public actual suspend fun onMessage(message: FeatureMessage) {
+        if (messageFilter(message)) {
+            processMessage(message)
+        }
+    }
 
-    /**
-     * Releases resources held by this processor.
-     */
-    public open override suspend fun close()
+    /** Releases resources held by this processor. */
+    actual override suspend fun close() {}
 }
