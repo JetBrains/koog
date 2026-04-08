@@ -146,19 +146,26 @@ The code below represents a basic LLM configuration with core capabilities:
     import ai.koog.prompt.llm.LLMProvider;
     import ai.koog.prompt.llm.LLModel;
     import java.util.List;
+
+    public class ExampleModelCapabilities01 {
+    public static void main(String[] args) {
     -->
     ```java
     LLModel basicModel = new LLModel(
         LLMProvider.OpenAI,
         "gpt-4-turbo",
         List.of(
-            LLMCapability.Temperature,
-            LLMCapability.Tools,
-            LLMCapability.Schema.JSON.Standard
+            LLMCapability.Temperature.INSTANCE,
+            LLMCapability.Tools.INSTANCE,
+            LLMCapability.Schema.JSON.Standard.INSTANCE
         ),
         128_000L,
     );
     ```
+    <!--- SUFFIX
+    }
+    }
+    -->
     <!--- KNIT exampleModelCapabilitiesJava01.java -->
 
 The model configuration below is a multimodal LLM with vision capabilities:
@@ -193,6 +200,9 @@ The model configuration below is a multimodal LLM with vision capabilities:
     import ai.koog.prompt.llm.LLMProvider;
     import ai.koog.prompt.llm.LLModel;
     import java.util.List;
+
+    public class ExampleModelCapabilities02 {
+    public static void main(String[] args) {
     -->
     ```java
     LLModel visionModel = new LLModel(
@@ -207,6 +217,10 @@ The model configuration below is a multimodal LLM with vision capabilities:
         32_768L
     );
     ```
+    <!--- SUFFIX
+    }
+    }
+    -->
     <!--- KNIT exampleModelCapabilitiesJava02.java -->
 
 An LLM with audio processing capabilities:
@@ -240,6 +254,9 @@ An LLM with audio processing capabilities:
     import ai.koog.prompt.llm.LLMProvider;
     import ai.koog.prompt.llm.LLModel;
     import java.util.List;
+
+    public class ExampleModelCapabilities03 {
+    public static void main(String[] args) {
     -->
     ```java
     LLModel audioModel = new LLModel(
@@ -253,6 +270,10 @@ An LLM with audio processing capabilities:
         200_000L,
     );
     ```
+    <!--- SUFFIX
+    }
+    }
+    -->
     <!--- KNIT exampleModelCapabilitiesJava03.java -->
 
 
@@ -276,10 +297,17 @@ To use a predefined Ollama model, specify it as follows:
     <!--- INCLUDE
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.llm.LLModel;
+
+    public class ExampleModelCapabilities04 {
+    public static void main(String[] args) {
     -->
     ```java
     LLModel metaModel = OllamaModels.Meta.LLAMA_3_2;
     ```
+    <!--- SUFFIX
+    }
+    }
+    -->
     <!--- KNIT exampleModelCapabilitiesJava04.java -->
 
 
@@ -315,6 +343,9 @@ capability in the `capabilities` list:
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import java.util.Objects;
 
+    public class ExampleModelCapabilities05 {
+    public static void main(String[] args) {
+
     LLModel basicModel = OllamaModels.Meta.LLAMA_3_2;
     LLModel visionModel = OllamaModels.Meta.LLAMA_3_2;
     -->
@@ -331,6 +362,10 @@ capability in the `capabilities` list:
         .orElse(null);
     boolean hasFullJsonSupport = jsonCapability instanceof LLMCapability.Schema.JSON.Standard; // true
     ```
+    <!--- SUFFIX
+    }
+    }
+    -->
     <!--- KNIT exampleModelCapabilitiesJava05.java -->
 
 ### LLM capabilities by model
