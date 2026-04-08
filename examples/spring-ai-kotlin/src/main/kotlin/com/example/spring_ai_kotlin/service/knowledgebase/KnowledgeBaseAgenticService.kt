@@ -6,7 +6,6 @@ import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.rag.base.TextDocument
@@ -45,7 +44,7 @@ class KnowledgeBaseAgenticService(
     @OptIn(ExperimentalAgentsApi::class)
     suspend fun createAndRunAgent(userPrompt: String): String {
         val toolRegistry = ToolRegistry {
-            tool(::searchKnowledgeBase.asTool())
+            tool(::searchKnowledgeBase)
         }
 
         val agent = AIAgent(

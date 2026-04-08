@@ -3,8 +3,6 @@ package com.example.spring_ai_kotlin.service.deepresearch
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.tools.ToolRegistry
-import com.example.spring_ai_kotlin.service.deepresearch.model.Paper
-import com.example.spring_ai_kotlin.service.deepresearch.model.ResearchState
 import ai.koog.agents.planner.AIAgentPlanner
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
@@ -14,6 +12,8 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.serialization.typeToken
+import com.example.spring_ai_kotlin.service.deepresearch.model.Paper
+import com.example.spring_ai_kotlin.service.deepresearch.model.ResearchState
 import com.example.spring_ai_kotlin.service.deepresearch.tools.ArxivTools
 import kotlinx.serialization.Serializable
 

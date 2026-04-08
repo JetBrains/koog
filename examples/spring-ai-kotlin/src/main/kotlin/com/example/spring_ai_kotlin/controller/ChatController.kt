@@ -1,6 +1,6 @@
 package com.example.spring_ai_kotlin.controller
 
-import com.example.spring_ai_kotlin.service.customersupport.CustomerSupportSimpleService
+import com.example.spring_ai_kotlin.service.customersupport.CustomerSupportGraphService
 import com.example.spring_ai_kotlin.service.deepresearch.DeepLiteratureResearchService
 import com.example.spring_ai_kotlin.service.knowledgebase.KnowledgeBaseNaiveService
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -16,7 +16,7 @@ private val logger = KotlinLogging.logger {}
 @RestController
 class ChatController(
     val knowledgeBaseService: KnowledgeBaseNaiveService,
-    val customerSupportService: CustomerSupportSimpleService,
+    val customerSupportService: CustomerSupportGraphService,
     val literatureResearchService: DeepLiteratureResearchService
 ) {
 

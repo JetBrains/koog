@@ -4,21 +4,38 @@ import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.nodeDoNothing
+import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.ext.agent.subgraphWithTask
+import ai.koog.agents.features.persistence.jdbc.PostgresJdbcPersistenceStorageProvider
+import ai.koog.agents.longtermmemory.feature.LongTermMemory
+import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.feature.RollbackToolRegistry
+import ai.koog.agents.snapshot.feature.RollbackToolRegistry.Companion.invoke
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.StructureFixingParser
+import ai.koog.rag.base.TextDocument
+import ai.koog.rag.base.storage.SearchStorage
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.springframework.stereotype.Service
+import javax.sql.DataSource
 
 @Suppress("unused")
 @SerialName("SupportIntent")
@@ -94,25 +111,96 @@ class EcommerceSupportTools : ToolSet {
     }
 }
 
+class EcommerceSupportRollbackTools : ToolSet {
+    @Tool
+    @LLMDescription("Change the delivery address for an order if the order is still eligible.")
+    fun changeDeliveryAddressToHome(
+        @LLMDescription("The customer order ID") orderId: String,
+        @LLMDescription("The new delivery address") newAddress: String
+    ): String {
+        // Replace with a real API call
+        return """{"orderId":"$orderId","updated":true,"newAddress":"$newAddress"}"""
+    }
+}
+
 @Service
 class CustomerSupportGraphService(
     private val promptExecutor: PromptExecutor,
-    private val chatStorage: ChatHistoryProvider
+    private val chatStorage: ChatHistoryProvider,
+    private val dataSource: DataSource,
+    private val knowledgeBase: SearchStorage<TextDocument, SimilaritySearchRequest>
 ) {
 
+    @OptIn(ExperimentalAgentsApi::class)
     suspend fun createAndRunAgent(userPrompt: String, sessionId: String): String {
-        val toolRegistry = ToolRegistry {
-            tools(EcommerceSupportTools())
+        val systemPrompt = """
+            You are an e-commerce support assistant.
+            Be concise and policy-aware.
+            Never invent order data.
+            If order context is missing for an order-specific request, ask for it.
+        """.trimIndent()
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("ecommerce-support-level1") {
+                system(systemPrompt)
+            },
+            model = OpenAIModels.Chat.GPT5Nano,
+            maxAgentIterations = 20
+        )
+
+        val supportTools = EcommerceSupportTools()
+        val rollbackTools = EcommerceSupportRollbackTools()
+
+        val agent = AIAgent<String, String>(
+            promptExecutor = promptExecutor,
+            strategy = createControllableWorkflow(systemPrompt), // See IntentProcessingFlowchart.mermaid
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry {
+                tools(supportTools)
+            }
+        ) {
+            // Let the agent remember previous conversations:
+            install(ChatMemory) {
+                chatHistoryProvider = chatStorage
+                windowSize(20)
+            }
+
+            // Augment user requests with external knowledge from our vector database:
+            install(LongTermMemory) {
+                retrieval {
+                    storage = knowledgeBase
+                    searchStrategy = SimilaritySearchStrategy(
+                        topK = 4,
+                        similarityThreshold = 0.70
+                    )
+                    promptAugmenter = UserPromptAugmenter()
+                }
+            }
+
+            // Make agent fault-tolerant using Koog's persistence.
+            // The agent will recover from the exact graph node where it crashed:
+            install(Persistence) {
+                // Configure where to store the checkpoints:
+                storage = PostgresJdbcPersistenceStorageProvider(dataSource)
+
+                // Configure how to roll back side effects produced by specific tools:
+                rollbackToolRegistry = RollbackToolRegistry {
+                    registerRollback(
+                        toolFunction = supportTools::changeDeliveryAddress,
+                        rollbackToolFunction = rollbackTools::changeDeliveryAddressToHome
+                    )
+                }
+            }
         }
 
-        val systemPrompt = """
-        You are an e-commerce support assistant.
-        Be concise and policy-aware.
-        Never invent order data.
-        If order context is missing for an order-specific request, ask for it.
-    """.trimIndent()
+        return agent.run(
+            "My order 84721 hasn't arrived yet. Where is it?"
+        )
+    }
 
-        val strategy = strategy<String, String>("ecommerce_support_level1") {
+    // See IntentProcessingFlowchart.mermaid
+    private fun createControllableWorkflow(systemPrompt: String): AIAgentGraphStrategy<String, String> =
+        strategy<String, String>("ecommerce_support_level1") {
 
             // 1) Detect Intent
             val classifyRequest by nodeLLMRequestStructured<SupportRequest>(
@@ -185,14 +273,14 @@ class CustomerSupportGraphService(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
                 """
-            $systemPrompt
-
-            Handle this request as an ORDER STATUS case.
-            Use the order status tool and then answer the user clearly.
-
-            Request: ${req.userRequest}
-            Order ID: ${req.orderId}
-            """.trimIndent()
+                        $systemPrompt
+            
+                        Handle this request as an ORDER STATUS case.
+                        Use the order status tool and then answer the user clearly.
+            
+                        Request: ${req.userRequest}
+                        Order ID: ${req.orderId}
+                    """.trimIndent()
             }
 
             // 3c) Change address handler
@@ -200,15 +288,15 @@ class CustomerSupportGraphService(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
                 """
-            $systemPrompt
-
-            Handle this request as a CHANGE ADDRESS case.
-            Use the address-change tool if possible and explain the result.
-
-            Request: ${req.userRequest}
-            Order ID: ${req.orderId}
-            New address: ${req.newAddress}
-            """.trimIndent()
+                        $systemPrompt
+            
+                        Handle this request as a CHANGE ADDRESS case.
+                        Use the address-change tool if possible and explain the result.
+            
+                        Request: ${req.userRequest}
+                        Order ID: ${req.orderId}
+                        New address: ${req.newAddress}
+                    """.trimIndent()
             }
 
             // 3d) Refund / return handler
@@ -216,14 +304,14 @@ class CustomerSupportGraphService(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
                 """
-            $systemPrompt
-
-            Handle this request as a REFUND OR RETURN case.
-            Check eligibility first, then explain next steps.
-
-            Request: ${req.userRequest}
-            Order ID: ${req.orderId}
-            """.trimIndent()
+                        $systemPrompt
+            
+                        Handle this request as a REFUND OR RETURN case.
+                        Check eligibility first, then explain next steps.
+            
+                        Request: ${req.userRequest}
+                        Order ID: ${req.orderId}
+                    """.trimIndent()
             }
 
             // 3e) Fallback FAQ / policy handler
@@ -231,90 +319,76 @@ class CustomerSupportGraphService(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
                 """
-            $systemPrompt
-
-            Handle this request as a GENERAL FAQ / POLICY case.
-            Prefer using the policy tool when relevant.
-
-            Request: ${req.userRequest}
-            """.trimIndent()
+                        $systemPrompt
+            
+                        Handle this request as a GENERAL FAQ / POLICY case.
+                        Prefer using the policy tool when relevant.
+            
+                        Request: ${req.userRequest}
+                    """.trimIndent()
             }
+
+            val compressLLMHistory by nodeLLMCompressHistory<String>(
+                strategy = HistoryCompressionStrategy.Chunked(20)
+            )
+
+            val maybeCompressHistory by nodeDoNothing<String>()
 
             // Graph edges
             edge(nodeStart forwardTo classifyRequest)
 
             edge(
                 classifyRequest forwardTo checkContext
-                        onCondition { it.isSuccess }
-                        transformed { it.getOrThrow().data }
+                    onCondition { it.isSuccess }
+                    transformed { it.getOrThrow().data }
             )
 
             edge(
-                classifyRequest forwardTo nodeFinish
-                        onCondition { it.isFailure }
-                        transformed { "Sorry, I couldn't understand the request well enough. Please rephrase it." }
+                classifyRequest forwardTo maybeCompressHistory
+                    onCondition { it.isFailure }
+                    transformed { "Sorry, I couldn't understand the request well enough. Please rephrase it." }
             )
 
             edge(
                 checkContext forwardTo askForMoreInfo
-                        onCondition { it.needsMoreInfo }
+                    onCondition { it.needsMoreInfo }
             )
 
             edge(
                 checkContext forwardTo orderStatusFlow
-                        onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.ORDER_STATUS }
-                        transformed { it.request }
+                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.ORDER_STATUS }
+                    transformed { it.request }
             )
 
             edge(
                 checkContext forwardTo changeAddressFlow
-                        onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.CHANGE_ADDRESS }
-                        transformed { it.request }
+                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.CHANGE_ADDRESS }
+                    transformed { it.request }
             )
 
             edge(
                 checkContext forwardTo refundFlow
-                        onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.REFUND_OR_RETURN }
-                        transformed { it.request }
+                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.REFUND_OR_RETURN }
+                    transformed { it.request }
             )
 
             edge(
                 checkContext forwardTo faqFlow
-                        onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.OTHER }
-                        transformed { it.request }
+                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.OTHER }
+                    transformed { it.request }
             )
 
-            edge(askForMoreInfo forwardTo nodeFinish)
-            edge(orderStatusFlow forwardTo nodeFinish)
-            edge(changeAddressFlow forwardTo nodeFinish)
-            edge(refundFlow forwardTo nodeFinish)
-            edge(faqFlow forwardTo nodeFinish)
+            edge(askForMoreInfo forwardTo maybeCompressHistory)
+            edge(orderStatusFlow forwardTo maybeCompressHistory)
+            edge(changeAddressFlow forwardTo maybeCompressHistory)
+            edge(refundFlow forwardTo maybeCompressHistory)
+            edge(faqFlow forwardTo maybeCompressHistory)
+
+            edge(maybeCompressHistory forwardTo compressLLMHistory onCondition { tooManyTokensSpent() })
+            edge(maybeCompressHistory forwardTo nodeFinish onCondition { !tooManyTokensSpent() })
+            edge(compressLLMHistory forwardTo nodeFinish)
         }
 
-        val agentConfig = AIAgentConfig(
-            prompt = prompt("ecommerce-support-level1") {
-                system(systemPrompt)
-            },
-            model = OpenAIModels.Chat.GPT5Nano,
-            maxAgentIterations = 20
-        )
-
-        val agent = AIAgent<String, String>(
-            promptExecutor = promptExecutor,
-            strategy = strategy,
-            agentConfig = agentConfig,
-            toolRegistry = toolRegistry
-        )
-        {
-            install(ChatMemory) {
-                chatHistoryProvider = chatStorage
-                windowSize(20)
-            }
-        }
-
-        return agent.run(
-            "My order 84721 hasn't arrived yet. Where is it?"
-        )
-    }
+    private fun AIAgentGraphContextBase.tooManyTokensSpent(): Boolean = llm.prompt.latestTokenUsage > 100500
 
 }
