@@ -147,8 +147,7 @@ The code below represents a basic LLM configuration with core capabilities:
     import ai.koog.prompt.llm.LLModel;
     import java.util.List;
 
-    public class ExampleModelCapabilities01 {
-    public static void main(String[] args) {
+    class ExampleModelCapabilities01 {
     -->
     ```java
     LLModel basicModel = new LLModel(
@@ -159,14 +158,13 @@ The code below represents a basic LLM configuration with core capabilities:
             LLMCapability.Tools.INSTANCE,
             LLMCapability.Schema.JSON.Standard.INSTANCE
         ),
-        128_000L,
+        128_000L
     );
     ```
     <!--- SUFFIX
     }
-    }
     -->
-    <!--- KNIT exampleModelCapabilitiesJava01.java -->
+    <!--- KNIT example-model-capabilities-java-01.java -->
 
 The model configuration below is a multimodal LLM with vision capabilities:
 
@@ -201,15 +199,14 @@ The model configuration below is a multimodal LLM with vision capabilities:
     import ai.koog.prompt.llm.LLModel;
     import java.util.List;
 
-    public class ExampleModelCapabilities02 {
-    public static void main(String[] args) {
+    class ExampleModelCapabilities02 {
     -->
     ```java
     LLModel visionModel = new LLModel(
         LLMProvider.OpenAI,
         "gpt-4-vision",
         List.of(
-            LLMCapability.Temperature,
+            LLMCapability.Temperature.INSTANCE,
             LLMCapability.Vision.Image.INSTANCE,
             LLMCapability.MultipleChoices.INSTANCE
         ),
@@ -219,9 +216,8 @@ The model configuration below is a multimodal LLM with vision capabilities:
     ```
     <!--- SUFFIX
     }
-    }
     -->
-    <!--- KNIT exampleModelCapabilitiesJava02.java -->
+    <!--- KNIT example-model-capabilities-java-02.java -->
 
 An LLM with audio processing capabilities:
 
@@ -255,8 +251,7 @@ An LLM with audio processing capabilities:
     import ai.koog.prompt.llm.LLModel;
     import java.util.List;
 
-    public class ExampleModelCapabilities03 {
-    public static void main(String[] args) {
+    class ExampleModelCapabilities03 {
     -->
     ```java
     LLModel audioModel = new LLModel(
@@ -264,17 +259,16 @@ An LLM with audio processing capabilities:
         "claude-3-opus",
         List.of(
             LLMCapability.Audio.INSTANCE,
-            LLMCapability.Temperature,
+            LLMCapability.Temperature.INSTANCE,
             LLMCapability.PromptCaching.INSTANCE
         ),
-        200_000L,
+        200_000L
     );
     ```
     <!--- SUFFIX
     }
-    }
     -->
-    <!--- KNIT exampleModelCapabilitiesJava03.java -->
+    <!--- KNIT example-model-capabilities-java-03.java -->
 
 
 In addition to creating models as `LLModel` instances and having to specify all related parameters, Koog includes a
@@ -298,17 +292,15 @@ To use a predefined Ollama model, specify it as follows:
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.llm.LLModel;
 
-    public class ExampleModelCapabilities04 {
-    public static void main(String[] args) {
+    class ExampleModelCapabilities04 {
     -->
     ```java
     LLModel metaModel = OllamaModels.Meta.LLAMA_3_2;
     ```
     <!--- SUFFIX
     }
-    }
     -->
-    <!--- KNIT exampleModelCapabilitiesJava04.java -->
+    <!--- KNIT example-model-capabilities-java-04.java -->
 
 
 To check whether a model supports a specific capability use the `contains` method to check for the presence of the
@@ -343,19 +335,18 @@ capability in the `capabilities` list:
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import java.util.Objects;
 
-    public class ExampleModelCapabilities05 {
-    public static void main(String[] args) {
+    class ExampleModelCapabilities05 {
 
     LLModel basicModel = OllamaModels.Meta.LLAMA_3_2;
     LLModel visionModel = OllamaModels.Meta.LLAMA_3_2;
     -->
     ```java
     // Check if models support specific capabilities
-    boolean supportsTools = basicModel.supports(LLMCapability.Tools); // true
+    boolean supportsTools = basicModel.supports(LLMCapability.Tools.INSTANCE); // true
     boolean supportsVideo = visionModel.supports(LLMCapability.Vision.Video.INSTANCE); // false
 
     // Check for schema capabilities
-    var jsonCapability = basicModel.getCapabilities().stream()
+    LLMCapability jsonCapability = basicModel.getCapabilities().stream()
         .filter(c -> c instanceof LLMCapability.Schema.JSON)
         .map(c -> (LLMCapability.Schema.JSON) c)
         .findFirst()
@@ -364,9 +355,8 @@ capability in the `capabilities` list:
     ```
     <!--- SUFFIX
     }
-    }
     -->
-    <!--- KNIT exampleModelCapabilitiesJava05.java -->
+    <!--- KNIT example-model-capabilities-java-05.java -->
 
 ### LLM capabilities by model
 
