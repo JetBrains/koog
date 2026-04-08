@@ -41,10 +41,6 @@ jobs:
             test-group: "ai.koog.integration.tests.agent.AIAgent*"
             artifact-name: "agent-tests"
             os: ubuntu-latest
-          - job-name: "single-llm-executor-tests"
-            test-group: "ai.koog.integration.tests.executor.SingleLLMPromptExecutorIntegrationTest"
-            artifact-name: "single-llm-executor-tests"
-            os: ubuntu-latest
           - job-name: "multiple-llm-executor-tests"
             test-group: "ai.koog.integration.tests.executor.MultipleLLMPromptExecutorIntegrationTest"
             artifact-name: "multiple-llm-executor-tests"
@@ -98,7 +94,7 @@ jobs:
           role-duration-seconds: 10800  # 3 hours (3 * 60 * 60)
 
       - name: Verify AWS Identity and Bedrock access
-        if: ${{ matrix.job-name == 'bedrock-tests' }}
+        if: ${{ matrix.job-name == 'bedrock-tests' || matrix.job-name == 'other-executor-tests' }}
         run: |
           echo "Verifying AWS identity..."
           aws sts get-caller-identity
@@ -112,7 +108,7 @@ jobs:
           echo "Bedrock access verified!"
 
       - name: Run Bedrock Credentials Smoke Test
-        if: ${{ matrix.job-name == 'bedrock-tests' }}
+        if: ${{ matrix.job-name == 'bedrock-tests' || matrix.job-name == 'other-executor-tests' }}
         run: |
           echo "Running Bedrock credentials smoke test..."
           ./gradlew :integration-tests:cleanJvmTest :integration-tests:jvmTest --tests "ai.koog.integration.tests.BedrockCredentialsSmokeTest"
