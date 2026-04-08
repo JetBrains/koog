@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.deepseek
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -49,27 +50,43 @@ public class DeepSeekClientSettings(
 /**
  * Implementation of [LLMClient] for DeepSeek API.
  *
- * @param apiKey The API key for the DeepSeek API
  * @param settings The base URL, chat completion path, and timeouts for the DeepSeek API,
  * defaults to "https://api.deepseek.com" and 900s
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class DeepSeekLLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
 ) {
 
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = DEEPSEEK_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    override val clientName: String = DEEPSEEK_CLIENT_NAME
+
     private companion object {
+        private const val DEEPSEEK_CLIENT_NAME = "DeepSeekLLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 

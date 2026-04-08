@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -94,28 +95,46 @@ public class OpenAIClientSettings(
 
 /**
  * Implementation of [LLMClient] for OpenAI API.
- * Uses Ktor HttpClient to communicate with the OpenAI API.
  *
- * @param apiKey The API key for the OpenAI API
  * @param settings The base URL and timeouts for the OpenAI API, defaults to "https://api.openai.com" and 900 s
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public open class OpenAILLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenAIChatCompletionResponse, OpenAIChatCompletionStreamResponse>(
-    apiKey,
-    settings,
-    baseClient,
-    clock,
-    staticLogger,
-    toolsConverter
+    settings = settings,
+    httpClient = httpClient,
+    clock = clock,
+    logger = staticLogger,
+    toolsConverter = toolsConverter
 ),
     LLMEmbeddingProvider {
+
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenAIClientSettings = OpenAIClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            logger = staticLogger,
+            baseClient = baseClient,
+            clientName = OPENAI_CLIENT_NAME
+        ),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
 
     /**
      * Returns the specific implementation of the `LLMProvider` associated with this client.
@@ -167,8 +186,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             parallelToolCalls = chatParams.parallelToolCalls,
             prediction = chatParams.speculation?.let { OpenAIStaticContent(OpenAIContent.Text(it)) },
             presencePenalty = chatParams.presencePenalty,
-            promptCacheKey = chatParams.promptCacheKey,
-            reasoningEffort = chatParams.reasoningEffort,
+            promptCacheKey = chatParams.promptCacheKey, reasoningEffort = chatParams.reasoningEffort,
             responseFormat = responseFormat,
             safetyIdentifier = chatParams.safetyIdentifier,
             serviceTier = chatParams.serviceTier,
@@ -240,7 +258,10 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         return json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
     }
 
+    override val clientName: String = OPENAI_CLIENT_NAME
+
     private companion object {
+        private const val OPENAI_CLIENT_NAME = "OpenAILLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 
@@ -358,7 +379,12 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                         }
 
                         is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
-                            StreamFrame.ToolCallDelta(id = it.itemId, name = null, content = it.delta, index = it.outputIndex)
+                            StreamFrame.ToolCallDelta(
+                                id = it.itemId,
+                                name = null,
+                                content = it.delta,
+                                index = it.outputIndex
+                            )
                         }
 
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {

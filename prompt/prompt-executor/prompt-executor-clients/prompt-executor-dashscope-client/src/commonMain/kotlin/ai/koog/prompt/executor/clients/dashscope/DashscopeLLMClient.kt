@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.dashscope
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -44,28 +45,43 @@ public class DashscopeClientSettings(
 /**
  * Implementation of [AbstractOpenAILLMClient] for DashScope API using OpenAI-compatible endpoints.
  *
- * @param apiKey The API key for the DashScope API
  * @param settings The base URL, chat completion path, and timeouts for the DashScope API,
  * defaults to "https://dashscope-intl.aliyuncs.com/compatible-mode/v1" and 900s
- * @param baseClient HTTP client for making requests
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps
  */
 public class DashscopeLLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: DashscopeClientSettings = DashscopeClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DashscopeChatCompletionResponse, DashscopeChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
 ) {
 
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: DashscopeClientSettings = DashscopeClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = DASHSCOPE_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    override val clientName: String = DASHSCOPE_CLIENT_NAME
+
     private companion object {
+        private const val DASHSCOPE_CLIENT_NAME = "DashscopeLLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 

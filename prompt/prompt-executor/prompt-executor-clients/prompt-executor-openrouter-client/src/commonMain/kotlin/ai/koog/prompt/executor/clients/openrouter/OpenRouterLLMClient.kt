@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openrouter
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -58,27 +59,43 @@ public class OpenRouterClientSettings(
  * Implementation of [LLMClient] for OpenRouter API.
  * OpenRouter is an API that routes requests to multiple LLM providers.
  *
- * @param apiKey The API key for the OpenRouter API
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class OpenRouterLLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenRouterChatCompletionResponse, OpenRouterChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
 ),
     LLMEmbeddingProvider {
 
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = OPENROUTER_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    override val clientName: String = OPENROUTER_CLIENT_NAME
+
     private companion object {
+        private const val OPENROUTER_CLIENT_NAME = "OpenRouterLLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 

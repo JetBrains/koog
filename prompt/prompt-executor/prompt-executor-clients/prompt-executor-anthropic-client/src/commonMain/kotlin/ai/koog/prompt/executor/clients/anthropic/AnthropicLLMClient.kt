@@ -44,14 +44,6 @@ import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.request.header
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
@@ -90,53 +82,64 @@ public class AnthropicClientSettings(
  * It leverages Kotlin Coroutines to handle asynchronous operations and provides full support for configuring HTTP
  * requests, including timeout handling and JSON serialization.
  *
- * @constructor Creates an instance of the AnthropicSuspendableDirectClient.
- * @param apiKey The API key required to authenticate with the Anthropic service.
  * @param settings Configurable settings for the Anthropic client, which include the base URL and other options.
- * @param baseClient An optional custom configuration for the underlying HTTP client, defaulting to a Ktor client.
+ * @param httpClient A preconfigured Koog HTTP client used for API calls. Must have authentication and other
+ *   request defaults already embedded. To use a Ktor-backed client with standard defaults, use the secondary
+ *   constructor that accepts an API key and an [io.ktor.client.HttpClient].
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class AnthropicLLMClient @JvmOverloads constructor(
-    private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    protected val httpClient: KoogHttpClient,
     private val clock: Clock = Clock.System
 ) : LLMClient() {
 
     private companion object {
+        private const val ANTHROPIC_CLIENT_NAME = "AnthropicLLMClient"
+
         private val logger = KotlinLogging.logger { }
+        private val json = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            encodeDefaults = true // Ensure default values are included in serialization
+            explicitNulls = false
+            namingStrategy = JsonNamingStrategy.SnakeCase
+        }
+
+        private fun createConfiguredHttpClient(
+            apiKey: String,
+            settings: AnthropicClientSettings,
+            baseClient: HttpClient = HttpClient()
+        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
+            clientName = ANTHROPIC_CLIENT_NAME,
+            logger = logger,
+            baseClient = baseClient,
+            baseUrl = settings.baseUrl,
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = json,
+            headers = mapOf(
+                "x-api-key" to apiKey,
+                "anthropic-version" to settings.apiVersion
+            ),
+        )
     }
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        encodeDefaults = true // Ensure default values are included in serialization
-        explicitNulls = false
-        namingStrategy = JsonNamingStrategy.SnakeCase
-    }
-
-    // Configures HTTP client with timeouts, headers, and JSON handling
-    protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
-        clientName = clientName,
-        logger = logger,
-        baseClient = baseClient
-    ) {
-        defaultRequest {
-            url(settings.baseUrl)
-            contentType(ContentType.Application.Json)
-            header("x-api-key", apiKey)
-            header("anthropic-version", settings.apiVersion)
-        }
-        install(SSE)
-        install(ContentNegotiation) {
-            json(json)
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis // Increase timeout to 60 seconds
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
-        }
-    }
+    /**
+     * Secondary constructor for creating an Anthropic client from a base Ktor HTTP client.
+     */
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: AnthropicClientSettings = AnthropicClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, baseClient),
+        clock = clock
+    )
 
     /**
      * Provides the specific Large Language Model (LLM) provider used by the client.
@@ -146,6 +149,8 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
      *
      * @return The LLM provider associated with this client, specifically `LLMProvider.Anthropic`.
      */
+    override val clientName: String = ANTHROPIC_CLIENT_NAME
+
     override fun llmProvider(): LLMProvider = LLMProvider.Anthropic
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {

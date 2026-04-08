@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.mistralai
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -41,6 +42,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Clock
 
 /**
@@ -63,27 +65,43 @@ public class MistralAIClientSettings(
 /**
  * Implementation of [LLMClient] for Mistral AI.
  *
- * @param apiKey The API key for the Mistral AI API
  * @param settings The base URL, chat completion path, and timeouts for the Mistral AI
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps
  */
-public open class MistralAILLMClient(
-    apiKey: String,
+public open class MistralAILLMClient @JvmOverloads constructor(
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter,
 ),
     LLMEmbeddingProvider {
 
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: MistralAIClientSettings = MistralAIClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = MISTRALAI_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    override val clientName: String = MISTRALAI_CLIENT_NAME
+
     private companion object {
+        private const val MISTRALAI_CLIENT_NAME = "MistralAILLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 

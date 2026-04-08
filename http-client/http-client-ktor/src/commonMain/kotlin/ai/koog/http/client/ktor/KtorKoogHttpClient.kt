@@ -8,10 +8,15 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngineConfig
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -20,14 +25,17 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.ApiStatus.Experimental
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
@@ -212,3 +220,63 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}
 ): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)
+
+/**
+ * Creates an instance of `KoogHttpClient` using Ktor's `HttpClient` and additional configuration options.
+ *
+ * This method combines a base `HttpClient` with predefined configurations for request handling,
+ * such as timeouts, headers, query parameters, content type, and optional Server-Sent Events (SSE) support.
+ *
+ * @param clientName The name assigned to the client instance, used for logging and traceability purposes.
+ * @param logger A `KLogger` instance for logging client operations and errors.
+ * @param baseClient The base Ktor `HttpClient` instance to be used. Defaults to a new `HttpClient` instance.
+ * @param baseUrl The base URL for all HTTP requests made through this client.
+ * @param requestTimeoutMillis The timeout in milliseconds for HTTP requests.
+ * @param connectTimeoutMillis The timeout in milliseconds for establishing a connection.
+ * @param socketTimeoutMillis The timeout in milliseconds for socket operations.
+ * @param json A `Json` instance used for serializing request bodies and deserializing responses.
+ * @param headers A map of default HTTP headers to include in every request. Defaults to an empty map.
+ * @param queryParameters A map of default query parameters to include in every request. Defaults to an empty map.
+ * @param withSse A flag indicating whether the client should support Server-Sent Events (SSE). Defaults to `true`.
+ * @return A `KoogHttpClient` instance configured with the specified parameters and options.
+ */
+@Experimental
+@JvmOverloads
+public fun KoogHttpClient.Companion.fromKtorClient(
+    clientName: String,
+    logger: KLogger,
+    baseClient: HttpClient = HttpClient(),
+    baseUrl: String,
+    requestTimeoutMillis: Long,
+    connectTimeoutMillis: Long,
+    socketTimeoutMillis: Long,
+    json: Json,
+    headers: Map<String, String> = emptyMap(),
+    queryParameters: Map<String, String> = emptyMap(),
+    withSse: Boolean = true,
+): KoogHttpClient = KoogHttpClient.fromKtorClient(
+    clientName = clientName,
+    logger = logger,
+    baseClient = baseClient
+) {
+    defaultRequest {
+        url(baseUrl)
+        contentType(ContentType.Application.Json)
+        headers.forEach { (name, value) -> header(name, value) }
+        queryParameters.forEach { (name, value) -> url.parameters.append(name, value) }
+    }
+
+    if (withSse) {
+        install(SSE)
+    }
+
+    install(ContentNegotiation) {
+        json(json)
+    }
+
+    install(HttpTimeout) {
+        this.requestTimeoutMillis = requestTimeoutMillis
+        this.connectTimeoutMillis = connectTimeoutMillis
+        this.socketTimeoutMillis = socketTimeoutMillis
+    }
+}
