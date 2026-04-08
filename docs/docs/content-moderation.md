@@ -618,6 +618,7 @@ In Koog, the structure of the response above maps to the following response:
     import ai.koog.prompt.dsl.ModerationCategoryResult;
     import ai.koog.prompt.dsl.ModerationResult;
     import ai.koog.prompt.dsl.ModerationResult.InputType;
+    import java.util.HashMap;
     import java.util.Map;
     import java.util.List;
 
@@ -629,24 +630,21 @@ In Koog, the structure of the response above maps to the following response:
     }
     -->
     ```java
-    ModerationResult result = new ModerationResult(
-        true,
-        Map.of(
-            ModerationCategory.Harassment, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.HarassmentThreatening, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Hate, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.HateThreatening, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Sexual, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SexualMinors, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Violence, new ModerationCategoryResult(false, 0.0145, List.of()),
-            ModerationCategory.ViolenceGraphic, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarm, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarmIntent, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarmInstructions, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Illicit, new ModerationCategoryResult(true, 0.9998, List.of(InputType.TEXT)),
-            ModerationCategory.IllicitViolent, new ModerationCategoryResult(true, 0.9876, List.of(InputType.TEXT))
-        )
-    );
+        Map<ModerationCategory, ModerationCategoryResult> categories = new HashMap<>();
+        categories.put(ModerationCategory.Harassment.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.HarassmentThreatening.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Hate.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.HateThreatening.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Sexual.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SexualMinors.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Violence.INSTANCE, new ModerationCategoryResult(false, 0.0145, List.of()));
+        categories.put(ModerationCategory.ViolenceGraphic.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SelfHarm.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SelfHarmIntent.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SelfHarmInstructions.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Illicit.INSTANCE, new ModerationCategoryResult(true, 0.9998, List.of(InputType.TEXT)));
+        categories.put(ModerationCategory.IllicitViolent.INSTANCE, new ModerationCategoryResult(true, 0.9876, List.of(InputType.TEXT)));
+        ModerationResult result = new ModerationResult(true, categories);
     ```
     <!--- KNIT example-content-moderation-java-05.java -->
 
@@ -729,29 +727,35 @@ In Koog, the OpenAI response above is presented as follows:
     import ai.koog.prompt.dsl.ModerationCategory;
     import ai.koog.prompt.dsl.ModerationCategoryResult;
     import ai.koog.prompt.dsl.ModerationResult;
+    import java.util.HashMap;
     import java.util.Map;
     import java.util.List;
+
+    class ExampleContentModeration06 {
+        public void main() {
+    -->
+    <!--- SUFFIX
+        }
+    }
     -->
     ```java
-    ModerationResult result = new ModerationResult(
-        false,
-        Map.of(
-            ModerationCategory.Harassment, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.HarassmentThreatening, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Hate, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.HateThreatening, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Sexual, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SexualMinors, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Violence, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.ViolenceGraphic, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarm, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarmIntent, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.SelfHarmInstructions, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.Illicit, new ModerationCategoryResult(false, 0.0001, List.of()),
-            ModerationCategory.IllicitViolent, new ModerationCategoryResult(false, 0.0001, List.of())
-        )
-    );
+        Map<ModerationCategory, ModerationCategoryResult> categories = new HashMap<>();
+        categories.put(ModerationCategory.Harassment.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.HarassmentThreatening.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Hate.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.HateThreatening.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Sexual.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SexualMinors.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Violence.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.ViolenceGraphic.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SelfHarm.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SelfHarmIntent.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.SelfHarmInstructions.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.Illicit.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        categories.put(ModerationCategory.IllicitViolent.INSTANCE, new ModerationCategoryResult(false, 0.0001, List.of()));
+        ModerationResult result = new ModerationResult(false, categories);
     ```
+    <!--- KNIT example-content-moderation-java-06.java -->
 
 ### Ollama moderation example (harmful content)
 
@@ -808,28 +812,35 @@ This is translated to the following result in Koog:
     import ai.koog.prompt.dsl.ModerationCategory;
     import ai.koog.prompt.dsl.ModerationCategoryResult;
     import ai.koog.prompt.dsl.ModerationResult;
+    import java.util.HashMap;
     import java.util.Map;
+    import java.util.List;
+
+    class ExampleContentModeration07 {
+        public void main() {
+    -->
+    <!--- SUFFIX
+        }
+    }
     -->
     ```java
-    ModerationResult result = new ModerationResult(
-        true,
-        Map.of(
-            ModerationCategory.Harassment, new ModerationCategoryResult(false),
-            ModerationCategory.HarassmentThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Hate, new ModerationCategoryResult(true),    // from S10
-            ModerationCategory.HateThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Sexual, new ModerationCategoryResult(false),
-            ModerationCategory.SexualMinors, new ModerationCategoryResult(false),
-            ModerationCategory.Violence, new ModerationCategoryResult(false),
-            ModerationCategory.ViolenceGraphic, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarm, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmIntent, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmInstructions, new ModerationCategoryResult(false),
-            ModerationCategory.Illicit, new ModerationCategoryResult(true),    // from S1
-            ModerationCategory.IllicitViolent, new ModerationCategoryResult(true)     // from S1
-        )
-    );
+    Map<ModerationCategory, ModerationCategoryResult> categories = new HashMap<>();
+    categories.put(ModerationCategory.Harassment.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.HarassmentThreatening.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Hate.INSTANCE, new ModerationCategoryResult(true, null, List.of()));    // from S10
+    categories.put(ModerationCategory.HateThreatening.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Sexual.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SexualMinors.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Violence.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.ViolenceGraphic.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SelfHarm.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SelfHarmIntent.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SelfHarmInstructions.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Illicit.INSTANCE, new ModerationCategoryResult(true, null, List.of()));    // from S1
+    categories.put(ModerationCategory.IllicitViolent.INSTANCE, new ModerationCategoryResult(true, null, List.of()));     // from S1
+    ModerationResult result = new ModerationResult(true, categories);
     ```
+    <!--- KNIT example-content-moderation-java-07.java -->
 
 ### Ollama moderation example (safe content)
 
@@ -879,25 +890,32 @@ Koog translates the response in the following way:
     import ai.koog.prompt.dsl.ModerationCategory;
     import ai.koog.prompt.dsl.ModerationCategoryResult;
     import ai.koog.prompt.dsl.ModerationResult;
+    import java.util.HashMap;
     import java.util.Map;
+    import java.util.List;
+
+    class ExampleContentModeration08 {
+        public void main() {
+    -->
+    <!--- SUFFIX
+        }
+    }
     -->
     ```java
-    ModerationResult result = new ModerationResult(
-        false,
-        Map.of(
-            ModerationCategory.Harassment, new ModerationCategoryResult(false),
-            ModerationCategory.HarassmentThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Hate, new ModerationCategoryResult(false),
-            ModerationCategory.HateThreatening, new ModerationCategoryResult(false),
-            ModerationCategory.Sexual, new ModerationCategoryResult(false),
-            ModerationCategory.SexualMinors, new ModerationCategoryResult(false),
-            ModerationCategory.Violence, new ModerationCategoryResult(false),
-            ModerationCategory.ViolenceGraphic, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarm, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmIntent, new ModerationCategoryResult(false),
-            ModerationCategory.SelfHarmInstructions, new ModerationCategoryResult(false),
-            ModerationCategory.Illicit, new ModerationCategoryResult(false),
-            ModerationCategory.IllicitViolent, new ModerationCategoryResult(false)
-        )
-    );
+    Map<ModerationCategory, ModerationCategoryResult> categories = new HashMap<>();
+    categories.put(ModerationCategory.Harassment.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.HarassmentThreatening.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Hate.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.HateThreatening.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Sexual.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SexualMinors.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Violence.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.ViolenceGraphic.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SelfHarm.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SelfHarmIntent.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.SelfHarmInstructions.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.Illicit.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    categories.put(ModerationCategory.IllicitViolent.INSTANCE, new ModerationCategoryResult(false, null, List.of()));
+    ModerationResult result = new ModerationResult(false, categories);
     ```
+    <!--- KNIT example-content-moderation-java-08.java -->
