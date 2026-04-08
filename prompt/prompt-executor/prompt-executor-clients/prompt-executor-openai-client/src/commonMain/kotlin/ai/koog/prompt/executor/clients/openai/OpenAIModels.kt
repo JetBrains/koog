@@ -771,6 +771,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 // ToDo add Batch endpoint as well, see KG-719
             ) + reasoningCapabilities,
             contextLength = 1_050_000,
@@ -805,6 +807,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
             ) + reasoningCapabilities,
             contextLength = 1_050_000,
             maxOutputTokens = 128_000,
