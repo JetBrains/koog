@@ -271,7 +271,7 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Schema.JSON.Standard,
         ) + thinkingCapabilities,
         contextLength = 200_000,
-        maxOutputTokens = 1_000_000,
+        maxOutputTokens = 128_000,
     )
 
     /**
