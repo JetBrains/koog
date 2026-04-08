@@ -48,6 +48,23 @@ public fun buildDatadogExporter(
         .build()
 }
 
+internal fun OpenTelemetryConfig.addDatadogExporterImpl(
+    datadogApiKey: String? = null,
+    datadogSite: String? = null,
+    timeout: Duration? = null,
+    traceAttributes: Map<String, String>? = null,
+) {
+    addSpanExporter(buildDatadogExporter(datadogApiKey, datadogSite, timeout ?: 10.seconds))
+
+    if (traceAttributes != null && traceAttributes.isNotEmpty()) {
+        addResourceAttributes(
+            traceAttributes.map { (key, value) ->
+                AttributeKey.stringKey(key) to value
+            }.toMap()
+        )
+    }
+}
+
 /**
  * Configure an OpenTelemetry span exporter that sends data to [Datadog](https://www.datadoghq.com/)
  * via direct OTLP intake.
@@ -69,18 +86,10 @@ public fun buildDatadogExporter(
 public fun OpenTelemetryConfig.addDatadogExporter(
     datadogApiKey: String? = null,
     datadogSite: String? = null,
-    timeout: Duration = 10.seconds,
-    traceAttributes: Map<String, String> = emptyMap(),
+    timeout: Duration? = null,
+    traceAttributes: Map<String, String>? = null,
 ) {
-    addSpanExporter(buildDatadogExporter(datadogApiKey, datadogSite, timeout))
-
-    if (traceAttributes.isNotEmpty()) {
-        addResourceAttributes(
-            traceAttributes.map { (key, value) ->
-                AttributeKey.stringKey(key) to value
-            }.toMap()
-        )
-    }
+    addDatadogExporterImpl(datadogApiKey, datadogSite, timeout, traceAttributes)
 }
 
 private val logger = KotlinLogging.logger { }
