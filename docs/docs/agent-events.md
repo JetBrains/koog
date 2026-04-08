@@ -436,6 +436,24 @@ Use the `messageFilter` property to filter events. For example, to trace only no
     **/
     -->
     ```java
+    // Create a file writer for the trace output
+    var fileWriter = new TraceFeatureMessageFileWriter<>(
+        outputPath,
+        path -> SystemFileSystem.INSTANCE.sink(path).buffered()
+    );
+
+    // Only trace LLM calls
+    fileWriter.setMessageFilter(message ->
+        message instanceof LLMCallStartingEvent || message instanceof LLMCallCompletedEvent
+    );
+
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .install(Tracing.Feature, cfg -> {
+            cfg.addMessageProcessor(fileWriter);
+        })
+        .build();
     ```
     <!--- KNIT example-events-java-01.java -->
 
@@ -495,6 +513,19 @@ Yes, you can add multiple message processors to trace to different destinations 
     **/
     -->
     ```java
+    var logger = KotlinLogging.INSTANCE.logger("my-agent-trace");
+    var syncOpener = (Function1<Path, Sink>) path -> SystemFileSystem.INSTANCE.sink(path).buffered();
+    var connectionConfig = new DefaultServerConnectionConfig("localhost", 50881, false, null);
+
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .install(Tracing.Feature, cfg -> {
+            cfg.addMessageProcessor(new TraceFeatureMessageLogWriter(logger));
+            cfg.addMessageProcessor(new TraceFeatureMessageFileWriter<>(outputPath, syncOpener));
+            cfg.addMessageProcessor(new TraceFeatureMessageRemoteWriter(connectionConfig));
+        })
+        .build();
     ```
     <!--- KNIT example-events-java-02.java -->
 
@@ -574,6 +605,42 @@ Implement the `FeatureMessageProcessor` interface:
     **/
     -->
     ```java
+    class CustomTraceProcessor extends FeatureMessageProcessor {
+
+        private final MutableStateFlow<Boolean> _isOpen = StateFlowKt.MutableStateFlow(true);
+
+        @Override
+        public StateFlow<Boolean> getIsOpen() {
+            return _isOpen;
+        }
+
+        @Override
+        protected Object processMessage(FeatureMessage message, Continuation<? super Unit> completion) {
+            // Custom processing logic
+            if (message instanceof NodeExecutionStartingEvent) {
+                // Process node start event
+            } else if (message instanceof LLMCallCompletedEvent) {
+                // Process LLM call end event
+            }
+            // Handle other event types
+            return Unit.INSTANCE;
+        }
+
+        @Override
+        public Object close(Continuation<? super Unit> completion) {
+            // Close connections if established
+            return Unit.INSTANCE;
+        }
+    }
+
+    // Use your custom processor
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .install(Tracing.Feature, cfg -> {
+            cfg.addMessageProcessor(new CustomTraceProcessor());
+        })
+        .build();
     ```
     <!--- KNIT example-events-java-03.java -->
 
