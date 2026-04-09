@@ -627,7 +627,7 @@ public class OpenTelemetry {
                 )
 
                 eventContext.responses.lastOrNull()?.metaInfo?.inputTokensCount?.toLong()?.let { inputTokens ->
-                    metricCollector.addCounterMetricEvent(
+                    metricCollector.recordHistogramMetricEvent(
                         metricEvent = createLLMInputTokensMetricEvent(
                             id = eventContext.eventId,
                             model = eventContext.model,
@@ -637,7 +637,7 @@ public class OpenTelemetry {
                 }
 
                 eventContext.responses.lastOrNull()?.metaInfo?.outputTokensCount?.toLong()?.let { outputTokens ->
-                    metricCollector.addCounterMetricEvent(
+                    metricCollector.recordHistogramMetricEvent(
                         metricEvent = createLLMOutputTokensMetricEvent(
                             id = eventContext.eventId,
                             model = eventContext.model,

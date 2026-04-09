@@ -30,12 +30,12 @@ internal fun createLLMCallDurationHistogramMetricEvent(
     model: LLModel,
     duration: Duration
 ): HistogramMetricEvent {
-    val attributes =
-        listOf(
-            GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
-            GenAIAttributes.Provider.Name(model.provider),
-            GenAIAttributes.Response.Model(model)
-        )
+    val attributes = buildList {
+        add(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
+        add(GenAIAttributes.Provider.Name(model.provider))
+        add(GenAIAttributes.Request.Model(model))
+        add(GenAIAttributes.Response.Model(model))
+    }
 
     return HistogramMetricEvent(
         id = id,
@@ -52,12 +52,11 @@ internal fun createExecuteToolDurationHistogramMetricEvent(
     toolCallStatus: KoogAttributes.Koog.Tool.Call.StatusType,
     duration: Duration
 ): HistogramMetricEvent {
-    val attributes =
-        listOf(
-            GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
-            GenAIAttributes.Tool.Name(toolName),
-            KoogAttributes.Koog.Tool.Call.Status(toolCallStatus)
-        )
+    val attributes = buildList {
+        add(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+        add(GenAIAttributes.Tool.Name(toolName))
+        add(KoogAttributes.Koog.Tool.Call.Status(toolCallStatus))
+    }
 
     return HistogramMetricEvent(
         id = id,

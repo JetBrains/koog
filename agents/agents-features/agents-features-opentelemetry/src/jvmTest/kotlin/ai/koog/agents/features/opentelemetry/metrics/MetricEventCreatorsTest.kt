@@ -36,13 +36,14 @@ class MetricEventCreatorsTest {
         )
 
         assertEquals("gen_ai.client.token.usage", event.metricName)
-        assertEquals(inputTokens, event.value)
+        assertEquals(inputTokens.toDouble(), event.value)
 
         // Verify attributes using toSdkAttributes
         val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Provider.Name(LLMProvider.OpenAI)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT)))
+        assertTrue(sdkAttributes.contains(GenAIAttributes.Request.Model(testModel)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Response.Model(testModel)))
     }
 
@@ -56,13 +57,14 @@ class MetricEventCreatorsTest {
         )
 
         assertEquals("gen_ai.client.token.usage", event.metricName)
-        assertEquals(outputTokens, event.value)
+        assertEquals(outputTokens.toDouble(), event.value)
 
         // Verify attributes using toSdkAttributes
         val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Provider.Name(LLMProvider.OpenAI)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT)))
+        assertTrue(sdkAttributes.contains(GenAIAttributes.Request.Model(testModel)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Response.Model(testModel)))
     }
 
@@ -82,6 +84,7 @@ class MetricEventCreatorsTest {
         val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Provider.Name(LLMProvider.OpenAI)))
+        assertTrue(sdkAttributes.contains(GenAIAttributes.Request.Model(testModel)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Response.Model(testModel)))
     }
 

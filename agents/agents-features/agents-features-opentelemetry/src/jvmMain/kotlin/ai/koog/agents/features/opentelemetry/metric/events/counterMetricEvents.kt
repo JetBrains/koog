@@ -4,6 +4,7 @@ import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.metric.CounterMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
+import ai.koog.agents.features.opentelemetry.metric.HistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.KoogMetrics
 import ai.koog.prompt.llm.LLModel
 import kotlin.time.Clock
@@ -12,19 +13,20 @@ internal fun createLLMInputTokensMetricEvent(
     id: String,
     inputTokens: Long,
     model: LLModel
-): CounterMetricEvent {
+): HistogramMetricEvent {
     val attributes = listOf(
         GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
         GenAIAttributes.Provider.Name(model.provider),
         GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT),
+        GenAIAttributes.Request.Model(model),
         GenAIAttributes.Response.Model(model)
     )
 
-    return CounterMetricEvent(
+    return HistogramMetricEvent(
         id = id,
         timestamp = Clock.System.now(),
         metricName = GenAIMetrics.Client.Token.Usage.name,
-        value = inputTokens,
+        value = inputTokens.toDouble(),
         attributes = attributes
     )
 }
@@ -33,19 +35,20 @@ internal fun createLLMOutputTokensMetricEvent(
     id: String,
     outputTokens: Long,
     model: LLModel
-): CounterMetricEvent {
+): HistogramMetricEvent {
     val attributes = listOf(
         GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
         GenAIAttributes.Provider.Name(model.provider),
         GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT),
+        GenAIAttributes.Request.Model(model),
         GenAIAttributes.Response.Model(model)
     )
 
-    return CounterMetricEvent(
+    return HistogramMetricEvent(
         id = id,
         timestamp = Clock.System.now(),
         metricName = GenAIMetrics.Client.Token.Usage.name,
-        value = outputTokens,
+        value = outputTokens.toDouble(),
         attributes = attributes
     )
 }
