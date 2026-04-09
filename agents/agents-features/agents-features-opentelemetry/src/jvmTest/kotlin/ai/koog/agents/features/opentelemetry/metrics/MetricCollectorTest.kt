@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.metrics
 
+import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Token.TokenType
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
@@ -30,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class MetricCollectorTest {
     companion object {
-        private const val tokenCountMetricName = "gen_ai.client.token.usage"
+        private const val tokenUsageMetricName = "gen_ai.client.token.usage"
         private const val toolCallCountMetricName = "koog.gen_ai.client.tool.call.count"
         private const val operationDurationMetricName = "gen_ai.client.operation.duration"
 
@@ -45,8 +46,8 @@ class MetricCollectorTest {
             contextLength = 8_192,
         )
 
-        val countersAmount = 2
-        val histogramsAmount = 1
+        val countersAmount = 1
+        val histogramsAmount = 2
     }
 
     @Test
@@ -60,7 +61,7 @@ class MetricCollectorTest {
         val config = OpenTelemetryConfig()
         MetricCollector(meter, config)
 
-        // Two counters and one histogram should be created
+        // One counter and two histograms should be created
         assertEquals(countersAmount, meter.buildCounter.size)
         assertEquals(histogramsAmount, meter.buildHistogram.size)
 
@@ -70,14 +71,14 @@ class MetricCollectorTest {
     }
 
     @Test
-    fun testMetricCollectorToCreateTokenCounter() {
+    fun testMetricCollectorToCreateTokenUsageHistogram() {
         val meter = TestMeter()
         val config = OpenTelemetryConfig()
         MetricCollector(meter, config)
 
         assertContains(
-            meter.buildCounter,
-            Metric(tokenCountMetricName, "Number of input and output tokens used", "{token}")
+            meter.buildHistogram,
+            Metric(tokenUsageMetricName, "Number of input and output tokens used", "{token}")
         )
     }
 
@@ -115,7 +116,7 @@ class MetricCollectorTest {
         val inputTokenSpend = 100L
         val outputTokenSpend = 200L
 
-        metricCollector.addCounterMetricEvent(
+        metricCollector.recordHistogramMetricEvent(
             createLLMInputTokensMetricEvent(
                 id = "test-id",
                 model = model,
@@ -123,7 +124,7 @@ class MetricCollectorTest {
             )
         )
 
-        metricCollector.addCounterMetricEvent(
+        metricCollector.recordHistogramMetricEvent(
             createLLMOutputTokensMetricEvent(
                 id = "test-id",
                 model = model,
@@ -131,23 +132,21 @@ class MetricCollectorTest {
             )
         )
 
-        assertEquals(countersAmount + 2, meter.counterValues.size)
-
-        // Token Count Metric
-        // Check values of the token count metric
-        val tokenCountRecords = meter.getRecordsByCounterName(tokenCountMetricName)
+        // Token Usage Metric (histogram)
+        // Check values of the token usage metric
+        val tokenUsageRecords = meter.getRecordsByHistogramName(tokenUsageMetricName)
 
         assertContentEquals(
-            listOf(0, inputTokenSpend, outputTokenSpend),
-            tokenCountRecords.map { it.value }
+            listOf(inputTokenSpend.toDouble(), outputTokenSpend.toDouble()),
+            tokenUsageRecords.map { it.value }
         )
 
-        // Check values' attributes of the input count metric
-        val inputTokenAttributes = tokenCountRecords.getOrNull(1)?.attributes
+        // Check values' attributes of the input token metric
+        val inputTokenAttributes = tokenUsageRecords.getOrNull(0)?.attributes
         assertLlmModelAttributes(inputTokenAttributes, model, model.provider)
         assertLlmModelTokenAttribute(inputTokenAttributes, TokenType.INPUT)
 
-        val outputTokenAttributes = tokenCountRecords.getOrNull(2)?.attributes
+        val outputTokenAttributes = tokenUsageRecords.getOrNull(1)?.attributes
         assertLlmModelAttributes(outputTokenAttributes, model, model.provider)
         assertLlmModelTokenAttribute(outputTokenAttributes, TokenType.OUTPUT)
     }
@@ -168,8 +167,6 @@ class MetricCollectorTest {
                 duration = duration
             )
         )
-
-        assertEquals(histogramsAmount, meter.buildHistogram.size)
 
         // Operation Duration Metric
         // Check values of the operation duration metric
@@ -205,6 +202,7 @@ class MetricCollectorTest {
             )
         }
         assertTrue { attributes.contains(GenAIAttributes.Provider.Name(modelProvider)) }
+        assertTrue { attributes.contains(GenAIAttributes.Request.Model(model)) }
         assertTrue { attributes.contains(GenAIAttributes.Response.Model(model)) }
     }
 
@@ -244,8 +242,8 @@ class MetricCollectorTest {
             val toolCallCountAttributes =
                 meter.getRecordsByCounterName(toolCallCountMetricName).getOrNull(1)?.attributes
 
-            // Check values' attributes of the input count metric
-            assertToolCallAttributes(toolCallCountAttributes, toolCallName, status)
+            // Check values' attributes of the tool call count metric
+            assertToolCallCountAttributes(toolCallCountAttributes, toolCallName, status)
 
             // Record duration
             metricCollector.recordHistogramMetricEvent(
@@ -253,7 +251,8 @@ class MetricCollectorTest {
                     id = "test-id",
                     duration = duration,
                     toolName = toolCallName,
-                    toolCallStatus = status
+                    toolCallStatus = status,
+                    model = model
                 )
             )
 
@@ -270,11 +269,40 @@ class MetricCollectorTest {
                 meter.getRecordsByHistogramName(operationDurationMetricName).getOrNull(0)
 
             // Check values' attributes of the operation duration metric
-            assertToolCallAttributes(operationDurationMetric?.attributes, toolCallName, status)
+            assertToolCallDurationAttributes(operationDurationMetric?.attributes, toolCallName, status, model)
         }
     }
 
-    private fun assertToolCallAttributes(
+    @Test
+    fun testMetricCollectorToProcessToolCallWithErrorType() {
+        val meter = TestMeter()
+        val config = OpenTelemetryConfig()
+        val metricCollector = MetricCollector(meter, config)
+
+        val toolCallName = "test-tool"
+        val duration = 100.milliseconds
+        val errorMessage = "Tool execution failed"
+
+        metricCollector.recordHistogramMetricEvent(
+            createExecuteToolDurationHistogramMetricEvent(
+                id = "test-id",
+                duration = duration,
+                toolName = toolCallName,
+                toolCallStatus = StatusType.ERROR,
+                model = model,
+                errorType = errorMessage
+            )
+        )
+
+        val operationDurationMetric =
+            meter.getRecordsByHistogramName(operationDurationMetricName).getOrNull(0)
+
+        val attributes = operationDurationMetric?.attributes
+        assertNotNull(attributes)
+        assertTrue { attributes.contains(CommonAttributes.Error.Type(errorMessage)) }
+    }
+
+    private fun assertToolCallCountAttributes(
         attributes: Attributes?,
         toolCallName: String,
         status: StatusType,
@@ -285,6 +313,23 @@ class MetricCollectorTest {
                 GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL)
             )
         }
+        assertTrue { attributes.contains(GenAIAttributes.Tool.Name(toolCallName)) }
+        assertTrue { attributes.contains(KoogAttributes.Koog.Tool.Call.Status(status)) }
+    }
+
+    private fun assertToolCallDurationAttributes(
+        attributes: Attributes?,
+        toolCallName: String,
+        status: StatusType,
+        model: LLModel,
+    ) {
+        assertNotNull(attributes)
+        assertTrue {
+            attributes.contains(
+                GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL)
+            )
+        }
+        assertTrue { attributes.contains(GenAIAttributes.Provider.Name(model.provider)) }
         assertTrue { attributes.contains(GenAIAttributes.Tool.Name(toolCallName)) }
         assertTrue { attributes.contains(KoogAttributes.Koog.Tool.Call.Status(status)) }
     }

@@ -10,12 +10,22 @@ import ai.koog.agents.features.opentelemetry.metric.events.createToolCallCounter
 import ai.koog.agents.features.opentelemetry.metrics.mock.TestMeter
 import ai.koog.agents.features.opentelemetry.metrics.mock.getRecordsByCounterName
 import ai.koog.agents.features.opentelemetry.metrics.mock.getRecordsByHistogramName
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 
 class MetricAdapterTest {
+
+    private val testModel = LLModel(
+        provider = LLMProvider.OpenAI,
+        id = "gpt-4",
+        capabilities = listOf(LLMCapability.Tools, LLMCapability.Temperature),
+        contextLength = 8192
+    )
 
     @Test
     fun testRestrictToolNameCardinalityWithAllowedTool() {
@@ -89,7 +99,8 @@ class MetricAdapterTest {
                 id = "test-id",
                 duration = duration,
                 toolName = toolName,
-                toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
+                toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS,
+                model = testModel
             )
         )
 

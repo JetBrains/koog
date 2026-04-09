@@ -9,12 +9,21 @@ import kotlin.test.assertTrue
 class MetricFactoryTest {
 
     @Test
-    fun testCreateTokenCounterMetric() {
-        val metric = MetricFactory.createTokenCounterMetric()
+    fun testCreateTokenUsageHistogramMetric() {
+        val metric = MetricFactory.createTokenUsageHistogramMetric()
 
         assertEquals("gen_ai.client.token.usage", metric.name)
         assertEquals("Number of input and output tokens used", metric.description)
         assertEquals("{token}", metric.unit)
+
+        assertNotNull(metric.boundariesAdvice)
+        assertTrue(metric.boundariesAdvice.isNotEmpty())
+
+        val expectedBoundaries = listOf(
+            1.0, 4.0, 16.0, 64.0, 256.0, 1024.0, 4096.0, 16384.0, 65536.0,
+            262144.0, 1048576.0, 4194304.0, 16777216.0, 67108864.0
+        )
+        assertEquals(expectedBoundaries, metric.boundariesAdvice)
     }
 
     @Test

@@ -3,11 +3,13 @@ package ai.koog.agents.features.opentelemetry.metric
 internal object MetricFactory {
 
     /**
-     * Build and register a Counter instrument for tracking GenAI token usage.
+     * Build and register a Histogram instrument for tracking GenAI token usage.
      *
      * The instrument name, description, and unit are taken from [GenAIMetrics.Client.Token.Usage].
-     * This counter is created according to the OpenTelemetry Metrics API. It is pre-initialized with
-     * a zero value to make the instrument visible to exporters even if no data points were recorded yet.
+     * This histogram is created according to the OpenTelemetry GenAI semantic conventions.
+     * It SHOULD be specified with ExplicitBucketBoundaries of
+     * [1, 4, 16, 64, 256, 1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216, 67108864]
+     * tokens to provide a meaningful distribution for token usage.
      *
      * Metric attributes when recording values (per GenAI semantic conventions):
      * - gen_ai.operation.name (required)
@@ -18,10 +20,15 @@ internal object MetricFactory {
      * - server.address (recommended)
      * - server.port (conditionally required, if server.address is set)
      */
-    internal fun createTokenCounterMetric(): CounterMetric = object : CounterMetric {
+    internal fun createTokenUsageHistogramMetric(): HistogramMetric = object : HistogramMetric {
         override val name: String = GenAIMetrics.Client.Token.Usage.name
         override val description: String = GenAIMetrics.Client.Token.Usage.description
         override val unit: String = GenAIMetrics.Client.Token.Usage.unit
+
+        override val boundariesAdvice: List<Double> = listOf(
+            1.0, 4.0, 16.0, 64.0, 256.0, 1024.0, 4096.0, 16384.0, 65536.0,
+            262144.0, 1048576.0, 4194304.0, 16777216.0, 67108864.0
+        )
     }
 
     /**

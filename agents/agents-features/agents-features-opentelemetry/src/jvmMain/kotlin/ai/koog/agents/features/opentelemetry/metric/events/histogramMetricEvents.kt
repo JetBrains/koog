@@ -1,6 +1,8 @@
 package ai.koog.agents.features.opentelemetry.metric.events
 
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.agents.features.opentelemetry.attribute.Attribute
+import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.metric.BaseMetricEvent
@@ -28,14 +30,18 @@ internal fun AgentLifecycleEventContext.toTimestampedMetricEvent(): BaseMetricEv
 internal fun createLLMCallDurationHistogramMetricEvent(
     id: String,
     model: LLModel,
-    duration: Duration
+    duration: Duration,
+    errorType: String? = null
 ): HistogramMetricEvent {
-    val attributes =
-        listOf(
-            GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION),
-            GenAIAttributes.Provider.Name(model.provider),
-            GenAIAttributes.Response.Model(model)
-        )
+    val attributes = buildList<Attribute> {
+        add(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION))
+        add(GenAIAttributes.Provider.Name(model.provider))
+        add(GenAIAttributes.Request.Model(model))
+        add(GenAIAttributes.Response.Model(model))
+        if (errorType != null) {
+            add(CommonAttributes.Error.Type(errorType))
+        }
+    }
 
     return HistogramMetricEvent(
         id = id,
@@ -50,14 +56,19 @@ internal fun createExecuteToolDurationHistogramMetricEvent(
     id: String,
     toolName: String,
     toolCallStatus: KoogAttributes.Koog.Tool.Call.StatusType,
-    duration: Duration
+    duration: Duration,
+    model: LLModel,
+    errorType: String? = null
 ): HistogramMetricEvent {
-    val attributes =
-        listOf(
-            GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
-            GenAIAttributes.Tool.Name(toolName),
-            KoogAttributes.Koog.Tool.Call.Status(toolCallStatus)
-        )
+    val attributes = buildList<Attribute> {
+        add(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+        add(GenAIAttributes.Provider.Name(model.provider))
+        add(GenAIAttributes.Tool.Name(toolName))
+        add(KoogAttributes.Koog.Tool.Call.Status(toolCallStatus))
+        if (errorType != null) {
+            add(CommonAttributes.Error.Type(errorType))
+        }
+    }
 
     return HistogramMetricEvent(
         id = id,

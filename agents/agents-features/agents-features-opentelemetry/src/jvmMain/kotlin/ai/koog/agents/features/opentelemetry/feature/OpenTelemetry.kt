@@ -627,7 +627,7 @@ public class OpenTelemetry {
                 )
 
                 eventContext.responses.lastOrNull()?.metaInfo?.inputTokensCount?.toLong()?.let { inputTokens ->
-                    metricCollector.addCounterMetricEvent(
+                    metricCollector.recordHistogramMetricEvent(
                         metricEvent = createLLMInputTokensMetricEvent(
                             id = eventContext.eventId,
                             model = eventContext.model,
@@ -637,7 +637,7 @@ public class OpenTelemetry {
                 }
 
                 eventContext.responses.lastOrNull()?.metaInfo?.outputTokensCount?.toLong()?.let { outputTokens ->
-                    metricCollector.addCounterMetricEvent(
+                    metricCollector.recordHistogramMetricEvent(
                         metricEvent = createLLMOutputTokensMetricEvent(
                             id = eventContext.eventId,
                             model = eventContext.model,
@@ -736,7 +736,8 @@ public class OpenTelemetry {
                             id = eventContext.eventId,
                             duration = Clock.System.now() - storedMetricEvent.timestamp,
                             toolName = eventContext.toolName,
-                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS,
+                            model = eventContext.context.config.model
                         )
                     )
                 }
@@ -768,7 +769,9 @@ public class OpenTelemetry {
                             id = eventContext.eventId,
                             duration = Clock.System.now() - storedMetricEvent.timestamp,
                             toolName = eventContext.toolName,
-                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR,
+                            model = eventContext.context.config.model,
+                            errorType = eventContext.error?.message
                         )
                     )
                 }
@@ -800,13 +803,38 @@ public class OpenTelemetry {
                             id = eventContext.eventId,
                             duration = Clock.System.now() - storedMetricEvent.timestamp,
                             toolName = eventContext.toolName,
-                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED,
+                            model = eventContext.context.config.model,
+                            errorType = eventContext.error.message
                         )
                     )
                 }
             }
 
             //endregion Tool Call
+
+            //region LLM Streaming
+
+            pipeline.interceptLLMStreamingStarting(this) intercept@{ eventContext ->
+                // Store timestamp for streaming LLM call duration measurement
+                metricCollector.storeMetricEvent(eventContext.toTimestampedMetricEvent())
+            }
+
+            pipeline.interceptLLMStreamingFailed(this) intercept@{ eventContext ->
+                // Record LLM call duration on streaming failure with error.type attribute
+                metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
+                    metricCollector.recordHistogramMetricEvent(
+                        metricEvent = createLLMCallDurationHistogramMetricEvent(
+                            id = eventContext.eventId,
+                            model = eventContext.model,
+                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            errorType = eventContext.error::class.simpleName ?: eventContext.error.message
+                        )
+                    )
+                }
+            }
+
+            //endregion LLM Streaming
         }
 
         /**

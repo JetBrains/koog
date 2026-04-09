@@ -20,8 +20,8 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
     }
 
     init {
-        MetricFactory.createTokenCounterMetric().let {
-            counters[it.name] = addCounterMetric(it)
+        MetricFactory.createTokenUsageHistogramMetric().let {
+            histograms[it.name] = addHistogramMetric(it)
         }
 
         MetricFactory.createToolCallCounterMetric().let {
