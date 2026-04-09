@@ -18,16 +18,16 @@ import kotlin.jvm.JvmField
  * Google Gemini models and their capabilities.
  * See https://ai.google.dev/gemini-api/docs for more information.
  *
- * | Name                        | Speed     | Price (per 1M tokens)        | Input                            | Output              |
- * |-----------------------------|-----------|------------------------------|----------------------------------|---------------------|
- * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini3_Pro_Preview]       | Slow      | $2.00-$4.00 / $12.00-$18.00  | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini3_Flash_Preview]     | Fast      | $0.50 / $3                   | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | Name                        | Speed     | Price (per 1M tokens)        | Input                                       | Output              |
+ * |-----------------------------|-----------|------------------------------|---------------------------------------------|---------------------|
+ * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini3_Pro_Preview]       | Slow      | $2.00-$4.00 / $12.00-$18.00  | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini3_Flash_Preview]     | Fast      | $0.50 / $3                   | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
  *
  * @see <a href="modelcards.withgoogle.com/model-cards">
  */
@@ -78,6 +78,7 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash.pdf">
      */
+    @Deprecated("Use Gemini2_5Flash instead")
     @JvmField
     public val Gemini2_0Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
@@ -90,6 +91,7 @@ public object GoogleModels : LLModelDefinitions {
     /**
      * Specific version of Gemini 2.0 Flash
      */
+    @Deprecated("Use Gemini2_5Flash instead")
     @JvmField
     public val Gemini2_0Flash001: LLModel = Gemini2_0Flash.copy(
         id = "gemini-2.0-flash-001",
@@ -104,6 +106,7 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash-lite.pdf">
      */
+    @Deprecated("Use Gemini2_5FlashLite instead")
     @JvmField
     public val Gemini2_0FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
