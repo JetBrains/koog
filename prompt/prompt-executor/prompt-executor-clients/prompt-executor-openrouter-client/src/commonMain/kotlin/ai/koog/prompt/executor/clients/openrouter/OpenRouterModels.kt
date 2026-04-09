@@ -220,7 +220,7 @@ public object OpenRouterModels : LLModelDefinitions {
             LLMCapability.ToolChoice
         ),
         contextLength = 200_000,
-        maxOutputTokens = 1_000_000,
+        maxOutputTokens = 128_000,
     )
 
     /**
