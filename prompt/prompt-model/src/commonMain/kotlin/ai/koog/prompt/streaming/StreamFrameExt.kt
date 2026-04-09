@@ -28,10 +28,11 @@ public fun Message.Response.toStreamFrames(index: Int? = null): List<StreamFrame
             }
 
             is Message.Reasoning -> {
-                parts.forEach { add(StreamFrame.ReasoningDelta(it.text, null, index)) }
-                summary?.forEach { add(StreamFrame.ReasoningDelta(null, it.text, index)) }
+                parts.forEach { add(StreamFrame.ReasoningDelta(id = id, text = it.text, summary = null, index = index)) }
+                summary?.forEach { add(StreamFrame.ReasoningDelta(id = id, text = null, summary = it.text, index = index)) }
                 add(
                     StreamFrame.ReasoningComplete(
+                        id = id,
                         parts.map { it.text },
                         summary?.map { it.text },
                         encrypted,
@@ -75,6 +76,7 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
         reasoningCompleteFrames.forEach {
             add(
                 Message.Reasoning(
+                    id = it.id,
                     parts = it.text.map { textPart -> ContentPart.Text(textPart) },
                     summary = it.summary?.map { summaryPart -> ContentPart.Text(summaryPart) },
                     encrypted = it.encrypted,

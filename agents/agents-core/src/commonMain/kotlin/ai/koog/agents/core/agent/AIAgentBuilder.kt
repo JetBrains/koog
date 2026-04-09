@@ -80,6 +80,18 @@ public class GraphAgentBuilder<Input, Output>(
     }
 
     /**
+     * Installs a new feature into the GraphAgentBuilder.
+     *
+     * @param featureInstaller A lambda function that utilizes the FeatureContext to define the feature to be installed.
+     * @return The updated instance of GraphAgentBuilder with the newly added feature.
+     */
+    public fun install(
+        featureInstaller: FeatureContext.() -> Unit,
+    ): GraphAgentBuilder<Input, Output> = apply {
+        this.featureInstallers += featureInstaller
+    }
+
+    /**
      * Builds and returns an instance of `AIAgent` configured using the parameters
      * provided to the `GraphAgentBuilder`.
      *

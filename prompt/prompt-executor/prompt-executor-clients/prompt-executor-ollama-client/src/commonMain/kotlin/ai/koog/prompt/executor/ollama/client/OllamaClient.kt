@@ -302,10 +302,10 @@ public class OllamaClient @JvmOverloads constructor(
                     val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                     chunk.message?.let { message ->
                         if (message.content.isNotEmpty()) {
-                            emitTextDelta(message.content)
+                            emitTextDelta(text = message.content)
                         }
                         if (message.thinking.isNullOrEmpty().not()) {
-                            emitReasoningDelta(message.thinking)
+                            emitReasoningDelta(text = message.thinking)
                         }
                         message.toolCalls?.forEachIndexed { index, toolCall ->
                             val name = toolCall.function.name

@@ -122,7 +122,8 @@ public object MistralAIModels : LLModelDefinitions {
                 LLMCapability.Speculation,
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.Thinking,
             ),
             contextLength = 128_000
         )

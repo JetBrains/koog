@@ -48,6 +48,7 @@ internal class StreamFrameExtTest {
     @Test
     fun testMessageReasoningToStreamFrames() {
         val message = Message.Reasoning(
+            id = "rs_123",
             parts = listOf(
                 ContentPart.Text("Thinking step 1"),
                 ContentPart.Text("Thinking step 2")
@@ -60,10 +61,11 @@ internal class StreamFrameExtTest {
         )
 
         val expectedFrames = listOf(
-            StreamFrame.ReasoningDelta(text = "Thinking step 1"),
-            StreamFrame.ReasoningDelta(text = "Thinking step 2"),
-            StreamFrame.ReasoningDelta(summary = "Summary"),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 1"),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 2"),
+            StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary"),
             StreamFrame.ReasoningComplete(
+                id = "rs_123",
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),
                 "encrypted_content"
@@ -94,6 +96,7 @@ internal class StreamFrameExtTest {
     fun testListOfMessageResponsesToStreamFrames() {
         val messages = listOf(
             Message.Reasoning(
+                id = "rs_123",
                 parts = listOf(
                     ContentPart.Text("Thinking step 1"),
                     ContentPart.Text("Thinking step 2")
@@ -120,10 +123,11 @@ internal class StreamFrameExtTest {
         )
 
         val expectedFrames = listOf(
-            StreamFrame.ReasoningDelta(text = "Thinking step 1", index = 0),
-            StreamFrame.ReasoningDelta(text = "Thinking step 2", index = 0),
-            StreamFrame.ReasoningDelta(summary = "Summary", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 1", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 2", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary", index = 0),
             StreamFrame.ReasoningComplete(
+                id = "rs_123",
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),
                 "encrypted_content",
@@ -183,10 +187,11 @@ internal class StreamFrameExtTest {
     @Test
     fun testStreamFramesToMessageReasoning() {
         val frames = listOf(
-            StreamFrame.ReasoningDelta("Thinking step 1"),
-            StreamFrame.ReasoningDelta("Thinking step 2"),
-            StreamFrame.ReasoningDelta(summary = "Summary"),
+            StreamFrame.ReasoningDelta(id = "rs_123", "Thinking step 1"),
+            StreamFrame.ReasoningDelta(id = "rs_123", "Thinking step 2"),
+            StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary"),
             StreamFrame.ReasoningComplete(
+                id = "rs_123",
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),
                 "encrypted_content"
@@ -196,6 +201,7 @@ internal class StreamFrameExtTest {
 
         val expectedMessages = listOf(
             Message.Reasoning(
+                id = "rs_123",
                 parts = listOf(ContentPart.Text("Thinking step 1"), ContentPart.Text("Thinking step 2")),
                 summary = listOf(ContentPart.Text("Summary")),
                 encrypted = "encrypted_content",
@@ -233,10 +239,11 @@ internal class StreamFrameExtTest {
     @Test
     fun testStreamFramesToListOfMessageResponses() {
         val frames = listOf(
-            StreamFrame.ReasoningDelta(text = "Thinking step 1", index = 0),
-            StreamFrame.ReasoningDelta(text = "Thinking step 2", index = 0),
-            StreamFrame.ReasoningDelta(summary = "Summary", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 1", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 2", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary", index = 0),
             StreamFrame.ReasoningComplete(
+                id = "rs_123",
                 listOf("Thinking step 1", "Thinking step 2"),
                 listOf("Summary"),
                 "encrypted_content",
@@ -252,6 +259,7 @@ internal class StreamFrameExtTest {
 
         val expectedMessages = listOf(
             Message.Reasoning(
+                id = "rs_123",
                 parts = listOf(ContentPart.Text("Thinking step 1"), ContentPart.Text("Thinking step 2")),
                 summary = listOf(ContentPart.Text("Summary")),
                 encrypted = "encrypted_content",
@@ -304,7 +312,7 @@ internal class StreamFrameExtTest {
     @Test
     fun testToReasoningMessageOrNull() {
         val framesWithReasoning = listOf(
-            StreamFrame.ReasoningComplete(listOf("Thinking")),
+            StreamFrame.ReasoningComplete(id = "rs_123", listOf("Thinking")),
             StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
 

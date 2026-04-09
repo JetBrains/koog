@@ -64,7 +64,7 @@ public object GoogleModels : LLModelDefinitions {
     )
 
     /**
-     * Full capabilities including standard, multimodal, tools and native structured output
+     * Full capabilities including standard, multimodal, tools, native structured output
      */
     private val fullCapabilities: List<LLMCapability> =
         standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities
@@ -133,7 +133,7 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_5Pro: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-pro",
-        capabilities = fullCapabilities,
+        capabilities = fullCapabilities + LLMCapability.Thinking,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )
@@ -147,7 +147,7 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash",
-        capabilities = fullCapabilities,
+        capabilities = fullCapabilities + LLMCapability.Thinking,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )

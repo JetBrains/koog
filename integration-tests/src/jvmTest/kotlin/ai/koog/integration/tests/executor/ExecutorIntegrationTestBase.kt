@@ -103,6 +103,7 @@ abstract class ExecutorIntegrationTestBase {
     private val testScope = TestScope()
     private val basicLimit = 256
     private val extendedLimit = 512
+    private val reasoningLimit = 10000
 
     @AfterEach
     fun cleanup() {
@@ -136,22 +137,22 @@ abstract class ExecutorIntegrationTestBase {
                     summary = ReasoningSummary.AUTO
                 ),
                 include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
-                maxTokens = basicLimit
+                maxTokens = reasoningLimit
             )
 
             is GoogleLLMProvider -> {
                 val thinkingConfig = GoogleThinkingConfig(
                     includeThoughts = true,
-                    thinkingBudget = extendedLimit
+                    thinkingBudget = reasoningLimit
                 )
                 GoogleParams(
                     thinkingConfig = thinkingConfig,
                     // Slightly higher limit to avoid truncation in multi-step reasoning tests
-                    maxTokens = extendedLimit
+                    maxTokens = reasoningLimit
                 )
             }
 
-            else -> LLMParams(maxTokens = basicLimit)
+            else -> LLMParams(maxTokens = reasoningLimit)
         }
     }
 
@@ -214,8 +215,9 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val executor = getExecutor(model)
+        val params = createReasoningParams(model)
 
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = Prompt.build("test-streaming", params = params) {
             system("You are a helpful assistant.")
             user("Count from 1 to 5. Like 1, 2, 3 ...")
         }
@@ -1100,17 +1102,11 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
-        val params = OpenAIResponsesParams(
-            reasoning = ReasoningConfig(
-                effort = ReasoningEffort.MEDIUM,
-                summary = ReasoningSummary.DETAILED
-            ),
-            include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
-            maxTokens = basicLimit
-        )
+        val params = createReasoningParams(model)
+
         val prompt = Prompt.build("reasoning-streaming-test", params = params) {
             system("You are a helpful assistant.")
-            user("Think about this step by step: What is 12 * 15?")
+            user("Reason about what is 8 * 9?. Include summary.")
         }
 
         val executor = getExecutor(model)
@@ -1137,7 +1133,7 @@ abstract class ExecutorIntegrationTestBase {
             (reasoningText + reasoningSummary).length shouldBeGreaterThan 0
 
             val finalAnswer = textDeltaFrames.joinToString("") { it.text }
-            finalAnswer.shouldContain("180")
+            finalAnswer.shouldContain("72")
         }
     }
 
