@@ -185,7 +185,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             parallelToolCalls = chatParams.parallelToolCalls,
             prediction = chatParams.speculation?.let { OpenAIStaticContent(OpenAIContent.Text(it)) },
             presencePenalty = chatParams.presencePenalty,
-            promptCacheKey = chatParams.promptCacheKey, reasoningEffort = model.takeIf { it.supports(LLMCapability.Thinking) }
+            promptCacheKey = chatParams.promptCacheKey,
+            reasoningEffort = model.takeIf { it.supports(LLMCapability.Thinking) }
                 ?.let { chatParams.reasoningEffort },
             responseFormat = responseFormat,
             safetyIdentifier = chatParams.safetyIdentifier,
