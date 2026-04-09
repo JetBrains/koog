@@ -4,17 +4,26 @@ import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.dsl.ModerationResult
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 
@@ -42,6 +51,31 @@ class ChatMemoryTest {
         override suspend fun load(conversationId: String): List<Message> {
             loadCalls.add(conversationId)
             return history[conversationId] ?: emptyList()
+        }
+    }
+
+    private class CapturingPromptExecutor(
+        private val delegate: PromptExecutor
+    ) : PromptExecutor() {
+        var lastPrompt: Prompt? = null
+            private set
+
+        override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+            lastPrompt = prompt
+            return delegate.execute(prompt, model, tools)
+        }
+
+        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> {
+            lastPrompt = prompt
+            return delegate.executeStreaming(prompt, model, tools)
+        }
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+            return delegate.moderate(prompt, model)
+        }
+
+        override fun close() {
+            delegate.close()
         }
     }
 
@@ -277,6 +311,45 @@ class ChatMemoryTest {
         assertTrue(userContents.any { it.contains("France") }, "Pre-seeded France question should be preserved")
         assertTrue(userContents.any { it.contains("Germany") }, "Pre-seeded Germany question should be preserved")
         assertTrue(userContents.any { it.contains("Italy") }, "New Italy question should be appended")
+    }
+
+    @Disabled("https://github.com/JetBrains/koog/issues/1826")
+    @Test
+    fun testSystemPromptIsPreservedInChatMemoryHistory() = runTest {
+        val sessionId = "system-prompt-session"
+        val systemPrompt = "You are a helpful assistant."
+        val historyProvider = InMemoryChatHistoryProvider(
+            history = mutableMapOf(
+                sessionId to listOf(
+                    Message.User("What is the capital of France?", RequestMetaInfo.Empty),
+                    Message.Assistant("Paris.", ResponseMetaInfo(Instant.DISTANT_PAST))
+                )
+            )
+        )
+        val executor = CapturingPromptExecutor(
+            getMockExecutor(serializer) {
+                mockLLMAnswer("Berlin.") onRequestContains "Germany"
+                mockLLMAnswer("mock reply").asDefaultResponse
+            }
+        )
+        val agent = AIAgent(
+            promptExecutor = executor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = systemPrompt,
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+                windowSize(50)
+            }
+        }
+
+        agent.run("What is the capital of Germany?", sessionId)
+
+        val sentPrompt = assertNotNull(executor.lastPrompt)
+        val systemMessages = sentPrompt.messages.filterIsInstance<Message.System>()
+
+        assertTrue(systemMessages.any { it.content == systemPrompt }, "System prompt should be sent to LLM")
     }
 
     // ---- Session Isolation ----
@@ -876,12 +949,6 @@ class ChatMemoryTest {
     fun testFilterMessagesOnlyUserMessages() = runTest {
         val sessionId = "filter-user-only"
         val historyProvider = InMemoryChatHistoryProvider()
-
-        val agent = createGraphAgent(historyProvider) {
-            mockLLMAnswer("Reply 1").onRequestContains("Q1")
-            mockLLMAnswer("Reply 2").onRequestContains("Q2")
-            mockLLMAnswer("mock reply").asDefaultResponse
-        }
 
         // This agent does NOT use filterMessages, just to get baseline data.
         // We need a separate agent that filters.
