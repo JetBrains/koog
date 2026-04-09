@@ -138,7 +138,7 @@ plugins:
       redirect_maps:
         'getting-started.md': 'quickstart.md'
         'simple-api-getting-started.md': 'quickstart.md'
-        'getting-started/index.md': 'quickstart/index.md'
+        'getting-started/index.md': 'quickstart.md'
         'advanced-tool-implementation.md': 'class-based-tools.md'
         'key-concepts.md': 'glossary.md'
         'single-run-agents.md': 'agents/basic-agents.md'
@@ -296,6 +296,9 @@ hooks:
 
 exclude_docs: |
   /snippets/
+
+not_in_nav: |
+  koog-slack-channel.md
 
 validation:
   omitted_files: warn
