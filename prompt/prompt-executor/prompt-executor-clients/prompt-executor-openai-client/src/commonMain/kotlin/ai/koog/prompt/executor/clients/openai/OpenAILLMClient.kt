@@ -318,7 +318,10 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                     processResponsesAPIResponse(response)
                 }
 
-                is OpenAIChatParams -> super.execute(prompt, model, tools)
+                is OpenAIChatParams -> {
+                    model.requireCapability(LLMCapability.OpenAIEndpoint.Completions)
+                    super.execute(prompt, model, tools)
+                }
             }
         }
     }
@@ -401,7 +404,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                                 is Item.Reasoning -> {
                                     // https://developers.openai.com/api/reference/resources/responses/streaming-events#response.reasoning_text.done
-                                    if (item.summary.isEmpty() && item.content?.isEmpty() ?: true) {
+                                    if (item.summary.isEmpty() && item.content.isNullOrEmpty()) {
                                         logger.debug { "Got and empty (hidden) reasoning from the model, ignoring it." }
                                         null
                                     } else {
