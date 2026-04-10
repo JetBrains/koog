@@ -9,7 +9,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
@@ -112,8 +111,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
-),
-    LLMEmbeddingProvider {
+) {
 
     @JvmOverloads
     public constructor(
@@ -527,6 +525,16 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             throw exception
         }
         return openAIResponse.data.first().embedding
+    }
+
+    /**
+     * Batch embedding is not supported by the OpenAI API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
+        logger.warn { "Batch embedding is not supported by OpenAI API" }
+        throw UnsupportedOperationException("Batch embedding is not supported by OpenAI API.")
     }
 
     /**

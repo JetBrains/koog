@@ -37,7 +37,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -879,15 +878,30 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testEmbed(model: LLModel) = runTest {
         val client = getLLMClient(model)
-        if (client !is LLMEmbeddingProvider) {
-            return@runTest
-        }
         val testText = "integration test embedding"
         client.embed(testText, model) shouldNotBeNull {
             shouldNotBeEmpty()
             size shouldBeGreaterThan 100
             shouldForAll {
                 it.isFinite()
+            }
+        }
+    }
+
+    open fun integration_testEmbedBatch(model: LLModel) = runTest {
+        val client = getLLMClient(model)
+        val inputs = listOf(
+            "integration test batch embedding first",
+            "integration test batch embedding second",
+            "integration test batch embedding third",
+        )
+        val embeddings = client.embed(inputs, model)
+        embeddings shouldNotBeNull {
+            size shouldBe inputs.size
+            shouldForAll { embedding ->
+                embedding.shouldNotBeEmpty()
+                embedding.size shouldBeGreaterThan 100
+                embedding.shouldForAll { it.isFinite() }
             }
         }
     }

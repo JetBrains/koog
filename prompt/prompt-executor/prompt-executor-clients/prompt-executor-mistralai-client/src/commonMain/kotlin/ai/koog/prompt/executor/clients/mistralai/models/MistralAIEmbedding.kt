@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * Request for Mistral AI embeddings
  *
  * @property model ID of the model to use.
- * @property input Text to embed
+ * @property input The list of texts to embed
  * @property outputDimension The dimension of the output embeddings.
  * @property outputDtype Default: "float"
  * Enum: "float" "int8" "uint8" "binary" "ubinary"
@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class MistralAIEmbeddingRequest(
     val model: String,
-    val input: String,
+    val input: List<String>,
     val outputDimension: Int? = null,
     val outputDtype: MistralAIEmbeddingDtype? = null
 )

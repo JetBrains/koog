@@ -249,4 +249,30 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
 
         return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
     }
+
+    /**
+     * Embedding is not supported by the DeepSeek API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> {
+        logger.warn { "Embedding is not supported by DeepSeek API" }
+        throw UnsupportedOperationException("Embedding is not supported by DeepSeek API.")
+    }
+
+    /**
+     * Batch embedding is not supported by the DeepSeek API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        logger.warn { "Embedding is not supported by DeepSeek API" }
+        throw UnsupportedOperationException("Embedding is not supported by DeepSeek API.")
+    }
 }

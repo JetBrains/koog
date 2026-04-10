@@ -233,6 +233,20 @@ open class AIAgentTestBase {
             throw NotImplementedError("Moderation not needed for this test")
         }
 
+        override suspend fun embed(
+            text: String,
+            model: LLModel
+        ): List<Double> {
+            throw NotImplementedError("Moderation not needed for this test")
+        }
+
+        override suspend fun embed(
+            inputs: List<String>,
+            model: LLModel
+        ): List<List<Double>> {
+            throw NotImplementedError("Moderation not needed for this test")
+        }
+
         override fun close() {
             underlyingClient.close()
             eventsChannel.close()

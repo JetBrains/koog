@@ -10,10 +10,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
+import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingBatchRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingBatchResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingConfig
@@ -75,6 +76,7 @@ public class GoogleClientSettings(
     public val generateContentMethod: String = "generateContent",
     public val streamGenerateContentMethod: String = "streamGenerateContent",
     public val embedContentMethod: String = "embedContent",
+    public val batchEmbedContentsMethod: String = "batchEmbedContents",
     public val fallbackThoughtSignature: String = "context_engineering_is_the_way_to_go",
 )
 
@@ -94,7 +96,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     private val httpClient: KoogHttpClient,
     private val clock: Clock = Clock.System
-) : LLMClient(), LLMEmbeddingProvider {
+) : LLMClient() {
 
     /**
      * Secondary constructor for creating a GoogleLLMClient backed with a Ktor HTTP client.
@@ -829,10 +831,14 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         return models.map { id -> modelsById[id] ?: LLModel(provider = llmProvider(), id = id) }
     }
 
-    override fun close() {
-        httpClient.close()
-    }
-
+    /**
+     * Embeds the given text using the Google AI embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of floating-point values representing the embedding vector.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         require(model.supports(LLMCapability.Embed)) {
             "Model ${model.id} does not support embedding."
@@ -865,5 +871,55 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                 cause = e
             )
         }
+    }
+
+    /**
+     * Embeds the given inputs using the Google AI batch embeddings API.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of embedding vectors, one per input string.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
+        require(model.supports(LLMCapability.Embed)) {
+            "Model ${model.id} does not support embedding."
+        }
+
+        logger.debug { "Embedding input with model: ${model.id}" }
+
+        val request = GoogleEmbeddingBatchRequest(
+            requests = inputs.map {
+                GoogleEmbeddingRequest(
+                    model = "models/${model.id}",
+                    content = GoogleContent(
+                        parts = listOf(GooglePart.Text(it))
+                    )
+                )
+            }
+        )
+
+        try {
+            val response = httpClient.post(
+                path = "${settings.defaultPath}/${model.id}:${settings.batchEmbedContentsMethod}",
+                request = request,
+                requestBodyType = GoogleEmbeddingBatchRequest::class,
+                responseType = GoogleEmbeddingBatchResponse::class,
+            )
+
+            return response.embeddings.map { it.values }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
+    }
+
+    override fun close() {
+        httpClient.close()
     }
 }

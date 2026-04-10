@@ -24,6 +24,8 @@ import kotlin.jvm.JvmOverloads
  * @property streamingChunks The sequence of chunks to emit from [executeStreaming].
  * @property choices The list of [LLMChoice] to return from [executeMultipleChoices].
  * @property moderationResult The [ModerationResult] to return from [moderate].
+ * @property embedResult The embedding vector to return from [embed] for a single text input.
+ * @property batchEmbedResult The list of embedding vectors to return from [embed] for batch input.
  * @property llmProvider [LLMProvider] associated with the client or [LLMProvider.OpenAI], if not defined
  */
 public class CapturingLLMClient @JvmOverloads constructor(
@@ -31,6 +33,8 @@ public class CapturingLLMClient @JvmOverloads constructor(
     private val streamingChunks: List<StreamFrame> = emptyList(),
     private val choices: List<LLMChoice> = emptyList(),
     private val moderationResult: ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap()),
+    private val embedResult: List<Double> = emptyList(),
+    private val batchEmbedResult: List<List<Double>> = emptyList(),
     private val llmProvider: LLMProvider = LLMProvider.OpenAI
 ) : LLMClient() {
 
@@ -63,6 +67,18 @@ public class CapturingLLMClient @JvmOverloads constructor(
 
     /** The last [LLModel] passed to [moderate], or null if it hasn't been called yet. */
     public var lastModerationModel: LLModel? = null
+
+    /** The last text passed to [embed], or null if it hasn't been called yet. */
+    public var lastEmbeddingText: String? = null
+
+    /** The last [LLModel] passed to [embed], or null if it hasn't been called yet. */
+    public var lastEmbeddingModel: LLModel? = null
+
+    /** The last batched input passed to [embed], or null if it hasn't been called yet. */
+    public var lastBatchEmbeddingInput: List<String>? = null
+
+    /** The last [LLModel] passed to [embed], or null if it hasn't been called yet. */
+    public var lastBatchEmbeddingModel: LLModel? = null
 
     override fun llmProvider(): LLMProvider = llmProvider
 
@@ -118,6 +134,32 @@ public class CapturingLLMClient @JvmOverloads constructor(
         lastModerationPrompt = prompt
         lastModerationModel = model
         return moderationResult
+    }
+
+    /**
+     * Simulates an embedding call.
+     * Captures input parameters and returns the predefined [embedResult].
+     */
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> {
+        lastEmbeddingText = text
+        lastEmbeddingModel = model
+        return embedResult
+    }
+
+    /**
+     * Simulates a batch embedding call.
+     * Captures input parameters and returns the predefined [batchEmbedResult].
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        lastBatchEmbeddingInput = inputs
+        lastBatchEmbeddingModel = model
+        return batchEmbedResult
     }
 
     override fun close() {

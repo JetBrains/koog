@@ -11,6 +11,8 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
@@ -82,7 +84,7 @@ public class OllamaClient @JvmOverloads constructor(
     private val clock: Clock = Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
-) : LLMClient(), LLMEmbeddingProvider {
+) : LLMClient() {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
@@ -353,7 +355,7 @@ public class OllamaClient @JvmOverloads constructor(
         }
 
         val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
-            setBody(EmbeddingRequestDTO(model = model.id, prompt = text))
+            setBody(EmbeddingRequestDTO(model = model.id, input = text))
         }
 
         if (!response.status.isSuccess()) {
@@ -365,7 +367,34 @@ public class OllamaClient @JvmOverloads constructor(
         }
 
         val embeddingResponse = response.body<EmbeddingResponseDTO>()
-        return embeddingResponse.embedding
+        return embeddingResponse.embeddings
+    }
+
+    /**
+     * Embeds the given inputs using the Ollama embeddings API.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability
+     *   and belong to [LLMProvider.Ollama].
+     * @return A list of embedding vectors, one per input string.
+     * @throws LLMClientException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
+
+        if (!model.supports(LLMCapability.Embed)) {
+            throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
+        }
+
+        val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
+            setBody(EmbeddingBatchRequestDTO(model = model.id, input = inputs))
+        }
+
+        val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
+        return embeddingResponse.embeddings
     }
 
     /**
