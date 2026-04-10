@@ -808,7 +808,7 @@ You can use it as follows:
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
-    import import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory;
+    import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory;
     class exampleHistoryCompressionJava11 {
         public static void main(String[] args) {
             var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
