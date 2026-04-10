@@ -383,11 +383,11 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          * `ToolRegistry.Builder`. The tools are applied to the internal `toolRegistry` of the
          * `AgentConfig` class instance by merging existing tools with the newly registered tools.
          *
-         * @param build A lambda function for configuring the tool registry using the `ToolRegistry.Builder`.
+         * @param block A lambda function for configuring the tool registry using the `ToolRegistry.Builder`.
          */
-        public fun registerTools(build: ToolRegistryBuilder.() -> Unit) {
+        public fun registerTools(block: ToolRegistryBuilder.() -> Unit) {
             toolRegistry += ToolRegistry {
-                build()
+                block()
             }
         }
 
