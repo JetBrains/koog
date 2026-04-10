@@ -1,7 +1,9 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
+import ai.koog.agents.core.agent.context.agentContextDataAdditionalKey
 import ai.koog.agents.core.agent.execution.path
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -17,6 +19,8 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.time.Clock
 
 class RunFromCheckpointTest {
@@ -32,6 +36,8 @@ class RunFromCheckpointTest {
         tool(SayToUser)
     }
     private val serializer = KotlinxSerializer()
+
+    private fun storageMutatingGraph() = straightForwardGraphNoCheckpoint()
 
     @Test
     fun testRunFromCheckpointOnAgent() = runTest {
@@ -192,5 +198,107 @@ class RunFromCheckpointTest {
                 "Node 2 output",
             output
         )
+    }
+
+    @Test
+    fun testRunFromCheckpointUsesLastInputWithoutSkippingCompletedNode() = runTest {
+        val sessionId = "test-session-last-input"
+        val time = Clock.System.now()
+
+        @Suppress("DEPRECATION")
+        val checkpoint = AgentCheckpointData(
+            checkpointId = "checkpoint-last-input",
+            createdAt = time,
+            nodePath = path(sessionId, "straight-forward", "Node2"),
+            lastInput = JSONPrimitive("Node 1 output"),
+            messageHistory = listOf(
+                Message.User("User message", metaInfo = RequestMetaInfo(time)),
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
+            ),
+            version = 0
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = straightForwardGraphNoCheckpoint(),
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+        )
+
+        val output = agent.runFromCheckpoint(
+            agentInput = "ignored",
+            checkpoint = checkpoint,
+            sessionId = sessionId,
+        )
+
+        assertEquals(
+            "History: User message\n" +
+                "Assistant message\n" +
+                "Node 2 output",
+            output
+        )
+    }
+
+    @Test
+    fun testRunFromCheckpointFailsForUnknownNodePath() = runTest {
+        val sessionId = "test-session-invalid-path"
+        val time = Clock.System.now()
+
+        val checkpoint = AgentCheckpointData(
+            checkpointId = "checkpoint-invalid-path",
+            createdAt = time,
+            nodePath = path(sessionId, "straight-forward", "MissingNode"),
+            lastOutput = JSONPrimitive("missing"),
+            messageHistory = emptyList(),
+            version = 0
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = straightForwardGraphNoCheckpoint(),
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+        )
+
+        val error = assertFailsWith<IllegalStateException> {
+            agent.runFromCheckpoint(
+                agentInput = "ignored",
+                checkpoint = checkpoint,
+                sessionId = sessionId,
+            )
+        }
+
+        assertEquals("Node straight-forward/MissingNode not found", error.message)
+    }
+
+    @Test
+    @OptIn(InternalAgentsApi::class)
+    fun testRunFromCheckpointClearsInjectedCheckpointDataAfterRestore() = runTest {
+        val sessionId = "test-session-cleanup"
+        val time = Clock.System.now()
+
+        val checkpoint = AgentCheckpointData(
+            checkpointId = "checkpoint-cleanup",
+            createdAt = time,
+            nodePath = path(sessionId, "straight-forward", "Node1"),
+            lastOutput = JSONPrimitive("Node 1 output"),
+            messageHistory = emptyList(),
+            version = 0
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = storageMutatingGraph(),
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+        )
+
+        val session = agent.createSession(sessionId)
+        session.runFromCheckpoint(
+            input = "ignored",
+            checkpoint = checkpoint,
+        )
+
+        assertNull(session.context().storage.get(agentContextDataAdditionalKey))
     }
 }

@@ -4,7 +4,10 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.AIAgentBuilder;
 import ai.koog.agents.core.agent.config.AIAgentConfig;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
+import ai.koog.agents.core.agent.entity.AIAgentStorage;
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
+import ai.koog.agents.core.agent.session.AIAgentRunSession;
+import ai.koog.agents.core.agent.session.AIAgentSessionInputs;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
 import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.ToolRegistry;
@@ -28,7 +31,6 @@ import ai.koog.prompt.message.AttachmentContent;
 import ai.koog.prompt.message.ContentPart;
 import ai.koog.prompt.message.Message;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -644,6 +646,41 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
 
         assertThat(Integer.parseInt(firstResult)).isEqualTo(1);
         assertThat(Integer.parseInt(secondResult)).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
+    public void integration_ShouldNotLeakSessionStorageBetweenRuns(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        AIAgentStorageKey<String> greetingKey = new AIAgentStorageKey<>("java-session-greeting");
+        AIAgentStorageKey<Integer> counterKey = new AIAgentStorageKey<>("java-session-counter");
+
+        AIAgent<String, String> agent = javaBuilder(model)
+            .systemPrompt("You are a helpful assistant.")
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                String greeting = JavaUtils.storageGet(context.getStorage(), greetingKey);
+                Integer counter = JavaUtils.storageGet(context.getStorage(), counterKey);
+                return "greeting=" + greeting + ", counter=" + counter;
+            })
+            .build();
+
+        AIAgentStorage initialStorage = new AIAgentStorage();
+        JavaUtils.storageSet(initialStorage, greetingKey, "hello-from-java-session");
+        JavaUtils.storageSet(initialStorage, counterKey, 11);
+
+        AIAgentRunSession<String, String, ?> session = agent.createSession("java-session-storage");
+        String firstResult = runBlocking(continuation ->
+            session.run("ignored", new AIAgentSessionInputs(initialStorage), continuation)
+        );
+        String secondResult = runBlocking(continuation ->
+            session.run("ignored", null, continuation)
+        );
+
+        assertThat(firstResult).isEqualTo("greeting=hello-from-java-session, counter=11");
+        assertThat(secondResult).isEqualTo("greeting=null, counter=null");
+        assertThat(JavaUtils.storageGet(initialStorage, greetingKey)).isEqualTo("hello-from-java-session");
+        assertThat(JavaUtils.storageGet(initialStorage, counterKey)).isEqualTo(11);
     }
 
     @Test

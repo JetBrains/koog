@@ -164,4 +164,37 @@ public class RunFromCheckpointJavaTest {
             output
         );
     }
+
+    @Test
+    public void testRunFromCheckpointUsesJvmOverloadDefaults() {
+        String sessionId = "test-session-defaults";
+        Instant time = Clock.System.INSTANCE.now();
+
+        AgentCheckpointData checkpoint = new AgentCheckpointData(
+            "checkpoint-defaults",
+            time,
+            nodePath(sessionId, "straight-forward", "Node1"),
+            null,
+            JSONElementKt.JSONPrimitive("Node 1 output"),
+            List.of(
+                new Message.User("User message", new RequestMetaInfo(time, null)),
+                new Message.Assistant("Assistant message", new ResponseMetaInfo(time, null, null, null))
+            ),
+            0L,
+            null
+        );
+
+        AIAgent<String, String> agent = createAgent();
+
+        String output = RunFromCheckpointJvm.runFromCheckpoint(
+            agent,
+            "Start the test",
+            checkpoint
+        );
+
+        assertEquals(
+            "History: User message\nAssistant message\nNode 2 output",
+            output
+        );
+    }
 }
