@@ -266,7 +266,6 @@ If you are implementing a custom node, you can compress history using the `repla
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
     val strategy = strategy<String, String>("strategy_name") {
         val node by node<Unit, Unit> {
     -->
@@ -365,7 +364,6 @@ You can use it as follows:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
     val strategy = strategy<String, String>("strategy_name") {
         val node by node<Unit, Unit> {
     -->
@@ -482,7 +480,6 @@ You can use it as follows:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
     typealias ProcessedInput = String
     val strategy = strategy<String, String>("strategy_name") {
     val node by node<Unit, Unit> {
@@ -601,7 +598,6 @@ You can use it as follows:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
     typealias ProcessedInput = String
     val strategy = strategy<String, String>("strategy_name") {
     val node by node<Unit, Unit> {
@@ -762,7 +758,6 @@ You can use it as follows:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
     import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
     import ai.koog.agents.memory.model.Concept
     import ai.koog.agents.memory.model.FactType
@@ -944,7 +939,6 @@ Then you can use it as follows:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
     import ai.koog.agents.example.exampleHistoryCompression12.MyCustomCompressionStrategy
     typealias ProcessedInput = String
     val strategy = strategy<String, String>("strategy_name") {
@@ -1035,7 +1029,6 @@ To enable memory preservation:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
     typealias ProcessedInput = String
     val strategy = strategy<String, String>("strategy_name") {
     val node by node<Unit, Unit> {
