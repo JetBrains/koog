@@ -7,11 +7,14 @@ awaitility = "4.3.0"
 aws-sdk-kotlin = "1.6.17"
 dokka = "2.2.0"
 exposed = "0.61.0"
+google-genai = "1.44.0"
 h2 = "2.4.240"
 hikaricp = "6.2.1"
+jackson = "2.21.2"
 jdkVersion = "17"
 jetsign = "45.47"
 junit = "5.8.2"
+junit-pioneer="2.3.0"
 knit = "0.5.1"
 kotest = "6.0.7"
 kotlin = "2.3.10"
@@ -41,15 +44,15 @@ spring-boot = "3.5.13"
 spring-management = "1.1.7"
 sqlite = "3.51.1.0"
 testcontainers = "1.21.4"
-jackson = "2.21.2"
 
 [libraries]
-jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
-mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 awaitility = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
+google-genai = { module = "com.google.genai:google-genai", version.ref = "google-genai"}
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit-pioneer = { module = "org.junit-pioneer:junit-pioneer", version.ref="junit-pioneer" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
@@ -84,9 +87,10 @@ ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref 
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mokksy-a2a = { module = "me.kpavlov.aimocks:ai-mocks-a2a", version.ref = "mokksy" }
+oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 acp = { module = "com.agentclientprotocol:acp", version.ref = "acp"}
 mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }

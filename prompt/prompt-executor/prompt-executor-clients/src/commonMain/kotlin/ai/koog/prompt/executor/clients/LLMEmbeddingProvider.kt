@@ -3,8 +3,9 @@ package ai.koog.prompt.executor.clients
 import ai.koog.prompt.llm.LLModel
 
 /**
- * Extension of the LLMClient interface which includes functionality for generating text embeddings
- * in addition to executing prompts and streaming outputs.
+ * Interface for generating text embeddings using an LLM provider.
+ *
+ * Extends [LLMProviderAware] to support shared provider-validation logic.
  */
 public interface LLMEmbeddingProvider {
     /**

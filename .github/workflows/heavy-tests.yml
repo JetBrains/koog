@@ -49,6 +49,10 @@ jobs:
             test-group: "ai.koog.integration.tests.executor.BedrockExecutorIntegrationTest"
             artifact-name: "bedrock-tests"
             os: ubuntu-latest
+          - job-name: "google-genai-tests"
+            test-group: "ai.koog.integration.tests.executor.GoogleGenaiIntegrationTest"
+            artifact-name: "google-genai-tests"
+            os: ubuntu-latest
           - job-name: "other-executor-tests"
             test-group: '"ai.koog.integration.tests.executor.BedrockConverseApiIntegrationTest" --tests "ai.koog.integration.tests.executor.ToolDescriptorIntegrationTest" --tests "ai.koog.integration.tests.executor.ToolSchemaExecutorIntegrationTest"'
             artifact-name: "other-executor-tests"

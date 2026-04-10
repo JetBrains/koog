@@ -28,3 +28,25 @@ public data class LLModel @JvmOverloads constructor(
      */
     public fun supports(capability: LLMCapability): Boolean = capabilities?.contains(capability) ?: false
 }
+
+/**
+ * Checks if the Large Language Model (LLM) supports a specific capability.
+ * @param capability The capability to check for, represented by an instance of [LLMCapability].
+ */
+public fun LLModel.requireCapability(capability: LLMCapability): Unit =
+    require(supports(capability)) {
+        "Model $id does not support ${capability.id} capability."
+    }
+
+/**
+ * Ensures that the provided [LLModel] is associated with the same [LLMProvider].
+ * Throws an [IllegalArgumentException] if the providers do not match.
+ *
+ * @param llmProvider The [LLMProvider] to compare against the current [LLModel].
+ */
+public fun LLModel.requireMatchingProvider(llmProvider: LLMProvider) {
+    require(this.provider == llmProvider) {
+        "Model provider mismatch: ${this.id}.provider=${this.provider}, " +
+            "${this::class.simpleName ?: "(LLMProviderAware)"}.llmProvider=$llmProvider"
+    }
+}

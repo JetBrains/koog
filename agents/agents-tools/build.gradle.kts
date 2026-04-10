@@ -30,16 +30,14 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(project(":test-utils"))
                 implementation(libs.kotlinx.datetime)
-                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
                 implementation(libs.assertj.core)
             }
         }
