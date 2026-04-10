@@ -198,4 +198,8 @@ public class OpenRouterError(
 )
 
 internal object OpenRouterChatCompletionRequestSerializer :
-    AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(OpenRouterChatCompletionRequest.serializer())
+    AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(
+        OpenRouterChatCompletionRequest.serializer(),
+        // OpenRouter uses snake case
+        additionalPropertiesField = "additional_properties"
+    )
