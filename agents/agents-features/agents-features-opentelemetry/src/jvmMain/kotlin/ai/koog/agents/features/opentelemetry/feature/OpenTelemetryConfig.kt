@@ -6,6 +6,7 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
+import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporterImpl
 import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporterImpl
 import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporterImpl
 import ai.koog.agents.features.opentelemetry.metric.MetricFilter
@@ -490,5 +491,37 @@ public class OpenTelemetryConfig : FeatureConfig() {
         weaveProjectName,
         weaveApiKey,
         timeout?.toKotlinDuration()
+    )
+
+    /**
+     * Configure an OpenTelemetry span exporter that sends data to [Datadog](https://www.datadoghq.com/)
+     * via direct OTLP intake.
+     *
+     * @param datadogApiKey Datadog API key.
+     *        If not set, is retrieved from `DD_API_KEY` environment variable.
+     * @param datadogSite Datadog site (e.g. `datadoghq.com`, `datadoghq.eu`).
+     *        If not set, is retrieved from `DD_SITE` environment variable.
+     *        Defaults to `datadoghq.com`.
+     * @param timeout OpenTelemetry SpanExporter timeout.
+     *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+     * @param traceAttributes resource-level attributes to add to all exported spans.
+     *        Useful for tagging traces with application-specific metadata
+     *        (e.g. `"env"`, `"tenant_id"`, `"prompt_name"`).
+     *
+     * @see <a href="https://docs.datadoghq.com/opentelemetry/guide/otlp_api/">Datadog OTLP API Intake</a>
+     * @see <a href="https://docs.datadoghq.com/llm_observability/">Datadog LLM Observability</a>
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun addDatadogExporter(
+        datadogApiKey: String? = null,
+        datadogSite: String? = null,
+        timeout: JavaDuration? = null,
+        traceAttributes: Map<String, String>? = null,
+    ): Unit = addDatadogExporterImpl(
+        datadogApiKey,
+        datadogSite,
+        timeout?.toKotlinDuration(),
+        traceAttributes
     )
 }

@@ -227,6 +227,7 @@ The OpenTelemetry feature creates different types of spans for various operation
         - `gen_ai.usage.output_tokens` (when available)
         - `gen_ai.usage.total_tokens` (when available)
         - `gen_ai.response.finish_reasons` (Stop, ToolCalls, etc.)
+        - `gen_ai.response.metadata` (when `ResponseMetaInfo.metadata` is present — serialized JSON containing free-form provider or application metadata)
 
 6. **Execute Tool Span**
     - Purpose: Execution of a tool or function call triggered by the agent or LLM.
@@ -369,6 +370,41 @@ suspend fun main() {
     
     // Wait for telemetry data to be exported
     TimeUnit.SECONDS.sleep(10)
+}
+```
+
+### Datadog
+
+[Datadog](https://www.datadoghq.com/) supports direct OTLP intake for LLM Observability. To send traces to Datadog:
+
+```kotlin
+install(OpenTelemetry) {
+    addDatadogExporter()
+}
+```
+
+The exporter reads the `DD_API_KEY` environment variable by default. You can also pass it explicitly:
+
+```kotlin
+install(OpenTelemetry) {
+    addDatadogExporter(
+        datadogApiKey = "your-api-key",
+        datadogSite = "datadoghq.eu",             // defaults to datadoghq.com
+        traceAttributes = mapOf(
+            "env" to "production",
+            "service.name" to "my-agent",
+        ),
+    )
+}
+```
+
+The `buildDatadogExporter()` function is also available if you need to wrap the exporter with custom decorators before registering it:
+
+```kotlin
+install(OpenTelemetry) {
+    val exporter = buildDatadogExporter()
+    val wrapped = MyCustomSpanExporter(exporter) // e.g. attribute post-processing
+    addSpanExporter(wrapped)
 }
 ```
 

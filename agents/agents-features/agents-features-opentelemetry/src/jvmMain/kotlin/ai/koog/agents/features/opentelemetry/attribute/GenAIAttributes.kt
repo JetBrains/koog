@@ -319,6 +319,12 @@ internal object GenAIAttributes {
             override val key: String = super.key.concatKey("model")
             override val value: String = model.id
         }
+
+        // gen_ai.response.metadata
+        data class Metadata(private val metadata: String) : Response {
+            override val key: String = super.key.concatKey("metadata")
+            override val value: String = metadata
+        }
     }
 
     // gen_ai.token
