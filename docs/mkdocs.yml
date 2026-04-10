@@ -284,7 +284,7 @@ copyright: Copyright © 2000-2025 JetBrains s.r.o.
 extra:
   social:
     - icon: fontawesome/brands/slack
-      link: https://docs.koog.ai/koog-slack-channel/
+      link: https://kotlinlang.slack.com/archives/C08SLB97W23
       name: Koog on Slack
 
 extra_javascript:
