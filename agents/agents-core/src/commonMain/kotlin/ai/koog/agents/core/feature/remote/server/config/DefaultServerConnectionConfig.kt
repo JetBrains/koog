@@ -3,6 +3,7 @@ package ai.koog.agents.core.feature.remote.server.config
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig.Companion.DEFAULT_AWAIT_INITIAL_CONNECTION
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig.Companion.DEFAULT_HOST
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig.Companion.DEFAULT_PORT
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -19,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
  *        Set to 'false' by default.
  * @param awaitInitialConnectionTimeout The timeout duration for waiting for the first connection.
  */
-public class DefaultServerConnectionConfig(
+public class DefaultServerConnectionConfig @JvmOverloads constructor(
     host: String? = null,
     port: Int? = null,
     awaitInitialConnection: Boolean? = null,
