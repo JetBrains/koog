@@ -1,3 +1,58 @@
+# 0.8.0
+> Published 10 April 2026
+
+## Major Features
+
+- **Spring AI Integration**: Added comprehensive Spring AI support with `ChatMemoryRepository` and `VectorStore` integration for seamless persistence and retrieval (#1719, #1763)
+- **Amazon Bedrock AgentCore Memory**: Introduced `ChatHistoryProvider` backed by Amazon Bedrock AgentCore Memory for managed conversation state (#1758)
+- **DataDog LLM Observability**: Added DataDog LLM Observability exporter with response metadata forwarding to inference spans (#1591)
+
+## Improvements
+
+- **Native structured output for Claude 4.5+**: Added JSON Schema support for Claude 4.5+ series models across Anthropic, Bedrock, and Vertex AI providers (#1593)
+- **Mermaid diagram support for nested subgraphs**: Enhanced Mermaid diagram generator to visualize subgraphs and nested subgraphs (#1745)
+- **RAG-based abstractions**:`LongTermMemory` feature now uses cleaner abstractions from `rag-base` for better modularity (#1785)
+- **LLMClient constructor decoupling**: Decoupled `LLMClient` constructors from Ktor for improved flexibility (#1742)
+- **Customizable field names**: Added support for customized field names in `AdditionalPropertiesFlatteningSerializer` (#1626)
+- **GPT-5.4 models**: Added support for GPT-5.4Mini and GPT-5.4Nano models (#1837)
+- **Google models update**: Updated Google models capabilities and deprecated older model versions (#1827)
+- **Environment creation abstraction**: Extracted environment creation into `prepareEnvironment` method in agent implementations for better extensibility (#1790)
+- **Reasoning prompt refactoring**: Moved reasoning prompt configuration to strategy parameters for better encapsulation (#1789)
+- **JSON schema capabilities**: Added JSON schema capabilities to OpenAI models (#1822)
+- **Add missing JavaAPI for history compression inside write session**: Added `replaceHistoryWithTLDR` as non-suspend method of AIAgentWriteSession (#1839)
+
+## Bug Fixes
+
+- **Agent message handling**: Corrected description of Koog agent message handling (#1010)
+- **History compression with chat memory**: Fixed missed prompt messages when chat memory feature is enabled (#1835)
+- **Reasoning messages**: Added IDs for reasoning messages and improved reasoning process to fix status 400 errors from OpenAI (#1779)
+- **Ollama embedding**: Check HTTP status before deserializing Ollama embedding response to prevent parsing errors (#1702)
+- **Ktor parameter shadowing**: Renamed `registerTools` parameter in `koog-ktor` to avoid `Builder.build()` shadowing (#1705, #1721)
+- **Opus 4.6 token limit**: Corrected `maxOutputTokens` from 1M to 128K for Claude Opus 4.6 (#1825)
+- **Java AIAgentLLMWriteSession**: Added Java support for `AIAgentLLMWriteSession` compress history functionality
+
+## Breaking Changes
+
+- **LLMProvider singletons restored**: Restored `LLMProvider` singletons and fixed reified type inference (potentially breaking for custom provider implementations) (#1800)
+
+## Examples
+- **Spring AI Examples** Add comprehensive examples of Koog + Spring AI integration
+
+
+## Documentation
+
+- **Java API documentation**: Add Java code snippets for Agent Events documentation (#1833)
+- **DataDog documentation**: add DataDog exporter documentation (#1801)
+- **Java API documentation**: Add Java code snippets for tracing feature (#1821)
+- **Java API documentation**: Add missing Java snippets for Persistence (#1818)
+- **Java API documentation**: Add java snippets for model capabilities docs (#1815)
+- **Java API documentation**: Add java snippets for content moderation docs (#1814)
+- **Java API documentation**: Add missing Java snippets for read/write LLM sessions (#1808)
+- **Java API documentation**: Predefined strategies Java snippets (#1796)
+- **Java API documentation**: Update streaming docs with Java snippets (#1792)
+- **Fixed broken formatting**: fix code snippets to remove leaking includes (#1759)
+- **Improve wording**: Update wording in History compression and Predefined nodes and components (#1699)
+
 # 0.7.3
 > Published 26 March 2026
 
@@ -115,6 +170,27 @@
 - Reworked Getting Started, agent types, and Chat Memory tutorials (#1349, #1552)
 - Improved Prompts and Planner agent documentation (#1302, #1301)
 - Added nightly builds documentation (#1433)
+
+## Documentation
+
+- Added Java code snippets for Agent Events documentation (#1833)
+- Added Java code snippets for tracing feature (#1821)
+- Added Java snippets for Persistence (#1818)
+- Added Java snippets for model capabilities documentation (#1815)
+- Added Java snippets for content moderation documentation (#1814)
+- Added Java snippets for sessions (#1808)
+- Added Java snippets for predefined strategies (#1796)
+- Updated streaming documentation with Java snippets (#1792)
+- Added DataDog exporter documentation (#1801)
+- Restored Koog on Slack page (#1823)
+- Fixed link to Slack channel in documentation (#1816)
+- Updated wording in History compression and Predefined nodes and components documentation (#1699)
+- Added hook to remove blank lines from HTML comments to avoid breaking tab groups (#1760)
+- Fixed code snippets to remove leaking includes (#1759)
+
+## Examples
+
+- Added Spring AI examples (#1799)
 
 ## Examples
 
