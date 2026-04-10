@@ -2,8 +2,7 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
-import ai.koog.agents.testing.tools.MockLLMBuilder.ToolCallReceiver
-import kotlinx.serialization.json.Json
+import ai.koog.agents.testing.tools.MockExecutorDSLBuilder.ToolCallReceiver
 import kotlin.reflect.KFunction
 
 /**
@@ -13,12 +12,11 @@ import kotlin.reflect.KFunction
  * @param args The arguments to be passed to the tool function.
  * @return A `ToolCallReceiver` instance configured with the tool and its arguments.
  */
-@Suppress("UnusedReceiverParameter")
-public fun MockLLMBuilder.mockLLMToolCall(
+public fun MockExecutorDSLBuilder.mockLLMToolCall(
     tool: KFunction<*>,
     vararg args: Any?,
     toolCallId: String? = null
-): ToolCallReceiver<ToolFromCallable.VarArgs> {
+): ToolCallReceiver<ToolFromCallable.Args> {
     val params = tool.parameters
 
     val argsMap = (params zip args).associate { (param, arg) ->
@@ -27,8 +25,9 @@ public fun MockLLMBuilder.mockLLMToolCall(
 
     return ToolCallReceiver(
         tool = tool.asTool(),
-        args = ToolFromCallable.VarArgs(argsMap),
+        args = ToolFromCallable.Args(argsMap),
         toolCallId = toolCallId,
+        builder = this
     )
 }
 
@@ -37,11 +36,11 @@ public fun MockLLMBuilder.mockLLMToolCall(
  *
  * @param Result The type of result produced by the callable
  * @property callable The callable function being mocked
- * @property builder The instance of [MockLLMBuilder] used to construct the mock
+ * @property builder The instance of [MockExecutorDSLBuilder] used to construct the mock
  */
 public class MockToolFromCallableReceiver<Result>(
     internal val callable: KFunction<Result>,
-    internal val builder: MockLLMBuilder
+    internal val builder: MockExecutorDSLBuilder
 ) {
 
     /**
@@ -49,12 +48,12 @@ public class MockToolFromCallableReceiver<Result>(
      *
      * @param callable The callable (function or method) that the mock tool corresponds to.
      * @param action The action to execute when the mock tool is invoked.
-     * @param builder The [MockLLMBuilder] used to configure and manage the mock tool's behavior.
+     * @param builder The [MockExecutorDSLBuilder] used to configure and manage the mock tool's behavior.
      */
     public class MockToolFromCallableResponseBuilder<Result>(
         internal val callable: KFunction<Result>,
         private val action: suspend () -> Result,
-        private val builder: MockLLMBuilder
+        private val builder: MockExecutorDSLBuilder
     ) {
         /**
          * Configures the mock tool to respond when it is called with the specified arguments.
@@ -67,19 +66,19 @@ public class MockToolFromCallableReceiver<Result>(
 
             builder.addToolAction(
                 callable.asTool(),
-                { it == ToolFromCallable.VarArgs(argsMap) }
-            ) { buildResult(action(), callable) }
+                { it == ToolFromCallable.Args(argsMap) }
+            ) { action() }
         }
 
         /**
          * Configures a mock behavior for the associated callable to be triggered when the supplied condition
          * is satisfied based on the provided arguments.
          *
-         * @param condition A suspendable condition function that takes an instance of [ToolFromCallable.VarArgs]
+         * @param condition A suspendable condition function that takes an instance of [ToolFromCallable.Args]
          * and evaluates to `true` if the action should be executed for the given arguments.
          */
-        public fun onArgumentsMatching(condition: suspend (ToolFromCallable.VarArgs) -> Boolean) {
-            builder.addToolAction(callable.asTool(), condition) { buildResult(action(), callable) }
+        public fun onArgumentsMatching(condition: suspend (ToolFromCallable.Args) -> Boolean) {
+            builder.addToolAction(callable.asTool(), condition) { action() }
         }
     }
 
@@ -90,7 +89,7 @@ public class MockToolFromCallableReceiver<Result>(
      */
     public infix fun alwaysReturns(response: Result) {
         builder.addToolAction(callable.asTool()) {
-            buildResult(response, callable)
+            response
         }
     }
 
@@ -101,7 +100,7 @@ public class MockToolFromCallableReceiver<Result>(
      */
     public infix fun alwaysDoes(action: suspend () -> Result) {
         builder.addToolAction(callable.asTool()) {
-            buildResult(action(), callable)
+            action()
         }
     }
 
@@ -130,20 +129,6 @@ public class MockToolFromCallableReceiver<Result>(
  * @param tool The function to be used as the tool in the mock setup.
  * @return A MockToolFromCallableReceiver instance configured with the provided tool function and the current MockLLMBuilder.
  */
-public infix fun <Result> MockLLMBuilder.mockTool(tool: KFunction<Result>): MockToolFromCallableReceiver<Result> {
+public infix fun <Result> MockExecutorDSLBuilder.mockTool(tool: KFunction<Result>): MockToolFromCallableReceiver<Result> {
     return MockToolFromCallableReceiver(tool, this)
 }
-
-/**
- * Builds a result object containing the response from the callable, its return type, and a JSON serializer.
- *
- * @param response The result produced by invoking the callable.
- * @param callable The callable whose metadata (such as return type) is used in constructing the result object.
- * @return A [ToolFromCallable.Result] instance encapsulating the callable's result, its return type, and a JSON serializer.
- */
-private fun <Result> buildResult(response: Result, callable: KFunction<Result>): ToolFromCallable.Result =
-    ToolFromCallable.Result(
-        result = response,
-        type = callable.returnType,
-        json = Json
-    )
