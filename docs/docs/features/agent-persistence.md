@@ -53,13 +53,14 @@ To use the Agent Persistence feature, add it to your agent's configuration:
 
     <!--- INCLUDE
     /**
+    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
     -->
     ```java
-    AIAgent<String, String> agent = AIAgent.<String, String>builder()
-        .promptExecutor(SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(executor)
         .llmModel(OllamaModels.Meta.LLAMA_3_2)
         .install(Persistence.Feature, cfg -> {
             // Use in-memory storage for snapshots
@@ -108,13 +109,14 @@ Set the storage provider that will be used to save and retrieve checkpoints:
 
     <!--- INCLUDE
     /**
+    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
     -->
     ```java
-    AIAgent<String, String> agent = AIAgent.<String, String>builder()
-        .promptExecutor(SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(executor)
         .llmModel(OllamaModels.Meta.LLAMA_3_2)
         .install(Persistence.Feature, cfg -> {
             cfg.setStorage(new InMemoryPersistenceStorageProvider());
@@ -165,13 +167,14 @@ To disable continuous persistence, use the code below:
 
     <!--- INCLUDE
     /**
+    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
     -->
     ```java
-    AIAgent<String, String> agent = AIAgent.<String, String>builder()
-        .promptExecutor(SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434"))
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(executor)
         .llmModel(OllamaModels.Meta.LLAMA_3_2)
         .install(Persistence.Feature, cfg -> {
             cfg.setEnableAutomaticPersistence(true);
@@ -224,6 +227,21 @@ To learn how to create a checkpoint at a specific point in your agent's executio
     **/
     -->
     ```java
+    // PersistenceKt.persistence() is the Java-accessible form of the Kotlin extension function
+    Persistence persistence = PersistenceKt.persistence(context);
+
+    // Create a checkpoint with the current state
+    AgentCheckpointData checkpoint = persistence.createCheckpointAfterNode(
+        context,
+        context.getExecutionInfo().path(),
+        outputData,
+        TypeToken.of(String.class),
+        0L,
+        context.getRunId()
+    );
+
+    // The checkpoint ID can be stored for later use
+    String checkpointId = checkpoint != null ? checkpoint.getCheckpointId() : null;
     ```
     <!--- KNIT example-agent-persistence-java-04.java -->
 
@@ -257,6 +275,13 @@ To restore the state of an agent from a specific checkpoint, follow the code sam
     **/
     -->
     ```java
+    Persistence persistence = PersistenceKt.persistence(context);
+
+    // Roll back to a specific checkpoint
+    persistence.rollbackToCheckpoint(checkpointId, context);
+
+    // Or roll back to the latest checkpoint
+    persistence.rollbackToLatestCheckpoint(context);
     ```
     <!--- KNIT example-agent-persistence-java-05.java -->
 
@@ -320,11 +345,28 @@ With Koog Persistence you can achieve that by providing a `RollbackToolRegistry`
 
     <!--- INCLUDE
     /**
+    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
     -->
     ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(executor)
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .install(Persistence.Feature, cfg -> {
+            cfg.setEnableAutomaticPersistence(true);
+            cfg.setRollbackToolRegistry(
+                RollbackToolRegistry.builder()
+                    // For every tool in UserToolSet there will be a corresponding rollback tool
+                    // in UserRollbackToolSet, invoked in reverse order when rolling back.
+                    // UserRollbackToolSet methods must be annotated with @Reverts to link
+                    // them to the corresponding tools in UserToolSet.
+                    .registerRollbacks(new UserToolSet(), new UserRollbackToolSet())
+                    .build()
+            );
+        })
+        .build();
     ```
     <!--- KNIT example-agent-persistence-java-06.java -->
 
@@ -371,6 +413,18 @@ The Agent Persistence feature provides convenient extension functions for workin
     **/
     -->
     ```java
+    // Access the persistence feature via PersistenceKt (the Kotlin extension function)
+    Persistence persistence = PersistenceKt.persistence(context);
+
+    // Use the persistence feature directly to create a checkpoint
+    persistence.createCheckpointAfterNode(
+        context,
+        context.getExecutionInfo().path(),
+        outputData,
+        TypeToken.of(String.class),
+        0L,
+        context.getRunId()
+    );
     ```
     <!--- KNIT example-agent-persistence-java-07.java -->
 
@@ -417,6 +471,25 @@ You can implement custom storage providers by implementing the `PersistenceStora
     **/
     -->
     ```java
+    class MyCustomStorageProvider extends AsyncPersistenceStorageProvider<Object> {
+        @Override
+        public CompletableFuture<List<AgentCheckpointData>> getCheckpointsAsync(
+                String agentId, Object filter) {
+            throw new UnsupportedOperationException("Not yet implemented");
+        }
+
+        @Override
+        public CompletableFuture<Boolean> saveCheckpointAsync(
+                String agentId, AgentCheckpointData checkpointData) {
+            throw new UnsupportedOperationException("Not yet implemented");
+        }
+
+        @Override
+        public CompletableFuture<AgentCheckpointData> getLatestCheckpointAsync(
+                String agentId, Object filter) {
+            throw new UnsupportedOperationException("Not yet implemented");
+        }
+    }
     ```
     <!--- KNIT example-agent-persistence-java-08.java -->
 
@@ -462,11 +535,19 @@ feature in your agent.
 
     <!--- INCLUDE
     /**
+    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
     -->
     ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(executor)
+        .llmModel(OllamaModels.Meta.LLAMA_3_2)
+        .install(Persistence.Feature, cfg -> {
+            cfg.setStorage(new MyCustomStorageProvider());
+        })
+        .build();
     ```
     <!--- KNIT example-agent-persistence-java-09.java -->
 
@@ -516,6 +597,23 @@ For advanced control, you can directly set the execution point of an agent:
     **/
     -->
     ```java
+    Persistence persistence = PersistenceKt.persistence(context);
+
+    // Set the execution point before a node and provide an input for it:
+    persistence.setExecutionPoint(
+        context,
+        context.getExecutionInfo().path(),
+        customMessageHistory,
+        customInput
+    );
+
+    // Or after a node and provide an output from the node:
+    persistence.setExecutionPointAfterNode(
+        context,
+        context.getExecutionInfo().path(),
+        customMessageHistory,
+        customOutput
+    );
     ```
     <!--- KNIT example-agent-persistence-java-10.java -->
 
