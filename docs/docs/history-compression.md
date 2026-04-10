@@ -583,7 +583,7 @@ You can use it as follows:
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
-    class exampleHistoryCompressionJava05 {
+    class exampleHistoryCompressionJava08 {
     public static void main(String[] args) {
         var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
             .withInput(String.class)
@@ -604,7 +604,7 @@ You can use it as follows:
     // Note: This example only shows the node creation.
     // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT exampleHistoryCompressionJava05.java -->
+    <!--- KNIT exampleHistoryCompressionJava08.java -->
 
 * In a custom node:
 
@@ -1019,7 +1019,7 @@ To enable memory preservation:
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
-    class exampleHistoryCompressionJava07 {
+    class exampleHistoryCompressionJava15 {
     public static void main(String[] args) {
         var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
             .withInput(String.class)
@@ -1041,7 +1041,7 @@ To enable memory preservation:
     // Note: This example only shows the node creation.
     // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT exampleHistoryCompressionJava07.java -->
+    <!--- KNIT exampleHistoryCompressionJava15.java -->
 
 * In a custom node:
 
