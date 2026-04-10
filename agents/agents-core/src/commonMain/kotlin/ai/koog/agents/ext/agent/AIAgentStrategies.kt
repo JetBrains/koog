@@ -125,7 +125,8 @@ public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy(
 @JvmOverloads
 public fun reActStrategy(
     reasoningInterval: Int = 1,
-    name: String = "re_act"
+    name: String = "re_act",
+    reasoningPrompt: String = "Please give your thoughts about the task and plan the next steps."
 ): AIAgentGraphStrategy<String, String> = strategy(name) {
     require(reasoningInterval > 0) { "Reasoning interval must be greater than 0" }
     val reasoningStepKey = createStorageKey<Int>("reasoning_step")
@@ -140,7 +141,6 @@ public fun reActStrategy(
     }
     val nodeExecuteTool by nodeExecuteTool()
 
-    val reasoningPrompt = "Please give your thoughts about the task and plan the next steps."
     val nodeCallLLMReasonInput by node<String, Unit> { stageInput ->
         llm.writeSession {
             appendPrompt {
