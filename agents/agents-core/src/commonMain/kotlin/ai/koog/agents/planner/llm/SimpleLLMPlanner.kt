@@ -3,7 +3,6 @@ package ai.koog.agents.planner.llm
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.planner.AIAgentPlanner
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown

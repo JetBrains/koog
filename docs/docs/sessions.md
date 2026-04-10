@@ -705,7 +705,6 @@ for compressing history:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 
     val strategy = strategy<Unit, Unit>("strategy-name") {
         val node by node<Unit, Unit> {
@@ -916,7 +915,6 @@ If your history becomes too large and consumes too many tokens, use history comp
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-    import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 
     val strategy = strategy<Unit, Unit>("strategy-name") {
         val node by node<Unit, Unit> {
