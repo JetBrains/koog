@@ -117,117 +117,246 @@ This section provides detailed examples of creating `LLModel` instances with dif
 
 The code below represents a basic LLM configuration with core capabilities:
 
-<!--- INCLUDE
-import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
+=== "Kotlin"
 
--->
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability
+    import ai.koog.prompt.llm.LLMProvider
+    import ai.koog.prompt.llm.LLModel
 
-```kotlin
-val basicModel = LLModel(
-    provider = LLMProvider.OpenAI,
-    id = "gpt-4-turbo",
-    capabilities = listOf(
-        LLMCapability.Temperature,
-        LLMCapability.Tools,
-        LLMCapability.Schema.JSON.Standard
-    ),
-    contextLength = 128_000
-)
-```
+    -->
+    ```kotlin
+    val basicModel = LLModel(
+        provider = LLMProvider.OpenAI,
+        id = "gpt-4-turbo",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.Schema.JSON.Standard
+        ),
+        contextLength = 128_000
+    )
+    ```
+    <!--- KNIT example-model-capabilities-01.kt -->
 
-<!--- KNIT example-model-capabilities-01.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability;
+    import ai.koog.prompt.llm.LLMProvider;
+    import ai.koog.prompt.llm.LLModel;
+    import java.util.List;
+
+    class ExampleModelCapabilities01 {
+    -->
+    ```java
+    LLModel basicModel = new LLModel(
+        LLMProvider.OpenAI,
+        "gpt-4-turbo",
+        List.of(
+            LLMCapability.Temperature.INSTANCE,
+            LLMCapability.Tools.INSTANCE,
+            LLMCapability.Schema.JSON.Standard.INSTANCE
+        ),
+        128_000L
+    );
+    ```
+    <!--- SUFFIX
+    }
+    -->
+    <!--- KNIT example-model-capabilities-java-01.java -->
 
 The model configuration below is a multimodal LLM with vision capabilities:
 
-<!--- INCLUDE
-import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
+=== "Kotlin"
 
--->
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability
+    import ai.koog.prompt.llm.LLMProvider
+    import ai.koog.prompt.llm.LLModel
 
-```kotlin
-val visionModel = LLModel(
-    provider = LLMProvider.OpenAI,
-    id = "gpt-4-vision",
-    capabilities = listOf(
-        LLMCapability.Temperature,
-        LLMCapability.Vision.Image,
-        LLMCapability.MultipleChoices
-    ),
-    contextLength = 1_047_576,
-    maxOutputTokens = 32_768
-)
-```
+    -->
+    ```kotlin
+    val visionModel = LLModel(
+        provider = LLMProvider.OpenAI,
+        id = "gpt-4-vision",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Vision.Image,
+            LLMCapability.MultipleChoices
+        ),
+        contextLength = 1_047_576,
+        maxOutputTokens = 32_768
+    )
+    ```
+    <!--- KNIT example-model-capabilities-02.kt -->
 
-<!--- KNIT example-model-capabilities-02.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability;
+    import ai.koog.prompt.llm.LLMProvider;
+    import ai.koog.prompt.llm.LLModel;
+    import java.util.List;
+
+    class ExampleModelCapabilities02 {
+    -->
+    ```java
+    LLModel visionModel = new LLModel(
+        LLMProvider.OpenAI,
+        "gpt-4-vision",
+        List.of(
+            LLMCapability.Temperature.INSTANCE,
+            LLMCapability.Vision.Image.INSTANCE,
+            LLMCapability.MultipleChoices.INSTANCE
+        ),
+        1_047_576L,
+        32_768L
+    );
+    ```
+    <!--- SUFFIX
+    }
+    -->
+    <!--- KNIT example-model-capabilities-java-02.java -->
 
 An LLM with audio processing capabilities:
 
-<!--- INCLUDE
-import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
+=== "Kotlin"
 
--->
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability
+    import ai.koog.prompt.llm.LLMProvider
+    import ai.koog.prompt.llm.LLModel
 
-```kotlin
-val audioModel = LLModel(
-    provider = LLMProvider.Anthropic,
-    id = "claude-3-opus",
-    capabilities = listOf(
-        LLMCapability.Audio,
-        LLMCapability.Temperature,
-        LLMCapability.PromptCaching
-    ),
-    contextLength = 200_000
-)
-```
+    -->
+    ```kotlin
+    val audioModel = LLModel(
+        provider = LLMProvider.Anthropic,
+        id = "claude-3-opus",
+        capabilities = listOf(
+            LLMCapability.Audio,
+            LLMCapability.Temperature,
+            LLMCapability.PromptCaching
+        ),
+        contextLength = 200_000
+    )
+    ```
+    <!--- KNIT example-model-capabilities-03.kt -->
 
-<!--- KNIT example-model-capabilities-03.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability;
+    import ai.koog.prompt.llm.LLMProvider;
+    import ai.koog.prompt.llm.LLModel;
+    import java.util.List;
+
+    class ExampleModelCapabilities03 {
+    -->
+    ```java
+    LLModel audioModel = new LLModel(
+        LLMProvider.Anthropic,
+        "claude-3-opus",
+        List.of(
+            LLMCapability.Audio.INSTANCE,
+            LLMCapability.Temperature.INSTANCE,
+            LLMCapability.PromptCaching.INSTANCE
+        ),
+        200_000L
+    );
+    ```
+    <!--- SUFFIX
+    }
+    -->
+    <!--- KNIT example-model-capabilities-java-03.java -->
 
 
 In addition to creating models as `LLModel` instances and having to specify all related parameters, Koog includes a
 collection of predefined models and their configurations with supported capabilities.
 To use a predefined Ollama model, specify it as follows:
 
-<!--- INCLUDE
-import ai.koog.prompt.executor.ollama.client.OllamaModels
+=== "Kotlin"
 
--->
+    <!--- INCLUDE
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
 
-```kotlin
-val metaModel = OllamaModels.Meta.LLAMA_3_2
-```
+    -->
+    ```kotlin
+    val metaModel = OllamaModels.Meta.LLAMA_3_2
+    ```
+    <!--- KNIT example-model-capabilities-04.kt -->
 
-<!--- KNIT example-model-capabilities-04.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    import ai.koog.prompt.llm.LLModel;
+
+    class ExampleModelCapabilities04 {
+    -->
+    ```java
+    LLModel metaModel = OllamaModels.Meta.LLAMA_3_2;
+    ```
+    <!--- SUFFIX
+    }
+    -->
+    <!--- KNIT example-model-capabilities-java-04.java -->
 
 
 To check whether a model supports a specific capability use the `contains` method to check for the presence of the
 capability in the `capabilities` list:
 
-<!--- INCLUDE
-import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.executor.ollama.client.OllamaModels
+=== "Kotlin"
 
-val basicModel = OllamaModels.Meta.LLAMA_3_2
-val visionModel = OllamaModels.Meta.LLAMA_3_2
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability
+    import ai.koog.prompt.executor.ollama.client.OllamaModels
 
--->
+    val basicModel = OllamaModels.Meta.LLAMA_3_2
+    val visionModel = OllamaModels.Meta.LLAMA_3_2
 
-```kotlin
-// Check if models support specific capabilities
-val supportsTools = basicModel.supports(LLMCapability.Tools) // true
-val supportsVideo = visionModel.supports(LLMCapability.Vision.Video) // false
+    -->
+    ```kotlin
+    // Check if models support specific capabilities
+    val supportsTools = basicModel.supports(LLMCapability.Tools) // true
+    val supportsVideo = visionModel.supports(LLMCapability.Vision.Video) // false
 
-// Check for schema capabilities
-val jsonCapability = basicModel.capabilities?.filterIsInstance<LLMCapability.Schema.JSON>()?.firstOrNull()
-val hasFullJsonSupport = jsonCapability is LLMCapability.Schema.JSON.Standard // true
-```
+    // Check for schema capabilities
+    val jsonCapability = basicModel.capabilities?.filterIsInstance<LLMCapability.Schema.JSON>()?.firstOrNull()
+    val hasFullJsonSupport = jsonCapability is LLMCapability.Schema.JSON.Standard // true
+    ```
+    <!--- KNIT example-model-capabilities-05.kt -->
 
-<!--- KNIT example-model-capabilities-05.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability;
+    import ai.koog.prompt.llm.LLModel;
+    import ai.koog.prompt.executor.ollama.client.OllamaModels;
+    import java.util.Objects;
+
+    class ExampleModelCapabilities05 {
+
+    LLModel basicModel = OllamaModels.Meta.LLAMA_3_2;
+    LLModel visionModel = OllamaModels.Meta.LLAMA_3_2;
+    -->
+    ```java
+    // Check if models support specific capabilities
+    boolean supportsTools = basicModel.supports(LLMCapability.Tools.INSTANCE); // true
+    boolean supportsVideo = visionModel.supports(LLMCapability.Vision.Video.INSTANCE); // false
+
+    // Check for schema capabilities
+    LLMCapability jsonCapability = basicModel.getCapabilities().stream()
+        .filter(c -> c instanceof LLMCapability.Schema.JSON)
+        .map(c -> (LLMCapability.Schema.JSON) c)
+        .findFirst()
+        .orElse(null);
+    boolean hasFullJsonSupport = jsonCapability instanceof LLMCapability.Schema.JSON.Standard; // true
+    ```
+    <!--- SUFFIX
+    }
+    -->
+    <!--- KNIT example-model-capabilities-java-05.java -->
 
 ### LLM capabilities by model
 
