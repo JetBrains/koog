@@ -215,7 +215,7 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val executor = getExecutor(model)
-        val params = createReasoningParams(model)
+        val params = createNoReasoningParams(model)
 
         val prompt = Prompt.build("test-streaming", params = params) {
             system("You are a helpful assistant.")
