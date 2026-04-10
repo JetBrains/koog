@@ -3,6 +3,7 @@ package ai.koog.agents.example.features.opentelemetry;
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.example.ApiKeyService;
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -41,10 +42,11 @@ public class OpenTelemetryExample {
             .llmModel(OpenAIModels.Chat.GPT4o)
             .install(OpenTelemetry.Feature, config -> {
                 // Add a console logger for local debugging
-                config.addSpanExporter(LoggingSpanExporter.create());
+                OpenTelemetryConfigJvm.addSpanExporter(config, LoggingSpanExporter.create());
 
                 // Send traces to OpenTelemetry collector
-                config.addSpanExporter(
+                OpenTelemetryConfigJvm.addSpanExporter(
+                    config,
                     OtlpGrpcSpanExporter.builder()
                         .setEndpoint("http://localhost:4317")
                         .build()

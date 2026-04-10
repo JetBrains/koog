@@ -3,10 +3,12 @@ package ai.koog.agents.example.features.opentelemetry
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addMetricExporter
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.utils.io.use
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.exporter.logging.LoggingMetricExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
@@ -45,7 +47,7 @@ fun main() = runBlocking {
                 "0.0.1"
             )
             addResourceAttributes(
-                mapOf(AttributeKey.stringKey("service.instance.id") to "run-1")
+                mapOf("service.instance.id" to "run-1")
             )
 
             // Add a console logger to view metrics
@@ -57,7 +59,7 @@ fun main() = runBlocking {
             // Add a console logger for local debugging
             addSpanExporter(LoggingSpanExporter.create())
 
-            // Send traces to OpenTelemetry collector
+            // Send traces to OpenTelemetry collector (batched, OTel-recommended for production)
             addSpanExporter(
                 OtlpGrpcSpanExporter.builder()
                     .setEndpoint("http://localhost:4317")

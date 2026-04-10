@@ -39,6 +39,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import ai.koog.utils.time.KoogClock
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -229,7 +230,7 @@ internal object OpenTelemetryTestAPI {
                 temperature = TEMPERATURE,
                 maxTokens = maxTokens,
             ) {
-                addSpanExporter(mockExporter)
+                addSpanProcessor { simpleSpanProcessor(mockExporter) }
                 setVerbose(verbose)
             }.use { agent ->
                 agent.run(userPrompt ?: USER_PROMPT_PARIS)

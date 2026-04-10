@@ -3,6 +3,7 @@
 koog = "99-SNAPSHOT"
 jackson = "2.21.1"
 logback = "1.5.13"
+opentelemetry = "1.61.0"
 
 [libraries]
 # Koog
@@ -17,5 +18,9 @@ koog-agents-test = { module = "ai.koog:agents-test", version.ref = "koog" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
+opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
 
 [plugins]

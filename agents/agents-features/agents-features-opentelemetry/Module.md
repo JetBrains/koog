@@ -32,17 +32,31 @@ dependencies {
 Then, install the OpenTelemetry feature when creating your agent:
 
 ```kotlin
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
+import io.opentelemetry.exporter.logging.LoggingSpanExporter
+
 val agent = AIAgent(
     executor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant.",
     installFeatures = {
         install(OpenTelemetry) {
-            setServiceInfo("my-agent-service", "1.0.0")   // Set your service configuration
-            addSpanExporter(LoggingSpanExporter.create()) // Add Logging exporter
+            setServiceInfo("my-agent-service", "1.0.0")    // Set your service configuration
+            addSpanExporter(LoggingSpanExporter.create())  // Wraps in batchSpanProcessor (OTel-recommended)
         }
     }
 )
+```
+
+`addSpanExporter` registers the exporter behind a [`batchSpanProcessor`][io.opentelemetry.kotlin.tracing.export.batchSpanProcessor], which is OTel's recommended default for production. For full control over the processor (custom batching parameters, simple processors for tests, composite processors), use [`addSpanProcessor`][ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig.addSpanProcessor]:
+
+```kotlin
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
+
+install(OpenTelemetry) {
+    addSpanProcessor { simpleSpanProcessor(stdoutSpanExporter()) }
+}
 ```
 
 ### Using in tests
@@ -59,9 +73,9 @@ val testAgent = AIAgent(
 ) {
     install(OpenTelemetry) {
         setServiceInfo("test-agent", "1.0.0")
-        addSpanExporter(mockSpanExporter)
+        addSpanProcessor { simpleSpanProcessor(mockSpanExporter) }
     }
-    
+
     // Enable testing mode
     withTesting()
 }
@@ -80,17 +94,17 @@ val agent = AIAgent(
         install(OpenTelemetry) {
             // Configure service info
             setServiceInfo("my-otlp-agent", "1.0.0")
-            
-            // Add OTLP exporter for Jaeger
+
+            // Add OTLP exporter for Jaeger (Java SDK exporter, bridged via the JVM addSpanExporter)
             addSpanExporter(
                 OtlpGrpcSpanExporter.builder()
                     .setEndpoint("http://localhost:4317")
                     .build()
             )
-            
-            // Add resource attributes
+
+            // Add resource attributes (Map<String, Any>)
             addResourceAttributes(mapOf(
-                AttributeKey.stringKey("deployment.environment") to "production"
+                "deployment.environment" to "production"
             ))
         }
     }

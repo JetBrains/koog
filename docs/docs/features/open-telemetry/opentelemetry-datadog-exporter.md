@@ -46,6 +46,7 @@ To enable Datadog export, install the **OpenTelemetry feature** and call [`addDa
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import kotlinx.coroutines.runBlocking
@@ -76,6 +77,7 @@ To enable Datadog export, install the **OpenTelemetry feature** and call [`addDa
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.agents.features.opentelemetry.integration.datadog.DatadogKt;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     public class exampleDatadogExporterJava01 {
@@ -93,7 +95,7 @@ To enable Datadog export, install the **OpenTelemetry feature** and call [`addDa
             .llmModel(OpenAIModels.Chat.GPT4oMini)
             .systemPrompt("You are a code assistant. Provide concise code examples.")
             .install(OpenTelemetry.Feature, config ->
-                config.addDatadogExporter()
+                DatadogKt.addDatadogExporter(config)
             )
             .build();
 
@@ -111,7 +113,7 @@ When Koog sends agent activity to Datadog, it does so as a series of *spans* —
 an LLM call or a tool execution. Related spans are grouped into a *trace*, which represents a complete agent run
 from start to finish.
 
-[`addDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter) accepts a `traceAttributes` parameter — a map of key-value pairs describing
+[`addDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter) accepts a `resourceAttributes` parameter — a map of key-value pairs describing
 the application emitting the traces. These are attached to every span, making it easy to filter and group traces in
 Datadog by properties such as environment or version.
 
@@ -128,6 +130,7 @@ Common attributes to include:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import kotlinx.coroutines.runBlocking
@@ -142,8 +145,8 @@ Common attributes to include:
         ) {
             install(OpenTelemetry) {
                 addDatadogExporter(
-                    datadogSite = "datadoghq.eu",  // Use EU region
-                    traceAttributes = mapOf(
+                    url = "datadoghq.eu",  // Use EU region
+                    resourceAttributes = mapOf(
                         "env" to "production",
                         "service.name" to "my-agent",
                         "version" to "1.0.0"
@@ -164,9 +167,9 @@ Common attributes to include:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.agents.features.opentelemetry.integration.datadog.DatadogKt;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    import java.util.Map;
     public class exampleDatadogExporterJava02 {
         static PromptExecutor promptExecutor = PromptExecutor.builder()
             .openAI("openai-api-key")
@@ -182,15 +185,10 @@ Common attributes to include:
             .systemPrompt("You are a helpful assistant.")
             .llmModel(OpenAIModels.Chat.GPT4oMini)
             .install(OpenTelemetry.Feature, config ->
-                config.addDatadogExporter(
-                    null,                           // Use DD_API_KEY env var
-                    "datadoghq.eu",                 // Use EU region
-                    null,                           // Default timeout
-                    Map.of(
-                        "env", "production",
-                        "service.name", "my-agent",
-                        "version", "1.0.0"
-                    )
+                DatadogKt.addDatadogExporter(
+                    config,
+                    null,                            // datadogApiKey: use DD_API_KEY env var
+                    "datadoghq.eu"                   // url: use EU region
                 ))
             .build();
 
@@ -201,21 +199,28 @@ Common attributes to include:
     ```
     <!--- KNIT exampleDatadogExporterJava02.java -->
 
-## Custom exporter wrapping
+    !!! note
+        Setting `resourceAttributes` from Java is currently not supported because the underlying Kotlin function carries a [`kotlin.time.Duration`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.time/-duration/) parameter (a value class) that causes JVM-name mangling on all overloads including parameters after it. Use the Kotlin example above when you need `resourceAttributes`.
 
-Use [`buildDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.buildDatadogExporter) when you need direct access to the exporter object to wrap it with additional processing logic before registering it.
-For example, use `SpanExporter.composite()` to send traces to multiple backends at once:
+## Sending to multiple backends
+
+To send traces to Datadog and another backend at the same time, register Datadog through
+[`addDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter)
+and add the second exporter through
+[`addSpanExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig.addSpanExporter).
+Each call registers an independent batch span processor so the two backends are exported
+in parallel:
 
 === "Kotlin"
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.integration.datadog.buildDatadogExporter
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
+    import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
-    import io.opentelemetry.sdk.trace.export.SpanExporter
     import kotlinx.coroutines.runBlocking
     val promptExecutor = simpleOpenAIExecutor("openai-api-key")
     fun main() = runBlocking {
@@ -231,11 +236,12 @@ For example, use `SpanExporter.composite()` to send traces to multiple backends 
     -->
     ```kotlin
     install(OpenTelemetry) {
-        val datadogExporter = buildDatadogExporter()
-        val localExporter = OtlpHttpSpanExporter.builder()
-            .setEndpoint("http://localhost:4318/v1/traces")
-            .build()
-        addSpanExporter(SpanExporter.composite(datadogExporter, localExporter))
+        addDatadogExporter()
+        addSpanExporter(
+            OtlpHttpSpanExporter.builder()
+                .setEndpoint("http://localhost:4318/v1/traces")
+                .build()
+        )
     }
     ```
     <!--- KNIT example-datadog-exporter-03.kt -->

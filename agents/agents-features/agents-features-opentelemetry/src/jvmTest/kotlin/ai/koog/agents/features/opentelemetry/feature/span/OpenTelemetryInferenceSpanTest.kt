@@ -38,7 +38,8 @@ import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestPipeline
-import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.kotlin.tracing.data.SpanData
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -680,7 +681,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                 systemPrompt = OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT
             ) {
                 install(OpenTelemetry) {
-                    addSpanExporter(spanExporter)
+                    addSpanProcessor { simpleSpanProcessor(spanExporter) }
                 }
             }.run(OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS)
         }
@@ -725,6 +726,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
     }
 
     private fun SpanData.asKeyValue(): List<Pair<String, Any>> {
-        return attributes.asMap().map { it.key.key!! to it.value }
+        return attributes.entries.map { it.key to it.value }
     }
 }

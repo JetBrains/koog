@@ -57,7 +57,9 @@ kotlin {
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
                 implementation(libs.aws.sdk.kotlin.bedrockagentcore)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(project.dependencies.platform(libs.opentelemetry.bom))
                 implementation(libs.opentelemetry.sdk.testing)
+                implementation(libs.opentelemetry.kotlin.exporters.inMemory)
             }
         }
     }

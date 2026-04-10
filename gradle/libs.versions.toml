@@ -32,7 +32,8 @@ mokksy = "0.5.1"
 mysql = "9.6.0"
 netty = "4.2.9.Final"
 okhttp = "5.3.2"
-opentelemetry = "1.51.0"
+opentelemetry-jvm = "1.61.0"
+opentelemetry-kotlin = "0.3.0"
 oshai-logging = "7.0.7"
 postgresql = "42.7.10"
 slf4j = "2.0.17"
@@ -108,17 +109,29 @@ sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttp" }
 okhttp = { module = "com.squareup.okhttp3:okhttp" }
 okhttp-sse = { module = "com.squareup.okhttp3:okhttp-sse" }
-opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
+android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+
+# Open Telemetry
+opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry-jvm" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 opentelemetry-sdk-testing = { module = "io.opentelemetry:opentelemetry-sdk-testing" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
 opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
+
+opentelemetry-kotlin-core = { module = "io.opentelemetry.kotlin:core", version.ref = "opentelemetry-kotlin" }
+opentelemetry-kotlin-sdk-api = { module = "io.opentelemetry.kotlin:sdk-api", version.ref = "opentelemetry-kotlin" }
+opentelemetry-kotlin-implementation = { module = "io.opentelemetry.kotlin:implementation", version.ref = "opentelemetry-kotlin" }
+opentelemetry-kotlin-exporters-core = { module = "io.opentelemetry.kotlin:exporters-core", version.ref = "opentelemetry-kotlin" }
+opentelemetry-kotlin-exporters-inMemory = { module = "io.opentelemetry.kotlin:exporters-in-memory", version.ref = "opentelemetry-kotlin" }
+opentelemetry-kotlin-semconv = { module = "io.opentelemetry.kotlin:semconv", version.ref = "opentelemetry-kotlin" }
+opentelemetry-kotlin-compat = { module = "io.opentelemetry.kotlin:compat", version.ref = "opentelemetry-kotlin" }
+
+# AWS
 aws-sdk-kotlin-bedrock = { module = "aws.sdk.kotlin:bedrock", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-bedrockruntime = { module = "aws.sdk.kotlin:bedrockruntime", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-bedrockagentcore = { module = "aws.sdk.kotlin:bedrockagentcore", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
-android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
-jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 
 # Spring
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }

@@ -10,6 +10,7 @@ import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
+import ai.koog.agents.features.opentelemetry.mock.MockContextFactory
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
@@ -42,12 +43,14 @@ class LangfuseSpanAdapterTest {
         val provider = MockLLMProvider()
         val model = createTestModel(provider)
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
@@ -66,6 +69,7 @@ class LangfuseSpanAdapterTest {
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = createAgentSpan,
             id = invokeAgentSpanId,
             model = model,
@@ -187,12 +191,14 @@ class LangfuseSpanAdapterTest {
         val provider = MockLLMProvider()
         val model = createTestModel(provider)
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
@@ -205,6 +211,7 @@ class LangfuseSpanAdapterTest {
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = createAgentSpan,
             id = invokeSpanId,
             model = model,
@@ -220,6 +227,7 @@ class LangfuseSpanAdapterTest {
 
         val firstNode = startNodeExecuteSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = invokeSpan,
             id = firstNodeSpanId,
             runId = runId,
@@ -239,6 +247,7 @@ class LangfuseSpanAdapterTest {
 
         val secondNode = startNodeExecuteSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = firstNode,
             id = secondNodeSpanId,
             runId = runId,
@@ -266,10 +275,12 @@ class LangfuseSpanAdapterTest {
     ): GenAIAgentSpan {
         val model = createTestModel(provider)
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
 
         val createAgentSpanId = "create-agent-span-id"
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
@@ -280,6 +291,7 @@ class LangfuseSpanAdapterTest {
         val invokeSpanId = "invoke-agent-span-id"
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = createAgentSpan,
             id = invokeSpanId,
             model = model,
@@ -293,6 +305,7 @@ class LangfuseSpanAdapterTest {
         val nodeSpanId = "node-span-id"
         val nodeSpan = startNodeExecuteSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = invokeSpan,
             id = nodeSpanId,
             runId = runId,
@@ -303,6 +316,7 @@ class LangfuseSpanAdapterTest {
         val inferenceSpanId = "inference-span-id"
         val inferenceSpan = startInferenceSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = nodeSpan,
             id = inferenceSpanId,
             provider = provider,

@@ -51,9 +51,13 @@ val agent = AIAgent(
 Here is an example of installing the OpenTelemetry feature with a basic set of configuration items:
 
 ```kotlin
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
+import io.opentelemetry.exporter.logging.LoggingSpanExporter
+
 install(OpenTelemetry) {
-    setServiceInfo("my-agent-service", "1.0.0")   // Set your service configuration
-    addSpanExporter(LoggingSpanExporter.create()) // Add Logging exporter
+    setServiceInfo("my-agent-service", "1.0.0")    // Set your service configuration
+    addSpanExporter(LoggingSpanExporter.create())  // Java SDK exporter (bridged via JVM addSpanExporter)
 }
 ```
 
@@ -62,75 +66,87 @@ The example includes the following configuration methods:
 | Name               | Data type | Required | Description                                                                                     |
 |--------------------|-----------|----------|-------------------------------------------------------------------------------------------------|
 | `setServiceInfo`   | Unit      | No       | Sets the information about the service being instrumented, including service name and version.  |
-| `addSpanExporter`  | Unit      | No       | Adds a span exporter to send telemetry data to external systems or for logging purposes.        |
+| `addSpanExporter`  | Unit      | No       | Registers an exporter wrapped in a [`batchSpanProcessor`][batchSpanProcessor] (OTel-recommended). |
 
 Please see below the full list of available configuration properties:
 
-| Name               | Data type          | Default value | Description                                                                  |
-|--------------------|--------------------|---------------|------------------------------------------------------------------------------|
-| `serviceName`      | `String`           | `ai.koog`     | The name of the service being instrumented.                                  |
-| `serviceVersion`   | `String`           | `0.0.0`       | The version of the service being instrumented.                               |
-| `sdk`              | `OpenTelemetrySdk` |               | The OpenTelemetry SDK instance to use for telemetry collection.              |
-| `isVerbose`        | `Boolean`          | `false`       | Whether to enable verbose logging for debugging OpenTelemetry configuration. |
-| `tracer`           | `Tracer`           |               | The OpenTelemetry tracer instance used for creating spans.                   |
+| Name                    | Data type       | Default value | Description                                                                                                              |
+|-------------------------|-----------------|---------------|--------------------------------------------------------------------------------------------------------------------------|
+| `serviceName`           | `String`        | `ai.koog`     | The name of the service being instrumented.                                                                              |
+| `serviceVersion`        | `String`        | `0.0.0`       | The version of the service being instrumented.                                                                           |
+| `isVerbose`             | `Boolean`       | `false`       | Whether to enable verbose logging for debugging OpenTelemetry configuration.                                             |
+| `isShutdownOnAgentClose`| `Boolean`       | `false`       | Whether the SDK is shut down when the owning agent closes.                                                               |
+| `tracer`                | `Tracer`        |               | Kotlin SDK [`Tracer`][Tracer] used for creating spans.                                                                  |
 
 Configuration API:
 
-| Name                    | Arguments                                           | Description                                                                       |
-|-------------------------|-----------------------------------------------------|-----------------------------------------------------------------------------------|
-| `setServiceInfo`        | `serviceName: String, serviceVersion: String`       | Sets the service information including name and version.                          |
-| `addSpanExporter`       | `exporter: SpanExporter`                            | Adds a span exporter to send telemetry data to external systems.                  |
-| `addSpanProcessor`      | `processor: (SpanExporter) -> SpanProcessor`        | Adds a span processor creator function to process spans before they are exported. |
-| `addResourceAttributes` | `attributes: Map<AttributeKey<T>, T> where T : Any` | Adds resource attributes to provide additional context about the service.         |
-| `setSampler`            | `sampler: Sampler`                                  | Sets the sampling strategy to control which spans are collected.                  |
-| `setVerbose`            | `verbose: Boolean`                                  | Enables or disables verbose logging for debugging OpenTelemetry configuration.    |
-| `setSdk`                | `sdk: OpenTelemetrySdk`                             | Injects a custom OpenTelemetry SDK instance for advanced configuration control.   |
+| Name                    | Arguments                                                | Description                                                                                                              |
+|-------------------------|----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `setServiceInfo`        | `serviceName: String, serviceVersion: String`            | Sets the service information including name and version.                                                                 |
+| `addSpanExporter`       | `exporter: SpanExporter` (Kotlin SDK or Java SDK on JVM) | Registers an exporter behind a `batchSpanProcessor`. Use the JVM overload (in `OpenTelemetryConfigJvm`) for Java exporters. |
+| `addSpanProcessor`      | `factory: TraceExportConfigDsl.() -> SpanProcessor`      | Registers a custom span processor (e.g., simple/composite/custom-batched) via the SDK's DSL.                             |
+| `addResourceAttributes` | `attributes: Map<String, Any>`                           | Adds resource attributes to provide additional context about the service. Supported value types: `String`, `Long`, `Double`, `Boolean`. |
+| `setVerbose`            | `verbose: Boolean`                                       | Enables or disables verbose logging for debugging OpenTelemetry configuration.                                           |
+| `setSdk`                | `openTelemetry: OpenTelemetry`                           | Injects a pre-built Kotlin OpenTelemetry SDK instance, bypassing internal configuration.                                 |
+| `setShutdownOnAgentClose`| `shutdownOnAgentClose: Boolean`                         | Toggles whether the SDK is shut down when the owning agent closes.                                                       |
 
+JVM-only metric extensions live on [`OpenTelemetryConfigJvm`][OpenTelemetryConfigJvm] (`addMetricExporter`, `addMetricFilter`, `meter`) — the Kotlin SDK 0.3.0 ships no metrics module, so metrics are sent through the Java SDK.
 
 ### Advanced configuration
 
-For more advanced configuration, you can also customize the following configuration options:
-
-- Sampler: configure the sampling strategy to adjust the frequency and amount of collected data.
-- Resource attributes: add resource information, either through standard or custom resource attributes.
+For more advanced configuration, you can customize resource attributes:
 
 ```kotlin
 install(OpenTelemetry) {
-    setServiceInfo("my-agent-service", "1.0.0")   // Set your service configuration
-    addSpanExporter(LoggingSpanExporter.create()) // Add Logging exporter
-    
-    // Add resource attributes
+    setServiceInfo("my-agent-service", "1.0.0")    // Set your service configuration
+    addSpanExporter(LoggingSpanExporter.create())  // Add Logging exporter
+
+    // Add resource attributes (Map<String, Any>; supports String, Long, Double, Boolean)
     addResourceAttributes(mapOf(
-        AttributeKey.stringKey("deployment.environment") to "production",
-        AttributeKey.stringKey("custom.attribute") to "custom-value"
+        "deployment.environment" to "production",
+        "custom.attribute" to "custom-value"
     ))
+}
+```
+
+### Custom span processors
+
+`addSpanExporter` always wraps in `batchSpanProcessor`. For full control over the processor — custom batching parameters, simple per-span export for tests, or a composite processor over several inner processors — use `addSpanProcessor` and the SDK's DSL-scoped factory functions:
+
+```kotlin
+import io.opentelemetry.kotlin.tracing.export.batchSpanProcessor
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
+import io.opentelemetry.kotlin.tracing.export.stdoutSpanExporter
+
+install(OpenTelemetry) {
+    // Stdout exporter wrapped in a simple (synchronous) processor — useful for local debugging.
+    addSpanProcessor { simpleSpanProcessor(stdoutSpanExporter()) }
+
+    // Custom batch parameters (default: 5s schedule delay, 512 max batch size).
+    addSpanProcessor { batchSpanProcessor(myExporter, scheduleDelayMs = 1000) }
 }
 ```
 
 ### Sdk configuration
 
-If you already have an initialized OpenTelemetrySdk-for example, configured elsewhere in your application or provided by a framework-you can pass it directly using `setSdk`
-When using `setSdk` any other configuration methods like `addSpanExporter`, `addSpanProcessor`, `addResourceAttributes` or `setSample` will be ignored, since the SDK is assumed to be fully configured.
+If you already have an initialized [`OpenTelemetry`][OpenTelemetry] SDK instance — for example, configured elsewhere in your application or provided by a framework — you can pass it directly using `setSdk`. When using `setSdk` any other configuration methods like `addSpanExporter`, `addSpanProcessor`, `addResourceAttributes` are ignored, since the SDK is assumed to be fully configured.
+
 ```kotlin
-val sdk: OpenTelemetrySdk = createPreconfiguredSdk() // Your preconfigured sdk
+import io.opentelemetry.kotlin.OpenTelemetry
+import io.opentelemetry.kotlin.createOpenTelemetry
+
+val sdk: OpenTelemetry = createOpenTelemetry { /* … */ } // Your preconfigured SDK
 
 install(OpenTelemetry) {
-    setSdk(sdk) // Use your existing OpenTelemetrySdk instance
+    setSdk(sdk) // Use your existing OpenTelemetry instance
 }
 ```
-
-#### Sampler
-
-To define a sampler, use a corresponding method of the `Sampler` class that represents the sampling strategy you want
-to use. The available method is:
-
-- `alwaysOn()`: The default sampling strategy where every span (trace) is sampled.
 
 #### Resource attributes
 
 Resource attributes represent additional information about a process producing telemetry. This information can be
-included in an OpenTelemetry configuration in Koog using the `addResourceAttributes()` method that takes a map of
-`AttributeKey<T>` to values of type `T`. 
+included in an OpenTelemetry configuration in Koog using the `addResourceAttributes()` method that takes a
+`Map<String, Any>`. Supported value types are `String`, `Long`, `Double`, and `Boolean`.
 
 The following default resource attributes are automatically added:
 
@@ -228,7 +244,7 @@ The OpenTelemetry feature creates different types of spans for various operation
         - `gen_ai.usage.total_tokens` (when available)
         - `gen_ai.response.finish_reasons` (Stop, ToolCalls, etc.)
         - `error.type` (on LLM call failure)
-        - `gen_ai.response.metadata` (when `ResponseMetaInfo.metadata` is present — serialized JSON containing free-form provider or application metadata)
+        - `gen_ai.response.metadata` (when `ResponseMetaInfo.metadata` is present - serialized JSON containing free-form provider or application metadata)
 
 6. **Execute Tool Span**
     - Purpose: Execution of a tool or function call triggered by the agent or LLM.
@@ -350,17 +366,14 @@ suspend fun main() {
             install(OpenTelemetry) {
                 // Configure service info
                 setServiceInfo("advanced-agent", "2.0.0")
-                
-                // Configure sampling
-                setSampler(Sampler.alwaysOn())
-                
-                // Add resource attributes
+
+                // Add resource attributes (Map<String, Any>)
                 addResourceAttributes(mapOf(
-                    AttributeKey.stringKey("deployment.environment") to "production",
-                    AttributeKey.stringKey("custom.attribute") to "custom-value"
+                    "deployment.environment" to "production",
+                    "custom.attribute" to "custom-value"
                 ))
-                
-                // Add exporters
+
+                // Add exporters (Java SDK exporter bridged via the JVM addSpanExporter)
                 addSpanExporter(LoggingSpanExporter.create())
             }
         }
@@ -368,17 +381,21 @@ suspend fun main() {
 
     val result = agent.run("Tell me about OpenTelemetry")
     println(result)
-    
+
     // Wait for telemetry data to be exported
     TimeUnit.SECONDS.sleep(10)
 }
 ```
+
+For full sampling control or other SDK-level options, build your own [`OpenTelemetry`][OpenTelemetry] instance with [`createOpenTelemetry { … }`][createOpenTelemetry] and inject it via `setSdk`.
 
 ### Datadog
 
 [Datadog](https://www.datadoghq.com/) supports direct OTLP intake for LLM Observability. To send traces to Datadog:
 
 ```kotlin
+import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter
+
 install(OpenTelemetry) {
     addDatadogExporter()
 }
@@ -390,8 +407,8 @@ The exporter reads the `DD_API_KEY` environment variable by default. You can als
 install(OpenTelemetry) {
     addDatadogExporter(
         datadogApiKey = "your-api-key",
-        datadogSite = "datadoghq.eu",             // defaults to datadoghq.com
-        traceAttributes = mapOf(
+        url = "datadoghq.eu",                    // defaults to datadoghq.com
+        resourceAttributes = mapOf(
             "env" to "production",
             "service.name" to "my-agent",
         ),
@@ -399,13 +416,16 @@ install(OpenTelemetry) {
 }
 ```
 
-The `buildDatadogExporter()` function is also available if you need to wrap the exporter with custom decorators before registering it:
+To send traces to Datadog and another backend at the same time, register both via `addSpanExporter` (Datadog's helper handles its own registration internally; the second exporter goes through the public API):
 
 ```kotlin
 install(OpenTelemetry) {
-    val exporter = buildDatadogExporter()
-    val wrapped = MyCustomSpanExporter(exporter) // e.g. attribute post-processing
-    addSpanExporter(wrapped)
+    addDatadogExporter()
+    addSpanExporter(
+        OtlpHttpSpanExporter.builder()
+            .setEndpoint("http://localhost:4318/v1/traces")
+            .build()
+    )
 }
 ```
 
@@ -424,5 +444,4 @@ install(OpenTelemetry) {
     - Add a delay (e.g., `TimeUnit.SECONDS.sleep(10)`) after agent execution to allow time for spans to be exported
 
 3. **Excessive number of spans**
-    - Consider using a different sampling strategy by configuring the `sampler` property
-    - For example, use `Sampler.traceIdRatioBased(0.1)` to sample only 10% of traces
+    - Build a custom Kotlin OTel SDK with a sampler (e.g., `parentBased(root = traceIdRatioBased(0.1))`) and inject it via `setSdk(...)`.

@@ -2,7 +2,7 @@ package ai.koog.agents.features.opentelemetry.metrics
 
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
+import ai.koog.agents.features.opentelemetry.attribute.toJavaSdkAttributes
 import ai.koog.agents.features.opentelemetry.metric.events.createExecuteToolDurationHistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDurationHistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
@@ -39,7 +39,7 @@ class MetricEventCreatorsTest {
         assertEquals(inputTokens.toDouble(), event.value)
 
         // Verify attributes using toSdkAttributes
-        val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
+        val sdkAttributes = event.attributes.toJavaSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Provider.Name(LLMProvider.OpenAI)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.INPUT)))
@@ -60,7 +60,7 @@ class MetricEventCreatorsTest {
         assertEquals(outputTokens.toDouble(), event.value)
 
         // Verify attributes using toSdkAttributes
-        val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
+        val sdkAttributes = event.attributes.toJavaSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Provider.Name(LLMProvider.OpenAI)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Token.Type(GenAIAttributes.Token.TokenType.OUTPUT)))
@@ -81,7 +81,7 @@ class MetricEventCreatorsTest {
         assertEquals(1.5, event.value)
 
         // Verify attributes using toSdkAttributes
-        val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
+        val sdkAttributes = event.attributes.toJavaSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Provider.Name(LLMProvider.OpenAI)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Request.Model(testModel)))
@@ -103,7 +103,7 @@ class MetricEventCreatorsTest {
         assertEquals(1L, event.value)
 
         // Verify attributes using toSdkAttributes
-        val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
+        val sdkAttributes = event.attributes.toJavaSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Tool.Name(toolName)))
         assertTrue(sdkAttributes.contains(KoogAttributes.Koog.Tool.Call.Status(status)))
@@ -126,7 +126,7 @@ class MetricEventCreatorsTest {
         assertEquals(0.15, event.value)
 
         // Verify attributes using toSdkAttributes
-        val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
+        val sdkAttributes = event.attributes.toJavaSdkAttributes(verbose = true)
         assertTrue(sdkAttributes.contains(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL)))
         assertTrue(sdkAttributes.contains(GenAIAttributes.Tool.Name(toolName)))
         assertTrue(sdkAttributes.contains(KoogAttributes.Koog.Tool.Call.Status(status)))
@@ -151,7 +151,7 @@ class MetricEventCreatorsTest {
             assertEquals("koog.gen_ai.client.tool.call.count", event.metricName)
             assertEquals(1L, event.value)
 
-            val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
+            val sdkAttributes = event.attributes.toJavaSdkAttributes(verbose = true)
             assertTrue(sdkAttributes.contains(KoogAttributes.Koog.Tool.Call.Status(status)))
         }
     }
@@ -177,7 +177,7 @@ class MetricEventCreatorsTest {
             assertEquals("gen_ai.client.operation.duration", event.metricName)
             assertEquals(0.1, event.value)
 
-            val sdkAttributes = event.attributes.toSdkAttributes(verbose = true)
+            val sdkAttributes = event.attributes.toJavaSdkAttributes(verbose = true)
             assertTrue(sdkAttributes.contains(KoogAttributes.Koog.Tool.Call.Status(status)))
         }
     }
