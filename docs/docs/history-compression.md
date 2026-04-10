@@ -394,9 +394,9 @@ You can use it as follows:
             .withInput(String.class)
             .withOutput(String.class)
             .withAction((input, ctx) -> {
-                -->
-                <!--- SUFFIX
-                return input;
+    -->
+    <!--- SUFFIX
+                    return null;
             })
             .build();
         }
@@ -405,6 +405,7 @@ You can use it as follows:
     ```java
     ctx.getLlm().writeSession(session -> {
         session.replaceHistoryWithTLDR(HistoryCompressionStrategy.WholeHistory);
+        return null;
     });
     ```
     <!--- KNIT exampleHistoryCompressionJava05.java -->
@@ -511,9 +512,9 @@ You can use it as follows:
             .withInput(String.class)
             .withOutput(String.class)
             .withAction((input, ctx) -> {
-                -->
-                <!--- SUFFIX
-                return input;
+    -->
+    <!--- SUFFIX
+                    return null;
             })
             .build();
         }
@@ -522,6 +523,7 @@ You can use it as follows:
     ```java
     ctx.getLlm().writeSession(session -> {
         session.replaceHistoryWithTLDR(HistoryCompressionStrategy.FromLastNMessages(5));
+        return null;
     });
     ```
     <!--- KNIT exampleHistoryCompressionJava07.java -->
@@ -629,9 +631,9 @@ You can use it as follows:
             .withInput(String.class)
             .withOutput(String.class)
             .withAction((input, ctx) -> {
-                -->
-                <!--- SUFFIX
-                return input;
+    -->
+    <!--- SUFFIX
+                    return null;
             })
             .build();
         }
@@ -640,6 +642,7 @@ You can use it as follows:
     ```java
     ctx.getLlm().writeSession(session -> {
         session.replaceHistoryWithTLDR(HistoryCompressionStrategy.Chunked(10));
+        return null;
     });
     ```
     <!--- KNIT exampleHistoryCompressionJava09.java -->
@@ -818,9 +821,9 @@ You can use it as follows:
             .withInput(String.class)
             .withOutput(String.class)
             .withAction((input, ctx) -> {
-                -->
-                <!--- SUFFIX
-                return input;
+    -->
+    <!--- SUFFIX
+                    return null;
             })
             .build();
         }
@@ -851,6 +854,7 @@ You can use it as follows:
                     factType = FactType.SINGLE
                 )
             ));
+        return null;
     });
     ```
     <!--- KNIT exampleHistoryCompressionJava11.java -->
@@ -1063,9 +1067,9 @@ To enable memory preservation:
             .withInput(String.class)
             .withOutput(String.class)
             .withAction((input, ctx) -> {
-                -->
-                <!--- SUFFIX
-                return input;
+    -->
+    <!--- SUFFIX
+                    return null;
             })
             .build();
         }
@@ -1077,6 +1081,7 @@ To enable memory preservation:
             /** strategy */ HistoryCompressionStrategy.WholeHistory,
             /** preserveMemory */ true
         );
+        return null;
     });
     ```
     <!--- KNIT exampleHistoryCompressionJava16.java -->
