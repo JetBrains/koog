@@ -10,6 +10,7 @@ import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEn
 import ai.koog.integration.tests.utils.TestCredentials.readTestMistralAiKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenRouterKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestSiliconFlowKeyFromEnv
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
@@ -20,6 +21,7 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.siliconflow.SiliconFlowLLMClient
 import ai.koog.prompt.llm.LLMProvider
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 
@@ -61,6 +63,10 @@ fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
 
         LLMProvider.MistralAI -> MistralAILLMClient(
             readTestMistralAiKeyFromEnv()
+        )
+
+        LLMProvider.SiliconFlow -> SiliconFlowLLMClient(
+            readTestSiliconFlowKeyFromEnv()
         )
 
         else -> throw IllegalArgumentException("Unsupported provider: $provider")

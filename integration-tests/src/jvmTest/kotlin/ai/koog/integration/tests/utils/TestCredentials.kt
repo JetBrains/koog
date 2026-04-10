@@ -25,6 +25,8 @@ object TestCredentials {
 
     fun readTestDashscopeKeyFromEnv(): String = requireEnv("DASHSCOPE_API_TEST_KEY")
 
+    fun readTestSiliconFlowKeyFromEnv(): String = requireEnv("SILICON_FLOW_API_TEST_KEY")
+
     fun readAwsAccessKeyIdFromEnv(): String = requireEnv("AWS_ACCESS_KEY_ID")
 
     fun readAwsSecretAccessKeyFromEnv(): String = requireEnv("AWS_SECRET_ACCESS_KEY")

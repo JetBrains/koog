@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.siliconflow.SiliconFlowLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 
@@ -98,3 +99,11 @@ public fun simpleOllamaAIExecutor(
  */
 public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor =
     SingleLLMPromptExecutor(MistralAILLMClient(apiKey))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with a `SiliconFlowLLMClient`.
+ *
+ * @param apiKey The API token used for authentication with the SiliconFlow API.
+ */
+public fun simpleSiliconFlowExecutor(apiKey: String): SingleLLMPromptExecutor =
+    SingleLLMPromptExecutor(SiliconFlowLLMClient(apiKey))

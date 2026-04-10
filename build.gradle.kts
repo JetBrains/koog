@@ -250,6 +250,7 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-siliconflow-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))
     dokka(project(":prompt:prompt-llm"))

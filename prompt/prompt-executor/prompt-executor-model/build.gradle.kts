@@ -34,6 +34,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-siliconflow-client"))
 
                 implementation(libs.ktor.client.cio)
             }

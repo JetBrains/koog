@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+import ai.koog.prompt.executor.clients.siliconflow.SiliconFlowModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import io.ktor.util.logging.KtorSimpleLogger
@@ -42,6 +43,8 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
         "deepseek" -> deepSeek(parts, identifier)
 
         "ollama" -> ollama(parts, identifier)
+
+        "siliconflow" -> siliconFlow(parts, identifier)
 
         else -> {
             logger.debug("Unsupported LLM provider: $providerName")
@@ -210,6 +213,134 @@ private fun openAI(parts: List<String>, identifier: String): LLModel? {
 
     return model
 }
+
+private fun siliconFlow(parts: List<String>, identifier: String): LLModel? {
+    if (parts.size < 2) {
+        logger.debug("SiliconFlow model identifier must be in format 'siliconflow.model', got: $identifier")
+        return null
+    }
+
+    val modelName = parts[1].lowercase()
+
+    val normalizedModelName = modelName.replace("-", "_").lowercase()
+    val model = SILICON_FLOW_MODELS_MAP[normalizedModelName]
+    if (model == null) {
+        logger.debug("Model '$modelName' not found in SiliconFlowModels")
+        return null
+    }
+
+    return model
+}
+
+private val SILICON_FLOW_MODELS_MAP = mapOf(
+    "pangupromoe" to SiliconFlowModels.PanguProMoE,
+    "bgererankerv2m3" to SiliconFlowModels.BgeRerankerV2M3,
+    "ernie_4_5_300b_a47b" to SiliconFlowModels.ERNIE_4_5_300B_A47B,
+    "seedoss_36b_instruct" to SiliconFlowModels.SeedOSS_36B_Instruct,
+    "deepseekocr" to SiliconFlowModels.DeepSeekOCR,
+    "deepseekr1" to SiliconFlowModels.DeepSeekR1,
+    "deepseekr1_0528_qwen3_8b" to SiliconFlowModels.DeepSeekR1_0528_Qwen3_8B,
+    "deepseekr1_distill_qwen_14b" to SiliconFlowModels.DeepSeekR1_Distill_Qwen_14B,
+    "deepseekr1_distill_qwen32b" to SiliconFlowModels.DeepSeekR1_Distill_Qwen32B,
+    "deepseekr1_distill_qwen_7b" to SiliconFlowModels.DeepSeekR1_Distill_Qwen_7B,
+    "deepseekv2_5" to SiliconFlowModels.DeepSeekV2_5,
+    "deepseekv3" to SiliconFlowModels.DeepSeekV3,
+    "deepseekv3_1_terminus" to SiliconFlowModels.DeepSeekV3_1_Terminus,
+    "deepseekv3_2" to SiliconFlowModels.DeepSeekV3_2,
+    "moss_ttsd_v0_5" to SiliconFlowModels.MOSS_TTSD_V0_5,
+    "cosyvoice2_0_5b" to SiliconFlowModels.CosyVoice2_0_5B,
+    "sensevoicesmall" to SiliconFlowModels.SenseVoiceSmall,
+    "lingflash_2_0" to SiliconFlowModels.LingFlash_2_0,
+    "lingmini_2_0" to SiliconFlowModels.LingMini_2_0,
+    "ringflash_2_0" to SiliconFlowModels.RingFlash_2_0,
+    "indextts_2" to SiliconFlowModels.IndexTTS_2,
+    "internlm2_5_7b_chat" to SiliconFlowModels.Internlm2_5_7b_Chat,
+    "kolors" to SiliconFlowModels.Kolors,
+    "kat_dev" to SiliconFlowModels.KAT_Dev,
+    "kimi_k2_instruct_0905" to SiliconFlowModels.Kimi_K2_Instruct_0905,
+    "kimi_k2_thinking" to SiliconFlowModels.Kimi_K2_Thinking,
+    "bcererankerbasev1" to SiliconFlowModels.BceRerankerBaseV1,
+    "paddleocr_vl" to SiliconFlowModels.PaddleOCR_VL,
+    "paddleocr_vl_1_5" to SiliconFlowModels.PaddleOCR_VL_1_5,
+    "probgereranker_v2_m3" to SiliconFlowModels.ProBgeReranker_V2_M3,
+    "prodeepseekr1" to SiliconFlowModels.ProDeepSeekR1,
+    "prodeepseekv3" to SiliconFlowModels.ProDeepSeekV3,
+    "prodeepseekv3_1_terminus" to SiliconFlowModels.ProDeepSeekV3_1_Terminus,
+    "prodeepseekv3_2" to SiliconFlowModels.ProDeepSeekV3_2,
+    "prominimax_m2_5" to SiliconFlowModels.ProMiniMax_M2_5,
+    "prokimi_k2_instruct_0905" to SiliconFlowModels.ProKimi_K2_Instruct_0905,
+    "prokimi_k2_thinking" to SiliconFlowModels.ProKimi_K2_Thinking,
+    "prokimi_k2_5" to SiliconFlowModels.ProKimi_K2_5,
+    "proqwen2_5_7b_instruct" to SiliconFlowModels.ProQwen2_5_7B_Instruct,
+    "proglm4_7" to SiliconFlowModels.ProGLM4_7,
+    "proglm5" to SiliconFlowModels.ProGLM5,
+    "proglm5_1" to SiliconFlowModels.ProGLM5_1,
+    "qwenimage" to SiliconFlowModels.QwenImage,
+    "qwenimageedit" to SiliconFlowModels.QwenImageEdit,
+    "qwenimageedit_2509" to SiliconFlowModels.QwenImageEdit_2509,
+    "qwen2_vl_72b_instruct" to SiliconFlowModels.Qwen2_VL_72B_Instruct,
+    "qwen2_5_14b_instruct" to SiliconFlowModels.Qwen2_5_14B_Instruct,
+    "qwen2_5_32b_instruct" to SiliconFlowModels.Qwen2_5_32B_Instruct,
+    "qwen2_5_72b_instruct" to SiliconFlowModels.Qwen2_5_72B_Instruct,
+    "qwen2_5_72b_instruct_128k" to SiliconFlowModels.Qwen2_5_72B_Instruct_128K,
+    "qwen2_5_7b_instruct" to SiliconFlowModels.Qwen2_5_7B_Instruct,
+    "qwen2_5_coder_32b_instruct" to SiliconFlowModels.Qwen2_5_Coder_32B_Instruct,
+    "qwen2_5_vl_32b_instruct" to SiliconFlowModels.Qwen2_5_VL_32B_Instruct,
+    "qwen2_5_vl_72b_instruct" to SiliconFlowModels.Qwen2_5_VL_72B_Instruct,
+    "qwen3_14b" to SiliconFlowModels.Qwen3_14B,
+    "qwen3_235b_a22b_instruct_2507" to SiliconFlowModels.Qwen3_235B_A22B_Instruct_2507,
+    "qwen3_235b_a22b_thinking_2507" to SiliconFlowModels.Qwen3_235B_A22B_Thinking_2507,
+    "qwen3_30b_a3b_instruct_2507" to SiliconFlowModels.Qwen3_30B_A3B_Instruct_2507,
+    "qwen3_30b_a3b_thinking_2507" to SiliconFlowModels.Qwen3_30B_A3B_Thinking_2507,
+    "qwen3_32b" to SiliconFlowModels.Qwen3_32B,
+    "qwen3_8b" to SiliconFlowModels.Qwen3_8B,
+    "qwen3_coder_30b_a3b_instruct" to SiliconFlowModels.Qwen3_Coder_30B_A3B_Instruct,
+    "qwen3_coder_480b_a35b_instruct" to SiliconFlowModels.Qwen3_Coder_480B_A35B_Instruct,
+    "qwen3_omni_30b_a3b_captioner" to SiliconFlowModels.Qwen3_Omni_30B_A3B_Captioner,
+    "qwen3_omni_30b_a3b_instruct" to SiliconFlowModels.Qwen3_Omni_30B_A3B_Instruct,
+    "qwen3_omni_30b_a3b_thinking" to SiliconFlowModels.Qwen3_Omni_30B_A3B_Thinking,
+    "qwen3_reranker_0_6b" to SiliconFlowModels.Qwen3_Reranker_0_6B,
+    "qwen3_reranker_4b" to SiliconFlowModels.Qwen3_Reranker_4B,
+    "qwen3_reranker_8b" to SiliconFlowModels.Qwen3_Reranker_8B,
+    "qwen3_vl_235b_a22b_instruct" to SiliconFlowModels.Qwen3_VL_235B_A22B_Instruct,
+    "qwen3_vl_235b_a22b_thinking" to SiliconFlowModels.Qwen3_VL_235B_A22B_Thinking,
+    "qwen3_vl_30b_a3b_instruct" to SiliconFlowModels.Qwen3_VL_30B_A3B_Instruct,
+    "qwen3_vl_30b_a3b_thinking" to SiliconFlowModels.Qwen3_VL_30B_A3B_Thinking,
+    "qwen3_vl_32b_instruct" to SiliconFlowModels.Qwen3_VL_32B_Instruct,
+    "qwen3_vl_32b_thinking" to SiliconFlowModels.Qwen3_VL_32B_Thinking,
+    "qwen3_vl_8b_instruct" to SiliconFlowModels.Qwen3_VL_8B_Instruct,
+    "qwen3_vl_8b_thinking" to SiliconFlowModels.Qwen3_VL_8B_Thinking,
+    "qwen3_5_122b_a10b" to SiliconFlowModels.Qwen3_5_122B_A10B,
+    "qwen3_5_27b" to SiliconFlowModels.Qwen3_5_27B,
+    "qwen3_5_35b_a3b" to SiliconFlowModels.Qwen3_5_35B_A3B,
+    "qwen3_5_397b_a17b" to SiliconFlowModels.Qwen3_5_397B_A17B,
+    "qwen3_5_4b" to SiliconFlowModels.Qwen3_5_4B,
+    "qwen3_5_9b" to SiliconFlowModels.Qwen3_5_9B,
+    "qwq_32b" to SiliconFlowModels.QwQ_32B,
+    "step3_5_flash" to SiliconFlowModels.Step3_5_Flash,
+    "telespeechasr" to SiliconFlowModels.TeleSpeechASR,
+    "hunyuan_a13b_instruct" to SiliconFlowModels.Hunyuan_A13B_Instruct,
+    "hunyuan_mt_7b" to SiliconFlowModels.Hunyuan_MT_7B,
+    "glm4_32b_0414" to SiliconFlowModels.GLM4_32B_0414,
+    "glm4_9b_0414" to SiliconFlowModels.GLM4_9B_0414,
+    "glm4_1v_9b_thinking" to SiliconFlowModels.GLM4_1V_9B_Thinking,
+    "glm_z1_32b_0414" to SiliconFlowModels.GLM_Z1_32B_0414,
+    "glm_z1_9b_0414" to SiliconFlowModels.GLM_Z1_9B_0414,
+    "wan2_2_i2v_a14b" to SiliconFlowModels.Wan2_2_I2V_A14B,
+    "wan2_2_t2v_a14b" to SiliconFlowModels.Wan2_2_T2V_A14B,
+    "glm4_5_air" to SiliconFlowModels.GLM4_5_Air,
+    "glm4_5v" to SiliconFlowModels.GLM4_5V,
+    "glm4_6" to SiliconFlowModels.GLM4_6,
+    "glm4_6v" to SiliconFlowModels.GLM4_6V,
+    "bgelarge_en_v1_5" to SiliconFlowModels.Embeddings.BgeLarge_En_V1_5,
+    "bgelarge_zh_v1_5" to SiliconFlowModels.Embeddings.BgeLarge_Zh_V1_5,
+    "bgem3" to SiliconFlowModels.Embeddings.BgeM3,
+    "bceembedding_base_v1" to SiliconFlowModels.Embeddings.BceEmbedding_Base_V1,
+    "probgem3" to SiliconFlowModels.Embeddings.ProBgeM3,
+    "qwen3_embedding_0_6b" to SiliconFlowModels.Embeddings.Qwen3_Embedding_0_6B,
+    "qwen3_embedding_4b" to SiliconFlowModels.Embeddings.Qwen3_Embedding_4B,
+    "qwen3_embedding_8b" to SiliconFlowModels.Embeddings.Qwen3_Embedding_8B,
+)
 
 private val OPENAI_MODELS_MAP = mapOf(
     "chat" to mapOf(
