@@ -40,5 +40,7 @@ class OpenAIModelsTest {
         assertNotNull(OpenAIModels.Chat.O4Mini.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(OpenAIModels.Chat.GPT5.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(OpenAIModels.Chat.GPT5_4.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.GPT5_4Mini.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.GPT5_4Nano.capabilities) shouldContain LLMCapability.Thinking
     }
 }
