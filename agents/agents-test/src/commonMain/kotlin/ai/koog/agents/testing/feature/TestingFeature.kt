@@ -2,6 +2,7 @@
 
 package ai.koog.agents.testing.feature
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
@@ -30,6 +31,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext
@@ -40,167 +42,8 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
 import org.jetbrains.annotations.TestOnly
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Clock
-
-/**
- * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
- * provides a way to resolve and identify nodes for various processing operations in the context
- * of a subgraph.
- *
- * @param Input The input data type handled by the related node.
- * @param Output The output data type produced by the related node.
- */
-@TestOnly
-public sealed class NodeReference<Input, Output> {
-    /**
-     * Resolves the current node reference within the context of the provided AI agent subgraph.
-     *
-     * @param subgraph An instance of [AIAgentSubgraph], representing the structured subgraph within the AI agent workflow.
-     *                 It contains the logical segment of processing, including the starting and finishing nodes.
-     * @return An instance of [AIAgentNodeBase], representing the resolved node within the subgraph that corresponds
-     *         to the current node reference.
-     */
-    public abstract fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output>
-
-    /**
-     * The `Start` class is a specialized type of `NodeReference` that serves as a reference to
-     * the starting node of an `AIAgentSubgraph`. This node initiates the processing of the subgraph
-     * by resolving and returning the subgraph's starting node.
-     *
-     * @param Input The type of input data that this node reference accepts and processes.
-     */
-    public class Start<Input> : NodeReference<Input, Input>() {
-        /**
-         * Resolves the starting node of the given subgraph and casts it to the appropriate type.
-         *
-         * @param subgraph The subgraph from which the starting node will be resolved.
-         * @return The starting node of the subgraph cast to AIAgentNodeBase<Input, Input>.
-         */
-        @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Input> =
-            subgraph.start as AIAgentNodeBase<Input, Input>
-    }
-
-    /**
-     * Represents the final node in an AI agent subgraph workflow.
-     * The `Finish` node signifies the end of the processing within the subgraph and provides the result
-     * of the subgraph's operations.
-     *
-     * @param Output The type of output data produced by this finish node.
-     */
-    public class Finish<Output> : NodeReference<Output, Output>() {
-        /**
-         * Resolves and returns the finishing node of the given AI agent subgraph.
-         *
-         * @param subgraph The AI agent subgraph from which the finishing node is resolved.
-         * @return The finishing node of the subgraph, cast to the expected type `AIAgentNodeBase<Output, Output>`.
-         */
-        @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Output, Output> =
-            subgraph.finish as AIAgentNodeBase<Output, Output>
-    }
-
-    /**
-     * [NamedNode] is a class that references a specific node within a subgraph by name.
-     * This class allows resolving a node instance by its unique name within a given subgraph.
-     *
-     * @param Input The type of input accepted by the node.
-     * @param Output The type of output produced by the node.
-     * @property name The unique name of the target node within the subgraph.
-     */
-    public open class NamedNode<Input, Output>(public val name: String) : NodeReference<Input, Output>() {
-        /**
-         * Resolves a node within the given AI Agent subgraph by searching for a node that matches the current node's name.
-         * The method performs a depth-first traversal starting from the subgraph's start node.
-         *
-         * @param subgraph The AI Agent subgraph to traverse in search of the matching node.
-         * @return The resolved node that matches the current node's name of a type [AIAgentNodeBase<Input, Output>].
-         * @throws IllegalArgumentException If no node with the specified name is found within the subgraph.
-         */
-        @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output> {
-            val visited = mutableSetOf<String>()
-            fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
-                if (node is FinishNode) return null
-                if (visited.contains(node.name)) return null
-                visited.add(node.name)
-                if (node.name == name) return node as? AIAgentNodeBase<Input, Output>
-                return node.edges.firstNotNullOfOrNull { visit(it.toNode) }
-            }
-
-            val result = visit(subgraph.start).also {
-                println("Visited nodes: ${visited.joinToString()} [${visited.size}]")
-            }
-                ?: throw IllegalArgumentException("Node with name '$name' not found")
-
-            return result
-        }
-    }
-
-    /**
-     * Represents a specialized type of node used in the context of AI agent subgraphs.
-     * This class extends the functionality of a named node by providing specific behavior
-     * to resolve itself as a valid subgraph within the overarching system.
-     *
-     * @param Input The input type that this node expects.
-     * @param Output The output type that this node produces.
-     * @param name The name of the node, inherited from the parent class, which serves as its identifier within the graph.
-     */
-    public open class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
-        /**
-         * Resolves the specified subgraph into a strongly typed subgraph of the expected input and output types.
-         * This method ensures the resolved subgraph matches the type constraints of the current node.
-         *
-         * @param subgraph The subgraph to resolve. This represents a structured portion of an AI agent workflow.
-         * @return The resolved subgraph of type `AIAgentSubgraph<Input, Output>`.
-         * @throws IllegalArgumentException If the resolved subgraph does not match the expected type constraints.
-         */
-        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentSubgraphBase<Input, Output> {
-            val result = super.resolve(subgraph)
-
-            if (result !is AIAgentSubgraph<Input, Output>) {
-                throw IllegalArgumentException("Node with name '$name' is not a subgraph")
-            }
-
-            return result
-        }
-    }
-
-    /**
-     * Represents a specific strategy within an AI agent subgraph.
-     *
-     * The `Strategy` class is a specialization of the `SubgraphNode` class designed to focus on
-     * resolving and managing `AIAgentStrategy` instances. It provides a mechanism to ensure the
-     * resolution process evaluates to the expected strategy type, preserving type safety
-     * and logical consistency within the graph-based AI workflow.
-     *
-     * @param name The unique identifier for the strategy.
-     */
-    public class Strategy<Input, Output>(name: String) : SubgraphNode<Input, Output>(name) {
-        /**
-         * Resolves the given subgraph into an `AIAgentStrategy` instance to ensure that the resolved object
-         * matches the expected strategy name and type.
-         *
-         * @param subgraph The subgraph to be resolved. It must have the same name as the current strategy instance
-         *                 and must also be of type `AIAgentStrategy`.
-         * @return The resolved subgraph as an instance of `AIAgentStrategy`.
-         * @throws IllegalArgumentException If the subgraph's name does not match the name of the current strategy.
-         * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
-         */
-        @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentGraphStrategyBase<Input, Output> {
-            if (subgraph.name != name) {
-                throw IllegalArgumentException("Strategy with name '$name' was expected")
-            }
-
-            if (subgraph !is AIAgentGraphStrategy<*, *>) {
-                throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
-            }
-
-            return subgraph as AIAgentGraphStrategy<Input, Output>
-        }
-    }
-}
 
 /**
  * Represents a set of assertions for validating the structure and behavior of a graph-based system.
@@ -218,9 +61,9 @@ public sealed class NodeReference<Input, Output> {
 @TestOnly
 public data class GraphAssertions(
     val name: String,
-    val start: NodeReference.Start<*>,
-    val finish: NodeReference.Finish<*>,
-    val nodes: Map<String, NodeReference<*, *>>,
+    val start: SubgraphAssertionsBuilder<*, *>.Start<*>,
+    val finish: SubgraphAssertionsBuilder<*, *>.Finish<*>,
+    val nodes: Map<String, SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>>,
     val nodeOutputAssertions: List<NodeOutputAssertion<*, *>>,
     val edgeAssertions: List<EdgeAssertion<*, *>>,
     val unconditionalEdgeAssertions: List<UnconditionalEdgeAssertion>,
@@ -244,7 +87,7 @@ public data class GraphAssertions(
  */
 @TestOnly
 public data class NodeOutputAssertion<Input, Output>(
-    val node: NodeReference<Input, Output>,
+    val node: SubgraphAssertionsBuilder<*, *>.NodeReference<Input, Output>,
     val context: DummyAIAgentContext,
     val input: Input,
     val expectedOutput: Output
@@ -262,10 +105,10 @@ public data class NodeOutputAssertion<Input, Output>(
  */
 @TestOnly
 public data class EdgeAssertion<Input, Output>(
-    val node: NodeReference<Input, Output>,
+    val node: SubgraphAssertionsBuilder<*, *>.NodeReference<Input, Output>,
     val context: AIAgentGraphContextBase,
     val output: Output,
-    val expectedNode: NodeReference<*, *>
+    val expectedNode: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>
 )
 
 /**
@@ -280,8 +123,8 @@ public data class EdgeAssertion<Input, Output>(
  */
 @TestOnly
 public data class UnconditionalEdgeAssertion(
-    val node: NodeReference<*, *>,
-    val expectedNode: NodeReference<*, *>
+    val node: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>,
+    val expectedNode: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>
 )
 
 /**
@@ -296,7 +139,7 @@ public data class UnconditionalEdgeAssertion(
  * This assertion helps validate the correctness and connectivity properties of constructed graphs.
  */
 @TestOnly
-public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
+public data class ReachabilityAssertion(val from: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>, val to: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>)
 
 /**
  * Encapsulates assertions for a subgraph within a graph testing framework.
@@ -310,7 +153,7 @@ public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: N
  */
 @TestOnly
 public data class SubGraphAssertions(
-    val subgraphRef: NodeReference.SubgraphNode<*, *>,
+    val subgraphRef: SubgraphAssertionsBuilder<*, *>.SubgraphNode<*, *>,
     val graphAssertions: GraphAssertions
 )
 
@@ -524,8 +367,8 @@ public class Testing {
             buildAssertions: SubgraphAssertionsBuilder<Input, Output>.() -> Unit
         ) {
             assertions =
-                SubgraphAssertionsBuilder(
-                    subgraphRef = NodeReference.Strategy<Input, Output>(name),
+                SubgraphAssertionsBuilder<Input, Output>(
+                    name = name,
                     clock = clock,
                     tokenizer = tokenizer,
                     serializer = serializer
@@ -533,24 +376,53 @@ public class Testing {
         }
 
         /**
+         * Configures and adds a verification strategy using the provided name and assertions.
+         *
+         * @param name The name of the strategy to be verified.
+         * @param configure A functional interface defining the assertions to be built for the strategy.
+         */
+        @JavaAPI
+        public fun <Input, Output> verifyStrategy(
+            name: String,
+            configure: ConfigureSubgraphAssertions<Input, Output>
+        ) {
+            verifyStrategy<Input, Output>(name) { configure.configure(this) }
+        }
+
+        /**
+         * A functional interface used to configure assertions for a subgraph.
+         *
+         * @param Input The type of the input parameter for the node.
+         * @param Output The type of the output parameter for the node.
+         */
+        public fun interface ConfigureSubgraphAssertions<Input, Output> {
+            /**
+             * Configures assertions within the provided [SubgraphAssertionsBuilder].
+             *
+             * @param builder The builder used to define assertions for the subgraph.
+             */
+            public fun configure(builder: SubgraphAssertionsBuilder<Input, Output>)
+        }
+
+        /**
          * Builder class for constructing subgraph-level assertions.
          * This includes setup for nodes, edges, reachability assertions, and context-related mock setups.
          *
-         * @param subgraphRef: A [NodeReference.SubgraphNode] reference to a subgraph of the agent's graph strategy
+         * @param subgraphRef: A [SubgraphNode] reference to a subgraph of the agent's graph strategy
          * @param clock: A clock that is used for mock message timestamps
          * @param tokenizer Tokenizer that will be used to estimate token counts in mock messages
          * @param serializer JSON serializer
          */
         public class SubgraphAssertionsBuilder<Input, Output>(
-            private val subgraphRef: NodeReference.SubgraphNode<Input, Output>,
+            private val name: String,
             internal val clock: Clock,
             internal val tokenizer: Tokenizer?,
             internal val serializer: JSONSerializer,
         ) {
 
-            private val start: NodeReference.Start<Input> = NodeReference.Start()
+            private val start: Start<Input> = Start()
 
-            private val finish: NodeReference.Finish<Output> = NodeReference.Finish()
+            private val finish: Finish<Output> = Finish()
 
             /**
              * Stores a mapping of node names to their corresponding references.
@@ -633,18 +505,18 @@ public class Testing {
             /**
              * Retrieves the starting node reference of the stage.
              *
-             * @return The starting node reference of type NodeReference.Start, representing the entry point of the stage.
+             * @return The starting node reference of type [Start], representing the entry point of the stage.
              */
-            public fun startNode(): NodeReference.Start<Input> {
+            public fun startNode(): Start<Input> {
                 return start
             }
 
             /**
              * Retrieves a reference to the finish node of the current stage in the graph.
              *
-             * @return a [NodeReference.Finish] representing the terminal node of the stage.
+             * @return a [Finish] representing the terminal node of the stage.
              */
-            public fun finishNode(): NodeReference.Finish<Output> {
+            public fun finishNode(): Finish<Output> {
                 return finish
             }
 
@@ -656,8 +528,8 @@ public class Testing {
              * @param name the name of the node to assert or retrieve.
              * @return a `NodeReference` for the node identified by the given name.
              */
-            public fun <I, O> assertNodeByName(name: String): NodeReference.NamedNode<I, O> {
-                val nodeRef = NodeReference.NamedNode<I, O>(name)
+            public fun <I, O> assertNodeByName(name: String): NamedNode<I, O> {
+                val nodeRef = NamedNode<I, O>(name)
                 nodes[name] = nodeRef
                 return nodeRef
             }
@@ -666,8 +538,8 @@ public class Testing {
              * Asserts the existence of a subgraph by its name*/
             public fun <I, O> assertSubgraphByName(
                 name: String
-            ): NodeReference.SubgraphNode<I, O> {
-                val nodeRef = NodeReference.SubgraphNode<I, O>(name)
+            ): SubgraphNode<I, O> {
+                val nodeRef = SubgraphNode<I, O>(name)
                 nodes[name] = nodeRef
                 return nodeRef
             }
@@ -675,15 +547,29 @@ public class Testing {
             /**
              * Verifies a given subgraph by applying a set of assertions to it using a provided configuration block.
              *
-             * @param subgraph the subgraph to verify, represented as a [NodeReference.SubgraphNode] of input and output types [I] and [O].
+             * @param subgraph the subgraph to verify, represented as a [SubgraphNode] of input and output types [I] and [O].
              * @param checkSubgraph a lambda receiver operating on a [SubgraphAssertionsBuilder] that defines the assertions to be applied to the subgraph.
              */
             public fun <I, O> verifySubgraph(
-                subgraph: NodeReference.SubgraphNode<I, O>,
+                subgraph: SubgraphNode<I, O>,
                 checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}
             ) {
-                val assertions = SubgraphAssertionsBuilder(subgraph, clock, tokenizer, serializer).apply(checkSubgraph).build()
+                val assertions = SubgraphAssertionsBuilder<I, O>(subgraph.name, clock, tokenizer, serializer).apply(checkSubgraph).build()
                 subgraphAssertions.add(SubGraphAssertions(subgraph, assertions))
+            }
+
+            /**
+             * Verifies a given subgraph by applying a set of assertions to it using a provided configuration interface.
+             *
+             * @param subgraph the subgraph to verify, represented as a [SubgraphNode] of input and output types [I] and [O].
+             * @param configure a functional interface receiver operating on a [SubgraphAssertionsBuilder] that defines the assertions to be applied to the subgraph.
+             */
+            @JavaAPI
+            public fun <I, O> verifySubgraph(
+                subgraph: SubgraphNode<I, O>,
+                configure: ConfigureSubgraphAssertions<I, O>
+            ) {
+                verifySubgraph(subgraph) { configure.configure(this) }
             }
 
             /**
@@ -692,7 +578,7 @@ public class Testing {
              * @param from The starting node reference from where the reachability is checked.
              * @param to The target node reference to which the reachability is checked.
              */
-            public fun assertReachable(from: NodeReference<*, *>, to: NodeReference<*, *>) {
+            public fun assertReachable(from: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>, to: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>) {
                 reachabilityAssertions.add(ReachabilityAssertion(from, to))
             }
 
@@ -706,7 +592,11 @@ public class Testing {
             public fun assertNodes(block: NodeOutputAssertionsBuilder.() -> Unit) {
                 val builder = NodeOutputAssertionsBuilder(this)
                 builder.block()
-                nodeOutputs.addAll(builder.assertions)
+            }
+
+            @JavaAPI
+            public fun assertNodes(configure: ConfigureNodeOutputAssertions) {
+                assertNodes { configure.configure(this) }
             }
 
             /**
@@ -722,6 +612,146 @@ public class Testing {
             }
 
             /**
+             * Asserts the edges in the context of a graph by applying a set of edge assertions built using the provided functional interface.
+             *
+             * @param configure A functional interface that operates on an instance of `EdgeAssertionsBuilder` to define specific edge assertions.
+             */
+            @JavaAPI
+            public fun assertEdges(configure: ConfigureEdgeAssertions) {
+                assertEdges { configure.configure(this) }
+            }
+
+            /**
+             * Creates a `Message.Tool.Call` instance for the given tool and its arguments.
+             *
+             * This utility function simplifies the creation of tool call messages for testing purposes.
+             * It automatically handles the encoding of arguments into the appropriate string format.
+             *
+             * @param tool The tool to be represented in the call message. The `Tool` instance contains metadata
+             *             such as the tool's name and utility methods for encoding/decoding arguments.
+             * @param args The arguments to be passed to the tool. Must match the type `Args` defined by the tool.
+             * @return A `Message.Tool.Call` object representing a call to the specified tool with the encoded arguments.
+             *
+             * Example usage:
+             * ```kotlin
+             * // Create a tool call message for testing
+             * val message = toolCallMessage(CreateTool, CreateTool.Args("solve"))
+             *
+             * // Use in node output assertions
+             * assertNodes {
+             *     askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+             * }
+             * ```
+             */
+            public fun <Args> toolCallMessage(
+                tool: Tool<Args, *>,
+                args: Args
+            ): Message.Tool.Call {
+                val toolContent = tool.encodeArgsToString(args, serializer)
+                val tokenCount = tokenizer?.countTokens(toolContent)
+
+                return Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
+                )
+            }
+
+            /**
+             * Creates an assistant message with the provided text and finish reason.
+             *
+             * @param text The content of the assistant message.
+             * @param finishReason The reason indicating why the message was concluded. Defaults to null.
+             * @return A new instance of Message.Assistant containing the provided content, finish reason, and associated metadata.
+             */
+            @JvmOverloads
+            public fun assistantMessage(
+                text: String,
+                finishReason: String? = null
+            ): Message.Assistant {
+                val tokenCount = tokenizer?.countTokens(text)
+
+                return Message.Assistant(
+                    content = text,
+                    finishReason = finishReason,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
+                )
+            }
+
+            /**
+             * Converts a tool and its corresponding result into a `ReceivedToolResult` object.
+             *
+             * This utility function simplifies the creation of tool results for testing purposes.
+             * It automatically handles the encoding of the result into the appropriate string format.
+             *
+             * @param tool The tool whose result is being processed. The tool provides context for the result.
+             * @param result The result produced by the tool, which will be encoded into a string representation.
+             * @return A `ReceivedToolResult` instance containing the tool's name and the encoded string representation of the result.
+             *
+             * Example usage:
+             * ```kotlin
+             * // Create a tool result for testing
+             * val result = toolResult(AnalyzeTool, AnalyzeTool.Result("Detailed analysis", 0.95))
+             *
+             * // Use in node output assertions
+             * assertNodes {
+             *     callTool withInput toolCallSignature(AnalyzeTool, AnalyzeTool.Args("analyze")) outputs result
+             * }
+             * ```
+             */
+            public fun <TArgs, TResult> toolResult(
+                tool: Tool<TArgs, TResult>,
+                args: TArgs,
+                result: TResult
+            ): ReceivedToolResult =
+                ReceivedToolResult(
+                    id = null,
+                    tool = tool.name,
+                    toolArgs = tool.encodeArgs(args, serializer),
+                    toolDescription = tool.descriptor.description,
+                    content = tool.encodeResultToString(result, serializer),
+                    resultKind = ToolResultKind.Success,
+                    result = tool.encodeResult(result, serializer)
+                )
+
+            /**
+             * Constructs a `ReceivedToolResult` object using the provided tool and result string.
+             *
+             * This is a convenience function for simple tools that return text results.
+             * It wraps the string result in a `ToolResult.Text` object.
+             *
+             * @param tool The tool for which the result is being created, of type `SimpleTool`.
+             * @param result The result content generated by the tool execution as a string.
+             * @return An instance of `ReceivedToolResult` containing the tool's name and the result string.
+             *
+             * Example usage:
+             * ```kotlin
+             * // Create a simple text tool result for testing
+             * val result = toolResult(SolveTool, "solved")
+             *
+             * // Use in node output assertions
+             * assertNodes {
+             *     callTool withInput toolCallSignature(SolveTool, SolveTool.Args("solve")) outputs result
+             * }
+             * ```
+             */
+            public fun <TArgs> toolResult(
+                tool: SimpleTool<TArgs>,
+                args: TArgs,
+                result: String
+            ): ReceivedToolResult =
+                ReceivedToolResult(
+                    id = null,
+                    tool = tool.name,
+                    toolArgs = tool.encodeArgs(args, serializer),
+                    toolDescription = tool.descriptor.description,
+                    content = tool.encodeResultToString(result, serializer),
+                    resultKind = ToolResultKind.Success,
+                    result = tool.encodeResult(result, serializer)
+                )
+
+            /**
              * Builds and returns a `StageAssertions` object based on the current state of the `StageAssertionsBuilder`.
              *
              * @return A `StageAssertions` instance containing the name, start and finish node references,
@@ -729,7 +759,7 @@ public class Testing {
              */
             internal fun build(): GraphAssertions {
                 return GraphAssertions(
-                    subgraphRef.name,
+                    name,
                     start,
                     finish,
                     nodes,
@@ -739,6 +769,237 @@ public class Testing {
                     reachabilityAssertions,
                     subgraphAssertions
                 )
+            }
+
+            /**
+             * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
+             * provides a way to resolve and identify nodes for various processing operations in the context
+             * of a subgraph.
+             *
+             * @param Input The input data type handled by the related node.
+             * @param Output The output data type produced by the related node.
+             */
+            @TestOnly
+            public abstract inner class NodeReference<Input, Output> {
+                /**
+                 * Resolves the current node reference within the context of the provided AI agent subgraph.
+                 *
+                 * @param subgraph An instance of [AIAgentSubgraph], representing the structured subgraph within the AI agent workflow.
+                 *                 It contains the logical segment of processing, including the starting and finishing nodes.
+                 * @return An instance of [AIAgentNodeBase], representing the resolved node within the subgraph that corresponds
+                 *         to the current node reference.
+                 */
+                public abstract fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output>
+
+                /**
+                 * Associates the provided input with the current node reference, creating a pair that links the node
+                 * to its corresponding input.
+                 *
+                 * @param input The input value to associate with the node reference.
+                 * @return A `NodeOutputPair` containing the node reference and the provided input.
+                 */
+                public infix fun withInput(input: Input): NodeOutputPair<Input, Output> {
+                    return NodeOutputPair(this, input)
+                }
+
+                /**
+                 * Associates the given output with the current node reference, creating a pair that represents
+                 * the node and its corresponding output.
+                 *
+                 * @param output the output value to associate with the current node reference
+                 * @return an instance of EdgeOutputPair containing the current node reference and the associated output
+                 */
+                public infix fun withOutput(output: Output): EdgeOutputPair<Input, Output> {
+                    return EdgeOutputPair(this, output)
+                }
+
+                /**
+                 * Creates an assertion to verify that the current node always leads to the given target node.
+                 *
+                 * @param targetNode The target node that the current node output is expected to connect to.
+                 */
+                public infix fun alwaysGoesTo(targetNode: SubgraphAssertionsBuilder<*, *>.NodeReference<*, *>) {
+                    unconditionalEdgeAssertions.add(UnconditionalEdgeAssertion(this, targetNode))
+                }
+            }
+
+            /**
+             * The `Start` class is a specialized type of `NodeReference` that serves as a reference to
+             * the starting node of an `AIAgentSubgraph`. This node initiates the processing of the subgraph
+             * by resolving and returning the subgraph's starting node.
+             *
+             * @param Input The type of input data that this node reference accepts and processes.
+             */
+            public inner class Start<Input> : NodeReference<Input, Input>() {
+                /**
+                 * Resolves the starting node of the given subgraph and casts it to the appropriate type.
+                 *
+                 * @param subgraph The subgraph from which the starting node will be resolved.
+                 * @return The starting node of the subgraph cast to AIAgentNodeBase<Input, Input>.
+                 */
+                @Suppress("UNCHECKED_CAST")
+                override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Input> =
+                    subgraph.start as AIAgentNodeBase<Input, Input>
+            }
+
+            /**
+             * Represents the final node in an AI agent subgraph workflow.
+             * The `Finish` node signifies the end of the processing within the subgraph and provides the result
+             * of the subgraph's operations.
+             *
+             * @param Output The type of output data produced by this finish node.
+             */
+            public inner class Finish<Output> : NodeReference<Output, Output>() {
+                /**
+                 * Resolves and returns the finishing node of the given AI agent subgraph.
+                 *
+                 * @param subgraph The AI agent subgraph from which the finishing node is resolved.
+                 * @return The finishing node of the subgraph, cast to the expected type `AIAgentNodeBase<Output, Output>`.
+                 */
+                @Suppress("UNCHECKED_CAST")
+                override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Output, Output> =
+                    subgraph.finish as AIAgentNodeBase<Output, Output>
+            }
+
+            /**
+             * [NamedNode] is a class that references a specific node within a subgraph by name.
+             * This class allows resolving a node instance by its unique name within a given subgraph.
+             *
+             * @param Input The type of input accepted by the node.
+             * @param Output The type of output produced by the node.
+             * @property name The unique name of the target node within the subgraph.
+             */
+            public open inner class NamedNode<Input, Output>(public val name: String) : NodeReference<Input, Output>() {
+                /**
+                 * Resolves a node within the given AI Agent subgraph by searching for a node that matches the current node's name.
+                 * The method performs a depth-first traversal starting from the subgraph's start node.
+                 *
+                 * @param subgraph The AI Agent subgraph to traverse in search of the matching node.
+                 * @return The resolved node that matches the current node's name of a type [AIAgentNodeBase<Input, Output>].
+                 * @throws IllegalArgumentException If no node with the specified name is found within the subgraph.
+                 */
+                @Suppress("UNCHECKED_CAST")
+                override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output> {
+                    val visited = mutableSetOf<String>()
+                    fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
+                        if (node is FinishNode) return null
+                        if (visited.contains(node.name)) return null
+                        visited.add(node.name)
+                        if (node.name == name) return node as? AIAgentNodeBase<Input, Output>
+                        return node.edges.firstNotNullOfOrNull { visit(it.toNode) }
+                    }
+
+                    val result = visit(subgraph.start).also {
+                        println("Visited nodes: ${visited.joinToString()} [${visited.size}]")
+                    }
+                        ?: throw IllegalArgumentException("Node with name '$name' not found")
+
+                    return result
+                }
+            }
+
+            /**
+             * Represents a specialized type of node used in the context of AI agent subgraphs.
+             * This class extends the functionality of a named node by providing specific behavior
+             * to resolve itself as a valid subgraph within the overarching system.
+             *
+             * @param Input The input type that this node expects.
+             * @param Output The output type that this node produces.
+             * @param name The name of the node, inherited from the parent class, which serves as its identifier within the graph.
+             */
+            public open inner class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
+                /**
+                 * Resolves the specified subgraph into a strongly typed subgraph of the expected input and output types.
+                 * This method ensures the resolved subgraph matches the type constraints of the current node.
+                 *
+                 * @param subgraph The subgraph to resolve. This represents a structured portion of an AI agent workflow.
+                 * @return The resolved subgraph of type `AIAgentSubgraph<Input, Output>`.
+                 * @throws IllegalArgumentException If the resolved subgraph does not match the expected type constraints.
+                 */
+                override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentSubgraphBase<Input, Output> {
+                    val result = super.resolve(subgraph)
+
+                    if (result !is AIAgentSubgraph<Input, Output>) {
+                        throw IllegalArgumentException("Node with name '$name' is not a subgraph")
+                    }
+
+                    return result
+                }
+            }
+
+            /**
+             * Represents a specific strategy within an AI agent subgraph.
+             *
+             * The `Strategy` class is a specialization of the `SubgraphNode` class designed to focus on
+             * resolving and managing `AIAgentStrategy` instances. It provides a mechanism to ensure the
+             * resolution process evaluates to the expected strategy type, preserving type safety
+             * and logical consistency within the graph-based AI workflow.
+             *
+             * @param name The unique identifier for the strategy.
+             */
+            public inner class Strategy<Input, Output>(name: String) : SubgraphNode<Input, Output>(name) {
+                /**
+                 * Resolves the given subgraph into an `AIAgentStrategy` instance to ensure that the resolved object
+                 * matches the expected strategy name and type.
+                 *
+                 * @param subgraph The subgraph to be resolved. It must have the same name as the current strategy instance
+                 *                 and must also be of type `AIAgentStrategy`.
+                 * @return The resolved subgraph as an instance of `AIAgentStrategy`.
+                 * @throws IllegalArgumentException If the subgraph's name does not match the name of the current strategy.
+                 * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
+                 */
+                @Suppress("UNCHECKED_CAST")
+                override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentGraphStrategyBase<Input, Output> {
+                    if (subgraph.name != name) {
+                        throw IllegalArgumentException("Strategy with name '$name' was expected")
+                    }
+
+                    if (subgraph !is AIAgentGraphStrategy<*, *>) {
+                        throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
+                    }
+
+                    return subgraph as AIAgentGraphStrategy<Input, Output>
+                }
+            }
+
+            /**
+             * Represents a pairing of a specific node reference and its corresponding input.
+             * This is used to define the expected output for a given input within the context of a specific node.
+             *
+             * @param I The type of the input for the node.
+             * @param O The type of the output for the node.
+             * @property node The reference to the specific node.
+             * @property input The input associated with the node.
+             */
+            public inner class NodeOutputPair<I, O>(public val node: NodeReference<I, O>, public val input: I) {
+                /**
+                 * Asserts that the output of the current node given the specified input matches the expected output.
+                 *
+                 * @param output The expected output to validate against the current node's actual output.
+                 */
+                public infix fun outputs(output: O) {
+                    nodeOutputs.add(NodeOutputAssertion(node, context.build(), input, output))
+                }
+            }
+
+            /**
+             * Represents a pair consisting of a node and its corresponding output within an edge assertion context.
+             * This is used to define expected edge behavior in a graph of nodes.
+             *
+             * @param I the type of the input expected by the node.
+             * @param O the type of the output produced by the node.
+             * @property node the reference to the node associated with this edge output.
+             * @property output the output value associated with the node.
+             */
+            public inner class EdgeOutputPair<I, O>(public val node: NodeReference<I, O>, public val output: O) {
+                /**
+                 * Creates an assertion to verify that a specific output from the current node leads to the given target node.
+                 *
+                 * @param targetNode The target node that the current node output is expected to connect to.
+                 */
+                public infix fun goesTo(targetNode: NodeReference<*, *>) {
+                    edgeAssertions.add(EdgeAssertion(node, context.build(), output, targetNode))
+                }
             }
 
             /**
@@ -774,19 +1035,6 @@ public class Testing {
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
-                 * A mutable list that stores assertions representing the expected behavior and output of nodes
-                 * in the context of a specific staging environment for testing purposes.
-                 *
-                 * Each assertion is an instance of [NodeOutputAssertion], which encapsulates information
-                 * such as the node reference, the input provided, the expected output, and the context
-                 * in which the node operates.
-                 *
-                 * These assertions are used to verify the correctness of node operations within the
-                 * local agent stage context during testing.
-                 */
-                public val assertions: MutableList<NodeOutputAssertion<*, *>> = mutableListOf()
-
-                /**
                  * Executes the specified block of code within a duplicate context of the current `NodeOutputAssertionsBuilder`.
                  *
                  * @param block The block of code to be executed within the duplicated context of `NodeOutputAssertionsBuilder`.
@@ -796,34 +1044,13 @@ public class Testing {
                 }
 
                 /**
-                 * Associates the provided input with the current node reference, creating a pair that links the node
-                 * to its corresponding input.
+                 * Executes the specified configuration within a duplicate context of the current `NodeOutputAssertionsBuilder`.
                  *
-                 * @param input The input value to associate with the node reference.
-                 * @return A `NodeOutputPair` containing the node reference and the provided input.
+                 * @param configure The functional interface to be executed within the duplicated context of `NodeOutputAssertionsBuilder`.
                  */
-                public infix fun <I, O> NodeReference<I, O>.withInput(input: I): NodeOutputPair<I, O> {
-                    return NodeOutputPair(this, input)
-                }
-
-                /**
-                 * Represents a pairing of a specific node reference and its corresponding input.
-                 * This is used to define the expected output for a given input within the context of a specific node.
-                 *
-                 * @param I The type of the input for the node.
-                 * @param O The type of the output for the node.
-                 * @property node The reference to the specific node.
-                 * @property input The input associated with the node.
-                 */
-                public inner class NodeOutputPair<I, O>(public val node: NodeReference<I, O>, public val input: I) {
-                    /**
-                     * Asserts that the output of the current node given the specified input matches the expected output.
-                     *
-                     * @param output The expected output to validate against the current node's actual output.
-                     */
-                    public infix fun outputs(output: O) {
-                        assertions.add(NodeOutputAssertion(node, context.build(), input, output))
-                    }
+                @JavaAPI
+                public fun withContext(configure: ConfigureNodeOutputAssertions) {
+                    withContext { configure.configure(this) }
                 }
             }
 
@@ -891,44 +1118,30 @@ public class Testing {
                 }
 
                 /**
-                 * Associates the given output with the current node reference, creating a pair that represents
-                 * the node and its corresponding output.
+                 * Executes a given configuration within the context of a copied instance of the current `EdgeAssertionsBuilder`.
                  *
-                 * @param output the output value to associate with the current node reference
-                 * @return an instance of EdgeOutputPair containing the current node reference and the associated output
+                 * @param configure The functional interface to execute within the context of the copied `EdgeAssertionsBuilder` instance.
                  */
-                public infix fun <I, O> NodeReference<I, O>.withOutput(output: O): EdgeOutputPair<I, O> {
-                    return EdgeOutputPair(this, output)
+                @JavaAPI
+                public fun withContext(configure: ConfigureEdgeAssertions) {
+                    withContext { configure.configure(this) }
                 }
+            }
 
-                /**
-                 * Creates an assertion to verify that the current node always leads to the given target node.
-                 *
-                 * @param targetNode The target node that the current node output is expected to connect to.
-                 */
-                public infix fun NodeReference<*, *>.alwaysGoesTo(targetNode: NodeReference<*, *>) {
-                    unconditionalEdgeAssertions.add(UnconditionalEdgeAssertion(this, targetNode))
-                }
+            public fun interface ConfigureNodeOutputAssertions {
+                public fun configure(builder: NodeOutputAssertionsBuilder)
+            }
 
+            /**
+             * A functional interface used to configure edge assertions.
+             */
+            public fun interface ConfigureEdgeAssertions {
                 /**
-                 * Represents a pair consisting of a node and its corresponding output within an edge assertion context.
-                 * This is used to define expected edge behavior in a graph of nodes.
+                 * Configures edge assertions within the provided [EdgeAssertionsBuilder].
                  *
-                 * @param I the type of the input expected by the node.
-                 * @param O the type of the output produced by the node.
-                 * @property node the reference to the node associated with this edge output.
-                 * @property output the output value associated with the node.
+                 * @param builder The builder used to define edge assertions.
                  */
-                public inner class EdgeOutputPair<I, O>(public val node: NodeReference<I, O>, public val output: O) {
-                    /**
-                     * Creates an assertion to verify that a specific output from the current node leads to the given target node.
-                     *
-                     * @param targetNode The target node that the current node output is expected to connect to.
-                     */
-                    public infix fun goesTo(targetNode: NodeReference<*, *>) {
-                        assertions.add(EdgeAssertion(node, context.build(), output, targetNode))
-                    }
-                }
+                public fun configure(builder: EdgeAssertionsBuilder)
             }
         }
     }
@@ -1141,135 +1354,6 @@ public class Testing {
         }
     }
 }
-
-/**
- * Creates a `Message.Tool.Call` instance for the given tool and its arguments.
- *
- * This utility function simplifies the creation of tool call messages for testing purposes.
- * It automatically handles the encoding of arguments into the appropriate string format.
- *
- * @param tool The tool to be represented in the call message. The `Tool` instance contains metadata
- *             such as the tool's name and utility methods for encoding/decoding arguments.
- * @param args The arguments to be passed to the tool. Must match the type `Args` defined by the tool.
- * @return A `Message.Tool.Call` object representing a call to the specified tool with the encoded arguments.
- *
- * Example usage:
- * ```kotlin
- * // Create a tool call message for testing
- * val message = toolCallMessage(CreateTool, CreateTool.Args("solve"))
- *
- * // Use in node output assertions
- * assertNodes {
- *     askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
- * }
- * ```
- */
-public fun <Args> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage(
-    tool: Tool<Args, *>,
-    args: Args
-): Message.Tool.Call {
-    val toolContent = tool.encodeArgsToString(args, serializer)
-    val tokenCount = tokenizer?.countTokens(toolContent)
-
-    return Message.Tool.Call(
-        id = null,
-        tool = tool.name,
-        content = toolContent,
-        metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
-    )
-}
-
-/**
- * Creates an assistant message with the provided text and finish reason.
- *
- * @param text The content of the assistant message.
- * @param finishReason The reason indicating why the message was concluded. Defaults to null.
- * @return A new instance of Message.Assistant containing the provided content, finish reason, and associated metadata.
- */
-public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
-    text: String,
-    finishReason: String? = null
-): Message.Assistant {
-    val tokenCount = tokenizer?.countTokens(text)
-
-    return Message.Assistant(
-        content = text,
-        finishReason = finishReason,
-        metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
-    )
-}
-
-/**
- * Converts a tool and its corresponding result into a `ReceivedToolResult` object.
- *
- * This utility function simplifies the creation of tool results for testing purposes.
- * It automatically handles the encoding of the result into the appropriate string format.
- *
- * @param tool The tool whose result is being processed. The tool provides context for the result.
- * @param result The result produced by the tool, which will be encoded into a string representation.
- * @return A `ReceivedToolResult` instance containing the tool's name and the encoded string representation of the result.
- *
- * Example usage:
- * ```kotlin
- * // Create a tool result for testing
- * val result = toolResult(AnalyzeTool, AnalyzeTool.Result("Detailed analysis", 0.95))
- *
- * // Use in node output assertions
- * assertNodes {
- *     callTool withInput toolCallSignature(AnalyzeTool, AnalyzeTool.Args("analyze")) outputs result
- * }
- * ```
- */
-public fun <TArgs, TResult> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolResult(
-    tool: Tool<TArgs, TResult>,
-    args: TArgs,
-    result: TResult
-): ReceivedToolResult =
-    ReceivedToolResult(
-        id = null,
-        tool = tool.name,
-        toolArgs = tool.encodeArgs(args, serializer),
-        toolDescription = tool.descriptor.description,
-        content = tool.encodeResultToString(result, serializer),
-        resultKind = ToolResultKind.Success,
-        result = tool.encodeResult(result, serializer)
-    )
-
-/**
- * Constructs a `ReceivedToolResult` object using the provided tool and result string.
- *
- * This is a convenience function for simple tools that return text results.
- * It wraps the string result in a `ToolResult.Text` object.
- *
- * @param tool The tool for which the result is being created, of type `SimpleTool`.
- * @param result The result content generated by the tool execution as a string.
- * @return An instance of `ReceivedToolResult` containing the tool's name and the result string.
- *
- * Example usage:
- * ```kotlin
- * // Create a simple text tool result for testing
- * val result = toolResult(SolveTool, "solved")
- *
- * // Use in node output assertions
- * assertNodes {
- *     callTool withInput toolCallSignature(SolveTool, SolveTool.Args("solve")) outputs result
- * }
- * ```
- */
-public fun <TArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolResult(
-    tool: SimpleTool<TArgs>,
-    args: TArgs,
-    result: String
-): ReceivedToolResult =
-    ReceivedToolResult(
-        id = null,
-        tool = tool.name,
-        toolArgs = tool.encodeArgs(args, serializer),
-        toolDescription = tool.descriptor.description,
-        content = tool.encodeResultToString(result, serializer),
-        resultKind = ToolResultKind.Success,
-        result = tool.encodeResult(result, serializer)
-    )
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

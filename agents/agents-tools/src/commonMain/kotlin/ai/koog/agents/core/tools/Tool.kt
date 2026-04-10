@@ -12,6 +12,7 @@ import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import kotlinx.schema.generator.json.JsonSchemaConfig
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmOverloads
 
 /**
  * Base class representing a tool that can be invoked by the LLM.
@@ -47,6 +48,7 @@ public abstract class Tool<TArgs, TResult>(
      * @param jsonSchemaConfig Optional custom [JsonSchemaConfig] for the tool schema generation.
      */
     @OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
+    @JvmOverloads
     public constructor(
         argsType: TypeToken,
         resultType: TypeToken,

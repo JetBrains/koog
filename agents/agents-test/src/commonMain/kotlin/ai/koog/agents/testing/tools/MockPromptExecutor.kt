@@ -12,10 +12,12 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
 
@@ -71,7 +73,8 @@ public class MockPromptExecutor internal constructor(
     public companion object {
         @JvmStatic
         @JavaAPI
-        public fun builder(serializer: JSONSerializer): MockExecutorBuilder = MockExecutorBuilder(serializer)
+        @JvmOverloads
+        public fun builder(serializer: JSONSerializer = KotlinxSerializer()): MockExecutorBuilder = MockExecutorBuilder(serializer)
     }
 
     /**
