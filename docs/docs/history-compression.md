@@ -25,10 +25,7 @@ History compression is performed at specific steps in the agent workflow:
 There are two main approaches to implementing history compression in your agent:
 
 - In a strategy graph
-- In a custom node (Kotlin)
-
-!!! warning
-    History compression inside custom node logic is available only in Kotlin.
+- In a custom node
 
 ### History compression in a strategy graph
 
@@ -261,9 +258,6 @@ In this example, the history is compressed after completing the information coll
 
 ### History compression in a custom node
 
-!!! warning
-    History compression inside custom node logic is available only in Kotlin.
-
 If you are implementing a custom node, you can compress history using the `replaceHistoryWithTLDR()` function (Kotlin) as follows:
 
 === "Kotlin"
@@ -362,7 +356,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava03.java -->
 
-* In a custom node (Kotlin only):
+* In a custom node:
 
 === "Kotlin"
 
@@ -385,6 +379,37 @@ You can use it as follows:
     }
     ```
     <!--- KNIT example-history-compression-05.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava05 {
+        public static void main(String[] args) {
+            var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+                .withInput(String.class)
+                .withOutput(String.class);
+        var compressHistory = AIAgentNode.builder()
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> {
+                -->
+                <!--- SUFFIX
+                return input;
+            })
+            .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        session.replaceHistoryWithTLDR(HistoryCompressionStrategy.WholeHistory);
+    });
+    ```
+    <!--- KNIT exampleHistoryCompressionJava05.java -->
 
 ### FromLastNMessages
 
@@ -448,7 +473,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava04.java -->
 
-* In a custom node (Kotlin only):
+* In a custom node:
 
 === "Kotlin"
 
@@ -472,6 +497,37 @@ You can use it as follows:
     }
     ```
     <!--- KNIT example-history-compression-07.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava07 {
+        public static void main(String[] args) {
+            var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+                .withInput(String.class)
+                .withOutput(String.class);
+        var compressHistory = AIAgentNode.builder()
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> {
+                -->
+                <!--- SUFFIX
+                return input;
+            })
+            .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        session.replaceHistoryWithTLDR(HistoryCompressionStrategy.FromLastNMessages(5));
+    });
+    ```
+    <!--- KNIT exampleHistoryCompressionJava07.java -->
 
 
 ### Chunked
@@ -536,7 +592,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava05.java -->
 
-* In a custom node (Kotlin only):
+* In a custom node:
 
 === "Kotlin"
 
@@ -560,6 +616,38 @@ You can use it as follows:
     }
     ```
     <!--- KNIT example-history-compression-09.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava09 {
+        public static void main(String[] args) {
+            var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+                .withInput(String.class)
+                .withOutput(String.class);
+        var compressHistory = AIAgentNode.builder()
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> {
+                -->
+                <!--- SUFFIX
+                return input;
+            })
+            .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        session.replaceHistoryWithTLDR(HistoryCompressionStrategy.Chunked(10));
+    });
+    ```
+    <!--- KNIT exampleHistoryCompressionJava09.java -->
+
 
 ### RetrieveFactsFromHistory
 
@@ -666,7 +754,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava06.java -->
 
-* In a custom node (Kotlin only):
+* In a custom node:
 
 === "Kotlin"
 
@@ -716,6 +804,61 @@ You can use it as follows:
     }
     ```
     <!--- KNIT example-history-compression-11.kt -->
+
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    import import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory;
+    class exampleHistoryCompressionJava11 {
+        public static void main(String[] args) {
+            var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+                .withInput(String.class)
+                .withOutput(String.class);
+        var compressHistory = AIAgentNode.builder()
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> {
+                -->
+                <!--- SUFFIX
+                return input;
+            })
+            .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        session.replaceHistoryWithTLDR(new RetrieveFactsFromHistory(
+                Concept(
+                    keyword = "user_preferences", 
+                    // Description to the LLM -- what specifically to search for
+                    description = "User's preferences for the recommendation system, including the preferred conversation style, theme in the application, etc.",
+                    // LLM would search for multiple relevant facts related to this concept:
+                    factType = FactType.MULTIPLE
+                ),
+                Concept(
+                    keyword = "product_details",
+                    // Description to the LLM -- what specifically to search for
+                    description = "Brief details about products in the catalog the user has been checking",
+                    // LLM would search for multiple relevant facts related to this concept:
+                    factType = FactType.MULTIPLE
+                ),
+                Concept(
+                    keyword = "issue_solved",
+                    // Description to the LLM -- what specifically to search for
+                    description = "Was the initial user's issue resolved?",
+                    // LLM would search for a single answer to the question:
+                    factType = FactType.SINGLE
+                )
+            ));
+    });
+    ```
+    <!--- KNIT exampleHistoryCompressionJava11.java -->
 
 ## Custom history compression strategy implementation
 
@@ -883,7 +1026,7 @@ To enable memory preservation:
     ```
     <!--- KNIT exampleHistoryCompressionJava07.java -->
 
-* In a custom node (Kotlin only):
+* In a custom node:
 
 === "Kotlin"
 
@@ -910,3 +1053,37 @@ To enable memory preservation:
     }
     ```
     <!--- KNIT example-history-compression-16.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+    class exampleHistoryCompressionJava16 {
+        public static void main(String[] args) {
+            var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
+                .withInput(String.class)
+                .withOutput(String.class);
+        var compressHistory = AIAgentNode.builder()
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> {
+                -->
+                <!--- SUFFIX
+                return input;
+            })
+            .build();
+        }
+    }
+    -->
+    ```java
+    ctx.getLlm().writeSession(session -> {
+        session.replaceHistoryWithTLDR(
+            /** strategy */ HistoryCompressionStrategy.WholeHistory,
+            /** preserveMemory */ true
+        );
+    });
+    ```
+    <!--- KNIT exampleHistoryCompressionJava16.java -->

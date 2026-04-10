@@ -7,6 +7,7 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.PromptBuilderAction
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -308,5 +309,23 @@ public actual class AIAgentLLMWriteSession actual constructor(
         executorService: ExecutorService? = null
     ): List<LLMChoice> = config.runOnStrategyDispatcher(executorService) {
         requestLLMMultipleChoices()
+    }
+
+    /**
+     * Rewrites LLM message history, leaving only user message and resulting TLDR.
+     *
+     * Default is `null`, which means entire history will be used.
+     * @param preserveMemory Whether to preserve memory-related messages in the history.
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun replaceHistoryWithTLDR(
+        strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
+        preserveMemory: Boolean = true,
+        executorService: ExecutorService? = null
+    ) {
+        config.runOnStrategyDispatcher(executorService) {
+            replaceHistoryWithTLDR(strategy, preserveMemory)
+        }
     }
 }
