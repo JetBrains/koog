@@ -335,6 +335,28 @@ internal class StreamFrameExtTest {
     }
 
     @Test
+    fun testToMessageResponsesBuildsAssistantFromTextDeltasOnly() {
+        val frames = listOf(
+            StreamFrame.TextDelta("Hello"),
+            StreamFrame.TextDelta(", World"),
+            StreamFrame.End("stop", ResponseMetaInfo.Empty)
+        )
+
+        val messages = frames.toMessageResponses()
+
+        assertEquals(
+            listOf(
+                Message.Assistant(
+                    parts = listOf(ContentPart.Text("Hello, World")),
+                    finishReason = "stop",
+                    metaInfo = ResponseMetaInfo.Empty
+                )
+            ),
+            messages
+        )
+    }
+
+    @Test
     fun testToMessageResponsesWithEmptyFrames() {
         val frames = emptyList<StreamFrame>()
 

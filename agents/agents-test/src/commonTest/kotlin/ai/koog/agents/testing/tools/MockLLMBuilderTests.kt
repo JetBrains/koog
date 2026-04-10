@@ -4,11 +4,14 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -33,13 +36,11 @@ class MockLLMBuilderTests {
 
     @Test
     fun testBasicMockLLMAnswer() = runTest {
-        // Create a mock executor with a simple response
         val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Hello, world!") onRequestContains "hello"
             mockLLMAnswer("Default response").asDefaultResponse
         }
 
-        // Test that the executor returns the expected response
         val prompt = prompt("test") {
             user("Say hello to me")
         }
@@ -47,7 +48,6 @@ class MockLLMBuilderTests {
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Hello, world!", response.content)
 
-        // Test default response
         val prompt2 = prompt("test2") {
             user("Something unrelated")
         }
@@ -70,7 +70,6 @@ class MockLLMBuilderTests {
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Exact match response", response.content)
 
-        // Test that partial match doesn't work for exact matching
         val prompt2 = prompt("test-exact-partial") {
             user("This contains exact match query somewhere")
         }
@@ -86,7 +85,6 @@ class MockLLMBuilderTests {
             mockLLMAnswer("Default response").asDefaultResponse
         }
 
-        // Test that partial match works
         val prompt = prompt("test-partial") {
             user("This contains partial match somewhere")
         }
@@ -102,7 +100,6 @@ class MockLLMBuilderTests {
             mockLLMAnswer("Default response").asDefaultResponse
         }
 
-        // Test that conditional match works
         val prompt = prompt("test-conditional") {
             user("This is a long message that should match the condition")
         }
@@ -110,13 +107,26 @@ class MockLLMBuilderTests {
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Conditional response", response.content)
 
-        // Test that condition not matching returns default
         val prompt2 = prompt("test-conditional-short") {
             user("Short message")
         }
 
         val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Default response", response2.content)
+    }
+
+    @Test
+    fun testStreamMocking() = runTest {
+        val prompt = prompt("test-stream") {
+            user("hello")
+        }
+        val expectedStream = streamFrameFlowOf("hi", ", ho", "w are you?")
+        val mockExecutor = getMockExecutor(serializer) {
+            mockLLMStream(expectedStream) onRequestEquals "hello"
+        }
+
+        val actualStream = mockExecutor.executeStreaming(prompt, OllamaModels.Meta.LLAMA_3_2)
+        assertContentEquals(expectedStream.toList(), actualStream.toList())
     }
 
     @Test
@@ -152,10 +162,8 @@ class MockLLMBuilderTests {
             user("Please use multiple tools to do something")
         }
 
-        // In this case, we expect a list of responses with tool calls
         val responses = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2, listOf())
 
-        // Verify we have the expected number of tool calls
         val responseToolCalls = responses.filterIsInstance<Message.Tool.Call>()
         assertEquals(2, responseToolCalls.size)
         assertEquals("test_tool", responseToolCalls[0].tool)
@@ -167,7 +175,6 @@ class MockLLMBuilderTests {
         val mixedToolCalls = listOf(
             TestTool to TestTool.Args("mixed input")
         )
-
         val textResponses = listOf("This is a mixed response with tool calls")
 
         val mockExecutor = getMockExecutor(serializer) {
@@ -181,8 +188,6 @@ class MockLLMBuilderTests {
 
         val responses = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2, listOf())
         assertEquals(2, responses.size)
-
-        // Check that we have both text and tool responses
         assertTrue(responses.any { it is Message.Assistant })
         assertTrue(responses.any { it is Message.Tool.Call })
 
@@ -196,10 +201,7 @@ class MockLLMBuilderTests {
     @Test
     fun testToolBehaviorMocking() = runTest {
         val mockExecutor = getMockExecutor(serializer) {
-            // Mock the tool behavior
             mockTool(TestTool) alwaysReturns "Mocked result"
-
-            // Set up a tool call that will use the mocked tool
             mockLLMToolCall(TestTool, TestTool.Args("test input")) onRequestContains "use tool"
         }
 
@@ -207,21 +209,16 @@ class MockLLMBuilderTests {
             user("Please use tool to do something")
         }
 
-        // Execute the prompt to get a tool call
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(response is Message.Tool.Call)
 
-        // Now simulate executing the tool
         val toolCall = response as Message.Tool.Call
-
-        // Find the tool condition that matches this call
         val toolCondition = (mockExecutor as MockPromptExecutor).toolActions.firstOrNull {
             it.tool.name == toolCall.tool
         }
 
         assertNotNull(toolCondition)
 
-        // Execute the tool and check the result
         val result = toolCondition.invoke(toolCall)
         assertTrue(result is String)
         assertEquals("Mocked result", result)
@@ -230,16 +227,12 @@ class MockLLMBuilderTests {
     @Test
     fun testToolBehaviorWithCondition() = runTest {
         val mockExecutor = getMockExecutor(serializer) {
-            // Mock the tool behavior with a condition
             mockTool(TestTool).returns("Specific result").onArguments(TestTool.Args("specific input"))
             mockTool(TestTool) alwaysReturns "Default result"
-
-            // Set up tool calls
             mockLLMToolCall(TestTool, TestTool.Args("specific input")) onRequestContains "specific"
             mockLLMToolCall(TestTool, TestTool.Args("other input")) onRequestContains "other"
         }
 
-        // Test the specific input
         val specificPrompt = prompt("test-specific") {
             user("Please use tool with specific input")
         }
@@ -256,7 +249,6 @@ class MockLLMBuilderTests {
         assertTrue(specificResult is String)
         assertEquals("Specific result", specificResult)
 
-        // Test the default behavior
         val otherPrompt = prompt("test-other") {
             user("Please use tool with other input")
         }
@@ -279,13 +271,10 @@ class MockLLMBuilderTests {
         var actionCalled = false
 
         val mockExecutor = getMockExecutor(serializer) {
-            // Mock the tool behavior with a custom action
             mockTool(TestTool) alwaysDoes {
                 actionCalled = true
                 "Custom action result"
             }
-
-            // Set up a tool call
             mockLLMToolCall(TestTool, TestTool.Args("test input")) onRequestContains "use tool"
         }
 

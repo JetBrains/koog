@@ -63,6 +63,7 @@ public class MockPromptExecutor internal constructor(
     private val handleLastAssistantMessage: Boolean,
     private val responseMatcher: ResponseMatcher<List<Message.Response>>,
     private val moderationResponseMatcher: ResponseMatcher<ModerationResult>,
+    private val streamResponseMatcher: ResponseMatcher<Flow<StreamFrame>>,
     private val logger: KLogger = KotlinLogging.logger(MockPromptExecutor::class.simpleName.toString()),
     internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: Clock = Clock.System,
@@ -102,8 +103,16 @@ public class MockPromptExecutor internal constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = flow {
-        execute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
+    ): Flow<StreamFrame> {
+        val lastMessage = getLastMessage(prompt)
+        val matchedStream = lastMessage?.let {
+            findExactResponse(it, streamResponseMatcher.exactMatches)
+                ?: findPartialResponse(it, streamResponseMatcher.partialMatches)
+        }
+
+        return matchedStream ?: flow {
+            execute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
+        }
     }
 
     /**
