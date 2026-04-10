@@ -826,6 +826,7 @@ You can use it as follows:
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
     import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory;
     import ai.koog.agents.memory.model.Concept;
+    import ai.koog.agents.memory.model.FactType;
     class exampleHistoryCompressionJava11 {
         public static void main(String[] args) {
             var graph = AIAgentGraphStrategy.builder("execute-with-history-compression")
@@ -865,7 +866,7 @@ You can use it as follows:
                     // Description to the LLM -- what specifically to search for
                     "Was the initial user's issue resolved?",
                     // LLM would search for a single answer to the question:
-                    factType = FactType.SINGLE
+                    FactType.SINGLE
                 )
             ));
         return null;
