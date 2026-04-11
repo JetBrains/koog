@@ -1,14 +1,14 @@
 # Why Koog
 
 Koog is designed to solve real-world problems with JetBrains-level quality.
-It provides advanced AI algorithms, out-of-the-box proven techniques, a Kotlin DSL, and robust multi-platform
+It provides advanced AI algorithms, out-of-the-box proven techniques, a Kotlin DSL, as well as a Java fluent API, and robust multi-platform
 support that goes beyond traditional frameworks.
 
-## Integration with JVM and Kotlin applications
+## Integration with Java and Kotlin applications
 
-Koog provides a Kotlin Domain-Specific Language (DSL) designed specifically for JVM and Kotlin developers.
-This ensures smooth integration into Kotlin and Java-based applications, 
-significantly improving productivity and enhancing the overall developer experience.
+Koog provides a Kotlin Domain-Specific Language (DSL) designed specifically for Kotlin developers, along with a fluent Java API for Java users.
+The same framework delivers a native feel in both JVM languages, ensuring seamless integration into Kotlin and Java applications
+while significantly boosting productivity and enhancing the overall developer experience.
 
 ## Real-world validation with JetBrains products
 
