@@ -156,7 +156,6 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          */
         @JvmField
         public val SiliconFlow: SiliconFlowProvider = SiliconFlowProvider
-
     }
 }
 
@@ -337,4 +336,4 @@ public object VertexLLMProvider : LLMProvider("vertex", "Google VertexAI")
  * SiliconFlow is identified by its unique ID ("siliconflow") and display name ("SiliconFlow").
  */
 @Serializable
-public object SiliconFlowProvider: LLMProvider("siliconflow", "SiliconFlow")
+public object SiliconFlowProvider : LLMProvider("siliconflow", "SiliconFlow")

@@ -2211,6 +2211,5 @@ public object SiliconFlowModels : LLModelDefinitions {
             ),
             contextLength = 32_000,
         )
-
     }
 }
