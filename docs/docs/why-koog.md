@@ -2,7 +2,9 @@
 
 Koog is designed to solve real-world problems with JetBrains-level quality.
 It provides advanced AI algorithms, out-of-the-box proven techniques, a Kotlin DSL, as well as a Java fluent API, and robust multi-platform
-support that goes beyond traditional frameworks.
+support that goes beyond traditional frameworks. 
+
+Its primary focus is reliability — enabling AI agents that can be confidently used in demanding enterprise environments.
 
 ## Integration with Java and Kotlin applications
 
@@ -21,23 +23,24 @@ This integration provides Koog with strengths that distinguish it from other fra
 
 Koog includes pre-built, composable solutions to simplify and speed up the development of agentic systems, setting it apart from frameworks that only offer basic components:
 
+* **Graph workflows with domain modeling.** Model AI workflows as explicit graphs built on verified domain models. By expressing requirements as structured data classes instead of relying on naive prompting, you gain precise control over agent behavior and significantly improve reliability and predictability.
 * **Multiple history compression strategies.** Koog comes with advanced strategies to compress and manage long-running conversations out of the box, eliminating the need for manual experimentation with approaches. With fine-tuned prompts, techniques, and algorithms tested and refined by ML engineers, you can rely on proven methods to improve performance. For more details on compression strategies, refer to [History compression](https://docs.koog.ai/history-compression/). To explore how Koog handles compression and context management in real-world scenarios, check out [this article](https://blog.jetbrains.com/ai/2025/07/when-tool-calling-becomes-an-addiction-debugging-llm-patterns-in-koog/).
+* **Advanced persistence (Durable execution).** Koog lets you restore full agent state machines instead of just chat messages. This enables features like checkpoints, failure recovery, and even the ability to revert to any point in the execution of the state machine.
+* **All modern agent patterns, one framework.** Graph workflows, GOAP (Goal-Oriented Action Planning) and LLM planning, multi-agent orchestration — fully supported and fully composable. Build exactly the agent your use case requires.
 * **Seamless LLM switching.** You can switch a conversation to a different large language model (LLM) with a new set of available tools at any point without losing the existing conversation history. Koog automatically rewrites the history and handles unavailable tools, enabling smooth transitions and a natural interaction flow.
-* **Advanced persistence.** Koog lets you restore full agent state machines instead of just chat messages. This enables features like checkpoints, failure recovery, and even the ability to revert to any point in the execution of the state machine.
-* **Robust retry component.** Koog includes a retry mechanism that lets you wrap any set of operations within your agentic system and retry them until they meet configurable conditions. You can provide feedback and adjust each attempt to ensure reliable results. If LLM calls time out, tools do not work as expected, or there are network issues, Koog ensures that your agent remains resilient and performs effectively, even during temporary failures. For more technical details, see [Retry functionality](https://docs.koog.ai/history-compression/).
-* **Structured typed streaming with Markdown DSL.** Koog streams LLM output and parses it into structured, typed events using a Markdown DSL. You can register handlers for specific elements like headers, bullet points, or regex patterns and receive only the relevant parts in real-time. This approach provides human-readable feedback using Markdown and machine-parsable data using structured typing, effectively eliminating the lack of transparency and enhancing the user experience. It ensures predictable output and dynamic user interfaces with progressive content rendering.
-
+* **Robust retry components.** Koog includes a retry mechanism that lets you wrap any set of operations within your agentic system and retry them until they meet configurable conditions. You can provide feedback and adjust each attempt to ensure reliable results. If LLM calls time out, tools do not work as expected, or there are network issues, Koog ensures that your agent remains resilient and performs effectively, even during temporary failures. For more technical details, see [Retry functionality](https://docs.koog.ai/history-compression/).
 
 ## Broad integration, multiplatform support, enhanced observability
 
 Koog supports the development and deployment of agentic applications across a variety of platforms and environments:
 
-*  **Multiplatform support**. You can deploy your agentic applications across JVM, JS, WasmJS, Android, and iOS targets.
-*  **Broad AI integration**. Koog integrates with major LLM providers, including OpenAI and Anthropic, as well as enterprise-level AI clouds like Bedrock. It also supports local models such as Ollama. For the full list of available providers, see [LLM providers](https://docs.koog.ai/llm-providers/).
-*  **OpenTelemetry support**. Koog provides out-of-the-box integration with popular observability providers like [W&B Weave](https://wandb.ai/site/weave/) and [Langfuse](https://langfuse.com/) for monitoring and debugging AI applications. With native OpenTelemetry support, you can trace, log, and measure your agents using the same tools you already use in your system. To learn more, refer to [OpenTelemetry](https://docs.koog.ai/opentelemetry-support/).
-*  **Spring Boot and Ktor integrations**. Koog integrates with widely used enterprise environments.
-      * If you have a Ktor server, you can install Koog as a plugin, configure providers using configuration files, and call agents directly from any route without manually connecting LLM clients.
+*  **Spring Boot, Sprig AI and Ktor integrations**. Koog integrates with widely used enterprise environments.
       * For Spring Boot, Koog provides ready-to-use beans and auto-configured LLM clients, making it easy to start building AI-powered workflows.
+      * If you're already using Spring AI for LLM and RAG capabilities, Koog can be layered on top as an orchestration and agentic framework. This allows you to leverage Spring AI’s extensive integrations while benefiting from Koog’s advanced, reliable, and cost-efficient AI workflows.
+      * If you have a Ktor server, you can install Koog as a plugin, configure providers using configuration files, and call agents directly from any route without manually connecting LLM clients.
+*  **Multiplatform support**. You can deploy your agentic applications across JVM, JS, WasmJS, Android, and iOS targets.
+*  **Broad AI integration**. Koog integrates with major LLM providers, including OpenAI, Anthropic, Google, DeepSeek, Mistral, Alibaba, as well as enterprise-level AI clouds like Bedrock. It also supports local models such as Ollama. For the full list of available providers, see [LLM providers](https://docs.koog.ai/llm-providers/).
+*  **OpenTelemetry support**. Koog provides out-of-the-box integration with popular observability providers like [W&B Weave](https://wandb.ai/site/weave/), [Langfuse](https://langfuse.com/) and [DataDog](https://www.datadoghq.com/) for monitoring and debugging AI applications. With native OpenTelemetry support, you can trace, log, and measure your agents using the same tools you already use in your system. To learn more, refer to [OpenTelemetry](https://docs.koog.ai/opentelemetry-support/).
 
 ## Collaboration with ML engineers and product teams
 
