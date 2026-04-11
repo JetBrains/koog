@@ -150,12 +150,7 @@ val siliconFlowParams = SiliconFlowParams(
     logprobs = true,
     topLogprobs = 5,
     transforms = listOf("middle-out"),
-    models = listOf("openai/gpt-4o", "anthropic/claude-3-sonnet"),
     route = "fallback",
-    provider = ProviderPreferences(
-        order = listOf("OpenAI", "Anthropic"),
-        ignoreUnknownTools = false
-    )
 )
 ```
 
@@ -168,9 +163,7 @@ val siliconFlowParams = SiliconFlowParams(
 - **minP** (0.0-1.0): Minimum cumulative probability for token inclusion
 - **topA** (0.0-1.0): Temperature scaling based on probability gain
 - **transforms**: Context transformation strategies when exceeding token limits
-- **models**: List of allowed models for fallback/routing
 - **route**: Request routing strategy ("fallback", etc.)
-- **provider**: Provider preferences and settings
 
 **Advanced Routing Features:**
 
@@ -252,6 +245,4 @@ val documentResponse = client.execute(
     },
     model = SiliconFlowModels.Qwen3_8B,
 )
-
-// etc
 ```
