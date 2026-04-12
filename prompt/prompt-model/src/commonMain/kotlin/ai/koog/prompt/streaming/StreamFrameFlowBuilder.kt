@@ -4,6 +4,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.channels.ProducerScope
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.concurrent.atomics.AtomicReference
@@ -115,8 +117,9 @@ public suspend fun FlowCollector<StreamFrame>.emitToolCallComplete(
  * Should be used only in case model does not produce completion events.
  */
 public fun buildStreamFrameFlow(block: suspend StreamFrameFlowBuilder.() -> Unit): Flow<StreamFrame> =
-    streamFrameFlow {
-        val builder = StreamFrameFlowBuilder(this)
+    channelFlow {
+        val collector = FlowCollector<StreamFrame> { frame -> send(frame) }
+        val builder = StreamFrameFlowBuilder(collector)
         block(builder)
     }
 
