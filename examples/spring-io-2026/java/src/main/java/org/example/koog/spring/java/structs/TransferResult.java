@@ -3,7 +3,7 @@ package org.example.koog.spring.java.structs;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public record TransferResult(
         @JsonProperty("was_successful") boolean wasSuccessful,

@@ -1,4 +1,4 @@
-name: Spring Boot Java Example
+name: Spring I/O Java Example
 
 on:
   push:
