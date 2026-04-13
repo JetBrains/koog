@@ -34,7 +34,7 @@ Koog includes pre-built, composable solutions to simplify and speed up the devel
 
 Koog supports the development and deployment of agentic applications across a variety of platforms and environments:
 
-*  **Spring Boot, Sprig AI and Ktor integrations**. Koog integrates with widely used enterprise environments.
+*  **Spring Boot, Spring AI and Ktor integrations**. Koog integrates with widely used enterprise environments.
       * For Spring Boot, Koog provides ready-to-use beans and auto-configured LLM clients, making it easy to start building AI-powered workflows.
       * If you're already using Spring AI for LLM and RAG capabilities, Koog can be layered on top as an orchestration and agentic framework. This allows you to leverage Spring AI’s extensive integrations while benefiting from Koog’s advanced, reliable, and cost-efficient AI workflows.
       * If you have a Ktor server, you can install Koog as a plugin, configure providers using configuration files, and call agents directly from any route without manually connecting LLM clients.
