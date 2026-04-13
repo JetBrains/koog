@@ -37,8 +37,13 @@ extra["springAiVersion"] = "1.1.4"
 
 dependencies {
 	implementation("ai.koog:koog-agents-jvm:0.8.0")
-
+	implementation("ai.koog:koog-spring-ai-starter-model-chat:0.8.0")
+	implementation("ai.koog:koog-spring-ai-starter-chat-memory:0.8.0")
+	implementation("ai.koog:koog-spring-ai-starter-vector-store:0.8.0")
 	implementation("ai.koog:agents-features-persistence-jdbc:0.8.0")
+
+    // Vector store (REQUIRED for QuestionAnswerAdvisor)
+    implementation("org.springframework.ai:spring-ai-advisors-vector-store")
 
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

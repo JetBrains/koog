@@ -15,8 +15,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.persistence.jdbc.PostgresJdbcPersistenceStorageProvider
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
@@ -43,7 +41,8 @@ import javax.sql.DataSource
 enum class SupportIntent {
     ORDER_STATUS,
     CHANGE_ADDRESS,
-    REFUND_OR_RETURN,
+    REFUND,
+    QUESTION,
     OTHER
 }
 
@@ -63,64 +62,17 @@ data class SupportRequest(
     val userRequest: String
 )
 
-data class ContextCheckResult(
-    val request: SupportRequest,
-    val needsMoreInfo: Boolean,
-    val clarificationQuestion: String? = null
-)
+sealed class CheckRequestResult(
+    val request: SupportRequest
+) {
+    class RequestDetected(
+        request: SupportRequest
+    ) : CheckRequestResult(request)
 
-@LLMDescription("Tools for order lookup, delivery changes, and refund policy checks.")
-class EcommerceSupportTools : ToolSet {
-
-    @Tool
-    @LLMDescription("Get the current status of an order by order ID.")
-    fun getOrderStatus(
-        @LLMDescription("Customer order ID") orderId: String
-    ): String {
-        return """{"orderId":"$orderId","status":"In transit","eta":"Tomorrow"}"""
-    }
-
-    @Tool
-    @LLMDescription("Change the delivery address of an order if it is still eligible.")
-    fun changeDeliveryAddress(
-        @LLMDescription("Customer order ID") orderId: String,
-        @LLMDescription("New delivery address") newAddress: String
-    ): String {
-        return """{"orderId":"$orderId","updated":true,"newAddress":"$newAddress"}"""
-    }
-
-    @Tool
-    @LLMDescription("Check whether an order is eligible for refund or return.")
-    fun checkRefundEligibility(
-        @LLMDescription("Customer order ID") orderId: String
-    ): String {
-        return """{"orderId":"$orderId","eligible":true,"window":"30 days"}"""
-    }
-
-    @Tool
-    @LLMDescription("Answer a general store policy question.")
-    fun getPolicy(
-        @LLMDescription("Policy topic, for example returns, refunds, shipping")
-        topic: String
-    ): String {
-        return when (topic.lowercase()) {
-            "returns", "refunds" -> "Returns are accepted within 30 days for eligible items."
-            "shipping" -> "Standard shipping takes 3 to 5 business days."
-            else -> "No matching policy found."
-        }
-    }
-}
-
-class EcommerceSupportRollbackTools : ToolSet {
-    @Tool
-    @LLMDescription("Change the delivery address for an order if the order is still eligible.")
-    fun changeDeliveryAddressToHome(
-        @LLMDescription("The customer order ID") orderId: String,
-        @LLMDescription("The new delivery address") newAddress: String
-    ): String {
-        // Replace with a real API call
-        return """{"orderId":"$orderId","updated":true,"newAddress":"$newAddress"}"""
-    }
+    class NeedsMoreInfo(
+        request: SupportRequest,
+        val clarificationQuestion: String
+    ) : CheckRequestResult(request)
 }
 
 @Service
@@ -133,16 +85,16 @@ class CustomerSupportGraphService(
 
     @OptIn(ExperimentalAgentsApi::class)
     suspend fun createAndRunAgent(userPrompt: String, sessionId: String): String {
-        val systemPrompt = """
-            You are an e-commerce support assistant.
-            Be concise and policy-aware.
-            Never invent order data.
-            If order context is missing for an order-specific request, ask for it.
-        """.trimIndent()
-
         val agentConfig = AIAgentConfig(
             prompt = prompt("ecommerce-support-level1") {
-                system(systemPrompt)
+                system(
+                    """
+                    You are an e-commerce support assistant.
+                    Be concise and policy-aware.
+                    Never invent order data.
+                    If order context is missing for an order-specific request, ask for it.
+                """.trimIndent()
+                )
             },
             model = OpenAIModels.Chat.GPT5Nano,
             maxAgentIterations = 20
@@ -153,7 +105,7 @@ class CustomerSupportGraphService(
 
         val agent = AIAgent<String, String>(
             promptExecutor = promptExecutor,
-            strategy = createControllableWorkflow(systemPrompt), // See IntentProcessingFlowchart.mermaid
+            strategy = createControllableWorkflow(), // See IntentProcessingFlowchart.mermaid
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 tools(supportTools)
@@ -195,13 +147,11 @@ class CustomerSupportGraphService(
             }
         }
 
-        return agent.run(
-            "My order 84721 hasn't arrived yet. Where is it?"
-        )
+        return agent.run(userPrompt)
     }
 
     // See IntentProcessingFlowchart.mermaid
-    private fun createControllableWorkflow(systemPrompt: String): AIAgentGraphStrategy<String, String> =
+    private fun createControllableWorkflow(): AIAgentGraphStrategy<String, String> =
         strategy<String, String>("ecommerce_support_level1") {
 
             // 1) Detect Intent
@@ -219,7 +169,7 @@ class CustomerSupportGraphService(
                         userRequest = "Change the delivery address for order 84721 to 12 King Street"
                     ),
                     SupportRequest(
-                        intent = SupportIntent.REFUND_OR_RETURN,
+                        intent = SupportIntent.REFUND,
                         orderId = "84721",
                         userRequest = "I want to return order 84721"
                     ),
@@ -235,107 +185,78 @@ class CustomerSupportGraphService(
             )
 
             // 2) Check Context
-            val checkContext by node<SupportRequest, ContextCheckResult> { req ->
-                val orderRequired = req.intent in setOf(
-                    SupportIntent.ORDER_STATUS,
-                    SupportIntent.CHANGE_ADDRESS,
-                    SupportIntent.REFUND_OR_RETURN
-                )
-
+            val checkContext by node<SupportRequest, CheckRequestResult> { request ->
                 when {
-                    orderRequired && req.orderId.isNullOrBlank() ->
-                        ContextCheckResult(
-                            request = req,
-                            needsMoreInfo = true,
-                            clarificationQuestion = "Please provide your order number so I can help with that request."
+                    request.intent == SupportIntent.OTHER ->
+                        CheckRequestResult.NeedsMoreInfo(
+                            request = request,
+                            clarificationQuestion = "Specify the intent: order status, refund, change address?"
                         )
 
-                    req.intent == SupportIntent.CHANGE_ADDRESS && req.newAddress.isNullOrBlank() ->
-                        ContextCheckResult(
-                            request = req,
-                            needsMoreInfo = true,
-                            clarificationQuestion = "What new delivery address would you like to use?"
+                    request.orderId.isNullOrBlank() ->
+                        CheckRequestResult.NeedsMoreInfo(
+                            request = request,
+                            clarificationQuestion = "Please provide your order number"
                         )
 
                     else ->
-                        ContextCheckResult(
-                            request = req,
-                            needsMoreInfo = false
+                        CheckRequestResult.RequestDetected(
+                            request = request,
                         )
                 }
             }
 
-            // 3a) Ask for missing info
-            val askForMoreInfo by subgraphWithTask<ContextCheckResult, String> { ctx ->
-                ctx.clarificationQuestion ?: "Please provide the missing information."
-            }
 
-            data class AccountIssueSolution(val actionsTaken: List<String>)
-            data class UserResponse(val confirmed: Boolean, val feedback: String)
-
-            val askUserConfirmation by node<AccountIssueSolution, UserResponse> { input ->
-                println("WDYT about solution: ${input.actionsTaken} ?")
-                UserResponse(confirmed = true, feedback = "I think this solution is good")
-            }
-
-            // 3b) Order status handler
+            // 3a) Order status handler
             val orderStatusFlow by subgraphWithTask<SupportRequest, String>(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
                 """
-                        $systemPrompt
-            
-                        Handle this request as an ORDER STATUS case.
-                        Use the order status tool and then answer the user clearly.
-            
-                        Request: ${req.userRequest}
-                        Order ID: ${req.orderId}
-                    """.trimIndent()
+                    Handle this request as an ORDER STATUS case.
+                    Use the order status tool and then answer the user clearly.
+        
+                    Request: ${req.userRequest}
+                    Order ID: ${req.orderId}
+                """.trimIndent()
             }
 
-            // 3c) Change address handler
+            // 3b) Change address handler
             val changeAddressFlow by subgraphWithTask<SupportRequest, String>(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
                 """
-                        $systemPrompt
-            
-                        Handle this request as a CHANGE ADDRESS case.
-                        Use the address-change tool if possible and explain the result.
-            
-                        Request: ${req.userRequest}
-                        Order ID: ${req.orderId}
-                        New address: ${req.newAddress}
-                    """.trimIndent()
+                    Handle this request as a CHANGE ADDRESS case.
+                    Use the address-change tool if possible and explain the result.
+        
+                    Request: ${req.userRequest}
+                    Order ID: ${req.orderId}
+                    New address: ${req.newAddress}
+                """.trimIndent()
             }
 
-            // 3d) Refund / return handler
+            // 3c) Refund / return handler
             val refundFlow by subgraphWithTask<SupportRequest, String>(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
                 """
-                        $systemPrompt
-            
-                        Handle this request as a REFUND OR RETURN case.
-                        Check eligibility first, then explain next steps.
-            
-                        Request: ${req.userRequest}
-                        Order ID: ${req.orderId}
-                    """.trimIndent()
+                    Handle this request as a REFUND OR RETURN case.
+                    Check eligibility first, then explain next steps.
+        
+                    Request: ${req.userRequest}
+                    Order ID: ${req.orderId}
+                """.trimIndent()
             }
 
-            // 3e) Fallback FAQ / policy handler
+            // 3d) Fallback FAQ / policy handler
             val faqFlow by subgraphWithTask<SupportRequest, String>(
                 tools = EcommerceSupportTools().asTools()
             ) { req ->
-                """
-                        $systemPrompt
-            
-                        Handle this request as a GENERAL FAQ / POLICY case.
-                        Prefer using the policy tool when relevant.
-            
-                        Request: ${req.userRequest}
-                    """.trimIndent()
+                """           
+                    Handle this request as a GENERAL FAQ / POLICY case.
+                    Prefer using the policy tool when relevant.
+        
+                    Request: ${req.userRequest}
+                """.trimIndent()
             }
 
             val compressLLMHistory by nodeLLMCompressHistory<String>(
@@ -356,43 +277,42 @@ class CustomerSupportGraphService(
             edge(
                 classifyRequest forwardTo maybeCompressHistory
                     onCondition { it.isFailure }
-                    transformed { "Sorry, I couldn't understand the request well enough. Please rephrase it." }
-            )
-
-            edge(
-                checkContext forwardTo askForMoreInfo
-                    onCondition { it.needsMoreInfo }
+                    transformed { "Sorry, I couldn't understand the request well enough. Please rephrase it: ${it.exceptionOrNull()}" }
             )
 
             edge(
                 checkContext forwardTo orderStatusFlow
-                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.ORDER_STATUS }
+                    onCondition { it is CheckRequestResult.RequestDetected && it.request.intent == SupportIntent.ORDER_STATUS }
                     transformed { it.request }
             )
 
             edge(
                 checkContext forwardTo changeAddressFlow
-                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.CHANGE_ADDRESS }
+                    onCondition { it is CheckRequestResult.RequestDetected && it.request.intent == SupportIntent.CHANGE_ADDRESS }
                     transformed { it.request }
             )
 
             edge(
                 checkContext forwardTo refundFlow
-                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.REFUND_OR_RETURN }
+                    onCondition { it is CheckRequestResult.RequestDetected && it.request.intent == SupportIntent.REFUND }
                     transformed { it.request }
             )
 
             edge(
                 checkContext forwardTo faqFlow
-                    onCondition { !it.needsMoreInfo && it.request.intent == SupportIntent.OTHER }
+                    onCondition { it is CheckRequestResult.RequestDetected && it.request.intent == SupportIntent.QUESTION }
                     transformed { it.request }
             )
 
-            edge(askForMoreInfo forwardTo maybeCompressHistory)
+            edge(
+                checkContext forwardTo maybeCompressHistory
+                    onCondition { it is CheckRequestResult.NeedsMoreInfo }
+                    transformed { (it as CheckRequestResult.NeedsMoreInfo).clarificationQuestion }
+            )
+
             edge(orderStatusFlow forwardTo maybeCompressHistory)
             edge(changeAddressFlow forwardTo maybeCompressHistory)
             edge(refundFlow forwardTo maybeCompressHistory)
-            edge(faqFlow forwardTo maybeCompressHistory)
 
             edge(maybeCompressHistory forwardTo compressLLMHistory onCondition { tooManyTokensSpent() })
             edge(maybeCompressHistory forwardTo nodeFinish onCondition { !tooManyTokensSpent() })
@@ -402,3 +322,4 @@ class CustomerSupportGraphService(
     private fun AIAgentGraphContextBase.tooManyTokensSpent(): Boolean = llm.prompt.latestTokenUsage > 100500
 
 }
+
