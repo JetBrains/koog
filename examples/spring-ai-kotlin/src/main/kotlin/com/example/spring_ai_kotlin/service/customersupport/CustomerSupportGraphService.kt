@@ -13,6 +13,7 @@ import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.ext.agent.subgraphWithTask
@@ -105,7 +106,7 @@ class CustomerSupportGraphService(
 
         val agent = AIAgent<String, String>(
             promptExecutor = promptExecutor,
-            strategy = createControllableWorkflow(), // See IntentProcessingFlowchart.mermaid
+            strategy = createControllableWorkflow(supportTools.asTools()), // See IntentProcessingFlowchart.mermaid
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 tools(supportTools)
@@ -151,7 +152,7 @@ class CustomerSupportGraphService(
     }
 
     // See IntentProcessingFlowchart.mermaid
-    private fun createControllableWorkflow(): AIAgentGraphStrategy<String, String> =
+    private fun createControllableWorkflow(supportTools: List<Tool<*, *>>): AIAgentGraphStrategy<String, String> =
         strategy<String, String>("ecommerce_support_level1") {
 
             // 1) Detect Intent
@@ -209,7 +210,7 @@ class CustomerSupportGraphService(
 
             // 3a) Order status handler
             val orderStatusFlow by subgraphWithTask<SupportRequest, String>(
-                tools = EcommerceSupportTools().asTools()
+                tools = supportTools
             ) { req ->
                 """
                     Handle this request as an ORDER STATUS case.
@@ -222,7 +223,7 @@ class CustomerSupportGraphService(
 
             // 3b) Change address handler
             val changeAddressFlow by subgraphWithTask<SupportRequest, String>(
-                tools = EcommerceSupportTools().asTools()
+                tools = supportTools
             ) { req ->
                 """
                     Handle this request as a CHANGE ADDRESS case.
@@ -236,7 +237,7 @@ class CustomerSupportGraphService(
 
             // 3c) Refund / return handler
             val refundFlow by subgraphWithTask<SupportRequest, String>(
-                tools = EcommerceSupportTools().asTools()
+                tools = supportTools
             ) { req ->
                 """
                     Handle this request as a REFUND OR RETURN case.
@@ -249,7 +250,7 @@ class CustomerSupportGraphService(
 
             // 3d) Fallback FAQ / policy handler
             val faqFlow by subgraphWithTask<SupportRequest, String>(
-                tools = EcommerceSupportTools().asTools()
+                tools = supportTools
             ) { req ->
                 """           
                     Handle this request as a GENERAL FAQ / POLICY case.
