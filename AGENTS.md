@@ -104,6 +104,67 @@ Features have unique storage keys and can intercept agent lifecycle events.
 - **Type Safety**: Generics ensure compile-time correctness for tool arguments/results
 - **Builder Patterns**: Fluent APIs for configuration throughout the framework
 
+## Quality Gates (MANDATORY)
+
+These rules are non-negotiable and apply to **every** change that touches production code.
+Claude MUST enforce them automatically without being asked.
+
+### Definition of Done for any code change
+
+A change is NOT done until ALL of the following are true:
+
+1. **Tests exist for every newly added or modified code path.**
+    - New public function/class → new unit test covering happy path + at least one edge case.
+    - Bug fix → a regression test that fails WITHOUT the fix and passes WITH it.
+    - Behavior change → existing tests updated to reflect the new contract.
+2. **Tests actually run and pass locally** via `./gradlew jvmTest` (and `jsTest` if the module has a JS target).
+   Do NOT report a task as complete based on "it compiles". Compilation ≠ tests pass.
+3. **`./gradlew build` succeeds** for the affected modules before the change is handed back to the user.
+4. **No suppressed warnings, no `@Ignore`, no `@Disabled`, no commented-out assertions** were introduced to make tests pass.
+5. **Public API changes** (new/removed/renamed public symbols) are documented with KDoc.
+
+If any gate fails, fix the underlying issue. Do NOT weaken the test, disable it, or mark
+the task complete with a caveat. If the gate genuinely cannot be satisfied, stop and ask the user.
+
+### Automatic workflow triggers
+
+Claude MUST follow this workflow without waiting for the user to ask:
+
+| Trigger                                                      | Required action                                                                 |
+|--------------------------------------------------------------|---------------------------------------------------------------------------------|
+| User asks for a non-trivial feature / refactor (>1 file)     | Invoke the `create_plan` skill BEFORE writing code                              |
+| User asks for a bug fix                                      | First write a failing regression test, then fix, then confirm test passes       |
+| Any edit under `src/commonMain`, `src/jvmMain`, `src/jsMain` | Add/update tests in the corresponding `src/*Test` source set in the SAME change |
+| Before reporting task complete                               | Run `./gradlew <affectedModule>:jvmTest` and paste the result summary           |
+| After finishing implementation                               | Invoke the `simplify` skill to review the diff for quality issues               |
+| Touching code shared between JVM and non-JVM targets         | Consider the `split-jvm-nonjvm` skill if platform-specific code is needed       |
+
+These triggers are **defaults**, not suggestions. Skip one only if the user explicitly says so
+in the current conversation.
+
+### Test planning checklist (use before writing any test)
+
+Before writing a test, Claude must answer in 1–2 lines each:
+
+1. **What behavior is under test?** (not "what function" — what observable behavior)
+2. **What are the inputs / preconditions?** Include the boundary and error cases.
+3. **What is the expected observable outcome?** Return value, thrown exception, state change, emitted event.
+4. **What is the minimal test double setup?** Prefer the framework's `getMockExecutor` / `mockTool` over hand-rolled
+   mocks.
+5. **Which source set does the test belong in?** (`commonTest` when platform-agnostic, else `jvmTest` / `jsTest`.)
+
+If any of these is unclear, the implementation itself is probably under-specified — pause and clarify.
+
+### Self-verification before handing back
+
+Before telling the user "done", Claude MUST explicitly confirm, in the final message:
+
+- [ ] Which tests were added or modified (file paths + test names).
+- [ ] The exact Gradle command that was run and its result (pass/fail count).
+- [ ] Whether any Quality Gate was skipped, and why.
+
+If this checklist cannot be filled in truthfully, the task is not done.
+
 ## Testing
 
 The framework provides comprehensive testing utilities in `agents-test` module:
@@ -237,8 +298,9 @@ export OPEN_ROUTER_API_TEST_KEY=your_key_here
 - **ALWAYS** run `./gradlew build` before submitting PRs
 - Ensure all tests pass on JVM, JS, WASM targets
 - Follow established patterns in existing code
-- Add tests for new functionality
+- Add tests for new functionality — see the **Quality Gates** section above; it is mandatory, not advisory
 - Update documentation for API changes
+- Run the `simplify` skill on your diff before opening a PR
 
 ### Commit Guidelines
 
