@@ -24,7 +24,6 @@ import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
-import ai.koog.agents.snapshot.feature.RollbackToolRegistry.Companion.invoke
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -36,6 +35,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.springframework.stereotype.Service
 import javax.sql.DataSource
+
 
 @Suppress("unused")
 @SerialName("SupportIntent")
@@ -183,6 +183,8 @@ class CustomerSupportGraphService(
                 // Configure where to store the checkpoints:
                 storage = PostgresJdbcPersistenceStorageProvider(dataSource)
 
+                enableAutomaticPersistence = true
+
                 // Configure how to roll back side effects produced by specific tools:
                 rollbackToolRegistry = RollbackToolRegistry {
                     registerRollback(
@@ -266,6 +268,14 @@ class CustomerSupportGraphService(
             // 3a) Ask for missing info
             val askForMoreInfo by subgraphWithTask<ContextCheckResult, String> { ctx ->
                 ctx.clarificationQuestion ?: "Please provide the missing information."
+            }
+
+            data class AccountIssueSolution(val actionsTaken: List<String>)
+            data class UserResponse(val confirmed: Boolean, val feedback: String)
+
+            val askUserConfirmation by node<AccountIssueSolution, UserResponse> { input ->
+                println("WDYT about solution: ${input.actionsTaken} ?")
+                UserResponse(confirmed = true, feedback = "I think this solution is good")
             }
 
             // 3b) Order status handler
