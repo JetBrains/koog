@@ -30,6 +30,7 @@ import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
+import jakarta.annotation.PostConstruct
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.springframework.stereotype.Service
@@ -84,6 +85,13 @@ class CustomerSupportGraphService(
     private val knowledgeBase: SearchStorage<TextDocument, SimilaritySearchRequest>
 ) {
 
+    private val persistenceStorage = PostgresJdbcPersistenceStorageProvider(dataSource)
+
+    @PostConstruct
+    fun initSchema() {
+        persistenceStorage.migrateBlocking()
+    }
+
     @OptIn(ExperimentalAgentsApi::class)
     suspend fun createAndRunAgent(userPrompt: String, sessionId: String): String {
         val agentConfig = AIAgentConfig(
@@ -134,7 +142,7 @@ class CustomerSupportGraphService(
             // The agent will recover from the exact graph node where it crashed:
             install(Persistence) {
                 // Configure where to store the checkpoints:
-                storage = PostgresJdbcPersistenceStorageProvider(dataSource)
+                storage = persistenceStorage
 
                 enableAutomaticPersistence = true
 
