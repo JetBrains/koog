@@ -17,6 +17,8 @@ object RetryUtils {
     private const val GOOGLE_429_STATUS = "Status code: 429"
     private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
     private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
+    private const val GOOGLE_UNAVAILABLE_STATUS = "\"status\": \"UNAVAILABLE\""
+    private const val GOOGLE_HIGH_DEMAND_ERROR = "This model is currently experiencing high demand"
     private const val ANTHROPIC_429_ERROR = "Error from Anthropic API: 429 Too Many Requests"
     private const val ANTHROPIC_500_ERROR = "Error from Anthropic API: 500 Internal Server Error"
     private const val ANTHROPIC_502_ERROR = "Error from Anthropic API: 502 Bad Gateway"
@@ -46,6 +48,8 @@ object RetryUtils {
             GOOGLE_RESOURCE_EXHAUSTED_STATUS,
             GOOGLE_500_ERROR,
             GOOGLE_503_ERROR,
+            GOOGLE_UNAVAILABLE_STATUS,
+            GOOGLE_HIGH_DEMAND_ERROR,
             ANTHROPIC_429_ERROR,
             ANTHROPIC_500_ERROR,
             ANTHROPIC_502_ERROR,
