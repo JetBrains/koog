@@ -117,8 +117,6 @@ Inject the `PromptExecutor` and use it to run a Koog agent:
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.model.PromptExecutor
-    import ai.koog.prompt.llm.LLModel
-    import ai.koog.prompt.llm.LLMProvider
     import org.springframework.stereotype.Service
 
     @Service
