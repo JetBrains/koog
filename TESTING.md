@@ -2,6 +2,50 @@
 
 When making changes in the project, please make sure that the corresponding tests are not failing.
 
+## Quality Gates
+
+These rules are non-negotiable and apply to **every** change that touches production code.
+
+### Definition of Done for any code change
+
+A change is NOT done until ALL of the following are true:
+
+1. **Tests exist for every newly added or modified code path.**
+    - New public function/class → new unit test covering happy path + at least one edge case.
+    - Bug fix → a regression test that fails WITHOUT the fix and passes WITH it.
+    - Behavior change → existing tests updated to reflect the new contract.
+2. **Tests actually run and pass locally** via `./gradlew jvmTest` (and `jsTest` if the module has a JS target).
+   Do NOT report a task as complete based on "it compiles". Compilation ≠ tests pass.
+3. **`./gradlew build` succeeds** for the affected modules before the change is handed back to the user.
+4. **No suppressed warnings, no `@Ignore`, no `@Disabled`, no commented-out assertions** were introduced to make tests pass.
+5. **Public API changes** (new/removed/renamed public symbols) are documented with KDoc.
+
+If any gate fails, fix the underlying issue. Do NOT weaken the test, disable it, or mark
+the task complete with a caveat. If the gate genuinely cannot be satisfied, stop and ask the user.
+
+### Test planning checklist (use before writing any test)
+
+Before writing a test, make sure these points are clear:
+
+1. **What behavior is under test?** (not "what function" — what observable behavior)
+2. **What are the inputs / preconditions?** Include the boundary and error cases.
+3. **What is the expected observable outcome?** Return value, thrown exception, state change, emitted event.
+4. **What is the minimal test double setup?** Prefer the framework's `getMockExecutor` / `mockTool` over hand-rolled
+   mocks.
+5. **Which source set does the test belong in?** (`commonTest` when platform-agnostic, else `jvmTest` / `jsTest`.)
+
+If any of these is unclear, the implementation itself is probably under-specified — pause and clarify.
+
+### Verification checklist
+
+Before considering the change complete, confirm:
+
+- [ ] Which tests were added or modified (file paths + test names).
+- [ ] The exact Gradle command that was run and its result (pass/fail count).
+- [ ] Whether any Quality Gate was skipped, and why.
+
+If this checklist cannot be filled in truthfully, the task is not done.
+
 ## Running unit tests
 
 This project uses Kotlin Multiplatform with JVM tests located in the `jvmTest` source sets.
