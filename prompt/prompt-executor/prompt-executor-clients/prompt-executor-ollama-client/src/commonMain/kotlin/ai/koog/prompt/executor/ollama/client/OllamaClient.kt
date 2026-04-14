@@ -14,7 +14,6 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
-import ai.koog.prompt.executor.ollama.client.dto.EmbeddingResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTOSerializer
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
@@ -90,7 +89,7 @@ public class OllamaClient @JvmOverloads constructor(
         private val logger = KotlinLogging.logger { }
 
         private const val DEFAULT_MESSAGE_PATH = "api/chat"
-        private const val DEFAULT_EMBEDDINGS_PATH = "api/embeddings"
+        private const val DEFAULT_EMBEDDINGS_PATH = "api/embed"
         private const val DEFAULT_LIST_MODELS_PATH = "api/tags"
         private const val DEFAULT_SHOW_MODEL_PATH = "api/show"
         private const val DEFAULT_PULL_MODEL_PATH = "api/pull"
@@ -366,8 +365,8 @@ public class OllamaClient @JvmOverloads constructor(
             )
         }
 
-        val embeddingResponse = response.body<EmbeddingResponseDTO>()
-        return embeddingResponse.embeddings
+        val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
+        return embeddingResponse.embeddings.first()
     }
 
     /**

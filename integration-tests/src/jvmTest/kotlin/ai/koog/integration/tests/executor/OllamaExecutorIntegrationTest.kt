@@ -23,6 +23,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -63,6 +64,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         lateinit var fixture: OllamaTestFixture
         val executor get() = fixture.executor
         val model get() = fixture.model
+        val embeddingsModel get() = fixture.embeddingsModel
         val visionModel get() = fixture.visionModel
         val moderationModel get() = fixture.moderationModel
         val thinkingModel get() = fixture.thinkingModel
@@ -269,6 +271,23 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                 Schema.JSON.Standard
             )
         }
+    }
+
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed one string`() = runTest {
+        client.embed(text = "text", model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+    }
+
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed list of string`() = runTest {
+        client.embed(inputs = listOf("one", "two"), model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+            .shouldHaveSize(2)
     }
 
     // Ollama-specific image processing test

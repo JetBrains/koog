@@ -1,6 +1,6 @@
 package ai.koog.integration.tests
 
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import com.github.dockerjava.api.model.Bind
@@ -35,10 +35,11 @@ class OllamaTestFixture {
 
     lateinit var client: OllamaClient
         private set
-    lateinit var executor: SingleLLMPromptExecutor
+    lateinit var executor: MultiLLMPromptExecutor
         private set
 
     val model = OllamaModels.Meta.LLAMA_3_2
+    val embeddingsModel = OllamaModels.Embeddings.NOMIC_EMBED_TEXT
     val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
     val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
     val thinkingModel = OllamaModels.DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B
@@ -67,6 +68,7 @@ class OllamaTestFixture {
             runBlocking {
                 try {
                     client.getModelOrNull(model.id, pullIfMissing = true)
+                    client.getModelOrNull(embeddingsModel.id, pullIfMissing = true)
                     client.getModelOrNull(visionModel.id, pullIfMissing = true)
                     client.getModelOrNull(moderationModel.id, pullIfMissing = true)
                     client.getModelOrNull(thinkingModel.id, pullIfMissing = true)
@@ -78,7 +80,7 @@ class OllamaTestFixture {
                 }
             }
 
-            executor = SingleLLMPromptExecutor(client)
+            executor = MultiLLMPromptExecutor(client)
         } catch (e: Exception) {
             teardown()
             throw e

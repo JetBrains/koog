@@ -122,7 +122,7 @@ internal data class EmbeddingBatchRequestDTO(
  */
 @Serializable
 internal data class EmbeddingBatchResponseDTO(
-    val embeddings: List<List<Double>>,
+    @SerialName("embeddings") val embeddings: List<List<Double>>,
     @SerialName("model") val modelId: String? = null
 )
 
@@ -138,22 +138,6 @@ internal data class EmbeddingBatchResponseDTO(
 internal data class EmbeddingRequestDTO(
     val model: String,
     val input: String
-)
-
-/**
- * Represents the response for an embedding operation, containing the result of the operation.
- *
- * This class is used for deserializing responses containing vector embeddings that may be
- * associated with a specific model.
- *
- * @property embeddings The list of list double values representing the computed embedding or vector for each input.
- *                     Each value corresponds to a specific dimension in the generated embedding space.
- * @property modelId An optional identifier for the model that generated the embedding.
- */
-@Serializable
-internal data class EmbeddingResponseDTO(
-    val embeddings: List<Double>,
-    @SerialName("model") val modelId: String? = null
 )
 
 internal object OllamaChatRequestDTOSerializer :
