@@ -3,7 +3,6 @@ package ai.koog.prompt.executor.ollama.client
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.JsonElement
 
-
 /**
  * Represents the parameters for configuring an Ollama Chat interaction with an LLM.
  *
