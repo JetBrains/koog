@@ -79,6 +79,8 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private var _spanAdapter: SpanAdapter? = null
 
+    private var _shutdownOnAgentClose: Boolean = false
+
     override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
         // Do not allow events filtering for the OpenTelemetry feature
         // Open Telemetry relay on the hierarchy. Filtering events can break the feature logic.
@@ -106,7 +108,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * The initialized SDK instance is cached for future access.
      *
      * The `initializeOpenTelemetry` function configures the SDK with the appropriate service attributes, trace
-     * providers, span processors, and exporters. It also ensures proper shutdown of the SDK on application termination.
+     * providers, span processors, and exporters.
      *
      * @return The initialized or previously cached `OpenTelemetrySdk`.
      */
@@ -139,6 +141,23 @@ public class OpenTelemetryConfig : FeatureConfig() {
     public val serviceVersion: String
         get() = _serviceVersion
 
+    /**
+     * Indicates whether the OpenTelemetry SDK should be automatically closed when the agent closes.
+     *
+     * Defaults to `false`. When set to `true` via [setShutdownOnAgentClose], the SDK will be closed
+     * (flushing all pending spans) during the agent close lifecycle event.
+     *
+     * Note: if multiple agents share the same [OpenTelemetryConfig], enabling this will cause
+     * the SDK to be closed when the first agent closes, which may affect the following agents.
+     */
+    public val isShutdownOnAgentClose: Boolean
+        get() = _shutdownOnAgentClose
+
+    /**
+     * A property providing access to the current instance of the [SpanAdapter].
+     * This is backed by a private field [_spanAdapter].
+     * Used to handle span-related operations between components.
+     */
     internal val spanAdapter: SpanAdapter?
         get() = _spanAdapter
 
@@ -227,6 +246,21 @@ public class OpenTelemetryConfig : FeatureConfig() {
     }
 
     /**
+     * Sets whether the OpenTelemetry SDK should be automatically closed when the agent closes.
+     *
+     * When enabled, [OpenTelemetrySdk.close] is called during the agent closing lifecycle event,
+     * which flushes all pending spans to exporters and shuts down the SDK.
+     *
+     * Defaults to `false`. For manual SDK lifecycle management, call [sdk]`.close()` directly.
+     *
+     * @param shutdownOnAgentClose `true` to close the SDK when the agent closes, `false` to leave
+     *        SDK lifecycle management to the caller.
+     */
+    public fun setShutdownOnAgentClose(shutdownOnAgentClose: Boolean) {
+        _shutdownOnAgentClose = shutdownOnAgentClose
+    }
+
+    /**
      * Adds a custom span adapter for post-processing GenAI agent spans.
      * The adapter can modify span data, add attributes/events, or perform other
      * post-processing logic before spans are completed.
@@ -261,9 +295,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
             .setTracerProvider(traceProviderBuilder.build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .build()
-
-        // Add a hook to close SDK, which flushes logs
-        Runtime.getRuntime().addShutdownHook(Thread { sdk.close() })
 
         return sdk
     }
