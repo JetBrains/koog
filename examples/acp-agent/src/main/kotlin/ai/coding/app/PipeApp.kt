@@ -9,7 +9,7 @@ import com.agentclientprotocol.transport.StdioTransport
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered

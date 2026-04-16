@@ -2,7 +2,7 @@ package ai.koog.agents.example.structuredoutput
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -15,8 +15,8 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.text.text
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -214,7 +214,7 @@ suspend fun main() {
         },
         model = GoogleModels.Gemini2_5Flash,
         // model = OpenAIModels.Chat.GPT4o,
-        // model = AnthropicModels.Sonnet_3_7,
+        // model = AnthropicModels.Opus_4_6,
         maxAgentIterations = 5
     )
 

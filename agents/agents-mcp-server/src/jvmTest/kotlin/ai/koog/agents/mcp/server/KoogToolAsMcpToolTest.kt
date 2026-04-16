@@ -8,6 +8,8 @@ import ai.koog.agents.mcp.McpTool
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.cio.CIO
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
@@ -31,6 +33,7 @@ import kotlin.time.Duration.Companion.seconds
 class KoogToolAsMcpToolTest {
 
     private val logger = KotlinLogging.logger {}
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testKoogToolAsMcpTool() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
@@ -38,11 +41,11 @@ class KoogToolAsMcpToolTest {
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args)
+                mcpTool.execute(args.toKoogJSONObject())
             }
         }
 
-        logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+        logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
         val content = result?.content?.first() as TextContent
         assertEquals("${origin.last}", content.text)
@@ -55,11 +58,11 @@ class KoogToolAsMcpToolTest {
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args)
+                mcpTool.execute(args.toKoogJSONObject())
             }
         }
 
-        logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+        logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
         val content = result?.content?.first() as TextContent
         assertEquals("${origin.last}", content.text)
@@ -73,7 +76,7 @@ class KoogToolAsMcpToolTest {
 
             val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(errorArgs)
+                    mcpTool.execute(errorArgs.toKoogJSONObject())
                 }
             }
 
@@ -86,11 +89,11 @@ class KoogToolAsMcpToolTest {
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(args)
+                    mcpTool.execute(args.toKoogJSONObject())
                 }
             }
 
-            logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+            logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
             val content = result?.content?.first() as TextContent
             assertEquals("${origin.last}", content.text)
@@ -110,7 +113,7 @@ class KoogToolAsMcpToolTest {
 
                 val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args)
+                        mcpTool.execute(args.toKoogJSONObject())
                     }
                 }
 
@@ -129,13 +132,13 @@ class KoogToolAsMcpToolTest {
 
                 val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args)
+                        mcpTool.execute(args.toKoogJSONObject())
                     }
                 }
 
-                logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+                logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-                val content = result?.content?.first() as TextContent
+                val content = result.content.first() as TextContent
                 assertEquals("${origin.last?.getOrNull()}", content.text)
             }
         }

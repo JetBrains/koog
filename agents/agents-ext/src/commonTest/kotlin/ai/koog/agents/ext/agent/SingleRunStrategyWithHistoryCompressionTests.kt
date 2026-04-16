@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -28,6 +29,7 @@ object CreateTool : SimpleTool<CreateTool.Args>(
 }
 
 class SingleRunStrategyWithHistoryCompressionTests {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun test_compression_happens() = runTest {
@@ -38,7 +40,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             compressionStrategy = HistoryCompressionStrategy.WholeHistory
         )
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
             mockLLMAnswer("TLDR summary.") onRequestContains "comprehensive summary" onCondition {
                 compressionRequested = true
@@ -65,7 +67,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             compressionStrategy = HistoryCompressionStrategy.WholeHistory
         )
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
@@ -91,7 +93,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             compressionStrategy = HistoryCompressionStrategy.WholeHistory
         )
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMToolCall(listOf(CreateTool to CreateTool.Args("1"), CreateTool to CreateTool.Args("2"))) onRequestEquals "Solve task"
             mockLLMAnswer("TLDR") onRequestContains "comprehensive summary" onCondition {
                 compressionRequested = true
@@ -120,7 +122,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
             compressionStrategy = HistoryCompressionStrategy.WholeHistory
         )
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMToolCall(listOf(CreateTool to CreateTool.Args("1"), CreateTool to CreateTool.Args("2"))) onRequestEquals "Solve task"
             mockLLMAnswer("TLDR") onRequestContains "comprehensive summary" onCondition {
                 compressionRequested = true

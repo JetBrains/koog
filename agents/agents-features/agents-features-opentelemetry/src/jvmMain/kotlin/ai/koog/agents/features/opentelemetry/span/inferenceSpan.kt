@@ -11,6 +11,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Build and start a new Inference Span with necessary attributes.
@@ -133,6 +135,7 @@ internal fun startInferenceSpan(
  * - gen_ai.response.finish_reasons (recommended)
  * - gen_ai.response.id (recommended)
  * - gen_ai.response.model (recommended)
+ * - gen_ai.response.metadata (recommended)
  * - gen_ai.usage.input_tokens (recommended)
  * - gen_ai.usage.output_tokens (recommended)
  * - gen_ai.output.messages (recommended)
@@ -157,6 +160,17 @@ internal fun endInferenceSpan(
     // gen_ai.response.id - Ignore. Not supported in Koog
     // gen_ai.response.model
     span.addAttribute(SpanAttributes.Response.Model(model))
+
+    // gen_ai.response.metadata
+    val responseMetadata = messages.filterIsInstance<Message.Response>()
+        .mapNotNull { message -> message.metaInfo.metadata }
+        .fold(mutableMapOf<String, JsonElement>()) { acc, jsonObject ->
+            acc.putAll(jsonObject)
+            acc
+        }
+    if (responseMetadata.isNotEmpty()) {
+        span.addAttribute(SpanAttributes.Response.Metadata(JsonObject(responseMetadata).toString()))
+    }
 
     // gen_ai.usage.input_tokens
     span.addAttribute(

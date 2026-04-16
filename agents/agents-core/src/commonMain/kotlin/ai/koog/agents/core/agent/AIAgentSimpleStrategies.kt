@@ -1,7 +1,8 @@
+@file:JvmName("AIAgentSimpleStrategies")
+
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -13,6 +14,7 @@ import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onMultipleAssistantMessages
 import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
 import ai.koog.agents.core.dsl.extension.onToolCall
+import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
 
 /**
@@ -25,11 +27,11 @@ import kotlin.jvm.JvmOverloads
  * 3. Execute a tool based on the LLM's response.
  * 4. Send the tool result back to the LLM.
  * 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
- * @param runMode The mode in which the single-run strategy should operate. Defaults to SingleRunMode.SINGLE.
- *                - SingleRunMode.SINGLE: Executes without allowing multiple simultaneous tool calls.
- *                - SingleRunMode.SEQUENTIAL: Executes simultaneous tool calls sequentially.
- *                - SingleRunMode.PARALLEL: Executes multiple tool calls in parallel.
- * @return An instance of AIAgentStrategy configured according to the specified single-run mode.
+ * @param runMode The mode in which the single-run strategy should operate. Defaults to [ToolCalls.SEQUENTIAL].
+ *                - [ToolCalls.SEQUENTIAL]: Executes multiple tool calls sequentially.
+ *                - [ToolCalls.PARALLEL]: Executes multiple tool calls in parallel.
+ *                - [ToolCalls.SINGLE_RUN_SEQUENTIAL]: Executes a single tool call per step.
+ * @return An instance of AIAgentStrategy configured according to the specified run mode.
  */
 @JvmOverloads
 public fun singleRunStrategy(runMode: ToolCalls = ToolCalls.SEQUENTIAL): AIAgentGraphStrategy<String, String> =

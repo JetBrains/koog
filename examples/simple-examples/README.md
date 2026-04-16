@@ -100,6 +100,9 @@ Examples demonstrating the A2A protocol for inter-agent communication. See the [
 | Feature               | Description                                   | Gradle Task                     | Notebook |
 |-----------------------|-----------------------------------------------|---------------------------------|----------|
 | **Memory**            | Customer support agent with persistent memory | -                               | -        |
+| **Chat Memory**       | Simple chat agent with in-memory conversation history | `runExampleChatMemory`         | -        |
+| **Chat Memory Windowed** | Chat agent with windowed conversation history      | `runExampleChatMemoryWindowed` | -        |
+| **Chat Memory Postgres** | Chat agent with PostgreSQL-backed conversation history | `runExampleChatMemoryPostgres` | -        |
 | **Tone Analysis**     | Text tone analysis capabilities               | -                               | -        |
 | **Moderation**        | Content moderation with jokes example         | `runExampleJokesWithModeration` | -        |
 | **Execution Sandbox** | Safe code execution in sandboxed environment  | `runExampleExecSandbox`         | -        |
@@ -170,6 +173,11 @@ Run any example using:
 **Persistence:**
 - `runExampleFilePersistentAgent` - File-based persistence
 - `runExampleSQLPersistentAgent` - SQL database persistence
+
+**Chat Memory:**
+- `runExampleChatMemory` - In-memory conversation history
+- `runExampleChatMemoryWindowed` - Windowed conversation history
+- `runExampleChatMemoryPostgres` - PostgreSQL-backed conversation history
 
 **Analysis:**
 - `runProjectAnalyzer` - Project structure analysis

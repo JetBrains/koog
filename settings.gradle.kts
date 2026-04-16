@@ -11,13 +11,17 @@ pluginManagement {
 
 include(":agents:agents-core")
 include(":agents:agents-ext")
-include(":agents:agents-planner")
 
 include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")
+include(":agents:agents-features:agents-features-longterm-memory")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-opentelemetry")
 include(":agents:agents-features:agents-features-sql")
+include(":agents:agents-features:agents-features-chat-memory-sql")
+include(":agents:agents-features:agents-features-chat-history-jdbc")
+include(":agents:agents-features:agents-features-chat-history-aws")
+include(":agents:agents-features:agents-features-persistence-jdbc")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-features:agents-features-tokenizer")
 include(":agents:agents-features:agents-features-snapshot")
@@ -54,10 +58,8 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client")
 
-include(":prompt:prompt-executor:prompt-executor-llms")
 include(":prompt:prompt-executor:prompt-executor-llms-all")
 include(":prompt:prompt-executor:prompt-executor-model")
-
 include(":prompt:prompt-llm")
 include(":prompt:prompt-markdown")
 include(":prompt:prompt-model")
@@ -70,7 +72,7 @@ include(":embeddings:embeddings-base")
 include(":embeddings:embeddings-llm")
 
 include(":rag:rag-base")
-include(":rag:vector-storage")
+include(":rag:rag-vector")
 
 include(":a2a:a2a-core")
 include(":a2a:a2a-server")
@@ -87,7 +89,17 @@ include(":http-client:http-client-ktor")
 include(":http-client:http-client-okhttp")
 include(":http-client:http-client-java")
 
+include(":serialization:serialization-core")
+include(":serialization:serialization-test")
+include(":serialization:serialization-jackson")
+
 include(":koog-spring-boot-starter")
+
+include(":koog-spring-ai:koog-spring-ai-common")
+include(":koog-spring-ai:koog-spring-ai-starter-model-chat")
+include(":koog-spring-ai:koog-spring-ai-starter-model-embedding")
+include(":koog-spring-ai:koog-spring-ai-starter-chat-memory")
+include(":koog-spring-ai:koog-spring-ai-starter-vector-store")
 
 include(":koog-ktor")
 include(":docs")

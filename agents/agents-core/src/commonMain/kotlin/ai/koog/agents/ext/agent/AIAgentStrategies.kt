@@ -1,9 +1,11 @@
+@file:JvmName("AIAgentStrategies")
+
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -18,8 +20,10 @@ import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.result
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructuredRequestConfig
+import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
 
 // FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
@@ -121,7 +125,8 @@ public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy(
 @JvmOverloads
 public fun reActStrategy(
     reasoningInterval: Int = 1,
-    name: String = "re_act"
+    name: String = "re_act",
+    reasoningPrompt: String = "Please give your thoughts about the task and plan the next steps."
 ): AIAgentGraphStrategy<String, String> = strategy(name) {
     require(reasoningInterval > 0) { "Reasoning interval must be greater than 0" }
     val reasoningStepKey = createStorageKey<Int>("reasoning_step")
@@ -136,7 +141,6 @@ public fun reActStrategy(
     }
     val nodeExecuteTool by nodeExecuteTool()
 
-    val reasoningPrompt = "Please give your thoughts about the task and plan the next steps."
     val nodeCallLLMReasonInput by node<String, Unit> { stageInput ->
         llm.writeSession {
             appendPrompt {
@@ -187,10 +191,12 @@ public fun reActStrategy(
 @JvmOverloads
 public inline fun <reified Output> structuredOutputWithToolsStrategy(
     config: StructuredRequestConfig<Output>,
+    fixingParser: StructureFixingParser? = null,
     parallelTools: Boolean = false
 ): AIAgentGraphStrategy<String, Output> = structuredOutputWithToolsStrategy(
     config,
-    parallelTools
+    fixingParser,
+    parallelTools,
 ) { it }
 
 /**
@@ -208,6 +214,7 @@ public inline fun <reified Output> structuredOutputWithToolsStrategy(
 @JvmOverloads
 public inline fun <reified Input, reified Output> structuredOutputWithToolsStrategy(
     config: StructuredRequestConfig<Output>,
+    fixingParser: StructureFixingParser? = null,
     parallelTools: Boolean = false,
     noinline transform: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentGraphStrategy<Input, Output> = strategy<Input, Output>("structured_output_with_tools_strategy") {
@@ -218,7 +225,7 @@ public inline fun <reified Input, reified Output> structuredOutputWithToolsStrat
     val sendToolResult by nodeLLMSendMultipleToolResults()
     val transformToStructuredOutput by node<Message.Assistant, Output> { response ->
         llm.writeSession {
-            parseResponseToStructuredResponse(response, config).data
+            parseResponseToStructuredResponse(response, config, fixingParser).data
         }
     }
 

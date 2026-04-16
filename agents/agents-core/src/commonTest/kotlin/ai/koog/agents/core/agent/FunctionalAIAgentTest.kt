@@ -8,6 +8,8 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.ext.agent.CriticResult
+import ai.koog.agents.ext.agent.CriticResultFromLLM
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -15,15 +17,17 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 class FunctionalAIAgentTest {
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun mixedTools_thenAssistantMessage() = runTest {
         val actualToolCalls = mutableListOf<String>()
@@ -33,7 +37,7 @@ class FunctionalAIAgentTest {
         }
 
         val assistantResponse = "Hey, I want to call following tools:"
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = true) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = true) {
             mockLLMAnswer(assistantResponse) onRequestContains assistantResponse
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
 
@@ -82,7 +86,7 @@ class FunctionalAIAgentTest {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("Task solved!!") onRequestContains "Solve task"
@@ -122,7 +126,7 @@ class FunctionalAIAgentTest {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Hello!") onRequestContains "Hello"
             mockLLMAnswer("Tools called!") onRequestContains "created"
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
@@ -295,12 +299,17 @@ class FunctionalAIAgentTest {
 
     // Define sample tools for subtasks, similar in spirit to QATools so tool lists are not empty
     object ArchitectureTools {
-        object AnalyzeRequirements : SimpleTool<String>(
-            argsSerializer = String.serializer(),
+        object AnalyzeRequirements : SimpleTool<AnalyzeRequirements.Requirements>(
+            argsSerializer = Requirements.serializer(),
             name = "analyze_requirements",
             description = "Analyzes high-level mission requirements."
         ) {
-            override suspend fun execute(args: String): String = "Requirements analyzed: $args"
+            @Serializable
+            data class Requirements(
+                val value: String,
+            )
+
+            override suspend fun execute(args: Requirements): String = "Requirements analyzed: ${args.value}"
         }
 
         object DraftArchitecture : SimpleTool<Architecture>(
@@ -376,7 +385,7 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `test_complex_subtasks_multistep_no_parallel_tools`() = runTest {
+    fun test_complex_subtasks_multistep_no_parallel_tools() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val testToolRegistry = ToolRegistry {
@@ -421,7 +430,7 @@ class FunctionalAIAgentTest {
 
         var qaAttempt = 0
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             // Design architecture subtask - match exact first request
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<Architecture>(),
@@ -490,17 +499,16 @@ class FunctionalAIAgentTest {
                     )
 
                     val assembly = Assembly(engine, body)
-                    product = subtask<Assembly, Spacecraft>(
+
+                    product = subtask<Spacecraft>(
                         taskDescription = "Assemble the product: $assembly",
-                        input = assembly,
                         tools = AssemblyTools.tools,
                         llmModel = OllamaModels.Meta.LLAMA_4,
                         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
                     )
 
-                    qaReport = subtask<Spacecraft, FullQAReport>(
-                        taskDescription = "Verify the product is built correctly",
-                        input = product,
+                    qaReport = subtask<FullQAReport>(
+                        taskDescription = "Verify the product is built correctly: $product",
                         tools = QATools.tools,
                         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
                     )
@@ -531,10 +539,9 @@ class FunctionalAIAgentTest {
     private suspend fun AIAgentFunctionalContext.buildBody(
         architecture: Architecture,
         additionalInfo: String? = null
-    ): Body = subtask<Architecture, Body>(
+    ): Body = subtask<Body>(
         taskDescription = "Create the body for the given architecture: $architecture" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
-        input = architecture,
         tools = BuildBodyTools.tools,
         llmModel = GoogleModels.Gemini2_0Flash,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
@@ -543,32 +550,30 @@ class FunctionalAIAgentTest {
     private suspend fun AIAgentFunctionalContext.buildEngine(
         architecture: Architecture,
         additionalInfo: String? = null
-    ): Engine = subtask<Architecture, Engine>(
+    ): Engine = subtask<Engine>(
         taskDescription = "Create the engine for the given architecture: $architecture" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
-        input = architecture,
         tools = BuildEngineTools.tools,
-        llmModel = AnthropicModels.Sonnet_4_5,
+        llmModel = AnthropicModels.Opus_4_6,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
     )
 
     private suspend fun AIAgentFunctionalContext.designArchitecture(
         input: String,
         additionalInfo: String? = null
-    ): Architecture = subtask<String, Architecture>(
+    ): Architecture = subtask<Architecture>(
         taskDescription = "Create the architecture for the following machinery: $input" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
-        input = input,
         tools = ArchitectureTools.tools,
         llmModel = OpenAIModels.Chat.GPT5,
         runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
     )
 
     @Test
-    fun `subtask_default_sequential_finish_only`() = runTest {
+    fun subtask_default_sequential_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             // The subtask should immediately call the finish tool in SEQUENTIAL (multi-tool) mode
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<SimpleOut>(),
@@ -583,9 +588,8 @@ class FunctionalAIAgentTest {
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = ToolRegistry.EMPTY,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Do simple subtask: $input",
-                    input = input,
                     tools = null, // no extra tools
                     runMode = ToolCalls.SEQUENTIAL
                 )
@@ -604,12 +608,12 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `subtask_sequential_with_normal_tool_then_finish`() = runTest {
+    fun subtask_sequential_with_normal_tool_then_finish() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val testToolRegistry = ToolRegistry { tool(DummyTool) }
 
-        val mockLLMApi = getMockExecutor(testToolRegistry, handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             // First, LLM asks to call a normal tool, then after tool results it calls finish tool
             mockLLMToolCall(
                 listOf(
@@ -631,9 +635,8 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Compose task with tool: $input",
-                    input = input,
                     tools = listOf(DummyTool),
                     runMode = ToolCalls.SEQUENTIAL
                 )
@@ -654,10 +657,10 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `subtask_parallel_finish_only`() = runTest {
+    fun subtask_parallel_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<SimpleOut>(),
                 SimpleOut("done-par")
@@ -671,9 +674,8 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Parallel subtask: $input",
-                    input = input,
                     tools = null,
                     runMode = ToolCalls.PARALLEL
                 )
@@ -690,10 +692,10 @@ class FunctionalAIAgentTest {
     }
 
     @Test
-    fun `subtask_single_run_sequential_finish_only`() = runTest {
+    fun subtask_single_run_sequential_finish_only() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             mockLLMToolCall(
                 SubgraphWithTaskUtils.finishTool<SimpleOut>(),
                 SimpleOut("done-single")
@@ -707,9 +709,8 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             strategy = functionalStrategy<String, SimpleOut> { input ->
-                subtask<String, SimpleOut>(
+                subtask<SimpleOut>(
                     taskDescription = "Single-run subtask: $input",
-                    input = input,
                     tools = null,
                     runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
                 )
@@ -727,13 +728,13 @@ class FunctionalAIAgentTest {
 
     @OptIn(InternalAgentsApi::class)
     @Test
-    fun `subtask_withVerification_success`() = runTest {
+    fun subtask_withVerification_success() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
-        val mockLLMApi = getMockExecutor(handleLastAssistantMessage = false) {
+        val mockLLMApi = getMockExecutor(serializer, handleLastAssistantMessage = false) {
             mockLLMToolCall(
-                SubgraphWithTaskUtils.finishTool<ai.koog.agents.ext.agent.CriticResultFromLLM>(),
-                ai.koog.agents.ext.agent.CriticResultFromLLM(isCorrect = true, feedback = "OK")
+                SubgraphWithTaskUtils.finishTool<CriticResultFromLLM>(),
+                CriticResultFromLLM(isCorrect = true, feedback = "OK")
             ) onRequestContains "Judge this:"
 
             mockLLMAnswer("default").asDefaultResponse
@@ -743,10 +744,9 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = ToolRegistry.EMPTY,
-            strategy = functionalStrategy<String, ai.koog.agents.ext.agent.CriticResult<String>> { input ->
+            strategy = functionalStrategy<String, CriticResult<String>> { input ->
                 subtaskWithVerification(
                     taskDescription = "Judge this: $input",
-                    input = input,
                     runMode = ToolCalls.SEQUENTIAL
                 )
             },
@@ -760,7 +760,7 @@ class FunctionalAIAgentTest {
         val result = agent.run("case-A", null)
         assertEquals(true, result.successful)
         assertEquals("OK", result.feedback)
-        assertEquals("case-A", result.input)
+        assertEquals("Judge this: case-A", result.input)
         assertEquals(0, actualToolCalls.size)
     }
 
@@ -772,7 +772,7 @@ class FunctionalAIAgentTest {
         val testFeatureMessageProcessor = TestFeatureMessageProcessor()
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             llmModel = model,
             strategy = strategy,
             systemPrompt = "You are helpful"

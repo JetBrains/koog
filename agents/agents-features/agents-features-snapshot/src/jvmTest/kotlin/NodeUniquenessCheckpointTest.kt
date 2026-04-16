@@ -2,9 +2,10 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.Persistence
@@ -13,6 +14,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -20,11 +22,12 @@ import kotlin.test.Test
  * Tests for verifying node uniqueness requirements with the AgentCheckpoint feature.
  */
 class NodeUniquenessCheckpointTest {
+    private val serializer = KotlinxSerializer()
 
     /**
      * Creates a simple node that appends the output to the input.
      */
-    private fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
+    private fun simpleNode(
         name: String? = null,
         output: String,
     ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -79,7 +82,7 @@ class NodeUniquenessCheckpointTest {
     @Test
     fun `test no error when Persistence feature is present and nodes are non-unique`() = runTest {
         // Create a mock executor
-        val mockExecutor: PromptExecutor = getMockExecutor {}
+        val mockExecutor: PromptExecutor = getMockExecutor(serializer) {}
 
         // Create a tool registry
         val toolRegistry = ToolRegistry {
@@ -118,7 +121,7 @@ class NodeUniquenessCheckpointTest {
     @Test
     fun `test no error when Persistence feature is not present and nodes are non-unique`() = runTest {
         // Create a mock executor
-        val mockExecutor: PromptExecutor = getMockExecutor {}
+        val mockExecutor: PromptExecutor = getMockExecutor(serializer) {}
 
         // Create a tool registry
         val toolRegistry = ToolRegistry {

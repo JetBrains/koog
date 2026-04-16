@@ -2,7 +2,6 @@ package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.Tool
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 
 @Serializable
@@ -35,14 +34,17 @@ object PickColorTool : Tool<Unit, Colors>(
 /**
  * Use to test tool with a list of enum arguments
  */
-object PickColorFromListTool : Tool<List<Colors>, Colors>(
-    argsSerializer = ListSerializer(Colors.serializer()),
+object PickColorFromListTool : Tool<PickColorFromListTool.Args, Colors>(
+    argsSerializer = Args.serializer(),
     resultSerializer = Colors.serializer(),
     name = "pick_color",
     description = "Picks a random color from a given list of colors"
 ) {
-    override suspend fun execute(args: List<Colors>): Colors {
-        return args.random()
+    @Serializable
+    data class Args(val colors: List<Colors>)
+
+    override suspend fun execute(args: Args): Colors {
+        return args.colors.random()
     }
 }
 

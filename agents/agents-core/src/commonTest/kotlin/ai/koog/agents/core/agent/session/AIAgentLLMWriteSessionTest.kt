@@ -24,6 +24,9 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Ignore
@@ -31,11 +34,16 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class AIAgentLLMWriteSessionTest {
+    companion object {
+        val serializer = KotlinxSerializer()
+    }
+
     private fun systemMessage(content: String) = Message.System(content, RequestMetaInfo.create(testClock))
     private fun userMessage(content: String) = Message.User(content, RequestMetaInfo.create(testClock))
     private fun assistantMessage(content: String) = Message.Assistant(content, ResponseMetaInfo.create(testClock))
@@ -45,17 +53,17 @@ class AIAgentLLMWriteSessionTest {
         @OptIn(InternalAgentToolsApi::class)
         override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
             val tool = toolRegistry.getTool(toolCall.tool)
-            val args = tool.decodeArgs(toolCall.contentJson)
+            val args = tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer)
             val result = tool.executeUnsafe(args)
 
             return ReceivedToolResult(
                 id = toolCall.id,
                 tool = toolCall.tool,
-                toolArgs = toolCall.contentJson,
+                toolArgs = toolCall.contentJson.toKoogJSONObject(),
                 toolDescription = null,
-                content = tool.encodeResultToStringUnsafe(result),
+                content = tool.encodeResultToStringUnsafe(result, serializer),
                 resultKind = ToolResultKind.Success,
-                result = tool.encodeResultUnsafe(result)
+                result = tool.encodeResultUnsafe(result, serializer)
             )
         }
 
@@ -108,7 +116,7 @@ class AIAgentLLMWriteSessionTest {
             return Result("Custom processed: ${args.input}")
         }
 
-        override fun encodeResultToString(result: Result): String {
+        override fun encodeResultToString(result: Result, serializer: JSONSerializer): String {
             return """{"output":"${result.output}"}"""
         }
     }
@@ -173,7 +181,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testRequestLLM() = runTest {
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer("This is a test response").asDefaultResponse
         }
 
@@ -189,7 +197,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testRequestLLMWithoutTools() = runTest {
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer("Response without tools").asDefaultResponse
         }
 
@@ -205,7 +213,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testCallTool() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Tool response").asDefaultResponse
         }
 
@@ -220,7 +228,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testCallToolByName() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Tool response").asDefaultResponse
         }
 
@@ -235,7 +243,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testCallToolRaw() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Tool response").asDefaultResponse
         }
 
@@ -249,24 +257,24 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testFindTool() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Tool response").asDefaultResponse
         }
 
         val testTool = TestTool()
         val session = createSession(mockExecutor, listOf(testTool))
 
-        val safeTool = session.findTool<TestTool.Args, String>(TestTool::class)
+        val safeTool = session.findTool(TestTool::class)
         assertNotNull(safeTool)
 
-        val result = safeTool.execute(TestTool.Args("test input"))
+        val result = safeTool.execute(TestTool.Args("test input"), serializer)
         assertTrue(result.isSuccessful())
         assertEquals("Processed: test input", result.asSuccessful().result)
     }
 
     @Test
     fun testCustomTool() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Custom tool response").asDefaultResponse
         }
 
@@ -281,7 +289,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testAppendPrompt() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Updated prompt response").asDefaultResponse
         }
 
@@ -307,7 +315,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testRewritePrompt() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Rewritten prompt response").asDefaultResponse
         }
 
@@ -318,7 +326,7 @@ class AIAgentLLMWriteSessionTest {
 
         val session = createSession(mockExecutor, prompt = initialPrompt)
 
-        session.rewritePrompt { oldPrompt ->
+        session.rewritePrompt { _ ->
             prompt("rewritten", clock = testClock) {
                 system("Rewritten system message")
                 user("Rewritten user message")
@@ -335,7 +343,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testChangeModel() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Changed model response").asDefaultResponse
         }
 
@@ -354,7 +362,7 @@ class AIAgentLLMWriteSessionTest {
 
     @Test
     fun testChangeLLMParams() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Changed params response").asDefaultResponse
         }
 
@@ -372,7 +380,7 @@ class AIAgentLLMWriteSessionTest {
         val thinkingContent = "<thinking>I need to use a tool</thinking>"
         val testTool = TestTool()
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             // Simulate [Assistant, ToolCall] sequence
             mockLLMMixedResponse(
                 toolCalls = listOf(testTool to TestTool.Args("test")),
@@ -404,7 +412,7 @@ class AIAgentLLMWriteSessionTest {
         val thinkingContent = "<thinking>Checking file...</thinking>"
         val testTool = TestTool()
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMMixedResponse(
                 toolCalls = listOf(testTool to TestTool.Args("test")),
                 responses = listOf(thinkingContent)
@@ -429,7 +437,7 @@ class AIAgentLLMWriteSessionTest {
     fun testRequestLLMOnlyCallingToolsWithMultipleToolCalls() = runTest {
         val testTool = TestTool()
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             // Simulate model returning multiple tool calls (parallel tool calling)
             mockLLMMixedResponse(
                 toolCalls = listOf(
@@ -452,5 +460,59 @@ class AIAgentLLMWriteSessionTest {
         val lastMessage = session.prompt.messages.last()
         assertIs<Message.Tool.Call>(lastMessage)
         assertContains(lastMessage.content, "first")
+    }
+
+    @Test
+    fun testRequestLLMForceOneToolUpdatesMessageHistoryCorrectly() = runTest {
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock, serializer = serializer) {
+            // Simulate model returning multiple tool calls (parallel tool calling)
+            mockLLMMixedResponse(
+                toolCalls = listOf(
+                    testTool to TestTool.Args("tool"),
+                ),
+                responses = emptyList()
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val response = session.requestLLMForceOneTool(testTool)
+
+        // Should return the tool call
+        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
+        assertEquals("test-tool", response.tool)
+
+        // The tool call should be added to the history
+        val lastMessage = session.prompt.messages.last()
+        assertIs<Message.Tool.Call>(lastMessage)
+        assertContains(lastMessage.content, "tool")
+
+        assertNotEquals(
+            lastMessage,
+            session.prompt.messages.dropLast(1).last(),
+            "Tool call should not be added to the history twice"
+        )
+    }
+
+    @Test
+    fun testRequestLLMForceOneToolSkipsNonToolMessages() = runTest {
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock, serializer = serializer) {
+            mockLLMMixedResponse(
+                toolCalls = listOf(
+                    testTool to TestTool.Args("tool"),
+                ),
+                responses = listOf("message")
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor)
+
+        val response = session.requestLLMForceOneTool(TestTool())
+
+        assertIs<Message.Tool.Call>(response)
     }
 }

@@ -4,10 +4,9 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
 import ai.koog.test.utils.DockerAvailableCondition
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -22,6 +21,7 @@ import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.Clock
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
@@ -122,7 +122,7 @@ class PostgresPersistenceStorageProviderTest {
             checkpointId = id,
             createdAt = Clock.System.now(),
             nodePath = "test-node",
-            lastOutput = JsonPrimitive("Test input"),
+            lastOutput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),

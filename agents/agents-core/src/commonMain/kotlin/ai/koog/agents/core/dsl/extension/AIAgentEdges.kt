@@ -8,6 +8,7 @@ import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
@@ -100,7 +101,13 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Ar
         .onCondition { it.tool == tool.name }
         .onCondition { toolCall ->
             val args = try {
-                tool.decodeArgs(toolCall.contentJsonResult.getOrNull() ?: return@onCondition false)
+                tool.decodeArgs(
+                    rawArgs = toolCall.contentJsonResult
+                        .getOrNull()
+                        ?.toKoogJSONObject()
+                        ?: return@onCondition false,
+                    serializer = config.serializer,
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -153,7 +160,8 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Re
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, ReceivedToolResult, OutgoingInput> {
     return onIsInstance(ReceivedToolResult::class)
         .onCondition { toolResult ->
-            (toolResult.tool == tool.name) && block(toolResult.toSafeResult(tool))
+            (toolResult.tool == tool.name) &&
+                block(toolResult.toSafeResult(tool, config.serializer))
         }
 }
 

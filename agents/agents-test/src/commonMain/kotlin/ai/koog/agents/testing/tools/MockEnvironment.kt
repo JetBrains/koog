@@ -8,6 +8,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 
 /**
  * A mock implementation of [AIAgentEnvironment] used for testing agent behavior.
@@ -17,11 +19,11 @@ import ai.koog.prompt.message.Message
  * 2. Handling exceptions by re-throwing them for test visibility
  * 3. Optionally delegating termination signals to a base environment
  *
- * It works in conjunction with [MockLLMExecutor] to provide a complete testing framework
+ * It works in conjunction with [MockPromptExecutor] to provide a complete testing framework
  * for agent interactions.
  *
  * @property toolRegistry The registry containing all available tools for the agent
- * @property promptExecutor The executor for handling prompts, typically a [MockLLMExecutor]
+ * @property promptExecutor The executor for handling prompts, typically a [MockPromptExecutor]
  * @property baseEnvironment Optional base environment to delegate certain operations to
  *
  * Example usage:
@@ -46,6 +48,7 @@ import ai.koog.prompt.message.Message
 public class MockEnvironment(
     internal val toolRegistry: ToolRegistry,
     internal val promptExecutor: PromptExecutor,
+    internal val serializer: JSONSerializer,
     internal val baseEnvironment: AIAgentEnvironment? = null
 ) : AIAgentEnvironment {
     /**
@@ -68,7 +71,7 @@ public class MockEnvironment(
      * Executes a single tool call and returns its result.
      *
      * The execution follows this process:
-     * 1. If the prompt executor is a [MockLLMExecutor], check for matching mocked tool actions
+     * 1. If the prompt executor is a [MockPromptExecutor], check for matching mocked tool actions
      * 2. If a matching mock is found, use it to generate the result
      * 3. Otherwise, retrieve the actual tool from the registry and execute it
      *
@@ -76,7 +79,7 @@ public class MockEnvironment(
      * @return A [ReceivedToolResult] containing the result of the tool call
      */
     override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
-        if (promptExecutor is MockLLMExecutor) {
+        if (promptExecutor is MockPromptExecutor) {
             promptExecutor.toolActions
                 .find { it.satisfies(toolCall) }
                 ?.invokeAndSerialize(toolCall)
@@ -85,28 +88,28 @@ public class MockEnvironment(
                     return ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        toolArgs = toolCall.contentJson,
+                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
                         toolDescription = tool.descriptor.description,
                         content = content,
                         resultKind = ToolResultKind.Success,
-                        result = tool.encodeResultUnsafe(result)
+                        result = tool.encodeResultUnsafe(result, serializer)
                     )
                 }
         }
 
         val tool = toolRegistry.getTool(toolCall.tool)
 
-        val args = tool.decodeArgs(toolCall.contentJson)
+        val args = tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer)
         val result = tool.executeUnsafe(args)
 
         return ReceivedToolResult(
             id = toolCall.id,
             tool = toolCall.tool,
-            toolArgs = toolCall.contentJson,
+            toolArgs = toolCall.contentJson.toKoogJSONObject(),
             toolDescription = tool.descriptor.description,
-            content = tool.encodeResultToStringUnsafe(result),
+            content = tool.encodeResultToStringUnsafe(result, serializer),
             resultKind = ToolResultKind.Success,
-            result = tool.encodeResultUnsafe(result)
+            result = tool.encodeResultUnsafe(result, serializer)
         )
     }
 

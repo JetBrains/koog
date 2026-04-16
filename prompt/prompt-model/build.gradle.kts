@@ -16,15 +16,20 @@ kotlin {
                 api(project(":utils"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(libs.kotlinx.datetime)
                 api(libs.kotlinx.io.core)
+            }
+        }
+
+        jvmMain {
+            dependencies {
+                implementation(project(":agents:agents-utils"))
             }
         }
 
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
-                api(project(":prompt:prompt-markdown"))
+                implementation(project(":prompt:prompt-markdown"))
             }
         }
 

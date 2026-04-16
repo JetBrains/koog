@@ -6,6 +6,9 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.EngineConnectorConfig
@@ -94,11 +97,17 @@ private suspend fun EmbeddedServer<*, *>.connectors(): List<EngineConnectorConfi
 
 /**
  * Build an MCP server with the given [tools].
+ *
+ * @param tools The tools to add to the server
+ * @param implementation Optional implementation information for the server.
+ * @param serializer Optional serializer to use for encoding and decoding tool arguments and results.
+ * Defaults to [KotlinxSerializer]
  */
 @OptIn(InternalAgentToolsApi::class)
 public fun configureMcpServer(
     tools: ToolRegistry,
-    implementation: Implementation = Implementation("MCP Server with Koog-based tools", "dev")
+    implementation: Implementation = Implementation("MCP Server with Koog-based tools", "dev"),
+    serializer: JSONSerializer = KotlinxSerializer(),
 ): Server {
     val server = Server(
         serverInfo = implementation,
@@ -110,7 +119,7 @@ public fun configureMcpServer(
     )
 
     tools.tools.forEach { tool ->
-        server.addTool(tool)
+        server.addTool(tool, serializer)
     }
 
     return server
@@ -118,14 +127,22 @@ public fun configureMcpServer(
 
 /**
  * Adds a tool to the MCP server.
+ *
+ * @param tool The tool to add
+ * @param serializer Optional serializer to use for encoding and decoding tool arguments and results
+ * Defaults to [KotlinxSerializer]
  */
 @OptIn(InternalAgentToolsApi::class)
 public fun Server.addTool(
     tool: Tool<*, *>,
+    serializer: JSONSerializer = KotlinxSerializer(),
 ) {
     addTool(tool.descriptor.asSdkTool()) { request ->
         val args = try {
-            tool.decodeArgs(request.arguments ?: EmptyJsonObject)
+            tool.decodeArgs(
+                rawArgs = (request.arguments ?: EmptyJsonObject).toKoogJSONObject(),
+                serializer = serializer
+            )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -137,7 +154,9 @@ public fun Server.addTool(
         val result = tool.executeUnsafe(args)
 
         CallToolResult(
-            content = listOf(TextContent(tool.encodeResultToStringUnsafe(result)))
+            content = listOf(
+                TextContent(tool.encodeResultToStringUnsafe(result, serializer))
+            )
         )
     }
 }

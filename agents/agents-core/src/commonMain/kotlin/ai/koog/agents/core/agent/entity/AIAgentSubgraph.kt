@@ -1,3 +1,5 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -10,28 +12,25 @@ import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedEx
 import ai.koog.agents.core.agent.exception.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
+import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
- * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
- * segment containing a defined starting and ending point. The subgraph is responsible for executing tasks
- * in a step-by-step manner, managing iterations, and handling tool selection strategies.
+ * Base class for [AIAgentSubgraph].
  *
  * @param TInput The type of input data accepted by the subgraph.
  * @param TOutput The type of output data returned by the subgraph.
@@ -43,7 +42,7 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
  * @param responseProcessor Optional [ResponseProcessor] override for the subgraph execution.
  */
-public open class AIAgentSubgraph<TInput, TOutput>(
+public open class AIAgentSubgraphBase<TInput, TOutput>(
     override val name: String,
     public val start: StartNode<TInput>,
     public val finish: FinishNode<TOutput>,
@@ -52,11 +51,11 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     private val llmParams: LLMParams? = null,
     private val responseProcessor: ResponseProcessor? = null,
 ) : AIAgentNodeBase<TInput, TOutput>(), ExecutionPointNode {
-    override val inputType: KType = start.inputType
-    override val outputType: KType = finish.outputType
+    override val inputType: TypeToken = start.inputType
+    override val outputType: TypeToken = finish.outputType
 
     /**
-     * Companion object for the AIAgentSubgraph class.
+     * Companion object for the AIAgentSubgraphBase class.
      *
      * This companion object provides predefined constants used to denote
      * special nodes (start and finish) within the subgraph of an AI agent strategy.
@@ -138,8 +137,8 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                             examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
                         ),
                     ),
-                    fixingParser = toolSelectionStrategy.fixingParser,
-                )
+                ),
+                fixingParser = toolSelectionStrategy.fixingParser,
             ).getOrThrow()
 
             prompt = initialPrompt
@@ -176,7 +175,14 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             )
 
             runIfNotStrategy(context) {
-                pipeline.onSubgraphExecutionStarting(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType)
+                pipeline.onSubgraphExecutionStarting(
+                    eventId,
+                    executionInfo,
+                    this@AIAgentSubgraphBase,
+                    context,
+                    input,
+                    inputType
+                )
             }
 
             // Execute the subgraph with an inner context and get the result and updated prompt.
@@ -187,7 +193,15 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             } catch (e: Exception) {
                 logger.error(e) { "Exception during executing subgraph '$name': ${e.message}" }
                 runIfNotStrategy(context) {
-                    pipeline.onSubgraphExecutionFailed(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, e)
+                    pipeline.onSubgraphExecutionFailed(
+                        eventId,
+                        executionInfo,
+                        this@AIAgentSubgraphBase,
+                        context,
+                        input,
+                        inputType,
+                        e
+                    )
                 }
                 throw e
             }
@@ -208,7 +222,16 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             }
 
             runIfNotStrategy(context) {
-                pipeline.onSubgraphExecutionCompleted(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, result, outputType)
+                pipeline.onSubgraphExecutionCompleted(
+                    eventId,
+                    executionInfo,
+                    this@AIAgentSubgraphBase,
+                    context,
+                    input,
+                    inputType,
+                    result,
+                    outputType
+                )
             }
 
             result
@@ -341,6 +364,22 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     private fun formatLog(context: AIAgentContext, message: String): String =
         "$message [$name, ${context.strategyName}, ${context.runId}]"
 }
+
+/**
+ * Represents a subgraph within an AI agent execution strategy capable of processing input and producing output.
+ *
+ * A subgraph is a modular component of a larger execution graph, defined by a `StartNode` as the entry point
+ * and a `FinishNode` as the exit point. The subgraph may implement tool selection strategies, incorporate language
+ * model support, and apply*/
+public expect class AIAgentSubgraph<TInput, TOutput> constructor(
+    name: String,
+    start: StartNode<TInput>,
+    finish: FinishNode<TOutput>,
+    toolSelectionStrategy: ToolSelectionStrategy,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    responseProcessor: ResponseProcessor? = null,
+) : AIAgentSubgraphBase<TInput, TOutput>
 
 /**
  * Represents a strategy to select a subset of tools to be used in a subgraph during its execution.

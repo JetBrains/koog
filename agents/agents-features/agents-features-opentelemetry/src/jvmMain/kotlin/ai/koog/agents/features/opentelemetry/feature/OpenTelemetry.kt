@@ -1,17 +1,19 @@
 package ai.koog.agents.features.opentelemetry.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.handler.tool.ToolCallEventContext
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
@@ -41,10 +43,13 @@ import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.agents.mcp.metadata.McpMetadataKeys
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.kotlinx.toKotlinxJsonElement
+import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlin.reflect.KType
 
 /**
  * Represents the OpenTelemetry integration feature for tracking and managing spans and contexts
@@ -58,13 +63,16 @@ public class OpenTelemetry {
      */
     public companion object Feature :
         AIAgentGraphFeature<OpenTelemetryConfig, OpenTelemetry>,
-        AIAgentFunctionalFeature<OpenTelemetryConfig, OpenTelemetry> {
+        AIAgentFunctionalFeature<OpenTelemetryConfig, OpenTelemetry>,
+        AIAgentPlannerFeature<OpenTelemetryConfig, OpenTelemetry> {
 
         private val logger = KotlinLogging.logger { }
 
         override val key: AIAgentStorageKey<OpenTelemetry> = AIAgentStorageKey("agents-features-opentelemetry")
 
-        override fun createInitialConfig(): OpenTelemetryConfig {
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): OpenTelemetryConfig {
             return OpenTelemetryConfig()
         }
 
@@ -92,7 +100,7 @@ public class OpenTelemetry {
                     return@intercept
                 }
 
-                val nodeInput = nodeDataToString(eventContext.input, eventContext.inputType)
+                val nodeInput = nodeDataToString(eventContext.input, eventContext.inputType, pipeline.config.serializer)
 
                 val nodeExecuteSpan = startNodeExecuteSpan(
                     tracer = tracer,
@@ -121,7 +129,7 @@ public class OpenTelemetry {
                     spanType = SpanType.NODE
                 ) ?: return@intercept
 
-                val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType)
+                val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
                 spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
                 endNodeExecuteSpan(
@@ -171,7 +179,7 @@ public class OpenTelemetry {
                     executionInfo = patchedExecutionInfo,
                 ) ?: return@intercept
 
-                val subgraphInput = nodeDataToString(eventContext.input, eventContext.inputType)
+                val subgraphInput = nodeDataToString(eventContext.input, eventContext.inputType, pipeline.config.serializer)
 
                 val subgraphExecuteSpan = startSubgraphExecuteSpan(
                     tracer = tracer,
@@ -200,7 +208,7 @@ public class OpenTelemetry {
                     spanType = SpanType.SUBGRAPH
                 ) ?: return@intercept
 
-                val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType)
+                val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
                 spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
                 endSubgraphExecuteSpan(
@@ -246,6 +254,18 @@ public class OpenTelemetry {
         override fun install(
             config: OpenTelemetryConfig,
             pipeline: AIAgentFunctionalPipeline
+        ): OpenTelemetry {
+            val openTelemetry = OpenTelemetry()
+            val spanCollector = SpanCollector()
+
+            installCommon(config, pipeline, spanCollector)
+
+            return openTelemetry
+        }
+
+        override fun install(
+            config: OpenTelemetryConfig,
+            pipeline: AIAgentPlannerPipeline
         ): OpenTelemetry {
             val openTelemetry = OpenTelemetry()
             val spanCollector = SpanCollector()
@@ -403,6 +423,10 @@ public class OpenTelemetry {
                 if (spanCollector.activeSpansCount > 0) {
                     logger.warn { "Found <${spanCollector.activeSpansCount}> active span(s) after agent closing. Stopping them." }
                     endUnfinishedSpans(spanCollector, config.isVerbose)
+                }
+
+                if (config.isShutdownOnAgentClose) {
+                    config.sdk.close()
                 }
             }
 
@@ -610,7 +634,7 @@ public class OpenTelemetry {
                     parentSpan = parentSpan,
                     id = eventContext.eventId,
                     toolName = eventContext.toolName,
-                    toolArgs = eventContext.toolArgs,
+                    toolArgs = eventContext.toolArgs.toKotlinxJsonObject(),
                     toolDescription = eventContext.toolDescription,
                     toolCallId = eventContext.toolCallId
                 )
@@ -643,7 +667,7 @@ public class OpenTelemetry {
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry tool result handler" }
-                val toolResult = eventContext.toolResult ?: JsonObject(emptyMap())
+                val toolResult = eventContext.toolResult ?: JSONObject(emptyMap())
                 endAndRemoveExecuteToolSpan(
                     toolResult = toolResult,
                     config = config,
@@ -658,7 +682,7 @@ public class OpenTelemetry {
                 endAndRemoveExecuteToolSpan(
                     spanAdapter = spanAdapter,
                     spanCollector = spanCollector,
-                    toolResult = JsonObject(emptyMap()),
+                    toolResult = JSONObject(emptyMap()),
                     config = config,
                     eventContext = eventContext,
                     error = eventContext.error,
@@ -681,13 +705,17 @@ public class OpenTelemetry {
         }
 
         /**
-         * Retrieves the [String] representation of the given data based on its type.
+         * Retrieves the string JSON representation of the given data based on its type, skips it if it's not serializable,
+         * returning null.
          */
-        private fun nodeDataToString(data: Any?, dataType: KType): String? {
+        private fun nodeDataToString(data: Any?, dataType: TypeToken, serializer: JSONSerializer): String? {
             data ?: return null
 
-            @OptIn(InternalAgentsApi::class)
-            return SerializationUtils.encodeDataToStringOrDefault(data, dataType)
+            return try {
+                serializer.encodeToString(data, dataType)
+            } catch (_: Exception) {
+                null
+            }
         }
 
         /**
@@ -783,7 +811,7 @@ public class OpenTelemetry {
         }
 
         private fun endAndRemoveExecuteToolSpan(
-            toolResult: JsonElement?,
+            toolResult: JSONElement?,
             config: OpenTelemetryConfig,
             spanAdapter: SpanAdapter?,
             spanCollector: SpanCollector,
@@ -800,7 +828,7 @@ public class OpenTelemetry {
             spanAdapter?.onBeforeSpanFinished(span = span)
             endExecuteToolSpan(
                 span = span,
-                toolResult = toolResult,
+                toolResult = toolResult?.toKotlinxJsonElement(),
                 error = error,
                 verbose = config.isVerbose
             )

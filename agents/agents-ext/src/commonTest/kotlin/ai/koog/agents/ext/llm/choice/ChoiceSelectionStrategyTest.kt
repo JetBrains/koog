@@ -14,11 +14,11 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.streamFrameFlowOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class ChoiceSelectionStrategyTest {
 
@@ -51,7 +51,7 @@ class ChoiceSelectionStrategyTest {
     @JsName("PromptExecutorChoice_should_delegate_to_strategy")
     fun `PromptExecutorWithChoiceSelection should delegate to strategy`() = runTest {
         // Arrange
-        val mockExecutor = object : PromptExecutor {
+        val mockExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: LLModel,

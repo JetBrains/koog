@@ -16,8 +16,7 @@ import java.util.Base64
 
 version = run {
     // our version follows the semver specification
-
-    val baseVersion = "0.7.0"
+    val baseVersion = findProperty("version")
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
@@ -75,7 +74,7 @@ version = run {
     "$baseVersion$feat"
 }
 
-fun isCustomReleaseBranch(branchName: String): Boolean = branchName.matches(Regex("""^\d+\.\d+\.\d+$"""))
+fun isCustomReleaseBranch(branchName: String): Boolean = branchName.matches(Regex("""^(release\/)?\d+\.\d+\.\d+$"""))
 
 buildscript {
     dependencies {
@@ -94,6 +93,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // For testing dev versions of dependencies
+        mavenLocal()
     }
 }
 
@@ -110,6 +111,19 @@ subprojects {
         outputToConsole = true
         coloredOutput = true
     }
+    val envVars = mapOf(
+        "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
+        "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
+        "AWS_BEARER_TOKEN_BEDROCK" to System.getenv("AWS_BEARER_TOKEN_BEDROCK"),
+        "AWS_SECRET_ACCESS_KEY" to System.getenv("AWS_SECRET_ACCESS_KEY"),
+        "AWS_BEDROCK_GUARDRAIL_ID" to System.getenv("AWS_BEDROCK_GUARDRAIL_ID"),
+        "AWS_BEDROCK_GUARDRAIL_VERSION" to System.getenv("AWS_BEDROCK_GUARDRAIL_VERSION"),
+        "DEEPSEEK_API_TEST_KEY" to System.getenv("DEEPSEEK_API_TEST_KEY"),
+        "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
+        "MISTRAL_AI_API_TEST_KEY" to System.getenv("MISTRAL_AI_API_TEST_KEY"),
+        "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
+        "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
+    ).filterValues { it != null }
 
     tasks.withType<Test> {
         testLogging {
@@ -117,21 +131,7 @@ subprojects {
             showExceptions = true
             exceptionFormat = FULL
         }
-        environment.putAll(
-            mapOf(
-                "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
-                "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
-                "AWS_BEARER_TOKEN_BEDROCK" to System.getenv("AWS_BEARER_TOKEN_BEDROCK"),
-                "AWS_SECRET_ACCESS_KEY" to System.getenv("AWS_SECRET_ACCESS_KEY"),
-                "AWS_BEDROCK_GUARDRAIL_ID" to System.getenv("AWS_BEDROCK_GUARDRAIL_ID"),
-                "AWS_BEDROCK_GUARDRAIL_VERSION" to System.getenv("AWS_BEDROCK_GUARDRAIL_VERSION"),
-                "DEEPSEEK_API_TEST_KEY" to System.getenv("DEEPSEEK_API_TEST_KEY"),
-                "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
-                "MISTRAL_AI_API_TEST_KEY" to System.getenv("MISTRAL_AI_API_TEST_KEY"),
-                "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
-                "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
-            )
-        )
+        environment.putAll(envVars)
     }
 }
 
@@ -183,7 +183,14 @@ tasks {
 
             println("Sending request to $uri...")
 
-            val client = OkHttpClient()
+            val client = OkHttpClient.Builder()
+                .connectTimeout(40, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.MINUTES)
+                .readTimeout(10, TimeUnit.MINUTES)
+                .callTimeout(15, TimeUnit.MINUTES)
+                .retryOnConnectionFailure(true)
+                .build()
+
             val request = Request.Builder()
                 .url(uri)
                 .header("Authorization", "Bearer $base64Auth")
@@ -210,12 +217,12 @@ dependencies {
     dokka(project(":agents:agents-core"))
     dokka(project(":agents:agents-ext"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
+    dokka(project(":agents:agents-features:agents-features-longterm-memory"))
     dokka(project(":agents:agents-features:agents-features-memory"))
     dokka(project(":agents:agents-features:agents-features-opentelemetry"))
     dokka(project(":agents:agents-features:agents-features-snapshot"))
     dokka(project(":agents:agents-features:agents-features-tokenizer"))
     dokka(project(":agents:agents-features:agents-features-trace"))
-    dokka(project(":agents:agents-planner"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))
@@ -223,6 +230,10 @@ dependencies {
     dokka(project(":embeddings:embeddings-base"))
     dokka(project(":embeddings:embeddings-llm"))
     dokka(project(":koog-ktor"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-chat-memory"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-chat"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-model-embedding"))
+    dokka(project(":koog-spring-ai:koog-spring-ai-starter-vector-store"))
     dokka(project(":koog-spring-boot-starter"))
     dokka(project(":prompt:prompt-cache:prompt-cache-files"))
     dokka(project(":prompt:prompt-cache:prompt-cache-model"))
@@ -239,7 +250,6 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))
     dokka(project(":prompt:prompt-llm"))
@@ -250,7 +260,7 @@ dependencies {
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":rag:rag-base"))
-    dokka(project(":rag:vector-storage"))
+    dokka(project(":rag:rag-vector"))
     dokka(project(":utils"))
 }
 

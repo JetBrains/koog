@@ -72,7 +72,7 @@ class ToneAgentTest {
         val negativeResponse = "The text has a negative tone."
         val neutralResponse = "The text has a neutral tone."
 
-        val mockLLMApi = getMockExecutor(toolRegistry) {
+        val mockLLMApi = getMockExecutor {
             // Set up LLM responses for different input texts
             mockLLMToolCall(NeutralToneTool, ToneTool.Args(defaultText)) onRequestEquals defaultText
             mockLLMToolCall(PositiveToneTool, ToneTool.Args(positiveText)) onRequestEquals positiveText

@@ -10,13 +10,15 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class LLMBasedToolJsonFixTest {
     private companion object {
@@ -46,9 +48,11 @@ class LLMBasedToolJsonFixTest {
         val processor = LLMBasedToolCallFixProcessor(toolRegistry)
     }
 
+    private val serializer = KotlinxSerializer()
+
     private class MockExecutor(
         private val responses: List<Message.Response>,
-    ) : PromptExecutor {
+    ) : PromptExecutor() {
         private var index = 0
         val prompts = mutableListOf<Prompt>()
 
@@ -63,6 +67,7 @@ class LLMBasedToolJsonFixTest {
             error("Not supported")
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = error("Not supported")
+
         override fun close() {}
     }
 
@@ -70,7 +75,7 @@ class LLMBasedToolJsonFixTest {
         executor: PromptExecutor,
         response: Message.Response,
         processor: ResponseProcessor
-    ) = processor.process(executor, prompt, model, tools, response)
+    ) = processor.process(executor, prompt, model, tools, response, serializer)
 
     @Test
     fun test_shouldStopIfToolCallNotIntended() = runTest {
@@ -162,7 +167,8 @@ class LLMBasedToolJsonFixTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                responses: List<Message.Response>
+                responses: List<Message.Response>,
+                serializer: JSONSerializer,
             ): List<Message.Response> = fallbackExecutor.execute(prompt, model, tools)
         }
 

@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openrouter
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -18,7 +19,10 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletio
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterEmbeddingRequest
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterEmbeddingResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterModelsResponse
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -28,9 +32,10 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
 import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
 
 /**
  * Configuration settings for connecting to the OpenRouter API.
@@ -38,12 +43,14 @@ import kotlin.jvm.JvmOverloads
  * @property baseUrl The base URL of the OpenRouter API. Default is "https://openrouter.ai/api/v1".
  * @property chatCompletionsPath The path of the OpenRouter Chat Completions API. Default is "api/v1/chat/completions".
  * @property modelsPath The path of the OpenRouter Models API. Default is "api/v1/models".
+ * @property embeddingsPath The path of the OpenRouter Embeddings API. Default is "api/v1/embeddings".
  * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
  */
 public class OpenRouterClientSettings(
     baseUrl: String = "https://openrouter.ai",
     chatCompletionsPath: String = "api/v1/chat/completions",
     public val modelsPath: String = "api/v1/models",
+    public val embeddingsPath: String = "api/v1/embeddings",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
 ) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
@@ -51,32 +58,43 @@ public class OpenRouterClientSettings(
  * Implementation of [LLMClient] for OpenRouter API.
  * OpenRouter is an API that routes requests to multiple LLM providers.
  *
- * @param apiKey The API key for the OpenRouter API
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class OpenRouterLLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
-    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenRouterChatCompletionResponse, OpenRouterChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
 ) {
 
-    private companion object {
-        private val staticLogger = KotlinLogging.logger { }
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = OPENROUTER_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
 
-        init {
-            // On class load register custom OpenAI JSON schema generators for structured output.
-            registerOpenAIJsonSchemaGenerators(LLMProvider.OpenRouter)
-        }
+    override val clientName: String = OPENROUTER_CLIENT_NAME
+
+    private companion object {
+        private const val OPENROUTER_CLIENT_NAME = "OpenRouterLLMClient"
+        private val staticLogger = KotlinLogging.logger { }
     }
 
     /**
@@ -164,13 +182,13 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
 
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
-                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.content?.let { emitTextDelta(it) }
 
                 choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
                     val id = openAIToolCall.id
                     val name = openAIToolCall.function.name
                     val arguments = openAIToolCall.function.arguments
-                    upsertToolCall(index, id, name, arguments)
+                    emitToolCallDelta(id, name, arguments, index)
                 }
 
                 choice.finishReason?.let { finishReason = it }
@@ -202,5 +220,61 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
 
         val modelsById = OpenRouterModels.modelsById()
         return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
+    }
+
+    /**
+     * Embeds the given text using the OpenRouter embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of floating-point values representing the embedding vector.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
+        model.requireCapability(LLMCapability.Embed)
+        logger.debug { "Embedding text (${text.length} chars) with model: ${model.id}" }
+
+        val request = OpenRouterEmbeddingRequest(model = model.id, input = text)
+
+        val response = try {
+            httpClient.post(
+                path = settings.embeddingsPath,
+                request = request,
+                requestBodyType = OpenRouterEmbeddingRequest::class,
+                responseType = OpenRouterEmbeddingResponse::class
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(clientName, e.message, e)
+        }
+
+        response.error?.let { error ->
+            throw LLMClientException(
+                clientName,
+                "OpenRouter API error: ${error.message}${error.type?.let { " (type: $it)" } ?: ""}${error.code?.let { " (code: $it)" } ?: ""}"
+            )
+        }
+
+        if (response.data.isEmpty()) {
+            throw LLMClientException(clientName, "Empty data in OpenRouter embedding response")
+        }
+
+        val embedding = response.data.first().embedding
+        logger.debug { "Received embedding with ${embedding.size} dimensions" }
+        return embedding
+    }
+
+    /**
+     * Batch embedding is not supported by the OpenRouter API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        logger.warn { "Batch embedding is not supported by OpenRouter API" }
+        throw UnsupportedOperationException("Batch embedding is not supported by OpenRouter API.")
     }
 }

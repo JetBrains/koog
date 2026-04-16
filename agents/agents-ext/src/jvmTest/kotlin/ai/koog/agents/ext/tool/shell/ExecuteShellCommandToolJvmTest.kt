@@ -1,6 +1,7 @@
 package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,6 +27,8 @@ import kotlin.test.fail
 class ExecuteShellCommandToolJvmTest {
 
     private val executor = JvmShellCommandExecutor()
+
+    private val serializer = KotlinxSerializer()
 
     @TempDir
     lateinit var tempDir: Path
@@ -77,7 +80,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -96,7 +99,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -116,7 +119,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -136,7 +139,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -153,7 +156,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -174,7 +177,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -199,7 +202,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     // NO OUTPUT COMMAND EXECUTION TESTS
@@ -215,7 +218,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertEquals(0, result.exitCode)
     }
 
@@ -232,7 +235,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 2
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -246,7 +249,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 1
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -263,7 +266,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 1
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -285,7 +288,7 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 1
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     // USER DENIAL TESTS
@@ -301,7 +304,7 @@ class ExecuteShellCommandToolJvmTest {
             Command execution denied with user response: No
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertNull(result.exitCode)
     }
 
@@ -316,7 +319,7 @@ class ExecuteShellCommandToolJvmTest {
             Command execution denied with user response: Cannot delete important files
         """.trimIndent()
 
-        assertEquals(expected, tool.encodeResultToString(result))
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertNull(result.exitCode)
     }
 
@@ -341,7 +344,7 @@ class ExecuteShellCommandToolJvmTest {
         beforeSleep
         """.trimIndent()
 
-        val output = tool.encodeResultToString(result)
+        val output = tool.encodeResultToString(result, serializer)
         assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
         assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
 
@@ -375,7 +378,7 @@ class ExecuteShellCommandToolJvmTest {
         val partialExpected = """
         """.trimIndent()
 
-        val output = tool.encodeResultToString(result)
+        val output = tool.encodeResultToString(result, serializer)
         assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
         assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
 

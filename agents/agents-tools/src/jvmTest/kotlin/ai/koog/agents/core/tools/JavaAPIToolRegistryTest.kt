@@ -1,11 +1,13 @@
+
 package ai.koog.agents.core.tools
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.core.tools.serialization.ToolJson
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -19,6 +21,7 @@ import kotlin.test.assertTrue
  * These tests verify that Java-facing API methods work correctly.
  */
 @OptIn(InternalAgentToolsApi::class)
+@Suppress("unused")
 class JavaAPIToolRegistryTest {
 
     // Simple test tool classes
@@ -47,6 +50,8 @@ class JavaAPIToolRegistryTest {
         ): String = a + b
     }
 
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun testBuilderMethodCreatesBuilder() {
         // Test that ToolRegistry.builder() creates a Builder instance
@@ -58,7 +63,7 @@ class JavaAPIToolRegistryTest {
     fun testBuilderToolMethod() = runTest {
         // Test that Builder.tool() method adds a tool
         val calculatorTools = CalculatorTools()
-        val tools = calculatorTools.asTools(ToolJson)
+        val tools = calculatorTools.asTools()
         val addTool = tools.first { it.descriptor.name == "add" }
 
         val registry = ToolRegistry.builder()
@@ -73,7 +78,7 @@ class JavaAPIToolRegistryTest {
     fun testBuilderToolsMethod() = runTest {
         // Test that Builder.tools() method adds multiple tools
         val calculatorTools = CalculatorTools()
-        val toolsList = calculatorTools.asTools(ToolJson)
+        val toolsList = calculatorTools.asTools()
 
         val registry = ToolRegistry.builder()
             .tools(toolsList)
@@ -88,14 +93,13 @@ class JavaAPIToolRegistryTest {
     fun testBuilderBuildMethod() = runTest {
         // Test that Builder.build() creates a ToolRegistry
         val calculatorTools = CalculatorTools()
-        val tools = calculatorTools.asTools(ToolJson)
+        val tools = calculatorTools.asTools()
 
         val registry = ToolRegistry.builder()
             .tools(tools)
             .build()
 
         assertNotNull(registry)
-        assertTrue(registry is ToolRegistry)
         assertEquals(2, registry.tools.size)
     }
 
@@ -105,8 +109,8 @@ class JavaAPIToolRegistryTest {
         val calculatorTools = CalculatorTools()
         val stringTools = StringTools()
 
-        val calcTools = calculatorTools.asTools(ToolJson)
-        val strTools = stringTools.asTools(ToolJson)
+        val calcTools = calculatorTools.asTools()
+        val strTools = stringTools.asTools()
 
         val registry = ToolRegistry.builder()
             .tool(calcTools[0])
@@ -124,7 +128,7 @@ class JavaAPIToolRegistryTest {
     fun testBuilderToolsCanBeRetrieved() = runTest {
         // Test that tools added via Builder can be retrieved
         val calculatorTools = CalculatorTools()
-        val tools = calculatorTools.asTools(ToolJson)
+        val tools = calculatorTools.asTools()
 
         val registry = ToolRegistry.builder()
             .tools(tools)
@@ -143,21 +147,21 @@ class JavaAPIToolRegistryTest {
     fun testBuilderToolsCanBeExecuted() = runTest {
         // Test that tools added via Builder can be executed
         val calculatorTools = CalculatorTools()
-        val tools = calculatorTools.asTools(ToolJson)
+        val tools = calculatorTools.asTools()
 
         val registry = ToolRegistry.builder()
             .tools(tools)
             .build()
 
         @Suppress("UNCHECKED_CAST")
-        val addTool = registry.getTool("add") as ai.koog.agents.core.tools.reflect.ToolFromCallable
+        val addTool = registry.getTool("add") as ToolFromCallable
         val args = buildJsonObject {
             put("a", JsonPrimitive(5))
             put("b", JsonPrimitive(3))
-        }
+        }.toKoogJSONObject()
 
-        val result = addTool.execute(addTool.decodeArgs(args))
-        assertEquals("8", addTool.encodeResultToStringUnsafe(result))
+        val result = addTool.execute(addTool.decodeArgs(args, serializer))
+        assertEquals("8", addTool.encodeResultToStringUnsafe(result, serializer))
     }
 
     @Test
@@ -173,7 +177,7 @@ class JavaAPIToolRegistryTest {
     fun testBuilderPreventsDuplicateToolNames() = runTest {
         // Test that Builder prevents adding tools with duplicate names
         val calculatorTools = CalculatorTools()
-        val tools = calculatorTools.asTools(ToolJson)
+        val tools = calculatorTools.asTools()
         val addTool = tools.first { it.descriptor.name == "add" }
 
         try {
@@ -196,8 +200,8 @@ class JavaAPIToolRegistryTest {
         val calculatorTools = CalculatorTools()
         val stringTools = StringTools()
 
-        val calcTools = calculatorTools.asTools(ToolJson)
-        val strTools = stringTools.asTools(ToolJson)
+        val calcTools = calculatorTools.asTools()
+        val strTools = stringTools.asTools()
 
         val builder1 = ToolRegistry.builder()
         val builder2 = ToolRegistry.builder()
@@ -236,8 +240,8 @@ class JavaAPIToolRegistryTest {
         val calculatorTools = CalculatorTools()
         val stringTools = StringTools()
 
-        val calcTools = calculatorTools.asTools(ToolJson)
-        val strTools = stringTools.asTools(ToolJson)
+        val calcTools = calculatorTools.asTools()
+        val strTools = stringTools.asTools()
 
         val registry = ToolRegistry.builder()
             .tool(calcTools[0]) // Add individual tool

@@ -4,9 +4,9 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.memory.tools.DiagnosticToolSet
 import ai.koog.agents.example.memory.tools.KnowledgeBaseToolSet
@@ -148,7 +148,7 @@ fun createCustomerSupportAgent(
     // Agent configuration
     val agentConfig = AIAgentConfig(
         prompt = prompt("customer-support") {},
-        model = AnthropicModels.Sonnet_3_7,
+        model = AnthropicModels.Opus_4_6,
         maxAgentIterations = maxAgentIterations
     )
 

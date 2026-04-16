@@ -31,12 +31,6 @@ public sealed class BedrockModelFamilies(
     public data object AmazonNova : BedrockModelFamilies("bedrock.amazon", "AWS Bedrock (Amazon Nova)")
 
     /**
-     * Represents the AI21 sub-provider under AWS Bedrock.
-     */
-    @Serializable
-    public data object AI21Jamba : BedrockModelFamilies("bedrock.ai21", "AWS Bedrock (AI21 Jamba)")
-
-    /**
      * Represents the Meta sub-provider under AWS Bedrock.
      */
     @Serializable
@@ -53,4 +47,10 @@ public sealed class BedrockModelFamilies(
      */
     @Serializable
     public data object Cohere : BedrockModelFamilies("bedrock.cohere", "AWS Bedrock (Cohere Embeddings)")
+
+    /**
+     * Represents the Moonshot AI (Kimi) sub-provider under AWS Bedrock.
+     */
+    @Serializable
+    public data object MoonshotKimi : BedrockModelFamilies("bedrock.moonshot", "AWS Bedrock (Moonshot Kimi)")
 }

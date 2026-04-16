@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.calculator.CalculatorTools
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.snapshot.feature.Persistence
@@ -39,7 +38,6 @@ suspend fun main() {
         ) {
             install(Persistence) {
                 storage = snapshotProvider
-                enableAutomaticPersistence = true
             }
 
             install(EventHandler) {
@@ -70,7 +68,6 @@ suspend fun main() {
         ) {
             install(Persistence) {
                 storage = snapshotProvider
-                enableAutomaticPersistence = true
             }
         }
 

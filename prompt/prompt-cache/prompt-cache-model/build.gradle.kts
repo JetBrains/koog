@@ -14,7 +14,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":prompt:prompt-model"))
-                api(libs.kotlinx.datetime)
             }
         }
 

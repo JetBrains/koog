@@ -14,6 +14,8 @@ import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 
@@ -28,8 +30,8 @@ import kotlinx.serialization.Serializable
 public class EditFileTool<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>
 ) : Tool<EditFileTool.Args, EditFileTool.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     descriptor = descriptor
 ) {
 
@@ -227,7 +229,7 @@ public class EditFileTool<Path>(
         return Result(patchApplyResult)
     }
 
-    override fun encodeResultToString(result: Result): String = with(result) {
+    override fun encodeResultToString(result: Result, serializer: JSONSerializer): String = with(result) {
         markdown {
             if (patchApplyResult.isSuccess()) {
                 line {

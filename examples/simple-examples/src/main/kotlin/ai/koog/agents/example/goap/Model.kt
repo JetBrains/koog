@@ -4,6 +4,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.Serializable
 import kotlin.math.max
+import ai.koog.agents.planner.goap.GoapAgentState
 
 /**
  * The state on which grouper agent operates.
@@ -15,8 +16,8 @@ data class State(
     val newWordings: List<String> = emptyList(),
     val feedback: List<String> = emptyList(),
     val learnings: List<String> = emptyList()
-) {
-    val result get() = bestWordings.show(config.numWordingsRequired)
+) : GoapAgentState<GrouperConfig, String>(config) {
+    override fun provideOutput(): String = bestWordings.show(config.numWordingsRequired)
 }
 
 class GrouperConfig(

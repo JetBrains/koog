@@ -4,11 +4,11 @@ import ai.koog.agents.core.tools.annotations.LLMDescription;
 import kotlinx.serialization.Serializable;
 
 @Serializable
-@LLMDescription(description = "Summary about what has been updated")
+@LLMDescription("Summary about what has been updated")
 public class OrderUpdateSummary {
     private final Integer orderId;
 
-    @LLMDescription(description = "Brief summary of the changes")
+    @LLMDescription("Brief summary of the changes")
     private final String changes;
 
     public OrderUpdateSummary(Integer orderId, String changes) {

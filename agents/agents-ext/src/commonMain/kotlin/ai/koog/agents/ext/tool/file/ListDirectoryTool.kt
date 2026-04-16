@@ -11,6 +11,8 @@ import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.filter.GlobPattern
 import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 /**
@@ -22,8 +24,8 @@ import kotlinx.serialization.Serializable
  */
 public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path>) :
     Tool<ListDirectoryTool.Args, ListDirectoryTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "__list_directory__",
         description = """
             List a directory as a tree so an agent can *orient itself* in an unknown filesystem/repo and decide what to read next.
@@ -160,7 +162,7 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         return Result(entry as FileSystemEntry.Folder)
     }
 
-    override fun encodeResultToString(result: Result): String = with(result) {
+    override fun encodeResultToString(result: Result, serializer: JSONSerializer): String = with(result) {
         text { folder(root) }
     }
 }

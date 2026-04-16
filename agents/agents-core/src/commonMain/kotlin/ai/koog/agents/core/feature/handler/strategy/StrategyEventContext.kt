@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 
 /**
  * Defines the context specifically for handling strategy-related events within the AI agent framework.
@@ -48,7 +48,7 @@ public class StrategyStartingContext(
  * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
  * @property context The context associated with the strategy's execution.
  * @property result Strategy result.
- * @property resultType [KType] representing the type of the [result]
+ * @property resultType [TypeToken] representing the type of the [result]
  */
 public class StrategyCompletedContext(
     override val eventId: String,
@@ -56,7 +56,7 @@ public class StrategyCompletedContext(
     public val strategy: AIAgentStrategy<*, *, *>,
     public val context: AIAgentContext,
     public val result: Any?,
-    public val resultType: KType,
+    public val resultType: TypeToken,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyCompleted
 

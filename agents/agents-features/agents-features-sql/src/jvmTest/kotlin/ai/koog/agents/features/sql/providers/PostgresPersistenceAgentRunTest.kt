@@ -4,8 +4,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
@@ -19,13 +19,12 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.test.utils.DockerAvailableCondition
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -38,11 +37,14 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
 @Execution(ExecutionMode.SAME_THREAD)
 class PostgresPersistenceAgentRunTest {
+    private val serializer = KotlinxSerializer()
 
     private lateinit var postgres: PostgreSQLContainer<*>
 
@@ -95,7 +97,7 @@ class PostgresPersistenceAgentRunTest {
         edge(historyNode forwardTo nodeFinish)
     }
 
-    private fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
+    private fun simpleNode(
         name: String? = null,
         output: String,
     ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -105,7 +107,7 @@ class PostgresPersistenceAgentRunTest {
         return@node it + "\n" + output
     }
 
-    private fun AIAgentSubgraphBuilderBase<*, *>.collectHistoryNode(
+    private fun collectHistoryNode(
         name: String? = null,
     ): AIAgentNodeDelegate<String, String> = node(name) {
         return@node llm.readSession {
@@ -167,7 +169,7 @@ class PostgresPersistenceAgentRunTest {
 
         // Create agent with persistence but without automatic persistence to keep seeded chain intact
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint("strategy"),
             agentConfig = agentConfig,
             id = agentId
@@ -212,7 +214,7 @@ class PostgresPersistenceAgentRunTest {
 
         // Create agent with persistence; keep auto persistence off to avoid mutating preseeded data
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint(stratName),
             agentConfig = agentConfig,
             id = agentId
@@ -255,7 +257,7 @@ class PostgresPersistenceAgentRunTest {
 
         // Create agent with persistence but without automatic persistence to keep seeded chain intact
         val agent = AIAgent(
-            promptExecutor = getMockExecutor { },
+            promptExecutor = getMockExecutor(serializer) { },
             strategy = straightForwardGraphNoCheckpoint(strategyId),
             agentConfig = agentConfig,
             id = agentId
@@ -289,7 +291,7 @@ class PostgresPersistenceAgentRunTest {
             checkpointId = id,
             createdAt = time,
             nodePath = nodePath,
-            lastInput = JsonPrimitive("Test input"),
+            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", RequestMetaInfo(time)),
                 Message.User("Node 1 output", RequestMetaInfo(time)),

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.13</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>koog-java-exp-01</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>koog-java-exp-01</name>
+
+    <properties>
+        <java.version>21</java.version>
+        <koog.version>0.8.0</koog.version>
+        <spring-ai.version>1.1.4</spring-ai.version>
+        <kotlinx-coroutines.version>1.10.2</kotlinx-coroutines.version>
+        <kotlinx-serialization.version>1.10.0</kotlinx-serialization.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Force kotlinx-coroutines version -->
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-core</artifactId>
+                <version>${kotlinx-coroutines.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-core-jvm</artifactId>
+                <version>${kotlinx-coroutines.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-jdk8</artifactId>
+                <version>${kotlinx-coroutines.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-reactive</artifactId>
+                <version>${kotlinx-coroutines.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-reactor</artifactId>
+                <version>${kotlinx-coroutines.version}</version>
+            </dependency>
+            <!-- Force kotlinx-serialization version -->
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-serialization-core</artifactId>
+                <version>${kotlinx-serialization.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-serialization-core-jvm</artifactId>
+                <version>${kotlinx-serialization.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-serialization-json</artifactId>
+                <version>${kotlinx-serialization.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-serialization-json-jvm</artifactId>
+                <version>${kotlinx-serialization.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Koog -->
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>koog-agents-jvm</artifactId>
+            <version>${koog.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>agents-features-persistence-jdbc</artifactId>
+            <version>${koog.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>agents-features-chat-history-jdbc</artifactId>
+            <version>${koog.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>koog-spring-ai-starter-model-chat</artifactId>
+            <version>${koog.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>koog-spring-ai-starter-chat-memory</artifactId>
+            <version>${koog.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>koog-spring-ai-starter-vector-store</artifactId>
+            <version>${koog.version}</version>
+        </dependency>
+
+        <!-- Spring Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Jackson Kotlin -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+        </dependency>
+
+        <!-- Kotlin reflect -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+
+        <!-- Spring AI -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-chat-memory-repository-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>grazie-platform-public</id>
+            <url>https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

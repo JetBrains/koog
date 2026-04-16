@@ -21,7 +21,6 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
@@ -29,6 +28,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
+import kotlin.time.Clock
 
 internal object BedrockAnthropicClaudeSerialization {
 
@@ -91,7 +91,8 @@ internal object BedrockAnthropicClaudeSerialization {
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.ToolResult(
                                         toolUseId = msg.id!!,
-                                        content = msg.content
+                                        content = msg.content,
+                                        isError = msg.isError
                                     )
                                 )
                             )
@@ -175,6 +176,21 @@ internal object BedrockAnthropicClaudeSerialization {
             null
         }
 
+        val outputConfig = params.schema?.let { schema ->
+            require(schema is LLMParams.Schema.JSON) {
+                "Bedrock Anthropic only supports JSON schemas for structured output"
+            }
+            buildJsonObject {
+                put(
+                    "format",
+                    buildJsonObject {
+                        put("type", "json_schema")
+                        put("schema", schema.schema)
+                    }
+                )
+            }
+        }
+
         return BedrockAnthropicInvokeModel(
             anthropicVersion = "bedrock-2023-05-31",
             maxTokens = maxTokens,
@@ -182,7 +198,8 @@ internal object BedrockAnthropicClaudeSerialization {
             temperature = temperature,
             messages = messages,
             tools = bedrockTools,
-            toolChoice = bedrockToolChoice
+            toolChoice = bedrockToolChoice,
+            outputConfig = outputConfig
         )
     }
 
@@ -255,11 +272,11 @@ internal object BedrockAnthropicClaudeSerialization {
                 AnthropicStreamEventType.CONTENT_BLOCK_START.value -> {
                     when (val contentBlock = response.contentBlock) {
                         is AnthropicContent.Text -> {
-                            emitAppend(contentBlock.text)
+                            emitTextDelta(contentBlock.text)
                         }
 
                         is AnthropicContent.ToolUse -> {
-                            upsertToolCall(
+                            emitToolCallDelta(
                                 index = response.index ?: error("Tool index is missing"),
                                 id = contentBlock.id,
                                 name = contentBlock.name,
@@ -279,14 +296,14 @@ internal object BedrockAnthropicClaudeSerialization {
 
                         when (delta.type) {
                             AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
-                                upsertToolCall(
+                                emitToolCallDelta(
                                     index = response.index ?: error("Tool index is missing"),
                                     args = delta.partialJson ?: error("Tool args are missing")
                                 )
                             }
 
                             AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
-                                emitAppend(
+                                emitTextDelta(
                                     delta.text ?: error("Text delta is missing")
                                 )
                             }

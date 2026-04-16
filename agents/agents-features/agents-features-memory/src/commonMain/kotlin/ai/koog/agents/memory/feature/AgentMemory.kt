@@ -1,5 +1,6 @@
 package ai.koog.agents.memory.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.featureOrThrow
@@ -7,13 +8,14 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
@@ -34,8 +36,8 @@ import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Memory implementation for AI agents that provides persistent storage and retrieval of facts.
@@ -179,11 +181,14 @@ public class AgentMemory(
      */
     public companion object Feature :
         AIAgentGraphFeature<Config, AgentMemory>,
-        AIAgentFunctionalFeature<Config, AgentMemory> {
+        AIAgentFunctionalFeature<Config, AgentMemory>,
+        AIAgentPlannerFeature<Config, AgentMemory> {
         override val key: AIAgentStorageKey<AgentMemory> =
             createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): Config = Config()
 
         /**
          * Create a feature implementation using the provided configuration.
@@ -215,6 +220,11 @@ public class AgentMemory(
         override fun install(
             config: Config,
             pipeline: AIAgentFunctionalPipeline,
+        ): AgentMemory = createFeature(config, pipeline)
+
+        override fun install(
+            config: Config,
+            pipeline: AIAgentPlannerPipeline,
         ): AgentMemory = createFeature(config, pipeline)
     }
 
@@ -489,6 +499,7 @@ public suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
                     is Message.Tool.Call -> append(
                         "<tool_call tool=${message.tool}>\n${message.content}\n</tool_call>\n"
                     )
+
                     is Message.Tool.Result -> append(
                         "<tool_result tool=${message.tool}>\n${message.content}\n</tool_result>\n"
                     )

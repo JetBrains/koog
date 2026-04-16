@@ -4,15 +4,15 @@ package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.message.Message
-import kotlinx.serialization.json.JsonElement
+import ai.koog.serialization.JSONElement
 
 @InternalAgentsApi
 public class AgentContextData(
     internal val messageHistory: List<Message>,
     internal val nodePath: String,
     @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
-    internal val lastInput: JsonElement? = null,
-    internal val lastOutput: JsonElement? = null,
+    internal val lastInput: JSONElement? = null,
+    internal val lastOutput: JSONElement? = null,
     internal val rollbackStrategy: RollbackStrategy,
     internal val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
 ) {

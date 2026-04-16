@@ -37,11 +37,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.TypeToken
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -124,8 +124,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param agent The agent instance for which the execution has started
      * @param context The context of the agent execution, providing access to the agent environment and context features
      */
-    // TODO: SD -- make this methods internal
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun <TInput, TOutput> onAgentStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -143,6 +142,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param runId The unique identifier of the agent run
      * @param result The result produced by the agent, or null if no result was produced
      */
+    @InternalAgentsApi
     public override suspend fun onAgentCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -161,6 +161,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param runId The unique identifier of the agent run
      * @param throwable The [Throwable] exception instance that was thrown during agent execution
      */
+    @InternalAgentsApi
     public override suspend fun onAgentExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -177,6 +178,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param executionInfo The execution information for the agent environment transformation event
      * @param agentId The unique identifier of the agent that will be closed.
      */
+    @InternalAgentsApi
     public override suspend fun onAgentClosing(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -195,6 +197,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param baseEnvironment The initial environment to be transformed
      * @return The transformed environment after all handlers have been applied
      */
+    @InternalAgentsApi
     public override suspend fun onAgentEnvironmentTransforming(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -214,7 +217,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param strategy The strategy that has started execution
      * @param context The context of the strategy execution
      */
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onStrategyStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -231,14 +234,14 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param context The context of the strategy execution
      * @param result The result produced by the strategy execution
      */
-    @OptIn(InternalAgentsApi::class)
+    @InternalAgentsApi
     public override suspend fun onStrategyCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         strategy: AIAgentStrategy<*, *, *>,
         context: AIAgentContext,
         result: Any?,
-        resultType: KType,
+        resultType: TypeToken,
     )
 
     //endregion Trigger Strategy Handlers
@@ -255,6 +258,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param model The language model instance that will process the request
      * @param tools The list of tool descriptors available for the LLM call
      */
+    @InternalAgentsApi
     public override suspend fun onLLMCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -277,6 +281,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param responses The response messages received from the language model
      * @param moderationResponse The moderation response, if any, received from the language model
      */
+    @InternalAgentsApi
     public override suspend fun onLLMCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -304,6 +309,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param toolDescription The description of the tool that is being called.
      * @param toolArgs The arguments provided to the tool
      */
+    @InternalAgentsApi
     public override suspend fun onToolCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -311,7 +317,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
+        toolArgs: JSONObject,
         context: AIAgentContext
     )
 
@@ -328,6 +334,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param message The validation error message;
      * @param error The [AIAgentError] validation error.
      */
+    @InternalAgentsApi
     public override suspend fun onToolValidationFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -335,7 +342,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
+        toolArgs: JSONObject,
         message: String,
         error: AIAgentError,
         context: AIAgentContext
@@ -354,6 +361,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param message A message describing the failure.
      * @param error The [AIAgentError] that caused the failure.
      */
+    @InternalAgentsApi
     public override suspend fun onToolCallFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -361,7 +369,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
+        toolArgs: JSONObject,
         message: String,
         error: AIAgentError?,
         context: AIAgentContext
@@ -379,6 +387,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param toolArgs The arguments that were provided to the tool;
      * @param toolResult The result produced by the tool, or null if no result was produced.
      */
+    @InternalAgentsApi
     public override suspend fun onToolCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -386,8 +395,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
-        toolArgs: JsonObject,
-        toolResult: JsonElement?,
+        toolArgs: JSONObject,
+        toolResult: JSONElement?,
         context: AIAgentContext
     )
 
@@ -408,6 +417,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param model The language model being used for streaming;
      * @param tools The list of available tool descriptors for this streaming session.
      */
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -431,6 +441,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param model The language model being used for streaming;
      * @param streamFrame The individual stream frame containing partial response data.
      */
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingFrameReceived(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -454,6 +465,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param model The language model being used for streaming;
      * @param throwable The exception that occurred during streaming if applicable.
      */
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -477,6 +489,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param model The language model that was used for streaming;
      * @param tools The list of tool descriptors that were available for this streaming session.
      */
+    @InternalAgentsApi
     public override suspend fun onLLMStreamingCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,

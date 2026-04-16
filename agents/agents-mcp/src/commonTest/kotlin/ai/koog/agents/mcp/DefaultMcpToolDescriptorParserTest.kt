@@ -221,7 +221,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableStringParam",
                     description = "Nullable string parameter",
-                    type = ToolParameterType.String
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.String, name = "", description = "")
+                        )
+                    )
                 ),
                 ToolParameterDescriptor(
                     name = "integerParam",
@@ -231,7 +236,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableIntegerParam",
                     description = "Nullable integer parameter",
-                    type = ToolParameterType.Integer
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.Integer, name = "", description = "")
+                        )
+                    )
                 ),
                 ToolParameterDescriptor(
                     name = "numberParam",
@@ -241,7 +251,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableNumberParam",
                     description = "Nullable number parameter",
-                    type = ToolParameterType.Float
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.Float, name = "", description = "")
+                        )
+                    )
                 ),
                 ToolParameterDescriptor(
                     name = "booleanParam",
@@ -251,7 +266,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableBooleanParam",
                     description = "Nullable boolean parameter",
-                    type = ToolParameterType.Boolean
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.Boolean, name = "", description = "")
+                        )
+                    )
                 ),
 
                 // Array type
@@ -263,7 +283,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableArrayParam",
                     description = "Nullable array parameter",
-                    type = ToolParameterType.List(ToolParameterType.String)
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.List(ToolParameterType.String), name = "", description = "Array parameter")
+                        )
+                    )
                 ),
 
                 // Object type

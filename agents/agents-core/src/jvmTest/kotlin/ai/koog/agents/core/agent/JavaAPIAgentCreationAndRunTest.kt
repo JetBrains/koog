@@ -6,12 +6,14 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 import java.util.function.BiFunction
 import kotlin.test.assertEquals
 
 class JavaAPIAgentCreationAndRunTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun buildFunctionalAgentAndRun_viaJavaAPIOverloads() {
@@ -23,7 +25,7 @@ class JavaAPIAgentCreationAndRunTest {
             maxAgentIterations = 5
         )
 
-        val executor = getMockExecutor { }
+        val executor = getMockExecutor(serializer) { }
         val toolRegistry = ToolRegistry.builder().build()
 
         val agent = AIAgent.builder()
@@ -39,7 +41,7 @@ class JavaAPIAgentCreationAndRunTest {
         val pool = Executors.newSingleThreadExecutor()
         try {
             // Use Java-facing overloads
-            val result = agent.javaRun("xyz", null, pool)
+            val result = agent.javaNonSuspendRun("xyz", null, pool)
             assertEquals("Echo: xyz", result)
         } finally {
             pool.shutdownNow()

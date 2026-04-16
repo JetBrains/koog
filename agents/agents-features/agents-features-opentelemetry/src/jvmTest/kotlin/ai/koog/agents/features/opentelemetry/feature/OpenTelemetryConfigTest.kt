@@ -1,7 +1,7 @@
 package ai.koog.agents.features.opentelemetry.feature
 
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.FINISH_NODE_PREFIX
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
 import ai.koog.agents.features.opentelemetry.AgentType
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_AGENT_ID
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_PROMPT_ID

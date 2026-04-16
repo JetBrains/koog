@@ -226,8 +226,15 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt5_1" to OpenAIModels.Chat.GPT5_1,
         "gpt5pro" to OpenAIModels.Chat.GPT5Pro,
         "gpt5_1codex" to OpenAIModels.Chat.GPT5_1Codex,
+        "gpt5_1codexmax" to OpenAIModels.Chat.GPT5_1CodexMax,
         "gpt5_2" to OpenAIModels.Chat.GPT5_2,
         "gpt5_2pro" to OpenAIModels.Chat.GPT5_2Pro,
+        "gpt5_2codex" to OpenAIModels.Chat.GPT5_2Codex,
+        "gpt5_3codex" to OpenAIModels.Chat.GPT5_3Codex,
+        "gpt5_4nano" to OpenAIModels.Chat.GPT5_4Nano,
+        "gpt5_4mini" to OpenAIModels.Chat.GPT5_4Mini,
+        "gpt5_4" to OpenAIModels.Chat.GPT5_4,
+        "gpt5_4pro" to OpenAIModels.Chat.GPT5_4Pro,
         "gpt4_1nano" to OpenAIModels.Chat.GPT4_1Nano,
         "gpt4_1mini" to OpenAIModels.Chat.GPT4_1Mini,
         "gpt4omini" to OpenAIModels.Chat.GPT4oMini,
@@ -247,17 +254,15 @@ private val OPENAI_MODELS_MAP = mapOf(
 )
 
 private val ANTHROPIC_MODELS_MAP = mapOf(
-    "opus_3" to AnthropicModels.Opus_3,
     "opus_4" to AnthropicModels.Opus_4,
     "opus_4_1" to AnthropicModels.Opus_4_1,
     "opus_4_5" to AnthropicModels.Opus_4_5,
+    "opus_4_6" to AnthropicModels.Opus_4_6,
     "haiku_3" to AnthropicModels.Haiku_3,
-    "haiku_3_5" to AnthropicModels.Haiku_3_5,
     "haiku_4_5" to AnthropicModels.Haiku_4_5,
-    "sonnet_3_5" to AnthropicModels.Sonnet_3_5,
-    "sonnet_3_7" to AnthropicModels.Sonnet_3_7,
     "sonnet_4" to AnthropicModels.Sonnet_4,
     "sonnet_4_5" to AnthropicModels.Sonnet_4_5,
+    "sonnet_4_6" to AnthropicModels.Sonnet_4_6,
 )
 
 private val GOOGLE_MODELS_MAP = mapOf(
@@ -265,9 +270,10 @@ private val GOOGLE_MODELS_MAP = mapOf(
     "gemini2_0flash001" to GoogleModels.Gemini2_0Flash001,
     "gemini2_0flashlite" to GoogleModels.Gemini2_0FlashLite,
     "gemini2_0flashlite001" to GoogleModels.Gemini2_0FlashLite001,
-    "gemini2_5pro" to GoogleModels.Gemini2_5Pro,
     "gemini2_5flash" to GoogleModels.Gemini2_5Flash,
     "gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
+    "gemini2_5pro" to GoogleModels.Gemini2_5Pro,
+    "gemini3flashpreview" to GoogleModels.Gemini3_Flash_Preview,
     "gemini3propreview" to GoogleModels.Gemini3_Pro_Preview,
     "gemini_embedding001" to GoogleModels.Embeddings.GeminiEmbedding001,
 )

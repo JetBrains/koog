@@ -64,6 +64,7 @@ The following scopes are supported:
 - `rag`
 - `test-utils`
 - `utils`
+- `serialization`
 
 #### Description
 

@@ -1,17 +1,20 @@
-@file:Suppress("RedundantSuspendModifier")
+@file:Suppress("RedundantSuspendModifier", "unused")
 
 package ai.koog.agents.core.tools.reflect
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.serialization.ToolJson
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import org.junit.jupiter.api.assertThrows
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -25,6 +28,34 @@ suspend fun globalTool(
     @LLMDescription("Count parameter") count: Int,
 ): String {
     return "Global tool called: $count"
+}
+
+object ObjectArgumentTool {
+    @Serializable
+    data class TestArg(
+        @property:LLMDescription("int argument")
+        val a: Int,
+        @property:LLMDescription("string argument")
+        val b: String? = null,
+    )
+
+    @Serializable
+    data class TestResult(
+        val field1: String,
+        val field2: Int,
+    )
+
+    @Tool
+    @LLMDescription("Object argument tool")
+    fun objectArgumentTool(
+        @LLMDescription("Test argument")
+        foo: TestArg,
+    ): TestResult {
+        return TestResult(
+            field1 = "foo",
+            field2 = foo.a,
+        )
+    }
 }
 
 interface Tools {
@@ -131,8 +162,6 @@ class MyTools : Tools {
     @Serializable
     data class ComplexType(val field1: Int, val field2: String)
 
-    data class NonSerializableType(val i: Int)
-
     @Tool
     @LLMDescription("The best tool number 1")
     override suspend fun tool1Async(
@@ -176,14 +205,6 @@ class MyTools : Tools {
     }
 
     @Tool
-    @LLMDescription("Non serializable tool 6")
-    suspend fun tool6(
-        @LLMDescription("Non serializable arg") argNotSerializable: NonSerializableType,
-    ) {
-        println("tool6 called")
-    }
-
-    @Tool
     @LLMDescription("Default args tool 7")
     suspend fun tool7(
         @LLMDescription("arg Int") argInt: Int,
@@ -206,7 +227,6 @@ class MyTools : Tools {
 class ToolsFromCallableTest {
     companion object {
         val tools = MyTools()
-        val json = ToolJson
 
         @JvmStatic
         fun testVariants(): Array<Arguments> {
@@ -270,66 +290,261 @@ class ToolsFromCallableTest {
         fun descriptionTestVariants(): Array<Arguments> {
             return arrayOf(
                 Arguments.of(
-                    ToolSet1Impl().asTools(json),
+                    ToolSet1Impl().asTools(),
                     """
-#0: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
-#1: ToolDescriptor(name=tool2, description=Wonderful tool number 2, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
-#2: ToolDescriptor(name=tool4, description=Perfect tool 4, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
-#3: ToolDescriptor(name=toolBase1, description=Base tool 1, requiredParameters=[], optionalParameters=[])
-#4: ToolDescriptor(name=toolBase2OverriddenInInterface, description=Base tool 2 description overridden, requiredParameters=[ToolParameterDescriptor(name=intArg, description=int argument overridden, type=Integer)], optionalParameters=[])
-""".trim()
+                    #0: ToolDescriptor(
+                      name = tool1,
+                      description = The best tool number 1,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = int argument,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #1: ToolDescriptor(
+                      name = tool2,
+                      description = Wonderful tool number 2,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = int argument,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #2: ToolDescriptor(
+                      name = tool4,
+                      description = Perfect tool 4,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = int argument,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #3: ToolDescriptor(
+                      name = toolBase1,
+                      description = Base tool 1,
+                      requiredParameters = [
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #4: ToolDescriptor(
+                      name = toolBase2OverriddenInInterface,
+                      description = Base tool 2 description overridden,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = intArg,
+                          description = int argument overridden,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    """.trimIndent()
                 ),
                 Arguments.of(
-                    DerivedToolSet1Impl().asTools(json),
+                    DerivedToolSet1Impl().asTools(),
                     """
-#0: ToolDescriptor(name=derivedTool5, description=Derived tool 5, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
-#1: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
-#2: ToolDescriptor(name=tool2, description=Wonderful tool number 2, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
-#3: ToolDescriptor(name=tool4, description=Perfect tool 4, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
-#4: ToolDescriptor(name=toolBase1, description=Base tool 1, requiredParameters=[], optionalParameters=[])
-#5: ToolDescriptor(name=toolBase2OverriddenInInterface, description=Base tool 2 description overridden, requiredParameters=[ToolParameterDescriptor(name=intArg, description=int argument overridden, type=Integer)], optionalParameters=[])
-""".trim()
+                    #0: ToolDescriptor(
+                      name = derivedTool5,
+                      description = Derived tool 5,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = ,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #1: ToolDescriptor(
+                      name = tool1,
+                      description = The best tool number 1,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = int argument,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #2: ToolDescriptor(
+                      name = tool2,
+                      description = Wonderful tool number 2,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = int argument,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #3: ToolDescriptor(
+                      name = tool4,
+                      description = Perfect tool 4,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = int argument,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #4: ToolDescriptor(
+                      name = toolBase1,
+                      description = Base tool 1,
+                      requiredParameters = [
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #5: ToolDescriptor(
+                      name = toolBase2OverriddenInInterface,
+                      description = Base tool 2 description overridden,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = intArg,
+                          description = int argument overridden,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    """.trimIndent()
                 ),
                 Arguments.of(
-                    ToolSet1Impl().asToolsByInterface<ToolSet1>(json),
+                    ToolSet1Impl().asToolsByClass<ToolSet1>(),
                     """
-#0: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
-#1: ToolDescriptor(name=toolBase1, description=Base tool 1, requiredParameters=[], optionalParameters=[])
-#2: ToolDescriptor(name=toolBase2OverriddenInInterface, description=Base tool 2 description overridden, requiredParameters=[ToolParameterDescriptor(name=intArg, description=int argument overridden, type=Integer)], optionalParameters=[])
-""".trim()
+                    #0: ToolDescriptor(
+                      name = tool1,
+                      description = The best tool number 1,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = arg,
+                          description = int argument,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #1: ToolDescriptor(
+                      name = toolBase1,
+                      description = Base tool 1,
+                      requiredParameters = [
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    #2: ToolDescriptor(
+                      name = toolBase2OverriddenInInterface,
+                      description = Base tool 2 description overridden,
+                      requiredParameters = [
+                        ToolParameterDescriptor(
+                          name = intArg,
+                          description = int argument overridden,
+                          type =
+                            Integer
+                        ),
+                      ]
+                      optionalParameters = [
+                      ]
+                      cacheControl=null
+                    )
+                    """.trimIndent()
                 ),
             )
         }
     }
 
+    private val serializer = KotlinxSerializer()
+
     @ParameterizedTest
     @MethodSource("testVariants")
     fun testJsonBridge(callable: KFunction<*>, argumentJson: JsonObject, expectedResult: String) {
-        val tool = callable.asTool(json)
-        val args = tool.decodeArgs(argumentJson)
+        val tool = callable.asTool()
+        val args = tool.decodeArgs(argumentJson.toKoogJSONObject(), serializer)
         val result = runBlocking {
             tool.execute(args)
         }
         assertEquals(
             expectedResult,
-            tool.encodeResultToStringUnsafe(result),
+            tool.encodeResultToStringUnsafe(result, serializer),
             "Incorrect result for $callable with argument $argumentJson"
         )
     }
 
-    @Test
-    fun testNonSerializable() {
-        assertThrows<IllegalArgumentException> { tools::tool6.asTool() }
-    }
-
     @ParameterizedTest
     @MethodSource("descriptionTestVariants")
-    fun testOnClasses(tools: List<ToolFromCallable>, expectedDescription: String) {
+    fun testOnClasses(tools: List<ToolFromCallable<*>>, expectedDescription: String) {
         val rendered = buildString {
             for ((i, tool) in tools.withIndex()) {
                 appendLine("#$i: ${tool.descriptor}")
             }
         }.trim()
         assertEquals(expectedDescription, rendered)
+    }
+
+    @Test
+    fun testObjectArgumentTool() = runTest {
+        val tool = ToolFromCallable(
+            callable = ObjectArgumentTool::objectArgumentTool,
+            thisRef = null
+        )
+
+        val args = buildJsonObject {
+            putJsonObject("foo") {
+                put("a", 42)
+                put("b", "test")
+            }
+        }.toKoogJSONObject()
+
+        val decodedArgs = tool.decodeArgs(args, serializer)
+
+        val result = tool.execute(decodedArgs)
+        assertEquals(ObjectArgumentTool.TestResult(field1 = "foo", field2 = 42), result)
     }
 }

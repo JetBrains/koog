@@ -95,6 +95,35 @@ public class DashscopeParams(
         }
     }
 
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): DashscopeParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        enableSearch = enableSearch,
+        parallelToolCalls = parallelToolCalls,
+        enableThinking = enableThinking,
+        frequencyPenalty = frequencyPenalty,
+        presencePenalty = presencePenalty,
+        logprobs = logprobs,
+        stop = stop,
+        topLogprobs = topLogprobs,
+        topP = topP,
+    )
+
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */
@@ -138,7 +167,9 @@ public class DashscopeParams(
 
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
+
         other !is DashscopeParams -> false
+
         else ->
             temperature == other.temperature &&
                 maxTokens == other.maxTokens &&

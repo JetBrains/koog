@@ -1,10 +1,9 @@
 package ai.koog.agents.core.system.feature
 
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.FINISH_NODE_PREFIX
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph.Companion.START_NODE_PREFIX
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.FINISH_NODE_PREFIX
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.feature.debugger.Debugger
@@ -24,13 +23,14 @@ import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.system.mock.ClientEventsCollector
 import ai.koog.agents.core.system.mock.MockLLMProvider
-import ai.koog.agents.core.system.mock.createAgent
-import ai.koog.agents.core.utils.SerializationUtils
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.singleEvent
 import ai.koog.agents.testing.feature.message.singleNodeEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.prompt.llm.LLModel
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
@@ -41,7 +41,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
-import kotlin.reflect.typeOf
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -51,6 +50,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 
 internal object DebuggerTestAPI {
+    private val serializer = KotlinxSerializer()
 
     internal const val HOST = "127.0.0.1"
 
@@ -94,7 +94,7 @@ internal object DebuggerTestAPI {
                 edge(nodeStart forwardTo nodeFinish)
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 userPrompt = userPrompt,
@@ -133,7 +133,6 @@ internal object DebuggerTestAPI {
                 val actualAgentStartingEvent = actualFilteredEvents.singleEvent<AgentStartingEvent>()
                 val actualStrategyStartingEvent = actualFilteredEvents.singleEvent<GraphStrategyStartingEvent>()
                 val actualNodeStartEvent = actualFilteredEvents.singleNodeEvent(START_NODE_PREFIX)
-                val actualNodeFinishEvent = actualFilteredEvents.singleNodeEvent(FINISH_NODE_PREFIX)
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 expectedFilteredEvents.addAll(
@@ -167,10 +166,7 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -179,15 +175,9 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = START_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionStartingEvent(
@@ -196,10 +186,7 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -208,15 +195,9 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
                             input = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
-                            SerializationUtils.encodeDataToJsonElementOrNull(
-                                data = userPrompt,
-                                dataType = typeOf<String>()
-                            ),
+                            serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         StrategyCompletedEvent(
@@ -290,7 +271,7 @@ internal object DebuggerTestAPI {
                 edge(nodeStart forwardTo nodeFinish)
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 userPrompt = userPrompt,

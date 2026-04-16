@@ -44,6 +44,7 @@ jobs:
             rag
             test-utils
             utils
+            serialization
           # ignore dependabot
           ignoreLabels: |
             dependencies

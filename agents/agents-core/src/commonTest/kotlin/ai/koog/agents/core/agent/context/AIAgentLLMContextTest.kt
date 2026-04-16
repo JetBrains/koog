@@ -11,6 +11,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -19,6 +20,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 class AIAgentLLMContextTest : AgentTestBase() {
+    private val serializer = KotlinxSerializer()
 
     @OptIn(DetachedPromptExecutorAPI::class)
     @Test
@@ -195,7 +197,7 @@ class AIAgentLLMContextTest : AgentTestBase() {
             tool(testTool)
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 

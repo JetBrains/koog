@@ -3,9 +3,11 @@ package ai.koog.agents.core.tools.serialization
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -14,7 +16,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import kotlin.jvm.JvmInline
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -23,53 +24,14 @@ import kotlin.test.assertTrue
 // Complex tool params = objects, lists of enums, nested lists.
 @OptIn(InternalAgentToolsApi::class)
 class ToolParameterTypesTest {
-
-    @Test
-    fun testPrimitiveTypesParameter() = runTest {
-        val args = "Hello"
-        val encodedArgs = PrimitiveTypesTool.encodeArgs(args)
-
-        // Test decoding and encoding for primitive types
-        assertEquals(
-            expected = buildJsonObject { put("__wrapped_value__", args) },
-            actual = encodedArgs,
-        )
-        assertEquals(
-            expected = args,
-            actual = PrimitiveTypesTool.decodeArgs(encodedArgs),
-        )
-
-        val result = PrimitiveTypesTool.execute(args)
-        val encodedResult = PrimitiveTypesTool.encodeResultToString(result)
-        assertEquals("\"$result\"", encodedResult)
-    }
-
-    @Test
-    fun testValueClassParameter() = runTest {
-        val args = ValueClassTool.Args("Hello")
-        val encodedArgs = ValueClassTool.encodeArgs(args)
-
-        // Test decoding and encoding for value classes types
-        assertEquals(
-            expected = buildJsonObject { put("__wrapped_value__", args.value) },
-            actual = encodedArgs,
-        )
-        assertEquals(
-            expected = args,
-            actual = ValueClassTool.decodeArgs(encodedArgs),
-        )
-
-        val result = ValueClassTool.execute(args)
-        val encodedResult = ValueClassTool.encodeResultToString(result)
-        assertEquals("\"$result\"", encodedResult)
-    }
+    private val serializer = KotlinxSerializer()
 
     // Region: Object tool parameter cases
     @Test
     fun testObjectParameter() = runTest {
         val result = ObjectTool.execute(
             ObjectTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonObject("person") {
                         put("name", "John")
                         put("age", 30)
@@ -78,7 +40,8 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -92,7 +55,7 @@ class ToolParameterTypesTest {
     fun testNullObjectParameter() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ObjectTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonObject("person") {
                         put("name", JsonNull)
                         put("age", 30)
@@ -101,7 +64,8 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -110,7 +74,7 @@ class ToolParameterTypesTest {
     fun testInvalidTypeInObjectParameter() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ObjectTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonObject("person") {
                         put("name", "John")
                         put("age", "thirty")
@@ -119,7 +83,8 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -128,7 +93,7 @@ class ToolParameterTypesTest {
     fun testMissingParameterInObject() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ObjectTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonObject("person") {
                         // name is missing
                         put("age", 30)
@@ -137,7 +102,8 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -146,7 +112,7 @@ class ToolParameterTypesTest {
     fun testMissingParameterInNestedObject() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ObjectTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonObject("person") {
                         put("name", "John")
                         put("age", 30)
@@ -155,7 +121,8 @@ class ToolParameterTypesTest {
                             put("city", "Anytown")
                         }
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -164,13 +131,14 @@ class ToolParameterTypesTest {
     fun testObjectWithAdditionalProperties() = runTest {
         val result = ObjectWithAdditionalPropertiesTool.execute(
             ObjectWithAdditionalPropertiesTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonObject("config") {
                         put("name", "MyConfig")
                         put("custom1", "value1")
                         put("custom2", "value2")
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -185,13 +153,14 @@ class ToolParameterTypesTest {
     fun testNullObjectWithAdditionalProperties() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ObjectWithAdditionalPropertiesTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonObject("config") {
                         put("name", JsonNull)
                         put("custom1", "value1")
                         put("custom2", "value2")
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -200,7 +169,7 @@ class ToolParameterTypesTest {
     fun testListOfObjects() = runTest {
         val result = ListOfObjectsTool.execute(
             ListOfObjectsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("people") {
                         addJsonObject {
                             put("name", "John")
@@ -211,7 +180,8 @@ class ToolParameterTypesTest {
                             put("age", 25)
                         }
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -226,9 +196,10 @@ class ToolParameterTypesTest {
     fun testEmptyListOfObjects() = runTest {
         val result = ListOfObjectsTool.execute(
             ListOfObjectsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("people") {}
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -240,9 +211,10 @@ class ToolParameterTypesTest {
     fun testNullListOfObjects() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ListOfObjectsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     put("people", JsonNull)
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -253,7 +225,7 @@ class ToolParameterTypesTest {
     fun testListOfEnumsParameter() = runTest {
         val result = ListOfEnumsTool.execute(
             ListOfEnumsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("colors") {
                         add("RED")
                         add("GREEN")
@@ -266,7 +238,8 @@ class ToolParameterTypesTest {
                     putJsonArray("optional") {
                         add("RED")
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -285,7 +258,7 @@ class ToolParameterTypesTest {
     fun testListOfEnumsMissingOptionalParameter() = runTest {
         val result = ListOfEnumsTool.execute(
             ListOfEnumsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("colors") {
                         add("RED")
                         add("GREEN")
@@ -295,7 +268,8 @@ class ToolParameterTypesTest {
                         add("JANE")
                         add("JOHN")
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -313,7 +287,7 @@ class ToolParameterTypesTest {
     fun testListOfEnumsEmptyOptionalParameter() = runTest {
         val result = ListOfEnumsTool.execute(
             ListOfEnumsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("colors") {
                         add("RED")
                         add("GREEN")
@@ -324,7 +298,8 @@ class ToolParameterTypesTest {
                         add("JOHN")
                     }
                     putJsonArray("optional") {}
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -342,13 +317,14 @@ class ToolParameterTypesTest {
     fun testListOfEnumsMissingRequiredParameter() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ListOfEnumsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("colors") {
                         add("RED")
                         add("GREEN")
                         add("BLUE")
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -357,10 +333,11 @@ class ToolParameterTypesTest {
     fun testListOfEnumsEmptyRequiredParameters() = runTest {
         val result = ListOfEnumsTool.execute(
             ListOfEnumsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("colors") {}
                     putJsonArray("names") {}
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -375,12 +352,13 @@ class ToolParameterTypesTest {
     fun testListOfEnumsNullRequiredParameter() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ListOfEnumsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     put("colors", JsonNull)
                     putJsonArray("names") {
                         add("JANE")
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -389,7 +367,7 @@ class ToolParameterTypesTest {
     fun testInvalidEnumValueInListOfEnumsParameter() = runTest {
         assertFailsWith<IllegalArgumentException> {
             ListOfEnumsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("colors") {
                         add("RED")
                         add("BLUE")
@@ -402,7 +380,8 @@ class ToolParameterTypesTest {
                     putJsonArray("optional") {
                         add("RED")
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
@@ -413,7 +392,7 @@ class ToolParameterTypesTest {
     fun testNestedListsParameter() = runTest {
         val result = NestedListsTool.execute(
             NestedListsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("nestedList") {
                         addJsonArray {
                             add(1)
@@ -424,7 +403,8 @@ class ToolParameterTypesTest {
                             add(4)
                         }
                     }
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -443,9 +423,10 @@ class ToolParameterTypesTest {
     fun testEmptyNestedListsParameter() = runTest {
         val result = NestedListsTool.execute(
             NestedListsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     putJsonArray("nestedList") {}
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         )
 
@@ -457,41 +438,18 @@ class ToolParameterTypesTest {
     fun testNullNestedListsParameter() = runTest {
         assertFailsWith<IllegalArgumentException> {
             NestedListsTool.decodeArgs(
-                buildJsonObject {
+                rawArgs = buildJsonObject {
                     put("nestedList", JsonNull)
-                }
+                }.toKoogJSONObject(),
+                serializer = serializer,
             )
         }
     }
     // endregion
 
-    private object PrimitiveTypesTool : Tool<String, String>(
-        argsSerializer = String.serializer(),
-        resultSerializer = String.serializer(),
-        name = "primitive_types_tool",
-        description = "Tool with primitive types parameter",
-    ) {
-        override suspend fun execute(args: String): String =
-            "input: $args"
-    }
-
-    private object ValueClassTool : Tool<ValueClassTool.Args, String>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = String.serializer(),
-        name = "value_class_tool",
-        description = "Tool with value class parameter",
-    ) {
-        @Serializable
-        @JvmInline
-        value class Args(val value: String)
-
-        override suspend fun execute(args: Args): String =
-            "input: ${args.value}"
-    }
-
     private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "nested_lists_tool",
         description = "Tool with nested lists parameter",
     ) {
@@ -508,8 +466,8 @@ class ToolParameterTypesTest {
     }
 
     private object ListOfEnumsTool : Tool<ListOfEnumsTool.Args, ListOfEnumsTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "list_of_enums_tool",
         description = "Tool with list of enums parameter",
     ) {
@@ -526,7 +484,7 @@ class ToolParameterTypesTest {
             @property:LLMDescription("A list of names")
             val names: List<Name>,
             @property:LLMDescription("An optional color parameter")
-            val optional: List<Color>?
+            val optional: List<Color>? = null,
         )
 
         @Serializable
@@ -536,8 +494,8 @@ class ToolParameterTypesTest {
     }
 
     private object ObjectTool : Tool<ObjectTool.Args, ObjectTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "object_tool",
         description = "Tool with object parameter",
     ) {
@@ -572,8 +530,8 @@ class ToolParameterTypesTest {
     }
 
     private object ListOfObjectsTool : Tool<ListOfObjectsTool.Args, ListOfObjectsTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "list_of_objects_tool",
         description = "Tool with list of objects parameter",
     ) {
@@ -599,8 +557,8 @@ class ToolParameterTypesTest {
 
     private object ObjectWithAdditionalPropertiesTool :
         Tool<ObjectWithAdditionalPropertiesTool.Args, ObjectWithAdditionalPropertiesTool.Result>(
-            argsSerializer = Args.serializer(),
-            resultSerializer = Result.serializer(),
+            argsType = typeToken<Args>(),
+            resultType = typeToken<Result>(),
             name = "object_with_additional_properties_tool",
             description = "Tool with object with additional properties parameter",
         ) {

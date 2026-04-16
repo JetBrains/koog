@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
@@ -12,6 +13,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class StatefulSingleUseAIAgentTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun test_StatefulSingleUseAIAgent_RunsTwiceWithoutException() = runTest {
@@ -20,7 +22,7 @@ class StatefulSingleUseAIAgentTest {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("First run result") onRequestContains "First run"
             mockLLMAnswer("Second run result") onRequestContains "Second run"
             mockLLMAnswer("Default response").asDefaultResponse
@@ -52,7 +54,7 @@ class StatefulSingleUseAIAgentTest {
         // Arrange
         val testToolRegistry = ToolRegistry.EMPTY
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Result 1") onRequestEquals "Run 1"
             mockLLMAnswer("Result 2") onRequestEquals "Run 2"
             mockLLMAnswer("Result 3") onRequestEquals "Run 3"
@@ -83,7 +85,7 @@ class StatefulSingleUseAIAgentTest {
             tool(CreateTool)
         }
 
-        val mockLLMApi = getMockExecutor {
+        val mockLLMApi = getMockExecutor(serializer) {
             mockLLMAnswer("Parallel run 1 result") onRequestContains "Parallel run 1"
             mockLLMAnswer("Parallel run 2 result") onRequestContains "Parallel run 2"
             mockLLMAnswer("Parallel run 3 result") onRequestContains "Parallel run 3"

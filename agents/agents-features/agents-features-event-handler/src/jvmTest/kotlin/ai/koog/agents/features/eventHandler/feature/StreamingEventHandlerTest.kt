@@ -5,9 +5,12 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
-import ai.koog.agents.testing.tools.MockLLMBuilder
+import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMStream
 import ai.koog.prompt.streaming.collectText
+import ai.koog.prompt.streaming.streamFrameFlowOf
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -26,7 +29,9 @@ class StreamingEventHandlerTest {
         // Using nodeLLMRequestStreaming to actually test streaming events
         val eventsCollector = mockStreaming(
             strategy = streamTextStrategy("streaming-test-strategy"),
-            buildLlmMock = { mockLLMAnswer(assistantResponse) onRequestContains userMessage }
+            buildLlmMock = {
+                mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains userMessage
+            }
         ) { agent ->
             agent.run(userMessage, null)
         }
@@ -55,7 +60,9 @@ class StreamingEventHandlerTest {
         val testResponse = "This is a response about streaming functionality"
         val eventsCollector = mockStreaming(
             strategy = streamTextStrategy("streaming-test-strategy-2"),
-            buildLlmMock = { mockLLMAnswer(testResponse) onRequestContains testMessage }
+            buildLlmMock = {
+                mockLLMStream(streamFrameFlowOf(testResponse)) onRequestContains testMessage
+            }
         ) { agent ->
             agent.run(testMessage, null)
         }
@@ -77,13 +84,14 @@ private fun assertEventsCollected(eventsCollector: TestEventsCollector) =
 
 private suspend fun mockStreaming(
     strategy: AIAgentGraphStrategy<String, String>,
-    buildLlmMock: MockLLMBuilder.() -> Unit,
+    buildLlmMock: MockExecutorDSLBuilder.() -> Unit,
     runAgent: suspend (AIAgent<String, String>) -> Unit
 ): TestEventsCollector {
+    val serializer = KotlinxSerializer()
     val eventsCollector = TestEventsCollector()
     val agent: AIAgent<String, String> = createAgent(
         strategy = strategy,
-        executor = getMockExecutor(clock = testClock) { buildLlmMock() }
+        executor = getMockExecutor(serializer, clock = testClock) { buildLlmMock() }
     ) {
         install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
     }

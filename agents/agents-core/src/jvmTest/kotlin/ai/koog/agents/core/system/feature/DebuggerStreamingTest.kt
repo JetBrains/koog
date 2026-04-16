@@ -1,7 +1,6 @@
 package ai.koog.agents.core.system.feature
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
@@ -21,10 +20,10 @@ import ai.koog.agents.core.system.feature.DebuggerTestAPI.mockLLModel
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.testBaseClient
 import ai.koog.agents.core.system.mock.ClientEventsCollector
 import ai.koog.agents.core.system.mock.MockLLMProvider
-import ai.koog.agents.core.system.mock.assistantMessage
-import ai.koog.agents.core.system.mock.createAgent
-import ai.koog.agents.core.system.mock.systemMessage
-import ai.koog.agents.core.system.mock.userMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.assistantMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
+import ai.koog.agents.core.system.mock.TestAgentFactory.systemMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.userMessage
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.agent.agentExecutionInfo
@@ -39,6 +38,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.flow.Flow
@@ -58,6 +58,7 @@ import kotlin.test.assertTrue
 
 @Disabled("Flaky, see #1124")
 class DebuggerStreamingTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun `test debugger collect streaming success events on agent run`() = runBlocking {
@@ -95,7 +96,7 @@ class DebuggerStreamingTest {
         // Executor
         val testLLMResponse = "Default test response"
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals userPrompt
         }
 
@@ -119,7 +120,7 @@ class DebuggerStreamingTest {
                 )
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
@@ -196,7 +197,7 @@ class DebuggerStreamingTest {
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
-                            frame = StreamFrame.Append(testLLMResponse),
+                            frame = StreamFrame.TextDelta(testLLMResponse),
                             timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         LLMStreamingCompletedEvent(
@@ -268,7 +269,7 @@ class DebuggerStreamingTest {
         val testStreamingErrorMessage = "Test streaming error"
         var testStreamingStackTrace = ""
 
-        val testStreamingExecutor = object : PromptExecutor {
+        val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: LLModel,
@@ -315,7 +316,7 @@ class DebuggerStreamingTest {
                 )
             }
 
-            val throwable = createAgent(
+            val throwable = createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,

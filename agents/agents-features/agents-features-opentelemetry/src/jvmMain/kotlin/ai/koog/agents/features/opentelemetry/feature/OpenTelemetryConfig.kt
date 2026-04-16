@@ -1,9 +1,14 @@
 package ai.koog.agents.features.opentelemetry.feature
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
+import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporterImpl
+import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporterImpl
+import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporterImpl
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -22,6 +27,8 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Properties
+import kotlin.time.toKotlinDuration
+import java.time.Duration as JavaDuration
 
 /**
  * Configuration class for OpenTelemetry integration.
@@ -72,6 +79,8 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private var _spanAdapter: SpanAdapter? = null
 
+    private var _shutdownOnAgentClose: Boolean = false
+
     override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
         // Do not allow events filtering for the OpenTelemetry feature
         // Open Telemetry relay on the hierarchy. Filtering events can break the feature logic.
@@ -99,7 +108,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * The initialized SDK instance is cached for future access.
      *
      * The `initializeOpenTelemetry` function configures the SDK with the appropriate service attributes, trace
-     * providers, span processors, and exporters. It also ensures proper shutdown of the SDK on application termination.
+     * providers, span processors, and exporters.
      *
      * @return The initialized or previously cached `OpenTelemetrySdk`.
      */
@@ -132,6 +141,23 @@ public class OpenTelemetryConfig : FeatureConfig() {
     public val serviceVersion: String
         get() = _serviceVersion
 
+    /**
+     * Indicates whether the OpenTelemetry SDK should be automatically closed when the agent closes.
+     *
+     * Defaults to `false`. When set to `true` via [setShutdownOnAgentClose], the SDK will be closed
+     * (flushing all pending spans) during the agent close lifecycle event.
+     *
+     * Note: if multiple agents share the same [OpenTelemetryConfig], enabling this will cause
+     * the SDK to be closed when the first agent closes, which may affect the following agents.
+     */
+    public val isShutdownOnAgentClose: Boolean
+        get() = _shutdownOnAgentClose
+
+    /**
+     * A property providing access to the current instance of the [SpanAdapter].
+     * This is backed by a private field [_spanAdapter].
+     * Used to handle span-related operations between components.
+     */
     internal val spanAdapter: SpanAdapter?
         get() = _spanAdapter
 
@@ -220,6 +246,21 @@ public class OpenTelemetryConfig : FeatureConfig() {
     }
 
     /**
+     * Sets whether the OpenTelemetry SDK should be automatically closed when the agent closes.
+     *
+     * When enabled, [OpenTelemetrySdk.close] is called during the agent closing lifecycle event,
+     * which flushes all pending spans to exporters and shuts down the SDK.
+     *
+     * Defaults to `false`. For manual SDK lifecycle management, call [sdk]`.close()` directly.
+     *
+     * @param shutdownOnAgentClose `true` to close the SDK when the agent closes, `false` to leave
+     *        SDK lifecycle management to the caller.
+     */
+    public fun setShutdownOnAgentClose(shutdownOnAgentClose: Boolean) {
+        _shutdownOnAgentClose = shutdownOnAgentClose
+    }
+
+    /**
      * Adds a custom span adapter for post-processing GenAI agent spans.
      * The adapter can modify span data, add attributes/events, or perform other
      * post-processing logic before spans are completed.
@@ -254,9 +295,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
             .setTracerProvider(traceProviderBuilder.build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .build()
-
-        // Add a hook to close SDK, which flushes logs
-        Runtime.getRuntime().addShutdownHook(Thread { sdk.close() })
 
         return sdk
     }
@@ -314,4 +352,105 @@ public class OpenTelemetryConfig : FeatureConfig() {
     }
 
     //endregion Private Methods
+
+    // integrations:
+
+    /**
+     * Configure an OpenTelemetry span exporter that sends data to [Langfuse](https://langfuse.com/).
+     *
+     * @param langfuseUrl the base URL of the Langfuse instance.
+     *        If not a set is retrieved from `LANGFUSE_HOST` environment variable.
+     *        Defaults to [https://cloud.langfuse.com](https://cloud.langfuse.com).
+     * @param langfusePublicKey if not set is retrieved from `LANGFUSE_PUBLIC_KEY` environment variable.
+     * @param langfuseSecretKey if not set is retrieved from `LANGFUSE_SECRET_KEY` environment variable.
+     * @param timeout OpenTelemetry SpanExporter timeout.
+     *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+     * @param traceAttributes list of trace-level Langfuse attributes.
+     *        See the full list: [Trace-Level Attributes](https://langfuse.com/integrations/native/opentelemetry#trace-level-attributes)
+     *
+     * @see <a href="https://langfuse.com/docs/get-started#create-new-project-in-langfuse">How to create a new project in Langfuse</a>
+     * @see <a href="https://langfuse.com/faq/all/where-are-langfuse-api-keys">How to set up API keys in Langfuse</a>
+     * @see <a href="https://langfuse.com/docs/opentelemetry/get-started#opentelemetry-endpoint">Langfuse OpenTelemetry Docs</a>
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun addLangfuseExporter(
+        langfuseUrl: String? = null,
+        langfusePublicKey: String? = null,
+        langfuseSecretKey: String? = null,
+        timeout: JavaDuration? = null,
+        traceAttributes: List<CustomAttribute>? = null
+    ): Unit = this.addLangfuseExporterImpl(
+        langfuseUrl,
+        langfusePublicKey,
+        langfuseSecretKey,
+        timeout?.toKotlinDuration(),
+        traceAttributes
+    )
+
+    /**
+     * Configure an OpenTelemetry span exporter that sends data to [W&B Weave](https://wandb.ai/site/weave/).
+     *
+     * @param weaveOtelBaseUrl the URL of the Weave OpenTelemetry endpoint.
+     *        If not set is retrieved from `WEAVE_URL` environment variable.
+     *        Defaults to [https://trace.wandb.ai](https://trace.wandb.ai).
+     * @param weaveEntity can be found by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home) and
+     *        checking the *Teams* field in the left sidebar.
+     *        If not set is retrieved from `WEAVE_ENTITY` environment variable.
+     * @param weaveProjectName name of your Weave project.
+     *        If not set is retrieved from `WEAVE_PROJECT_NAME` environment variable.
+     * @param weaveApiKey can be created on the [https://wandb.ai/authorize](https://wandb.ai/authorize) page.
+     *        If not set is retrieved from `WEAVE_API_KEY` environment variable.
+     * @param timeout OpenTelemetry SpanExporter timeout.
+     *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+     *
+     * @see <a href="https://weave-docs.wandb.ai/guides/tracking/otel/">Weave OpenTelemetry Docs</a>
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun addWeaveExporter(
+        weaveOtelBaseUrl: String? = null,
+        weaveEntity: String? = null,
+        weaveProjectName: String? = null,
+        weaveApiKey: String? = null,
+        timeout: JavaDuration? = null,
+    ): Unit = addWeaveExporterImpl(
+        weaveOtelBaseUrl,
+        weaveEntity,
+        weaveProjectName,
+        weaveApiKey,
+        timeout?.toKotlinDuration()
+    )
+
+    /**
+     * Configure an OpenTelemetry span exporter that sends data to [Datadog](https://www.datadoghq.com/)
+     * via direct OTLP intake.
+     *
+     * @param datadogApiKey Datadog API key.
+     *        If not set, is retrieved from `DD_API_KEY` environment variable.
+     * @param datadogSite Datadog site (e.g. `datadoghq.com`, `datadoghq.eu`).
+     *        If not set, is retrieved from `DD_SITE` environment variable.
+     *        Defaults to `datadoghq.com`.
+     * @param timeout OpenTelemetry SpanExporter timeout.
+     *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+     * @param traceAttributes resource-level attributes to add to all exported spans.
+     *        Useful for tagging traces with application-specific metadata
+     *        (e.g. `"env"`, `"tenant_id"`, `"prompt_name"`).
+     *
+     * @see <a href="https://docs.datadoghq.com/opentelemetry/guide/otlp_api/">Datadog OTLP API Intake</a>
+     * @see <a href="https://docs.datadoghq.com/llm_observability/">Datadog LLM Observability</a>
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun addDatadogExporter(
+        datadogApiKey: String? = null,
+        datadogSite: String? = null,
+        timeout: JavaDuration? = null,
+        traceAttributes: Map<String, String>? = null,
+    ): Unit = addDatadogExporterImpl(
+        datadogApiKey,
+        datadogSite,
+        timeout?.toKotlinDuration(),
+        traceAttributes
+    )
 }

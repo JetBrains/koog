@@ -1,4 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.project
 
 group = rootProject.group
 version = rootProject.version
@@ -29,9 +31,9 @@ kotlin {
                 api(project(":prompt:prompt-structure"))
 
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-markdown"))
 
-                api(libs.kotlinx.datetime)
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)
@@ -48,14 +50,23 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
+                implementation(libs.kotest.assertions.json)
+            }
+        }
+
+        jvmCommonMain {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.jdk9)
+                implementation(project(":serialization:serialization-jackson"))
             }
         }
 
         jvmTest {
             dependencies {
-                implementation("org.jetbrains.lincheck:lincheck:3.4")
-                implementation(libs.ktor.client.cio)
                 implementation(project(":integration-tests"))
+                implementation(project(":serialization:serialization-jackson"))
+
+                implementation(libs.ktor.client.cio)
             }
         }
     }

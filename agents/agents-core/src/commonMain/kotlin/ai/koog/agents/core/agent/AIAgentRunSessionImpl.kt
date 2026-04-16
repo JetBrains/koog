@@ -10,8 +10,8 @@ import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.runCatchingCancellable
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KLogger
-import kotlin.reflect.typeOf
 
 /**
  * Internal implementation of [AIAgentRunSession] that manages the execution lifecycle of an AI agent.
@@ -81,7 +81,8 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                             strategy,
                             context,
                             result,
-                            typeOf<Any?>()
+                            // FIXME this will break serialization, need to add outputType to the AIAgentStrategy!!
+                            typeToken<Any?>()
                         )
 
                         result

@@ -2,7 +2,7 @@ package ai.koog.agents.ext.llm.choice
 
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.result
 import ai.koog.prompt.message.LLMChoice
@@ -13,7 +13,7 @@ import ai.koog.prompt.message.LLMChoice
  * @param name Optional name for the node.
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendResultsMultipleChoices(
+public fun nodeLLMSendResultsMultipleChoices(
     name: String? = null
 ): AIAgentNodeDelegate<List<ReceivedToolResult>, List<LLMChoice>> =
     node(name) { results ->
@@ -35,7 +35,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendResultsMultipleChoices(
  * @param name Optional name for the node.
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeSelectLLMChoice(
+public fun nodeSelectLLMChoice(
     choiceSelectionStrategy: ChoiceSelectionStrategy,
     name: String? = null
 ): AIAgentNodeDelegate<List<LLMChoice>, LLMChoice> =

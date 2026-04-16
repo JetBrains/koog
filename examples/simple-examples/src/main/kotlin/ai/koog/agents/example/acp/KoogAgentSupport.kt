@@ -2,7 +2,7 @@ package ai.koog.agents.example.acp
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.ToolRegistry
@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.JsonElement
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

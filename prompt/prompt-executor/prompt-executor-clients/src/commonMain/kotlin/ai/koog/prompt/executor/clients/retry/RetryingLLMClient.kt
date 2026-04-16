@@ -8,6 +8,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.IncompleteStreamException
 import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
@@ -37,7 +38,7 @@ import kotlin.time.Duration.Companion.milliseconds
 public class RetryingLLMClient @JvmOverloads constructor(
     private val delegate: LLMClient,
     internal val config: RetryConfig = RetryConfig()
-) : LLMClient {
+) : LLMClient() {
 
     /**
      * Retrieves the configured instance of the `LLMProvider` in use.
@@ -119,6 +120,34 @@ public class RetryingLLMClient @JvmOverloads constructor(
         delegate.models()
     }
 
+    /**
+     * Embeds the given text, retrying on transient failures according to [config].
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding.
+     * @return A list of floating-point values representing the embedding vector.
+     */
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> = withRetry("embed") {
+        delegate.embed(text, model)
+    }
+
+    /**
+     * Embeds the given inputs, retrying on transient failures according to [config].
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding.
+     * @return A list of embedding vectors, one per input string.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> = withRetry("embed") {
+        delegate.embed(inputs, model)
+    }
+
     private suspend fun <T> withRetry(
         operation: String,
         block: suspend () -> T
@@ -150,6 +179,8 @@ public class RetryingLLMClient @JvmOverloads constructor(
     }
 
     private fun shouldRetry(error: Throwable): Boolean {
+        if (error is IncompleteStreamException) return true
+
         val message = error.message ?: return false
 
         // Check if error matches any retry pattern

@@ -2,7 +2,7 @@ package ai.koog.agents.example.structuredoutput
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.example.ApiKeyService
@@ -18,8 +18,8 @@ import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchema
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
@@ -81,13 +81,12 @@ suspend fun main() {
 
                 // Fallback manual structured output mode, via explicit prompting with additional message, not native model support
                 default = StructuredRequest.Manual(genericWeatherStructure),
-
-                // Helper parser to attempt a fix if a malformed output is produced.
-                fixingParser = StructureFixingParser(
-                    model = AnthropicModels.Haiku_3_5,
-                    retries = 2,
-                ),
-            )
+            ),
+            // Helper parser to attempt a fix if a malformed output is produced.
+            fixingParser = StructureFixingParser(
+                model = AnthropicModels.Haiku_4_5,
+                retries = 2,
+            ),
         )
 
         nodeStart then prepareRequest then getStructuredForecast

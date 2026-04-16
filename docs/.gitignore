@@ -1,1 +1,3 @@
 site/
+src/main/
+hooks/__pycache__/

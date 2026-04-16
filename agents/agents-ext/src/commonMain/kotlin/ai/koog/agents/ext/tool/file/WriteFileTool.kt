@@ -12,6 +12,8 @@ import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.model.FileSystemEntry
 import ai.koog.rag.base.files.model.buildFileSystemEntry
 import ai.koog.rag.base.files.writeText
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 /**
@@ -23,8 +25,8 @@ import kotlinx.serialization.Serializable
  */
 public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Path>) :
     Tool<WriteFileTool.Args, WriteFileTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "__write_file__",
         description = """
             Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
@@ -92,7 +94,7 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
         return Result(fileEntry)
     }
 
-    override fun encodeResultToString(result: Result): String = with(result) {
+    override fun encodeResultToString(result: Result, serializer: JSONSerializer): String = with(result) {
         text {
             +"Written"
             entry(file)

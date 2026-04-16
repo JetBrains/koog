@@ -1,7 +1,7 @@
 package ai.koog.agents.example.goap
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
@@ -19,7 +19,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.typeOf
 
-suspend fun AIAgentFunctionalContext.generateProposal(
+suspend fun AIAgentPlannerContext.generateProposal(
     config: GrouperConfig,
     bestWordings: BestWordings,
     feedback: List<String>,
@@ -72,7 +72,7 @@ suspend fun AIAgentFunctionalContext.generateProposal(
     requestLLMStructured<Proposal>().getOrThrow().data
 }
 
-suspend fun AIAgentFunctionalContext.evaluateWordings(
+suspend fun AIAgentPlannerContext.evaluateWordings(
     config: GrouperConfig,
     wordings: List<String>,
 ): List<Reaction> {
@@ -122,7 +122,7 @@ suspend fun AIAgentFunctionalContext.evaluateWordings(
     }
 }
 
-fun grouperPlanner() = goap<State>(typeOf<State>()) {
+fun grouperPlanner() = AIAgentPlannerStrategy.goap("strategy", ::State) {
     goal(
         name = "Needed number of good proposals reached"
     ) { state ->
@@ -199,10 +199,7 @@ fun grouperPlanner() = goap<State>(typeOf<State>()) {
 }
 
 suspend fun main() {
-    val grouperStrategy = AIAgentPlannerStrategy(
-        name = "grouper",
-        planner = grouperPlanner(),
-    )
+    val grouperStrategy = grouperPlanner()
 
     val agentConfig = AIAgentConfig(
         prompt = prompt("grouper") {},
@@ -246,7 +243,7 @@ suspend fun main() {
             "participant3",
             "Taylor",
             "A 19-year-old college student who responds to emotional appeals",
-            AnthropicModels.Sonnet_4_5,
+            AnthropicModels.Opus_4_6,
             LLMParams(temperature = 1.0)
         )
 
@@ -271,7 +268,7 @@ suspend fun main() {
             "creative3",
             "Riley",
             "A behavioral psychologist who understands persuasive messaging techniques",
-            AnthropicModels.Sonnet_4_5,
+            AnthropicModels.Opus_4_6,
             LLMParams(temperature = 0.8)
         )
 
@@ -285,7 +282,7 @@ suspend fun main() {
             message = message,
         )
 
-        val result = agent.run(State(config)).result
+        val result = agent.run(config)
         buildString {
             appendLine("Final result:")
             appendLine(result)

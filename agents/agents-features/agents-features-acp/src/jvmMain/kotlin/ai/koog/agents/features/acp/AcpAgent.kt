@@ -1,16 +1,21 @@
 package ai.koog.agents.features.acp
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.serialization.kotlinx.toKotlinxJsonElement
+import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import com.agentclientprotocol.common.Event
 import com.agentclientprotocol.model.PromptResponse
 import com.agentclientprotocol.model.SessionId
@@ -111,12 +116,15 @@ public class AcpAgent(
      */
     public companion object Feature :
         AIAgentGraphFeature<AcpConfig, AcpAgent>,
-        AIAgentFunctionalFeature<AcpConfig, AcpAgent> {
+        AIAgentFunctionalFeature<AcpConfig, AcpAgent>,
+        AIAgentPlannerFeature<AcpConfig, AcpAgent> {
 
         private val logger = KotlinLogging.logger { }
         override val key: AIAgentStorageKey<AcpAgent> = AIAgentStorageKey("agents-features-acp")
 
-        override fun createInitialConfig(): AcpConfig = AcpConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): AcpConfig = AcpConfig()
 
         private fun createFeature(
             config: AcpConfig,
@@ -149,6 +157,20 @@ public class AcpAgent(
         override fun install(
             config: AcpConfig,
             pipeline: AIAgentFunctionalPipeline,
+        ): AcpAgent {
+            logger.debug { "Start installing feature: ${AcpAgent::class.simpleName}" }
+
+            val acpAgent = createFeature(config)
+            if (config.setDefaultNotifications) {
+                acpAgent.registerDefaultNotificationHandlers(pipeline)
+            }
+
+            return acpAgent
+        }
+
+        override fun install(
+            config: AcpConfig,
+            pipeline: AIAgentPlannerPipeline,
         ): AcpAgent {
             logger.debug { "Start installing feature: ${AcpAgent::class.simpleName}" }
 
@@ -218,7 +240,7 @@ public class AcpAgent(
                             title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.IN_PROGRESS,
-                            rawInput = ctx.toolArgs,
+                            rawInput = ctx.toolArgs.toKotlinxJsonObject(),
                         )
                     )
                 )
@@ -233,7 +255,7 @@ public class AcpAgent(
                             title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.FAILED,
-                            rawInput = ctx.toolArgs,
+                            rawInput = ctx.toolArgs.toKotlinxJsonObject(),
                         )
                     )
                 )
@@ -248,8 +270,8 @@ public class AcpAgent(
                             title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.COMPLETED,
-                            rawInput = ctx.toolArgs,
-                            rawOutput = ctx.toolResult
+                            rawInput = ctx.toolArgs.toKotlinxJsonObject(),
+                            rawOutput = ctx.toolResult?.toKotlinxJsonElement()
                         )
                     )
                 )

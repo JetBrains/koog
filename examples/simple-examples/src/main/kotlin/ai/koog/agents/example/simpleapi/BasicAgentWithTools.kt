@@ -2,7 +2,6 @@ package ai.koog.agents.example.simpleapi
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor

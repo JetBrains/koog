@@ -2,6 +2,8 @@
 
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -12,18 +14,19 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.KSerializerTypeToken
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.serializer
 import kotlin.jvm.JvmStatic
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
+import kotlin.time.Clock
 
 /**
  * [AIAgentService] is a core interface for managing AI agents. The service allows creation, removal, and
- * management of AI agents and provides functionalities to list agents based on their statuses.f
+ * management of AI agents and provides functionalities to list agents based on their statuses.
  *
  * A single instance of [AIAgentService] manages one kind of uniform AI Agents serving same purpose and solving the same type
  * of user task. It's useful to create, manage, and track the progress of running agents solving similar user tasks in parallel.
@@ -339,8 +342,8 @@ public constructor(
     override val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     public val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: KType,
-    private val outputType: KType,
+    private val inputType: TypeToken,
+    private val outputType: TypeToken,
     override val toolRegistry: ToolRegistry,
     public val installFeatures: FeatureContext.() -> Unit
 ) : AIAgentServiceBase<Input, Output, GraphAIAgent<Input, Output>>() {
@@ -430,10 +433,41 @@ public operator fun AIAgentService.Companion.invoke(
     promptExecutor = promptExecutor,
     agentConfig = agentConfig,
     strategy = strategy,
-    inputType = typeOf<String>(),
-    outputType = typeOf<String>(),
+    inputType = typeToken<String>(),
+    outputType = typeToken<String>(),
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
+)
+
+/**
+ * Creates an [AIAgent] and converts it to a [Tool] that can be used by other AI Agents.
+ *
+ * @param agentName Agent name that would be a tool name for this agent tool.
+ * @param agentDescription Agent description that would be a tool description for this agent tool.
+ * @param inputType Type token representing agent input.
+ * @param outputType Type token representing agent output.
+ * @return A special tool that wraps the agent functionality.
+ * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
+ * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
+ * @return A tool instance configured with the provided parameters, representing the AI agent.
+ */
+@OptIn(InternalAgentToolsApi::class)
+public inline fun <reified Input, reified Output> AIAgentService<Input, Output, *>.createAgentTool(
+    agentName: String,
+    agentDescription: String,
+    inputDescription: String? = null,
+    inputType: TypeToken = typeToken<Input>(),
+    outputType: TypeToken = typeToken<Output>(),
+    parentAgentId: String? = null,
+    clock: Clock = Clock.System
+): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = AIAgentTool(
+    agentService = this,
+    agentName = agentName,
+    agentDescription = agentDescription,
+    inputDescription = inputDescription,
+    inputType = inputType,
+    outputType = outputType,
+    parentAgentId = parentAgentId
 )
 
 /**
@@ -451,21 +485,22 @@ public operator fun AIAgentService.Companion.invoke(
  * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
  * @return A tool instance configured with the provided parameters, representing the AI agent.
  */
-@OptIn(InternalAgentToolsApi::class)
+@Deprecated("Use createAgentTool with TypeToken instead of KSerializer")
+@OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
 public inline fun <reified Input, reified Output> AIAgentService<Input, Output, *>.createAgentTool(
     agentName: String,
     agentDescription: String,
     inputDescription: String? = null,
-    inputSerializer: KSerializer<Input> = serializer(),
-    outputSerializer: KSerializer<Output> = serializer(),
+    inputSerializer: KSerializer<Input>,
+    outputSerializer: KSerializer<Output>,
     parentAgentId: String? = null,
     clock: Clock = Clock.System
-): Tool<Input, AIAgentTool.AgentToolResult<Output>> = AIAgentTool(
-    agentService = this,
+): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = createAgentTool(
     agentName = agentName,
     agentDescription = agentDescription,
     inputDescription = inputDescription,
-    inputSerializer = inputSerializer,
-    outputSerializer = outputSerializer,
-    parentAgentId = parentAgentId
+    inputType = KSerializerTypeToken(inputSerializer),
+    outputType = KSerializerTypeToken(outputSerializer),
+    parentAgentId = parentAgentId,
+    clock = clock
 )

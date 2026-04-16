@@ -302,17 +302,15 @@ public class OpenAIToolCall(
  * @property id The unique identifier associated with the tool call. This value can be null.
  * @property function The function object containing the name and arguments of the function invoked.
  * This value can be null if no function call is associated.
- * @property type The type of the tool call. This is always set to "function" for denoting function-based calls.
+ * @property type The type of the tool call. Defaults to "function" for denoting function-based calls. Can be null.
  */
 @Serializable
 public class OpenAIStreamToolCall(
     public val index: Int,
     public val id: String?,
-    public val function: OpenAIStreamFunction?
-) {
-    /** The type of the tool. Currently, only `function` is supported. */
-    public val type: String = "function"
-}
+    public val function: OpenAIStreamFunction?,
+    public val type: String? = "function"
+)
 
 /**
  * Function call from an OpenAI model, containing the function name and arguments.

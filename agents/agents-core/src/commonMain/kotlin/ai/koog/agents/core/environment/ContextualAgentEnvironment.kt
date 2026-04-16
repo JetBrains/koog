@@ -2,15 +2,29 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.JsonObject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@Suppress("MissingKDocForPublicAPI")
+/**
+ * Represents an AI agent environment that operates within the context of a specific agent framework.
+ *
+ * This class acts as a decorator over an existing [AIAgentEnvironment], augmenting operations with contextual
+ * processing using the provided [AIAgentContext].
+ *
+ * @constructor Constructs a new instance of [ContextualAgentEnvironment] with a decorated [environment] and a
+ * contextual [context].
+ *
+ * @param environment The underlying agent environment responsible for managing tool execution.
+ * @param context The context that augments the environment with additional behavioral and execution information.
+ */
+@InternalAgentsApi
 public class ContextualAgentEnvironment(
     private val environment: AIAgentEnvironment,
     private val context: AIAgentContext,
@@ -26,14 +40,14 @@ public class ContextualAgentEnvironment(
         val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
 
         val toolArgs = try {
-            toolCall.contentJson
+            toolCall.contentJson.toKoogJSONObject()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             logger.error { "Failed to execute tool call with id '${toolCall.id}' while parsing args: ${e.message}" }
 
             val tool = toolCall.tool
-            val toolArgs = JsonObject(emptyMap())
+            val toolArgs = JSONObject(emptyMap())
             val message = "Failed to parse tool arguments: ${e.message}"
             context.pipeline.onToolValidationFailed(
                 eventId = eventId,

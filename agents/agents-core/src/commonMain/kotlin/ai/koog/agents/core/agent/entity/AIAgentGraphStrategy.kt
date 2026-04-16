@@ -1,17 +1,19 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AgentContextData
-import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONElement
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.serializer
 
 /**
  * Represents a strategy for managing and executing AI agent workflows built as subgraphs of interconnected nodes.
@@ -22,13 +24,30 @@ import kotlinx.serialization.serializer
  * @property nodeFinish The finishing node of the strategy, marking the subgraph's endpoint.
  * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
  */
-public class AIAgentGraphStrategy<TInput, TOutput>(
+public expect class AIAgentGraphStrategy<TInput, TOutput>(
+    name: String,
+    nodeStart: StartNode<TInput>,
+    nodeFinish: FinishNode<TOutput>,
+    toolSelectionStrategy: ToolSelectionStrategy,
+    serializer: Json = Json { prettyPrint = true }
+) : AIAgentGraphStrategyBase<TInput, TOutput>
+
+/**
+ * Base class for [AIAgentStrategy].
+ *
+ * @property name The unique identifier for the strategy.
+ * @property nodeStart The starting node of the strategy, initiating the subgraph execution.
+ * By default, the start node gets the agent input and returns
+ * @property nodeFinish The finishing node of the strategy, marking the subgraph's endpoint.
+ * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
+ */
+public open class AIAgentGraphStrategyBase<TInput, TOutput>(
     override val name: String,
     public val nodeStart: StartNode<TInput>,
     public val nodeFinish: FinishNode<TOutput>,
     toolSelectionStrategy: ToolSelectionStrategy,
     private val serializer: Json = Json { prettyPrint = true }
-) : AIAgentStrategy<TInput, TOutput, AIAgentGraphContextBase>, AIAgentSubgraph<TInput, TOutput>(
+) : AIAgentStrategy<TInput, TOutput, AIAgentGraphContextBase>, AIAgentSubgraphBase<TInput, TOutput>(
     name,
     nodeStart,
     nodeFinish,
@@ -71,10 +90,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     ) {
         val additionalContextData: AgentContextData = agentContext.getAgentContextData() ?: return
 
-        when (additionalContextData.rollbackStrategy) {
-            RollbackStrategy.Default -> restoreDefault(agentContext, additionalContextData)
-            RollbackStrategy.MessageHistoryOnly -> restoreMessageOnly(agentContext, additionalContextData)
-        }
+        restoreDefault(agentContext, additionalContextData)
         agentContext.removeAgentContextData()
     }
 
@@ -95,7 +111,7 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
         // Set current graph node:
         @Suppress("DEPRECATION")
         when {
-            data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput)
+            data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput, agentContext)
             data.lastOutput != null -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
 
             // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpoints:
@@ -145,7 +161,11 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
      * Finds and sets the node for the strategy based on the provided context.
      */
     @Deprecated("Use setExecutionPointAfterNode instead, setExecutionPoint will be removed in future versions")
-    public suspend fun setExecutionPoint(nodePath: String, input: JsonElement) {
+    public suspend fun setExecutionPoint(
+        nodePath: String,
+        input: JSONElement,
+        agentContext: AIAgentGraphContextBase,
+    ) {
         // we drop first because it's agent's id, we don't need it here
         val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
 
@@ -157,10 +177,8 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
 
         val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
 
-        val actualInput = serializer.decodeFromJsonElement(
-            serializer.serializersModule.serializer(completedNode.inputType),
-            input
-        )
+        val actualInput = agentContext.config.serializer
+            .decodeFromJSONElement<Any?>(input, completedNode.inputType)
 
         // Note: completed node will be re-executed because the output wasn't saved in checkpoints
         // (this was the original behavior before 0.6.1)
@@ -170,9 +188,21 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     /**
      * Finds and sets the node for the strategy based on the provided context.
      */
+    @Deprecated("Use setExecutionPointAfterNode with output: JSONElement instead")
     public suspend fun setExecutionPointAfterNode(
         nodePath: String,
         output: JsonElement,
+        agentContext: AIAgentGraphContextBase
+    ) {
+        setExecutionPointAfterNode(nodePath, output.toKoogJSONElement(), agentContext)
+    }
+
+    /**
+     * Finds and sets the node for the strategy based on the provided context.
+     */
+    public suspend fun setExecutionPointAfterNode(
+        nodePath: String,
+        output: JSONElement,
         agentContext: AIAgentGraphContextBase
     ) {
         // we drop first because it's agent's id, we don't need it here
@@ -186,10 +216,8 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
 
         val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
 
-        val actualOutput = serializer.decodeFromJsonElement(
-            serializer.serializersModule.serializer(completedNode.outputType),
-            output
-        )
+        val actualOutput = agentContext.config.serializer
+            .decodeFromJSONElement<Any?>(output, completedNode.outputType)
 
         if (completedNode is FinishNode<*>) {
             // finish node (of some subgraph) doesn't have next edges, and it's input equals output, so it's safe to re-start it:

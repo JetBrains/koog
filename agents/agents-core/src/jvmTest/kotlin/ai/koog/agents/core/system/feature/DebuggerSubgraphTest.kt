@@ -1,9 +1,9 @@
 package ai.koog.agents.core.system.feature
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.message.FeatureMessage
@@ -19,13 +19,14 @@ import ai.koog.agents.core.system.feature.DebuggerTestAPI.defaultClientServerTim
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.mockLLModel
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.testBaseClient
 import ai.koog.agents.core.system.mock.ClientEventsCollector
-import ai.koog.agents.core.system.mock.createAgent
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.singleEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.flow.first
@@ -34,7 +35,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.Disabled
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -44,6 +44,7 @@ import kotlin.test.assertTrue
 
 @Disabled("Flaky, see #1124")
 class DebuggerSubgraphTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun `test debugger collect subgraph events on agent run`() = runBlocking {
@@ -81,7 +82,7 @@ class DebuggerSubgraphTest {
                 nodeStart then nodeSubgraph then nodeFinish
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
@@ -125,11 +126,9 @@ class DebuggerSubgraphTest {
                 client.connect()
                 collectEventsJob.join()
 
-                val encodedUserInput = @OptIn(InternalAgentsApi::class)
-                SerializationUtils.encodeDataToJsonElement(userPrompt, typeOf<String>())
+                val encodedUserInput = serializer.encodeToJSONElement(userPrompt, typeToken<String>())
 
-                val encodedSubgraphOutput = @OptIn(InternalAgentsApi::class)
-                SerializationUtils.encodeDataToJsonElement(subgraphNodeOutput, typeOf<String>())
+                val encodedSubgraphOutput = serializer.encodeToJSONElement(subgraphNodeOutput, typeToken<String>())
 
                 val actualClientEvents = clientEventsCollector.collectedEvents
 
@@ -221,7 +220,7 @@ class DebuggerSubgraphTest {
                 nodeStart then subgraph then nodeFinish
             }
 
-            val throwable = createAgent(
+            val throwable = createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
@@ -266,8 +265,7 @@ class DebuggerSubgraphTest {
                 client.connect()
                 collectEventsJob.join()
 
-                val encodedUserInput = @OptIn(InternalAgentsApi::class)
-                SerializationUtils.encodeDataToJsonElement(userPrompt, typeOf<String>())
+                val encodedUserInput = serializer.encodeToJSONElement(userPrompt, typeToken<String>())
 
                 val actualClientEvents = clientEventsCollector.collectedEvents
 

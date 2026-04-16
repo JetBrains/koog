@@ -1,4 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import ai.koog.gradle.xcframework.XCFrameworkConfig.configureFrameworkExportsIfRequested
 
 group = rootProject.group
 version = rootProject.version
@@ -11,6 +12,10 @@ val excluded = setOf(
     ":agents:agents-test",
     ":agents:agents-ext",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
+    ":agents:agents-features:agents-features-chat-memory-sql", // Optional SQL chat memory provider
+    ":agents:agents-features:agents-features-chat-history-jdbc", // Optional JDBC chat history provider
+    ":agents:agents-features:agents-features-chat-history-aws", // Optional AWS chat history provider
+    ":agents:agents-features:agents-features-persistence-jdbc", // Optional JDBC persistence provider
     ":agents:agents-mcp-server",
     ":integration-tests",
     ":test-utils",
@@ -37,12 +42,23 @@ val excluded = setOf(
     ":http-client:http-client-okhttp",
     ":http-client:http-client-java",
 
+    ":serialization:serialization-test",
+    ":serialization:serialization-jackson",
+
+    ":koog-spring-ai",
+    ":koog-spring-ai:koog-spring-ai-common",
+    ":koog-spring-ai:koog-spring-ai-starter-model-chat",
+    ":koog-spring-ai:koog-spring-ai-starter-model-embedding",
+    ":koog-spring-ai:koog-spring-ai-starter-chat-memory",
+    ":koog-spring-ai:koog-spring-ai-starter-vector-store",
+
     project.path, // the current project should not depend on itself
 )
 
 val included = setOf(
     ":agents:agents-core",
     ":agents:agents-features:agents-features-event-handler",
+    ":agents:agents-features:agents-features-longterm-memory",
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-opentelemetry",
     ":agents:agents-features:agents-features-trace",
@@ -50,7 +66,6 @@ val included = setOf(
     ":agents:agents-features:agents-features-snapshot",
     ":agents:agents-mcp",
     ":agents:agents-mcp-metadata",
-    ":agents:agents-planner",
     ":agents:agents-tools",
     ":agents:agents-utils",
     ":embeddings:embeddings-base",
@@ -70,7 +85,6 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
-    ":prompt:prompt-executor:prompt-executor-llms",
     ":prompt:prompt-executor:prompt-executor-llms-all",
     ":prompt:prompt-executor:prompt-executor-model",
     ":prompt:prompt-llm",
@@ -81,21 +95,24 @@ val included = setOf(
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",
     ":rag:rag-base",
-    ":rag:vector-storage",
+    ":rag:rag-vector",
     ":http-client:http-client-core",
     ":http-client:http-client-ktor",
+    ":serialization:serialization-core",
     ":utils",
 )
 
 kotlin {
+    val projects = rootProject.subprojects
+        .filterNot { it.path in excluded }
+        .filter { it.buildFile.exists() }
+    val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
+
+    configureFrameworkExportsIfRequested(project, projectsPaths)
+
     sourceSets {
         commonMain {
             dependencies {
-                val projects = rootProject.subprojects
-                    .filterNot { it.path in excluded }
-                    .filter { it.buildFile.exists() }
-
-                val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 
                 val obsoleteIncluded = included - projectsPaths
                 require(obsoleteIncluded.isEmpty()) {

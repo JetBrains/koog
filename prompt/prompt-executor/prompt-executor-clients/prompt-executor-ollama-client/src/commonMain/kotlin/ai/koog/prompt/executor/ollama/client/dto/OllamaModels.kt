@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonElement
 internal data class OllamaChatMessageDTO(
     val role: String,
     val content: String,
+    val thinking: String? = null,
     val images: List<String>? = null,
     @SerialName("tool_calls") val toolCalls: List<OllamaToolCallDTO>? = null
 )
@@ -63,6 +64,7 @@ internal data class OllamaChatRequestDTO(
     val format: JsonElement? = null,
     val options: Options? = null,
     val stream: Boolean,
+    val think: Boolean = true,
     @SerialName("keep_alive") val keepAlive: String? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) {
@@ -100,12 +102,12 @@ internal data class OllamaErrorResponseDTO(val error: String)
  * The request includes the model to be used and the prompt text for which the embedding is to be generated.
  *
  * @property model The identifier of the model to be used for generating the embedding.
- * @property prompt The input text for which the embedding is to be generated.
+ * @property input The input text for which the embedding is to be generated.
  */
 @Serializable
-internal data class EmbeddingRequestDTO(
+internal data class EmbeddingBatchRequestDTO(
     val model: String,
-    val prompt: String
+    val input: List<String>
 )
 
 /**
@@ -114,14 +116,28 @@ internal data class EmbeddingRequestDTO(
  * This class is used for deserializing responses containing vector embeddings that may be
  * associated with a specific model.
  *
- * @property embedding The list of double values representing the computed embedding or vector.
+ * @property embeddings The list of list double values representing the computed embedding or vector for each input.
  *                     Each value corresponds to a specific dimension in the generated embedding space.
  * @property modelId An optional identifier for the model that generated the embedding.
  */
 @Serializable
-internal data class EmbeddingResponseDTO(
-    val embedding: List<Double>,
+internal data class EmbeddingBatchResponseDTO(
+    @SerialName("embeddings") val embeddings: List<List<Double>>,
     @SerialName("model") val modelId: String? = null
+)
+
+/**
+ * Represents a request to generate an embedding using a specific model.
+ *
+ * The request includes the model to be used and the prompt text for which the embedding is to be generated.
+ *
+ * @property model The identifier of the model to be used for generating the embedding.
+ * @property input The input text for which the embedding is to be generated.
+ */
+@Serializable
+internal data class EmbeddingRequestDTO(
+    val model: String,
+    val input: String
 )
 
 internal object OllamaChatRequestDTOSerializer :

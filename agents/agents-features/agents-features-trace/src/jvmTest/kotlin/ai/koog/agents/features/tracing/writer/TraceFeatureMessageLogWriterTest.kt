@@ -1,7 +1,6 @@
 package ai.koog.agents.features.tracing.writer
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -24,7 +23,6 @@ import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
 import ai.koog.agents.features.tracing.mock.TestLogger
@@ -42,16 +40,17 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
-import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class TraceFeatureMessageLogWriterTest {
-
+    private val serializer = KotlinxSerializer()
     private val targetLogger = TestLogger("test-logger")
 
     @AfterTest
@@ -114,7 +113,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                 mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals
                     userPrompt
                 mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
@@ -146,22 +145,22 @@ class TraceFeatureMessageLogWriterTest {
                 agent.run(userPrompt, null)
             }
 
-            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
             val dummyToolName = dummyTool.name
             val dummyToolDescription = dummyTool.descriptor.description
 
             val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
-            SerializationUtils.encodeDataToJsonElementOrNull(
-                data = receivedToolResult(
+            serializer.encodeToJSONElement(
+                receivedToolResult(
                     toolCallId = "0",
                     toolName = dummyToolName,
-                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                     toolDescription = dummyToolDescription,
                     content = dummyTool.result,
                     result = dummyToolResultEncoded,
                 ),
-                dataType = typeOf<ReceivedToolResult>()
+                typeToken<ReceivedToolResult>()
             )
 
             val expectedLogMessages = listOf(
@@ -188,23 +187,23 @@ class TraceFeatureMessageLogWriterTest {
                     "input: \"$userPrompt\", " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(
+                        serializer.encodeToJSONElement(
+                            toolCallMessage(
                                 toolName = dummyTool.name,
                                 content = dummyToolArgsEncoded.toString()
                             ),
-                            dataType = typeOf<Message>()
+                            typeToken<Message>()
                         )}" +
                     ")",
                 "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
                     "input: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(
+                        serializer.encodeToJSONElement(
+                            toolCallMessage(
                                 toolName = dummyTool.name,
                                 content = dummyToolArgsEncoded.toString()
                             ),
-                            dataType = typeOf<Message.Tool.Call>()
+                            typeToken<Message.Tool.Call>()
                         )}" +
                     ")",
                 "[INFO] Received feature message [event]: ${ToolCallStartingEvent::class.simpleName} (run id: $runId, tool: $dummyToolName, tool args: $dummyToolArgsEncoded)",
@@ -212,12 +211,12 @@ class TraceFeatureMessageLogWriterTest {
                 "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
                     "input: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(
+                        serializer.encodeToJSONElement(
+                            toolCallMessage(
                                 toolName = dummyTool.name,
                                 content = dummyToolArgsEncoded.toString()
                             ),
-                            dataType = typeOf<Message.Tool.Call>()
+                            typeToken<Message.Tool.Call>()
                         )}, " +
                     "output: $dummyReceivedToolResultEncoded" +
                     ")",
@@ -232,10 +231,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -248,10 +247,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -260,9 +259,9 @@ class TraceFeatureMessageLogWriterTest {
                     "input: $dummyReceivedToolResultEncoded, " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = expectedResponse,
-                            dataType = typeOf<Message>()
+                        serializer.encodeToJSONElement(
+                            expectedResponse,
+                            typeToken<Message>()
                         )}" +
                     ")",
                 "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: __finish__, input: \"$mockResponse\")",
@@ -454,7 +453,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
             }
 
-            val mockExecutor = getMockExecutor(clock = testClock) {
+            val mockExecutor = getMockExecutor(serializer, clock = testClock) {
                 mockLLMToolCall(
                     tool = dummyTool,
                     args = DummyTool.Args("test"),
@@ -490,8 +489,8 @@ class TraceFeatureMessageLogWriterTest {
                 agent.run(userPrompt, null)
             }
 
-            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
             val dummyToolName = dummyTool.name
             val dummyToolDescription = dummyTool.descriptor.description
 
@@ -518,10 +517,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -534,10 +533,10 @@ class TraceFeatureMessageLogWriterTest {
                             receivedToolResult(
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
-                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                 toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
-                                result = dummyTool.encodeResult(dummyTool.result)
+                                result = dummyTool.encodeResult(dummyTool.result, serializer)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString

@@ -10,31 +10,42 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.core.tools.asToolDescriptor
+import ai.koog.agents.core.tools.schema.getJsonSchema
+import ai.koog.agents.core.tools.schema.toToolParameter
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.serializer
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import ai.koog.serialization.kotlinx.KotlinxDelegateSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.kotlinx.toKotlinxJsonObject
+import ai.koog.serialization.typeToken
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.reflect.KClass
 
 /**
  * Utility object providing tools and methods for working with subgraphs and tasks in a controlled
@@ -72,28 +83,10 @@ public object SubgraphWithTaskUtils {
     public const val FINALIZE_SUBGRAPH_TOOL_DESCRIPTION: String = "Call this tool when finish and provide final result"
 
     /**
-     * Creates and returns a `Tool` instance with serializers and a descriptor for processing.
-     *
-     * @return A `Tool` instance where the input arguments and results share the same type `T`. The tool uses serializers and a descriptor based on the generic type `T`.
+     * Creates an instance of [FinishTool] for output type [T]
      */
     @OptIn(InternalAgentToolsApi::class)
-    public inline fun <reified T> finishTool(): Tool<T, T> = object : Tool<T, T>(
-        argsSerializer = serializer(),
-        resultSerializer = serializer(),
-        descriptor = serializer<T>().descriptor.asToolDescriptor(
-            toolName = FINALIZE_SUBGRAPH_TOOL_NAME,
-            toolDescription = FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
-        )
-    ) {
-        /**
-         * Executes the given argument and returns it as the result. This is a simple pass-through
-         * implementation that processes input and directly returns it without modification.
-         *
-         * @param args The input argument of type [T] to be processed.
-         * @return The same input argument [args] of type [T] as the result.
-         */
-        override suspend fun execute(args: T): T = args
-    }
+    public inline fun <reified T> finishTool(): Tool<T, T> = FinishTool(typeToken<T>())
 
     /**
      * The maximum number of times an assistant is allowed to repeat responses within an interaction session,
@@ -107,34 +100,86 @@ public object SubgraphWithTaskUtils {
 }
 
 /**
- * Creates an identity tool which performs no transformations, returning the input as the output.
+ * A pass-through tool used with [subgraphWithTask] to signal task completion and return a structured result.
+ * Wraps outputs in [FinishResult] to support primitive [outputType]s, which base [Tool] cannot handle directly.
  *
- * @return An instance of a Tool that processes input of type Output and returns the same input as output.
+ * @param outputType Type of the [Output]
+ * @param customSerializer Optional serializer override to use instead of the one that is passed to encode/decode tool methods.
+ * This is useful for certain internal implementations, such as some built-in subgraphs and subtasks, when the output is our own class
+ * and we don't want to rely on user-configured [JSONSerializer].
  */
-@PublishedApi
-@OptIn(InternalAgentToolsApi::class)
-internal inline fun <reified Output> identityTool(): Tool<Output, Output> = object : Tool<Output, Output>(
-    argsSerializer = serializer(),
-    resultSerializer = serializer(),
-    name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
-    description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
-) {
-    override suspend fun execute(args: Output): Output = args
-}
+@OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
+public class FinishTool<Output>
+@InternalAgentsApi
+internal constructor(
+    private val outputType: TypeToken,
+    private val customSerializer: JSONSerializer? = null,
+) : Tool<Output, Output>(
+    argsType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
+    resultType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
+    descriptor = run {
+        val resultSchema = getJsonSchema(outputType)
+        val resultToolParameter = resultSchema.toToolParameter(resultSchema.defs)
 
-/**
- * Creates an identity tool which performs no transformations, returning the input as the output.
- *
- * @return An instance of a Tool that processes input of type Output and returns the same input as output.
- */
-@PublishedApi
-@OptIn(InternalAgentToolsApi::class, InternalSerializationApi::class)
-internal fun <Output : Any> identityTool(outputClass: KClass<Output>): Tool<Output, Output> = object : Tool<Output, Output>(
-    argsSerializer = outputClass.serializer(),
-    resultSerializer = outputClass.serializer(),
-    name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
-    description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+        ToolDescriptor(
+            name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
+            description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION,
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "result",
+                    description = resultToolParameter.description,
+                    type = resultToolParameter.type,
+                )
+            )
+        )
+    }
 ) {
+    private companion object {
+        private val json = Json.Default
+    }
+
+    /**
+     * A pass-through tool used with [subgraphWithTask] to signal task completion and return a structured result.
+     * Wraps outputs in [FinishResult] to support primitive [outputType]s, which base [Tool] cannot handle directly.
+     */
+    @OptIn(InternalAgentsApi::class)
+    public constructor(outputType: TypeToken) : this(outputType, null)
+
+    /**
+     * Wrapper for the output, since the output itself might be a primitive type, and they are not
+     * supported for automatic tool descriptor generation.
+     */
+    @Serializable
+    private data class FinishResult<Output>(
+        val result: Output
+    )
+
+    private fun decodeOutput(rawArgs: JSONObject, serializer: JSONSerializer): Output {
+        return json.decodeFromJsonElement<FinishResult<Output>>(
+            deserializer = FinishResult.serializer(KotlinxDelegateSerializer(customSerializer ?: serializer, outputType)),
+            element = rawArgs.toKotlinxJsonObject(),
+        ).result
+    }
+
+    private fun encodeOutput(args: Output, serializer: JSONSerializer): JSONObject {
+        return json.encodeToJsonElement(
+            serializer = FinishResult.serializer(KotlinxDelegateSerializer(customSerializer ?: serializer, outputType)),
+            value = FinishResult(args)
+        ).jsonObject.toKoogJSONObject()
+    }
+
+    override fun decodeArgs(rawArgs: JSONObject, serializer: JSONSerializer): Output =
+        decodeOutput(rawArgs, serializer)
+
+    override fun encodeArgs(args: Output, serializer: JSONSerializer): JSONObject =
+        encodeOutput(args, serializer)
+
+    override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): Output =
+        decodeOutput(rawResult as JSONObject, serializer)
+
+    override fun encodeResult(result: Output, serializer: JSONSerializer): JSONElement =
+        encodeOutput(result, serializer)
+
     override suspend fun execute(args: Output): Output = args
 }
 
@@ -160,7 +205,7 @@ internal fun <Output : Any> identityTool(outputClass: KClass<Output>): Tool<Outp
  */
 @OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     name: String? = null,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     llmModel: LLModel? = null,
@@ -176,10 +221,63 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     llmParams = llmParams,
     responseProcessor = responseProcessor,
 ) {
-    val finishTool = identityTool<Output>()
+    val finishTool = FinishTool<Output>(typeToken<Output>())
 
     setupSubgraphWithTask<Input, Output, Output>(
         finishTool = finishTool,
+        runMode = runMode,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask
+    )
+}
+
+/**
+ * Creates a subgraph, which performs one specific task, defined by [defineTask],
+ * using the tools defined by [toolSelectionStrategy].
+ *
+ * Use this function if you need the agent to perform a single task which outputs a structured result.
+ *
+ * @param Input The input type for the task to be defined in the subgraph.
+ * @param Output The output type for the subgraph's finalized result.
+ * @param toolSelectionStrategy The strategy used to select tools for the subgraph operations.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
+ * @param llmModel Optional language model to be used within the subgraph. Defaults to null.
+ * @param llmParams Optional parameters for configuring the language model behavior. Defaults to null.
+ * @param runMode The mode in which tools are executed. Defaults to sequential execution.
+ * @param assistantResponseRepeatMax The maximum number of assistant responses allowed before determining that the task cannot be completed.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param defineTask A suspending lambda function that defines the task for the subgraph, taking the input as a parameter.
+ * @return A delegate that represents the created subgraph, allowing input and output operations.
+ */
+@OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
+@AIAgentBuilderDslMarker
+@InternalAgentsApi
+public fun <Input : Any, Output : Any> subgraphWithTask(
+    name: String? = null,
+    inputType: TypeToken,
+    outputType: TypeToken,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
+    defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, Output> = subgraph(
+    name = name,
+    inputType = inputType,
+    outputType = outputType,
+    toolSelectionStrategy = toolSelectionStrategy,
+    llmModel = llmModel,
+    llmParams = llmParams,
+    responseProcessor = responseProcessor,
+) {
+    val finishTool = FinishTool<Output>(outputType)
+
+    setupSubgraphWithTask<Input, Output, Output>(
+        finishTool = finishTool,
+        inputType = inputType,
+        outputTransformedType = outputType,
         runMode = runMode,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
         defineTask = defineTask
@@ -201,7 +299,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
  * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output> subgraphWithTask(
     tools: List<Tool<*, *>>,
     name: String? = null,
     llmModel: LLModel? = null,
@@ -240,7 +338,57 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+@InternalAgentsApi
+public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
+    inputType: TypeToken,
+    toolSelectionStrategy: ToolSelectionStrategy,
+    finishTool: Tool<*, OutputTransformed>,
+    name: String? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
+    defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph<Input, OutputTransformed>(
+    inputType = inputType,
+    outputType = inputType,
+    name = name,
+    toolSelectionStrategy = toolSelectionStrategy,
+    llmModel = llmModel,
+    llmParams = llmParams,
+    responseProcessor = responseProcessor,
+) {
+    setupSubgraphWithTask(
+        finishTool = finishTool,
+        inputType = inputType,
+        outputTransformedType = finishTool.resultType,
+        runMode = runMode,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask,
+    )
+}
+
+/**
+ * Defines a subgraph with a specific task to be performed by an AI agent.
+ *
+ * @param Input The input type provided to the subgraph.
+ * @param Output The output type returned by the subgraph.
+ * @param OutputTransformed The transformed output type after finishing the task.
+ * @param toolSelectionStrategy The strategy to be used for selecting tools within the subgraph.
+ * @param finishTool The tool responsible for finalizing the task and producing the transformed output.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
+ * @param llmModel The optional language model to be used in the subgraph for processing requests.
+ * @param llmParams The optional parameters to customize the behavior of the language model.
+ * @param runMode The mode in which tools are executed. Defaults to sequential execution.
+ * @param assistantResponseRepeatMax The maximum number of assistant responses allowed before determining that the task cannot be completed.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param defineTask A lambda function to define the task logic, which accepts the input and returns a task description.
+ * @return A delegate object representing the constructed subgraph for the specified task.
+ */
+@OptIn(InternalAgentsApi::class)
+@AIAgentBuilderDslMarker
+public inline fun <reified Input, reified Output, reified OutputTransformed> subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: Tool<Output, OutputTransformed>,
     name: String? = null,
@@ -284,7 +432,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
  */
 @OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified Output, reified OutputTransformed> subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: Tool<Output, OutputTransformed>,
     name: String? = null,
@@ -330,24 +478,36 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 @OptIn(InternalAgentsApi::class)
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+@InternalAgentsApi
+public fun <Input : Any> subgraphWithVerification(
+    name: String? = null,
+    inputType: TypeToken,
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
-    noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
-): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraph {
+    defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraph<Input, CriticResult<Input>>(
+    name = name,
+    inputType = inputType,
+    outputType = typeToken<CriticResult<Input>>()
+) {
     val inputKey = createStorageKey<Input>("subgraphWithVerification-input-key")
 
-    val saveInput by node<Input, Input> { input ->
+    val saveInput by node<Input, Input>(inputType = inputType, outputType = inputType) { input ->
         storage.set(inputKey, input)
 
         input
     }
 
     val verifyTask by subgraphWithTask<Input, CriticResultFromLLM>(
+        inputType = inputType,
+        finishTool = FinishTool<CriticResultFromLLM>(
+            outputType = typeToken<CriticResultFromLLM>(),
+            customSerializer = KotlinxSerializer()
+        ),
         toolSelectionStrategy = toolSelectionStrategy,
         llmModel = llmModel,
         llmParams = llmParams,
@@ -367,6 +527,42 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
 
     nodeStart then saveInput then verifyTask then provideResult then nodeFinish
 }
+
+/**
+ * [subgraphWithTask] with [CriticResult] result.
+ * It verifies if the task was performed correctly or not, and describes the problems if any.
+ *
+ * @param Input The input type accepted by the subgraph.
+ * @param toolSelectionStrategy The strategy used to select tools for the subgraph operations.
+ * @param llmModel Optional language model to be used within the subgraph. Defaults to null.
+ * @param llmParams Optional parameters for configuring the language model behavior. Defaults to null.
+ * @param runMode The mode in which tools are executed. Defaults to sequential execution.
+ * @param assistantResponseRepeatMax The maximum number of assistant responses allowed before determining that the task cannot be completed.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param defineTask A suspending lambda function that defines the task for the subgraph, taking the input as a parameter.
+ * @return A delegate representing the constructed subgraph with verification result.
+ */
+@OptIn(InternalAgentsApi::class)
+@Suppress("unused")
+@AIAgentBuilderDslMarker
+public inline fun <reified Input : Any> subgraphWithVerification(
+    toolSelectionStrategy: ToolSelectionStrategy,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
+    noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraphWithVerification(
+    inputType = typeToken<Input>(),
+    toolSelectionStrategy = toolSelectionStrategy,
+    llmModel = llmModel,
+    llmParams = llmParams,
+    runMode = runMode,
+    assistantResponseRepeatMax = assistantResponseRepeatMax,
+    responseProcessor = responseProcessor,
+    defineTask = defineTask
+)
 
 /**
  * Constructs a subgraph within an AI agent's strategy graph with additional verification capabilities.
@@ -389,7 +585,7 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input : Any> subgraphWithVerification(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
@@ -454,18 +650,20 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
  *        context of an AI agent graph and based on the given input data.
  */
 @InternalAgentsApi
-public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
+public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
     finishTool: Tool<Output, OutputTransformed>,
+    inputType: TypeToken,
+    outputTransformedType: TypeToken,
     runMode: ToolCalls,
     assistantResponseRepeatMax: Int? = null,
-    noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
+    defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
     val originalToolsKey = createStorageKey<List<ToolDescriptor>>("all-available-tools")
     val askAssistantToFinishCounterKey = createStorageKey<Int>("ask-assistant-to-finish-counter")
 
     val maxAssistantResponses = assistantResponseRepeatMax ?: SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
 
-    val setupTask by node<Input, String> { input ->
+    val setupTask by node<Input, String>(inputType = inputType, outputType = typeToken<String>()) { input ->
         llm.writeSession {
             // Save tools to restore after the subgraph is finished
             storage.set(originalToolsKey, tools)
@@ -484,13 +682,16 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
         defineTask(input)
     }
 
-    val finalizeTask by node<ReceivedToolResult, OutputTransformed> { toolResult ->
+    val finalizeTask by node<ReceivedToolResult, OutputTransformed>(
+        inputType = typeToken<ReceivedToolResult>(),
+        outputType = outputTransformedType
+    ) { toolResult ->
         llm.writeSession {
             // Restore original tools
             tools = storage.get(originalToolsKey)!!
         }
 
-        toolResult.toSafeResult(finishTool).asSuccessful().result
+        toolResult.toSafeResult(finishTool, config.serializer).asSuccessful().result
     }
 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
@@ -594,7 +795,10 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
     edge(
         callToolsHacked forwardTo finalizeTask
-            onCondition { toolResults -> toolResults.firstOrNull()?.let { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success } == true }
+            onCondition { toolResults ->
+                toolResults.firstOrNull()
+                    ?.let { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success } == true
+            }
             transformed { toolsResults -> toolsResults.first() }
     )
 
@@ -610,6 +814,37 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     edge(finalizeTask forwardTo nodeFinish)
 }
 
+/**
+ * Configures and sets up a subgraph with task handling, including tool execution operations,
+ * assistant response management, and task finalization logic.
+ *
+ * @param Input the type of input data for the subgraph.
+ * @param Output the type of output data from the finish tool.
+ * @param OutputTransformed the transformed type of the output data after processing by the finish tool.
+ * @param finishTool the tool used to signify task completion and process task finalization.
+ * @param runMode the mode in which tools are executed, e.g., parallel or sequential execution.
+ * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
+ *        determining that the task cannot be completed. If not provided, a default is used.
+ * @param defineTask a suspend function defining the task description, executed within the
+ *        context of an AI agent graph and based on the given input data.
+ */
+@InternalAgentsApi
+public inline fun <reified Input, Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
+    finishTool: Tool<Output, OutputTransformed>,
+    runMode: ToolCalls,
+    assistantResponseRepeatMax: Int? = null,
+    noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
+) {
+    setupSubgraphWithTask(
+        finishTool = finishTool,
+        inputType = typeToken<Input>(),
+        outputTransformedType = typeToken<OutputTransformed>(),
+        runMode = runMode,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask,
+    )
+}
+
 @PublishedApi
 @InternalAgentsApi
 internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishTool(
@@ -619,16 +854,18 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
     val toolDescription = finishTool.descriptor.description
     // Execute Finish tool directly and get a result
     val encodedResult = try {
-        val args = finishTool.decodeArgs(toolCall.contentJson)
+        val args = finishTool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), config.serializer)
         val toolResult = finishTool.execute(args = args)
-        finishTool.encodeResult(toolResult)
+        finishTool.encodeResult(toolResult, config.serializer)
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
         return ReceivedToolResult(
             id = toolCall.id,
             tool = finishTool.name,
-            toolArgs = toolCall.contentJsonResult.getOrElse { JsonObject(emptyMap()) },
+            toolArgs = toolCall.contentJsonResult
+                .map { it.toKoogJSONObject() }
+                .getOrElse { JSONObject(emptyMap()) },
             toolDescription = toolDescription,
             content = "Failed to execute '${finishTool.name}' with error: ${e.message}'",
             resultKind = ToolResultKind.Failure(e.toAgentError()),
@@ -649,7 +886,7 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
     return ReceivedToolResult(
         id = toolCall.id,
         tool = finishTool.name,
-        toolArgs = toolCall.contentJson,
+        toolArgs = toolCall.contentJson.toKoogJSONObject(),
         content = toolCall.content,
         resultKind = ToolResultKind.Success,
         toolDescription = toolDescription,

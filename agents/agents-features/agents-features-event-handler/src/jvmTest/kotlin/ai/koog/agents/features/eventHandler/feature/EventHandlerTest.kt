@@ -1,9 +1,10 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
@@ -23,6 +24,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -33,8 +35,10 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.time.Instant
 
 class EventHandlerTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun `test event handler for agent without nodes and tools`() = runTest {
@@ -137,7 +141,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, model: ${model.eventString}, tools: [], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -184,7 +188,7 @@ class EventHandlerTest {
             tool(dummyTool)
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMToolCall(dummyTool, DummyTool.Args("test")) onRequestEquals userPrompt
             mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
         }
@@ -209,8 +213,8 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
         val dummyToolName = dummyTool.name
         val dummyToolDescription = dummyTool.descriptor.description
-        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
-        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
 
         val dummyToolReceivedToolResult = ReceivedToolResult(
             id = null,
@@ -268,7 +272,7 @@ class EventHandlerTest {
                 "}], temperature: $temperature, model: openai:gpt-4o, tools: [$dummyToolName], responses: [role: ${Message.Role.Assistant}, message: Return test result])",
             "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, " +
                 "input: $dummyToolReceivedToolResult, " +
-                "output: Assistant(parts=[Text(text=$mockResponse)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "output: Assistant(parts=[Text(text=$mockResponse)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $mockResponse)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $mockResponse)",
@@ -346,7 +350,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse)",
             "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
@@ -365,7 +369,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $llmCallWithToolsResponse" +
                 "}], temperature: $temperature, model: openai:gpt-4o, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -527,7 +531,7 @@ class EventHandlerTest {
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
 
         val testLLMResponse = "Default test response"
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(serializer) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals "Test user message"
         }
 
@@ -560,7 +564,9 @@ class EventHandlerTest {
 
         val expectedEvents = listOf(
             "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
-            "OnLLMStreamingFrameReceived (run id: $runId, frame: Append(text=$testLLMResponse))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextDelta(text=$testLLMResponse, index=0))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextComplete(text=$testLLMResponse, index=0))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: End(finishReason=null, metaInfo=ResponseMetaInfo(timestamp=${Instant.DISTANT_PAST}, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
             "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
         )
 
@@ -592,7 +598,7 @@ class EventHandlerTest {
 
         val testStreamingErrorMessage = "Test streaming error"
 
-        val testStreamingExecutor = object : PromptExecutor {
+        val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
@@ -746,7 +752,7 @@ class EventHandlerTest {
 
     //region Private Methods
 
-    private fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
+    private fun nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
         node(name) { throw IllegalStateException("Test exception") }
 
     //endregion Private Methods

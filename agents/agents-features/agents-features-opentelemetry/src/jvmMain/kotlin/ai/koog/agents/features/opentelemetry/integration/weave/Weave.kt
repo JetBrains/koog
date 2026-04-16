@@ -8,30 +8,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Configure an OpenTelemetry span exporter that sends data to [W&B Weave](https://wandb.ai/site/weave/).
- *
- * @param weaveOtelBaseUrl the URL of the Weave OpenTelemetry endpoint.
- *        If not set is retrieved from `WEAVE_URL` environment variable.
- *        Defaults to [https://trace.wandb.ai](https://trace.wandb.ai).
- * @param weaveEntity can be found by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home) and
- *        checking the *Teams* field in the left sidebar.
- *        If not set is retrieved from `WEAVE_ENTITY` environment variable.
- * @param weaveProjectName name of your Weave project.
- *        If not set is retrieved from `WEAVE_PROJECT_NAME` environment variable.
- * @param weaveApiKey can be created on the [https://wandb.ai/authorize](https://wandb.ai/authorize) page.
- *        If not set is retrieved from `WEAVE_API_KEY` environment variable.
- * @param timeout OpenTelemetry SpanExporter timeout.
- *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
- *
- * @see <a href="https://weave-docs.wandb.ai/guides/tracking/otel/">Weave OpenTelemetry Docs</a>
- */
-public fun OpenTelemetryConfig.addWeaveExporter(
+internal fun OpenTelemetryConfig.addWeaveExporterImpl(
     weaveOtelBaseUrl: String? = null,
     weaveEntity: String? = null,
     weaveProjectName: String? = null,
     weaveApiKey: String? = null,
-    timeout: Duration = 10.seconds,
+    timeout: Duration? = null,
 ) {
     val url = weaveOtelBaseUrl ?: System.getenv()["WEAVE_URL"] ?: "https://trace.wandb.ai"
 
@@ -40,6 +22,7 @@ public fun OpenTelemetryConfig.addWeaveExporter(
     val entity = requireNotNull(weaveEntity ?: System.getenv()["WEAVE_ENTITY"]) { "WEAVE_ENTITY is not set" }
     val projectName = weaveProjectName ?: System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
     val apiKey = requireNotNull(weaveApiKey ?: System.getenv()["WEAVE_API_KEY"]) { "WEAVE_API_KEY is not set" }
+    val timeout = timeout ?: 10.seconds
 
     val auth = Base64.getEncoder().encodeToString("api:$apiKey".toByteArray(Charsets.UTF_8))
 
@@ -53,6 +36,31 @@ public fun OpenTelemetryConfig.addWeaveExporter(
     )
 
     addSpanAdapter(WeaveSpanAdapter(this))
+}
+
+/**
+ * Configures and adds a Weave Exporter to the OpenTelemetry configuration.
+ *
+ * @param weaveOtelBaseUrl Optional base URL for the Weave OpenTelemetry endpoint.
+ * @param weaveEntity Optional identifier for the Weave entity.
+ * @param weaveProjectName Optional name of the Weave project to associate telemetry data with.
+ * @param weaveApiKey Optional API key for authenticating with the Weave service.
+ * @param timeout Optional timeout duration for interactions with the Weave endpoint.
+ */
+public fun OpenTelemetryConfig.addWeaveExporter(
+    weaveOtelBaseUrl: String? = null,
+    weaveEntity: String? = null,
+    weaveProjectName: String? = null,
+    weaveApiKey: String? = null,
+    timeout: Duration? = null
+) {
+    addWeaveExporterImpl(
+        weaveOtelBaseUrl,
+        weaveEntity,
+        weaveProjectName,
+        weaveApiKey,
+        timeout
+    )
 }
 
 private val logger = KotlinLogging.logger { }

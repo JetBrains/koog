@@ -23,9 +23,10 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
@@ -237,7 +238,7 @@ class ModelCapabilitiesIntegrationTest {
 
                 LLMCapability.MultipleChoices -> {
                     assumeTrue(
-                        model.provider !is LLMProvider.Google,
+                        model.provider !is GoogleLLMProvider,
                         "https://github.com/googleapis/python-genai/issues/1723"
                     )
                     val prompt = prompt(
@@ -340,7 +341,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.OpenAIEndpoint.Completions -> {
-                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    assumeTrue(model.provider is OpenAILLMProvider)
                     val prompt = prompt("cap-openai-endpoint-completions-positive", params = OpenAIChatParams()) {
                         system("You are a helpful assistant.")
                         user("Say hello in one short sentence.")
@@ -351,7 +352,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.OpenAIEndpoint.Responses -> {
-                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    assumeTrue(model.provider is OpenAILLMProvider)
                     val prompt =
                         prompt("cap-openai-endpoint-responses-positive", params = OpenAIResponsesParams()) {
                             system("You are a helpful assistant.")
@@ -596,7 +597,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.OpenAIEndpoint.Completions -> {
-                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    assumeTrue(model.provider is OpenAILLMProvider)
                     val prompt = prompt("cap-openai-endpoint-completions-negative", params = OpenAIChatParams()) {
                         system("You are a helpful assistant.")
                         user("Say hello in one short sentence.")
@@ -610,7 +611,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.OpenAIEndpoint.Responses -> {
-                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    assumeTrue(model.provider is OpenAILLMProvider)
                     val prompt = prompt("cap-openai-endpoint-responses-negative", params = OpenAIResponsesParams()) {
                         system("You are a helpful assistant.")
                         user("Say hello in one short sentence.")

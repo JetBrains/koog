@@ -98,11 +98,9 @@ class OpenRouterSerializationTest {
                 ],
                 "model": "anthropic/claude-3-sonnet",
                 "temperature": 0.7,
-                "additional_properties": {
-                    "customProperty": "customValue",
-                    "customNumber": 42,
-                    "customBoolean": true
-                }
+                "customProperty": "customValue",
+                "customNumber": 42,
+                "customBoolean": true
             }
             """.trimIndent()
     }
@@ -158,15 +156,11 @@ class OpenRouterSerializationTest {
         // Verify basic deserialization works
         request.model shouldBe "anthropic/claude-3-sonnet"
         request.temperature shouldBe 0.7
-
-        // Note: Additional properties functionality is currently broken with JsonNamingStrategy.SnakeCase
-        // due to AdditionalPropertiesFlatteningSerializer bug:
-        // KG-531 OpenRouter's AdditionalPropertiesFlatteningSerializer is incompatible with JsonNamingStrategy.SnakeCase
-        // In lenient mode, unknown properties
-        // are ignored instead of collected.
-        //
-        // The test passes because ignoreUnknownKeys = true, but additional properties are not captured
-        request.additionalProperties shouldBe null
+        request.additionalProperties shouldBe mapOf(
+            "extra" to JsonPrimitive("value"),
+            "number" to JsonPrimitive(42),
+            "flag" to JsonPrimitive(true)
+        )
     }
 
     @Test
@@ -645,9 +639,7 @@ class OpenRouterSerializationTest {
                     }
                 },
                 "user": "user-123",
-                "additional_properties": {
-                    "x-extra": "ok"
-                }
+                "x-extra": "ok"
             }
             """.trimIndent()
     }
@@ -738,5 +730,52 @@ class OpenRouterSerializationTest {
         req.provider?.quantizations shouldBe listOf("int4")
         req.provider?.sort shouldBe "price"
         req.provider?.maxPrice shouldBe mapOf("prompt" to "0.002", "completion" to "0.006")
+    }
+
+    @Test
+    fun `test OpenRouter streaming response with reasoning fields deserialization`() {
+        val jsonString =
+            // language=json
+            """
+            {
+                "id": "gen-1758662697-qjFTfAqlZh2Qa1vAfoff",
+                "provider": "AtlasCloud",
+                "model": "alibaba/tongyi-deepresearch-30b-a3b",
+                "object": "chat.completion.chunk",
+                "created": 1758662697,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {
+                            "role": "assistant",
+                            "content": "",
+                            "reasoning": null,
+                            "reasoning_details": []
+                        },
+                        "finish_reason": null,
+                        "native_finish_reason": null,
+                        "logprobs": null
+                    }
+                ]
+            }
+            """.trimIndent()
+
+        val response = json.decodeFromString(OpenRouterChatCompletionStreamResponse.serializer(), jsonString)
+
+        response.id shouldBe "gen-1758662697-qjFTfAqlZh2Qa1vAfoff"
+        response.model shouldBe "alibaba/tongyi-deepresearch-30b-a3b"
+        response.objectType shouldBe "chat.completion.chunk"
+        response.created shouldBe 1758662697L
+        response.choices.size shouldBe 1
+
+        val choice = response.choices.first()
+        choice.finishReason shouldBe null
+        choice.nativeFinishReason shouldBe null
+
+        choice.delta.role shouldBe "assistant"
+        choice.delta.content shouldBe ""
+        choice.delta.reasoning shouldBe null
+        choice.delta.reasoningDetails shouldNotBe null
+        choice.delta.reasoningDetails?.size shouldBe 0
     }
 }

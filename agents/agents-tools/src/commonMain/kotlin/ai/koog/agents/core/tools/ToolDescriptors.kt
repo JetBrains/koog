@@ -1,5 +1,10 @@
 package ai.koog.agents.core.tools
 
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.enums.EnumEntries
 
 /**
@@ -19,7 +24,18 @@ public data class ToolParameterDescriptor(
     val name: String,
     val description: String,
     val type: ToolParameterType
-)
+) {
+    override fun toString(): String = buildString {
+        appendLine("ToolParameterDescriptor(")
+        appendLine("  name = $name,")
+        appendLine("  description = $description,")
+
+        appendLine("  type =")
+        appendLine(type.toString().prependIndent("    "))
+
+        append(")")
+    }
+}
 
 /**
  * Sealed class representing different types of tool parameters.
@@ -60,6 +76,12 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      */
     public data class Enum(val entries: Array<kotlin.String>) : ToolParameterType("ENUM") {
         override fun equals(other: Any?): kotlin.Boolean = other is Enum && this.entries.contentEquals(other.entries)
+
+        override fun toString(): kotlin.String = buildString {
+            appendLine("ToolParameterType.Enum(")
+            appendLine("  entries = [${entries.joinToString()}]")
+            append(")")
+        }
     }
 
     /**
@@ -67,16 +89,77 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      *
      * @property itemsType The type definition for the items within the array.
      */
-    public data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY")
+    public data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY") {
+        override fun toString(): kotlin.String = buildString {
+            appendLine("ToolParameterType.List(")
+            appendLine("  itemsType =")
+            appendLine(itemsType.toString().prependIndent("    "))
+            append(")")
+        }
+    }
 
     /**
      * Represents an anyOf type parameter.
      *
      * @property types The type definition for the items within the array.
      */
+    // FIXME ToolParameterDescriptor.name in types array is actually always ignored when the schema is constructed.
+    //  Should we use a dedicated type here instead?
     public data class AnyOf(val types: Array<ToolParameterDescriptor>) : ToolParameterType("ANYOF") {
         override fun equals(other: Any?): kotlin.Boolean = other is AnyOf && this.types.contentEquals(other.types)
         override fun hashCode(): Int = types.contentHashCode()
+
+        override fun toString(): kotlin.String = buildString {
+            appendLine("ToolParameterType.AnyOf(")
+            appendLine("  types = [")
+            types.forEach {
+                append(it.toString().prependIndent("    "))
+                appendLine(",")
+            }
+            appendLine("  ]")
+            append(")")
+        }
+
+        /**
+         * Our API doesn't support proper nullability yet via type unions, such as `"type": ["string", "null"]`.
+         * Instead, we rely on anyOf with "null" type.
+         * However, not all LLM providers support anyOf in their tool schemas, Anthropic being one of them.
+         * This is a hack that tries to detect such anyOf's and generate a proper JsonObject with type union on "null" instead.
+         *
+         * @param getTypeDefinition The function that generates the type definition for a given type.
+         * @return [JsonObject] with generated tool schema, or null if the type is not AnyOf with "null" type.
+         */
+        // FIXME this is hack, represent union types properly in ToolDescriptor
+        @InternalAgentToolsApi
+        public fun hackRepresentAnyOfWithNullAsTypeUnionWithNull(
+            getTypeDefinition: (ToolParameterType) -> JsonObject,
+        ): JsonObject? {
+            val types = types
+
+            /*
+             Check if this is actually a type union represented as anyOf:
+             "type": ["string", "null"]
+             */
+            val isNullTypeUnion = types.size == 2 &&
+                // is exactly two types
+                types.none { it.type is AnyOf } &&
+                // can't have nested anyOf
+                types.any { it.type is Null } // one of the types is "null"
+
+            // Can't represent as type union, return null
+            if (!isNullTypeUnion) return null
+
+            val actualType = types.single { it.type !is Null }
+            return getTypeDefinition(actualType.type).let {
+                val definition = it.toMutableMap()
+
+                // Replace existing type with type union with null
+                val type = it.getValue("type").jsonPrimitive.content
+                definition["type"] = JsonArray(listOf(type, "null").map(::JsonPrimitive))
+
+                JsonObject(definition)
+            }
+        }
     }
 
     /**
@@ -97,7 +180,26 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
         val requiredProperties: kotlin.collections.List<kotlin.String> = listOf(),
         val additionalProperties: kotlin.Boolean? = null,
         val additionalPropertiesType: ToolParameterType? = null,
-    ) : ToolParameterType("OBJECT")
+    ) : ToolParameterType("OBJECT") {
+        override fun toString(): kotlin.String = buildString {
+            appendLine("ToolParameterType.Object(")
+
+            appendLine("  properties = [")
+            properties.forEach {
+                append(it.toString().prependIndent("    "))
+                appendLine(",")
+            }
+            appendLine("  ],")
+
+            appendLine("  requiredProperties = [${requiredProperties.joinToString()}],")
+            appendLine("  additionalProperties = $additionalProperties,")
+
+            appendLine("  additionalPropertiesType =")
+            appendLine(additionalPropertiesType.toString().prependIndent("    "))
+
+            append(")")
+        }
+    }
 
     /**
      * Companion object for the enclosing class. Provides utility functions for creating instances

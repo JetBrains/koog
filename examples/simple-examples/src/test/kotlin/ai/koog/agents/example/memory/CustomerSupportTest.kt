@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.Fact
@@ -268,7 +267,7 @@ class CustomerSupportTest {
         }
 
         // Create mock executor
-        mockExecutor = getMockExecutor(toolRegistry) {
+        mockExecutor = getMockExecutor {
             // Mock responses for memory-related queries
             // Diagnostic tool calls
             mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains
@@ -487,7 +486,7 @@ class CustomerSupportTest {
     @Disabled("`finishTool` mock is broken because it's not actually a String, but a fake object with value: String field")
     fun `test second agent can access facts from first agent`() = runTest {
         // Create a custom mock executor that will track tool calls for each agent
-        val customMockExecutor = getMockExecutor(toolRegistry) {
+        val customMockExecutor = getMockExecutor {
             // Mock responses for memory-related queries
             // Diagnostic tool calls
             mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains

@@ -4,6 +4,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -79,11 +81,11 @@ fun bestJokeStrategy(): AIAgentGraphStrategy<String, String> = strategy("best-jo
     }
 
     val nodeAnthropicSonnet by node<String, String> { topic ->
-        requestAJoke(AnthropicModels.Sonnet_3_5, topic)
+        requestAJoke(AnthropicModels.Opus_4_6, topic)
     }
 
     val nodeAnthropicOpus by node<String, String> { topic ->
-        requestAJoke(AnthropicModels.Opus_3, topic)
+        requestAJoke(AnthropicModels.Opus_4_6, topic)
     }
 
     // Define a node to select the best joke

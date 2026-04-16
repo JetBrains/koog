@@ -1,0 +1,51 @@
+.greeting-container {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.greeting-button {
+  padding: 10px 20px;
+  background-color: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.greeting-button:hover {
+  background-color: #0056b3;
+}
+
+.greeting-content {
+  margin-top: 20px;
+  animation: fadeInFromTop 0.5s forwards;
+  pointer-events: none;
+}
+
+.greeting-content.fade-out {
+  animation: fadeOut 0.5s forwards;
+}
+
+@keyframes fadeInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}

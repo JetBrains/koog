@@ -3,9 +3,17 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKotlinxJsonElement
+import ai.koog.serialization.kotlinx.toKotlinxJsonObject
+import ai.koog.serialization.typeToken
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -25,12 +33,18 @@ public class McpTool(
     private val mcpClient: Client,
     descriptor: ToolDescriptor,
     metadata: Map<String, String>,
-) : Tool<JsonObject, CallToolResult?>(
-    argsSerializer = JsonObject.serializer(),
-    resultSerializer = CallToolResult.serializer().nullable,
+) : Tool<JSONObject, CallToolResult?>(
+    argsType = typeToken<JSONObject>(),
+    resultType = typeToken<CallToolResult?>(),
     descriptor = descriptor,
-    metadata = metadata
+    metadata = metadata,
 ) {
+    /**
+     * MCP SDK uses kotlinx.serialization for JSON serialization, so keep private instance to perform some
+     * JSON serialization/deserialization operations.
+     */
+    private val json = Json.Default
+    private val resultSerializer = CallToolResult.serializer().nullable
 
     /**
      * Executes the MCP tool with the given arguments.
@@ -41,27 +55,35 @@ public class McpTool(
      * @param args The arguments for the MCP tool call.
      * @return The result of the MCP tool call.
      */
-    override suspend fun execute(args: JsonObject): CallToolResult {
+    override suspend fun execute(args: JSONObject): CallToolResult {
         return mcpClient.callTool(
             name = descriptor.name,
-            arguments = args
+            arguments = args.toKotlinxJsonObject()
         )
+    }
+
+    override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): CallToolResult? {
+        return json.decodeFromJsonElement(resultSerializer, rawResult.toKotlinxJsonElement())
+    }
+
+    override fun encodeResult(result: CallToolResult?, serializer: JSONSerializer): JSONElement {
+        return json.encodeToJsonElement(resultSerializer, result).toKoogJSONElement()
     }
 
     /**
      * Postprocess result string representation for LLMs a bit, removing unnecessary meta fields.
      */
-    override fun encodeResultToString(result: CallToolResult?): String {
+    override fun encodeResultToString(result: CallToolResult?, serializer: JSONSerializer): String {
         val preparedResultJson: JsonElement = result
             ?.let {
                 JsonObject(
-                    json.encodeToJsonElement(resultSerializer, it).jsonObject
+                    json.encodeToJsonElement(resultSerializer, result).jsonObject
                         // LLM doesn't need "meta" fields, leave only actual data
                         .filter { (key, _) -> key !in listOf("type", "_meta") }
                 )
             }
             ?: JsonNull
 
-        return json.encodeToString(preparedResultJson)
+        return serializer.encodeJSONElementToString(preparedResultJson.toKoogJSONElement())
     }
 }

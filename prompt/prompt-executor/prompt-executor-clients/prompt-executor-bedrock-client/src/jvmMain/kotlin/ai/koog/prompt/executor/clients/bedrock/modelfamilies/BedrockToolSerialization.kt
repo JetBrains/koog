@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies
 
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -31,6 +32,7 @@ internal object BedrockToolSerialization {
      * Builds a JSON schema for a parameter type without description.
      * This helper function handles recursive type serialization cleanly.
      */
+    @OptIn(InternalAgentToolsApi::class)
     private fun buildTypeSchema(type: ToolParameterType): JsonObject = buildJsonObject {
         when (type) {
             ToolParameterType.Boolean -> put("type", "boolean")
@@ -50,9 +52,11 @@ internal object BedrockToolSerialization {
             }
 
             is ToolParameterType.AnyOf -> {
-                putJsonArray("anyOf") {
-                    addAll(type.types.map { buildToolParameterSchema(it) })
-                }
+                // FIXME this is hack, represent union types properly in ToolDescriptor
+                type.hackRepresentAnyOfWithNullAsTypeUnionWithNull(::buildTypeSchema)
+                    ?: putJsonArray("anyOf") {
+                        addAll(type.types.map { buildToolParameterSchema(it) })
+                    }
             }
 
             is ToolParameterType.Object -> {

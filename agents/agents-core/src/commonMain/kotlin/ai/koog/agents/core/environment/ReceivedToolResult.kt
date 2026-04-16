@@ -1,13 +1,16 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import kotlinx.datetime.Clock
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.time.Clock
 
 /**
  * Represents the result or response received from a tool operation.
@@ -18,18 +21,37 @@ import kotlinx.serialization.json.JsonObject
  * @property toolDescription An optional description of the tool's functionality.
  * @property content The main content or message associated with the tool result.
  * @property resultKind The kind of result produced by the tool, indicating success, failure, or validation error.
- * @property result The detailed result produced by the tool, implementing the [ToolResult] interface.
+ * @property result The result produced by the tool.
  */
 @Serializable
 public data class ReceivedToolResult(
     val id: String?,
     val tool: String,
-    val toolArgs: JsonObject,
+    val toolArgs: JSONObject,
     val toolDescription: String?,
     val content: String,
     val resultKind: ToolResultKind,
-    val result: JsonElement?
+    val result: JSONElement?
 ) {
+    @Deprecated("Use the constructor with JSONElement instead of JsonElement")
+    public constructor(
+        id: String?,
+        tool: String,
+        toolArgs: JsonObject,
+        toolDescription: String?,
+        content: String,
+        resultKind: ToolResultKind,
+        result: JsonElement?
+    ) : this(
+        id = id,
+        tool = tool,
+        toolArgs = toolArgs.toKoogJSONObject(),
+        toolDescription = toolDescription,
+        content = content,
+        resultKind = resultKind,
+        result = result?.toKoogJSONElement()
+    )
+
     /**
      * Converts the current `ReceivedToolResult` instance into a `Message.Tool.Result` object.
      *
@@ -40,7 +62,8 @@ public data class ReceivedToolResult(
         id = id,
         tool = tool,
         content = content,
-        metaInfo = RequestMetaInfo.create(clock)
+        metaInfo = RequestMetaInfo.create(clock),
+        isError = resultKind !is ToolResultKind.Success // Failure and ValidationError both represent tool errors
     )
 }
 

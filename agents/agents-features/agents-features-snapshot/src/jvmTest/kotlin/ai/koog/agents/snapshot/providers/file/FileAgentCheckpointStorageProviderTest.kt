@@ -4,9 +4,8 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -14,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class FileAgentCheckpointStorageProviderTest {
     private lateinit var tempDir: java.nio.file.Path
@@ -39,7 +39,7 @@ class FileAgentCheckpointStorageProviderTest {
         val checkpointId = "test-checkpoint"
         val createdAt = Clock.System.now()
         val nodeId = "test-node"
-        val lastInput = JsonPrimitive("test-input")
+        val lastInput = JSONPrimitive("test-input")
         val time = Clock.System.now()
         val messageHistory = listOf(
             Message.User("Hello", metaInfo = RequestMetaInfo(time)),

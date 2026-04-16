@@ -3,15 +3,15 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Represents an event triggered at the start of an AI agent strategy execution.
  *
  * @property strategyName The name of the strategy being started.
  */
-public abstract class StrategyStartingEvent : DefinedFeatureEvent() {
+public abstract class StrategyStartingEventBase : DefinedFeatureEvent() {
 
     /**
      * A unique identifier associated with a specific run.
@@ -43,7 +43,7 @@ public data class GraphStrategyStartingEvent(
     override val strategyName: String,
     val graph: StrategyEventGraph,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : StrategyStartingEvent() {
+) : StrategyStartingEventBase() {
 
     /**
      * @deprecated Use constructor with [executionInfo] parameter
@@ -71,7 +71,7 @@ public data class GraphStrategyStartingEvent(
 }
 
 /**
- * Represents an event triggered at the start of executing a functional strategy by an AI agent.
+ * Represents an event triggered at the start of executing a functional, planner, and other strategy types by an AI agent.
  *
  * @property eventId A unique identifier for the event or a group of events;
  * @property executionInfo Provides contextual information about the execution associated with this event.
@@ -80,13 +80,13 @@ public data class GraphStrategyStartingEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class FunctionalStrategyStartingEvent(
+public data class StrategyStartingEvent(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     override val runId: String,
     override val strategyName: String,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : StrategyStartingEvent() {
+) : StrategyStartingEventBase() {
 
     /**
      * @deprecated Use constructor with [executionInfo] parameter
@@ -100,10 +100,10 @@ public data class FunctionalStrategyStartingEvent(
         strategyName: String,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
     ) : this(
-        eventId = FunctionalStrategyStartingEvent::class.simpleName.toString(),
+        eventId = StrategyStartingEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
             parent = null,
-            partName = FunctionalStrategyStartingEvent::class.simpleName.toString(),
+            partName = StrategyStartingEvent::class.simpleName.toString(),
         ),
         runId = runId,
         strategyName = strategyName,
@@ -256,7 +256,7 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGr
     // Closing node
     graphNodes.add(finishGraphNode)
 
-    // Link initial node with start node
+    // Link the initial node with the start node
     graphEdges.add(
         index = 0,
         element = StrategyEventGraphEdge(startGraphNode, graphNodes[1]) // Ignore the initial start node

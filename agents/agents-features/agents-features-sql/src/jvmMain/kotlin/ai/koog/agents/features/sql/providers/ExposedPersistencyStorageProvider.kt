@@ -2,7 +2,6 @@ package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistenceUtils
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
@@ -14,6 +13,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.upsert
+import kotlin.time.Clock
 
 /**
  * An abstract Exposed-based implementation of [SQLPersistenceStorageProvider] for managing

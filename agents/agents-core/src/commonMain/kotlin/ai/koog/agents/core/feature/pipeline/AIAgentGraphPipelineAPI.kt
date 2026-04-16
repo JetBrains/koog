@@ -4,8 +4,9 @@ package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
@@ -13,7 +14,7 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 
 /**
  * Public API surface for graph-specific pipeline operations (nodes and subgraphs).
@@ -24,70 +25,81 @@ import kotlin.reflect.KType
 public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
 
     //region Trigger Node Handlers
+
+    @InternalAgentsApi
     public suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType
+        inputType: TypeToken
     )
 
+    @InternalAgentsApi
     public suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         output: Any?,
-        outputType: KType,
+        outputType: TypeToken,
     )
 
+    @InternalAgentsApi
     public suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         throwable: Throwable
     )
-    //endregion
+
+    //endregion Trigger Node Handlers
 
     //region Trigger Subgraph Handlers
+
+    @InternalAgentsApi
     public suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
+        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType
+        inputType: TypeToken
     )
 
+    @InternalAgentsApi
     public suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
+        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         output: Any?,
-        outputType: KType,
+        outputType: TypeToken,
     )
 
+    @InternalAgentsApi
     public suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraph<*, *>,
+        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
         input: Any?,
-        inputType: KType,
+        inputType: TypeToken,
         throwable: Throwable
     )
-    //endregion
+
+    //endregion Trigger Subgraph Handlers
 
     //region Interceptors
+
     public fun interceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionStartingContext) -> Unit
@@ -117,5 +129,5 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit
     )
-    //endregion
+    //endregion Interceptors
 }

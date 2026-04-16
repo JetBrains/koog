@@ -135,21 +135,6 @@ public object BedrockModels : LLModelDefinitions {
     )
 
     /**
-     * Claude 3 Opus - Anthropic's most powerful model with superior performance on complex tasks
-     *
-     * This model excels at:
-     * - Complex reasoning and analysis
-     * - Creative and nuanced content generation
-     * - Following detailed instructions
-     * - Multimodal understanding (text and images)
-     * - Tool/function calling
-     */
-    public val AnthropicClaude3Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_3,
-        "anthropic.claude-3-opus-20240229-v1:0",
-    ).effectiveModel
-
-    /**
      * Claude 4 Opus - Anthropic's previous flagship model
      *
      * This model sets new standards in:
@@ -194,6 +179,17 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Claude Opus 4.6 is a frontier model with strong capabilities in software engineering,
+     * agentic tasks, and long context reasoning, as well as in knowledge work—including financial
+     * analysis, document creation, and multi-step research workflows.
+     *
+     */
+    public val AnthropicClaude46Opus: LLModel = BedrockModel(
+        AnthropicModels.Opus_4_6,
+        "anthropic.claude-opus-4-6-v1",
+    ).effectiveModel
+
+    /**
      * Claude 4 Sonnet - High-performance model with exceptional reasoning and efficiency
      *
      * This model offers:
@@ -227,69 +223,12 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
-     * Claude Haiku 4.5 - Anthropic's most powerful model for powering real-world agents,
-     * with industry-leading capabilities around coding, and computer use.
-     *
-     * It delivers near-frontier performance for a wide range of use cases, and stands out as
-     * one of the best coding and agent models – with the right speed and cost to power free products
-     * and high-volume user experiences.
+     * Claude 4.6 Sonnet laude Sonnet 4.6 suggests the best combination of speed and intelligence.
+     * It’s a full upgrade of the model’s skills across coding, computer use, long-context reasoning, agent planning, knowledge work, and design.
      */
-    public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_4_5,
-        "anthropic.claude-haiku-4-5-20251001-v1:0",
-    ).effectiveModel
-
-    /**
-     * Claude 3 Sonnet - Balanced performance model ideal for most use cases
-     *
-     * This model offers:
-     * - Excellent balance of intelligence and speed
-     * - Strong performance on reasoning tasks
-     * - Multimodal capabilities
-     * - Tool/function calling support
-     * - Cost-effective for production use
-     */
-    public val AnthropicClaude3Sonnet: LLModel = BedrockModel(
-        LLModel(
-            provider = LLMProvider.Bedrock,
-            id = "anthropic.claude-3-sonnet-20240229-v1:0",
-            capabilities = fullCapabilities,
-            contextLength = 200_000,
-            maxOutputTokens = 4_096,
-        ),
-    ).effectiveModel
-
-    /**
-     * Claude 3.5 Sonnet v2 - Upgraded model with improved intelligence and capabilities
-     *
-     * This model offers:
-     * - Enhanced coding and reasoning capabilities
-     * - Improved agentic workflows
-     * - Computer use capabilities (beta)
-     * - Advanced tool/function calling
-     * - Better software development lifecycle support
-     * - Multimodal understanding with vision
-     */
-    public val AnthropicClaude35SonnetV2: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_3_5,
-        "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    ).effectiveModel
-
-    /**
-     * Claude 3.5 Haiku - Fast model with improved reasoning capabilities
-     *
-     * This model combines:
-     * - Rapid response times with intelligence
-     * - Performance matching Claude 3 Opus on many benchmarks
-     * - Strong coding capabilities
-     * - Cost-effective for high-volume use cases
-     * - Entry-level user-facing products
-     * - Specialized sub-agent tasks
-     * - Processing large volumes of data
-     */
-    public val AnthropicClaude35Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3_5,
-        "anthropic.claude-3-5-haiku-20241022-v1:0",
+    public val AnthropicClaude4_6Sonnet: LLModel = BedrockModel(
+        AnthropicModels.Sonnet_4_6,
+        "anthropic.claude-sonnet-4-6",
     ).effectiveModel
 
     /**
@@ -301,47 +240,26 @@ public object BedrockModels : LLModelDefinitions {
      * - Basic reasoning and comprehension
      * - Multimodal understanding
      * - Tool/function calling
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-lifecycle.html">
      */
+    @Deprecated("Claude 3 Haiku is deprecated. Please use Claude Opus 4.6 instead.")
     public val AnthropicClaude3Haiku: LLModel = BedrockModel(
         AnthropicModels.Haiku_3,
         "anthropic.claude-3-haiku-20240307-v1:0",
     ).effectiveModel
 
     /**
-     * Claude 2.1 - Previous generation Claude model with 200K context window
+     * Claude Haiku 4.5 - Anthropic's most powerful model for powering real-world agents,
+     * with industry-leading capabilities around coding, and computer use.
      *
-     * Features:
-     * - Extended context window (200K tokens)
-     * - Strong reasoning capabilities
-     * - Improved accuracy over Claude 2.0
-     * - Text-only (no vision support)
-     * - No tool calling support
+     * It delivers near-frontier performance for a wide range of use cases, and stands out as
+     * one of the best coding and agent models – with the right speed and cost to power free products
+     * and high-volume user experiences.
      */
-    public val AnthropicClaude21: LLModel = BedrockModel(
-        LLModel(
-            provider = LLMProvider.Bedrock,
-            id = "anthropic.claude-v2:1",
-            capabilities = standardCapabilities,
-            contextLength = 200_000,
-        ),
-    ).effectiveModel
-
-    /**
-     * Claude Instant - Fast, affordable model for simple tasks
-     *
-     * Optimized for:
-     * - Quick responses
-     * - Simple Q&A and text tasks
-     * - High-volume applications
-     * - Cost-sensitive use cases
-     */
-    public val AnthropicClaudeInstant: LLModel = BedrockModel(
-        LLModel(
-            provider = LLMProvider.Bedrock,
-            id = "anthropic.claude-instant-v1",
-            capabilities = standardCapabilities,
-            contextLength = 100_000,
-        ),
+    public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
+        AnthropicModels.Haiku_4_5,
+        "anthropic.claude-haiku-4-5-20251001-v1:0",
     ).effectiveModel
 
     /**
@@ -421,49 +339,6 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-premier-v1:0",
             capabilities = novaCapabilities,
             contextLength = 1_000_000,
-        ),
-    ).effectiveModel
-
-    /**
-     * Jamba Large - AI21's most powerful hybrid SSM-Transformer model
-     *
-     * Excels at:
-     * - Complex language understanding
-     * - Long-form content generation
-     * - Reasoning tasks
-     * - Following complex instructions
-     * - Tool/function calling
-     * - Large context windows (up to 256K tokens)
-     *
-     * @see <a href="huggingface.co/ai21labs/AI21-Jamba-Large-1.5">
-     */
-    public val AI21JambaLarge: LLModel = BedrockModel(
-        LLModel(
-            provider = LLMProvider.Bedrock,
-            id = "ai21.jamba-1-5-large-v1:0",
-            capabilities = standardCapabilities + toolCapabilities,
-            contextLength = 256_000,
-        ),
-    ).effectiveModel
-
-    /**
-     * Jamba Mini - AI21's efficient hybrid SSM-Transformer model
-     *
-     * Good for:
-     * - General text generation
-     * - Moderate complexity tasks
-     * - Cost-effective production use
-     * - Tool/function calling
-     * - Faster inference speeds
-     *
-     * @see <a href="huggingface.co/ai21labs/AI21-Jamba-Mini-1.5">
-     */
-    public val AI21JambaMini: LLModel = BedrockModel(
-        LLModel(
-            provider = LLMProvider.Bedrock,
-            id = "ai21.jamba-1-5-mini-v1:0",
-            capabilities = standardCapabilities + toolCapabilities,
-            contextLength = 256_000,
         ),
     ).effectiveModel
 
@@ -668,6 +543,36 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Moonshot Kimi K2 Thinking - Advanced reasoning model with extended thinking capabilities
+     *
+     * Kimi K2 Thinking is a sparse Mixture-of-Experts model with one trillion total parameters,
+     * with only 32 billion parameters activating per inference.
+     *
+     * Features:
+     * - 256K context window
+     * - Deep reasoning with interleaved chain-of-thought
+     * - Robust tool calling (supports 200-300 sequential tool calls)
+     * - Native INT4 quantization for 2x speed-up
+     * - Strong performance on research-heavy, multistep workflows
+     * - Enhanced Chinese language reasoning capabilities
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     * When using this model, ensure you configure BedrockClientSettings with BedrockAPIMethod.Converse.
+     *
+     * @see <a href="https://moonshotai.github.io/Kimi-K2/">
+     * @see <a href="https://huggingface.co/moonshotai/Kimi-K2-Thinking">
+     */
+    public val MoonshotKimiK2Thinking: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "moonshot.kimi-k2-thinking",
+            capabilities = standardCapabilities + toolCapabilities,
+            contextLength = 256_000,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
      * Embedding models available through the AWS Bedrock API.
      *
      * **Note:** Multimodality (image, audio, video) embeddings are currently not supported by the Bedrock client.
@@ -746,35 +651,23 @@ public object BedrockModels : LLModelDefinitions {
      */
     private val supportedModels: List<LLModel> = listOf(
         // Claude 3 Series
-        AnthropicClaude3Opus,
-        AnthropicClaude3Sonnet,
         AnthropicClaude3Haiku,
-
-        // Claude 3.5 Series
-        AnthropicClaude35SonnetV2,
-        AnthropicClaude35Haiku,
 
         // Claude 4 Series
         AnthropicClaude4Opus,
         AnthropicClaude41Opus,
         AnthropicClaude45Opus,
+        AnthropicClaude46Opus,
         AnthropicClaude4Sonnet,
         AnthropicClaude4_5Sonnet,
+        AnthropicClaude4_6Sonnet,
         AnthropicClaude4_5Haiku,
-
-        // Claude Legacy
-        AnthropicClaude21,
-        AnthropicClaudeInstant,
 
         // Amazon Nova Series
         AmazonNovaMicro,
         AmazonNovaLite,
         AmazonNovaPro,
         AmazonNovaPremier,
-
-        // AI21 Jamba Series
-        AI21JambaLarge,
-        AI21JambaMini,
 
         // Meta Llama 3.0 Series
         MetaLlama3_0_8BInstruct,
@@ -799,6 +692,9 @@ public object BedrockModels : LLModelDefinitions {
         Embeddings.AmazonTitanEmbedTextV2,
         Embeddings.CohereEmbedEnglishV3,
         Embeddings.CohereEmbedMultilingualV3,
+
+        // Moonshot Kimi K2 Thinking
+        MoonshotKimiK2Thinking,
     )
 
     /**
@@ -831,7 +727,7 @@ public object BedrockModels : LLModelDefinitions {
  */
 public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     require(provider == LLMProvider.Bedrock) {
-        "withInferencePrefix() can only be used with Bedrock models, but model provider is $provider"
+        "withInferenceProfile() can only be used with Bedrock models, but model provider is $provider"
     }
     val baseModelId = if (id.contains('.')) {
         val potentialPrefix = id.substringBefore('.')

@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature.pipeline
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents a specific implementation of an AI agent pipeline
@@ -30,7 +30,7 @@ public class AIAgentFunctionalPipeline(
         feature: AIAgentFunctionalFeature<TConfig, TFeature>,
         configure: TConfig.() -> Unit,
     ) {
-        val featureConfig = feature.createInitialConfig().apply { configure() }
+        val featureConfig = feature.createInitialConfig(config).apply { configure() }
         val featureImpl = feature.install(
             config = featureConfig,
             pipeline = this,

@@ -18,7 +18,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents the core AI agent for processing input and generating output using
@@ -79,11 +79,8 @@ public class FunctionalAIAgent<Input, Output>(
     }
 
     override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentFunctionalContext {
-        val environment = GenericAgentEnvironment(
-            agentId = id,
-            logger = logger,
-            toolRegistry = toolRegistry,
-        )
+        val environment = prepareEnvironment()
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
 
         val initialLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
@@ -97,12 +94,9 @@ public class FunctionalAIAgent<Input, Output>(
             clock = clock
         )
 
-        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
-        val preparedEnvironment = prepareEnvironment()
-
         // Context
         val initialAgentContext = AIAgentFunctionalContext(
-            environment = preparedEnvironment,
+            environment = environment,
             agentId = id,
             runId = runId,
             agentInput = agentInput,
@@ -118,7 +112,7 @@ public class FunctionalAIAgent<Input, Output>(
 
         // Updated environment
         val contextualEnvironment = ContextualAgentEnvironment(
-            environment = preparedEnvironment,
+            environment = environment,
             context = initialAgentContext,
         )
 
@@ -148,6 +142,7 @@ public class FunctionalAIAgent<Input, Output>(
             agentId = id,
             logger = logger,
             toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
         )
 
         return baseEnvironment

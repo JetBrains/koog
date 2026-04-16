@@ -15,6 +15,8 @@ kotlin {
                 api(project(":http-client:http-client-core"))
                 implementation(project(":utils"))
                 implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
             }
         }
@@ -23,6 +25,7 @@ kotlin {
             dependencies {
                 implementation(project(":http-client:http-client-test"))
                 implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.client.mock)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(kotlin("test-junit5"))

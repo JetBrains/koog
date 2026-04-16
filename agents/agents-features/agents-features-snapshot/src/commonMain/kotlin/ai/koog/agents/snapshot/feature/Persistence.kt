@@ -1,5 +1,6 @@
 package ai.koog.agents.snapshot.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
@@ -7,7 +8,7 @@ import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.agent.session.feature
@@ -15,16 +16,18 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.reflect.KType
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -88,7 +91,9 @@ public class Persistence(
 
         override val key: AIAgentStorageKey<Persistence> = AIAgentStorageKey("agents-features-snapshot")
 
-        override fun createInitialConfig(): PersistenceFeatureConfig = PersistenceFeatureConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): PersistenceFeatureConfig = PersistenceFeatureConfig()
 
         override fun install(
             config: PersistenceFeatureConfig,
@@ -132,7 +137,7 @@ public class Persistence(
             }
 
             pipeline.interceptStrategyCompleted(this) { ctx ->
-                if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
+                if (config.enableAutomaticPersistence) {
                     val parent = persistence.getLatestCheckpoint(ctx.context.runId)
                     persistence.createTombstoneCheckpoint(
                         ctx.context.runId,
@@ -147,8 +152,8 @@ public class Persistence(
     }
 
     private fun isTechnicalNode(nodeId: String): Boolean =
-        nodeId.startsWith(AIAgentSubgraph.FINISH_NODE_PREFIX) ||
-            nodeId.startsWith(AIAgentSubgraph.START_NODE_PREFIX)
+        nodeId.startsWith(AIAgentSubgraphBase.FINISH_NODE_PREFIX) ||
+            nodeId.startsWith(AIAgentSubgraphBase.START_NODE_PREFIX)
 
     /**
      * Creates a checkpoint of the agent's current state.
@@ -167,11 +172,15 @@ public class Persistence(
         agentContext: AIAgentContext,
         nodePath: String,
         lastInput: Any?,
-        lastInputType: KType,
+        lastInputType: TypeToken,
         version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
-        val inputJson = SerializationUtils.encodeDataToJsonElementOrNull(lastInput, lastInputType)
+        val inputJson: JSONElement? = try {
+            agentContext.config.serializer.encodeToJSONElement(lastInput, lastInputType)
+        } catch (_: Exception) {
+            null
+        }
 
         if (inputJson == null) {
             logger.warn {
@@ -211,11 +220,15 @@ public class Persistence(
         agentContext: AIAgentContext,
         nodePath: String,
         lastOutput: Any?,
-        lastOutputType: KType,
+        lastOutputType: TypeToken,
         version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
-        val outputJson = SerializationUtils.encodeDataToJsonElementOrNull(lastOutput, lastOutputType)
+        val outputJson = try {
+            agentContext.config.serializer.encodeToJSONElement(lastOutput, lastOutputType)
+        } catch (_: Exception) {
+            null
+        }
 
         if (outputJson == null) {
             logger.warn {
@@ -283,6 +296,16 @@ public class Persistence(
         return allCps.firstOrNull { it.checkpointId == checkpointId }
     }
 
+    @Deprecated("Use setExecutionPoint with JSONElement instead of JsonElement")
+    public fun setExecutionPoint(
+        agentContext: AIAgentContext,
+        nodePath: String,
+        messageHistory: List<Message>,
+        input: JsonElement,
+    ) {
+        return setExecutionPoint(agentContext, nodePath, messageHistory, input.toKoogJSONElement())
+    }
+
     /**
      * Sets the execution point of an agent to a specific state.
      *
@@ -298,7 +321,7 @@ public class Persistence(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
-        input: JsonElement
+        input: JSONElement,
     ) {
         agentContext.store(
             AgentContextData(
@@ -308,6 +331,16 @@ public class Persistence(
                 rollbackStrategy = rollbackStrategy
             )
         )
+    }
+
+    @Deprecated("Use setExecutionPointAfterNode with JSONElement instead of JsonElement")
+    public fun setExecutionPointAfterNode(
+        agentContext: AIAgentContext,
+        nodePath: String,
+        messageHistory: List<Message>,
+        output: JsonElement,
+    ) {
+        return setExecutionPointAfterNode(agentContext, nodePath, messageHistory, output.toKoogJSONElement())
     }
 
     /**
@@ -325,7 +358,7 @@ public class Persistence(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
-        output: JsonElement
+        output: JSONElement,
     ) {
         agentContext.store(
             AgentContextData(
@@ -368,7 +401,10 @@ public class Persistence(
                         .forEach { toolCall ->
                             rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
                                 val toolArgs = try {
-                                    toolCall.contentJsonResult.getOrNull()?.let { rollbackTool.decodeArgs(it) }
+                                    toolCall.contentJsonResult
+                                        .getOrNull()
+                                        ?.toKoogJSONObject()
+                                        ?.let { rollbackTool.decodeArgs(it, agentContext.config.serializer) }
                                 } catch (e: CancellationException) {
                                     throw e
                                 } catch (_: Exception) {

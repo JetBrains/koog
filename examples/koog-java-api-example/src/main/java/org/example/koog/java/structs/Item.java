@@ -4,18 +4,18 @@ import ai.koog.agents.core.tools.annotations.LLMDescription;
 
 import java.util.Objects;
 
-@LLMDescription(description = "Basic representation of an item in an order")
+@LLMDescription("Basic representation of an item in an order")
 public class Item {
-    @LLMDescription(description = "Stock keeping unit or product identifier")
+    @LLMDescription("Stock keeping unit or product identifier")
     private final String sku;
 
-    @LLMDescription(description = "Human readable name")
+    @LLMDescription("Human readable name")
     private final String name;
 
-    @LLMDescription(description = "Quantity of the item")
+    @LLMDescription("Quantity of the item")
     private final int quantity;
 
-    @LLMDescription(description = "Price per single unit in cents")
+    @LLMDescription("Price per single unit in cents")
     private final int priceCents;
 
     public Item(String sku, String name, int quantity, int priceCents) {

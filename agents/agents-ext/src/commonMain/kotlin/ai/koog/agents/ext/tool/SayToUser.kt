@@ -2,13 +2,14 @@ package ai.koog.agents.ext.tool
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 /**
  * The `SayToUser` allows agent to say something to the output (via `println`).
  */
 public object SayToUser : SimpleTool<SayToUser.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "say_to_user",
     description = "Service tool, used by the agent to talk."
 ) {

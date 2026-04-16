@@ -29,7 +29,7 @@ data class SimpleCalculatorArgs(
 
 object CalculatorToolNoArgs : SimpleTool<Unit>(
     argsSerializer = Unit.serializer(),
-    name = "calculator",
+    name = "calculator_no_args",
     description = "A simple calculator that performs basic calculations. No parameters needed."
 ) {
     override suspend fun execute(args: Unit): String {
@@ -39,14 +39,17 @@ object CalculatorToolNoArgs : SimpleTool<Unit>(
 
 object SimpleCalculatorTool : SimpleTool<SimpleCalculatorArgs>(
     argsSerializer = SimpleCalculatorArgs.serializer(),
-    name = "calculator",
+    name = "simple_calculator",
     description = "A simple calculator that can add, subtract, multiply, and divide two integers."
 ) {
     override suspend fun execute(args: SimpleCalculatorArgs): String {
         return when (args.operation) {
             CalculatorOperation.ADD -> (args.a + args.b).toString()
+
             CalculatorOperation.SUBTRACT -> (args.a - args.b).toString()
+
             CalculatorOperation.MULTIPLY -> (args.a * args.b).toString()
+
             CalculatorOperation.DIVIDE -> {
                 if (args.b == 0) {
                     "Error: Division by zero"

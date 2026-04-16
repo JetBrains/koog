@@ -19,25 +19,29 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.typeOf
 
 open class AgentTestBase {
     protected val testAgentId = "test-agent"
     protected val testRunId = "test-run"
     protected val strategyName = "test-strategy"
 
+    private val serializer = KotlinxSerializer()
+
     protected fun createTestEnvironment(
         id: String = "test-environment",
         toolResult: ReceivedToolResult = ReceivedToolResult(
             id = "test-tool-id",
             tool = "test-tool",
-            toolArgs = JsonObject(mapOf("result" to JsonPrimitive("test-result"))),
+            toolArgs = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
             toolDescription = null,
             content = "Test tool result",
             resultKind = ToolResultKind.Success,
-            result = JsonObject(mapOf("result" to JsonPrimitive("test-result")))
+            result = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
         )
     ): AIAgentEnvironment {
         return object : AIAgentEnvironment {
@@ -68,7 +72,7 @@ open class AgentTestBase {
     }
 
     protected fun createTestLLMContext(id: String = "test-llm"): AIAgentLLMContext {
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -107,7 +111,7 @@ open class AgentTestBase {
         return AIAgentGraphContext(
             environment = environment,
             agentId = testAgentId,
-            agentInputType = typeOf<String>(),
+            agentInputType = typeToken<String>(),
             agentInput = agentInput,
             config = config,
             llm = llmContext,

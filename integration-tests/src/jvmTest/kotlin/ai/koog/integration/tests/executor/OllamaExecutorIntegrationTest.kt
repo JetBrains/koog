@@ -6,7 +6,6 @@ import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
-import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -20,13 +19,17 @@ import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -61,8 +64,10 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         lateinit var fixture: OllamaTestFixture
         val executor get() = fixture.executor
         val model get() = fixture.model
+        val embeddingsModel get() = fixture.embeddingsModel
         val visionModel get() = fixture.visionModel
         val moderationModel get() = fixture.moderationModel
+        val thinkingModel get() = fixture.thinkingModel
         val client get() = fixture.client
 
         @JvmStatic
@@ -70,7 +75,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return ImageTestScenario.entries
                 .minus(
                     setOf(
-                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC,
                         ImageTestScenario.EMPTY_IMAGE,
                         ImageTestScenario.CORRUPTED_IMAGE,
                     )
@@ -269,6 +273,23 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
     }
 
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed one string`() = runTest {
+        client.embed(text = "text", model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+    }
+
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed list of string`() = runTest {
+        client.embed(inputs = listOf("one", "two"), model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+            .shouldHaveSize(2)
+    }
+
     // Ollama-specific image processing test
     @ParameterizedTest
     @MethodSource("imageScenarios")
@@ -296,16 +317,8 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
-                ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                    checkExecutorMediaResponse(response)
-                    response.content.shouldNotBeBlank()
-                }
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    response.content.shouldNotBeBlank()
-                }
-
-                ImageTestScenario.LARGE_IMAGE -> {
                     response.content.shouldNotBeBlank()
                 }
             }
@@ -343,5 +356,36 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         val response = executor.execute(prompt, model).single()
         response.content.shouldNotBeBlank()
+    }
+
+    @Test
+    fun `ollama_test thinking feature in streaming mode`() = runTest(timeout = 600.seconds) {
+        val prompt = prompt("thinking-test") {
+            system("You are a helpful assistant. Think step by step.")
+            user("What is 15 * 23? Show your reasoning.")
+        }
+
+        val reasoningDeltaFrames = mutableListOf<StreamFrame.ReasoningDelta>()
+        val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
+        val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+
+        executor.executeStreaming(prompt, thinkingModel, listOf()).collect { frame ->
+            when (frame) {
+                is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(frame)
+                is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)
+                is StreamFrame.TextDelta -> textDeltaFrames.add(frame)
+                else -> {}
+            }
+        }
+
+        reasoningDeltaFrames.shouldNotBeEmpty()
+        reasoningCompleteFrames.shouldNotBeEmpty()
+
+        val allThinking = reasoningDeltaFrames.joinToString("") { it.text.orEmpty() }
+        allThinking.shouldNotBeBlank()
+
+        val allContent = textDeltaFrames.joinToString("") { it.text }
+        allContent.shouldNotBeBlank()
+        allContent.shouldNotContain(allThinking)
     }
 }

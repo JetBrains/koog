@@ -7,16 +7,18 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class AIAgentServiceTest {
+    private val serializer = KotlinxSerializer()
 
     private fun mockConfig(): AIAgentConfig = AIAgentConfig(
         prompt = prompt("test-prompt") { system("sys") },
@@ -37,7 +39,7 @@ class AIAgentServiceTest {
 
     @Test
     fun testCompanionInvoke_graphWithTypes_buildsServiceAndCreatesAgents() = runTest {
-        val executor = getMockExecutor { }
+        val executor = getMockExecutor(serializer) { }
         val service = AIAgentService(
             promptExecutor = executor,
             agentConfig = mockConfig(),
@@ -58,7 +60,7 @@ class AIAgentServiceTest {
 
     @Test
     fun testCompanionInvoke_graphWithModel_buildsServiceFromModel() = runTest {
-        val executor = getMockExecutor { }
+        val executor = getMockExecutor(serializer) { }
         val service = AIAgentService(
             promptExecutor = executor,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
@@ -76,7 +78,7 @@ class AIAgentServiceTest {
 
     @Test
     fun testFunctionalService_factoryAndRun() = runTest {
-        val executor = getMockExecutor { }
+        val executor = getMockExecutor(serializer) { }
         val cfg = mockConfig()
         val service = AIAgentService(
             promptExecutor = executor,
@@ -96,7 +98,7 @@ class AIAgentServiceTest {
 
     @Test
     fun testFromAgent_factories() = runTest {
-        val executor = getMockExecutor { }
+        val executor = getMockExecutor(serializer) { }
         val cfg = mockConfig()
         val strat = mockGraphStrategy()
         val graphAgent = GraphAIAgent(
@@ -104,8 +106,8 @@ class AIAgentServiceTest {
             strategy = strat,
             promptExecutor = executor,
             agentConfig = cfg,
-            inputType = typeOf<String>(),
-            outputType = typeOf<String>()
+            inputType = typeToken<String>(),
+            outputType = typeToken<String>()
         )
 
         val serviceFromGraph = AIAgentService.fromAgent<String, String>(graphAgent)
@@ -128,7 +130,7 @@ class AIAgentServiceTest {
 
     @Test
     fun testCreateAgentAndRun_andCloseAll() = runTest {
-        val executor = getMockExecutor { }
+        val executor = getMockExecutor(serializer) { }
         val service = AIAgentService(
             promptExecutor = executor,
             agentConfig = mockConfig(),

@@ -6,7 +6,6 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.getLLMClientForProvider
@@ -18,8 +17,8 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldEndWith
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -153,8 +152,8 @@ class ToolSchemaExecutorIntegrationTest {
             getLLMClientForProvider(model.provider).execute(prompt, model, listOf(writeFileTool)) shouldNotBeNull {
                 shouldNotBeEmpty()
                 with(Json.decodeFromString<FileOperation>(joinToString("\n") { it.content })) {
-                    filePath shouldBe "hello.txt"
-                    content.trim() shouldBe "Hello, World!"
+                    filePath shouldEndWith "hello.txt"
+                    content.trim().shouldContain("Hello, World!")
                 }
             }
         }

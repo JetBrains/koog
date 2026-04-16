@@ -6,6 +6,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlin.jvm.JvmName
 
 /**
@@ -24,14 +26,16 @@ import kotlin.jvm.JvmName
  *        typically due to differences in tool sets between steps or subgraphs while the same history is reused.
  *        This ensures the prompt remains consistent and readable for the model, even with undefined tools.
  * @param responseProcessor Optional processor for the agent's responses. If specified, will modify the responses from the llm.
+ * @param serializer Optional serializer to (de)serialize tool arguments and results. Defaults to [KotlinxSerializer]
  */
-public expect class AIAgentConfig constructor(
+public expect class AIAgentConfig(
     prompt: Prompt,
     model: LLModel,
     maxAgentIterations: Int,
     missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
-    responseProcessor: ResponseProcessor? = null
+    responseProcessor: ResponseProcessor? = null,
+    serializer: JSONSerializer = KotlinxSerializer(),
 ) : AIAgentConfigBase {
 
     /**
@@ -82,6 +86,12 @@ public expect class AIAgentConfig constructor(
     public val missingToolsConversionStrategy: MissingToolsConversionStrategy
 
     /**
+     * Serializer to (de)serialize tool arguments and results.
+     */
+    @get:JvmName("serializer")
+    public val serializer: JSONSerializer
+
+    /**
      * Companion object for providing utility methods related to [AIAgentConfig].
      */
     public companion object {
@@ -105,4 +115,24 @@ public expect class AIAgentConfig constructor(
             maxAgentIterations: Int = 3,
         ): AIAgentConfig
     }
+
+    /**
+     * Creates a copy of this AI agent configuration with the specified modifications.
+     *
+     * @param prompt The prompt to use for the AI agent. Defaults to the existing prompt.
+     * @param model The LLM model to use for the AI agent. Defaults to the existing model.
+     * @param maxAgentIterations The maximum number of iterations allowed for the AI agent. Defaults to the existing value.
+     * @param missingToolsConversionStrategy The strategy for handling missing tools during the AI agent's execution. Defaults to the existing strategy.
+     * @param responseProcessor The processor for handling responses from the LLM. Defaults to the existing processor.
+     * @param serializer The serializer for handling tool arguments and results. Defaults to the existing serializer.
+     * @return A new instance of [AIAgentConfig] with the specified modifications.
+     */
+    internal fun copy(
+        prompt: Prompt = this.prompt,
+        model: LLModel = this.model,
+        maxAgentIterations: Int = this.maxAgentIterations,
+        missingToolsConversionStrategy: MissingToolsConversionStrategy = this.missingToolsConversionStrategy,
+        responseProcessor: ResponseProcessor? = this.responseProcessor,
+        serializer: JSONSerializer = this.serializer
+    ): AIAgentConfig
 }

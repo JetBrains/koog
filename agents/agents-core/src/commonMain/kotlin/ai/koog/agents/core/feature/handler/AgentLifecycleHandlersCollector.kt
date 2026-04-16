@@ -2,8 +2,21 @@ package ai.koog.agents.core.feature.handler
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 
+/**
+ * Collects and manages lifecycle event handlers associated with AI agents and features.
+ *
+ * This class serves as a centralized registry for associating handlers with specific
+ * lifecycle event types and their corresponding features. Handlers are grouped by the
+ * associated feature key and further categorized by the event type they handle.
+ */
 internal class AgentLifecycleHandlersCollector {
 
+    /**
+     * The internal class maintains a mapping between event types and their corresponding handlers, enabling
+     * the addition and retrieval of event handlers for different agent lifecycle events.
+     *
+     * @property featureKey The key representing the feature associated with these event handlers.
+     */
     private class FeatureEventHandlers(
         val featureKey: AIAgentStorageKey<*>
     ) {
@@ -27,8 +40,7 @@ internal class AgentLifecycleHandlersCollector {
         }
     }
 
-    private val featureToHandlersMap =
-        mutableMapOf<AIAgentStorageKey<*>, FeatureEventHandlers>()
+    private val featureToHandlersMap = mutableMapOf<AIAgentStorageKey<*>, FeatureEventHandlers>()
 
     internal fun <TContext : AgentLifecycleEventContext, TReturn : Any> addHandlerForFeature(
         featureKey: AIAgentStorageKey<*>,

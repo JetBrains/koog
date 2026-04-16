@@ -47,7 +47,17 @@ import kotlin.jvm.JvmOverloads
  * @param logLevel The log level to use for trace events (default: INFO)
  * @param format Optional custom formatter for trace events
  */
-public class TraceFeatureMessageLogWriter @JvmOverloads constructor(
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+public expect class TraceFeatureMessageLogWriter @JvmOverloads constructor(
+    targetLogger: KLogger,
+    logLevel: LogLevel = LogLevel.INFO,
+    format: ((FeatureMessage) -> String)? = null,
+) : FeatureMessageLogWriter {
+
+    override fun FeatureMessage.toLoggerMessage(): String
+}
+
+internal class TraceFeatureMessageLogWriterImpl @JvmOverloads constructor(
     targetLogger: KLogger,
     logLevel: LogLevel = LogLevel.INFO,
     private val format: ((FeatureMessage) -> String)? = null,
