@@ -1,9 +1,11 @@
 package ai.koog.prompt.streaming
 
 import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFailsWith
@@ -357,6 +359,38 @@ class StreamFrameFlowBuilderTest {
             listOf(
                 StreamFrame.ToolCallDelta("call_1", "tool", "{}"),
                 StreamFrame.ToolCallComplete("call_1", "tool", "{}"),
+                StreamFrame.End("stop", ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    /**
+     * Regression test for #1775.
+     *
+     * When LLM clients (e.g. OllamaClient) wrap Ktor's preparePost(...).execute { }
+     * inside buildStreamFrameFlow, the emission happens from an undispatched Ktor
+     * continuation context while collection happens from a different context. With
+     * the previous flow { } builder this violated Flow's context preservation
+     * invariant and threw IllegalStateException. The fix switches buildStreamFrameFlow
+     * to channelFlow { }, which supports cross-context emission. This test reproduces
+     * that scenario by emitting from a withContext(Dispatchers.Default) block.
+     */
+    @Test
+    fun testBuildStreamFrameFlowSupportsCrossContextEmission() = runTest {
+        val frames = buildStreamFrameFlow {
+            withContext(Dispatchers.Default) {
+                emitTextDelta("Hello", 0)
+                emitTextDelta(" World", 0)
+                emitEnd("stop")
+            }
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.TextDelta("Hello", 0),
+                StreamFrame.TextDelta(" World", 0),
+                StreamFrame.TextComplete("Hello World", 0),
                 StreamFrame.End("stop", ResponseMetaInfo.Empty)
             ),
             frames
