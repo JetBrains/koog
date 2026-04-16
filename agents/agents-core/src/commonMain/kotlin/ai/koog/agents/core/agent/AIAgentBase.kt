@@ -1,6 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -31,13 +28,19 @@ public abstract class AIAgentBase<Input, Output, TContext : AIAgentContext> cons
     logger: KLogger,
     id: String? = null,
 ) : AIAgent<Input, Output>() {
+
     /**
      * Logger instance used for logging messages and events specific to this agent.
      */
     internal open val logger: KLogger = logger
 
-    @OptIn(ExperimentalUuidApi::class)
-    final override val id: String by lazy { id ?: Uuid.random().toString() }
+    /**
+     * Unique identifier for the agent.
+     */
+    final override val id: String by lazy {
+        @OptIn(ExperimentalUuidApi::class)
+        id ?: Uuid.random().toString()
+    }
 
     /**
      * The execution strategy defining how the agent processes input and produces output.
@@ -67,11 +70,27 @@ public abstract class AIAgentBase<Input, Output, TContext : AIAgentContext> cons
      * @throws IllegalStateException if the agent was already started.
      * @throws Throwable if any exception occurs during the execution process.
      */
-    @OptIn(ExperimentalUuidApi::class)
-    override suspend fun run(agentInput: Input, sessionId: String?): Output {
+    override suspend fun run(agentInput: Input, sessionId: String?): Output =
+        runWithResult(agentInput, sessionId).output
+
+    /**
+     * Executes the AI agent with the provided input and produces a contextual result that includes the output
+     * and execution context.
+     *
+     * @param agentInput The input required to execute the agent. This serves as the primary data
+     *                   the agent processes within the provided context.
+     * @param sessionId An optional session identifier. If not provided, a unique session ID will
+     *                  be generated for this execution.
+     * @return A contextual result containing the agent's output and associated execution context.
+     */
+    override suspend fun runWithResult(agentInput: Input, sessionId: String?): AIAgentContextualResult<Output, TContext> {
+        @OptIn(ExperimentalUuidApi::class)
         val runId = sessionId ?: Uuid.random().toString()
+
+        @OptIn(InternalAgentsApi::class)
         val session = AIAgentRunSessionImpl(runId, logger, this, strategy, pipeline, ::prepareContext)
-        return session.run(agentInput)
+
+        return session.runWithResult(agentInput)
     }
 
     /**
@@ -97,9 +116,11 @@ public abstract class AIAgentBase<Input, Output, TContext : AIAgentContext> cons
      * @return A new [AIAgentRunSession] instance configured with this agent's logger, strategy,
      *         and identifier. The session can be used to run the agent with specific input and context.
      */
-    @OptIn(ExperimentalUuidApi::class)
     override fun createSession(sessionId: String?): AIAgentRunSession<Input, Output, TContext> {
+        @OptIn(ExperimentalUuidApi::class)
         val runId = sessionId ?: Uuid.random().toString()
+
+        @OptIn(InternalAgentsApi::class)
         return AIAgentRunSessionImpl(runId, logger, this, strategy, pipeline, ::prepareContext)
     }
 

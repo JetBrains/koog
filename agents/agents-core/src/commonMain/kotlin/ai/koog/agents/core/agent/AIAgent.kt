@@ -37,9 +37,19 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
      * Executes the AI agent with the given input and retrieves the resulting output.
      *
      * @param agentInput The input for the agent.
+     * @param sessionId An optional session ID for the agent run.
      * @return The output produced by the agent.
      */
     public abstract suspend fun run(agentInput: Input, sessionId: String? = null): Output
+
+    /**
+     * Executes the AI agent with the given input and retrieves the result including the execution context.
+     *
+     * @param agentInput The input for the agent.
+     * @param sessionId An optional session ID for the agent run.
+     * @return The [AIAgentResult] containing the output and execution context.
+     */
+    public abstract suspend fun runWithResult(agentInput: Input, sessionId: String? = null): AIAgentResult<Output>
 
     /**
      * Creates a new session for executing the agent with the given input.

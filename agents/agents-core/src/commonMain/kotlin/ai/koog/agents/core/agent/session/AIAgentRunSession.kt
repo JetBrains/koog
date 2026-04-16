@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent.session
 
+import ai.koog.agents.core.agent.AIAgentContextualResult
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
@@ -37,6 +38,17 @@ public interface AIAgentRunSession<Input, Output, TContext : AIAgentContext> {
     public suspend fun run(
         input: Input
     ): Output
+
+    /**
+     * Executes the agent pipeline with the given context and input, producing a result
+     * that includes both the output and the execution context.
+     *
+     * @param input The input provided to the pipeline during execution.
+     * @return The [AIAgentContextualResult] containing the output and execution context.
+     */
+    public suspend fun runWithResult(
+        input: Input
+    ): AIAgentContextualResult<Output, TContext>
 
     /**
      * Returns the pipeline associated with this session.

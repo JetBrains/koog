@@ -46,8 +46,29 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         executorService: ExecutorService? = null
     ): Output = agentConfig.runOnStrategyDispatcher(executorService) { run(agentInput, sessionId) }
 
+    /**
+     * Executes the AI agent task based on the provided input and an optional executor service.
+     *
+     * @param agentInput The input data required for the AI agent to perform its task.
+     * @param sessionId An optional session ID for the agent run.
+     * @param executorService An optional [ExecutorService] to provide a coroutine context for execution.
+     *                        If not provided, the default coroutine context is used.
+     * @return The [AIAgentResult] containing the output and execution context.
+     */
+    @JavaAPI
+    @JvmOverloads
+    @JvmName("runWithResult")
+    public final fun javaNonSuspendRunWithResult(
+        agentInput: Input,
+        sessionId: String? = null,
+        executorService: ExecutorService? = null
+    ): AIAgentResult<Output> = agentConfig.runOnStrategyDispatcher(executorService) { runWithResult(agentInput, sessionId) }
+
     // Common (multiplatform) methods:
+
     public actual abstract suspend fun run(agentInput: Input, sessionId: String?): Output
+
+    public actual abstract suspend fun runWithResult(agentInput: Input, sessionId: String?): AIAgentResult<Output>
 
     public actual abstract fun createSession(sessionId: String?): AIAgentRunSession<Input, Output, out AIAgentContext>
 

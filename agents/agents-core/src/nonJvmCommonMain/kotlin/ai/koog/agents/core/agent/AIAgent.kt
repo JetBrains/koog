@@ -23,6 +23,8 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
 
     public actual abstract suspend fun run(agentInput: Input, sessionId: String?): Output
 
+    public actual abstract suspend fun runWithResult(agentInput: Input, sessionId: String?): AIAgentResult<Output>
+
     public actual abstract fun createSession(sessionId: String?): AIAgentRunSession<Input, Output, out AIAgentContext>
 
     public actual companion object {

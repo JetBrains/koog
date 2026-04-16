@@ -53,7 +53,11 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
 
     override suspend fun run(
         input: Input
-    ): Output {
+    ): Output = runWithResult(input).output
+
+    override suspend fun runWithResult(
+        input: Input
+    ): AIAgentContextualResult<Output, TContext> {
         state = AIAgentState.Starting()
         val context = ctxBuilder(input, id, agent.id)
         ctx = context
@@ -110,7 +114,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
             state = AIAgentState.Finished(runResult)
         }
 
-        return runResult
+        return AIAgentContextualResult(runResult, context)
     }
 
     private fun formatLog(agentId: String, runId: String, message: String): String =
