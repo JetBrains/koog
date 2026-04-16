@@ -259,8 +259,10 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     logger = logger,
     baseClient = baseClient
 ) {
+    val normalizedBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+
     defaultRequest {
-        url(baseUrl)
+        url(normalizedBaseUrl)
         contentType(ContentType.Application.Json)
         headers.forEach { (name, value) -> header(name, value) }
         queryParameters.forEach { (name, value) -> url.parameters.append(name, value) }
