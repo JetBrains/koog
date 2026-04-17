@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.message.Message.Tool
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -22,7 +23,7 @@ class GenericAgentEnvironmentTest {
     private data class RequiredArgs(val required: String)
 
     private class RequiredArgsTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "required_args",
         description = "Tool that requires a single argument.",
     ) {
@@ -30,7 +31,7 @@ class GenericAgentEnvironmentTest {
     }
 
     private class ValidationTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "validation_tool",
         description = "Tool that fails with validation error.",
     ) {
@@ -40,7 +41,7 @@ class GenericAgentEnvironmentTest {
     }
 
     private class FailingTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "failing_tool",
         description = "Tool that fails with runtime exception.",
     ) {
@@ -50,7 +51,7 @@ class GenericAgentEnvironmentTest {
     }
 
     private class SuccessTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "success_tool",
         description = "Tool that succeeds.",
     ) {
@@ -58,7 +59,7 @@ class GenericAgentEnvironmentTest {
     }
 
     private class CancellableTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "cancellable_tool",
         description = "Tool that throws cancellation.",
     ) {

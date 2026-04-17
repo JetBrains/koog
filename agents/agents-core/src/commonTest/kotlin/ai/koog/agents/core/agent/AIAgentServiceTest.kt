@@ -25,7 +25,7 @@ class AIAgentServiceTest {
     private data class EchoArgs(val value: String)
 
     private class EchoTool(name: String) : SimpleTool<EchoArgs>(
-        argsSerializer = EchoArgs.serializer(),
+        argsType = typeToken<EchoArgs>(),
         name = name,
         description = "Echo tool",
     ) {
