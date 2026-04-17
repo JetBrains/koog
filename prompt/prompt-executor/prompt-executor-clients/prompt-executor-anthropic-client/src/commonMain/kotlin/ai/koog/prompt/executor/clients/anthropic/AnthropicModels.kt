@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_1
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_6
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_7
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_6
@@ -30,6 +31,7 @@ import kotlin.jvm.JvmField
  * | [Opus_4_1]   | Moderately fast | $15-$75      | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4_5]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4_6]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
+ * | [Opus_4_7]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
  */
 public object AnthropicModels : LLModelDefinitions {
     private val thinkingCapabilities: List<LLMCapability> = listOf(LLMCapability.Thinking)
@@ -275,6 +277,34 @@ public object AnthropicModels : LLModelDefinitions {
     )
 
     /**
+     * Claude Opus 4.7 is Anthropic's latest generally available Opus model.
+     * It improves on Opus 4.6 for advanced software engineering, long-running agents,
+     * knowledge work, and higher-resolution vision tasks.
+     *
+     * 1M context window
+     *
+     * @see <a href="https://www.anthropic.com/news/claude-opus-4-7">
+     * @see <a href="https://platform.claude.com/docs/en/about-claude/models/overview">
+     */
+    @JvmField
+    public val Opus_4_7: LLModel = LLModel(
+        provider = LLMProvider.Anthropic,
+        id = "claude-opus-4-7",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Vision.Image,
+            LLMCapability.Document,
+            LLMCapability.Completion,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+        ) + thinkingCapabilities,
+        contextLength = 1_000_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
      * List of the supported models by the Anthropic provider.
      */
     private val supportedModels: List<LLModel> = listOf(
@@ -286,6 +316,7 @@ public object AnthropicModels : LLModelDefinitions {
         Opus_4_1,
         Opus_4_5,
         Opus_4_6,
+        Opus_4_7,
         Haiku_4_5
     )
 
@@ -313,4 +344,5 @@ internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
     Opus_4_1 to "claude-opus-4-1-20250805",
     Opus_4_5 to "claude-opus-4-5-20251101",
     Opus_4_6 to "claude-opus-4-6",
+    Opus_4_7 to "claude-opus-4-7",
 )

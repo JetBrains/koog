@@ -190,6 +190,17 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Claude Opus 4.7 is Anthropic's latest generally available Opus model for advanced coding,
+     * long-running agents, knowledge work, and higher-resolution vision tasks.
+     *
+     * @see <a href="https://aws.amazon.com/blogs/aws/introducing-anthropics-claude-opus-4-7-model-in-amazon-bedrock/">
+     */
+    public val AnthropicClaude47Opus: LLModel = BedrockModel(
+        AnthropicModels.Opus_4_7,
+        "anthropic.claude-opus-4-7",
+    ).effectiveModel
+
+    /**
      * Claude 4 Sonnet - High-performance model with exceptional reasoning and efficiency
      *
      * This model offers:
@@ -658,6 +669,7 @@ public object BedrockModels : LLModelDefinitions {
         AnthropicClaude41Opus,
         AnthropicClaude45Opus,
         AnthropicClaude46Opus,
+        AnthropicClaude47Opus,
         AnthropicClaude4Sonnet,
         AnthropicClaude4_5Sonnet,
         AnthropicClaude4_6Sonnet,

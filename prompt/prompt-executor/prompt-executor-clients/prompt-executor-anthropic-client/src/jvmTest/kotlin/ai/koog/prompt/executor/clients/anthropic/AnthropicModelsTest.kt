@@ -35,6 +35,7 @@ class AnthropicModelsTest {
             AnthropicModels.Sonnet_4_6,
             AnthropicModels.Opus_4_5,
             AnthropicModels.Opus_4_6,
+            AnthropicModels.Opus_4_7,
         )
 
         modelsWithSchema.forEach { model ->
@@ -115,5 +116,6 @@ class AnthropicModelsTest {
         assertNotNull(AnthropicModels.Haiku_4_5.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Sonnet_4.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Opus_4_6.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(AnthropicModels.Opus_4_7.capabilities) shouldContain LLMCapability.Thinking
     }
 }
