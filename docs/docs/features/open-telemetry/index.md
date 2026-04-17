@@ -248,6 +248,28 @@ Injects a pre-configured OpenTelemetrySdk instance.
 |-------|--------------------|----------|---------------------------------------|
 | `sdk` | `OpenTelemetrySdk` | Yes      | The SDK instance to use in the agent. |
 
+#### addMetricExporter
+
+Adds a metric exporter to send metric data to external systems. Takes the following arguments:
+
+| Name            | Data type        | Required | Default value | Description                                                                  |
+|-----------------|------------------|----------|---------------|------------------------------------------------------------------------------|
+| `exporter`      | `MetricExporter` | Yes      |               | The `MetricExporter` instance to register with a periodic metric reader.     |
+| `meterInterval` | `Duration`       | No       | `1s`          | The interval between metric reads. Also available as a `java.time.Duration`. |
+
+If no metric exporter is registered, Koog falls back to the console `LoggingMetricExporter` so that metrics are visible during local development.
+
+#### addMetricFilter
+
+Restricts the attribute keys that are reported for a specific metric instrument. This installs an OpenTelemetry `View` that drops any attribute not listed. Takes the following arguments:
+
+| Name            | Data type     | Required | Default value | Description                                                 |
+|-----------------|---------------|----------|---------------|-------------------------------------------------------------|
+| `metricName`    | `String`      | Yes      |               | The name of the metric instrument to apply the filter to.   |
+| `keysToRetain`  | `Set<String>` | Yes      |               | The attribute keys that should be retained for this metric. |
+
+Use this to keep high-cardinality attributes (for example, request identifiers) from blowing up your metric backend while still exporting the metric itself.
+
 ### Advanced configuration
 
 For more advanced configuration, you can also customize the following configuration options:
@@ -503,6 +525,46 @@ string. The string includes the content or payload for the event body field, whi
 examples of event body fields, see the [OpenTelemetry documentation](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-events/#examples). For the state of support for event body
 fields in `opentelemetry-java`, see the related [GitHub issue](https://github.com/open-telemetry/semantic-conventions/issues/1870).
 
+## Metrics
+
+In addition to spans, the OpenTelemetry feature emits metrics that follow OpenTelemetry's [Semantic conventions for GenAI metrics](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/). Metrics are exported through the meter provider configured via [addMetricExporter](#addmetricexporter); if no exporter is registered, a console `LoggingMetricExporter` is used by default.
+
+The following instruments are registered:
+
+| Name                                | Instrument | Unit    | Description                                                                                                 |
+|-------------------------------------|------------|---------|-------------------------------------------------------------------------------------------------------------|
+| `gen_ai.client.token.usage`         | Histogram  | `{token}` | Token usage reported for each LLM call, split by `gen_ai.token.type` (`input`/`output`).                    |
+| `gen_ai.client.operation.duration`  | Histogram  | `s`     | Duration of GenAI operations — both `text_completion` (LLM calls) and `execute_tool` (tool invocations).    |
+| `koog.gen_ai.client.tool.call.count`| Counter    | `{call}` | Koog-specific counter of tool calls performed by the agent, labelled by tool name and call status.          |
+
+Explicit histogram bucket boundaries are provided as advice in line with the semantic conventions:
+
+- `gen_ai.client.token.usage`: `[1, 4, 16, 64, 256, 1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216, 67108864]`
+- `gen_ai.client.operation.duration`: `[0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12, 10.24, 20.48, 40.96, 81.92]`
+
+### gen_ai.provider.name
+
+Every data point carries a `gen_ai.provider.name` attribute:
+
+- For `text_completion` operations, the value is the LLM provider id (for example, `openai`, `anthropic`).
+- For `execute_tool` operations, the value is `koog`, because tool execution happens in-process rather than against a third-party provider. MCP tool executions keep this value and surface MCP-specific details through separate `mcp.*` attributes on the corresponding span, so tool metrics stay at low cardinality.
+
+### error.type
+
+`error.type` is set only on failed `gen_ai.client.operation.duration` data points, per the GenAI semconv requirement. The value is the canonical Java class name of the error that caused the failure, so it is bounded by the exception hierarchy and safe to use as a metric dimension:
+
+- Subclasses of `AIAgentError` — for `execute_tool` failures and tool validation failures.
+- Any `Throwable` raised by the LLM client or agent runtime — for `text_completion` failures that surface through the agent-level failure hook.
+- `_OTHER` — fallback when an in-flight operation is flushed at agent close without an associated error.
+
+The attribute is not set on successful operations.
+
+### restrictToolNameCardinality
+
+Tool metrics are labeled with `gen_ai.tool.name`. If you expose tools whose names are dynamic or user-generated, the tool-name cardinality can grow without bound. Use `restrictToolNameCardinality` to map any name outside an allow-list to a single fallback value.
+
+For metric-specific attribute filtering that applies to any instrument and any attribute key, use [addMetricFilter](#addmetricfilter).
+
 ## Exporters
 
 Exporters send collected telemetry data to an OpenTelemetry Collector or other types of destinations or backend
@@ -550,7 +612,7 @@ This type of export is useful for development and debugging purposes.
         // Add more exporters as needed
     }
     ```
-    <!--- KNIT example-opentelemetry-support-05.kt -->
+    <!--- KNIT example-opentelemetry-support-06.kt -->
 
 === "Java"
 
@@ -560,7 +622,7 @@ This type of export is useful for development and debugging purposes.
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-    public class exampleOpentelemetrySupportJava05 {
+    public class exampleOpentelemetrySupportJava06 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -583,7 +645,7 @@ This type of export is useful for development and debugging purposes.
         // Add more exporters as needed
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava05.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava06.java -->
 
 ### OpenTelemetry HTTP exporter
 
@@ -625,7 +687,7 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-06.kt -->
+    <!--- KNIT example-opentelemetry-support-07.kt -->
 
 === "Java"
 
@@ -636,7 +698,7 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
     import java.util.concurrent.TimeUnit;
-    public class exampleOpentelemetrySupportJava06 {
+    public class exampleOpentelemetrySupportJava07 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -668,7 +730,7 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava06.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava07.java -->
 
 ### OpenTelemetry gRPC exporter
 
@@ -706,7 +768,7 @@ lets you define the host and port of the backend, collector, or endpoint that re
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-07.kt -->
+    <!--- KNIT example-opentelemetry-support-08.kt -->
 
 === "Java"
 
@@ -716,7 +778,7 @@ lets you define the host and port of the backend, collector, or endpoint that re
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-    public class exampleOpentelemetrySupportJava07 {
+    public class exampleOpentelemetrySupportJava08 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -743,7 +805,7 @@ lets you define the host and port of the backend, collector, or endpoint that re
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava07.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava08.java -->
 
 ## Integration with Langfuse
 
@@ -777,7 +839,7 @@ You can configure Koog to export OpenTelemetry traces directly to Langfuse using
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-08.kt -->
+    <!--- KNIT example-opentelemetry-support-09.kt -->
 
 === "Java"
 
@@ -786,7 +848,7 @@ You can configure Koog to export OpenTelemetry traces directly to Langfuse using
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    public class exampleOpentelemetrySupportJava08 {
+    public class exampleOpentelemetrySupportJava09 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -813,7 +875,7 @@ You can configure Koog to export OpenTelemetry traces directly to Langfuse using
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava08.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava09.java -->
 
 Please read the [full documentation](opentelemetry-langfuse-exporter.md) about integration with Langfuse.
 
@@ -848,7 +910,7 @@ W&B Weave provides trace visualization and analytics for LLM/agent workloads. In
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-09.kt -->
+    <!--- KNIT example-opentelemetry-support-10.kt -->
 
 === "Java"
 
@@ -857,7 +919,7 @@ W&B Weave provides trace visualization and analytics for LLM/agent workloads. In
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    public class exampleOpentelemetrySupportJava09 {
+    public class exampleOpentelemetrySupportJava10 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -883,7 +945,7 @@ W&B Weave provides trace visualization and analytics for LLM/agent workloads. In
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava09.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava10.java -->
 
 Please read the [full documentation](opentelemetry-weave-exporter.md) about integration with W&B Weave.
 
@@ -973,7 +1035,7 @@ Here is the full code sample:
         }
     }
     ```
-    <!--- KNIT example-opentelemetry-support-10.kt -->
+    <!--- KNIT example-opentelemetry-support-11.kt -->
 
 === "Java"
 
@@ -984,7 +1046,7 @@ Here is the full code sample:
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
     import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-    public class exampleOpentelemetrySupportJava10 {
+    public class exampleOpentelemetrySupportJava11 {
         static PromptExecutor promptExecutor = PromptExecutor.builder()
             .openAI("openai-api-key")
             .build();
@@ -1021,7 +1083,7 @@ Here is the full code sample:
         );
     }
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava10.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava11.java -->
 
 ## Troubleshooting
 
@@ -1131,6 +1193,6 @@ Where `{target}` is the tool name or prompt name when applicable. Examples:
         it.run("Use the search tool to find information")
     }
     ```
-    <!--- KNIT example-opentelemetry-support-11.kt -->
+    <!--- KNIT example-opentelemetry-support-12.kt -->
 
 This setup provides complete observability for MCP operations with minimal code changes, following OpenTelemetry best practices and semantic conventions.

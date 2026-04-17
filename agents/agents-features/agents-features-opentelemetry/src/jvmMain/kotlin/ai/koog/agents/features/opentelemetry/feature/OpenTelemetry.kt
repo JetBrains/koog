@@ -65,20 +65,6 @@ import kotlin.time.Clock
  * Represents the OpenTelemetry integration feature for tracking and managing spans and contexts
  * within the AI Agent framework. This class manages the lifecycle of spans for various operations,
  * including agent executions, node processing, LLM calls, and tool calls.
- *
- * Follows the [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics).
- *
- * ### `gen_ai.provider.name`
- * - LLM calls: the LLM provider id (e.g. `openai`, `anthropic`).
- * - `execute_tool` operations: [ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.PROVIDER_NAME]
- *   (`"koog"`), since tools run in-process.
- *
- * ### `error.type` values emitted by this instrumentation
- * Set only on failed `gen_ai.client.operation.duration` data points. The value is the canonical Java class name of:
- * - [ai.koog.agents.core.feature.model.AIAgentError] subclasses — for `execute_tool` failures and tool validation failures.
- * - Any [Throwable] raised by the LLM client or agent runtime — for `text_completion` failures surfaced via the
- *   agent-level failure hook.
- * - `_OTHER` — fallback when an operation is flushed at agent close without an associated error.
  */
 public class OpenTelemetry {
 
